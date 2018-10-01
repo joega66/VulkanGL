@@ -16,45 +16,119 @@
     <Filter Include="Header Files\Common">
       <UniqueIdentifier>{83656741-a615-4e6f-88b8-28b7f9c42fe5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{e5966bd1-11db-47b1-9871-270467879372}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\includes\camera.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="VulkanDevice.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\helper_library.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="WindowsPlatform.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\model.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="VulkanSurface.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\vulkan_capabilities.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="VulkanImage.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\vulkan_gpu.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="VulkanMemory.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\vulkan_library.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="VulkanCommands.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="app.hpp">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="VulkanShader.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan_template.hpp">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="VulkanRenderTargetView.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\vulkan_renderer.hpp">
-      <Filter>Header Files\Common</Filter>
+    <ClInclude Include="Platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FullscreenQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLRenderResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneRenderTargets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanDescriptors.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="app.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan_template.cpp">
+    <ClCompile Include="VulkanDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WindowsPlatform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanSurface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanMemory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanCommands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanRenderTargetView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanGL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanDescriptors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Shaders\FullscreenFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\Shaders\FullscreenVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\Shaders\SunFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

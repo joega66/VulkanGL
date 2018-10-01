@@ -19,12 +19,45 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GL.cpp" />
+    <ClCompile Include="GLImage.cpp" />
+    <ClCompile Include="GLShader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="VulkanCommands.cpp" />
+    <ClCompile Include="VulkanDescriptors.cpp" />
     <ClCompile Include="VulkanDevice.cpp" />
+    <ClCompile Include="VulkanGL.cpp" />
+    <ClCompile Include="VulkanImage.cpp" />
+    <ClCompile Include="VulkanRenderTargetView.cpp" />
+    <ClCompile Include="VulkanMemory.cpp" />
+    <ClCompile Include="VulkanShader.cpp" />
+    <ClCompile Include="VulkanSurface.cpp" />
+    <ClCompile Include="WindowsPlatform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GHIDevice.h" />
+    <ClInclude Include="GL.h" />
+    <ClInclude Include="GLImage.h" />
+    <ClInclude Include="GLRenderResource.h" />
+    <ClInclude Include="GLShader.h" />
+    <ClInclude Include="Platform.h" />
+    <ClInclude Include="FullscreenQuad.h" />
+    <ClInclude Include="SceneRenderTargets.h" />
+    <ClInclude Include="VulkanCommands.h" />
+    <ClInclude Include="VulkanDescriptors.h" />
     <ClInclude Include="VulkanDevice.h" />
+    <ClInclude Include="VulkanGL.h" />
+    <ClInclude Include="VulkanImage.h" />
+    <ClInclude Include="VulkanRenderTargetView.h" />
+    <ClInclude Include="VulkanMemory.h" />
+    <ClInclude Include="VulkanShader.h" />
+    <ClInclude Include="VulkanSurface.h" />
+    <ClInclude Include="WindowsPlatform.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Shaders\FullscreenFS.glsl" />
+    <None Include="..\..\Shaders\FullscreenVS.glsl" />
+    <None Include="..\..\Shaders\SunFS.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -66,27 +99,23 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\vulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\vulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\vulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\vulkan.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Graphics\Libraries\Include;C:\VulkanSDK\1.1.73.0\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Graphics\Libraries\Include;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Graphics\Libraries\Libs;C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Graphics\Libraries\Include;C:\VulkanSDK\1.1.73.0\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Graphics\Libraries\Include;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Graphics\Libraries\Libs;C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -96,9 +125,12 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <ShowIncludes>false</ShowIncludes>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>assimp-vc140-mt.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,11 +150,14 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <ShowIncludes>false</ShowIncludes>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc140-mt.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

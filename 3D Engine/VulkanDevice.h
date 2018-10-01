@@ -1,21 +1,57 @@
 #pragma once
-#include "GHIDevice.h"
+#include "Platform.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <sstream>
+#include <iostream>
 
-class VulkanDevice : public GHIDevice
+class VulkanDevice
 {
 public:
-	virtual void Open() override;
-	virtual void Close() override;
+	VkSurfaceKHR Surface;
+	VkQueue GraphicsQueue;
+	VkQueue PresentQueue;
+	VkCommandPool CommandPool;
+	VkPhysicalDeviceProperties Properties;
+	VkPhysicalDeviceFeatures Features;
+
+	VulkanDevice();
 
 	operator VkDevice() { return Device; }
 	operator VkPhysicalDevice() { return PhysicalDevice; }
 
-private:
-	GLFWwindow* Window;
 	VkDevice Device;
-	VkPhysicalDevice PhysicalDevice;
 
-	void OpenWindow(int Width, int Height);
+private:
+	VkInstance Instance;
+	VkDebugReportCallbackEXT DebugReportCallback;
+	VkPhysicalDevice PhysicalDevice;
 };
+
+CLASS(VulkanDevice);
+
+struct QueueFamilyIndices
+{
+	// @todo Change to uint32
+	int GraphicsFamily = -1;
+	int PresentFamily = -1;
+
+	bool IsComplete() const;
+	void FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface);
+};
+
+void VulkanAssert(VkResult Result, const char* Func, const char* File, int Line);
+
+#define vulkan(Result) \
+		if (Result != VK_SUCCESS)	\
+		{							\
+			std::stringstream SS;	\
+			SS << "Vulkan call ";	\
+			SS << #Result;			\
+			SS << " in file ";		\
+			SS << __FILE__;			\
+			SS << " on line ";		\
+			SS << __LINE__;			\
+			SS << " failed.";		\
+			fail(SS.str());			\
+		}							
