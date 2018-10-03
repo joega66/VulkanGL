@@ -30,9 +30,11 @@ public:
 		GLShaderRef Geometry,
 		GLShaderRef Fragment
 	) final;
-	virtual void SetShaderResource(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) final;
+	virtual void SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer) final;
+	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) final;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) final;
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceCreateFlags CreateFlags) final;
+	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data);
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags) final;
 	virtual void ResizeImage(GLImageRef Image, uint32 Width, uint32 Height) final;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) final;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) final;
@@ -104,7 +106,11 @@ private:
 	PendingBuffer<VkSampler> Samplers;
 	PendingBuffer<VkDescriptorSet> DescriptorSets;
 
-	Map<EShaderStage, Map<uint32, VulkanWriteDescriptorImage>> DescriptorImages;
+	template<typename VulkanDescriptorType>
+	using DescriptorMap = Map<EShaderStage, Map<uint32, std::unique_ptr<VulkanDescriptorType>>>;
+
+	DescriptorMap<VulkanWriteDescriptorImage> DescriptorImages;
+	DescriptorMap<VulkanWriteDescriptorBuffer> DescriptorBuffers;
 
 	VkCommandBuffer& GetCommandBuffer();
 	VulkanRenderTargetViewRef GetCurrentSwapchainRTView();
@@ -116,7 +122,7 @@ private:
 
 	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout);
 	VkFormat FindSupportedDepthFormat(EImageFormat Format);
-	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceCreateFlags CreateFlags);
+	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags);
 	VkSampler CreateSampler(const SamplerState& Sampler);
 };
 

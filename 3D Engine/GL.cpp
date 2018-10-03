@@ -47,9 +47,14 @@ void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShader
 	GRender->SetGraphicsPipeline(Vertex, TessControl, TessEval, Geometry, Fragment);
 }
 
-void GLSetShaderResource(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState & Sampler)
+void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
 {
-	GRender->SetShaderResource(Shader, Location, Image, Sampler);
+	GRender->SetUniformBuffer(Shader, Location, UniformBuffer);
+}
+
+void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState & Sampler)
+{
+	GRender->SetShaderImage(Shader, Location, Image, Sampler);
 }
 
 void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
@@ -57,9 +62,9 @@ void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32
 	GRender->Draw(VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceCreateFlags CreateFlags)
+GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags)
 {
-	return GRender->CreateImage(Width, Height, Format, CreateFlags);
+	return GRender->CreateImage(Width, Height, Format, UsageFlags);
 }
 
 void GLResizeImage(GLImageRef Image, uint32 Width, uint32 Height)

@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <array>
@@ -33,7 +34,7 @@ UniqueRef<T> MakeUniqueRef(RefArgs& ...Args)
 template<typename T, typename ...RefArgs>
 Ref<T> MakeRef(RefArgs&& ...Args)
 {
-	return std::make_shared<T>(std::forward<RefArgs>(Args)...);
+	return std::make_shared<T>(Args...);
 }
 
 #define CLASS(Class) \
@@ -81,6 +82,9 @@ public:
 	void AddWindowListener(WindowResizeListenerRef WindowListener);
 	void RemoveWindowListener(WindowResizeListenerRef WindowListener);
 	void NotifyWindowListeners(int32 X, int32 Y);
+
+	// Memory
+	void Memcpy(void* Dst, const void* Src, size_t Size);
 
 protected:
 	std::vector<WindowResizeListenerRef> WindowListeners;
@@ -179,11 +183,7 @@ public:
 
 	void Destroy()
 	{
-		for (auto& Resource : Resources)
-		{
-			Deallocator(Resource);
-		}
-
+		std::for_each(Resources.begin(), Resources.end(), Deallocator);
 		Resources.clear();
 	}
 

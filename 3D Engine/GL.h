@@ -112,9 +112,11 @@ public:
 		GLShaderRef Geometry,
 		GLShaderRef Fragment
 	) = 0;
-	virtual void SetShaderResource(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) = 0;
+	virtual void SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer) = 0;
+	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceCreateFlags CreateFlags) = 0;
+	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data) = 0;
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags) = 0;
 	virtual void ResizeImage(GLImageRef Image, uint32 Width, uint32 Height) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) = 0;
@@ -136,15 +138,23 @@ void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPo
 void GLSetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
 void GLSetInputAssembly(EPrimitiveTopology Topology);
 void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment);
-void GLSetShaderResource(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
+void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer);
+void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
 void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceCreateFlags CreateFlags);
+GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags);
 void GLResizeImage(GLImageRef Image, uint32 Width, uint32 Height);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
 GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 void GLRebuildResolutionDependents();
 std::string GLGetDeviceName();
+
+// @todo-joe Pass by const ref...
+template<typename UniformBufferType>
+GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data)
+{
+	return GRender->CreateUniformBuffer(sizeof(UniformBufferType), &Data);
+}
 
 template<typename ShaderType> // std::enable_if<std::is_base_of<GLShader, ShaderType>>, or something...
 static GLShaderRef GLCreateShader()

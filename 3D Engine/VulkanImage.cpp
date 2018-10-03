@@ -2,13 +2,13 @@
 #include "VulkanGL.h"
 #include "VulkanCommands.h"
 
-VulkanImage::VulkanImage(VulkanDevice & Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceCreateFlags CreateFlags, VkPipelineStageFlags Stage)
+VulkanImage::VulkanImage(VulkanDevice & Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags, VkPipelineStageFlags Stage)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
 	, Layout(Layout)
 	, Stage(Stage)
-	, GLImage(Format, Width, Height, CreateFlags)
+	, GLImage(Format, Width, Height, UsageFlags)
 {
 }
 

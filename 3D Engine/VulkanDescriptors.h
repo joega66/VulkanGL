@@ -6,8 +6,24 @@ class VulkanDevice;
 
 struct VulkanWriteDescriptorImage
 {
-	VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+	const VkDescriptorSetLayoutBinding& Binding;
 	VkDescriptorImageInfo DescriptorImage = {};
+
+	VulkanWriteDescriptorImage(const VkDescriptorSetLayoutBinding& Binding, const VkDescriptorImageInfo& DescriptorImage)
+		: Binding(Binding), DescriptorImage(DescriptorImage)
+	{
+	}
+};
+
+struct VulkanWriteDescriptorBuffer
+{
+	const VkDescriptorSetLayoutBinding& Binding;
+	VkDescriptorBufferInfo DescriptorBuffer = {};
+
+	VulkanWriteDescriptorBuffer(const VkDescriptorSetLayoutBinding& Binding, const VkDescriptorBufferInfo& DescriptorBuffer)
+		: Binding(Binding), DescriptorBuffer(DescriptorBuffer)
+	{
+	}
 };
 
 class VulkanDescriptorPool

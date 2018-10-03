@@ -61,10 +61,10 @@ public:
 	EImageFormat Format;
 	uint32 Width;
 	uint32 Height;
-	EResourceCreateFlags CreateFlags;
+	EResourceUsageFlags UsageFlags;
 
-	GLImage(EImageFormat Format, uint32 Width, uint32 Height, EResourceCreateFlags CreateFlags)
-		: Format(Format), Width(Width), Height(Height), CreateFlags(CreateFlags) {}
+	GLImage(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags)
+		: Format(Format), Width(Width), Height(Height), UsageFlags(UsageFlags) {}
 
 	bool IsColor();
 	bool IsDepthStencil();

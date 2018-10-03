@@ -19,7 +19,7 @@ public:
 
 	VulkanShader(
 		VulkanDevice& Device
-		,VkShaderModule ShaderModule
+		, VkShaderModule ShaderModule
 		, const ShaderMetadata& Meta
 		, const std::vector<VkVertexInputAttributeDescription>& Attributes
 		, const std::vector<VkDescriptorSetLayoutBinding>& Bindings

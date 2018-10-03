@@ -8,6 +8,7 @@
 CAST(GLImage, VulkanImage);
 CAST(GLRenderTargetView, VulkanRenderTargetView);
 CAST(GLShader, VulkanShader);
+CAST(GLUniformBuffer, VulkanUniformBuffer);
 
 VulkanGL::VulkanGL()
 	: Swapchain(Device)
@@ -125,7 +126,7 @@ void VulkanSwapchain::InitSwapchain()
 			, GetKey(VulkanFormat, SurfaceFormat.format)
 			, Extent.width
 			, Extent.height
-			, RF_RenderTargetable
+			, RU_RenderTargetable
 			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 		Vulkan->CreateImageView(Images[i]);
 	}
@@ -179,6 +180,7 @@ void VulkanGL::BeginRender()
 
 void VulkanGL::EndRender()
 {
+	// @todo-joe Dunno how well this will work with compute shaders.
 	vkCmdEndRenderPass(GetCommandBuffer());
 	vulkan(vkEndCommandBuffer(GetCommandBuffer()));
 
@@ -216,12 +218,14 @@ void VulkanGL::EndRender()
 	Pipelines.Destroy();
 	Samplers.Destroy();
 	DescriptorSets.Destroy();
+
 	DescriptorImages.clear();
+	DescriptorBuffers.clear();
 
 	vkResetDescriptorPool(Device, DescriptorPool, 0);
 
 	// "Transition" render targets back to UNDEFINED
-	// This is mainly for consistency and error checking
+	// This is mainly for consistency with non-rendertargetable images and error checking
 	for (uint32 i = 0; i < Pending.NumRTs; i++)
 	{
 		VulkanImageRef Image = ResourceCast(Pending.ColorTargets[i]->Image);
@@ -266,7 +270,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 		ColorTarget = ResourceCast(ColorTargets[i]);
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
-		check(Image && (Image->CreateFlags & RF_RenderTargetable), "Color target is invalid.");
+		check(Image && (Image->UsageFlags & RU_RenderTargetable), "Color target is invalid.");
 		check(Image->IsColor(), "Color target was not created in color format.");
 
 		Image->Layout = [&] ()
@@ -275,11 +279,11 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 			{
 				return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			}
-			else if (Image->CreateFlags & RF_ShaderResource)
+			else if (Image->UsageFlags & RU_ShaderResource)
 			{
 				return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			}
-			else if (Image->CreateFlags & RF_RenderTargetable)
+			else if (Image->UsageFlags & RU_RenderTargetable)
 			{
 				return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			}
@@ -319,28 +323,28 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 		check(DepthTarget, "Depth target is invalid.");
 
 		VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
-		check(DepthImage && (DepthImage->CreateFlags & RF_RenderTargetable), "Depth target is invalid.");
+		check(DepthImage && (DepthImage->UsageFlags & RU_RenderTargetable), "Depth target is invalid.");
 		check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
 		VkImageLayout FinalLayout = [&] ()
 		{
 			if (Access == DS_DepthReadStencilRead)
 			{
-				check(DepthImage->CreateFlags & RF_ShaderResource, "Depth Image must be created with RF_ShaderResource.");
+				check(DepthImage->UsageFlags & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
 				DepthStencil.stencilTestEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			}
 			else if (Access == DS_DepthReadStencilWrite)
 			{
-				check(DepthImage->CreateFlags & RF_ShaderResource, "Depth Image must be created with RF_ShaderResource.");
+				check(DepthImage->UsageFlags & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
 				DepthStencil.stencilTestEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 			}
 			else if (Access == DS_DepthWriteStencilRead)
 			{
-				check(DepthImage->CreateFlags & RF_ShaderResource, "Depth Image must be created with RF_ShaderResource.");
+				check(DepthImage->UsageFlags & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
 				DepthStencil.stencilTestEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
@@ -428,6 +432,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
 {
 	DescriptorImages.clear();
+	DescriptorBuffers.clear();
 
 	Pending.Vertex = ResourceCast(Vertex);
 	Pending.TessControl = ResourceCast(TessControl);
@@ -438,39 +443,69 @@ void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, 
 	bDirtyPipelineLayout = true;
 }
 
-void VulkanGL::SetShaderResource(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
+void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
+{
+	VulkanShaderRef VulkanShader = ResourceCast(Shader);
+	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
+	auto& Bindings = VulkanShader->Bindings;
+	auto& SharedBuffer = VulkanUniformBuffer->Buffer;
+
+	check(SharedBuffer.Buffer.Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
+
+	if (VulkanUniformBuffer->bDirty)
+	{
+		Allocator.UploadBufferData(VulkanUniformBuffer->Buffer, VulkanUniformBuffer->GetData());
+		VulkanUniformBuffer->bDirty = false;
+	}
+
+	for (const auto& Binding : Bindings)
+	{
+		if (Binding.binding == Location)
+		{
+			// @todo-joe Also check that the buffer size matches
+			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
+
+			VkDescriptorBufferInfo BufferInfo = { SharedBuffer.Buffer.Buffer, SharedBuffer.Offset, SharedBuffer.Size };
+
+			auto WriteDescriptorBuffer = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
+			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::move(WriteDescriptorBuffer);
+			bDirtyDescriptorSets = true;
+
+			return;
+		}
+	}
+
+	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
+}
+
+void VulkanGL::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanImageRef VulkanImage = ResourceCast(Image);
-	VkSampler VulkanSampler = CreateSampler(Sampler);
 	auto& Bindings = VulkanShader->Bindings;
 	
 	check(VulkanImage->Layout != VK_IMAGE_LAYOUT_UNDEFINED, "Invalid Vulkan image layout for shader read.");
 
-	Samplers.Push(VulkanSampler);
-
-	VulkanWriteDescriptorImage DescriptorImage;
-	VkDescriptorImageInfo& ImageDescriptor = DescriptorImage.DescriptorImage;
-	VkWriteDescriptorSet& WriteDescriptor = DescriptorImage.WriteDescriptor;
-
-	ImageDescriptor = { VulkanSampler, VulkanImage->ImageView, VulkanImage->Layout };
-
-	WriteDescriptor.dstBinding = Location;
-	WriteDescriptor.dstArrayElement = 0;
-	WriteDescriptor.descriptorCount = 1;
-	WriteDescriptor.pImageInfo = &ImageDescriptor;
-
-	for (auto& Binding : Bindings)
+	for (const auto& Binding : Bindings)
 	{
 		if (Binding.binding == Location)
 		{
-			WriteDescriptor.descriptorType = Binding.descriptorType;
+			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, "Shader resource at this location isn't a combined image sampler.");
+
+			VkSampler VulkanSampler = CreateSampler(Sampler);
+			Samplers.Push(VulkanSampler);
+
+			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->Layout };
+
+			auto WriteDescriptorImage = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
+			DescriptorImages[VulkanShader->Meta.Stage][Location] = std::move(WriteDescriptorImage);
+			bDirtyDescriptorSets = true;
+
+			return;
 		}
 	}
 
-	DescriptorImages[VulkanShader->Meta.Stage][Location] = DescriptorImage;
-
-	bDirtyDescriptorSets = true;
+	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
 void VulkanGL::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
@@ -498,13 +533,19 @@ void VulkanGL::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex
 	vkCmdDraw(GetCommandBuffer(), VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceCreateFlags CreateFlags)
+GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data)
+{
+	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, RU_None, Data);
+	return MakeRef<VulkanUniformBuffer>(Buffer);
+}
+
+GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
 	VkImageLayout Layout;
 
-	CreateImage(Image, Memory, Layout, Width, Height, Format, CreateFlags);
+	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags);
 
 	VulkanImageRef GLImage = MakeRef<VulkanImage>(Device
 		, Image
@@ -513,7 +554,7 @@ GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Forma
 		, Format
 		, Width
 		, Height
-		, CreateFlags);
+		, UsageFlags);
 
 	CreateImageView(GLImage);
 
@@ -528,7 +569,7 @@ void VulkanGL::ResizeImage(GLImageRef GLImage, uint32 Width, uint32 Height)
 	VkImage Image;
 	VkDeviceMemory Memory;
 	VkImageLayout Layout;
-	CreateImage(Image, Memory, Layout, Width, Height, VulkanImage->Format, VulkanImage->CreateFlags);
+	CreateImage(Image, Memory, Layout, Width, Height, VulkanImage->Format, VulkanImage->UsageFlags);
 
 	VulkanImage->Image = Image;
 	VulkanImage->Memory = Memory;
@@ -721,7 +762,7 @@ void VulkanGL::CleanPipelineLayout()
 	PipelineLayouts.Push(PipelineLayout);
 
 	bDirtyPipelineLayout = false;
-	bDirtyPipeline = true; // A dirty pipeline layout is a dirty pipeline...
+	bDirtyPipeline = true;
 }
 
 void VulkanGL::CleanDescriptorSets()
@@ -742,17 +783,40 @@ void VulkanGL::CleanDescriptorSets()
 		auto& ImageDescriptors = DescriptorImagesInShaderStage.second;
 		for (auto& Descriptors : ImageDescriptors)
 		{
-			VulkanWriteDescriptorImage& WriteDescriptor = Descriptors.second;
-			WriteDescriptors.push_back(WriteDescriptor.WriteDescriptor);
-			WriteDescriptors.back().pImageInfo = &WriteDescriptor.DescriptorImage;
+			const auto& WriteDescriptorImage = Descriptors.second;
+			const auto& Binding = WriteDescriptorImage->Binding;
+
+			VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+			WriteDescriptor.dstSet = DescriptorSets.Get();
+			WriteDescriptor.dstBinding = Binding.binding;
+			WriteDescriptor.dstArrayElement = 0;
+			WriteDescriptor.descriptorType = Binding.descriptorType;
+			WriteDescriptor.descriptorCount = 1;
+			WriteDescriptor.pImageInfo = &WriteDescriptorImage->DescriptorImage;
+
+			WriteDescriptors.push_back(WriteDescriptor);
 		}
 	}
 
-	std::for_each(WriteDescriptors.begin(), WriteDescriptors.end(),
-		[&] (VkWriteDescriptorSet& WriteDescriptor)
+	for (auto& DescriptorBuffersInShaderStage : DescriptorBuffers)
 	{
-		WriteDescriptor.dstSet = DescriptorSets.Get();
-	});
+		auto& BufferDescriptors = DescriptorBuffersInShaderStage.second;
+		for (auto& Descriptors : BufferDescriptors)
+		{
+			const auto& WriteDescriptorImage = Descriptors.second;
+			const auto& Binding = WriteDescriptorImage->Binding;
+
+			VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+			WriteDescriptor.dstSet = DescriptorSets.Get();
+			WriteDescriptor.dstBinding = Binding.binding;
+			WriteDescriptor.dstArrayElement = 0;
+			WriteDescriptor.descriptorType = Binding.descriptorType;
+			WriteDescriptor.descriptorCount = 1;
+			WriteDescriptor.pBufferInfo = &WriteDescriptorImage->DescriptorBuffer;
+
+			WriteDescriptors.push_back(WriteDescriptor);
+		}
+	}
 
 	vkUpdateDescriptorSets(Device.Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, nullptr);
 	vkCmdBindDescriptorSets(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineLayouts.Get(), 0, 1, &DescriptorSets.Get(), 0, nullptr);
@@ -842,7 +906,7 @@ void VulkanGL::CleanRenderPass()
 
 	vkCmdBeginRenderPass(GetCommandBuffer(), &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 	bDirtyRenderPass = false;
-	bDirtyPipeline = true; // A dirty render pass is a dirty pipeline...
+	bDirtyPipeline = true;
 }
 
 void VulkanGL::CleanPipeline()
@@ -1079,7 +1143,7 @@ void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayo
 }
 
 void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
-	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceCreateFlags CreateFlags)
+	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags)
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -1103,13 +1167,13 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 	{
 		VkFlags Usage = 0;
 
-		if (CreateFlags & RF_RenderTargetable)
+		if (UsageFlags & RU_RenderTargetable)
 		{
 			Usage |= GLImage::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
-		Usage |= CreateFlags & RF_ShaderResource ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
-		Usage |= CreateFlags & RF_UnorderedAccess ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
+		Usage |= UsageFlags & RU_ShaderResource ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
+		Usage |= UsageFlags & RU_UnorderedAccess ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 
 		return Usage;
 	}();

@@ -87,7 +87,7 @@ public:
 		, EImageFormat Format
 		, uint32 Width
 		, uint32 Height
-		, EResourceCreateFlags CreateFlags
+		, EResourceUsageFlags UsageFlags
 		, VkPipelineStageFlags Stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 	virtual void ReleaseGL() final;

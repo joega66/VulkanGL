@@ -14,18 +14,25 @@ void RunEngine()
 	COMPILE_SHADER(FullscreenVS, "C:/Users/Joe/Source/Repos/Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex);
 	COMPILE_SHADER(FullscreenFS, "C:/Users/Joe/Source/Repos/Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment);
 	COMPILE_SHADER(SunFS, "C:/Users/Joe/Source/Repos/Shaders/SunFS.glsl", "main", EShaderStage::Fragment);
-
+	
 	GLShaderRef VertexShader = GLCreateShader<FullscreenVS>();
 	GLShaderRef FragmentShader = GLCreateShader<FullscreenFS>();
 	GLShaderRef SunShader = GLCreateShader<SunFS>();
 
 	std::array<float, 4> ClearColor = { 0, 0, 0, 0 };
 
-	GLImageRef Depth = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT, RF_RenderTargetable);
+	struct Test
+	{
+		glm::vec4 Color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	} Test;
+
+	GLUniformBufferRef Uniform = GLCreateUniformBuffer(Test);
+
+	GLImageRef Depth = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT, RU_RenderTargetable);
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(Depth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
 
 	GLImageRef SunImage = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y,
-		IF_R8G8B8A8_SRGB, RF_RenderTargetable | RF_ShaderResource);
+		IF_R8G8B8A8_SRGB, RU_RenderTargetable | RU_ShaderResource);
 	GLRenderTargetViewRef SunView = GLCreateRenderTargetView(SunImage, ELoadAction::Clear, EStoreAction::Store, ClearColor);
 
 	while (!GPlatform->WindowShouldClose())
@@ -45,8 +52,8 @@ void RunEngine()
 			nullptr,
 			nullptr,
 			nullptr,
-			SunShader
-		);
+			SunShader);
+		GLSetUniformBuffer(SunShader, 0, Uniform);
 		GLDraw(3, 1, 0, 0);
 
 		/** Sample the image */
@@ -57,9 +64,8 @@ void RunEngine()
 			nullptr,
 			nullptr,
 			nullptr,
-			FragmentShader
-		);
-		GLSetShaderResource(FragmentShader, 0, SunImage, SamplerState());
+			FragmentShader);
+		GLSetShaderImage(FragmentShader, 0, SunImage, SamplerState());
 		GLDraw(3, 1, 0, 0);
 
 		GLEndRender();

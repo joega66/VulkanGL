@@ -37,13 +37,7 @@ void IPlatform::FileRename(const std::string& Old, const std::string& New)
 
 bool IPlatform::FileExists(const std::string& Filename)
 {
-	std::ifstream File(Filename, std::ios::ate | std::ios::binary);
-	if (File.is_open())
-	{
-		File.close();
-		return true;
-	}
-	return false;
+	return std::filesystem::is_regular_file(Filename);
 }
 
 void IPlatform::RemoveSpaces(std::string& String)
@@ -120,6 +114,11 @@ void IPlatform::NotifyWindowListeners(int32 X, int32 Y)
 	{
 		Listener->OnWindowResize(X, Y);
 	}
+}
+
+void IPlatform::Memcpy(void * Dst, const void * Src, size_t Size)
+{
+	memcpy(Dst, Src, Size);
 }
 
 WindowResizeListener::~WindowResizeListener()
