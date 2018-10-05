@@ -55,9 +55,10 @@
     <ClInclude Include="WindowsPlatform.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Shaders\FullscreenFS.glsl" />
-    <None Include="..\..\Shaders\FullscreenVS.glsl" />
-    <None Include="..\..\Shaders\SunFS.glsl" />
+    <None Include="..\Shaders\FullscreenFS.glsl" />
+    <None Include="..\Shaders\FullscreenVS.glsl" />
+    <None Include="..\Shaders\SunFS.glsl" />
+    <None Include="..\Shaders\TestVS.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

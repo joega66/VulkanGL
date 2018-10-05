@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <memory>
 #include <functional>
@@ -194,5 +195,5 @@ public:
 
 private:
 	const std::function<void(T)> Deallocator;
-	std::vector<T> Resources;
+	std::list<T> Resources;
 };

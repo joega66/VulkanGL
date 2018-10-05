@@ -1,6 +1,15 @@
 #pragma once
 #include "GLShader.h"
 
+class TestVS : public GLShader
+{
+public:
+	TestVS(const ShaderMetadata& Meta)
+		: GLShader(Meta)
+	{
+	}
+};
+
 class FullscreenVS : public GLShader
 {
 public:

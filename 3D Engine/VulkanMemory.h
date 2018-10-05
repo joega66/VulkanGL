@@ -35,6 +35,11 @@ struct SharedVulkanBuffer
 	{
 		Buffer.Used += Size;
 	}
+
+	VkBuffer& GetVulkanHandle() const
+	{
+		return Buffer.Buffer;
+	}
 };
 
 class VulkanAllocator
@@ -47,21 +52,42 @@ public:
 
 private:
 	VulkanDevice& Device;
-
-	enum
-	{
-		// Allocate in 2MB chunks
-		BufferAllocationSize = 2 * (1 << 20),
-	};
+	const VkDeviceSize BufferAllocationSize;
 
 	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanBuffer>> LockedStagingBuffers;
 	std::list<std::unique_ptr<VulkanBuffer>> FreeStagingBuffers;
-	std::vector<VulkanBuffer> Buffers;
+	std::list<VulkanBuffer> Buffers;
 
 	VulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
 	void* LockBuffer(const SharedVulkanBuffer& Buffer);
 	void UnlockBuffer(const SharedVulkanBuffer& Buffer);
 };
+
+class VulkanVertexBuffer : public GLVertexBuffer
+{
+public:
+	SharedVulkanBuffer Buffer;
+
+	VulkanVertexBuffer(const SharedVulkanBuffer& Buffer, EImageFormat Format, EResourceUsageFlags Usage)
+		: Buffer(Buffer), GLVertexBuffer(Format, Usage)
+	{
+	}
+};
+
+CLASS(VulkanVertexBuffer);
+
+class VulkanIndexBuffer : public GLIndexBuffer
+{
+public:
+	SharedVulkanBuffer Buffer;
+
+	VulkanIndexBuffer(const SharedVulkanBuffer& Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsageFlags Usage)
+		: Buffer(Buffer), GLIndexBuffer(IndexStride, Format, Usage)
+	{
+	}
+};
+
+CLASS(VulkanIndexBuffer);
 
 class VulkanUniformBuffer : public GLUniformBuffer
 {

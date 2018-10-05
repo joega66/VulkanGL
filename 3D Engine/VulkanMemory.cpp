@@ -4,6 +4,7 @@
 
 VulkanAllocator::VulkanAllocator(VulkanDevice& Device) 
 	: Device(Device)
+	, BufferAllocationSize(2 * (1 << 20)) // Allocate in 2MB chunks
 {
 }
 
@@ -18,11 +19,9 @@ SharedVulkanBuffer VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsag
 	VkMemoryPropertyFlags Properties = Usage & RU_KeepCPUAccessible ? 
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	for (uint32 i = 0; i < Buffers.size(); i++)
+	for (auto& Buffer : Buffers)
 	{
 		// Find a buffer with the same properties and usage
-
-		VulkanBuffer& Buffer = Buffers[i];
 		if (Buffer.Usage == VulkanUsage && Buffer.Properties == Properties)
 		{
 			if (Buffer.SizeRemaining() >= Size)
@@ -133,13 +132,10 @@ void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
 			FreeStagingBuffers.pop_back();
 		}
 
-		check(StagingBuffer->Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
-			"Don't map staging buffers without these flags.");
-
 		void* MemMapped = nullptr;
 		vkMapMemory(Device, StagingBuffer->Memory, 0, Buffer.Size, 0, &MemMapped);
 
-		LockedStagingBuffers[std::make_pair(Buffer.Buffer.Buffer, Buffer.Offset)] = std::move(StagingBuffer);
+		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset)] = std::move(StagingBuffer);
 
 		return MemMapped;
 	}
@@ -157,12 +153,10 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 {
 	if (Buffer.Buffer.Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
 	{
-		auto Key = std::make_pair(Buffer.Buffer.Buffer, Buffer.Offset);
+		auto Key = std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset);
 
 		std::unique_ptr<VulkanBuffer> StagingBuffer = std::move(LockedStagingBuffers[Key]);
 		LockedStagingBuffers.erase(Key);
-
-		check(StagingBuffer, "Buffer was never locked for writing.");
 
 		vkUnmapMemory(Device, StagingBuffer->Memory);
 
@@ -173,7 +167,7 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 		Copy.dstOffset = Buffer.Offset;
 		Copy.srcOffset = 0;
 
-		vkCmdCopyBuffer(CommandBuffer, StagingBuffer->Buffer, Buffer.Buffer.Buffer, 1, &Copy);
+		vkCmdCopyBuffer(CommandBuffer, StagingBuffer->Buffer, Buffer.GetVulkanHandle(), 1, &Copy);
 
 		FreeStagingBuffers.push_back(std::move(StagingBuffer));
 	}

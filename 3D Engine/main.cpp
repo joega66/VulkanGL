@@ -1,6 +1,6 @@
 #include "WindowsPlatform.h"
 #include "VulkanGL.h"
-#include "VulkanShader.h"
+#include "GLShader.h"
 #include "FullscreenQuad.h"
 #include "SceneRenderTargets.h"
 #include <cxxopts.hpp>
@@ -11,25 +11,39 @@ void RunEngine()
 
 	GPlatform->AddWindowListener(&SceneRenderTargets);
 
-	COMPILE_SHADER(FullscreenVS, "C:/Users/Joe/Source/Repos/Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex);
-	COMPILE_SHADER(FullscreenFS, "C:/Users/Joe/Source/Repos/Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment);
-	COMPILE_SHADER(SunFS, "C:/Users/Joe/Source/Repos/Shaders/SunFS.glsl", "main", EShaderStage::Fragment);
+	COMPILE_SHADER(TestVS, "../Shaders/TestVS.glsl", "main", EShaderStage::Vertex);
+	COMPILE_SHADER(FullscreenVS, "../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex);
+	COMPILE_SHADER(FullscreenFS, "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment);
+	COMPILE_SHADER(SunFS, "../Shaders/SunFS.glsl", "main", EShaderStage::Fragment);
 	
-	GLShaderRef VertexShader = GLCreateShader<FullscreenVS>();
-	GLShaderRef FragmentShader = GLCreateShader<FullscreenFS>();
-	GLShaderRef SunShader = GLCreateShader<SunFS>();
+	GLShaderRef TestVert = GLCreateShader<TestVS>();
+	GLShaderRef FullscreenVert = GLCreateShader<FullscreenVS>();
+	GLShaderRef FullscreenFrag = GLCreateShader<FullscreenFS>();
+	GLShaderRef SunFrag = GLCreateShader<SunFS>();
 
-	std::array<float, 4> ClearColor = { 0, 0, 0, 0 };
-
-	struct Test
+	std::array<glm::vec3, 4> VertexPositions =
 	{
-		glm::vec4 Color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	} Test;
+		glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f)
+	};
 
-	GLUniformBufferRef Uniform = GLCreateUniformBuffer(Test);
+	std::array<glm::vec2, 4> VertexUVs = 
+	{
+		glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 1.0f)
+	};
+
+	std::array<uint32, 6> Indices =
+	{
+		0, 1, 2, 1, 3, 2
+	};
+
+	GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), RU_None, Indices.data());
+	GLVertexBufferRef PositionVertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, VertexPositions.size(), RU_None, VertexPositions.data());
+	GLVertexBufferRef TextureCoordinateVertexBuffer = GLCreateVertexBuffer(IF_R32G32_SFLOAT, VertexUVs.size(), RU_None, VertexUVs.data());
 
 	GLImageRef Depth = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT, RU_RenderTargetable);
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(Depth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
+	
+	std::array<float, 4> ClearColor = { 0, 0, 0, 0 };
 
 	GLImageRef SunImage = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y,
 		IF_R8G8B8A8_SRGB, RU_RenderTargetable | RU_ShaderResource);
@@ -48,25 +62,28 @@ void RunEngine()
 		GLSetColorMask(0, Color_RGBA);
 		GLSetRasterizerState(CM_None);
 		GLSetGraphicsPipeline(
-			VertexShader,
+			TestVert,
 			nullptr,
 			nullptr,
 			nullptr,
-			SunShader);
-		GLSetUniformBuffer(SunShader, 0, Uniform);
-		GLDraw(3, 1, 0, 0);
+			SunFrag);
+		GLSetVertexStream(0, PositionVertexBuffer);
+		GLSetVertexStream(1, TextureCoordinateVertexBuffer);
+		GLDrawIndexed(IndexBuffer, Indices.size(), 1, 0, 0, 0);
 
 		/** Sample the image */
 		GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColor);
 		GLSetRenderTargets(1, &SurfaceView, nullptr, DS_None);
 		GLSetGraphicsPipeline(
-			VertexShader,
+			TestVert,
 			nullptr,
 			nullptr,
 			nullptr,
-			FragmentShader);
-		GLSetShaderImage(FragmentShader, 0, SunImage, SamplerState());
-		GLDraw(3, 1, 0, 0);
+			FullscreenFrag);
+		GLSetVertexStream(0, PositionVertexBuffer);
+		GLSetVertexStream(1, TextureCoordinateVertexBuffer);
+		GLSetShaderImage(FullscreenFrag, 0, SunImage, SamplerState());
+		GLDrawIndexed(IndexBuffer, Indices.size(), 1, 0, 0, 0);
 
 		GLEndRender();
 	}
@@ -74,7 +91,7 @@ void RunEngine()
 
 int main(int argc, char* argv[])
 {
-	cxxopts::Options Options("VulkanGL", "A work-in-progress Vulkan wrapper :)");
+	cxxopts::Options Options("VulkanGL", "A Vulkan-based framework for graphics demos :)");
 
 	Options.add_options()
 		("vulkan", "Enable Vulkan graphics library interface")

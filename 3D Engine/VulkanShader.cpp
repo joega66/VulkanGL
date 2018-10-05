@@ -121,12 +121,12 @@ static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttribute
 {
 	std::vector<VkVertexInputAttributeDescription> Descriptions;
 
-	for (const auto& Stream : Streams)
+	for (uint32 Binding = 0; Binding < Streams.size(); Binding++)
 	{
 		VkVertexInputAttributeDescription Description = {};
-		Description.binding = 0;
-		Description.location = Stream.Location;
-		Description.format = GetValue(GLSLTypeToVulkanFormat, Stream.Type);
+		Description.binding = Binding;
+		Description.location = Streams[Binding].Location;
+		Description.format = GetValue(GLSLTypeToVulkanFormat, Streams[Binding].Type);
 		Description.offset = 0;
 		Descriptions.push_back(Description);
 	}

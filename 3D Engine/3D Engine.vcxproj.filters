@@ -121,13 +121,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Shaders\FullscreenFS.glsl">
+    <None Include="..\Shaders\FullscreenFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\Shaders\FullscreenVS.glsl">
+    <None Include="..\Shaders\FullscreenVS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\Shaders\SunFS.glsl">
+    <None Include="..\Shaders\SunFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\TestVS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

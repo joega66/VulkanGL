@@ -8,12 +8,31 @@
 CAST(GLImage, VulkanImage);
 CAST(GLRenderTargetView, VulkanRenderTargetView);
 CAST(GLShader, VulkanShader);
+CAST(GLVertexBuffer, VulkanVertexBuffer);
 CAST(GLUniformBuffer, VulkanUniformBuffer);
+CAST(GLIndexBuffer, VulkanIndexBuffer);
+
+const Map<EImageFormat, uint32> ConvertImageFormatToGLSLSizes()
+{
+	Map<EImageFormat, uint32> ImageFormatToGLSLSize;
+
+	for (auto& GLSLTypeAndVulkanFormat : GLSLTypeToVulkanFormat)
+	{
+		auto& GLSLType = GLSLTypeAndVulkanFormat.first;
+		auto& Format = GLSLTypeAndVulkanFormat.second;
+		auto& ImageFormat = GetKey(VulkanFormat, Format);
+		auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType);
+		ImageFormatToGLSLSize[ImageFormat] = GLSLSize;
+	}
+
+	return ImageFormatToGLSLSize;
+}
 
 VulkanGL::VulkanGL()
 	: Swapchain(Device)
 	, Allocator(Device)
 	, DescriptorPool(Device)
+	, Pending(Device)
 	, RenderPasses([&] (VkRenderPass RenderPass) { vkDestroyRenderPass(Device, RenderPass, nullptr); })
 	, Framebuffers([&] (VkFramebuffer Framebuffer) { vkDestroyFramebuffer(Device, Framebuffer, nullptr); })
 	, DescriptorSetLayouts([&] (VkDescriptorSetLayout DescriptorSetLayout) { vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr); })
@@ -21,36 +40,9 @@ VulkanGL::VulkanGL()
 	, Pipelines([&] (VkPipeline Pipeline) { vkDestroyPipeline(Device, Pipeline, nullptr); })
 	, Samplers([&] (VkSampler Sampler) { vkDestroySampler(Device, Sampler, nullptr); })
 	, DescriptorSets([&] (VkDescriptorSet DescriptorSet) { /** Descriptor sets are reset with the descriptor pool */ })
+	, ImageFormatToGLSLSize(ConvertImageFormatToGLSLSizes())
 {
-	VkPipelineRasterizationStateCreateInfo& RasterizerState = Pending.RasterizationState;
-	RasterizerState.depthBiasClamp = false;
-	RasterizerState.rasterizerDiscardEnable = false;
-	RasterizerState.depthBiasEnable = false;
-
-	VkPipelineDepthStencilStateCreateInfo& Depth = Pending.DepthStencilState;
-	Depth.depthBoundsTestEnable = false;
-
-	VkPipelineInputAssemblyStateCreateInfo& InputAssembly = Pending.InputAssemblyState;
-	InputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	InputAssembly.primitiveRestartEnable = false;
-
-	VkPipelineMultisampleStateCreateInfo& Multisample = Pending.MultisampleState;
-	Multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-	VkPipelineColorBlendStateCreateInfo& ColorBlendState = Pending.ColorBlendState;
-	ColorBlendState.logicOpEnable = false;
-	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
-	ColorBlendState.blendConstants[0] = 0.0f;
-	ColorBlendState.blendConstants[1] = 0.0f;
-	ColorBlendState.blendConstants[2] = 0.0f;
-	ColorBlendState.blendConstants[3] = 0.0f;
-
-	for (VkPipelineColorBlendAttachmentState& ColorBlendAttachment : Pending.ColorBlendAttachments)
-	{
-		ColorBlendAttachment = {};
-		ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		ColorBlendAttachment.blendEnable = false;
-	}
+	Pending.SetDefaultPipeline(Device);
 
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
@@ -180,8 +172,11 @@ void VulkanGL::BeginRender()
 
 void VulkanGL::EndRender()
 {
-	// @todo-joe Dunno how well this will work with compute shaders.
-	vkCmdEndRenderPass(GetCommandBuffer());
+	if (RenderPasses.Size())
+	{
+		vkCmdEndRenderPass(GetCommandBuffer());
+	}
+
 	vulkan(vkEndCommandBuffer(GetCommandBuffer()));
 
 	VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
@@ -238,6 +233,8 @@ void VulkanGL::EndRender()
 		Image->Layout = VK_IMAGE_LAYOUT_UNDEFINED;
 		Pending.DepthTarget = nullptr;
 	}
+
+	Pending.SetDefaultPipeline(Device);
 }
 
 void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
@@ -443,6 +440,23 @@ void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, 
 	bDirtyPipelineLayout = true;
 }
 
+void VulkanGL::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
+{
+	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
+
+	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
+	check(VulkanVertexBuffer, "Invalid vertex buffer.");
+
+	Pending.VertexStreams[Location] = VulkanVertexBuffer;
+}
+
+GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsageFlags Usage, const void * Data)
+{
+	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
+	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(GLSLSize * NumElements, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
+	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
+}
+
 void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
@@ -464,8 +478,8 @@ void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBu
 		{
 			// @todo-joe Also check that the buffer size matches
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
-
-			VkDescriptorBufferInfo BufferInfo = { SharedBuffer.Buffer.Buffer, SharedBuffer.Offset, SharedBuffer.Size };
+			
+			VkDescriptorBufferInfo BufferInfo = { SharedBuffer.GetVulkanHandle(), SharedBuffer.Offset, SharedBuffer.Size };
 
 			auto WriteDescriptorBuffer = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
 			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::move(WriteDescriptorBuffer);
@@ -508,29 +522,31 @@ void VulkanGL::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Im
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
+void VulkanGL::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
+{
+	PrepareForDraw();
+
+	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
+	VkIndexType IndexType = VulkanIndexBuffer->IndexStride == 4 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
+
+	vkCmdBindIndexBuffer(GetCommandBuffer(), VulkanIndexBuffer->Buffer.GetVulkanHandle(), VulkanIndexBuffer->Buffer.Offset, IndexType);
+	vkCmdDrawIndexed(GetCommandBuffer(), IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
+}
+
 void VulkanGL::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
 {
-	if (bDirtyRenderPass)
-	{
-		CleanRenderPass();
-	}
-	
-	if (bDirtyPipelineLayout)
-	{
-		CleanPipelineLayout();
-	}
-
-	if (bDirtyPipeline)
-	{
-		CleanPipeline();
-	}
-	
-	if (bDirtyDescriptorSets)
-	{
-		CleanDescriptorSets();
-	}
+	PrepareForDraw();
 
 	vkCmdDraw(GetCommandBuffer(), VertexCount, InstanceCount, FirstVertex, FirstInstance);
+}
+
+GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void * Data)
+{
+	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
+
+	uint32 IndexBufferStride = GetValue(ImageFormatToGLSLSize, Format);
+	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
+	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
 }
 
 GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data)
@@ -756,7 +772,7 @@ void VulkanGL::CleanPipelineLayout()
 	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 	PipelineLayoutInfo.setLayoutCount = 1;
 	PipelineLayoutInfo.pSetLayouts = &DescriptorSetLayout;
-
+	
 	VkPipelineLayout PipelineLayout;
 	vulkan(vkCreatePipelineLayout(Device, &PipelineLayoutInfo, nullptr, &PipelineLayout));
 	PipelineLayouts.Push(PipelineLayout);
@@ -821,6 +837,47 @@ void VulkanGL::CleanDescriptorSets()
 	vkUpdateDescriptorSets(Device.Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, nullptr);
 	vkCmdBindDescriptorSets(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineLayouts.Get(), 0, 1, &DescriptorSets.Get(), 0, nullptr);
 	bDirtyDescriptorSets = false;
+}
+
+void VulkanGL::PrepareForDraw()
+{
+	if (bDirtyRenderPass)
+	{
+		CleanRenderPass();
+	}
+
+	if (bDirtyPipelineLayout)
+	{
+		CleanPipelineLayout();
+	}
+
+	if (bDirtyPipeline)
+	{
+		CleanPipeline();
+	}
+
+	if (bDirtyDescriptorSets)
+	{
+		CleanDescriptorSets();
+	}
+
+	// @todo-joe Should have a bDirtyVertexStreams flag, too, for FirstVertex / FirstIndex...
+	const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
+	std::vector<VkDeviceSize> Offsets;
+	std::vector<VkBuffer> Buffers;
+
+	for (uint32 Location = 0; Location < VertexStreams.size(); Location++)
+	{
+		if (VertexStreams[Location])
+		{
+			VkDeviceSize Offset = VertexStreams[Location]->Buffer.Offset;
+			VkBuffer Buffer = VertexStreams[Location]->Buffer.GetVulkanHandle();
+			Offsets.push_back(Offset);
+			Buffers.push_back(Buffer);
+		}
+	}
+
+	vkCmdBindVertexBuffers(GetCommandBuffer(), 0, Buffers.size(), Buffers.data(), Offsets.data());
 }
 
 void VulkanGL::CleanRenderPass()
@@ -1241,4 +1298,44 @@ VkSampler VulkanGL::CreateSampler(const SamplerState& SamplerState)
 	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
 
 	return Sampler;
+}
+
+VulkanGL::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
+{
+	VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings);
+}
+
+void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Device)
+{
+	std::fill(VertexStreams.begin(), VertexStreams.end(), VulkanVertexBufferRef());
+
+	VkPipelineRasterizationStateCreateInfo& Rasterization = RasterizationState;
+	Rasterization.depthBiasClamp = false;
+	Rasterization.rasterizerDiscardEnable = false;
+	Rasterization.depthBiasEnable = false;
+
+	VkPipelineDepthStencilStateCreateInfo& DepthStencil = DepthStencilState;
+	DepthStencil.depthBoundsTestEnable = false;
+
+	VkPipelineInputAssemblyStateCreateInfo& InputAssembly = InputAssemblyState;
+	InputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	InputAssembly.primitiveRestartEnable = false;
+
+	VkPipelineMultisampleStateCreateInfo& Multisample = MultisampleState;
+	Multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+	VkPipelineColorBlendStateCreateInfo& ColorBlend = ColorBlendState;
+	ColorBlend.logicOpEnable = false;
+	ColorBlend.logicOp = VK_LOGIC_OP_COPY;
+	ColorBlend.blendConstants[0] = 0.0f;
+	ColorBlend.blendConstants[1] = 0.0f;
+	ColorBlend.blendConstants[2] = 0.0f;
+	ColorBlend.blendConstants[3] = 0.0f;
+
+	for (VkPipelineColorBlendAttachmentState& ColorBlendAttachment : ColorBlendAttachments)
+	{
+		ColorBlendAttachment = {};
+		ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		ColorBlendAttachment.blendEnable = false;
+	}
 }

@@ -112,9 +112,13 @@ public:
 		GLShaderRef Geometry,
 		GLShaderRef Fragment
 	) = 0;
+	virtual void SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer) = 0;
 	virtual void SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer) = 0;
 	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) = 0;
+	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
+	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
+	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data) = 0;
 	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags) = 0;
 	virtual void ResizeImage(GLImageRef Image, uint32 Width, uint32 Height) = 0;
@@ -138,9 +142,13 @@ void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPo
 void GLSetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
 void GLSetInputAssembly(EPrimitiveTopology Topology);
 void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment);
+void GLSetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer);
 void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer);
 void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
+void GLDrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
+GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr);
+GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr);
 GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags);
 void GLResizeImage(GLImageRef Image, uint32 Width, uint32 Height);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
@@ -149,7 +157,6 @@ GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction Stor
 void GLRebuildResolutionDependents();
 std::string GLGetDeviceName();
 
-// @todo-joe Pass by const ref...
 template<typename UniformBufferType>
 GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data)
 {
