@@ -8,7 +8,6 @@ public:
 	{
 		for (auto& Dependent : ResolutionDependents)
 		{
-			GLResizeImage(Dependent, X, Y);
 		}
 
 		GLRebuildResolutionDependents();

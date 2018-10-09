@@ -28,10 +28,10 @@ public:
 	}
 };
 
-class SunFS : public GLShader
+class RenderTargetFS : public GLShader
 {
 public:
-	SunFS(const ShaderMetadata& Meta)
+	RenderTargetFS(const ShaderMetadata& Meta)
 		: GLShader(Meta)
 	{
 	}

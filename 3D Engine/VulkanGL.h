@@ -35,15 +35,17 @@ public:
 	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) final;
 	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) final;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) final;
-	// @todo-joe Change to std::weak_ptr<void>
 	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr) final;
 	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr) final;
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data);
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags) final;
-	virtual void ResizeImage(GLImageRef Image, uint32 Width, uint32 Height) final;
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data) final;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) final;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) final;
 	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) final;
+	virtual void* LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset) final;
+	virtual void UnlockBuffer(GLVertexBufferRef VertexBuffer) final;
+	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset) final;
+	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer) final;
 	virtual void RebuildResolutionDependents() final;
 	virtual std::string GetDeviceName() final { return "Vulkan"; }
 
@@ -66,6 +68,7 @@ private:
 	bool bDirtyPipelineLayout = false;
 	bool bDirtyPipeline = false;
 	bool bDirtyDescriptorSets = false;
+	bool bDirtyVertexStreams = false;
 
 	enum EVulkanConstants
 	{
@@ -106,6 +109,7 @@ private:
 
 		PendingGraphicsState(VulkanDevice& Device);
 		void SetDefaultPipeline(const VulkanDevice& Device);
+		void ResetVertexStreams();
 	} Pending;
 
 	PendingBuffer<VkRenderPass> RenderPasses;
@@ -131,9 +135,9 @@ private:
 	void CleanPipeline();
 	void CleanDescriptorSets();
 
-	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout);
+	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
 	VkFormat FindSupportedDepthFormat(EImageFormat Format);
-	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags);
+	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags, const void* Data = nullptr);
 	VkSampler CreateSampler(const SamplerState& Sampler);
 
 	/** Engine conversions */

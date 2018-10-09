@@ -1,5 +1,6 @@
 #pragma once
 #include "GLRenderResource.h"
+#include "VulkanImage.h"
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
@@ -46,21 +47,26 @@ class VulkanAllocator
 {
 public:
 	VulkanAllocator(VulkanDevice& Device);
-	SharedVulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsageFlags Usage, const void* Data = nullptr);
+	[[nodiscard]] SharedVulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsageFlags Usage, const void* Data = nullptr);
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties);
 	void UploadBufferData(const SharedVulkanBuffer& Buffer, const void* Data);
+	void* LockBuffer(const SharedVulkanBuffer& Buffer);
+	void UnlockBuffer(const SharedVulkanBuffer& Buffer);
+	void UploadImageData(const VulkanImageRef Image, const uint8* Pixels);
 
 private:
 	VulkanDevice& Device;
 	const VkDeviceSize BufferAllocationSize;
 
+	std::map<VkImage, std::unique_ptr<VulkanBuffer>> LockedStagingImages;
 	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanBuffer>> LockedStagingBuffers;
 	std::list<std::unique_ptr<VulkanBuffer>> FreeStagingBuffers;
 	std::list<VulkanBuffer> Buffers;
 
-	VulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
-	void* LockBuffer(const SharedVulkanBuffer& Buffer);
-	void UnlockBuffer(const SharedVulkanBuffer& Buffer);
+	[[nodiscard]] VulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
+	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, /** Size is the size of the VulkanBuffer, not Shared */
+		std::function<void(std::unique_ptr<VulkanBuffer> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanBuffer* Buffer = nullptr);
+	void UnlockImage(const VulkanImageRef Image);
 };
 
 class VulkanVertexBuffer : public GLVertexBuffer

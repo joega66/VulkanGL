@@ -44,6 +44,28 @@ VkFormat VulkanImage::GetVulkanFormat() const
 	return GetValue(VulkanFormat, Format);
 }
 
+VkImageAspectFlags VulkanImage::GetVulkanAspect()
+{
+	VkFlags Flags = 0;
+	if (IsDepthStencil())
+	{
+		Flags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+	}
+	else if (IsDepth())
+	{
+		Flags = VK_IMAGE_ASPECT_DEPTH_BIT;
+	}
+	else if (IsStencil())
+	{
+		Flags = VK_IMAGE_ASPECT_STENCIL_BIT;
+	}
+	else
+	{
+		Flags = VK_IMAGE_ASPECT_COLOR_BIT;
+	}
+	return Flags;
+}
+
 static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
 {
 	for (VkFormat Format : Candidates)

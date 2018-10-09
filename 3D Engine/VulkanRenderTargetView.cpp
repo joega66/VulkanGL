@@ -1,10 +1,6 @@
 #include "VulkanRenderTargetView.h"
 #include "VulkanDevice.h"
 
-void VulkanRenderTargetView::ReleaseGL()
-{
-}
-
 VkAttachmentLoadOp VulkanRenderTargetView::GetVulkanLoadOp() const
 {
 	if (LoadAction == ELoadAction::Clear)

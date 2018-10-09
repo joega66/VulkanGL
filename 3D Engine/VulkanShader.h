@@ -7,7 +7,7 @@ class VulkanDevice;
 class VulkanShaderCompiler : public GLShaderCompiler
 {
 public:
-	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) final;
+	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const final;
 };
 
 class VulkanShader : public GLShader

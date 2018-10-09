@@ -120,11 +120,14 @@ public:
 	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
 	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data) = 0;
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags) = 0;
-	virtual void ResizeImage(GLImageRef Image, uint32 Width, uint32 Height) = 0;
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) = 0;
 	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
+	virtual void* LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset) = 0;
+	virtual void UnlockBuffer(GLVertexBufferRef VertexBuffer) = 0;
+	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset) = 0;
+	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer) = 0;
 	virtual void RebuildResolutionDependents() = 0;
 	virtual std::string GetDeviceName() = 0;
 };
@@ -149,11 +152,14 @@ void GLDrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 Insta
 void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
 GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr);
 GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr);
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags);
-void GLResizeImage(GLImageRef Image, uint32 Width, uint32 Height);
+GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
 GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+void* GLLockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
+void GLUnlockBuffer(GLVertexBufferRef VertexBuffer);
+void* GLLockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
+void GLUnlockBuffer(GLIndexBufferRef IndexBuffer);
 void GLRebuildResolutionDependents();
 std::string GLGetDeviceName();
 
@@ -164,10 +170,10 @@ GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data)
 }
 
 template<typename ShaderType> // std::enable_if<std::is_base_of<GLShader, ShaderType>>, or something...
-static GLShaderRef GLCreateShader()
+GLShaderRef GLCreateShader()
 {
 	const std::string& Type = typeid(ShaderType).name();
 	GLShaderRef Shader = GShaderCompiler->FindShader(Type);
-	check(Shader, "The shader compiler is missing shader with type %s!", Type.c_str());
+	check(Shader, "The shader compiler is missing shader type %s!", Type.c_str());
 	return Shader;
 }

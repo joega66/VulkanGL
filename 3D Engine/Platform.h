@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <array>
+#include <chrono>
+#include <mutex>
 
 #ifndef NDEBUG
 //#define DEBUG_BUILD
@@ -15,6 +17,7 @@
 
 #define ENTRY(Key, Value) { Key, Value },
 
+using uint8 = uint8_t;
 using int32 = int32_t;
 using uint32 = uint32_t;
 using int64 = int64_t;
@@ -62,14 +65,14 @@ public:
 	virtual void PollEvents() = 0;
 
 	// File I/O
-	std::string FileRead(const std::string& Filename);
-	void FileDelete(const std::string& Filename);
-	void FileRename(const std::string& Old, const std::string& New);
-	bool FileExists(const std::string& Filename);
+	std::string FileRead(const std::string& Filename) const;
+	void FileDelete(const std::string& Filename) const;
+	void FileRename(const std::string& Old, const std::string& New) const;
+	bool FileExists(const std::string& Filename) const;
 
 	// Strings
 	virtual void RemoveNewlines(std::string& String) = 0;
-	static void RemoveSpaces(std::string& String);
+	virtual void RemoveSpaces(std::string& String);
 
 	void WriteLog(const std::string& Log);
 	void WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& Log);
@@ -78,7 +81,7 @@ public:
 	static std::string FormatString(std::string format, ...);
 
 	// Processes
-	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) = 0;
+	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const = 0;
 
 	void AddWindowListener(WindowResizeListenerRef WindowListener);
 	void RemoveWindowListener(WindowResizeListenerRef WindowListener);
@@ -87,8 +90,12 @@ public:
 	// Memory
 	void Memcpy(void* Dst, const void* Src, size_t Size);
 
+	// Loading
+	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels);
+	void FreeImage(uint8* Pixels);
+
 protected:
-	std::vector<WindowResizeListenerRef> WindowListeners;
+	std::list<WindowResizeListenerRef> WindowListeners;
 };
 
 CLASS(IPlatform);
@@ -196,4 +203,25 @@ public:
 private:
 	const std::function<void(T)> Deallocator;
 	std::list<T> Resources;
+};
+
+class ScopedTimer
+{
+public:
+	ScopedTimer(bool bFrequency = false)
+		: bFrequency(bFrequency)
+	{
+		Start = std::chrono::system_clock::now();
+	}
+
+	~ScopedTimer()
+	{
+		auto End = std::chrono::system_clock::now();
+		std::chrono::duration<float> Duration = End - Start;
+		print("Elapsed time: %.3f", bFrequency ? 1 / Duration.count() : Duration.count());
+	}
+
+private:
+	const bool bFrequency;
+	std::chrono::system_clock::time_point Start;
 };

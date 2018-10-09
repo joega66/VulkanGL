@@ -79,7 +79,7 @@ static std::vector<UniformBufferFormat> ParseUniforms(const std::string& Code)
 		Uniform.Name = Match[4].str();
 
 		std::string Members = Match[3].str();
-		IPlatform::RemoveSpaces(Members);
+		GPlatform->RemoveSpaces(Members);
 		std::string::const_iterator InnerIter(Members.cbegin());
 		std::smatch InnerMatch;
 		std::regex_search(InnerIter, Members.cend(), InnerMatch, GLSLTypesRegex);
@@ -117,8 +117,16 @@ static std::vector<TextureFormat> ParseTextures(const std::string& Code)
 	return Textures;
 }
 
-static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttributeDescriptions(const std::vector<VertexStreamFormat>& Streams)
+static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttributeDescriptions(std::vector<VertexStreamFormat>& Streams)
 {
+	// This sorting saves us from having to figure out
+	// a mapping between layout(location = ...) and buffer binding point
+	std::sort(Streams.begin(), Streams.end(),
+		[] (const VertexStreamFormat& LHS, const VertexStreamFormat& RHS)
+	{
+		return LHS.Location < RHS.Location;
+	});
+
 	std::vector<VkVertexInputAttributeDescription> Descriptions;
 
 	for (uint32 Binding = 0; Binding < Streams.size(); Binding++)
@@ -153,7 +161,7 @@ static void CreateDescriptorSetLayoutBindings(
 	}
 }
 
-GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
+GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const
 {
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslangValidator.exe";
 	static const std::string SPIRVExt = ".spv";
@@ -195,16 +203,14 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 
 	VulkanGLRef Vulkan = std::static_pointer_cast<VulkanGL>(GRender);
 
-	VkShaderModuleCreateInfo CreateInfo = {};
-	CreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	VkShaderModuleCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 	CreateInfo.codeSize = SPIRV.size();
 	CreateInfo.pCode = reinterpret_cast<const uint32*>(SPIRV.data());
 
 	VkShaderModule ShaderModule;
 	vulkan(vkCreateShaderModule(*Vulkan, &CreateInfo, nullptr, &ShaderModule));
 
-	// Parse vertex attributes and shader resources.
-
+	// Parse vertex attributes and shader resources. @todo-joe Just use the compiler's reflection option...
 	const std::string& Code = Worker.Code;
 	VkShaderStageFlags Stage = VulkanStages[(int32)Meta.Stage];
 	std::vector<VertexStreamFormat> VertexStreams = ParseVertexStreams(Code);
@@ -216,12 +222,6 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 	CreateDescriptorSetLayoutBindings(Uniforms, Bindings, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Stage);
 	CreateDescriptorSetLayoutBindings(Textures, Bindings, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Stage);
 	// @todo-joe UAVs
-
-	std::sort(Attributes.begin(), Attributes.end(),
-		[] (const VkVertexInputAttributeDescription& LHS, const VkVertexInputAttributeDescription& RHS)
-	{
-		return LHS.location < RHS.location;
-	});
 
 	std::sort(Bindings.begin(), Bindings.end(),
 		[] (const VkDescriptorSetLayoutBinding& LHS, const VkDescriptorSetLayoutBinding& RHS)

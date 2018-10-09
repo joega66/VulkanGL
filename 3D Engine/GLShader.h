@@ -1,5 +1,7 @@
 #pragma once
 #include "GLRenderResource.h"
+#include <mutex>
+#include <future>
 
 enum class EShaderStage : uint32
 {
@@ -14,7 +16,7 @@ enum class EShaderStage : uint32
 class ShaderCompilerWorker
 {
 public:
-	std::string Code;
+	const std::string& Code;
 
 	ShaderCompilerWorker(const std::string& Code)
 		: Code(Code)
@@ -22,7 +24,7 @@ public:
 	}
 
 	template<typename T>
-	void SetDefine(const std::string& Define, T&& Value)
+	void SetDefine(const std::string& Define, const T& Value)
 	{
 		// @todo-joe Should just batch the defines. SPIR-V compiler has -D option for setting defines.
 		signal_unimplemented();
@@ -53,11 +55,7 @@ public:
 
 	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker) 
 	{
-		//signal_unimplemented();
 	}
-
-private:
-	friend class GLShaderCompiler;
 };
 
 CLASS(GLShader);
@@ -65,37 +63,54 @@ CLASS(GLShader);
 class GLShaderCompiler
 {
 public:
-	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
-
-	template<typename ShaderType>
-	void CompileShader(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
-	{
-		if (!Contains(FilenameToCode, Filename))
-		{
-			FilenameToCode[Filename] = GPlatform->FileRead(Filename);
-		}
-
-		ShaderCompilerWorker Worker(FilenameToCode[Filename]);
-		ShaderType::ModifyCompilationEnvironment(Worker);
-
-		ShaderMetadata Meta(Filename, EntryPoint, Stage);
-		GLShaderRef Shader = CompileShader(Worker, Meta);
-		StoreShader(typeid(ShaderType).name(), Shader);
-	}
-
-	void StoreShader(const std::string& Type, GLShaderRef Shader);
 	GLShaderRef FindShader(const std::string& Type);
 
-protected:
-	// Maps a filename to code.
-	Map<std::string, std::string> FilenameToCode;
-	// Maps a shader's typename to its GLShader.
+private:
 	Map<std::string, GLShaderRef> Shaders;
+
+	friend class ScopedAsyncShaderCompiler;
+	using ShaderMapEntry = std::pair<std::string, GLShaderRef>;
+
+	template<typename ShaderType>
+	[[nodiscard]]
+	ShaderMapEntry CompileShader(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
+	{
+		std::string Code = GPlatform->FileRead(Filename);
+		ShaderCompilerWorker Worker(Code);
+		ShaderType::ModifyCompilationEnvironment(Worker);
+		ShaderMetadata Meta(Filename, EntryPoint, Stage);
+		GLShaderRef Shader = CompileShader(Worker, Meta);
+		return std::make_pair(std::string(typeid(ShaderType).name()), Shader);
+	}
+
+	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const = 0;
+	void StoreShader(const std::string& Type, GLShaderRef Shader);
 };
 
 CLASS(GLShaderCompiler);
 
 extern GLShaderCompilerRef GShaderCompiler;
 
-#define COMPILE_SHADER(Type, Filename, EntryPoint, Stage) \
-	GShaderCompiler->CompileShader<Type>(Filename, EntryPoint, Stage);
+class ScopedAsyncShaderCompiler
+{
+public:
+	template<typename ShaderType>
+	void Compile(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
+	{
+		std::future<GLShaderCompiler::ShaderMapEntry> Task = std::async(std::launch::async,
+			[=] () { return GShaderCompiler->CompileShader<ShaderType>(Filename, EntryPoint, Stage); });
+		Tasks.push_back(std::move(Task));
+	}
+
+	~ScopedAsyncShaderCompiler()
+	{
+		for (auto& Task : Tasks)
+		{
+			auto Result = Task.get();
+			GShaderCompiler->StoreShader(Result.first, Result.second);
+		}
+	}
+
+private:
+	std::list<std::future<GLShaderCompiler::ShaderMapEntry>> Tasks;
+};

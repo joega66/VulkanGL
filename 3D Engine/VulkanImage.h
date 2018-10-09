@@ -96,6 +96,7 @@ public:
 	static bool IsDepthLayout(VkImageLayout Layout);
 	bool IsInDepthLayout();
 	VkFormat GetVulkanFormat() const;
+	VkImageAspectFlags GetVulkanAspect();
 
 private:
 	VulkanDevice& Device;

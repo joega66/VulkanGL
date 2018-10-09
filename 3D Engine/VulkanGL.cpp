@@ -42,8 +42,6 @@ VulkanGL::VulkanGL()
 	, DescriptorSets([&] (VkDescriptorSet DescriptorSet) { /** Descriptor sets are reset with the descriptor pool */ })
 	, ImageFormatToGLSLSize(ConvertImageFormatToGLSLSizes())
 {
-	Pending.SetDefaultPipeline(Device);
-
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &RenderEndSem));
@@ -66,8 +64,7 @@ void VulkanSwapchain::InitSwapchain()
 		ImageCount = SwapchainSupport.Capabilities.maxImageCount;
 	}
 
-	VkSwapchainCreateInfoKHR SwapchainInfo = {};
-	SwapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	VkSwapchainCreateInfoKHR SwapchainInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	SwapchainInfo.surface = Device.Surface;
 	SwapchainInfo.minImageCount = ImageCount;
 	SwapchainInfo.imageFormat = SurfaceFormat.format;
@@ -410,8 +407,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 	Dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	Dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-	VkRenderPassCreateInfo RenderPassInfo = {};
-	RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	VkRenderPassCreateInfo RenderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 	RenderPassInfo.pAttachments = Descriptions.data();
 	RenderPassInfo.attachmentCount = static_cast<uint32>(Descriptions.size());
 	RenderPassInfo.subpassCount = 1;
@@ -430,6 +426,7 @@ void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, 
 {
 	DescriptorImages.clear();
 	DescriptorBuffers.clear();
+	Pending.ResetVertexStreams();
 
 	Pending.Vertex = ResourceCast(Vertex);
 	Pending.TessControl = ResourceCast(TessControl);
@@ -448,12 +445,13 @@ void VulkanGL::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 	check(VulkanVertexBuffer, "Invalid vertex buffer.");
 
 	Pending.VertexStreams[Location] = VulkanVertexBuffer;
+	bDirtyVertexStreams = true;
 }
 
-GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsageFlags Usage, const void * Data)
+GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsageFlags Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
-	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(GLSLSize * NumElements, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
+	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
 }
 
@@ -555,13 +553,13 @@ GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data)
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags)
+GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
 	VkImageLayout Layout;
 
-	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags);
+	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, Data);
 
 	VulkanImageRef GLImage = MakeRef<VulkanImage>(Device
 		, Image
@@ -572,26 +570,16 @@ GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Forma
 		, Height
 		, UsageFlags);
 
+	if (Data)
+	{
+		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		Allocator.UploadImageData(GLImage, Data);
+		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	}
+
 	CreateImageView(GLImage);
 
 	return GLImage;
-}
-
-void VulkanGL::ResizeImage(GLImageRef GLImage, uint32 Width, uint32 Height)
-{
-	VulkanImageRef VulkanImage = ResourceCast(GLImage);
-	VulkanImage->ReleaseGL();
-	
-	VkImage Image;
-	VkDeviceMemory Memory;
-	VkImageLayout Layout;
-	CreateImage(Image, Memory, Layout, Width, Height, VulkanImage->Format, VulkanImage->UsageFlags);
-
-	VulkanImage->Image = Image;
-	VulkanImage->Memory = Memory;
-	VulkanImage->Layout = Layout;
-	VulkanImage->Width = Width;
-	VulkanImage->Height = Height;
 }
 
 GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
@@ -722,6 +710,30 @@ GLRenderTargetViewRef VulkanGL::GetSurfaceView(ELoadAction LoadAction, EStoreAct
 	SurfaceView->StoreAction = StoreAction;
 	SurfaceView->ClearValue = ClearValue;
 	return SurfaceView;
+}
+
+void* VulkanGL::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+{
+	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
+	return Allocator.LockBuffer(VulkanVertexBuffer->Buffer);
+}
+
+void VulkanGL::UnlockBuffer(GLVertexBufferRef VertexBuffer)
+{
+	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
+	Allocator.UnlockBuffer(VulkanVertexBuffer->Buffer);
+}
+
+void* VulkanGL::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+{
+	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
+	return Allocator.LockBuffer(VulkanIndexBuffer->Buffer);
+}
+
+void VulkanGL::UnlockBuffer(GLIndexBufferRef IndexBuffer)
+{
+	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
+	Allocator.UnlockBuffer(VulkanIndexBuffer->Buffer);
 }
 
 void VulkanGL::RebuildResolutionDependents()
@@ -861,23 +873,26 @@ void VulkanGL::PrepareForDraw()
 		CleanDescriptorSets();
 	}
 
-	// @todo-joe Should have a bDirtyVertexStreams flag, too, for FirstVertex / FirstIndex...
-	const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
-	std::vector<VkDeviceSize> Offsets;
-	std::vector<VkBuffer> Buffers;
-
-	for (uint32 Location = 0; Location < VertexStreams.size(); Location++)
+	if (bDirtyVertexStreams)
 	{
-		if (VertexStreams[Location])
-		{
-			VkDeviceSize Offset = VertexStreams[Location]->Buffer.Offset;
-			VkBuffer Buffer = VertexStreams[Location]->Buffer.GetVulkanHandle();
-			Offsets.push_back(Offset);
-			Buffers.push_back(Buffer);
-		}
-	}
+		const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
+		std::vector<VkDeviceSize> Offsets;
+		std::vector<VkBuffer> Buffers;
 
-	vkCmdBindVertexBuffers(GetCommandBuffer(), 0, Buffers.size(), Buffers.data(), Offsets.data());
+		for (uint32 Location = 0; Location < VertexStreams.size(); Location++)
+		{
+			if (VertexStreams[Location])
+			{
+				VkDeviceSize Offset = VertexStreams[Location]->Buffer.Offset;
+				VkBuffer Buffer = VertexStreams[Location]->Buffer.GetVulkanHandle();
+				Offsets.push_back(Offset);
+				Buffers.push_back(Buffer);
+			}
+		}
+
+		vkCmdBindVertexBuffers(GetCommandBuffer(), 0, Buffers.size(), Buffers.data(), Offsets.data());
+		bDirtyVertexStreams = false;
+	}
 }
 
 void VulkanGL::CleanRenderPass()
@@ -1071,32 +1086,11 @@ void VulkanGL::CleanPipeline()
 
 void VulkanGL::CreateImageView(VulkanImageRef Image)
 {
-	VkImageViewCreateInfo ViewInfo = {};
-	ViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image->Image;
 	ViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 	ViewInfo.format = Image->GetVulkanFormat();
-	ViewInfo.subresourceRange.aspectMask = [&] ()
-	{
-		VkFlags Flags = 0;
-		if (Image->IsDepthStencil())
-		{
-			Flags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-		}
-		else if (Image->IsDepth())
-		{
-			Flags = VK_IMAGE_ASPECT_DEPTH_BIT;
-		}
-		else if (Image->IsStencil())
-		{
-			Flags = VK_IMAGE_ASPECT_STENCIL_BIT;
-		}
-		else
-		{
-			Flags = VK_IMAGE_ASPECT_COLOR_BIT;
-		}
-		return Flags;
-	}();
+	ViewInfo.subresourceRange.aspectMask = Image->GetVulkanAspect();
 	ViewInfo.subresourceRange.baseMipLevel = 0;
 	ViewInfo.subresourceRange.levelCount = 1;
 	ViewInfo.subresourceRange.baseArrayLayer = 0;
@@ -1105,81 +1099,33 @@ void VulkanGL::CreateImageView(VulkanImageRef Image)
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &Image->ImageView));
 }
 
-void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout)
+void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
 	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);
 
-	VkImageMemoryBarrier Barrier = {};
-	Barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	Barrier.oldLayout = Image->Layout;
 	Barrier.newLayout = NewLayout;
 	Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	Barrier.image = Image->Image;
-
-	if (VulkanImage::IsDepthLayout(NewLayout))
-	{
-		Barrier.subresourceRange.aspectMask = [&] ()
-		{
-			VkFlags Flags = 0;
-			if (Image->IsDepthStencil())
-			{
-				Flags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-			}
-			else if (Image->IsDepth())
-			{
-				Flags = VK_IMAGE_ASPECT_DEPTH_BIT;
-			}
-			else if (Image->IsStencil())
-			{
-				Flags = VK_IMAGE_ASPECT_STENCIL_BIT;
-			}
-			else
-			{
-				fail("Invalid new layout.");
-			}
-			return Flags;
-		} ();
-	}
-	else
-	{
-		Barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	}
-
+	Barrier.subresourceRange.aspectMask = Image->GetVulkanAspect();
 	Barrier.subresourceRange.baseMipLevel = 0;
 	Barrier.subresourceRange.levelCount = 1;
 	Barrier.subresourceRange.baseArrayLayer = 0;
 	Barrier.subresourceRange.layerCount = 1;
-
-	VkPipelineStageFlags DestinationStage;
 
 	if (Image->Layout == VK_IMAGE_LAYOUT_UNDEFINED && NewLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 	{
 		check(Image->Stage == VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "Pipeline stage is invalid for this transition.");
 		Barrier.srcAccessMask = 0;
 		Barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
 	else if (Image->Layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && NewLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 	{
 		check(Image->Stage == VK_PIPELINE_STAGE_TRANSFER_BIT, "Pipeline stage is invalid for this transition.");
 		Barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		Barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	}
-	else if (Image->Layout == VK_IMAGE_LAYOUT_UNDEFINED && NewLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		check(Image->Stage == VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "Pipeline stage is invalid for this transition.");
-		Barrier.srcAccessMask = 0;
-		Barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	}
-	else if (Image->Layout == VK_IMAGE_LAYOUT_UNDEFINED && NewLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-	{
-		check(Image->Stage == VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "Pipeline stage is invalid for this transition.");
-		Barrier.srcAccessMask = 0;
-		Barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		DestinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	}
 	else
 	{
@@ -1200,7 +1146,7 @@ void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayo
 }
 
 void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
-	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags)
+	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags, const void* Data)
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -1209,8 +1155,7 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 		Format = GetKey(VulkanFormat, FindSupportedDepthFormat(Format));
 	}
 
-	VkImageCreateInfo Info = {};
-	Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	VkImageCreateInfo Info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	Info.imageType = VK_IMAGE_TYPE_2D;
 	Info.extent.width = Width;
 	Info.extent.height = Height;
@@ -1229,6 +1174,7 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 			Usage |= GLImage::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
+		Usage |= Data ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 		Usage |= UsageFlags & RU_ShaderResource ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
 		Usage |= UsageFlags & RU_UnorderedAccess ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 
@@ -1243,8 +1189,7 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 	VkMemoryRequirements MemRequirements = {};
 	vkGetImageMemoryRequirements(Device, Image, &MemRequirements);
 
-	VkMemoryAllocateInfo MemInfo = {};
-	MemInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	VkMemoryAllocateInfo MemInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 	MemInfo.allocationSize = MemRequirements.size;
 	MemInfo.memoryTypeIndex = Allocator.FindMemoryType(MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -1303,11 +1248,12 @@ VkSampler VulkanGL::CreateSampler(const SamplerState& SamplerState)
 VulkanGL::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
 {
 	VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings);
+	SetDefaultPipeline(Device);
 }
 
 void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Device)
 {
-	std::fill(VertexStreams.begin(), VertexStreams.end(), VulkanVertexBufferRef());
+	ResetVertexStreams();
 
 	VkPipelineRasterizationStateCreateInfo& Rasterization = RasterizationState;
 	Rasterization.depthBiasClamp = false;
@@ -1338,4 +1284,9 @@ void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Devi
 		ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		ColorBlendAttachment.blendEnable = false;
 	}
+}
+
+void VulkanGL::PendingGraphicsState::ResetVertexStreams()
+{
+	std::fill(VertexStreams.begin(), VertexStreams.end(), VulkanVertexBufferRef());
 }

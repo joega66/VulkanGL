@@ -7,19 +7,27 @@
 
 void RunEngine()
 {
+	{
+		ScopedAsyncShaderCompiler Compiler;
+		Compiler.Compile<TestVS>("../Shaders/TestVS.glsl", "main", EShaderStage::Vertex);
+		Compiler.Compile<FullscreenVS>("../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex);
+		Compiler.Compile<FullscreenFS>("../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment);
+		Compiler.Compile<RenderTargetFS>("../Shaders/SunFS.glsl", "main", EShaderStage::Fragment);
+	}
+
 	auto& SceneRenderTargets = SceneRenderTargets::Get();
 
 	GPlatform->AddWindowListener(&SceneRenderTargets);
-
-	COMPILE_SHADER(TestVS, "../Shaders/TestVS.glsl", "main", EShaderStage::Vertex);
-	COMPILE_SHADER(FullscreenVS, "../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex);
-	COMPILE_SHADER(FullscreenFS, "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment);
-	COMPILE_SHADER(SunFS, "../Shaders/SunFS.glsl", "main", EShaderStage::Fragment);
 	
+	int32 Width, Height, NumChannels;
+	uint8* StallmanPixels = GPlatform->LoadImage("../Images/Stallman.jpg", Width, Height, NumChannels);
+	GLImageRef Stallman = GLCreateImage(Width, Height, IF_R8G8B8A8_UNORM, RU_ShaderResource, StallmanPixels);
+	GPlatform->FreeImage(StallmanPixels);
+
 	GLShaderRef TestVert = GLCreateShader<TestVS>();
 	GLShaderRef FullscreenVert = GLCreateShader<FullscreenVS>();
 	GLShaderRef FullscreenFrag = GLCreateShader<FullscreenFS>();
-	GLShaderRef SunFrag = GLCreateShader<SunFS>();
+	GLShaderRef RenderTargetFrag = GLCreateShader<RenderTargetFS>();
 
 	std::array<glm::vec3, 4> VertexPositions =
 	{
@@ -45,9 +53,9 @@ void RunEngine()
 	
 	std::array<float, 4> ClearColor = { 0, 0, 0, 0 };
 
-	GLImageRef SunImage = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y,
+	GLImageRef RenderTarget = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y,
 		IF_R8G8B8A8_SRGB, RU_RenderTargetable | RU_ShaderResource);
-	GLRenderTargetViewRef SunView = GLCreateRenderTargetView(SunImage, ELoadAction::Clear, EStoreAction::Store, ClearColor);
+	GLRenderTargetViewRef RenderTargetView = GLCreateRenderTargetView(RenderTarget, ELoadAction::Clear, EStoreAction::Store, ClearColor);
 
 	while (!GPlatform->WindowShouldClose())
 	{
@@ -56,7 +64,7 @@ void RunEngine()
 		GLBeginRender();
 
 		/** Render to image */
-		GLSetRenderTargets(1, &SunView, nullptr, DS_None);
+		GLSetRenderTargets(1, &RenderTargetView, nullptr, DS_None);
 		GLSetViewport(0.0f, 0.0f, (float)GPlatform->GetWindowSize().x, (float)GPlatform->GetWindowSize().y);
 		GLSetDepthTest(false);
 		GLSetColorMask(0, Color_RGBA);
@@ -66,7 +74,8 @@ void RunEngine()
 			nullptr,
 			nullptr,
 			nullptr,
-			SunFrag);
+			RenderTargetFrag);
+		GLSetShaderImage(RenderTargetFrag, 0, Stallman, SamplerState());
 		GLSetVertexStream(0, PositionVertexBuffer);
 		GLSetVertexStream(1, TextureCoordinateVertexBuffer);
 		GLDrawIndexed(IndexBuffer, Indices.size(), 1, 0, 0, 0);
@@ -80,9 +89,9 @@ void RunEngine()
 			nullptr,
 			nullptr,
 			FullscreenFrag);
+		GLSetShaderImage(FullscreenFrag, 0, RenderTarget, SamplerState());
 		GLSetVertexStream(0, PositionVertexBuffer);
 		GLSetVertexStream(1, TextureCoordinateVertexBuffer);
-		GLSetShaderImage(FullscreenFrag, 0, SunImage, SamplerState());
 		GLDrawIndexed(IndexBuffer, Indices.size(), 1, 0, 0, 0);
 
 		GLEndRender();

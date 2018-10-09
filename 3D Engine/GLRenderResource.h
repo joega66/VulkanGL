@@ -1,8 +1,6 @@
 #pragma once
 #include "Platform.h"
 
-// @todo-joe Move all GL Render Resources to this file? 
-
 class GLRenderResource
 {
 public:

@@ -4,10 +4,12 @@
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 IPlatformRef GPlatform;
 
-std::string IPlatform::FileRead(const std::string& Filename)
+std::string IPlatform::FileRead(const std::string& Filename) const
 {
 	std::ifstream File(Filename, std::ios::ate | std::ios::binary);
 
@@ -18,24 +20,24 @@ std::string IPlatform::FileRead(const std::string& Filename)
 	Buffer.resize(FileSize);
 
 	File.seekg(0);
-	File.read((char*)Buffer.data(), FileSize);
+	File.read(Buffer.data(), FileSize);
 	File.close();
 
 	return Buffer;
 }
 
-void IPlatform::FileDelete(const std::string& Filename)
+void IPlatform::FileDelete(const std::string& Filename) const
 {
 	check(std::filesystem::remove(Filename), "Failed to remove file...");
 }
 
-void IPlatform::FileRename(const std::string& Old, const std::string& New)
+void IPlatform::FileRename(const std::string& Old, const std::string& New) const
 {
 	check(FileExists(Old), "Renaming file that doesn't exist...");
 	std::filesystem::rename(Old, New);
 }
 
-bool IPlatform::FileExists(const std::string& Filename)
+bool IPlatform::FileExists(const std::string& Filename) const
 {
 	return std::filesystem::is_regular_file(Filename);
 }
@@ -116,9 +118,20 @@ void IPlatform::NotifyWindowListeners(int32 X, int32 Y)
 	}
 }
 
-void IPlatform::Memcpy(void * Dst, const void * Src, size_t Size)
+void IPlatform::Memcpy(void* Dst, const void* Src, size_t Size)
 {
 	memcpy(Dst, Src, Size);
+}
+
+uint8* IPlatform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels)
+{
+	uint8* Image = stbi_load(Filename.c_str(), &Width, &Height, &NumChannels, STBI_rgb_alpha);
+	return Image;
+}
+
+void IPlatform::FreeImage(uint8* Pixels)
+{
+	stbi_image_free(Pixels);
 }
 
 WindowResizeListener::~WindowResizeListener()

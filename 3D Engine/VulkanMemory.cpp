@@ -108,12 +108,12 @@ VulkanBuffer VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags
 	return VulkanBuffer(Buffer, Memory, Usage, Properties, BufferInfo.size);
 }
 
-void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
+void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, std::function<void(std::unique_ptr<VulkanBuffer> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanBuffer* Buffer)
 {
-	if (Buffer.Buffer.Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+	if (Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
 	{
 		auto StagingBufferIter = std::find_if(FreeStagingBuffers.begin(), FreeStagingBuffers.end(),
-			[&] (const std::unique_ptr<VulkanBuffer>& StagingBuffer) { return StagingBuffer->Size >= Buffer.Size; });
+			[&] (const std::unique_ptr<VulkanBuffer>& StagingBuffer) { return StagingBuffer->Size >= Size; });
 
 		std::unique_ptr<VulkanBuffer> StagingBuffer;
 
@@ -121,7 +121,7 @@ void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
 		{
 			// No staging buffer of suitable size found - Make a new one
 			VulkanBuffer NewStagingBuffer = CreateBuffer(
-				BufferAllocationSize >= Buffer.Buffer.Size ? BufferAllocationSize : Buffer.Buffer.Size,
+				BufferAllocationSize >= Size ? BufferAllocationSize : Size,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			StagingBuffer = std::make_unique<VulkanBuffer>(NewStagingBuffer);
@@ -133,20 +133,31 @@ void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
 		}
 
 		void* MemMapped = nullptr;
-		vkMapMemory(Device, StagingBuffer->Memory, 0, Buffer.Size, 0, &MemMapped);
+		vkMapMemory(Device, StagingBuffer->Memory, 0, Size, 0, &MemMapped);
 
-		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset)] = std::move(StagingBuffer);
+		LockStagingBuffer(std::move(StagingBuffer));
 
 		return MemMapped;
 	}
 	else
 	{
-		check(Buffer.Buffer.Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
+		check(Buffer && Buffer->Buffer.Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
 			"CPU-mappable buffer must have these memory properties.");
 		void* MemMapped = nullptr;
-		vkMapMemory(Device, Buffer.Buffer.Memory, Buffer.Offset, Buffer.Size, 0, &MemMapped);
+		vkMapMemory(Device, Buffer->Buffer.Memory, Buffer->Offset, Buffer->Size, 0, &MemMapped);
 		return MemMapped;
 	}
+}
+
+void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
+{
+	VulkanBuffer& Backing = Buffer.Buffer;
+	return LockBuffer(Backing.Usage, Backing.Size,
+		[&] (auto StagingBuffer) 
+	{ 
+		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset)] = std::move(StagingBuffer); 
+	}, &Buffer
+	);
 }
 
 void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
@@ -175,4 +186,53 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 	{
 		vkUnmapMemory(Device, Buffer.Buffer.Memory);
 	}
+}
+
+void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* Pixels)
+{
+	VkDeviceSize Size = Image->Width * Image->Height;
+
+	switch (Image->Format)
+	{
+	case IF_R8G8B8A8_UNORM:
+		Size *= 4;
+		break;
+	default:
+		signal_unimplemented();
+	}
+
+	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
+		[&] (auto StagingBuffer)
+	{
+		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
+	});
+	GPlatform->Memcpy(MemMapped, Pixels, (size_t)Size);
+	UnlockImage(Image);
+}
+
+void VulkanAllocator::UnlockImage(const VulkanImageRef Image)
+{
+	VulkanScopedCommandBuffer CommandBuffer(Device);
+
+	VkBufferImageCopy Region = {};
+	Region.bufferOffset = 0;
+	Region.bufferRowLength = 0;
+	Region.bufferImageHeight = 0;
+	Region.imageSubresource.aspectMask = Image->GetVulkanAspect();
+	Region.imageSubresource.mipLevel = 0;
+	Region.imageSubresource.baseArrayLayer = 0;
+	Region.imageSubresource.layerCount = 1;
+	Region.imageOffset = { 0, 0, 0 };
+	Region.imageExtent = {
+		Image->Width,
+		Image->Height,
+		1
+	};
+
+	std::unique_ptr<VulkanBuffer> StagingBuffer = std::move(LockedStagingImages[Image->Image]);
+	LockedStagingImages.erase(Image->Image);
+
+	vkCmdCopyBufferToImage(CommandBuffer, StagingBuffer->Buffer, Image->Image, Image->Layout, 1, &Region);
+
+	FreeStagingBuffers.push_back(std::move(StagingBuffer));
 }

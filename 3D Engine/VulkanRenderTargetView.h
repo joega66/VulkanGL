@@ -25,7 +25,6 @@ public:
 	{
 	}
 
-	virtual void ReleaseGL() final;
 	VkAttachmentLoadOp GetVulkanLoadOp() const;
 	VkAttachmentStoreOp GetVulkanStoreOp() const;
 

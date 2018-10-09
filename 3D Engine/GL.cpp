@@ -82,14 +82,9 @@ GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, 
 	return GRender->CreateVertexBuffer(Format, NumElements, Usage, Data);
 }
 
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags)
+GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data)
 {
-	return GRender->CreateImage(Width, Height, Format, UsageFlags);
-}
-
-void GLResizeImage(GLImageRef Image, uint32 Width, uint32 Height)
-{
-	GRender->ResizeImage(Image, Width, Height);
+	return GRender->CreateImage(Width, Height, Format, UsageFlags, Data);
 }
 
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
@@ -105,6 +100,26 @@ GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction L
 GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	return GRender->GetSurfaceView(LoadAction, StoreAction, ClearValue);
+}
+
+void* GLLockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+{
+	return GRender->LockBuffer(VertexBuffer, Size, Offset);
+}
+
+void GLUnlockBuffer(GLVertexBufferRef VertexBuffer)
+{
+	GRender->UnlockBuffer(VertexBuffer);
+}
+
+void* GLLockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+{
+	return GRender->LockBuffer(IndexBuffer, Size, Offset);
+}
+
+void GLUnlockBuffer(GLIndexBufferRef IndexBuffer)
+{
+	return GRender->UnlockBuffer(IndexBuffer);
 }
 
 void GLRebuildResolutionDependents()

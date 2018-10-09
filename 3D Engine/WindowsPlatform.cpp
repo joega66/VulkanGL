@@ -37,7 +37,7 @@ glm::ivec2 WindowsPlatform::GetWindowSize()
 	return WindowSize;
 }
 
-void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs)
+void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
 {
 	enum { ParentRead, ParentWrite, ChildWrite, ChildRead, NumPipeTypes };
 
@@ -79,25 +79,6 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 		NULL, NULL, TRUE, 0, NULL,
 		NULL, &StartupInfo, &ProcessInfo))
 	{
-		char ReadBuff[4096 + 1];
-		DWORD ReadNum;
-		DWORD BytesAvail;
-		for (;;)
-		{
-			BOOL Success = PeekNamedPipe(Pipes[ParentRead], ReadBuff, sizeof(ReadBuff) - 1, &ReadNum, &BytesAvail, NULL);
-
-			if (ReadNum)
-			{
-				ReadBuff[ReadNum] = 0;
-				print("%s", ReadBuff);
-			}
-
-			if (!Success || !BytesAvail)
-			{
-				break;
-			}
-		}
-
 		WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
 		CloseHandle(ProcessInfo.hThread);
 		CloseHandle(ProcessInfo.hProcess);

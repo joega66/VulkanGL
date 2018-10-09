@@ -12,7 +12,7 @@ public:
 	virtual void PollEvents() final;
 	virtual void RemoveNewlines(std::string& String) final;
 	virtual glm::ivec2 GetWindowSize() final;
-	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) final;
+	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const final;
 	static void WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y);
 };
 

@@ -140,8 +140,7 @@ static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
 	float QueuePriority = 1.0f;
 	for (int QueueFamily : UniqueQueueFamilies)
 	{
-		VkDeviceQueueCreateInfo QueueCreateInfo = {};
-		QueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		VkDeviceQueueCreateInfo QueueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
 		QueueCreateInfo.queueFamilyIndex = QueueFamily;
 		QueueCreateInfo.queueCount = 1;
 		QueueCreateInfo.pQueuePriorities = &QueuePriority;
@@ -151,8 +150,7 @@ static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
 	VkPhysicalDeviceFeatures DeviceFeatures = {};
 	DeviceFeatures.samplerAnisotropy = VK_TRUE;
 
-	VkDeviceCreateInfo CreateInfo = {};
-	CreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	VkDeviceCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 	CreateInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());
 	CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
 	CreateInfo.pEnabledFeatures = &DeviceFeatures;
@@ -182,8 +180,7 @@ static VkCommandPool CreateCommandPool(VkDevice Device,
 	QueueFamilyIndices QueueFamilyIndices = {};
 	QueueFamilyIndices.FindQueueFamilies(PhysicalDevice, Surface);
 
-	VkCommandPoolCreateInfo PoolInfo = {};
-	PoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	VkCommandPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 	PoolInfo.queueFamilyIndex = QueueFamilyIndices.GraphicsFamily;
 	PoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
@@ -213,8 +210,7 @@ VulkanDevice::VulkanDevice()
 #endif
 
 	// Create instance
-	VkApplicationInfo ApplicationInfo = {};
-	ApplicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	VkApplicationInfo ApplicationInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	ApplicationInfo.pApplicationName = "Vulkan Engine";
 	ApplicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	ApplicationInfo.pEngineName = "No Engine";
@@ -223,8 +219,7 @@ VulkanDevice::VulkanDevice()
 
 	auto Extensions = GetRequiredExtensions();
 
-	VkInstanceCreateInfo InstanceInfo = {};
-	InstanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	VkInstanceCreateInfo InstanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 	InstanceInfo.pApplicationInfo = &ApplicationInfo;
 	InstanceInfo.enabledExtensionCount = static_cast<uint32>(Extensions.size());
 	InstanceInfo.ppEnabledExtensionNames = Extensions.data();
@@ -240,8 +235,7 @@ VulkanDevice::VulkanDevice()
 
 #ifdef DEBUG_BUILD
 	// Create Vulkan debug callback
-	VkDebugReportCallbackCreateInfoEXT DebugCallbackInfo = {};
-	DebugCallbackInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+	VkDebugReportCallbackCreateInfoEXT DebugCallbackInfo = { VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT };
 	DebugCallbackInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 	DebugCallbackInfo.pfnCallback = DebugCallback;
 
