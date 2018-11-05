@@ -1,18 +1,5 @@
 #pragma once
-#include "Platform.h"
-
-class GLRenderResource
-{
-public:
-	virtual void ReleaseGL() {}
-
-	inline ~GLRenderResource()
-	{
-		ReleaseGL();
-	}
-};
-
-CLASS(GLRenderResource);
+#include "Platform/Platform.h"
 
 enum EImageFormat
 {
@@ -66,17 +53,56 @@ enum EImageFormat
 	IF_S8_UINT,
 	IF_D32_SFLOAT_S8_UINT,
 	IF_D24_UNORM_S8_UINT,
+	IF_BC2_UNORM_BLOCK,
 };
 
 enum EResourceUsageFlags
 {
 	RU_None,
-	RU_RenderTargetable = 0x01,
-	RU_ShaderResource = 0x02,
-	RU_UnorderedAccess = 0x04,
-	RU_IndirectBuffer = 0x08,
-	RU_KeepCPUAccessible = 0x10,
+	RU_RenderTargetable = 1 << 0,
+	RU_ShaderResource = 1 << 1,
+	RU_UnorderedAccess = 1 << 2,
+	RU_IndirectBuffer = 1 << 3,
+	RU_KeepCPUAccessible = 1 << 4,
+	RU_Cubemap = 1 << 5
 };
+
+enum class ELoadAction
+{
+	None,
+	Clear,
+	Load
+};
+
+enum class EStoreAction
+{
+	None,
+	Store
+};
+
+enum EDepthStencilAccess : uint32
+{
+	DS_None,
+	DS_DepthWrite,
+	DS_StencilWrite,
+	DS_DepthWriteStencilWrite,
+	DS_DepthReadStencilWrite,
+	DS_DepthWriteStencilRead,
+	DS_DepthReadStencilRead,
+};
+
+class GLRenderResource
+{
+public:
+	virtual void ReleaseGL() {}
+
+	inline ~GLRenderResource()
+	{
+		ReleaseGL();
+	}
+};
+
+CLASS(GLRenderResource);
 
 class GLVertexBuffer : public GLRenderResource
 {
@@ -113,13 +139,13 @@ public:
 	template<typename UniformType>
 	void Set(const UniformType& UniformData)
 	{
-		check(Size() == sizeof(UniformType), "Size mismatch.");
+		check(GetSize() == sizeof(UniformType), "Size mismatch.");
 		Data = std::make_shared<UniformType>(UniformData);
 		MarkDirty();
 	}
 
 	const void* GetData() { return Data.get(); }
-	virtual uint32 Size() = 0;
+	virtual uint32 GetSize() = 0;
 
 private:
 	std::shared_ptr<void> Data;
@@ -127,3 +153,42 @@ private:
 };
 
 CLASS(GLUniformBuffer);
+
+class GLImage : public GLRenderResource
+{
+public:
+	EImageFormat Format;
+	uint32 Width;
+	uint32 Height;
+	EResourceUsageFlags Usage;
+
+	GLImage(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags)
+		: Format(Format), Width(Width), Height(Height), Usage(UsageFlags)
+	{
+	}
+
+	bool IsColor();
+	bool IsDepthStencil();
+	bool IsStencil();
+	static bool IsDepth(EImageFormat Format);
+	bool IsDepth();
+};
+
+CLASS(GLImage);
+
+class GLRenderTargetView : public GLRenderResource
+{
+public:
+	GLImageRef Image;
+	ELoadAction LoadAction;
+	EStoreAction StoreAction;
+
+	std::array<float, 4> ClearValue;
+	float DepthClear;
+	uint32 StencilClear;
+
+	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
+};
+
+CLASS(GLRenderTargetView);

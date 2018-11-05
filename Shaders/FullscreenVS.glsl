@@ -1,5 +1,4 @@
-#version 450
-#extension GL_ARB_separate_shader_objects : enable
+#include "Common.glsl"
 
 layout(location = 0) out vec2 OutUV;
 

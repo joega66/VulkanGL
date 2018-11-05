@@ -1,6 +1,5 @@
 #pragma once
-#include "Platform.h"
-#include "GLImage.h"
+#include "Platform/Platform.h"
 #include "GLShader.h"
 
 enum EDepthCompareTest
@@ -89,6 +88,12 @@ struct SamplerState
 	}
 };
 
+enum class EUniformUpdate
+{
+	Infrequent,
+	Frequent
+};
+
 /** Graphics Library Interface */
 class GL : public GLRenderResource
 {
@@ -119,7 +124,7 @@ public:
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
 	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
-	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data) = 0;
+	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent) = 0;
 	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) = 0;
@@ -164,16 +169,29 @@ void GLRebuildResolutionDependents();
 std::string GLGetDeviceName();
 
 template<typename UniformBufferType>
-GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data)
+GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
 {
-	return GRender->CreateUniformBuffer(sizeof(UniformBufferType), &Data);
+	return GRender->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
 }
 
-template<typename ShaderType> // std::enable_if<std::is_base_of<GLShader, ShaderType>>, or something...
+template<typename UniformBufferType>
+GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data, EUniformUpdate Usage = EUniformUpdate::Infrequent)
+{
+	return GRender->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
+}
+
+template<typename ShaderType>
 GLShaderRef GLCreateShader()
 {
 	const std::string& Type = typeid(ShaderType).name();
-	GLShaderRef Shader = GShaderCompiler->FindShader(Type);
-	check(Shader, "The shader compiler is missing shader type %s!", Type.c_str());
-	return Shader;
+	
+	if (GLShaderRef Shader = GShaderCompiler->FindShader(Type); Shader)
+	{
+		return Shader;
+	}
+	else
+	{
+		const auto& [Filename, EntryPoint, Stage] = ShaderType::GetBaseShaderInfo();
+		return GShaderCompiler->CompileShader<ShaderType>(Filename, EntryPoint, Stage);
+	}
 }

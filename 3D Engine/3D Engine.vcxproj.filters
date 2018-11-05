@@ -5,119 +5,217 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\Common">
-      <UniqueIdentifier>{83656741-a615-4e6f-88b8-28b7f9c42fe5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{e5966bd1-11db-47b1-9871-270467879372}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source\Platforms">
+      <UniqueIdentifier>{8a3673d7-1ae4-4722-a7fb-90022bbe7be1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Renderer">
+      <UniqueIdentifier>{cfefb2d1-747e-410f-894e-04c88556a23c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\SPIRV-Cross">
+      <UniqueIdentifier>{cb045061-4184-4be1-9e0a-0745f217c51f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Vulkan">
+      <UniqueIdentifier>{b92d8b85-c159-4d27-a3d0-53445f7a0ee3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Components">
+      <UniqueIdentifier>{fcacbb59-7333-4150-b19e-2ba18ce8cadb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Engine">
+      <UniqueIdentifier>{79239352-4301-4ef0-bb1c-a94a04cd2310}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Graphics Library">
+      <UniqueIdentifier>{6feafe98-9750-45ea-bfeb-487c5349b673}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="VulkanDevice.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SPIRV-Cross\GLSL.std.450.h">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsPlatform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SPIRV-Cross\spirv.hpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanSurface.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanImage.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SPIRV-Cross\spirv_common.hpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanMemory.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SPIRV-Cross\spirv_cross.hpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanCommands.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanShader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanCommands.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanRenderTargetView.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanDescriptors.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Platform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanDevice.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="FullscreenQuad.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanGL.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanGL.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanImage.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="GLShader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanMemory.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="GLRenderResource.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanRenderTargetView.h">
+      <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="GLImage.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Vulkan\VulkanShader.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\VulkanSurface.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\Platform.h">
+      <Filter>Source\Platforms</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\WindowsPlatform.h">
+      <Filter>Source\Platforms</Filter>
     </ClInclude>
     <ClInclude Include="GL.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source\Graphics Library</Filter>
     </ClInclude>
-    <ClInclude Include="SceneRenderTargets.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="GLRenderResource.h">
+      <Filter>Source\Graphics Library</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanDescriptors.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="GLShader.h">
+      <Filter>Source\Graphics Library</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Component.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CStaticMesh.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CTransform.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CMaterial.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\ResourceManager.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\StaticMesh.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\View.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\DrawingPlan.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\FullscreenQuad.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\LightingPass.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\MaterialShader.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\SceneRenderTargets.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Scene.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanDevice.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClCompile>
-    <ClCompile Include="WindowsPlatform.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SPIRV-Cross\spirv_cross.cpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanSurface.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp">
+      <Filter>Source\SPIRV-Cross</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanImage.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vulkan\VulkanCommands.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanMemory.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vulkan\VulkanDescriptors.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanCommands.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vulkan\VulkanDevice.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanShader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vulkan\VulkanGL.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanRenderTargetView.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vulkan\VulkanImage.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Platform.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Vulkan\VulkanMemory.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanRenderTargetView.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanShader.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanSurface.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\Platform.cpp">
+      <Filter>Source\Platforms</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\WindowsPlatform.cpp">
+      <Filter>Source\Platforms</Filter>
     </ClCompile>
     <ClCompile Include="GL.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source\Graphics Library</Filter>
     </ClCompile>
-    <ClCompile Include="GLImage.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="GLRenderResource.cpp">
+      <Filter>Source\Graphics Library</Filter>
     </ClCompile>
     <ClCompile Include="GLShader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source\Graphics Library</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanGL.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Components\CMaterial.cpp">
+      <Filter>Source\Components</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanDescriptors.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Components\CStaticMesh.cpp">
+      <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\CTransform.cpp">
+      <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\ResourceManager.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\StaticMesh.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\View.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\LightingPass.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\MaterialShader.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Scene.cpp">
+      <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,10 +225,19 @@
     <None Include="..\Shaders\FullscreenVS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\SunFS.glsl">
+    <None Include="..\Shaders\Common.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\TestVS.glsl">
+    <None Include="..\Shaders\LightingPassVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\LightingPassFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\StaticMeshVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\StaticMeshFS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

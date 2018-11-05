@@ -19,46 +19,77 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Components\CMaterial.cpp" />
+    <ClCompile Include="Components\CStaticMesh.cpp" />
+    <ClCompile Include="Components\CTransform.cpp" />
+    <ClCompile Include="Engine\ResourceManager.cpp" />
+    <ClCompile Include="Engine\StaticMesh.cpp" />
+    <ClCompile Include="Engine\View.cpp" />
     <ClCompile Include="GL.cpp" />
-    <ClCompile Include="GLImage.cpp" />
+    <ClCompile Include="GLRenderResource.cpp" />
     <ClCompile Include="GLShader.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Platform.cpp" />
-    <ClCompile Include="VulkanCommands.cpp" />
-    <ClCompile Include="VulkanDescriptors.cpp" />
-    <ClCompile Include="VulkanDevice.cpp" />
-    <ClCompile Include="VulkanGL.cpp" />
-    <ClCompile Include="VulkanImage.cpp" />
-    <ClCompile Include="VulkanRenderTargetView.cpp" />
-    <ClCompile Include="VulkanMemory.cpp" />
-    <ClCompile Include="VulkanShader.cpp" />
-    <ClCompile Include="VulkanSurface.cpp" />
-    <ClCompile Include="WindowsPlatform.cpp" />
+    <ClCompile Include="Platform\Platform.cpp" />
+    <ClCompile Include="Platform\WindowsPlatform.cpp" />
+    <ClCompile Include="Renderer\LightingPass.cpp" />
+    <ClCompile Include="Renderer\MaterialShader.cpp" />
+    <ClCompile Include="Renderer\Scene.cpp" />
+    <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
+    <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
+    <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
+    <ClCompile Include="Vulkan\VulkanCommands.cpp" />
+    <ClCompile Include="Vulkan\VulkanDescriptors.cpp" />
+    <ClCompile Include="Vulkan\VulkanDevice.cpp" />
+    <ClCompile Include="Vulkan\VulkanGL.cpp" />
+    <ClCompile Include="Vulkan\VulkanImage.cpp" />
+    <ClCompile Include="Vulkan\VulkanMemory.cpp" />
+    <ClCompile Include="Vulkan\VulkanRenderTargetView.cpp" />
+    <ClCompile Include="Vulkan\VulkanShader.cpp" />
+    <ClCompile Include="Vulkan\VulkanSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\CMaterial.h" />
+    <ClInclude Include="Components\CStaticMesh.h" />
+    <ClInclude Include="Components\CTransform.h" />
+    <ClInclude Include="Engine\ResourceManager.h" />
+    <ClInclude Include="Engine\StaticMesh.h" />
+    <ClInclude Include="Engine\View.h" />
     <ClInclude Include="GL.h" />
-    <ClInclude Include="GLImage.h" />
     <ClInclude Include="GLRenderResource.h" />
     <ClInclude Include="GLShader.h" />
-    <ClInclude Include="Platform.h" />
-    <ClInclude Include="FullscreenQuad.h" />
-    <ClInclude Include="SceneRenderTargets.h" />
-    <ClInclude Include="VulkanCommands.h" />
-    <ClInclude Include="VulkanDescriptors.h" />
-    <ClInclude Include="VulkanDevice.h" />
-    <ClInclude Include="VulkanGL.h" />
-    <ClInclude Include="VulkanImage.h" />
-    <ClInclude Include="VulkanRenderTargetView.h" />
-    <ClInclude Include="VulkanMemory.h" />
-    <ClInclude Include="VulkanShader.h" />
-    <ClInclude Include="VulkanSurface.h" />
-    <ClInclude Include="WindowsPlatform.h" />
+    <ClInclude Include="Platform\Platform.h" />
+    <ClInclude Include="Platform\WindowsPlatform.h" />
+    <ClInclude Include="Renderer\DrawingPlan.h" />
+    <ClInclude Include="Renderer\FullscreenQuad.h" />
+    <ClInclude Include="Renderer\LightingPass.h" />
+    <ClInclude Include="Renderer\MaterialShader.h" />
+    <ClInclude Include="Renderer\Scene.h" />
+    <ClInclude Include="Renderer\SceneRenderTargets.h" />
+    <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
+    <ClInclude Include="SPIRV-Cross\spirv.hpp" />
+    <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp" />
+    <ClInclude Include="SPIRV-Cross\spirv_common.hpp" />
+    <ClInclude Include="SPIRV-Cross\spirv_cross.hpp" />
+    <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp" />
+    <ClInclude Include="Vulkan\VulkanCommands.h" />
+    <ClInclude Include="Vulkan\VulkanDescriptors.h" />
+    <ClInclude Include="Vulkan\VulkanDevice.h" />
+    <ClInclude Include="Vulkan\VulkanGL.h" />
+    <ClInclude Include="Vulkan\VulkanImage.h" />
+    <ClInclude Include="Vulkan\VulkanMemory.h" />
+    <ClInclude Include="Vulkan\VulkanRenderTargetView.h" />
+    <ClInclude Include="Vulkan\VulkanShader.h" />
+    <ClInclude Include="Vulkan\VulkanSurface.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Shaders\Common.glsl" />
     <None Include="..\Shaders\FullscreenFS.glsl" />
     <None Include="..\Shaders\FullscreenVS.glsl" />
-    <None Include="..\Shaders\SunFS.glsl" />
-    <None Include="..\Shaders\TestVS.glsl" />
+    <None Include="..\Shaders\LightingPassFS.glsl" />
+    <None Include="..\Shaders\LightingPassVS.glsl" />
+    <None Include="..\Shaders\StaticMeshFS.glsl" />
+    <None Include="..\Shaders\StaticMeshVS.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -112,11 +143,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;$(IncludePath)</IncludePath>
+    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;$(IncludePath)</IncludePath>
+    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

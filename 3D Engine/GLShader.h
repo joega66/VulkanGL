@@ -1,9 +1,7 @@
 #pragma once
 #include "GLRenderResource.h"
-#include <mutex>
-#include <future>
 
-enum class EShaderStage : uint32
+enum class EShaderStage : int32
 {
 	Vertex,
 	TessControl,
@@ -16,19 +14,28 @@ enum class EShaderStage : uint32
 class ShaderCompilerWorker
 {
 public:
-	const std::string& Code;
+	using ShaderDefines = std::list<std::pair<std::string, std::string>>;
 
-	ShaderCompilerWorker(const std::string& Code)
-		: Code(Code)
-	{
-	}
+	ShaderCompilerWorker() = default;
 
 	template<typename T>
 	void SetDefine(const std::string& Define, const T& Value)
 	{
-		// @todo-joe Should just batch the defines. SPIR-V compiler has -D option for setting defines.
-		signal_unimplemented();
+		Defines.push_back(std::make_pair(Define, std::string(Value)));
 	}
+
+	void SetDefine(const std::string& Define)
+	{
+		Defines.push_back(std::make_pair(Define, "1"));
+	}
+
+	const ShaderDefines& GetDefines() const
+	{
+		return Defines;
+	}
+
+private:
+	ShaderDefines Defines;
 };
 
 struct ShaderMetadata
@@ -43,19 +50,35 @@ struct ShaderMetadata
 	}
 };
 
+using GLBaseShaderInfo = std::tuple<std::string, std::string, EShaderStage>;
+
 class GLShader : public GLRenderResource
 {
 public:
 	const ShaderMetadata Meta;
 
-	GLShader(const ShaderMetadata& Meta)
-		: Meta(Meta)
+	GLShader(const ShaderMetadata& Meta, const Map<std::string, uint32>& AttributeLocations, const Map<std::string, uint32>& UniformLocations)
+		: Meta(Meta), AttributeLocations(AttributeLocations), UniformLocations(UniformLocations)
 	{
 	}
 
 	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker) 
 	{
 	}
+
+	uint32 GetAttributeLocation(const std::string& Name) const
+	{
+		return GetValue(AttributeLocations, Name);
+	}
+
+	uint32 GetUniformLocation(const std::string& Name) const
+	{
+		return GetValue(UniformLocations, Name);
+	}
+
+private:
+	Map<std::string, uint32> UniformLocations;
+	Map<std::string, uint32> AttributeLocations;
 };
 
 CLASS(GLShader);
@@ -65,52 +88,25 @@ class GLShaderCompiler
 public:
 	GLShaderRef FindShader(const std::string& Type);
 
-private:
-	Map<std::string, GLShaderRef> Shaders;
-
-	friend class ScopedAsyncShaderCompiler;
-	using ShaderMapEntry = std::pair<std::string, GLShaderRef>;
-
 	template<typename ShaderType>
-	[[nodiscard]]
-	ShaderMapEntry CompileShader(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
+	GLShaderRef CompileShader(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
 	{
-		std::string Code = GPlatform->FileRead(Filename);
-		ShaderCompilerWorker Worker(Code);
+		ShaderCompilerWorker Worker;
 		ShaderType::ModifyCompilationEnvironment(Worker);
 		ShaderMetadata Meta(Filename, EntryPoint, Stage);
 		GLShaderRef Shader = CompileShader(Worker, Meta);
-		return std::make_pair(std::string(typeid(ShaderType).name()), Shader);
+		StoreShader(std::string(typeid(ShaderType).name()), Shader);
+		return Shader;
 	}
 
+private:
 	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const = 0;
+
 	void StoreShader(const std::string& Type, GLShaderRef Shader);
+
+	Map<std::string, GLShaderRef> Shaders;
 };
 
 CLASS(GLShaderCompiler);
 
 extern GLShaderCompilerRef GShaderCompiler;
-
-class ScopedAsyncShaderCompiler
-{
-public:
-	template<typename ShaderType>
-	void Compile(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
-	{
-		std::future<GLShaderCompiler::ShaderMapEntry> Task = std::async(std::launch::async,
-			[=] () { return GShaderCompiler->CompileShader<ShaderType>(Filename, EntryPoint, Stage); });
-		Tasks.push_back(std::move(Task));
-	}
-
-	~ScopedAsyncShaderCompiler()
-	{
-		for (auto& Task : Tasks)
-		{
-			auto Result = Task.get();
-			GShaderCompiler->StoreShader(Result.first, Result.second);
-		}
-	}
-
-private:
-	std::list<std::future<GLShaderCompiler::ShaderMapEntry>> Tasks;
-};
