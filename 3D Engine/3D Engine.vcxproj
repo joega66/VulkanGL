@@ -19,9 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ComponentSystems\ComponentSystem.cpp" />
+    <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp" />
+    <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp" />
     <ClCompile Include="Components\CMaterial.cpp" />
     <ClCompile Include="Components\CStaticMesh.cpp" />
     <ClCompile Include="Components\CTransform.cpp" />
+    <ClCompile Include="Components\Entity.cpp" />
+    <ClCompile Include="Engine\EditorController.cpp" />
     <ClCompile Include="Engine\ResourceManager.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\View.cpp" />
@@ -29,8 +34,11 @@
     <ClCompile Include="GLRenderResource.cpp" />
     <ClCompile Include="GLShader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
     <ClCompile Include="Platform\WindowsPlatform.cpp" />
+    <ClCompile Include="Renderer\DepthPass.cpp" />
+    <ClCompile Include="Renderer\EditorPrimitives.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\MaterialShader.cpp" />
     <ClCompile Include="Renderer\Scene.cpp" />
@@ -48,19 +56,28 @@
     <ClCompile Include="Vulkan\VulkanSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ComponentSystems\ComponentSystem.h" />
+    <ClInclude Include="ComponentSystems\TransformGizmoSystem.h" />
+    <ClInclude Include="ComponentSystems\StaticMeshSystem.h" />
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\CMaterial.h" />
+    <ClInclude Include="Components\ComponentArray.h" />
     <ClInclude Include="Components\CStaticMesh.h" />
     <ClInclude Include="Components\CTransform.h" />
+    <ClInclude Include="Components\Entity.h" />
+    <ClInclude Include="Engine\EditorController.h" />
     <ClInclude Include="Engine\ResourceManager.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\View.h" />
     <ClInclude Include="GL.h" />
     <ClInclude Include="GLRenderResource.h" />
     <ClInclude Include="GLShader.h" />
+    <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Platform\WindowsPlatform.h" />
+    <ClInclude Include="Renderer\DepthPass.h" />
     <ClInclude Include="Renderer\DrawingPlan.h" />
+    <ClInclude Include="Renderer\EditorPrimitives.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
@@ -84,10 +101,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\Common.glsl" />
+    <None Include="..\Shaders\DepthPassVS.glsl" />
     <None Include="..\Shaders\FullscreenFS.glsl" />
     <None Include="..\Shaders\FullscreenVS.glsl" />
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
+    <None Include="..\Shaders\ObjectHighlightFS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
   </ItemGroup>

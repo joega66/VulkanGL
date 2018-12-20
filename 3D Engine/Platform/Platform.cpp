@@ -138,6 +138,11 @@ void IPlatform::FreeImage(uint8* Pixels)
 	stbi_image_free(Pixels);
 }
 
+void IPlatform::EndFrame()
+{
+	std::fill(Private.KeysPressed.begin(), Private.KeysPressed.end(), false);
+}
+
 WindowResizeListener::~WindowResizeListener()
 {
 	GPlatform->RemoveWindowListener(this);

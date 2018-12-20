@@ -27,6 +27,16 @@ void GLSetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest)
 	GRender->SetDepthTest(bDepthTestEnable, CompareTest);
 }
 
+void GLSetStencilTest(bool bStencilTestEnable)
+{
+	GRender->SetStencilTest(bStencilTestEnable);
+}
+
+void GLSetStencilState(ECompareOp CompareOp, EStencilOp FailOp, EStencilOp DepthFailOp, EStencilOp PassOp, uint32 CompareMask, uint32 WriteMask, uint32 Reference)
+{
+	GRender->SetStencilState(CompareOp, FailOp, DepthFailOp, PassOp, CompareMask, WriteMask, Reference);
+}
+
 void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode PolygonMode, float LineWidth)
 {
 	GRender->SetRasterizerState(CullMode, FrontFace, PolygonMode, LineWidth);

@@ -3,9 +3,9 @@
 
 // @todo Since we're querying attribute/uniform locations anyway, should use glsl compiler option to automatically assign locations?
 
-LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Resources, MaterialProxyRef MaterialProxy, GLUniformBufferRef LocalToWorldUniform)
+LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Resources, const MaterialProxy& MaterialProxy, GLUniformBufferRef LocalToWorldUniform)
 {
-	const bool bHasNormalMap = MaterialProxy->Count(EMaterialType::Normal);
+	const bool bHasNormalMap = MaterialProxy.Count(EMaterialType::Normal);
 
 	LightingPassVert = GLCreateShader<LightingPassVS<EMeshType::StaticMesh>>();
 

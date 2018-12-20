@@ -1,8 +1,8 @@
 #include "MaterialShader.h"
-#include "../Engine/StaticMesh.h"
+#include "Engine/StaticMesh.h"
 
 void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources, 
-	MaterialProxyRef MaterialProxy, 
+	const MaterialProxy& MaterialProxy,
 	GLUniformBufferRef InLocalToWorldUniform, 
 	GraphicsPipeline&& Pipeline)
 {
@@ -18,10 +18,10 @@ void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources,
 	ViewLocation = Pipeline.Vertex->GetUniformLocation("ViewUniform");
 	LocalToWorldLocation = Pipeline.Vertex->GetUniformLocation("LocalToWorldUniform");
 
-	CMaterialRef Diffuse = MaterialProxy->Get(EMaterialType::Diffuse);
+	CMaterialRef Diffuse = MaterialProxy.Get(EMaterialType::Diffuse);
 	Materials.emplace_back(Diffuse->GetMaterial(), Pipeline.Fragment->GetUniformLocation("Diffuse"));
 
-	if (CMaterialRef Normal = MaterialProxy->Get(EMaterialType::Normal); Normal)
+	if (CMaterialRef Normal = MaterialProxy.Get(EMaterialType::Normal); Normal)
 	{
 		Materials.emplace_back(Normal->GetMaterial(), Pipeline.Fragment->GetUniformLocation("Normal"));
 	}

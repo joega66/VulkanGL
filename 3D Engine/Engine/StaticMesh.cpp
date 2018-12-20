@@ -43,37 +43,8 @@ GLImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, a
 	return nullptr;
 }
 
-void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
+MaterialProxyRef ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* Material, TextureCache& TextureCache)
 {
-	check(AiMesh->mTextureCoords[0] > 0, "Static mesh is missing texture coordinates.");
-
-	const uint32 NumVertices = AiMesh->mNumVertices;
-
-	std::vector<glm::vec3> Positions(NumVertices);
-	std::vector<glm::vec2> TextureCoordinates(NumVertices);
-	std::vector<glm::vec3> Normals(NumVertices);
-	std::vector<glm::vec3> Tangents(NumVertices);
-	std::vector<uint32> Indices;
-
-	for (uint32 i = 0; i < NumVertices; i++)
-	{
-		Positions[i] = glm::vec3(AiMesh->mVertices[i].x, AiMesh->mVertices[i].y, AiMesh->mVertices[i].z);
-		TextureCoordinates[i] = glm::vec2(AiMesh->mTextureCoords[0][i].x, AiMesh->mTextureCoords[0][i].y);
-		Normals[i] = glm::vec3(AiMesh->mNormals[i].x, AiMesh->mNormals[i].y, AiMesh->mNormals[i].z);
-		Tangents[i] = glm::vec3(AiMesh->mTangents[i].x, AiMesh->mTangents[i].y, AiMesh->mTangents[i].z);
-	}
-
-	for (uint32 i = 0; i < AiMesh->mNumFaces; i++)
-	{
-		aiFace Face = AiMesh->mFaces[i];
-
-		for (uint32 j = 0; j < Face.mNumIndices; j++)
-		{
-			Indices.push_back(Face.mIndices[j]);
-		}
-	}
-
-	aiMaterial* Material = AiScene->mMaterials[AiMesh->mMaterialIndex];
 	MaterialProxyRef Materials = MakeRef<MaterialProxy>();
 
 	GLImageRef DiffuseMap = LoadMaterials(StaticMesh->Directory, Material, aiTextureType_DIFFUSE, TextureCache);
@@ -93,6 +64,58 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 	{
 		Materials->Add(MakeRef<CMaterial>(NormalMap, EMaterialType::Normal));
 	}
+
+	return Materials;
+}
+
+void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
+{
+	check(AiMesh->mTextureCoords[0] > 0, "Static mesh is missing texture coordinates.");
+
+	const uint32 NumVertices = AiMesh->mNumVertices;
+
+	std::vector<glm::vec3> Positions(NumVertices);
+	std::vector<glm::vec2> TextureCoordinates(NumVertices);
+	std::vector<glm::vec3> Normals(NumVertices);
+	std::vector<glm::vec3> Tangents(NumVertices);
+	std::vector<uint32> Indices;
+
+	glm::vec3& Min = StaticMesh->Bounds.Min;
+	glm::vec3& Max = StaticMesh->Bounds.Max;
+
+	for (uint32 i = 0; i < NumVertices; i++)
+	{
+		Positions[i] = glm::vec3(AiMesh->mVertices[i].x, AiMesh->mVertices[i].y, AiMesh->mVertices[i].z);
+		TextureCoordinates[i] = glm::vec2(AiMesh->mTextureCoords[0][i].x, AiMesh->mTextureCoords[0][i].y);
+		Normals[i] = glm::vec3(AiMesh->mNormals[i].x, AiMesh->mNormals[i].y, AiMesh->mNormals[i].z);
+		Tangents[i] = glm::vec3(AiMesh->mTangents[i].x, AiMesh->mTangents[i].y, AiMesh->mTangents[i].z);
+
+		const glm::vec3& Position = Positions[i];
+		if (Position.x > Max.x)
+			Max.x = Position.x;
+		if (Position.y > Max.y)
+			Max.y = Position.y;
+		if (Position.z > Max.z)
+			Max.z = Position.z;
+		if (Position.x < Min.x)
+			Min.x = Position.x;
+		if (Position.y < Min.y)
+			Min.y = Position.y;
+		if (Position.z < Min.z)
+			Min.z = Position.z;
+	}
+
+	for (uint32 i = 0; i < AiMesh->mNumFaces; i++)
+	{
+		const aiFace& Face = AiMesh->mFaces[i];
+
+		for (uint32 j = 0; j < Face.mNumIndices; j++)
+		{
+			Indices.push_back(Face.mIndices[j]);
+		}
+	}
+
+	MaterialProxyRef Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
 	GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), RU_None, Indices.data());
 	GLVertexBufferRef PositionBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), RU_None, Positions.data());

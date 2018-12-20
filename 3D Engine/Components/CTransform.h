@@ -2,7 +2,7 @@
 #include "Component.h"
 #include "GLRenderResource.h"
 
-class CTransform : public Component
+class CTransform : public Component<CTransform>
 {
 public:
 	GLUniformBufferRef LocalToWorldUniform;
@@ -35,5 +35,3 @@ private:
 	const glm::mat4& GetLocalToParent();
 	void MarkDirty();
 };
-
-CLASS(CTransform);

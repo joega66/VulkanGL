@@ -8,11 +8,29 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 	, MouseSensitivity(MouseSensitivity)
 	, MovementSpeed(MovementSpeed)
 	, ZoomDegree(Zoom)
-	, Uniform(GLCreateUniformBuffer<ViewUniforms>())
+	, Uniform(GLCreateUniformBuffer<ViewUniforms>(EUniformUpdate::Frequent))
 	, LastXPos(GPlatform->GetMousePosition().x)
 	, LastYPos(GPlatform->GetMousePosition().y)
 {
 	UpdateView();
+}
+
+Ray View::ScreenPointToRay()
+{
+	const glm::vec2& Window = GPlatform->GetWindowSize();
+	const glm::vec2& Mouse = GPlatform->GetMousePosition();
+
+	float X = (2.0f * Mouse.x) / Window.x - 1.0f;
+	float Y = 1.0f - (2.0f * Mouse.y) / Window.y;
+	float Z = 1.0f;
+
+	glm::vec3 RayNdc = glm::vec3(X, Y, Z);
+	glm::vec4 RayClip = glm::vec4(RayNdc.x, RayNdc.y, 1.0, 1.0);
+	glm::vec4 RayEye = glm::inverse(GetPerspectiveMatrix()) * RayClip;
+	glm::vec3 RayWorld = glm::vec3(glm::inverse(GetViewMatrix()) * RayEye);
+	RayWorld = glm::normalize(RayWorld);
+
+	return Ray(Position, RayWorld);
 }
 
 void View::UpdateView()
@@ -27,7 +45,7 @@ void View::UpdateView()
 	ViewUniforms View =
 	{
 		GetViewMatrix(),
-		glm::perspective(glm::radians(ZoomDegree), (float)GPlatform->GetWindowSize().x / GPlatform->GetWindowSize().y, 0.1f, 100.0f)
+		GetPerspectiveMatrix()
 	};
 
 	// @todo VK_KHR_maintenance1
@@ -41,13 +59,21 @@ glm::mat4 View::GetViewMatrix() const
 	return glm::lookAt(Position, Position + Front, Up);
 }
 
-void View::LookAround(float XPos, float YPos)
+void View::SetLastMousePosition()
 {
-	float XOffset = XPos - LastXPos;
-	float YOffset = LastYPos - YPos;
+	LastXPos = GPlatform->GetMousePosition().x;
+	LastYPos = GPlatform->GetMousePosition().y;
+}
 
-	LastXPos = XPos;
-	LastYPos = YPos;
+void View::LookAround()
+{
+	const glm::vec2& Mouse = GPlatform->GetMousePosition();
+
+	float XOffset = Mouse.x - LastXPos;
+	float YOffset = LastYPos - Mouse.y;
+
+	LastXPos = Mouse.x;
+	LastYPos = Mouse.y;
 
 	XOffset *= MouseSensitivity;
 	YOffset *= MouseSensitivity;
@@ -60,8 +86,15 @@ void View::LookAround(float XPos, float YPos)
 	UpdateView();
 }
 
-void View::Move(float YOffset)
+void View::Translate()
 {
-	float DS = MovementSpeed * YOffset;
-	Position -= Front * DS;
+	float DS = MovementSpeed * GPlatform->GetScrollOffset().y;
+	Position += Front * DS;
+
+	UpdateView();
+}
+
+glm::mat4 View::GetPerspectiveMatrix() const
+{
+	return glm::perspective(glm::radians(ZoomDegree), (float)GPlatform->GetWindowSize().x / GPlatform->GetWindowSize().y, 0.1f, 100.0f);
 }

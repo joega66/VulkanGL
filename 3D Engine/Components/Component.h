@@ -1,11 +1,10 @@
 #pragma once
 #include "Platform/Platform.h"
 
-class Component
+template<typename T, bool bNeedsRenderUpdate = false>
+struct Component
 {
-public:
-	virtual void GameUpdate() {}
-	virtual void RenderUpdate(class Scene* Scene) {}
+private:
+	friend class Entity;
+	static constexpr bool bNeedsRenderUpdate = bNeedsRenderUpdate;
 };
-
-CLASS(Component);

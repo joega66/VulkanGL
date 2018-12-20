@@ -1,5 +1,6 @@
 #pragma once
 #include "Components/CMaterial.h"
+#include "Physics/Physics.h"
 
 struct aiNode;
 struct aiScene;
@@ -17,7 +18,7 @@ struct StaticMeshResources
 	GLVertexBufferRef TangentBuffer;
 
 	MaterialProxyRef Materials;
-
+	
 	StaticMeshResources(
 		uint32 IndexCount
 		, GLIndexBufferRef IndexBuffer
@@ -40,16 +41,15 @@ struct StaticMeshResources
 class StaticMesh
 {
 public:
-	StaticMesh(const std::string& Filename);
-
 	const std::string Filename;
 	const std::string Directory;
-
 	std::vector<StaticMeshResources> Resources;
+	BoundingBox Bounds;
+
+	StaticMesh(const std::string& Filename);
 	
 private:
 	void LoadStaticMesh();
-
 };
 
 CLASS(StaticMesh);

@@ -8,12 +8,11 @@ enum class EMaterialType
 	Normal,
 };
 
-class CMaterial : public Component
+class CMaterial : public Component<CMaterial>
 {
 public:
 	CMaterial(GLImageRef Material, EMaterialType MaterialType);
 
-	virtual void GameUpdate() final {}
 	EMaterialType GetMaterialType() const;
 	GLImageRef GetMaterial() const;
 

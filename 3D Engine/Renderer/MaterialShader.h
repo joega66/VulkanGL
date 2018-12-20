@@ -38,8 +38,8 @@ class MaterialDrawingPlan
 {
 public:
 	void Construct(const struct StaticMeshResources& Resources, 
-		MaterialProxyRef MaterialProxy,
-		GLUniformBufferRef LocalToWorldUniform, 
+		const MaterialProxy& MaterialProxy,
+		GLUniformBufferRef LocalToWorldUniform,
 		GraphicsPipeline&& Pipeline);
 	void SetUniforms(const View& View, GraphicsPipeline&& Pipeline);
 	void Draw() const;

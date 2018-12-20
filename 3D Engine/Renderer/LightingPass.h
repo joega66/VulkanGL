@@ -1,6 +1,6 @@
 #pragma once
 #include "MaterialShader.h"
-#include "../Components/CStaticMesh.h"
+#include "Components/CStaticMesh.h"
 
 class LightingPassBaseVS : public GLShader
 {
@@ -45,7 +45,7 @@ public:
 class LightingPassDrawingPlan : public MaterialDrawingPlan
 {
 public:
-	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, MaterialProxyRef MaterialProxy, GLUniformBufferRef LocalToWorldUniform);
+	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, const MaterialProxy& MaterialProxy, GLUniformBufferRef LocalToWorldUniform);
 
 	GraphicsPipeline GetGraphicsPipeline() const;
 	void SetUniforms(const View& View);

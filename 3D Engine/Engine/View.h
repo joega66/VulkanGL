@@ -1,7 +1,8 @@
 #pragma once
 #include "../GL.h"
+#include "Physics/Physics.h"
 
-class View 
+class View
 {
 public:
 	struct ViewUniforms
@@ -15,6 +16,8 @@ public:
 	glm::vec3 Position;
 	float MovementSpeed;
 	float MouseSensitivity;
+	float LastXPos = 0;
+	float LastYPos = 0;
 
 	View(const glm::vec3 &Position = glm::vec3(0.0f, 0.0f, 0.0f),
 		const glm::vec3 &Up = glm::vec3(0.0f, 1.0f, 0.0f),
@@ -22,11 +25,16 @@ public:
 		float MouseSensitivity = 0.25f, float MovementSpeed = 1.0f,
 		float Zoom = 45.0f);
 
-	void LookAround(float XOffset, float YOffset);
-	void Move(float YOffset);
+	Ray ScreenPointToRay();
+
+	void SetLastMousePosition();
+	void LookAround();
+	void Translate();
+
+	glm::mat4 GetViewMatrix() const;
+	glm::mat4 GetPerspectiveMatrix() const;
 
 private:
-
 	glm::vec3 Front = glm::vec3(0.0f, 0.0f, 1.0f);
 	glm::vec3 Up;
 	glm::vec3 Right;
@@ -36,9 +44,5 @@ private:
 	float Pitch;
 	float ZoomDegree;
 
-	float LastXPos = 0;
-	float LastYPos = 0;
-
 	void UpdateView();
-	glm::mat4 GetViewMatrix() const;
 };

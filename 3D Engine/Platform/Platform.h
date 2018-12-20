@@ -66,11 +66,13 @@ public:
 	virtual glm::ivec2 GetWindowSize() = 0;
 	virtual bool WindowShouldClose() = 0;
 	virtual void PollEvents() = 0;
+	virtual void HideMouse(bool bHide) = 0;
+
 	void AddWindowListener(WindowResizeListenerRef WindowListener);
 	void RemoveWindowListener(WindowResizeListenerRef WindowListener);
 	void NotifyWindowListeners(int32 NewX, int32 NewY);
 
-	// Input. Key corresponds to GLFW key codes (for now...).
+	// Input
 	bool GetKeyDown(uint32 Key);
 	bool GetKeyUp(uint32 Key);
 	const glm::vec2& GetScrollOffset() { return Private.ScrollOffset; }
@@ -102,6 +104,8 @@ public:
 	// Loading
 	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels);
 	void FreeImage(uint8* Pixels);
+
+	void EndFrame();
 
 protected:
 	struct PlatformPrivate
@@ -245,3 +249,21 @@ private:
 	const bool bFrequency;
 	std::chrono::system_clock::time_point Start;
 };
+
+namespace Input
+{
+	enum EButton
+	{
+		MouseLeft,
+	};
+
+	inline bool GetKeyDown(uint32 Key)
+	{
+		return GPlatform->GetKeyDown(Key);
+	}
+
+	inline bool GetKeyUp(uint32 Key)
+	{
+		return GPlatform->GetKeyUp(Key);
+	}
+}

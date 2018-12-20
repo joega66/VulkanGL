@@ -3,6 +3,11 @@
 #include <Windows.h>
 #include <GLFW/glfw3.h>
 
+Map<int32, Input::EButton> GLFWToEngineFormat
+{
+	ENTRY(GLFW_MOUSE_BUTTON_LEFT, Input::MouseLeft)
+};
+
 void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 {
 	glfwInit();
@@ -16,6 +21,7 @@ void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 	glfwSetKeyCallback(Window, KeyboardCallback);
 	glfwSetScrollCallback(Window, ScrollCallback);
 	glfwSetCursorPosCallback(Window, MouseCallback);
+	glfwSetMouseButtonCallback(Window, MouseButtonCallback);
 }
 
 bool WindowsPlatform::WindowShouldClose()
@@ -99,6 +105,11 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 	}
 }
 
+void WindowsPlatform::HideMouse(bool bHide)
+{
+	glfwSetInputMode(Window, GLFW_CURSOR, bHide ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+}
+
 void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
 {
 	GPlatform->NotifyWindowListeners(X, Y);
@@ -110,14 +121,21 @@ void WindowsPlatform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scan
 
 	if (Key >= 0 && Key <= PlatformPrivate::NUM_KEYS)
 	{
+		if (!Contains(GLFWToEngineFormat, Key))
+		{
+			return;
+		}
+
+		Input::EButton EngineKey = GetValue(GLFWToEngineFormat, Key);
+
 		if (Action == GLFW_PRESS)
 		{
-			Private->Keys[Key] = true;
+			Private->Keys[EngineKey] = true;
 		}
 		else if (Action == GLFW_RELEASE)
 		{
-			Private->Keys[Key] = false;
-			Private->KeysPressed[Key] = true;
+			Private->Keys[EngineKey] = false;
+			Private->KeysPressed[EngineKey] = true;
 		}
 	}
 }
@@ -131,4 +149,23 @@ void WindowsPlatform::ScrollCallback(GLFWwindow* Window, double XOffset, double 
 void WindowsPlatform::MouseCallback(GLFWwindow* Window, double X, double Y)
 {
 	GPlatform->SetMousePosition(X, Y);
+}
+
+void WindowsPlatform::MouseButtonCallback(GLFWwindow * Window, int32 Button, int32 Action, int32 Mods)
+{
+	PlatformPrivate* Private = (PlatformPrivate*)glfwGetWindowUserPointer(Window);
+	if (Button == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		Input::EButton EngineKey = GetValue(GLFWToEngineFormat, Button);
+
+		if (Action == GLFW_PRESS)
+		{
+			Private->Keys[EngineKey] = true;
+		}
+		else if (Action == GLFW_RELEASE)
+		{
+			Private->Keys[EngineKey] = false;
+			Private->KeysPressed[EngineKey] = true;
+		}
+	}
 }

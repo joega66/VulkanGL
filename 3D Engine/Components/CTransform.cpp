@@ -3,12 +3,11 @@
 
 CTransform::CTransform(glm::vec3&& Position, glm::vec3&& Rotation, float Angle, glm::vec3&& InScale)
 {
+	LocalToWorldUniform = GLCreateUniformBuffer<glm::mat4>(EUniformUpdate::Frequent);
+
 	Translate(std::forward<glm::vec3>(Position));
 	Rotate(std::forward<glm::vec3>(Rotation), Angle);
 	Scale(std::forward<glm::vec3>(InScale));
-
-	LocalToWorldUniform = GLCreateUniformBuffer<glm::mat4>(EUniformUpdate::Frequent);
-	GetLocalToWorld();
 }
 
 CTransform::~CTransform()
@@ -23,15 +22,13 @@ const glm::mat4& CTransform::GetLocalToWorld()
 {
 	if (bDirty)
 	{
-		CTransform* NextParent = Parent;
 		LocalToWorld = GetLocalToParent();
 
-		while (NextParent)
+		if (Parent)
 		{
-			LocalToWorld = NextParent->GetLocalToParent() * LocalToWorld;
-			NextParent = NextParent->Parent;
+			LocalToWorld = Parent->GetLocalToWorld() * LocalToWorld;
 		}
-
+		
 		LocalToWorldUniform->Set(LocalToWorld);
 		bDirty = false;
 	}
@@ -103,6 +100,6 @@ bool CTransform::IsDirty() const
 void CTransform::MarkDirty()
 {
 	bDirty = true;
-
+	GetLocalToWorld(); // @todo Ugh.
 	std::for_each(Children.begin(), Children.end(), [&] (CTransform* Child) { Child->MarkDirty(); });
 }

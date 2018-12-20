@@ -1,7 +1,6 @@
 #pragma once
 #include "../GLRenderResource.h"
 #include "VulkanImage.h"
-#include <vulkan/vulkan.h>
 
 class VulkanDevice;
 
@@ -14,40 +13,47 @@ struct VulkanBuffer
 	VkDeviceSize Size;
 	VkDeviceSize Used;
 
-	VulkanBuffer(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size)
-		: Buffer(Buffer), Memory(Memory), Usage(Usage), Properties(Properties), Size(Size), Used(0)
-	{
-	}
+	VulkanBuffer(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
+	VkDeviceSize SizeRemaining() const;
+	std::shared_ptr<struct SharedVulkanBuffer> Allocate(VkDeviceSize Size);
 
-	VkDeviceSize SizeRemaining() const
+private:
+	friend struct SharedVulkanBuffer;
+
+	struct Slot
 	{
-		return Size - Used;
-	}
+		VkDeviceSize Offset;
+		VkDeviceSize Size;
+	};
+
+	std::list<Slot> FreeList;
+
+	void Free(const struct SharedVulkanBuffer& SharedBuffer);
 };
 
 struct SharedVulkanBuffer
 {
+	// @todo Make VulkanBuffer a shared_ptr
 	VulkanBuffer& Shared;
 	VkDeviceSize Size;
 	VkDeviceSize Offset;
 	
-	SharedVulkanBuffer(VulkanBuffer& Buffer, VkDeviceSize Size)
-		: Shared(Buffer), Size(Size), Offset(Buffer.Used)
-	{
-		Buffer.Used += Size;
-	}
-
-	VkBuffer& GetVulkanHandle() const
-	{
-		return Shared.Buffer;
-	}
+	SharedVulkanBuffer(VulkanBuffer& Buffer, VkDeviceSize Size, VkDeviceSize Offset);
+	VkBuffer& GetVulkanHandle() const;
+	~SharedVulkanBuffer();
 };
+
+CLASS(SharedVulkanBuffer);
 
 class VulkanAllocator
 {
 public:
 	VulkanAllocator(VulkanDevice& Device);
-	SharedVulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsageFlags Usage, const void* Data = nullptr);
+	SharedVulkanBufferRef CreateBuffer(
+		VkDeviceSize Size, 
+		VkBufferUsageFlags VulkanUsage, 
+		EResourceUsageFlags Usage, 
+		const void* Data = nullptr);
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties);
 	void UploadBufferData(const SharedVulkanBuffer& Buffer, const void* Data);
 	void* LockBuffer(const SharedVulkanBuffer& Buffer);
@@ -72,9 +78,9 @@ private:
 class VulkanVertexBuffer : public GLVertexBuffer
 {
 public:
-	SharedVulkanBuffer Buffer;
+	SharedVulkanBufferRef Buffer;
 
-	VulkanVertexBuffer(const SharedVulkanBuffer& Buffer, EImageFormat Format, EResourceUsageFlags Usage)
+	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EImageFormat Format, EResourceUsageFlags Usage)
 		: Buffer(Buffer), GLVertexBuffer(Format, Usage)
 	{
 	}
@@ -85,9 +91,9 @@ CLASS(VulkanVertexBuffer);
 class VulkanIndexBuffer : public GLIndexBuffer
 {
 public:
-	SharedVulkanBuffer Buffer;
+	SharedVulkanBufferRef Buffer;
 
-	VulkanIndexBuffer(const SharedVulkanBuffer& Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsageFlags Usage)
+	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsageFlags Usage)
 		: Buffer(Buffer), GLIndexBuffer(IndexStride, Format, Usage)
 	{
 	}
@@ -98,15 +104,19 @@ CLASS(VulkanIndexBuffer);
 class VulkanUniformBuffer : public GLUniformBuffer
 {
 public:
-	SharedVulkanBuffer Buffer;
+	SharedVulkanBufferRef Buffer;
 	bool bDirty = false;
 
-	VulkanUniformBuffer(const SharedVulkanBuffer& Buffer)
+	VulkanUniformBuffer(SharedVulkanBufferRef Buffer)
 		: Buffer(Buffer)
 	{
 	}
 
-	virtual uint32 GetSize() final { return (uint32)Buffer.Size; }
+	virtual uint32 GetSize() final { return (uint32)Buffer->Size; }
+
+	~VulkanUniformBuffer()
+	{
+	}
 
 private:
 	virtual void MarkDirty() final { bDirty = true; }

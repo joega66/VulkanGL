@@ -33,6 +33,12 @@
     <Filter Include="Source\Graphics Library">
       <UniqueIdentifier>{6feafe98-9750-45ea-bfeb-487c5349b673}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\ComponentSystems">
+      <UniqueIdentifier>{fd042fa3-58d0-4e00-8180-0946d3cf194e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Physics">
+      <UniqueIdentifier>{2ea3e4fb-8478-4ac6-8aec-7816e70b388b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h">
@@ -134,6 +140,33 @@
     <ClInclude Include="Renderer\Scene.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Components\Entity.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ComponentArray.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentSystems\ComponentSystem.h">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentSystems\StaticMeshSystem.h">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\EditorController.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Physics.h">
+      <Filter>Source\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentSystems\TransformGizmoSystem.h">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\EditorPrimitives.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\DepthPass.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -217,6 +250,30 @@
     <ClCompile Include="Renderer\Scene.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Components\Entity.cpp">
+      <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentSystems\ComponentSystem.cpp">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\EditorController.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\Physics.cpp">
+      <Filter>Source\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\EditorPrimitives.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DepthPass.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -238,6 +295,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\StaticMeshFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\ObjectHighlightFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

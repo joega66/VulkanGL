@@ -1,6 +1,6 @@
 #pragma once
-#include "../GLShader.h"
-#include "../Engine/View.h"
+#include "GLShader.h"
+#include "Engine/View.h"
 
 enum class EMeshType
 {
@@ -27,6 +27,7 @@ struct StreamSource
 	GLVertexBufferRef VertexBuffer;
 	uint32 Location;
 
+	StreamSource() = default;
 	StreamSource(GLVertexBufferRef VertexBuffer, uint32 Location)
 		: VertexBuffer(VertexBuffer), Location(Location)
 	{
@@ -48,21 +49,26 @@ template<typename DrawingPlanType>
 class DrawingPlanList
 {
 public:
-	inline void Add(DrawingPlanType&& DrawingPlan)
+	inline void Add(uint64 EntityID, DrawingPlanType&& DrawingPlan)
 	{
-		DrawingPlans.emplace_back(std::forward<DrawingPlanType>(DrawingPlan));
+		DrawingPlans.emplace(EntityID, std::forward<DrawingPlanType>(DrawingPlan));
+	}
+
+	inline void Remove(uint64 EntityID)
+	{
+		DrawingPlans.erase(EntityID);
 	}
 	
 	void Execute(const View& View);
 
 private:
-	std::vector<DrawingPlanType> DrawingPlans;
+	std::multimap<uint64, DrawingPlanType> DrawingPlans;
 };
 
 template<typename DrawingPlanType>
 inline void DrawingPlanList<DrawingPlanType>::Execute(const View& View)
 {
-	for (auto& DrawingPlan : DrawingPlans)
+	for (auto& [EntityID, DrawingPlan] : DrawingPlans)
 	{
 		const GraphicsPipeline Pipeline = DrawingPlan.GetGraphicsPipeline();
 

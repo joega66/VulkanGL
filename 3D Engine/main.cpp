@@ -2,35 +2,50 @@
 #include "Vulkan/VulkanGL.h"
 #include "Renderer/Scene.h"
 #include "Engine/ResourceManager.h"
+#include "Engine/EditorController.h"
 #include "Components/CStaticMesh.h"
+#include "Components/Entity.h"
+#include "ComponentSystems/StaticMeshSystem.h"
+#include "ComponentSystems/TransformGizmoSystem.h"
 #include <cxxopts.hpp>
 
 void RunEngine()
 {
 	GAssetManager->SaveImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
-
+	
 	StaticMeshRef Cube = GAssetManager->SaveStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 	StaticMeshRef StaticMesh = GAssetManager->SaveStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
 
-	View View;
+	// @todo Make this a component system?
+	EditorController EditorController;
 	Scene Scene;
 
-	CTransformRef Transform = MakeRef<CTransform>();
-	CStaticMeshRef StaticMeshComponent = MakeRef<CStaticMesh>(StaticMesh, Transform);
+	// @todo We can return an entity by value, since it's just an integer handle!
+	auto& Entity = GEntityManager.CreateEntity();
+	Entity.AddComponent<CStaticMesh>(StaticMesh);
+	Entity.AddComponent<CTransform>();
 
-	StaticMeshComponent->RenderUpdate(&Scene);
+	StaticMeshSystem StaticMeshSystem;
+	GComponentSystemManager.AddRenderSystem(&StaticMeshSystem);
 
+	TransformGizmoSystem TransformGizmoSystem;
+	GComponentSystemManager.AddComponentSystem(&TransformGizmoSystem);
+	
 	while (!GPlatform->WindowShouldClose())
 	{
 		GPlatform->PollEvents();
 
-		// @todo Hide mouse while looking around
-		View.LookAround(GPlatform->GetMousePosition().x, GPlatform->GetMousePosition().y);
-		View.Move(GPlatform->GetScrollOffset().y);
+		EditorController.Update(Scene.View);
+
+		GComponentSystemManager.UpdateSystems(&Scene);
 
 		GLBeginRender();
-		Scene.Render(View);
+
+		Scene.Render();
+
 		GLEndRender();
+
+		GPlatform->EndFrame();
 	}
 }
 
@@ -63,7 +78,9 @@ int main(int argc, char* argv[])
 	GAssetManager = MakeRef<AssetManager>();
 
 	GRender->InitGL();
+
 	RunEngine();
+
 	GRender->ReleaseGL();
 
 	return 0;

@@ -11,7 +11,7 @@ CAST(GLVertexBuffer, VulkanVertexBuffer);
 CAST(GLUniformBuffer, VulkanUniformBuffer);
 CAST(GLIndexBuffer, VulkanIndexBuffer);
 
-const Map<EImageFormat, uint32> ConvertImageFormatToGLSLSizes()
+const Map<EImageFormat, uint32> ConvertImageFormatToSize()
 {
 	Map<EImageFormat, uint32> ImageFormatToGLSLSize;
 
@@ -25,6 +25,19 @@ const Map<EImageFormat, uint32> ConvertImageFormatToGLSLSizes()
 	return ImageFormatToGLSLSize;
 }
 
+const Map<VkFormat, uint32> ConvertVulkanFormatToSize()
+{
+	Map<VkFormat, uint32> SizeOfVulkanFormat;
+
+	for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+	{
+		auto SizeOf = GetValue(GLSLTypeSizes, GLSLType);
+		SizeOfVulkanFormat[Format] = SizeOf;
+	}
+
+	return SizeOfVulkanFormat;
+}
+
 VulkanGL::VulkanGL()
 	: Swapchain(Device)
 	, Allocator(Device)
@@ -36,8 +49,9 @@ VulkanGL::VulkanGL()
 	, PipelineLayouts([&] (VkPipelineLayout PipelineLayout) { vkDestroyPipelineLayout(Device, PipelineLayout, nullptr); })
 	, Pipelines([&] (VkPipeline Pipeline) { vkDestroyPipeline(Device, Pipeline, nullptr); })
 	, Samplers([&] (VkSampler Sampler) { vkDestroySampler(Device, Sampler, nullptr); })
-	, DescriptorSets([&] (VkDescriptorSet DescriptorSet) { /** Descriptor sets are reset with the descriptor pool */ })
-	, ImageFormatToGLSLSize(ConvertImageFormatToGLSLSizes())
+	, DescriptorSets([&] (VkDescriptorSet DescriptorSet) {})
+	, ImageFormatToGLSLSize(ConvertImageFormatToSize())
+	, SizeOfVulkanFormat(ConvertVulkanFormatToSize())
 {
 }
 
@@ -458,7 +472,7 @@ void VulkanGL::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsageFlags Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
-	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
+	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
 }
 
@@ -467,13 +481,13 @@ void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBu
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
 	auto& Bindings = VulkanShader->Bindings;
-	auto& SharedBuffer = VulkanUniformBuffer->Buffer;
+	auto SharedBuffer = VulkanUniformBuffer->Buffer;
 
-	check(SharedBuffer.Shared.Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
+	check(SharedBuffer->Shared.Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
 
 	if (VulkanUniformBuffer->bDirty)
 	{
-		Allocator.UploadBufferData(VulkanUniformBuffer->Buffer, VulkanUniformBuffer->GetData());
+		Allocator.UploadBufferData(*VulkanUniformBuffer->Buffer, VulkanUniformBuffer->GetData());
 		VulkanUniformBuffer->bDirty = false;
 	}
 
@@ -481,10 +495,9 @@ void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBu
 	{
 		if (Binding.binding == Location)
 		{
-			// @todo-joe Also check that the buffer size matches
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
 			
-			VkDescriptorBufferInfo BufferInfo = { SharedBuffer.GetVulkanHandle(), SharedBuffer.Offset, SharedBuffer.Size };
+			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
 			auto WriteDescriptorBuffer = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
 			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::move(WriteDescriptorBuffer);
 			bDirtyDescriptorSets = true;
@@ -532,7 +545,7 @@ void VulkanGL::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	VkIndexType IndexType = VulkanIndexBuffer->IndexStride == sizeof(uint32) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 
-	vkCmdBindIndexBuffer(GetCommandBuffer(), VulkanIndexBuffer->Buffer.GetVulkanHandle(), VulkanIndexBuffer->Buffer.Offset, IndexType);
+	vkCmdBindIndexBuffer(GetCommandBuffer(), VulkanIndexBuffer->Buffer->GetVulkanHandle(), VulkanIndexBuffer->Buffer->Offset, IndexType);
 	vkCmdDrawIndexed(GetCommandBuffer(), IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
@@ -548,14 +561,14 @@ GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndi
 	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
 
 	uint32 IndexBufferStride = GetValue(ImageFormatToGLSLSize, Format);
-	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
+	auto Buffer = Allocator.CreateBuffer(IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
 }
 
 GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
 	EResourceUsageFlags Usage = UniformUsage == EUniformUpdate::Frequent ? RU_KeepCPUAccessible : RU_None;
-	SharedVulkanBuffer Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
+	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
@@ -648,6 +661,52 @@ void VulkanGL::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest
 	bDirtyPipeline = true;
 }
 
+void VulkanGL::SetStencilTest(bool bStencilTestEnable)
+{
+	Pending.DepthStencilState.stencilTestEnable = bStencilTestEnable;
+	bDirtyPipeline = true;
+}
+
+void VulkanGL::SetStencilState(ECompareOp CompareOp,
+	EStencilOp FailOp, 
+	EStencilOp DepthFailOp, 
+	EStencilOp PassOp, 
+	uint32 CompareMask, 
+	uint32 WriteMask, 
+	uint32 Reference)
+{
+	static const Map<EStencilOp, VkStencilOp> VulkanStencilOp =
+	{
+		ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
+		ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
+		ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
+	};
+
+	static const Map<ECompareOp, VkCompareOp> VulkanCompareOp =
+	{
+		ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
+		ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
+		ENTRY(ECompareOp::Equal, VK_COMPARE_OP_EQUAL)
+		ENTRY(ECompareOp::LessOrEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
+		ENTRY(ECompareOp::Greater, VK_COMPARE_OP_GREATER)
+		ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
+		ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
+		ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
+	};
+
+	auto& DepthStencilState = Pending.DepthStencilState;
+	DepthStencilState.back.compareOp = GetValue(VulkanCompareOp, CompareOp);
+	DepthStencilState.back.failOp = GetValue(VulkanStencilOp, FailOp);
+	DepthStencilState.back.depthFailOp = GetValue(VulkanStencilOp, DepthFailOp);
+	DepthStencilState.back.passOp = GetValue(VulkanStencilOp, PassOp);
+	DepthStencilState.back.compareMask = CompareMask;
+	DepthStencilState.back.writeMask = WriteMask;
+	DepthStencilState.back.reference = Reference;
+	DepthStencilState.front = DepthStencilState.back;
+
+	bDirtyPipeline = true;
+}
+
 void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode PolygonMode, float LineWidth)
 {
 	static const Map<ECullMode, VkCullModeFlags> VulkanCullMode =
@@ -723,26 +782,26 @@ void* VulkanGL::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 O
 {
 	// @todo-joe Handle Size, Offset
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
-	return Allocator.LockBuffer(VulkanVertexBuffer->Buffer);
+	return Allocator.LockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
 void VulkanGL::UnlockBuffer(GLVertexBufferRef VertexBuffer)
 {
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
-	Allocator.UnlockBuffer(VulkanVertexBuffer->Buffer);
+	Allocator.UnlockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
 void* VulkanGL::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	return Allocator.LockBuffer(VulkanIndexBuffer->Buffer);
+	return Allocator.LockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
 void VulkanGL::UnlockBuffer(GLIndexBufferRef IndexBuffer)
 {
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	Allocator.UnlockBuffer(VulkanIndexBuffer->Buffer);
+	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
 void VulkanGL::RebuildResolutionDependents()
@@ -886,8 +945,8 @@ void VulkanGL::PrepareForDraw()
 		{
 			if (VertexStreams[Location])
 			{
-				VkDeviceSize Offset = VertexStreams[Location]->Buffer.Offset;
-				VkBuffer Buffer = VertexStreams[Location]->Buffer.GetVulkanHandle();
+				VkDeviceSize Offset = VertexStreams[Location]->Buffer->Offset;
+				VkBuffer Buffer = VertexStreams[Location]->Buffer->GetVulkanHandle();
 				Offsets.push_back(Offset);
 				Buffers.push_back(Buffer);
 			}
@@ -980,6 +1039,7 @@ void VulkanGL::CleanRenderPass()
 	BeginInfo.clearValueCount = ClearValues.size();
 
 	vkCmdBeginRenderPass(GetCommandBuffer(), &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 	bDirtyRenderPass = false;
 	bDirtyPipeline = true;
 }
@@ -1028,12 +1088,7 @@ void VulkanGL::CleanPipeline()
 	{
 		VkVertexInputBindingDescription& Binding = Bindings[i];
 		Binding.binding = AttributeDescriptions[i].binding;
-		Binding.stride = [&] ()
-		{
-			// @todo-joe This is crap.
-			const std::string& GLSLType = GetKey(GLSLTypeToVulkanFormat, AttributeDescriptions[i].format);
-			return GetValue(GLSLTypeSizes, GLSLType);
-		}();
+		Binding.stride = GetValue(SizeOfVulkanFormat, AttributeDescriptions[i].format);
 		Binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	}
 
@@ -1085,6 +1140,7 @@ void VulkanGL::CleanPipeline()
 	Pipelines.Push(GraphicsPipeline);
 
 	vkCmdBindPipeline(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, Pipelines.Get());
+
 	bDirtyPipeline = false;
 }
 
@@ -1203,20 +1259,20 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 
 VkSampler VulkanGL::CreateSampler(const SamplerState& SamplerState)
 {
-	static VkFilter VulkanFilters[] =
+	static const VkFilter VulkanFilters[] =
 	{
 		VK_FILTER_NEAREST,
 		VK_FILTER_LINEAR,
 		VK_FILTER_CUBIC_IMG
 	};
 
-	static VkSamplerMipmapMode VulkanMipmapModes[] =
+	static const VkSamplerMipmapMode VulkanMipmapModes[] =
 	{
 		VK_SAMPLER_MIPMAP_MODE_NEAREST,
 		VK_SAMPLER_MIPMAP_MODE_LINEAR
 	};
 
-	static VkSamplerAddressMode VulkanAddressModes[] =
+	static const VkSamplerAddressMode VulkanAddressModes[] =
 	{
 		VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,

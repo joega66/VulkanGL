@@ -2,6 +2,8 @@
 #include "Platform/Platform.h"
 #include "GLShader.h"
 
+// @todo Change non bitmasks to enum class
+
 enum EDepthCompareTest
 {
 	Depth_Never,
@@ -94,6 +96,25 @@ enum class EUniformUpdate
 	Frequent
 };
 
+enum class EStencilOp
+{
+	Keep,
+	Zero,
+	Replace,
+};
+
+enum class ECompareOp
+{
+	Never,
+	Less,
+	Equal,
+	LessOrEqual,
+	Greater,
+	NotEqual,
+	GreaterOrEqual,
+	Always
+};
+
 /** Graphics Library Interface */
 class GL : public GLRenderResource
 {
@@ -107,6 +128,15 @@ public:
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
 	virtual void SetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f) = 0;
 	virtual void SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = Depth_Less) = 0;
+	virtual void SetStencilTest(bool bStencilTestEnable) = 0;
+	virtual void SetStencilState(
+		ECompareOp CompareOp,
+		EStencilOp FailOp,
+		EStencilOp DepthFailOp,
+		EStencilOp PassOp,
+		uint32 CompareMask,
+		uint32 WriteMask,
+		uint32 Reference) = 0;
 	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPolygonMode PolygonMode = PM_Fill, float LineWidth = 1.0f) = 0;
 	virtual void SetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask) = 0;
 	virtual void SetInputAssembly(EPrimitiveTopology Topology) = 0;
@@ -146,6 +176,15 @@ void GLEndRender();
 void GLSetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 void GLSetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f);
 void GLSetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = Depth_Less);
+void GLSetStencilTest(bool bStencilTestEnable);
+void GLSetStencilState(
+	ECompareOp CompareOp,
+	EStencilOp FailOp,
+	EStencilOp DepthFailOp,
+	EStencilOp PassOp,
+	uint32 CompareMask,
+	uint32 WriteMask,
+	uint32 Reference);
 void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPolygonMode PolygonMode = PM_Fill, float LineWidth = 1.0f);
 void GLSetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
 void GLSetInputAssembly(EPrimitiveTopology Topology);
