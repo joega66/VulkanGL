@@ -6,7 +6,7 @@ void TransformGizmoSystem::Update(Scene* Scene)
 	if (Input::GetKeyUp(Input::MouseLeft))
 	{
 		Ray Ray = Scene->View.ScreenPointToRay();
-		for (auto Entity : EntityManager::GetEntities<CStaticMesh, CTransform>())
+		for (auto Entity : GEntityManager.GetEntities<CStaticMesh, CTransform>())
 		{
 			if (Physics::Raycast(Ray, Entity))
 			{

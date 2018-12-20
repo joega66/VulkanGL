@@ -19,6 +19,11 @@ uint64 Entity::GetEntityID()
 	return EntityID;
 }
 
+void Entity::QueueEntityForRenderUpdate()
+{
+	GEntityManager.QueueEntityThatNeedsRenderUpdate(this);
+}
+
 Entity& EntityManager::CreateEntity()
 {
 	Entity& NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });

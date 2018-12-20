@@ -4,7 +4,7 @@
 
 void StaticMeshSystem::RenderUpdate(Scene* Scene)
 {
-	for (auto Entity : EntityManager::GetEntitiesThatNeedRenderUpdate<CStaticMesh, CTransform>())
+	for (auto Entity : GEntityManager.GetEntitiesThatNeedRenderUpdate<CStaticMesh, CTransform>())
 	{
 		auto& Component = Entity->GetComponent<CStaticMesh>();
 		auto& StaticMesh = Component.StaticMesh;

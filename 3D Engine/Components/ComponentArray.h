@@ -49,5 +49,4 @@ public:
 private:
 	// @todo Object pool for components
 	Map<std::uintptr_t, TComponent> Components;
-
 };

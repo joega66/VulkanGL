@@ -23,9 +23,9 @@ SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferU
 	for (auto& Buffer : Buffers)
 	{
 		// Find a buffer with the same properties and usage
-		if (Buffer.Usage == VulkanUsage && Buffer.Properties == Properties)
+		if (Buffer->Usage == VulkanUsage && Buffer->Properties == Properties)
 		{
-			auto SharedBuffer = Buffer.Allocate(Size);
+			auto SharedBuffer = VulkanBuffer::Allocate(Buffer, Size);
 
 			if (SharedBuffer)
 			{
@@ -39,9 +39,9 @@ SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferU
 	}
 
 	// Buffer not found - Create a new one
-	Buffers.emplace_back(CreateBuffer(Size, VulkanUsage, Properties));
+	Buffers.emplace_back(MakeRef<VulkanBuffer>(CreateBuffer(Size, VulkanUsage, Properties)));
 
-	auto SharedBuffer = Buffers.back().Allocate(Size);
+	auto SharedBuffer = VulkanBuffer::Allocate(Buffers.back(), Size);
 
 	if (Data)
 	{
@@ -140,17 +140,17 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 	}
 	else
 	{
-		check(Buffer && Buffer->Shared.Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
+		check(Buffer && Buffer->Shared->Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
 			"CPU-mappable buffer must have these memory properties.");
 		void* MemMapped = nullptr;
-		vkMapMemory(Device, Buffer->Shared.Memory, Buffer->Offset, Buffer->Size, 0, &MemMapped);
+		vkMapMemory(Device, Buffer->Shared->Memory, Buffer->Offset, Buffer->Size, 0, &MemMapped);
 		return MemMapped;
 	}
 }
 
 void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
 {
-	VulkanBuffer& Backing = Buffer.Shared;
+	VulkanBuffer& Backing = *Buffer.Shared;
 	return LockBuffer(Backing.Usage, Backing.Size,
 		[&] (auto StagingBuffer) 
 	{ 
@@ -161,7 +161,7 @@ void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
 
 void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 {
-	if (Buffer.Shared.Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+	if (Buffer.Shared->Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
 	{
 		auto Key = std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset);
 
@@ -183,7 +183,7 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 	}
 	else
 	{
-		vkUnmapMemory(Device, Buffer.Shared.Memory);
+		vkUnmapMemory(Device, Buffer.Shared->Memory);
 	}
 }
 
@@ -286,9 +286,9 @@ VkDeviceSize VulkanBuffer::SizeRemaining() const
 	return Size - Used;
 }
 
-std::shared_ptr<SharedVulkanBuffer> VulkanBuffer::Allocate(VkDeviceSize Size)
+std::shared_ptr<SharedVulkanBuffer> VulkanBuffer::Allocate(VulkanBufferRef Buffer, VkDeviceSize Size)
 {
-	for (auto Iter = FreeList.begin(); Iter != FreeList.end(); Iter++)
+	for (auto Iter = Buffer->FreeList.begin(); Iter != Buffer->FreeList.end(); Iter++)
 	{
 		if (Iter->Size >= Size)
 		{
@@ -301,17 +301,17 @@ std::shared_ptr<SharedVulkanBuffer> VulkanBuffer::Allocate(VkDeviceSize Size)
 			}
 			else
 			{
-				FreeList.erase(Iter);
+				Buffer->FreeList.erase(Iter);
 			}
 
-			return MakeRef<SharedVulkanBuffer>(*this, Size, Offset);
+			return MakeRef<SharedVulkanBuffer>(Buffer, Size, Offset);
 		}
 	}
 
-	if (SizeRemaining() >= Size)
+	if (Buffer->SizeRemaining() >= Size)
 	{
-		auto SharedBuffer = MakeRef<SharedVulkanBuffer>(*this, Size, Used);
-		Used += Size;
+		auto SharedBuffer = MakeRef<SharedVulkanBuffer>(Buffer, Size, Buffer->Used);
+		Buffer->Used += Size;
 		return SharedBuffer;
 	}
 
@@ -345,17 +345,17 @@ void VulkanBuffer::Free(const SharedVulkanBuffer& SharedBuffer)
 	FreeList.push_back(New);
 }
 
-SharedVulkanBuffer::SharedVulkanBuffer(VulkanBuffer& Buffer, VkDeviceSize Size, VkDeviceSize Offset)
+SharedVulkanBuffer::SharedVulkanBuffer(VulkanBufferRef Buffer, VkDeviceSize Size, VkDeviceSize Offset)
 	: Shared(Buffer), Size(Size), Offset(Offset)
 {
 }
 
 VkBuffer& SharedVulkanBuffer::GetVulkanHandle() const
 {
-	return Shared.Buffer;
+	return Shared->Buffer;
 }
 
 SharedVulkanBuffer::~SharedVulkanBuffer()
 {
-	Shared.Free(*this);
+	Shared->Free(*this);
 }

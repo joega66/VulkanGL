@@ -23,7 +23,7 @@ void RunEngine()
 	// @todo We can return an entity by value, since it's just an integer handle!
 	auto& Entity = GEntityManager.CreateEntity();
 	Entity.AddComponent<CStaticMesh>(StaticMesh);
-	Entity.AddComponent<CTransform>();
+	auto& Transform = Entity.AddComponent<CTransform>();
 
 	StaticMeshSystem StaticMeshSystem;
 	GComponentSystemManager.AddRenderSystem(&StaticMeshSystem);
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 	cxxopts::Options Options("VulkanGL", "A Vulkan-based framework for graphics demos :)");
 
 	Options.add_options()
-		("vulkan", "Enable Vulkan graphics library interface")
+		("vulkan", "Enable Vulkan graphics library")
 		("w,width", "Window width", cxxopts::value<int32>())
 		("h,height", "Window height", cxxopts::value<int32>());
 

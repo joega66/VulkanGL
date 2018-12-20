@@ -11,38 +11,36 @@ public:
 	template<typename TComponent, typename ...Args>
 	TComponent& AddComponent(Args&& ...InArgs)
 	{
-		auto& ComponentArray = ComponentArray<TComponent>::Get();
 		if constexpr (TComponent::bNeedsRenderUpdate)
 		{
-			GEntityManager.QueueEntityThatNeedsRenderUpdate(this);
+			QueueEntityForRenderUpdate();
 		}
-		return ComponentArray.AddComponent(this, std::forward<Args>(InArgs)...);
+		return ComponentArray<TComponent>::Get().AddComponent(this, std::forward<Args>(InArgs)...);
 	}
 
 	template<typename TComponent>
 	TComponent& GetComponent()
 	{
-		auto& ComponentArray = ComponentArray<TComponent>::Get();
-		return ComponentArray.GetComponent(this);
+		return ComponentArray<TComponent>::Get().GetComponent(this);
 	}
 
 	template<typename TComponent>
 	bool HasComponent()
 	{
-		auto& ComponentArray = ComponentArray<TComponent>::Get();
-		return ComponentArray.HasComponent(this);
+		return ComponentArray<TComponent>::Get().HasComponent(this);
 	}
 
 	template<typename TComponent>
 	void RemoveComponent()
 	{
-		auto& ComponentArray = ComponentArray<TComponent>::Get();
-		ComponentArray.RemoveComponent(this);
+		ComponentArray<TComponent>::Get().RemoveComponent(this);
 	}
 
 	void DestroyEntity();
 
 	uint64 GetEntityID();
+
+	void QueueEntityForRenderUpdate();
 
 private:
 	uint64 EntityID;
@@ -55,11 +53,11 @@ public:
 	void DestroyEntity(Entity* Entity);
 
 	template<typename ...TComponents>
-	static std::vector<Entity*> GetEntitiesThatNeedRenderUpdate()
+	std::vector<Entity*> GetEntitiesThatNeedRenderUpdate()
 	{
 		std::vector<Entity*> EntitiesWithComponents;
 
-		for (auto Entity : GEntityManager.EntitiesThatNeedRenderUpdate)
+		for (auto Entity : EntitiesThatNeedRenderUpdate)
 		{
 			if (EntityHasComponents<TComponents...>(*Entity))
 			{
@@ -71,11 +69,11 @@ public:
 	}
 
 	template<typename ...TComponents>
-	static std::vector<Entity*> GetEntities()
+	std::vector<Entity*> GetEntities()
 	{
 		std::vector<Entity*> EntitiesWithComponents;
 		
-		for (auto& Entity : GEntityManager.Entities)
+		for (auto& Entity : Entities)
 		{
 			if (EntityHasComponents<TComponents...>(Entity))
 			{

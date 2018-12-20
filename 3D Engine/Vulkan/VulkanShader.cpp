@@ -120,7 +120,7 @@ static std::vector<UniformBufferFormat> ParseUniformBuffers(const spirv_cross::C
 		UniformBufferFormat Uniform;
 		Uniform.Name = Resource.name;
 		Uniform.Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
-		Uniform.Size = GLSL.get_declared_struct_size(GLSL.get_type(Resource.type_id));
+		Uniform.Size = (uint32)GLSL.get_declared_struct_size(GLSL.get_type(Resource.type_id));
 
 		check(Uniform.Size % 16 == 0, "std140 layout advises to manually pad structures/arrays to multiple of 16 bytes.");
 

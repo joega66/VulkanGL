@@ -118,7 +118,7 @@ void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
 void WindowsPlatform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
 {
 	PlatformPrivate* Private = (PlatformPrivate*)glfwGetWindowUserPointer(Window);
-
+	
 	if (Key >= 0 && Key <= PlatformPrivate::NUM_KEYS)
 	{
 		if (!Contains(GLFWToEngineFormat, Key))

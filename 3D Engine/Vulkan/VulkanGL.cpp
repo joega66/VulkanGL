@@ -118,7 +118,7 @@ void VulkanSurface::InitSwapchain()
 	{
 		Images[i] = MakeRef<VulkanImage>(Device
 			, VkImages[i]
-			, VK_NULL_HANDLE
+			, VkDeviceMemory()
 			, VK_IMAGE_LAYOUT_UNDEFINED
 			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
 			, Extent.width
@@ -483,7 +483,7 @@ void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBu
 	auto& Bindings = VulkanShader->Bindings;
 	auto SharedBuffer = VulkanUniformBuffer->Buffer;
 
-	check(SharedBuffer->Shared.Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
+	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
 
 	if (VulkanUniformBuffer->bDirty)
 	{

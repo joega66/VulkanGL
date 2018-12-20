@@ -24,6 +24,7 @@ public:
 private:
 	friend class EntityManager;
 
+	// @todo std::reference_wrapper
 	std::vector<ComponentSystem*> ComponentSystems;
 	std::vector<ComponentSystem*> RenderSystems;
 	std::vector<IComponentArray*> ComponentArrays;

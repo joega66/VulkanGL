@@ -15,7 +15,7 @@ struct VulkanBuffer
 
 	VulkanBuffer(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
 	VkDeviceSize SizeRemaining() const;
-	std::shared_ptr<struct SharedVulkanBuffer> Allocate(VkDeviceSize Size);
+	static std::shared_ptr<struct SharedVulkanBuffer> Allocate(std::shared_ptr<VulkanBuffer> Buffer, VkDeviceSize Size);
 
 private:
 	friend struct SharedVulkanBuffer;
@@ -31,14 +31,16 @@ private:
 	void Free(const struct SharedVulkanBuffer& SharedBuffer);
 };
 
+CLASS(VulkanBuffer);
+
 struct SharedVulkanBuffer
 {
 	// @todo Make VulkanBuffer a shared_ptr
-	VulkanBuffer& Shared;
+	VulkanBufferRef Shared;
 	VkDeviceSize Size;
 	VkDeviceSize Offset;
 	
-	SharedVulkanBuffer(VulkanBuffer& Buffer, VkDeviceSize Size, VkDeviceSize Offset);
+	SharedVulkanBuffer(VulkanBufferRef Buffer, VkDeviceSize Size, VkDeviceSize Offset);
 	VkBuffer& GetVulkanHandle() const;
 	~SharedVulkanBuffer();
 };
@@ -67,7 +69,7 @@ private:
 	std::map<VkImage, std::unique_ptr<VulkanBuffer>> LockedStagingImages;
 	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanBuffer>> LockedStagingBuffers;
 	std::list<std::unique_ptr<VulkanBuffer>> FreeStagingBuffers;
-	std::list<VulkanBuffer> Buffers;
+	std::list<VulkanBufferRef> Buffers;
 
 	[[nodiscard]] VulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
 	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, /** Size is the size of the VulkanBuffer, not Shared */
