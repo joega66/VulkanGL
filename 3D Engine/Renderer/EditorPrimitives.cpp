@@ -1,13 +1,13 @@
 #include "EditorPrimitives.h"
 #include "Engine/StaticMesh.h"
 
-ObjectHighlightDrawingPlan::ObjectHighlightDrawingPlan(const StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform)
+OutlineDrawingPlan::OutlineDrawingPlan(const StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform)
 	: DepthPassDrawingPlan(Resources, LocalToWorldUniform)
 {
-	FragmentShader = GLCreateShader<ObjectHighlightFS>();
+	FragmentShader = GLCreateShader<OutlineFS>();
 }
 
-GraphicsPipeline ObjectHighlightDrawingPlan::GetGraphicsPipeline() const
+GraphicsPipeline OutlineDrawingPlan::GetGraphicsPipeline() const
 {
 	GraphicsPipeline Pipeline = DepthPassDrawingPlan::GetGraphicsPipeline();
 
@@ -19,12 +19,12 @@ GraphicsPipeline ObjectHighlightDrawingPlan::GetGraphicsPipeline() const
 	, FragmentShader);
 }
 
-void ObjectHighlightDrawingPlan::SetUniforms(const View& View)
+void OutlineDrawingPlan::SetUniforms(const View& View)
 {
 	DepthPassDrawingPlan::SetUniforms(View);
 }
 
-void ObjectHighlightDrawingPlan::Draw() const
+void OutlineDrawingPlan::Draw() const
 {
 	DepthPassDrawingPlan::Draw();
 }

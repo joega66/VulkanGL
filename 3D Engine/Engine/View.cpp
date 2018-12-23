@@ -49,7 +49,7 @@ void View::UpdateView()
 	};
 
 	// @todo VK_KHR_maintenance1
-	View.Projection[1][1] *= -1;
+	//View.Projection[1][1] *= -1;
 
 	Uniform->Set(View);
 }
@@ -96,5 +96,7 @@ void View::Translate()
 
 glm::mat4 View::GetPerspectiveMatrix() const
 {
-	return glm::perspective(glm::radians(ZoomDegree), (float)GPlatform->GetWindowSize().x / GPlatform->GetWindowSize().y, 0.1f, 100.0f);
+	glm::mat4 Perspective = glm::perspective(glm::radians(ZoomDegree), (float)GPlatform->GetWindowSize().x / GPlatform->GetWindowSize().y, 0.1f, 100.0f);
+	Perspective[1][1] *= -1;
+	return Perspective;
 }

@@ -2,11 +2,6 @@
 #include "GLShader.h"
 #include "Engine/View.h"
 
-enum class EMeshType
-{
-	StaticMesh
-};
-
 struct GraphicsPipeline
 {
 	GLShaderRef Vertex;
@@ -49,14 +44,14 @@ template<typename DrawingPlanType>
 class DrawingPlanList
 {
 public:
-	inline void Add(uint64 EntityID, DrawingPlanType&& DrawingPlan)
+	inline void Add(Entity Entity, DrawingPlanType&& DrawingPlan)
 	{
-		DrawingPlans.emplace(EntityID, std::forward<DrawingPlanType>(DrawingPlan));
+		DrawingPlans.emplace(Entity.GetEntityID(), std::forward<DrawingPlanType>(DrawingPlan));
 	}
 
-	inline void Remove(uint64 EntityID)
+	inline void Remove(Entity Entity)
 	{
-		DrawingPlans.erase(EntityID);
+		DrawingPlans.erase(Entity.GetEntityID());
 	}
 	
 	void Execute(const View& View);

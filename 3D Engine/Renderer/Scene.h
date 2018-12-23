@@ -8,22 +8,18 @@ public:
 	View View;
 
 	DrawingPlanList<LightingPassDrawingPlan> LightingPassDrawingPlans;
+	DrawingPlanList<DepthPassDrawingPlan> Stencil;
+	DrawingPlanList<OutlineDrawingPlan> Outline;
 
-	struct
-	{
-		DrawingPlanList<DepthPassDrawingPlan> Prepass;
-		DrawingPlanList<ObjectHighlightDrawingPlan> Final;
-	} Highlighted;
-	
 	Scene();
 	void Render();
-	void RenderLightingPass();
-	void RenderEditorPrimitives();
 
 private:
 	GLImageRef SceneDepth;
 	GLRenderTargetViewRef SceneDepthView;
+	GLImageRef OutlineDepthStencil;
 
-	GLImageRef HighlightDepthStencil;
-	GLRenderTargetViewRef HighlightDepthStencilView;
+	void RenderLightingPass();
+	void RenderEditorPrimitives();
+	void RenderOutlines();
 };

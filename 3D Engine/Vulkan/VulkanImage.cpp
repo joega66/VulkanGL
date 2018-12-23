@@ -57,7 +57,7 @@ const Map<EImageFormat, VkFormat> VulkanFormat =
 	ENTRY(IF_BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
 
-VulkanImage::VulkanImage(VulkanDevice & Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags, VkPipelineStageFlags Stage)
+VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags, VkPipelineStageFlags Stage)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
@@ -65,6 +65,17 @@ VulkanImage::VulkanImage(VulkanDevice & Device, VkImage Image, VkDeviceMemory Me
 	, Stage(Stage)
 	, GLImage(Format, Width, Height, UsageFlags)
 {
+	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+	ViewInfo.image = Image;
+	ViewInfo.viewType = Usage & RU_Cubemap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+	ViewInfo.format = GetVulkanFormat();
+	ViewInfo.subresourceRange.aspectMask = GetVulkanAspect();
+	ViewInfo.subresourceRange.baseMipLevel = 0;
+	ViewInfo.subresourceRange.levelCount = 1;
+	ViewInfo.subresourceRange.baseArrayLayer = 0;
+	ViewInfo.subresourceRange.layerCount = Usage & RU_Cubemap ? 6 : 1;
+
+	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
 }
 
 void VulkanImage::ReleaseGL()

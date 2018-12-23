@@ -1,7 +1,7 @@
 #include "ResourceManager.h"
 #include "../GL.h"
 
-AssetManagerRef GAssetManager;
+AssetManager GAssetManager;
 
 StaticMeshRef AssetManager::SaveStaticMesh(const std::string& Name, const std::string& File)
 {

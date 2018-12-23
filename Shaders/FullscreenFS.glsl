@@ -2,7 +2,8 @@
 
 layout(location = 0) in vec2 InUV;
 layout(location = 0) out vec4 OutColor;
-layout(binding = 0) uniform sampler2D Sampler;
+
+uniform sampler2D Sampler;
 
 void main()
 {

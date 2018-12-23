@@ -119,11 +119,11 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 		if (StagingBufferIter == FreeStagingBuffers.end())
 		{
 			// No staging buffer of suitable size found - Make a new one
-			VulkanBuffer NewStagingBuffer = CreateBuffer(
-				BufferAllocationSize > Size ? BufferAllocationSize : Size,
+			StagingBuffer = std::make_unique<VulkanBuffer>(
+				CreateBuffer(BufferAllocationSize > Size ? BufferAllocationSize : Size,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-			StagingBuffer = std::make_unique<VulkanBuffer>(NewStagingBuffer);
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+			);
 		}
 		else
 		{
@@ -150,8 +150,8 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 
 void* VulkanAllocator::LockBuffer(const SharedVulkanBuffer& Buffer)
 {
-	VulkanBuffer& Backing = *Buffer.Shared;
-	return LockBuffer(Backing.Usage, Backing.Size,
+	VulkanBufferRef Backing = Buffer.Shared;
+	return LockBuffer(Backing->Usage, Backing->Size,
 		[&] (auto StagingBuffer) 
 	{ 
 		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset)] = std::move(StagingBuffer); 
@@ -286,7 +286,7 @@ VkDeviceSize VulkanBuffer::SizeRemaining() const
 	return Size - Used;
 }
 
-std::shared_ptr<SharedVulkanBuffer> VulkanBuffer::Allocate(VulkanBufferRef Buffer, VkDeviceSize Size)
+std::shared_ptr<struct SharedVulkanBuffer> VulkanBuffer::Allocate(std::shared_ptr<VulkanBuffer> Buffer, VkDeviceSize Size)
 {
 	for (auto Iter = Buffer->FreeList.begin(); Iter != Buffer->FreeList.end(); Iter++)
 	{

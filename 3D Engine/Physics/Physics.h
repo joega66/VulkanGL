@@ -1,5 +1,6 @@
 #pragma once
 #include "Platform/Platform.h"
+#include "Components/Entity.h"
 
 class BoundingBox
 {
@@ -22,5 +23,5 @@ struct Ray
 class Physics
 {
 public:
-	static bool Raycast(const Ray& Ray, class Entity* Entity);
+	static bool Raycast(const Ray& Ray, Entity Entity);
 };

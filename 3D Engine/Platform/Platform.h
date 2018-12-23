@@ -172,7 +172,8 @@ inline const V& GetValue(const Map<K, V>& Map, const K& Key)
 template<typename ContainerType, typename ElementType>
 inline bool Contains(const ContainerType& Container, const ElementType& Element)
 {
-	return Container.find(Element) != Container.end();
+	return Container.count(Element) != 0;
+	//return Container.find(Element) != Container.end();
 }
 
 template<typename T, std::size_t N>

@@ -1,7 +1,13 @@
 #include "Entity.h"
 #include "ComponentSystems/ComponentSystem.h"
+#include "CTransform.h"
 
 EntityManager GEntityManager;
+
+Entity::Entity()
+	: EntityID(InvalidID)
+{
+}
 
 Entity::Entity(uint64 EntityID)
 	: EntityID(EntityID)
@@ -10,35 +16,71 @@ Entity::Entity(uint64 EntityID)
 
 void Entity::DestroyEntity()
 {
-	GComponentSystemManager.DestroyEntity(this);
-	GEntityManager.DestroyEntity(this);
+	GComponentSystemManager.DestroyEntity(EntityID);
+	GEntityManager.DestroyEntity(EntityID);
 }
 
-uint64 Entity::GetEntityID()
+uint64 Entity::GetEntityID() const
 {
 	return EntityID;
 }
 
-void Entity::QueueEntityForRenderUpdate()
+Entity EntityManager::CreatePrefab(const std::string& Name)
 {
-	GEntityManager.QueueEntityThatNeedsRenderUpdate(this);
+	Prefabs.emplace(Name, Entity{ NextEntityID++ });
+	Entity Prefab = GetValue(Prefabs, Name);
+	PrefabNames.emplace(Prefab.GetEntityID(), Name);
+	Prefab.AddComponent<CTransform>();
+	return Prefab;
 }
 
-Entity& EntityManager::CreateEntity()
+Entity EntityManager::CreateEntity()
 {
-	Entity& NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });
+	Entity NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });
+	NewEntity.AddComponent<CTransform>();
 	return NewEntity;
 }
 
-void EntityManager::DestroyEntity(Entity* Entity)
+Entity EntityManager::CreateFromPrefab(Entity Prefab)
+{
+	Entity Entity = CreateEntity();
+	auto& ComponentArrays = GComponentSystemManager.ComponentArrays;
+
+	for (auto& ComponentArray : ComponentArrays)
+	{
+		if (ComponentArray.get().HasComponent(Prefab.GetEntityID()))
+		{
+			auto Component = ComponentArray.get().CopyComponent(Prefab.GetEntityID());
+			ComponentArray.get().AddComponent(Entity.GetEntityID(), std::move(Component));
+		}
+	}
+
+	return Entity;
+}
+
+Entity EntityManager::CreateFromPrefab(const std::string& Name)
+{
+	if (Contains(Prefabs, Name))
+	{
+		return CreateFromPrefab(GetValue(Prefabs, Name));
+	}
+
+	return Entity();
+}
+
+void EntityManager::DestroyEntity(const uint64 EntityID)
 {
 	Entities.erase(std::remove_if(Entities.begin(), Entities.end(), [&] (auto& Other)
 	{
-		return Entity == &Other;
+		return EntityID == Other.GetEntityID();
 	}));
 }
 
-void EntityManager::QueueEntityThatNeedsRenderUpdate(Entity* Entity)
+void EntityManager::QueueEntityForRenderUpdate(Entity Entity)
 {
-	EntitiesThatNeedRenderUpdate.push_back(Entity);
+	// Prefabs are not updated by component systems
+	if (!Contains(PrefabNames, Entity.GetEntityID()))
+	{
+		EntitiesForRenderUpdate.push_back(Entity);
+	}
 }

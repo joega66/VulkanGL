@@ -180,22 +180,29 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
+	std::string BaseBinding;
 
 	const std::string ShaderExt = [&] ()
 	{
 		switch (Meta.Stage)
 		{
 		case EShaderStage::Vertex:
+			BaseBinding = "0";
 			return "vert";
 		case EShaderStage::TessControl:
+			BaseBinding = "100";
 			return "tesc";
 		case EShaderStage::TessEvaluation:
+			BaseBinding = "200";
 			return "tese";
 		case EShaderStage::Geometry:
+			BaseBinding = "300";
 			return "geom";
 		case EShaderStage::Fragment:
+			BaseBinding = "400";
 			return "frag";
 		default: // Compute
+			BaseBinding = "0";
 			return "comp";
 		}
 	}();
@@ -214,6 +221,12 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 	SS << " -o ";
 	SS << Meta.Filename + SPIRVExt;
 	SS << " " + Meta.Filename;
+	SS << " -fauto-bind-uniforms";
+	SS << " -fimage-binding-base " + ShaderExt + " " + BaseBinding;
+	SS << " -fsampler-binding-base " + ShaderExt + " " + BaseBinding;
+	SS << " -ftexture-binding-base " + ShaderExt + " " + BaseBinding;
+	SS << " -fubo-binding-base " + ShaderExt + " " + BaseBinding;
+	SS << " -fssbo-binding-base " + ShaderExt + " " + BaseBinding;
 
 	GPlatform->ForkProcess(ShaderCompilerPath, SS.str());
 

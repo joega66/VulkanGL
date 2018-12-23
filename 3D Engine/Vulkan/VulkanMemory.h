@@ -35,7 +35,6 @@ CLASS(VulkanBuffer);
 
 struct SharedVulkanBuffer
 {
-	// @todo Make VulkanBuffer a shared_ptr
 	VulkanBufferRef Shared;
 	VkDeviceSize Size;
 	VkDeviceSize Offset;

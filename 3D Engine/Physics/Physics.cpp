@@ -1,11 +1,10 @@
 #include "Physics.h"
-#include "Components/Entity.h"
 #include "Components/CStaticMesh.h"
 
-bool Physics::Raycast(const Ray& Ray, Entity* Entity)
+bool Physics::Raycast(const Ray& Ray, Entity Entity)
 {
-	CStaticMesh& Mesh = Entity->GetComponent<CStaticMesh>();
-	CTransform& Transform = Entity->GetComponent<CTransform>();
+	CStaticMesh& Mesh = Entity.GetComponent<CStaticMesh>();
+	CTransform& Transform = Entity.GetComponent<CTransform>();
 	BoundingBox& Bounds = Mesh.StaticMesh->Bounds;
 
 	glm::vec4 Min = Transform.GetLocalToWorld() * glm::vec4(Bounds.Min, 1.0f);

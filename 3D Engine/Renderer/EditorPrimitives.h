@@ -1,24 +1,28 @@
 #pragma once
 #include "DepthPass.h"
 
-class ObjectHighlightFS : public GLShader
+class OutlineFS : public GLShader
 {
 public:
 	static const GLBaseShaderInfo& GetBaseShaderInfo()
 	{
-		static GLBaseShaderInfo Base = { "../Shaders/ObjectHighlightFS.glsl", "main", EShaderStage::Fragment };
+		static GLBaseShaderInfo Base = { "../Shaders/OutlineFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
 	}
 };
 
-class ObjectHighlightDrawingPlan : public DepthPassDrawingPlan
+class OutlineDrawingPlan : public DepthPassDrawingPlan
 {
 public:
-	ObjectHighlightDrawingPlan(const struct StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform);
+	OutlineDrawingPlan(const struct StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform);
 	GraphicsPipeline GetGraphicsPipeline() const;
 	void SetUniforms(const View& View);
 	void Draw() const;
 
 private:
 	GLShaderRef FragmentShader;
+};
+
+struct DrawLineInfo
+{
 };

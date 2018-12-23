@@ -152,9 +152,6 @@
     <ClInclude Include="ComponentSystems\StaticMeshSystem.h">
       <Filter>Source\ComponentSystems</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\EditorController.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Physics\Physics.h">
       <Filter>Source\Physics</Filter>
     </ClInclude>
@@ -166,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="Renderer\DepthPass.h">
       <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentSystems\EditorControllerSystem.h">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreEngine.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -259,9 +262,6 @@
     <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp">
       <Filter>Source\ComponentSystems</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\EditorController.cpp">
-      <Filter>Source\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp">
       <Filter>Source\ComponentSystems</Filter>
     </ClCompile>
@@ -273,6 +273,15 @@
     </ClCompile>
     <ClCompile Include="Renderer\DepthPass.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentSystems\EditorControllerSystem.cpp">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\ComponentArray.cpp">
+      <Filter>Source\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -297,10 +306,10 @@
     <None Include="..\Shaders\StaticMeshFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\ObjectHighlightFS.glsl">
+    <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\DepthPassVS.glsl">
+    <None Include="..\Shaders\OutlineFS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

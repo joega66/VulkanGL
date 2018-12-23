@@ -17,6 +17,4 @@ private:
 	Map<std::string, GLImageRef> Images;
 };
 
-CLASS(AssetManager);
-
-extern AssetManagerRef GAssetManager;
+extern AssetManager GAssetManager;

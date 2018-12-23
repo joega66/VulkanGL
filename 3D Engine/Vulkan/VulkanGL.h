@@ -19,7 +19,7 @@ public:
 
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 	virtual void SetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f);
-	virtual void SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = Depth_Less);
+	virtual void SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = EDepthCompareTest::Less);
 	virtual void SetStencilTest(bool bStencilTestEnable);
 	virtual void SetStencilState(
 		ECompareOp CompareOp,
@@ -29,7 +29,7 @@ public:
 		uint32 CompareMask,
 		uint32 WriteMask,
 		uint32 Reference);
-	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPolygonMode PolygonMode = PM_Fill, float LineWidth = 1.0f);
+	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f);
 	virtual void SetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
 	virtual void SetInputAssembly(EPrimitiveTopology Topology);
 	virtual void SetGraphicsPipeline(
@@ -60,8 +60,6 @@ public:
 
 	VulkanDevice& GetDevice() { return Device; }
 
-	void CreateImageView(VulkanImageRef Image);
-
 private:
 	VulkanDevice Device;
 	VulkanSurface Swapchain;
@@ -87,7 +85,7 @@ private:
 	{
 		/** Render targets */
 		uint32 NumRTs = 0;
-		VulkanRenderTargetViewRef ColorTargets[MaxSimultaneousRenderTargets];
+		std::array<VulkanRenderTargetViewRef, MaxSimultaneousRenderTargets> ColorTargets;
 		VulkanRenderTargetViewRef DepthTarget;
 
 		/** Graphics pipeline */

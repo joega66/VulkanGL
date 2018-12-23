@@ -112,8 +112,6 @@ void VulkanSurface::InitSwapchain()
 
 	Images.resize(ImageCount);
 
-	VulkanGLRef Vulkan = std::static_pointer_cast<VulkanGL>(GRender);
-
 	for (uint32 i = 0; i < ImageCount; i++)
 	{
 		Images[i] = MakeRef<VulkanImage>(Device
@@ -125,7 +123,6 @@ void VulkanSurface::InitSwapchain()
 			, Extent.height
 			, RU_RenderTargetable
 			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-		Vulkan->CreateImageView(Images[i]);
 	}
 
 	RTViews.resize(ImageCount);
@@ -328,7 +325,6 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 	if (Access == DS_None)
 	{
 		DepthStencil.depthWriteEnable = false;
-		DepthStencil.stencilTestEnable = false;
 	}
 	else
 	{
@@ -345,21 +341,18 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 			{
 				check(DepthImage->Usage & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
-				DepthStencil.stencilTestEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			}
 			else if (Access == DS_DepthReadStencilWrite)
 			{
 				check(DepthImage->Usage & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
-				DepthStencil.stencilTestEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 			}
 			else if (Access == DS_DepthWriteStencilRead)
 			{
 				check(DepthImage->Usage & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
-				DepthStencil.stencilTestEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
 			}
 			else
@@ -367,17 +360,14 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 				if (Access == DS_DepthWrite)
 				{
 					DepthStencil.depthWriteEnable = true;
-					DepthStencil.stencilTestEnable = false;
 				}
 				else if (Access == DS_StencilWrite)
 				{
 					DepthStencil.depthWriteEnable = false;
-					DepthStencil.stencilTestEnable = true;
 				}
 				else // DepthWriteStencilWrite
 				{
 					DepthStencil.depthWriteEnable = true;
-					DepthStencil.stencilTestEnable = true;
 				}
 
 				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -407,7 +397,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 	Subpass.pColorAttachments = ColorRefs.data();
 	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
 	Subpass.pDepthStencilAttachment = !DepthTarget || DS_None ? nullptr : &DepthRef;
-
+	
 	std::array<VkSubpassDependency, 2> Dependencies;
 
 	Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -498,8 +488,7 @@ void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBu
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
 			
 			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
-			auto WriteDescriptorBuffer = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
-			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::move(WriteDescriptorBuffer);
+			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
 			bDirtyDescriptorSets = true;
 
 			return;
@@ -527,8 +516,7 @@ void VulkanGL::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Im
 			Samplers.Push(VulkanSampler);
 
 			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->Layout };
-			auto WriteDescriptorImage = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
-			DescriptorImages[VulkanShader->Meta.Stage][Location] = std::move(WriteDescriptorImage);
+			DescriptorImages[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
 			bDirtyDescriptorSets = true;
 
 			return;
@@ -597,8 +585,6 @@ GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Forma
 		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
-	CreateImageView(GLImage);
-
 	return GLImage;
 }
 
@@ -644,14 +630,14 @@ void VulkanGL::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest
 {
 	static const Map<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 	{
-		ENTRY(Depth_Never, VK_COMPARE_OP_NEVER)
-		ENTRY(Depth_Less, VK_COMPARE_OP_LESS)
-		ENTRY(Depth_Equal, VK_COMPARE_OP_EQUAL)
-		ENTRY(Depth_LEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
-		ENTRY(Depth_Greater, VK_COMPARE_OP_GREATER)
-		ENTRY(Depth_NEqual, VK_COMPARE_OP_NOT_EQUAL)
-		ENTRY(Depth_GEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
-		ENTRY(Depth_Always, VK_COMPARE_OP_ALWAYS)
+		ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
+		ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
+		ENTRY(EDepthCompareTest::Equal, VK_COMPARE_OP_EQUAL)
+		ENTRY(EDepthCompareTest::LEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
+		ENTRY(EDepthCompareTest::Greater, VK_COMPARE_OP_GREATER)
+		ENTRY(EDepthCompareTest::NEqual, VK_COMPARE_OP_NOT_EQUAL)
+		ENTRY(EDepthCompareTest::GEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
+		ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
 	};
 
 	VkPipelineDepthStencilStateCreateInfo& Depth = Pending.DepthStencilState;
@@ -711,23 +697,23 @@ void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPol
 {
 	static const Map<ECullMode, VkCullModeFlags> VulkanCullMode =
 	{
-		ENTRY(CM_None, VK_CULL_MODE_NONE)
-		ENTRY(CM_Back, VK_CULL_MODE_BACK_BIT)
-		ENTRY(CM_Front, VK_CULL_MODE_FRONT_BIT)
-		ENTRY(CM_FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
+		ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
+		ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
+		ENTRY(ECullMode::Front, VK_CULL_MODE_FRONT_BIT)
+		ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
 	};
 
 	static const Map<EFrontFace, VkFrontFace> VulkanFrontFace =
 	{
-		ENTRY(FF_CW, VK_FRONT_FACE_CLOCKWISE)
-		ENTRY(FF_CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+		ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
+		ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
 	};
 
 	static const Map<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	{
-		ENTRY(PM_Fill, VK_POLYGON_MODE_FILL)
-		ENTRY(PM_Line, VK_POLYGON_MODE_LINE)
-		ENTRY(PM_Point, VK_POLYGON_MODE_POINT)
+		ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
+		ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)
+		ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
 	};
 
 	VkPipelineRasterizationStateCreateInfo& RasterizerState = Pending.RasterizationState;
@@ -758,7 +744,7 @@ void VulkanGL::SetInputAssembly(EPrimitiveTopology Topology)
 {
 	for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
 	{
-		if (Topology == VulkanTopology)
+		if ((uint32)Topology == VulkanTopology)
 		{
 			Pending.InputAssemblyState.topology = VulkanTopology;
 			bDirtyPipeline = true;
@@ -766,6 +752,7 @@ void VulkanGL::SetInputAssembly(EPrimitiveTopology Topology)
 		}
 		VulkanTopology = VkPrimitiveTopology(VulkanTopology + 1);
 	}
+
 	fail("VkPrimitiveTopology not found.");
 }
 
@@ -823,7 +810,7 @@ void VulkanGL::CleanPipelineLayout()
 {
 	std::vector<VkDescriptorSetLayoutBinding> AllBindings;
 
-	static auto AddBindings = [&] (const VulkanShaderRef& Shader)
+	auto AddBindings = [&] (const VulkanShaderRef& Shader)
 	{
 		if (Shader)
 		{
@@ -1013,6 +1000,7 @@ void VulkanGL::CleanRenderPass()
 		AttachmentViews[NumRTs] = Image->ImageView;
 	}
 
+	// @todo Bug waiting to happen
 	GLImageRef Image = Pending.DepthTarget ? Pending.DepthTarget->Image : Pending.ColorTargets[0]->Image;
 
 	VkRect2D RenderArea = {};
@@ -1102,8 +1090,8 @@ void VulkanGL::CleanPipeline()
 	VkViewport& Viewport = Pending.Viewport;
 
 	VkRect2D& Scissor = Pending.Scissor;
-	Scissor.extent.width = 0;
-	Scissor.extent.height = 0;
+	Scissor.extent.width = (uint32)Viewport.width;
+	Scissor.extent.height = (uint32)Viewport.height;
 	Scissor.offset = { 0, 0 };
 
 	VkPipelineViewportStateCreateInfo& ViewportState = Pending.ViewportState;
@@ -1142,21 +1130,6 @@ void VulkanGL::CleanPipeline()
 	vkCmdBindPipeline(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, Pipelines.Get());
 
 	bDirtyPipeline = false;
-}
-
-void VulkanGL::CreateImageView(VulkanImageRef Image)
-{
-	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	ViewInfo.image = Image->Image;
-	ViewInfo.viewType = Image->Usage & RU_Cubemap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
-	ViewInfo.format = Image->GetVulkanFormat();
-	ViewInfo.subresourceRange.aspectMask = Image->GetVulkanAspect();
-	ViewInfo.subresourceRange.baseMipLevel = 0;
-	ViewInfo.subresourceRange.levelCount = 1;
-	ViewInfo.subresourceRange.baseArrayLayer = 0;
-	ViewInfo.subresourceRange.layerCount = Image->Usage & RU_Cubemap ? 6 : 1;
-
-	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &Image->ImageView));
 }
 
 void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
@@ -1281,9 +1254,9 @@ VkSampler VulkanGL::CreateSampler(const SamplerState& SamplerState)
 		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 	};
 
-	VkFilter Filter = VulkanFilters[SamplerState.Filter];
-	VkSamplerMipmapMode SMM = VulkanMipmapModes[SamplerState.SMM];
-	VkSamplerAddressMode SAM = VulkanAddressModes[SamplerState.SAM];
+	VkFilter Filter = VulkanFilters[(uint32)SamplerState.Filter];
+	VkSamplerMipmapMode SMM = VulkanMipmapModes[(uint32)SamplerState.SMM];
+	VkSamplerAddressMode SAM = VulkanAddressModes[(uint32)SamplerState.SAM];
 
 	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	SamplerInfo.magFilter = Filter;
@@ -1313,30 +1286,53 @@ VulkanGL::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
 
 void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Device)
 {
+	NumRTs = 0;
+	std::fill(ColorTargets.begin(), ColorTargets.end(), VulkanRenderTargetViewRef());
+	DepthTarget = nullptr;
+	
 	ResetVertexStreams();
 
-	VkPipelineRasterizationStateCreateInfo& Rasterization = RasterizationState;
-	Rasterization.depthBiasClamp = false;
-	Rasterization.rasterizerDiscardEnable = false;
-	Rasterization.depthBiasEnable = false;
+	VertexInputState.pVertexAttributeDescriptions = nullptr;
+	VertexInputState.pVertexBindingDescriptions = nullptr;
+	VertexInputState.vertexAttributeDescriptionCount = 0;
+	VertexInputState.vertexBindingDescriptionCount = 0;
 
-	VkPipelineDepthStencilStateCreateInfo& DepthStencil = DepthStencilState;
-	DepthStencil.depthBoundsTestEnable = false;
+	InputAssemblyState.primitiveRestartEnable = false;
+	InputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-	VkPipelineInputAssemblyStateCreateInfo& InputAssembly = InputAssemblyState;
-	InputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	InputAssembly.primitiveRestartEnable = false;
+	ViewportState.pScissors = nullptr;
+	ViewportState.pViewports = nullptr;
+	ViewportState.scissorCount = 0;
+	ViewportState.viewportCount = 0;
 
-	VkPipelineMultisampleStateCreateInfo& Multisample = MultisampleState;
-	Multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	RasterizationState.cullMode = VK_CULL_MODE_NONE;
+	RasterizationState.depthBiasClamp = false;
+	RasterizationState.depthBiasEnable = false;
+	RasterizationState.depthClampEnable = false;
+	RasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	RasterizationState.lineWidth = 1.0f;
+	RasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
+	RasterizationState.rasterizerDiscardEnable = false;
 
-	VkPipelineColorBlendStateCreateInfo& ColorBlend = ColorBlendState;
-	ColorBlend.logicOpEnable = false;
-	ColorBlend.logicOp = VK_LOGIC_OP_COPY;
-	ColorBlend.blendConstants[0] = 0.0f;
-	ColorBlend.blendConstants[1] = 0.0f;
-	ColorBlend.blendConstants[2] = 0.0f;
-	ColorBlend.blendConstants[3] = 0.0f;
+	MultisampleState.alphaToCoverageEnable = false;
+	MultisampleState.alphaToOneEnable = false;
+	MultisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	MultisampleState.sampleShadingEnable = true;
+
+	DepthStencilState.depthBoundsTestEnable = false;
+	DepthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
+	DepthStencilState.depthTestEnable = true;
+	DepthStencilState.depthWriteEnable = true;
+	DepthStencilState.stencilTestEnable = false;
+
+	ColorBlendState.attachmentCount = 0;
+	ColorBlendState.blendConstants[0] = 0.0f;
+	ColorBlendState.blendConstants[1] = 0.0f;
+	ColorBlendState.blendConstants[2] = 0.0f;
+	ColorBlendState.blendConstants[3] = 0.0f;
+	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
+	ColorBlendState.logicOpEnable = false;
+	ColorBlendState.pAttachments = nullptr;
 
 	for (VkPipelineColorBlendAttachmentState& ColorBlendAttachment : ColorBlendAttachments)
 	{
@@ -1344,6 +1340,9 @@ void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Devi
 		ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		ColorBlendAttachment.blendEnable = false;
 	}
+
+	DynamicState.dynamicStateCount = 0;
+	DynamicState.pDynamicStates = nullptr;
 }
 
 void VulkanGL::PendingGraphicsState::ResetVertexStreams()

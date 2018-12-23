@@ -5,6 +5,11 @@
 class TransformGizmoSystem : public ComponentSystem
 {
 public:
-	uint64 SelectedEntity = Entity::InvalidID;
-	virtual void Update(class Scene* Scene) override;
+	Entity SelectedEntity;
+	float LastX, LastY;
+	bool bFirstPress = true;
+
+	TransformGizmoSystem();
+	virtual void Update(class Scene& Scene) final;
+	void RemoveOutline(Scene& Scene, Entity Entity);
 };

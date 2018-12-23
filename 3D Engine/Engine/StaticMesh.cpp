@@ -55,7 +55,7 @@ MaterialProxyRef ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* Material, 
 	}
 	else
 	{
-		Materials->Add(MakeRef<CMaterial>(GAssetManager->GetImage("Engine-Diffuse-Default"), EMaterialType::Diffuse));
+		Materials->Add(MakeRef<CMaterial>(GAssetManager.GetImage("Engine-Diffuse-Default"), EMaterialType::Diffuse));
 	}
 
 	GLImageRef NormalMap = LoadMaterials(StaticMesh->Directory, Material, aiTextureType_NORMALS, TextureCache);

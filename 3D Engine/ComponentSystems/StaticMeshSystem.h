@@ -4,5 +4,5 @@
 class StaticMeshSystem : public ComponentSystem
 {
 public:
-	virtual void RenderUpdate(class Scene* Scene) override;
+	virtual void RenderUpdate(class Scene& Scene) override;
 };

@@ -2,39 +2,37 @@
 #include "Platform/Platform.h"
 #include "GLShader.h"
 
-// @todo Change non bitmasks to enum class
-
-enum EDepthCompareTest
+enum class EDepthCompareTest
 {
-	Depth_Never,
-	Depth_Less,
-	Depth_Equal,
-	Depth_LEqual,
-	Depth_Greater,
-	Depth_NEqual,
-	Depth_GEqual,
-	Depth_Always
+	Never,
+	Less,
+	Equal,
+	LEqual,
+	Greater,
+	NEqual,
+	GEqual,
+	Always
 };
 
-enum EPolygonMode
+enum class EPolygonMode
 {
-	PM_Fill,
-	PM_Line,
-	PM_Point
+	Fill,
+	Line,
+	Point
 };
 
-enum EFrontFace
+enum class EFrontFace
 {
-	FF_CCW,
-	FF_CW
+	CCW,
+	CW
 };
 
-enum ECullMode
+enum class ECullMode
 {
-	CM_None,
-	CM_Front,
-	CM_Back,
-	CM_FrontAndBack
+	None,
+	Front,
+	Back,
+	FrontAndBack
 };
 
 enum EColorWriteMask
@@ -46,36 +44,36 @@ enum EColorWriteMask
 	Color_RGBA = Color_R | Color_G | Color_B | Color_A
 };
 
-enum EPrimitiveTopology
+enum class EPrimitiveTopology
 {
-	PT_PointList,
-	PT_LineList,
-	PT_LineStrip,
-	PT_TriangleList,
-	PT_TriangleStrip,
-	PT_TriangleFan
+	PointList,
+	LineList,
+	LineStrip,
+	TriangleList,
+	TriangleStrip,
+	TriangleFan
 };
 
-enum ESamplerAddressMode
+enum class ESamplerAddressMode
 {
-	SAM_Repeat,
-	SAM_MirroredRepeat,
-	SAM_ClampToEdge,
-	SAM_ClampToBorder,
-	SAM_MirrorClampToEdge
+	Repeat,
+	MirroredRepeat,
+	ClampToEdge,
+	ClampToBorder,
+	MirrorClampToEdge
 };
 
-enum ESamplerMipmapMode
+enum class ESamplerMipmapMode
 {
-	SMM_Nearest,
-	SMM_Linear
+	Nearest,
+	Linear
 };
 
-enum EFilter
+enum class EFilter
 {
-	Filter_Nearest,
-	Filter_Linear,
-	Filter_Cubic
+	Nearest,
+	Linear,
+	Cubic
 };
 
 struct SamplerState
@@ -84,7 +82,7 @@ struct SamplerState
 	ESamplerAddressMode SAM;
 	ESamplerMipmapMode SMM;
 
-	SamplerState(EFilter Filter = Filter_Linear, ESamplerAddressMode SAM = SAM_ClampToBorder, ESamplerMipmapMode SMM = SMM_Linear)
+	SamplerState(EFilter Filter = EFilter::Linear, ESamplerAddressMode SAM = ESamplerAddressMode::ClampToBorder, ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear)
 		: Filter(Filter), SAM(SAM), SMM(SMM)
 	{
 	}
@@ -127,7 +125,7 @@ public:
 
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
 	virtual void SetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f) = 0;
-	virtual void SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = Depth_Less) = 0;
+	virtual void SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = EDepthCompareTest::Less) = 0;
 	virtual void SetStencilTest(bool bStencilTestEnable) = 0;
 	virtual void SetStencilState(
 		ECompareOp CompareOp,
@@ -137,7 +135,7 @@ public:
 		uint32 CompareMask,
 		uint32 WriteMask,
 		uint32 Reference) = 0;
-	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPolygonMode PolygonMode = PM_Fill, float LineWidth = 1.0f) = 0;
+	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f) = 0;
 	virtual void SetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask) = 0;
 	virtual void SetInputAssembly(EPrimitiveTopology Topology) = 0;
 	virtual void SetGraphicsPipeline(
@@ -175,7 +173,7 @@ void GLBeginRender();
 void GLEndRender();
 void GLSetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 void GLSetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f);
-void GLSetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = Depth_Less);
+void GLSetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = EDepthCompareTest::Less);
 void GLSetStencilTest(bool bStencilTestEnable);
 void GLSetStencilState(
 	ECompareOp CompareOp,
@@ -185,7 +183,7 @@ void GLSetStencilState(
 	uint32 CompareMask,
 	uint32 WriteMask,
 	uint32 Reference);
-void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = FF_CCW, EPolygonMode PolygonMode = PM_Fill, float LineWidth = 1.0f);
+void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f);
 void GLSetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
 void GLSetInputAssembly(EPrimitiveTopology Topology);
 void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment);

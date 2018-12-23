@@ -2,7 +2,7 @@
 #include "StaticMeshVS.glsl"
 #endif
 
-layout(binding = 0) uniform ViewUniform
+uniform ViewUniform
 {
 	mat4 View;
 	mat4 Projection;
@@ -10,9 +10,9 @@ layout(binding = 0) uniform ViewUniform
 
 void main()
 {
-	SetVSInterpolants();
-
 	vec4 WorldPosition = GetWorldPosition();
+
+	SetVSInterpolants(WorldPosition);
 
 	gl_Position = View.Projection * View.View * WorldPosition;
 }

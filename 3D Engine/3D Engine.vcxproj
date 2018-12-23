@@ -20,13 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ComponentSystems\ComponentSystem.cpp" />
+    <ClCompile Include="ComponentSystems\EditorControllerSystem.cpp" />
     <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp" />
     <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp" />
     <ClCompile Include="Components\CMaterial.cpp" />
+    <ClCompile Include="Components\ComponentArray.cpp" />
     <ClCompile Include="Components\CStaticMesh.cpp" />
     <ClCompile Include="Components\CTransform.cpp" />
     <ClCompile Include="Components\Entity.cpp" />
-    <ClCompile Include="Engine\EditorController.cpp" />
+    <ClCompile Include="CoreEngine.cpp" />
     <ClCompile Include="Engine\ResourceManager.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\View.cpp" />
@@ -57,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComponentSystems\ComponentSystem.h" />
+    <ClInclude Include="ComponentSystems\EditorControllerSystem.h" />
     <ClInclude Include="ComponentSystems\TransformGizmoSystem.h" />
     <ClInclude Include="ComponentSystems\StaticMeshSystem.h" />
     <ClInclude Include="Components\Component.h" />
@@ -65,7 +68,7 @@
     <ClInclude Include="Components\CStaticMesh.h" />
     <ClInclude Include="Components\CTransform.h" />
     <ClInclude Include="Components\Entity.h" />
-    <ClInclude Include="Engine\EditorController.h" />
+    <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="Engine\ResourceManager.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\View.h" />
@@ -106,7 +109,7 @@
     <None Include="..\Shaders\FullscreenVS.glsl" />
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
-    <None Include="..\Shaders\ObjectHighlightFS.glsl" />
+    <None Include="..\Shaders\OutlineFS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
   </ItemGroup>

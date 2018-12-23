@@ -3,6 +3,11 @@
 #include "DrawingPlan.h"
 #include "Components/CMaterial.h"
 
+enum class EMeshType
+{
+	StaticMesh
+};
+
 template<EMeshType MeshType>
 class MaterialVS : public GLShader
 {

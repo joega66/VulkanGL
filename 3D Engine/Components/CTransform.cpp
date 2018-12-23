@@ -1,13 +1,18 @@
 #include "CTransform.h"
-#include "../GL.h"
+#include "GL.h"
 
-CTransform::CTransform(glm::vec3&& Position, glm::vec3&& Rotation, float Angle, glm::vec3&& InScale)
+CTransform::CTransform(const CTransform& Other)
+	: CTransform(Other.Position, Other.Rotation, Other.Angle, Other.ScaleBy)
+{
+}
+
+CTransform::CTransform(const glm::vec3& Position, const glm::vec3& Rotation, float Angle, const glm::vec3& InScale)
 {
 	LocalToWorldUniform = GLCreateUniformBuffer<glm::mat4>(EUniformUpdate::Frequent);
 
-	Translate(std::forward<glm::vec3>(Position));
-	Rotate(std::forward<glm::vec3>(Rotation), Angle);
-	Scale(std::forward<glm::vec3>(InScale));
+	Translate(Position);
+	Rotate(Rotation, Angle);
+	Scale(InScale);
 }
 
 CTransform::~CTransform()
@@ -49,20 +54,20 @@ const glm::mat4& CTransform::GetLocalToParent()
 	return LocalToParent;
 }
 
-void CTransform::Translate(glm::vec3&& InPosition)
+void CTransform::Translate(const glm::vec3& InPosition)
 {
 	Position = InPosition;
 	MarkDirty();
 }
 
-void CTransform::Rotate(glm::vec3&& InRotation, float InAngle)
+void CTransform::Rotate(const glm::vec3& InRotation, float InAngle)
 {
 	Rotation = InRotation;
 	Angle = InAngle;
 	MarkDirty();
 }
 
-void CTransform::Scale(glm::vec3&& InScale)
+void CTransform::Scale(const glm::vec3& InScale)
 {
 	ScaleBy = InScale;
 	MarkDirty();
