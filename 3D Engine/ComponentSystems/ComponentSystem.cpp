@@ -1,7 +1,7 @@
 #include "ComponentSystem.h"
-#include "Components/ComponentArray.h"
-#include "Components/Entity.h"
-#include "Renderer/Scene.h"
+#include <Components/ComponentArray.h>
+#include <Components/Entity.h>
+#include <Renderer/Scene.h>
 
 ComponentSystemManager GComponentSystemManager;
 
@@ -20,16 +20,16 @@ void ComponentSystemManager::AddComponentArray(IComponentArray& ComponentArray)
 	ComponentArrays.push_back(ComponentArray);
 }
 
-void ComponentSystemManager::UpdateSystems(Scene& Scene)
+void ComponentSystemManager::UpdateSystems()
 {
 	for (auto& ComponentSystem : ComponentSystems)
 	{
-		ComponentSystem.get().Update(Scene);
+		ComponentSystem.get().Update();
 	}
 
 	for (auto& RenderSystem : RenderSystems)
 	{
-		RenderSystem.get().RenderUpdate(Scene);
+		RenderSystem.get().RenderUpdate();
 	}
 
 	GEntityManager.EntitiesForRenderUpdate.clear();

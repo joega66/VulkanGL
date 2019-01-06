@@ -4,5 +4,7 @@
 class StaticMeshSystem : public ComponentSystem
 {
 public:
-	virtual void RenderUpdate(class Scene& Scene) override;
+	StaticMeshSystem();
+	virtual void RenderUpdate() override;
+	virtual void OnRemove(std::type_index Type, const Entity& Entity) override;
 };

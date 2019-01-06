@@ -21,11 +21,11 @@ Ray View::ScreenPointToRay()
 	const glm::vec2& Mouse = GPlatform->GetMousePosition();
 
 	float X = (2.0f * Mouse.x) / Window.x - 1.0f;
-	float Y = 1.0f - (2.0f * Mouse.y) / Window.y;
+	float Y = (2.0f * Mouse.y) / Window.y - 1.0f;
 	float Z = 1.0f;
 
 	glm::vec3 RayNdc = glm::vec3(X, Y, Z);
-	glm::vec4 RayClip = glm::vec4(RayNdc.x, RayNdc.y, 1.0, 1.0);
+	glm::vec4 RayClip = glm::vec4(RayNdc.x, RayNdc.y, RayNdc.z, 1.0);
 	glm::vec4 RayEye = glm::inverse(GetPerspectiveMatrix()) * RayClip;
 	glm::vec3 RayWorld = glm::vec3(glm::inverse(GetViewMatrix()) * RayEye);
 	RayWorld = glm::normalize(RayWorld);

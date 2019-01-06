@@ -74,6 +74,7 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 	ViewInfo.subresourceRange.levelCount = 1;
 	ViewInfo.subresourceRange.baseArrayLayer = 0;
 	ViewInfo.subresourceRange.layerCount = Usage & RU_Cubemap ? 6 : 1;
+	ViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
 }

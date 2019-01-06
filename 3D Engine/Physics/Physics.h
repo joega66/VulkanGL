@@ -1,13 +1,11 @@
 #pragma once
-#include "Platform/Platform.h"
-#include "Components/Entity.h"
+#include <Platform/Platform.h>
+#include <Components/Entity.h>
 
-class BoundingBox
+struct BoundingBox
 {
-public:
 	glm::vec3 Min = glm::vec3(std::numeric_limits<float>::max());
 	glm::vec3 Max = glm::vec3(std::numeric_limits<float>::min());
-	BoundingBox() = default;
 };
 
 struct Ray

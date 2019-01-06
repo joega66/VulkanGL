@@ -3,7 +3,7 @@
 
 AssetManager GAssetManager;
 
-StaticMeshRef AssetManager::SaveStaticMesh(const std::string& Name, const std::string& File)
+StaticMeshRef AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File)
 {
 	StaticMeshRef Static = MakeRef<StaticMesh>(File);
 	StaticMeshes[Name] = Static;
@@ -15,7 +15,7 @@ StaticMeshRef AssetManager::GetStaticMesh(const std::string & Name)
 	return GetValue(StaticMeshes, Name);
 }
 
-void AssetManager::SaveImage(const std::string& Name, const std::string& File, EImageFormat Format)
+void AssetManager::LoadImage(const std::string& Name, const std::string& File, EImageFormat Format)
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = GPlatform->LoadImage(File, Width, Height, Channels);
@@ -26,4 +26,38 @@ void AssetManager::SaveImage(const std::string& Name, const std::string& File, E
 GLImageRef AssetManager::GetImage(const std::string& Name)
 {
 	return GetValue(Images, Name);
+}
+
+void AssetManager::LoadCubemap(const std::string& Name, std::array<std::string, 6>& Files, EImageFormat Format)
+{
+	CubemapCreateInfo CubemapCreateInfo;
+
+	for (uint32 i = 0; i < Files.size(); i++)
+	{
+		auto& File = Files[i];
+		auto& Face = CubemapCreateInfo.CubeFaces[i];
+		int32 Width, Height, Channels;
+		uint8* Pixels = GPlatform->LoadImage(File, Width, Height, Channels);
+		Face = { Width, Height, Pixels };
+	}
+
+	auto& Face = CubemapCreateInfo.CubeFaces[0];
+
+	check(std::all_of(CubemapCreateInfo.CubeFaces.begin() + 1, CubemapCreateInfo.CubeFaces.end(), 
+		[&](const auto& Other)
+	{
+		return Face.Width == Other.Width && Face.Height == Other.Height;
+	}), "Cubemap faces must have same dimensions.");
+
+	Cubemaps[Name] = GLCreateCubemap(
+		Face.Width
+		, Face.Height
+		, Format
+		, EResourceUsageFlags::RU_Cubemap | EResourceUsageFlags::RU_ShaderResource
+		, CubemapCreateInfo);
+}
+
+GLImageRef AssetManager::GetCubemap(const std::string& Name)
+{
+	return Cubemaps[Name];
 }

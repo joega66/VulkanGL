@@ -1,7 +1,7 @@
 #include "VulkanSurface.h"
 #include "VulkanGL.h"
 #include "VulkanDevice.h"
-#include "Platform/Platform.h"
+#include <Platform/Platform.h>
 #include <algorithm>
 
 VulkanSurface::VulkanSurface(VulkanDevice& Device)

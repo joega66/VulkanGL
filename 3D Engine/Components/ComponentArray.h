@@ -1,5 +1,5 @@
 #pragma once
-#include "ComponentSystems/ComponentSystem.h"
+#include <ComponentSystems/ComponentSystem.h>
 
 class IComponentArray
 {
@@ -27,7 +27,6 @@ public:
 		{
 			QueueEntityForRenderUpdate(EntityID);
 		}
-
 		Components.emplace(EntityID, TComponent(std::forward<Args>(InArgs)...));
 		return Components[EntityID];
 	}
@@ -38,7 +37,6 @@ public:
 		{
 			QueueEntityForRenderUpdate(EntityID);
 		}
-
 		Components.emplace(EntityID, *std::static_pointer_cast<TComponent>(Data));
 	}
 
@@ -60,6 +58,15 @@ public:
 	virtual void RemoveComponent(const uint64 EntityID) final
 	{
 		Components.erase(EntityID);
+		for (auto& ComponentSystem : OnRemoveListeners)
+		{
+			ComponentSystem.get().OnRemove(std::type_index(typeid(TComponent)), EntityID);
+		}
+	}
+
+	void OnRemoveListener(ComponentSystem& ComponentSystem)
+	{
+		OnRemoveListeners.push_back(ComponentSystem);
 	}
 
 	static ComponentArray<TComponent>& Get()
@@ -71,4 +78,6 @@ public:
 private:
 	// @todo Object pool for components
 	Map<uint64, TComponent> Components;
+	std::vector<std::reference_wrapper<ComponentSystem>> OnRemoveListeners;
+	std::vector<Entity> RemovedEntities;
 };

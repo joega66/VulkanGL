@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform/Platform.h"
+#include <Platform/Platform.h>
 #include <vulkan/vulkan.h>
 #include <sstream>
 #include <iostream>

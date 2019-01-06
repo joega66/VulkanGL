@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="ComponentSystems\ComponentSystem.cpp" />
     <ClCompile Include="ComponentSystems\EditorControllerSystem.cpp" />
+    <ClCompile Include="ComponentSystems\GameSystem.cpp" />
     <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp" />
     <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp" />
     <ClCompile Include="Components\CMaterial.cpp" />
@@ -60,6 +61,7 @@
   <ItemGroup>
     <ClInclude Include="ComponentSystems\ComponentSystem.h" />
     <ClInclude Include="ComponentSystems\EditorControllerSystem.h" />
+    <ClInclude Include="ComponentSystems\GameSystem.h" />
     <ClInclude Include="ComponentSystems\TransformGizmoSystem.h" />
     <ClInclude Include="ComponentSystems\StaticMeshSystem.h" />
     <ClInclude Include="Components\Component.h" />
@@ -110,14 +112,17 @@
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
     <None Include="..\Shaders\OutlineFS.glsl" />
+    <None Include="..\Shaders\SkyboxFS.glsl" />
+    <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
+    <None Include="..\Shaders\View.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3251e0ea-e82a-4fe7-a893-499a35dca794}</ProjectGuid>
     <RootNamespace>_3D_Engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -165,8 +170,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath)</IncludePath>

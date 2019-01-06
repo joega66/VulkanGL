@@ -1,6 +1,6 @@
 #pragma once
 #include "ComponentSystem.h"
-#include "Components/Entity.h"
+#include <Components/Entity.h>
 
 class TransformGizmoSystem : public ComponentSystem
 {
@@ -10,6 +10,6 @@ public:
 	bool bFirstPress = true;
 
 	TransformGizmoSystem();
-	virtual void Update(class Scene& Scene) final;
-	void RemoveOutline(Scene& Scene, Entity Entity);
+	virtual void Update() final;
+	void RemoveOutline(Entity Entity);
 };

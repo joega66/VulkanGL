@@ -29,7 +29,7 @@ const Map<VkFormat, uint32> ConvertVulkanFormatToSize()
 {
 	Map<VkFormat, uint32> SizeOfVulkanFormat;
 
-	for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+	for (auto& [GLSLType, Format] : GLSLTypeToVulkanFormat)
 	{
 		auto SizeOf = GetValue(GLSLTypeSizes, GLSLType);
 		SizeOfVulkanFormat[Format] = SizeOf;
@@ -252,7 +252,8 @@ void VulkanGL::EndRender()
 
 void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
 {
-	// @todo-joe Pretty heavyweight function... Should just defer the creation of this stuff until draw.
+	// @todo Pretty heavyweight function... Should just defer the creation of this stuff until draw.
+	// @todo Check if the render pass is the same. 
 	check(NumRTs < MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
 
 	Pending.NumRTs = NumRTs;
@@ -384,12 +385,14 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 		DepthDescription.storeOp = DepthImage->IsDepth() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		DepthDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		DepthDescription.initialLayout = DepthImage->Layout;
 		DepthDescription.finalLayout = FinalLayout;
 		Descriptions[NumRTs] = DepthDescription;
 
 		DepthRef.attachment = NumRTs;
 		DepthRef.layout = FinalLayout;
+
+		DepthImage->Layout = FinalLayout;
 	}
 
 	VkSubpassDescription Subpass = {};
@@ -560,7 +563,6 @@ GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, 
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-// @todo CubemapCreateInfo
 GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
@@ -582,6 +584,38 @@ GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Forma
 	{
 		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
 		Allocator.UploadImageData(GLImage, Data);
+		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	}
+
+	return GLImage;
+}
+
+GLImageRef VulkanGL::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+{
+	// This path will be supported, but should really prefer to use a compressed format.
+	VkImage Image;
+	VkDeviceMemory Memory;
+	VkImageLayout Layout;
+
+	bool bHasData = std::find_if(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(),
+		[](const auto& TextureInfo) { return TextureInfo.Data; })
+		!= CubemapCreateInfo.CubeFaces.end();
+
+	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, bHasData);
+
+	VulkanImageRef GLImage = MakeRef<VulkanImage>(Device
+		, Image
+		, Memory
+		, Layout
+		, Format
+		, Width
+		, Height
+		, UsageFlags);
+
+	if (bHasData)
+	{
+		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		Allocator.UploadCubemapData(GLImage, CubemapCreateInfo);
 		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
@@ -650,6 +684,7 @@ void VulkanGL::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest
 void VulkanGL::SetStencilTest(bool bStencilTestEnable)
 {
 	Pending.DepthStencilState.stencilTestEnable = bStencilTestEnable;
+
 	bDirtyPipeline = true;
 }
 
@@ -661,13 +696,6 @@ void VulkanGL::SetStencilState(ECompareOp CompareOp,
 	uint32 WriteMask, 
 	uint32 Reference)
 {
-	static const Map<EStencilOp, VkStencilOp> VulkanStencilOp =
-	{
-		ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
-		ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
-		ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
-	};
-
 	static const Map<ECompareOp, VkCompareOp> VulkanCompareOp =
 	{
 		ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
@@ -678,6 +706,13 @@ void VulkanGL::SetStencilState(ECompareOp CompareOp,
 		ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
 		ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
 		ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
+	};
+
+	static const Map<EStencilOp, VkStencilOp> VulkanStencilOp =
+	{
+		ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
+		ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
+		ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
 	};
 
 	auto& DepthStencilState = Pending.DepthStencilState;
@@ -877,6 +912,7 @@ void VulkanGL::CleanDescriptorSets()
 
 	for (auto& DescriptorBuffersInShaderStage : DescriptorBuffers)
 	{
+		// @todo God you're ugly. Use a named struct.
 		auto& BufferDescriptors = DescriptorBuffersInShaderStage.second;
 		for (auto& Descriptors : BufferDescriptors)
 		{
@@ -1179,7 +1215,7 @@ void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayo
 }
 
 void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
-	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags, const void* Data)
+	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags, bool bTransferDstBit)
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -1207,7 +1243,7 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 			Usage |= GLImage::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
-		Usage |= Data ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
+		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 		Usage |= UsageFlags & RU_ShaderResource ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
 		Usage |= UsageFlags & RU_UnorderedAccess ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 

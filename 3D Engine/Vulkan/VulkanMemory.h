@@ -60,6 +60,7 @@ public:
 	void* LockBuffer(const SharedVulkanBuffer& Buffer);
 	void UnlockBuffer(const SharedVulkanBuffer& Buffer);
 	void UploadImageData(const VulkanImageRef Image, const uint8* Pixels);
+	void UploadCubemapData(const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo);
 
 private:
 	VulkanDevice& Device;
@@ -106,7 +107,6 @@ class VulkanUniformBuffer : public GLUniformBuffer
 {
 public:
 	SharedVulkanBufferRef Buffer;
-	bool bDirty = false;
 
 	VulkanUniformBuffer(SharedVulkanBufferRef Buffer)
 		: Buffer(Buffer)
@@ -118,9 +118,6 @@ public:
 	~VulkanUniformBuffer()
 	{
 	}
-
-private:
-	virtual void MarkDirty() final { bDirty = true; }
 };
 
 CLASS(VulkanUniformBuffer);

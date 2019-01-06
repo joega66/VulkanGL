@@ -1,6 +1,6 @@
 #pragma once
 #include "GL.h"
-#include "Physics/Physics.h"
+#include <Physics/Physics.h>
 
 class View
 {

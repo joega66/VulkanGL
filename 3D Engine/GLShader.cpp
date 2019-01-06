@@ -2,12 +2,12 @@
 
 GLShaderCompilerRef GShaderCompiler;
 
-void GLShaderCompiler::StoreShader(const std::string& Type, GLShaderRef Shader)
+void GLShaderCompiler::StoreShader(std::type_index Type, GLShaderRef Shader)
 {
 	Shaders[Type] = Shader;
 }
 
-GLShaderRef GLShaderCompiler::FindShader(const std::string& Type)
+GLShaderRef GLShaderCompiler::FindShader(std::type_index Type)
 {
 	if (Contains(Shaders, Type))
 	{

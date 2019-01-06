@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform/Platform.h"
+#include <Platform/Platform.h>
 
 template<typename T, bool bNeedsRenderUpdate = false>
 struct Component

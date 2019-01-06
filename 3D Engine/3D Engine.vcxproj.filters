@@ -18,9 +18,6 @@
     <Filter Include="Source\Renderer">
       <UniqueIdentifier>{cfefb2d1-747e-410f-894e-04c88556a23c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\SPIRV-Cross">
-      <UniqueIdentifier>{cb045061-4184-4be1-9e0a-0745f217c51f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Vulkan">
       <UniqueIdentifier>{b92d8b85-c159-4d27-a3d0-53445f7a0ee3}</UniqueIdentifier>
     </Filter>
@@ -39,25 +36,28 @@
     <Filter Include="Source\Physics">
       <UniqueIdentifier>{2ea3e4fb-8478-4ac6-8aec-7816e70b388b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Vulkan\SPIRV-Cross">
+      <UniqueIdentifier>{cb045061-4184-4be1-9e0a-0745f217c51f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
     <ClInclude Include="SPIRV-Cross\spirv.hpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
     <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
     <ClInclude Include="SPIRV-Cross\spirv_common.hpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
     <ClInclude Include="SPIRV-Cross\spirv_cross.hpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
     <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
     <ClInclude Include="Vulkan\VulkanCommands.h">
       <Filter>Source\Vulkan</Filter>
@@ -170,19 +170,22 @@
     <ClInclude Include="CoreEngine.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ComponentSystems\GameSystem.h">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClCompile>
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClCompile>
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp">
-      <Filter>Source\SPIRV-Cross</Filter>
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCommands.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -283,6 +286,9 @@
     <ClCompile Include="Components\ComponentArray.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
+    <ClCompile Include="ComponentSystems\GameSystem.cpp">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -310,6 +316,15 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\OutlineFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SkyboxVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\View.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SkyboxFS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

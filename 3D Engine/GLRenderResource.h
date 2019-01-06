@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform/Platform.h"
+#include <Platform/Platform.h>
 
 enum EImageFormat
 {
@@ -136,12 +136,14 @@ CLASS(GLIndexBuffer);
 class GLUniformBuffer : public GLRenderResource
 {
 public:
+	bool bDirty = false;
+
 	template<typename UniformType>
 	void Set(const UniformType& UniformData)
 	{
 		check(GetSize() == sizeof(UniformType), "Size mismatch.");
 		Data = std::make_shared<UniformType>(UniformData);
-		MarkDirty();
+		bDirty = true;
 	}
 
 	const void* GetData() { return Data.get(); }
@@ -149,7 +151,6 @@ public:
 
 private:
 	std::shared_ptr<void> Data;
-	virtual void MarkDirty() = 0;
 };
 
 CLASS(GLUniformBuffer);
@@ -183,6 +184,7 @@ public:
 	ELoadAction LoadAction;
 	EStoreAction StoreAction;
 
+	// @todo std::variant? 
 	std::array<float, 4> ClearValue;
 	float DepthClear;
 	uint32 StencilClear;
@@ -192,3 +194,16 @@ public:
 };
 
 CLASS(GLRenderTargetView);
+
+struct TextureCreateInfo
+{
+	int32 Width;
+	int32 Height;
+	uint8* Data;
+};
+
+struct CubemapCreateInfo
+{
+	// +X, -X, +Y, -Y, +Z, -Z
+	std::array<TextureCreateInfo, 6> CubeFaces;
+};

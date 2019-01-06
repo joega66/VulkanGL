@@ -11,15 +11,23 @@ public:
 	DrawingPlanList<DepthPassDrawingPlan> Stencil;
 	DrawingPlanList<OutlineDrawingPlan> Outline;
 
+	GLImageRef Skybox;
+
 	Scene();
+	Scene(const Scene&) = delete;
+	Scene& operator=(const Scene&) = delete;
+
 	void Render();
+
+	static Scene& Get();
 
 private:
 	GLImageRef SceneDepth;
-	GLRenderTargetViewRef SceneDepthView;
 	GLImageRef OutlineDepthStencil;
 
 	void RenderLightingPass();
+
 	void RenderEditorPrimitives();
+	void RenderSkybox();
 	void RenderOutlines();
 };

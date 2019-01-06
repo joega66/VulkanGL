@@ -62,7 +62,7 @@ void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef 
 	GRender->SetUniformBuffer(Shader, Location, UniformBuffer);
 }
 
-void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState & Sampler)
+void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
 {
 	GRender->SetShaderImage(Shader, Location, Image, Sampler);
 }
@@ -95,6 +95,11 @@ GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, 
 GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data)
 {
 	return GRender->CreateImage(Width, Height, Format, UsageFlags, Data);
+}
+
+GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+{
+	return GRender->CreateCubemap(Width, Height, Format, UsageFlags, CubemapCreateInfo);
 }
 
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)

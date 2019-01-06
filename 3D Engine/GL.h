@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform/Platform.h"
+#include <Platform/Platform.h>
 #include "GLShader.h"
 
 enum class EDepthCompareTest
@@ -78,14 +78,9 @@ enum class EFilter
 
 struct SamplerState
 {
-	EFilter Filter;
-	ESamplerAddressMode SAM;
-	ESamplerMipmapMode SMM;
-
-	SamplerState(EFilter Filter = EFilter::Linear, ESamplerAddressMode SAM = ESamplerAddressMode::ClampToBorder, ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear)
-		: Filter(Filter), SAM(SAM), SMM(SMM)
-	{
-	}
+	EFilter Filter = EFilter::Linear;
+	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToBorder;
+	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
 };
 
 enum class EUniformUpdate
@@ -154,6 +149,7 @@ public:
 	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent) = 0;
 	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr) = 0;
+	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) = 0;
 	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
@@ -195,6 +191,7 @@ void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32
 GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr);
 GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr);
 GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr);
+GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
 GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
@@ -219,10 +216,8 @@ GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data, EUniform
 
 template<typename ShaderType>
 GLShaderRef GLCreateShader()
-{
-	const std::string& Type = typeid(ShaderType).name();
-	
-	if (GLShaderRef Shader = GShaderCompiler->FindShader(Type); Shader)
+{	
+	if (GLShaderRef Shader = GShaderCompiler->FindShader(std::type_index(typeid(ShaderType))); Shader)
 	{
 		return Shader;
 	}

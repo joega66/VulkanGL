@@ -18,7 +18,6 @@ public:
 	void SetParent(CTransform* Parent);
 	void AddChild(CTransform* Child);
 	void RemoveChild(CTransform* Child);
-	bool IsDirty() const;
 
 	const glm::vec3& GetPosition() const
 	{
@@ -46,8 +45,7 @@ private:
 
 	CTransform* Parent = nullptr;
 	std::list<CTransform*> Children;
-	bool bDirty = true;
 
 	const glm::mat4& GetLocalToParent();
-	void MarkDirty();
+	void Clean();
 };

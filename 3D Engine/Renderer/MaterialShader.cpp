@@ -1,5 +1,5 @@
 #include "MaterialShader.h"
-#include "Engine/StaticMesh.h"
+#include <Engine/StaticMesh.h>
 
 void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources, 
 	const MaterialProxy& MaterialProxy,
@@ -34,7 +34,7 @@ void MaterialDrawingPlan::SetUniforms(const View& View, GraphicsPipeline&& Pipel
 
 	for (auto& Material : Materials)
 	{
-		GLSetShaderImage(Pipeline.Fragment, Material.Location, Material.Image, SamplerState());
+		GLSetShaderImage(Pipeline.Fragment, Material.Location, Material.Image, SamplerState{});
 	}
 }
 

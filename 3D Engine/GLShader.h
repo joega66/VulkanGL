@@ -1,7 +1,8 @@
 #pragma once
 #include "GLRenderResource.h"
+#include <typeindex>
 
-enum class EShaderStage : int32
+enum class EShaderStage
 {
 	Vertex,
 	TessControl,
@@ -86,7 +87,7 @@ CLASS(GLShader);
 class GLShaderCompiler
 {
 public:
-	GLShaderRef FindShader(const std::string& Type);
+	GLShaderRef FindShader(std::type_index Type);
 
 	template<typename ShaderType>
 	GLShaderRef CompileShader(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
@@ -95,16 +96,15 @@ public:
 		ShaderType::ModifyCompilationEnvironment(Worker);
 		ShaderMetadata Meta(Filename, EntryPoint, Stage);
 		GLShaderRef Shader = CompileShader(Worker, Meta);
-		StoreShader(std::string(typeid(ShaderType).name()), Shader);
+		StoreShader(std::type_index(typeid(ShaderType)), Shader);
 		return Shader;
 	}
 
 private:
 	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const = 0;
+	void StoreShader(std::type_index Type, GLShaderRef Shader);
 
-	void StoreShader(const std::string& Type, GLShaderRef Shader);
-
-	Map<std::string, GLShaderRef> Shaders;
+	Map<std::type_index, GLShaderRef> Shaders;
 };
 
 CLASS(GLShaderCompiler);

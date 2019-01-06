@@ -1,8 +1,9 @@
 #pragma once
 #include "ComponentSystem.h"
 
-class EditorControllerSystem : public ComponentSystem
+class GameSystem : public ComponentSystem 
 {
 public:
+	GameSystem();
 	virtual void Update() override;
 };

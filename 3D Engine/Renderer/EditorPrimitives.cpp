@@ -1,5 +1,5 @@
 #include "EditorPrimitives.h"
-#include "Engine/StaticMesh.h"
+#include <Engine/StaticMesh.h>
 
 OutlineDrawingPlan::OutlineDrawingPlan(const StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform)
 	: DepthPassDrawingPlan(Resources, LocalToWorldUniform)

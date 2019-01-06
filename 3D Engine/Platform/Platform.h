@@ -173,7 +173,6 @@ template<typename ContainerType, typename ElementType>
 inline bool Contains(const ContainerType& Container, const ElementType& Element)
 {
 	return Container.count(Element) != 0;
-	//return Container.find(Element) != Container.end();
 }
 
 template<typename T, std::size_t N>
@@ -251,6 +250,7 @@ private:
 	std::chrono::system_clock::time_point Start;
 };
 
+// @todo Move this!
 namespace Input
 {
 	enum EButton

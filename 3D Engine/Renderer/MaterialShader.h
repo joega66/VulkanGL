@@ -1,7 +1,7 @@
 #pragma once
 #include "../GLShader.h"
 #include "DrawingPlan.h"
-#include "Components/CMaterial.h"
+#include <Components/CMaterial.h>
 
 enum class EMeshType
 {
@@ -31,7 +31,7 @@ public:
 		{
 			Worker.SetDefine("HAS_NORMAL_MAP");
 		}
-
+		// REFLECTION WHEN???
 		if constexpr (MeshType == EMeshType::StaticMesh)
 		{
 			Worker.SetDefine("STATIC_MESH");

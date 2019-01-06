@@ -1,13 +1,8 @@
+#include "View.glsl"
 #ifdef STATIC_MESH
 #include "StaticMeshVS.glsl"
-
 #endif
 
-uniform ViewUniform
-{
-	mat4 View;
-	mat4 Projection;
-} View;
 
 void main()
 {

@@ -23,6 +23,22 @@ private:
 	GLShaderRef FragmentShader;
 };
 
-struct DrawLineInfo
+class SkyboxVS : public GLShader
 {
+public:
+	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	{
+		static GLBaseShaderInfo Base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
+		return Base;
+	}
+};
+
+class SkyboxFS : public GLShader
+{
+public:
+	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	{
+		static GLBaseShaderInfo Base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
+		return Base;
+	}
 };

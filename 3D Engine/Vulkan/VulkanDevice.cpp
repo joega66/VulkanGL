@@ -1,6 +1,6 @@
 #include "VulkanDevice.h"
 #include "VulkanSurface.h"
-#include "Platform/WindowsPlatform.h"
+#include <Platform/WindowsPlatform.h>
 #include <GLFW/glfw3.h>
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT Flags, VkDebugReportObjectTypeEXT ObjType,

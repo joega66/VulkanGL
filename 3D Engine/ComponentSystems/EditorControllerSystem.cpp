@@ -1,9 +1,9 @@
 #include "EditorControllerSystem.h"
-#include "Renderer/Scene.h"
+#include <Renderer/Scene.h>
 
-void EditorControllerSystem::Update(Scene& Scene)
+void EditorControllerSystem::Update()
 {
-	View& View = Scene.View;
+	auto& View = Scene::Get().View;
 
 	View.Translate();
 

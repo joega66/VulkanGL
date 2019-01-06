@@ -1,6 +1,6 @@
 #pragma once
 #include "MaterialShader.h"
-#include "Components/CStaticMesh.h"
+#include <Components/CStaticMesh.h>
 
 class LightingPassBaseVS : public GLShader
 {

@@ -1,5 +1,5 @@
 #include "DepthPass.h"
-#include "Engine/StaticMesh.h"
+#include <Engine/StaticMesh.h>
 
 DepthPassDrawingPlan::DepthPassDrawingPlan(const StaticMeshResources& Resources, GLUniformBufferRef InLocalToWorldUniform)
 {

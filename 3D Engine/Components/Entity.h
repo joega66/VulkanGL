@@ -1,7 +1,6 @@
 #pragma once
 #include "ComponentArray.h"
 
-// @todo Should also perform checks for invalid entities
 class Entity
 {
 public:
@@ -114,7 +113,6 @@ private:
 		return EntityHasComponents<T1>(Entity) && EntityHasComponents<T2, More...>(Entity);
 	}
 
-	// @todo Not ideal. Should use an object pool to store entities.
 	uint64 NextEntityID = 0;
 	Map<std::string, Entity> Prefabs;
 	Map<uint64, std::string> PrefabNames;

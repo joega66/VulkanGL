@@ -1,44 +1,22 @@
 #include "TransformGizmoSystem.h"
-#include "Engine/ResourceManager.h"
-#include "Renderer/Scene.h"
+#include <Engine/ResourceManager.h>
+#include <Renderer/Scene.h>
 
 TransformGizmoSystem::TransformGizmoSystem()
 {
-	// @todo Change GetComponent to std::optional<std::reference_wrapper
-	//TranslateGizmo.AddComponent<CStaticMesh>(GAssetManager.GetStaticMesh("Cube"));
-	// @todo This is a good place to have prefabs. A prefab is basically an entity whose
-	// components aren't enabled.
-	Entity TranslateGizmoPrefab = GEntityManager.CreatePrefab("Translate Gizmo");
-	TranslateGizmoPrefab.AddComponent<CStaticMesh>(GAssetManager.GetStaticMesh("Cube"));
-
-	auto E1 = GEntityManager.CreateFromPrefab("Translate Gizmo");
-	auto E2 = GEntityManager.CreateFromPrefab("Translate Gizmo");
-	auto E3 = GEntityManager.CreateFromPrefab("Translate Gizmo");
-	auto E4 = GEntityManager.CreateFromPrefab("Translate Gizmo");
-
-	auto& Transform = E1.GetComponent<CTransform>();
-	Transform.Translate(glm::vec3(-10.0f, 0.0f, 0.0f));
-
-	auto& Transform1 = E2.GetComponent<CTransform>();
-	Transform1.Translate(glm::vec3(10.0f, 0.0f, 0.0f));
-
-	auto& Transform2 = E3.GetComponent<CTransform>();
-	Transform2.Translate(glm::vec3(0.0f, 0.0f, -10.0f));
-
-	auto& Transform3 = E4.GetComponent<CTransform>();
-	Transform3.Translate(glm::vec3(0.0f, 0.0f, 10.0f));
-
-	// @todo Let's draw the hitboxes to see where they are landing...
 }
 
-void TransformGizmoSystem::RemoveOutline(Scene& Scene, Entity Entity)
+void TransformGizmoSystem::RemoveOutline(Entity Entity)
 {
+	auto& Scene = Scene::Get();
 	Scene.Stencil.Remove(Entity);
 	Scene.Outline.Remove(Entity);
 }
 
-void TransformGizmoSystem::Update(Scene& Scene)
+void TransformGizmoSystem::Update()
 {
+	auto& Scene = Scene::Get();
+
 	if (bFirstPress && Input::GetKeyDown(Input::MouseLeft))
 	{
 		bFirstPress = false;
@@ -51,7 +29,7 @@ void TransformGizmoSystem::Update(Scene& Scene)
 
 		if (!(LastX == Scene.View.LastXPos && LastY == Scene.View.LastYPos))
 		{
-			// Don't cast ray while looking around
+			// Don't select while looking around
 			return;
 		}
 
@@ -63,28 +41,26 @@ void TransformGizmoSystem::Update(Scene& Scene)
 			{
 				if (Entity != SelectedEntity)
 				{
-					RemoveOutline(Scene, SelectedEntity);
-
+					RemoveOutline(SelectedEntity);
 					SelectedEntity = Entity;
 
 					auto& StaticMesh = Entity.GetComponent<CStaticMesh>().StaticMesh;
-					auto& MeshTransform = Entity.GetComponent<CTransform>();
+					auto& Transform = Entity.GetComponent<CTransform>();
 
-					CTransform ScaledUpTransform = MeshTransform;
+					auto ScaledUpTransform = Transform;
 					ScaledUpTransform.Scale(glm::vec3(1.05f));
 
 					for (auto& Resource : StaticMesh->Resources)
 					{
-						Scene.Stencil.Add(Entity, DepthPassDrawingPlan(Resource, MeshTransform.LocalToWorldUniform));
+						Scene.Stencil.Add(Entity, DepthPassDrawingPlan(Resource, Transform.LocalToWorldUniform));
 						Scene.Outline.Add(Entity, OutlineDrawingPlan(Resource, ScaledUpTransform.LocalToWorldUniform));
 					}
 				}
-
 				break;
 			}
 			else
 			{
-				RemoveOutline(Scene, SelectedEntity);
+				RemoveOutline(SelectedEntity);
 				SelectedEntity = Entity::InvalidID;
 			}
 		}

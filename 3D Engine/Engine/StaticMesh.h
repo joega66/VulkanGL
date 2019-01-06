@@ -1,6 +1,6 @@
 #pragma once
-#include "Components/CMaterial.h"
-#include "Physics/Physics.h"
+#include <Components/CMaterial.h>
+#include <Physics/Physics.h>
 
 struct aiNode;
 struct aiScene;

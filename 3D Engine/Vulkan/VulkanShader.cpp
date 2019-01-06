@@ -1,7 +1,7 @@
 #include "VulkanShader.h"
 #include "VulkanGL.h"
 #include "../GL.h"
-#include "SPIRV-Cross/spirv_glsl.hpp"
+#include <SPIRV-Cross/spirv_glsl.hpp>
 
 struct VertexStreamFormat
 {
@@ -140,7 +140,7 @@ static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttribute
 		return LHS.Location < RHS.Location;
 	});
 
-	std::vector<VkVertexInputAttributeDescription> Descriptions;
+	std::vector<VkVertexInputAttributeDescription> Descriptions(Streams.size());
 
 	for (uint32 Binding = 0; Binding < Streams.size(); Binding++)
 	{
@@ -149,7 +149,7 @@ static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttribute
 		Description.location = Streams[Binding].Location;
 		Description.format = Streams[Binding].Format;
 		Description.offset = 0;
-		Descriptions.push_back(Description);
+		Descriptions[Binding] = Description;
 	}
 
 	return Descriptions;

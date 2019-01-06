@@ -187,27 +187,25 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 	}
 }
 
-void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* Pixels)
+static VkDeviceSize GetNumBytes(const VulkanImageRef Image)
 {
-	VkDeviceSize Size = Image->Width * Image->Height;
+	VkDeviceSize Bytes;
 
 	switch (Image->Format)
 	{
-	case IF_R8G8B8A8_UNORM:		
-		Size *= 4;
-		break;
-	case IF_BC2_UNORM_BLOCK:
-		check(Device.Features.textureCompressionBC, "Texture compression format not supported by this device.");
-		Size *= 4;
+	case IF_R8G8B8A8_UNORM:
+		Bytes = 4;
 		break;
 	default:
 		signal_unimplemented();
 	}
 
-	if (Image->Usage & RU_Cubemap)
-	{
-		Size *= 6;
-	}
+	return Bytes;
+}
+
+void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* Pixels)
+{
+	VkDeviceSize Size = Image->Width * Image->Height * GetNumBytes(Image);
 
 	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
 		[&] (auto StagingBuffer)
@@ -215,6 +213,29 @@ void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* P
 		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
 	});
 	GPlatform->Memcpy(MemMapped, Pixels, (size_t)Size);
+	UnlockImage(Image, Size);
+}
+
+void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo)
+{
+	VkDeviceSize Size = Image->Width * Image->Height * 6 * GetNumBytes(Image);
+
+	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
+		[&](auto StagingBuffer)
+	{
+		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
+	});
+
+	for (uint32 i = 0; i < CubemapCreateInfo.CubeFaces.size(); i++)
+	{
+		auto& Face = CubemapCreateInfo.CubeFaces[i];
+
+		if (Face.Data)
+		{
+			GPlatform->Memcpy((uint8*)MemMapped + i * Size / 6, Face.Data, (size_t)Size / 6);
+		}
+	}
+
 	UnlockImage(Image, Size);
 }
 
@@ -226,7 +247,7 @@ void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
 	if (Image->Usage & RU_Cubemap)
 	{
 		Size /= 6;
-		Regions.resize(6);
+		Regions.resize(6, {});
 
 		for (uint32 LayerIndex = 0; LayerIndex < Regions.size(); LayerIndex++)
 		{
