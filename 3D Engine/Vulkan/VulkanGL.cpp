@@ -121,7 +121,7 @@ void VulkanSurface::InitSwapchain()
 			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
 			, Extent.width
 			, Extent.height
-			, RU_RenderTargetable
+			, EResourceUsage::RenderTargetable
 			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 	}
 
@@ -281,7 +281,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 		ColorTarget = ResourceCast(ColorTargets[i]);
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
-		check(Image && (Image->Usage & RU_RenderTargetable), "Color target is invalid.");
+		check(Image && Any(Image->Usage & EResourceUsage::RenderTargetable), "Color target is invalid.");
 		check(Image->IsColor(), "Color target was not created in color format.");
 
 		Image->Layout = [&] ()
@@ -290,11 +290,11 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 			{
 				return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			}
-			else if (Image->Usage & RU_ShaderResource)
+			else if (Any(Image->Usage & EResourceUsage::ShaderResource))
 			{
 				return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			}
-			else if (Image->Usage & RU_RenderTargetable)
+			else if (Any(Image->Usage & EResourceUsage::RenderTargetable))
 			{
 				return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			}
@@ -323,7 +323,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 
 	VkPipelineDepthStencilStateCreateInfo& DepthStencil = Pending.DepthStencilState;
 
-	if (Access == DS_None)
+	if (Access == EDepthStencilAccess::None)
 	{
 		DepthStencil.depthWriteEnable = false;
 	}
@@ -333,36 +333,36 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 		check(DepthTarget, "Depth target is invalid.");
 
 		VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
-		check(DepthImage && (DepthImage->Usage & RU_RenderTargetable), "Depth target is invalid.");
+		check(DepthImage && Any(DepthImage->Usage & EResourceUsage::RenderTargetable), "Depth target is invalid.");
 		check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
 		VkImageLayout FinalLayout = [&] ()
 		{
-			if (Access == DS_DepthReadStencilRead)
+			if (Access == EDepthStencilAccess::DepthReadStencilRead)
 			{
-				check(DepthImage->Usage & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
+				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			}
-			else if (Access == DS_DepthReadStencilWrite)
+			else if (Access == EDepthStencilAccess::DepthReadStencilWrite)
 			{
-				check(DepthImage->Usage & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
+				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 			}
-			else if (Access == DS_DepthWriteStencilRead)
+			else if (Access == EDepthStencilAccess::DepthWriteStencilRead)
 			{
-				check(DepthImage->Usage & RU_ShaderResource, "Depth Image must be created with RU_ShaderResource.");
+				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
 				DepthStencil.depthWriteEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
 			}
 			else
 			{
-				if (Access == DS_DepthWrite)
+				if (Access == EDepthStencilAccess::DepthWrite)
 				{
 					DepthStencil.depthWriteEnable = true;
 				}
-				else if (Access == DS_StencilWrite)
+				else if (Access == EDepthStencilAccess::StencilWrite)
 				{
 					DepthStencil.depthWriteEnable = false;
 				}
@@ -399,7 +399,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 	Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	Subpass.pColorAttachments = ColorRefs.data();
 	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-	Subpass.pDepthStencilAttachment = !DepthTarget || DS_None ? nullptr : &DepthRef;
+	Subpass.pDepthStencilAttachment = !DepthTarget /*|| Access == EDepthStencilAccess::None*/ ? nullptr : &DepthRef;
 	
 	std::array<VkSubpassDependency, 2> Dependencies;
 
@@ -462,7 +462,7 @@ void VulkanGL::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 	bDirtyVertexStreams = true;
 }
 
-GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsageFlags Usage, const void* Data)
+GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
@@ -547,7 +547,7 @@ void VulkanGL::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex
 	vkCmdDraw(GetCommandBuffer(), VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void * Data)
+GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
 	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
 
@@ -558,12 +558,12 @@ GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndi
 
 GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
-	EResourceUsageFlags Usage = UniformUsage == EUniformUpdate::Frequent ? RU_KeepCPUAccessible : RU_None;
+	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent ? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr)
+GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
@@ -590,7 +590,7 @@ GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Forma
 	return GLImage;
 }
 
-GLImageRef VulkanGL::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+GLImageRef VulkanGL::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;
@@ -760,15 +760,15 @@ void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPol
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask)
+void VulkanGL::SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask)
 {
 	check(RenderTargetIndex < MaxSimultaneousRenderTargets, "Invalid render target index.");
 
 	VkColorComponentFlags Flags = 0;
-	Flags |= ColorWriteMask & Color_R ? VK_COLOR_COMPONENT_R_BIT : 0;
-	Flags |= ColorWriteMask & Color_G ? VK_COLOR_COMPONENT_G_BIT : 0;
-	Flags |= ColorWriteMask & Color_B ? VK_COLOR_COMPONENT_B_BIT : 0;
-	Flags |= ColorWriteMask & Color_A ? VK_COLOR_COMPONENT_A_BIT : 0;
+	Flags |= Any(ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
+	Flags |= Any(ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
+	Flags |= Any(ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
+	Flags |= Any(ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
 
 	Pending.ColorBlendAttachments[RenderTargetIndex].colorWriteMask = Flags;
 
@@ -1182,7 +1182,7 @@ void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayo
 	Barrier.subresourceRange.baseMipLevel = 0;
 	Barrier.subresourceRange.levelCount = 1;
 	Barrier.subresourceRange.baseArrayLayer = 0;
-	Barrier.subresourceRange.layerCount = Image->Usage & RU_Cubemap ? 6 : 1;
+	Barrier.subresourceRange.layerCount = Any(Image->Usage & EResourceUsage::Cubemap) ? 6 : 1;
 
 	if (Image->Layout == VK_IMAGE_LAYOUT_UNDEFINED && NewLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 	{
@@ -1215,7 +1215,7 @@ void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayo
 }
 
 void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
-	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags, bool bTransferDstBit)
+	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit)
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -1230,26 +1230,26 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 	Info.extent.height = Height;
 	Info.extent.depth = 1;
 	Info.mipLevels = 1;
-	Info.arrayLayers = UsageFlags & RU_Cubemap ? 6 : 1;
+	Info.arrayLayers = Any(UsageFlags & EResourceUsage::Cubemap) ? 6 : 1;
 	Info.format = VulkanImage::GetVulkanFormat(Format);
 	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
 	Info.initialLayout = Layout;
 	Info.usage = [&] ()
 	{
 		VkFlags Usage = 0;
-
-		if (UsageFlags & RU_RenderTargetable)
+		
+		if (Any(UsageFlags & EResourceUsage::RenderTargetable))
 		{
 			Usage |= GLImage::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
 		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
-		Usage |= UsageFlags & RU_ShaderResource ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
-		Usage |= UsageFlags & RU_UnorderedAccess ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
+		Usage |= Any(UsageFlags & EResourceUsage::ShaderResource) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
+		Usage |= Any(UsageFlags & EResourceUsage::UnorderedAccess) ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 
 		return Usage;
 	}();
-	Info.flags = UsageFlags & RU_Cubemap ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
+	Info.flags = Any(UsageFlags & EResourceUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
 	Info.samples = VK_SAMPLE_COUNT_1_BIT;
 	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 

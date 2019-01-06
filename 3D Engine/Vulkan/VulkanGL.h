@@ -30,7 +30,7 @@ public:
 		uint32 WriteMask,
 		uint32 Reference);
 	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f);
-	virtual void SetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
+	virtual void SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask);
 	virtual void SetInputAssembly(EPrimitiveTopology Topology);
 	virtual void SetGraphicsPipeline(
 		GLShaderRef Vertex,
@@ -44,11 +44,11 @@ public:
 	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
 	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
-	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr);
-	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr);
+	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
+	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent); 
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data);
-	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data);
+	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
 	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
@@ -144,7 +144,7 @@ private:
 
 	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
 	VkFormat FindSupportedDepthFormat(EImageFormat Format);
-	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsageFlags UsageFlags, bool bTransferDstBit);
+	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit);
 	VkSampler CreateSampler(const SamplerState& Sampler);
 
 	/** Engine conversions */

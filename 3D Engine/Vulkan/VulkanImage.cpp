@@ -57,7 +57,7 @@ const Map<EImageFormat, VkFormat> VulkanFormat =
 	ENTRY(IF_BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
 
-VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags, VkPipelineStageFlags Stage)
+VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceUsage UsageFlags, VkPipelineStageFlags Stage)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
@@ -67,13 +67,13 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
-	ViewInfo.viewType = Usage & RU_Cubemap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+	ViewInfo.viewType = Any(Usage & EResourceUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
 	ViewInfo.format = GetVulkanFormat();
 	ViewInfo.subresourceRange.aspectMask = GetVulkanAspect();
 	ViewInfo.subresourceRange.baseMipLevel = 0;
 	ViewInfo.subresourceRange.levelCount = 1;
 	ViewInfo.subresourceRange.baseArrayLayer = 0;
-	ViewInfo.subresourceRange.layerCount = Usage & RU_Cubemap ? 6 : 1;
+	ViewInfo.subresourceRange.layerCount = Any(Usage & EResourceUsage::Cubemap) ? 6 : 1;
 	ViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));

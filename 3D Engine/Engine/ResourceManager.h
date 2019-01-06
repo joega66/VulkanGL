@@ -12,7 +12,7 @@ public:
 	void LoadImage(const std::string& Name, const std::string& File, EImageFormat Format = IF_R8G8B8A8_UNORM);
 	GLImageRef GetImage(const std::string& Name);
 
-	void LoadCubemap(const std::string& Name, std::array<std::string, 6>& Files, EImageFormat Format = IF_R8G8B8A8_UNORM);
+	void LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EImageFormat Format = IF_R8G8B8A8_UNORM);
 	GLImageRef GetCubemap(const std::string& Name);
 
 private:

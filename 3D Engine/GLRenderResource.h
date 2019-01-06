@@ -56,15 +56,15 @@ enum EImageFormat
 	IF_BC2_UNORM_BLOCK,
 };
 
-enum EResourceUsageFlags
+enum class EResourceUsage
 {
-	RU_None,
-	RU_RenderTargetable = 1 << 0,
-	RU_ShaderResource = 1 << 1,
-	RU_UnorderedAccess = 1 << 2,
-	RU_IndirectBuffer = 1 << 3,
-	RU_KeepCPUAccessible = 1 << 4,
-	RU_Cubemap = 1 << 5
+	None,
+	RenderTargetable = 1 << 0,
+	ShaderResource = 1 << 1,
+	UnorderedAccess = 1 << 2,
+	IndirectBuffer = 1 << 3,
+	KeepCPUAccessible = 1 << 4,
+	Cubemap = 1 << 5
 };
 
 enum class ELoadAction
@@ -80,15 +80,15 @@ enum class EStoreAction
 	Store
 };
 
-enum EDepthStencilAccess : uint32
+enum class EDepthStencilAccess
 {
-	DS_None,
-	DS_DepthWrite,
-	DS_StencilWrite,
-	DS_DepthWriteStencilWrite,
-	DS_DepthReadStencilWrite,
-	DS_DepthWriteStencilRead,
-	DS_DepthReadStencilRead,
+	None,
+	DepthWrite,
+	StencilWrite,
+	DepthWriteStencilWrite,
+	DepthReadStencilWrite,
+	DepthWriteStencilRead,
+	DepthReadStencilRead,
 };
 
 class GLRenderResource
@@ -108,9 +108,9 @@ class GLVertexBuffer : public GLRenderResource
 {
 public:
 	EImageFormat Format;
-	EResourceUsageFlags Usage;
+	EResourceUsage Usage;
 
-	GLVertexBuffer(EImageFormat Format, EResourceUsageFlags Usage)
+	GLVertexBuffer(EImageFormat Format, EResourceUsage Usage)
 		: Format(Format), Usage(Usage)
 	{
 	}
@@ -122,10 +122,10 @@ class GLIndexBuffer : public GLRenderResource
 {
 public:
 	EImageFormat Format;
-	EResourceUsageFlags Usage;
+	EResourceUsage Usage;
 	uint32 IndexStride;
 
-	GLIndexBuffer(uint32 IndexStride, EImageFormat Format, EResourceUsageFlags Usage)
+	GLIndexBuffer(uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
 		: IndexStride(IndexStride), Format(Format), Usage(Usage)
 	{
 	}
@@ -161,9 +161,9 @@ public:
 	EImageFormat Format;
 	uint32 Width;
 	uint32 Height;
-	EResourceUsageFlags Usage;
+	EResourceUsage Usage;
 
-	GLImage(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsageFlags UsageFlags)
+	GLImage(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
 		: Format(Format), Width(Width), Height(Height), Usage(UsageFlags)
 	{
 	}

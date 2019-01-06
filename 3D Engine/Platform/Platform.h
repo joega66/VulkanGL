@@ -189,6 +189,12 @@ template<class T> inline constexpr T& operator|= (T& a, T b) { return (T&)((int&
 template<class T> inline constexpr T& operator&= (T& a, T b) { return (T&)((int&)a &= (int)b); }
 template<class T> inline constexpr T& operator^= (T& a, T b) { return (T&)((int&)a ^= (int)b); }
 
+template<typename EnumClass>
+inline bool Any(EnumClass EnumTrait)
+{
+	return EnumTrait != EnumClass::None;
+}
+
 template<typename T>
 class PendingBuffer
 {

@@ -3,8 +3,8 @@
 
 Scene::Scene()
 {
-	SceneDepth = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT, RU_RenderTargetable);
-	OutlineDepthStencil = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT_S8_UINT, RU_RenderTargetable);
+	SceneDepth = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
+	OutlineDepthStencil = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
 
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
@@ -20,10 +20,10 @@ void Scene::RenderLightingPass()
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
 
-	GLSetRenderTargets(1, &SurfaceView, DepthView, DS_DepthWrite);
+	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 	GLSetViewport(0.0f, 0.0f, (float)GPlatform->GetWindowSize().x, (float)GPlatform->GetWindowSize().y);
 	GLSetDepthTest(true);
-	GLSetColorMask(0, Color_RGBA);
+	GLSetColorMask(0, EColorChannel::RGBA);
 	GLSetRasterizerState(ECullMode::None);
 
 	LightingPassDrawingPlans.Execute(View);
@@ -43,7 +43,7 @@ void Scene::RenderSkybox()
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Load, EStoreAction::Store, 1.0f, 0);
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
-	GLSetRenderTargets(1, &SurfaceView, DepthView, DS_DepthWrite);
+	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 	GLSetDepthTest(true, EDepthCompareTest::LEqual);
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 	GLSetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
@@ -62,7 +62,7 @@ void Scene::RenderOutlines()
 {
 	GLRenderTargetViewRef StencilView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
 
-	GLSetRenderTargets(0, nullptr, StencilView, DS_DepthWriteStencilWrite);
+	GLSetRenderTargets(0, nullptr, StencilView, EDepthStencilAccess::DepthWriteStencilWrite);
 	GLSetStencilTest(true);
 	GLSetStencilState(ECompareOp::Always, EStencilOp::Replace, EStencilOp::Replace, EStencilOp::Replace, 0xff, 0xff, 1);
 
@@ -71,7 +71,7 @@ void Scene::RenderOutlines()
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
 	GLRenderTargetViewRef OutlineView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, 1.0f, 0);
 
-	GLSetRenderTargets(1, &SurfaceView, OutlineView, DS_StencilWrite);
+	GLSetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
 	GLSetDepthTest(false);
 	GLSetStencilState(ECompareOp::NotEqual, EStencilOp::Keep, EStencilOp::Keep, EStencilOp::Replace, 0xff, 0, 1);
 

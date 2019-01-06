@@ -130,6 +130,7 @@ void IPlatform::Memcpy(void* Dst, const void* Src, size_t Size)
 uint8* IPlatform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels)
 {
 	uint8* Image = stbi_load(Filename.c_str(), &Width, &Height, &NumChannels, STBI_rgb_alpha);
+	check(Image, "%s failed to load", Filename.c_str());
 	return Image;
 }
 

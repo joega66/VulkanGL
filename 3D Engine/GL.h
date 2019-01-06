@@ -35,13 +35,14 @@ enum class ECullMode
 	FrontAndBack
 };
 
-enum EColorWriteMask
+enum class EColorChannel
 {
-	Color_R = 0x01,
-	Color_G = 0x02,
-	Color_B = 0x04,
-	Color_A = 0x08,
-	Color_RGBA = Color_R | Color_G | Color_B | Color_A
+	None,
+	R = 0x01,
+	G = 0x02,
+	B = 0x04,
+	A = 0x08,
+	RGBA = R | G | B | A
 };
 
 enum class EPrimitiveTopology
@@ -131,7 +132,7 @@ public:
 		uint32 WriteMask,
 		uint32 Reference) = 0;
 	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f) = 0;
-	virtual void SetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask) = 0;
+	virtual void SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask) = 0;
 	virtual void SetInputAssembly(EPrimitiveTopology Topology) = 0;
 	virtual void SetGraphicsPipeline(
 		GLShaderRef Vertex,
@@ -145,11 +146,11 @@ public:
 	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) = 0;
 	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
-	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
-	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr) = 0;
+	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
+	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr) = 0;
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent) = 0;
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr) = 0;
-	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr) = 0;
+	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
 	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear) = 0;
 	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
@@ -180,7 +181,7 @@ void GLSetStencilState(
 	uint32 WriteMask,
 	uint32 Reference);
 void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f);
-void GLSetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask);
+void GLSetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask);
 void GLSetInputAssembly(EPrimitiveTopology Topology);
 void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment);
 void GLSetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer);
@@ -188,10 +189,10 @@ void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef 
 void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
 void GLDrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
-GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void* Data = nullptr);
-GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void* Data = nullptr);
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data = nullptr);
-GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
+GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
+GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
+GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr);
+GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
 GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);

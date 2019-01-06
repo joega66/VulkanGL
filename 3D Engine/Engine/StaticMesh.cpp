@@ -29,7 +29,7 @@ GLImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, a
 
 			if (Pixels)
 			{
-				Material = GLCreateImage(Width, Height, IF_R8G8B8A8_UNORM, RU_ShaderResource, Pixels);
+				Material = GLCreateImage(Width, Height, IF_R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Pixels);
 			}
 
 			GPlatform->FreeImage(Pixels);
@@ -117,11 +117,11 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 
 	MaterialProxyRef Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
-	GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), RU_None, Indices.data());
-	GLVertexBufferRef PositionBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), RU_None, Positions.data());
-	GLVertexBufferRef TextureCoordinateBuffer = GLCreateVertexBuffer(IF_R32G32_SFLOAT, TextureCoordinates.size(), RU_None, TextureCoordinates.data());
-	GLVertexBufferRef NormalBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Normals.size(), RU_None, Normals.data());
-	GLVertexBufferRef TangentBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Tangents.size(), RU_None, Tangents.data());
+	GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
+	GLVertexBufferRef PositionBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
+	GLVertexBufferRef TextureCoordinateBuffer = GLCreateVertexBuffer(IF_R32G32_SFLOAT, TextureCoordinates.size(), EResourceUsage::None, TextureCoordinates.data());
+	GLVertexBufferRef NormalBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Normals.size(), EResourceUsage::None, Normals.data());
+	GLVertexBufferRef TangentBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Tangents.size(), EResourceUsage::None, Tangents.data());
 
 	StaticMesh->Resources.emplace_back(StaticMeshResources(
 		Indices.size()

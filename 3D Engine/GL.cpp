@@ -42,7 +42,7 @@ void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode
 	GRender->SetRasterizerState(CullMode, FrontFace, PolygonMode, LineWidth);
 }
 
-void GLSetColorMask(uint32 RenderTargetIndex, EColorWriteMask ColorWriteMask)
+void GLSetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask)
 {
 	GRender->SetColorMask(RenderTargetIndex, ColorWriteMask);
 }
@@ -77,7 +77,7 @@ void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32
 	GRender->Draw(VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsageFlags Usage, const void * Data)
+GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
 	return GRender->CreateIndexBuffer(Format, NumIndices, Usage, Data);
 }
@@ -87,17 +87,17 @@ void GLSetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 	GRender->SetVertexStream(Location, VertexBuffer);
 }
 
-GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsageFlags Usage, const void * Data)
+GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void * Data)
 {
 	return GRender->CreateVertexBuffer(Format, NumElements, Usage, Data);
 }
 
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const uint8* Data)
+GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data)
 {
 	return GRender->CreateImage(Width, Height, Format, UsageFlags, Data);
 }
 
-GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsageFlags UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	return GRender->CreateCubemap(Width, Height, Format, UsageFlags, CubemapCreateInfo);
 }

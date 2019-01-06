@@ -53,7 +53,7 @@ public:
 	SharedVulkanBufferRef CreateBuffer(
 		VkDeviceSize Size, 
 		VkBufferUsageFlags VulkanUsage, 
-		EResourceUsageFlags Usage, 
+		EResourceUsage Usage, 
 		const void* Data = nullptr);
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties);
 	void UploadBufferData(const SharedVulkanBuffer& Buffer, const void* Data);
@@ -82,7 +82,7 @@ class VulkanVertexBuffer : public GLVertexBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EImageFormat Format, EResourceUsageFlags Usage)
+	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EImageFormat Format, EResourceUsage Usage)
 		: Buffer(Buffer), GLVertexBuffer(Format, Usage)
 	{
 	}
@@ -95,7 +95,7 @@ class VulkanIndexBuffer : public GLIndexBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsageFlags Usage)
+	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
 		: Buffer(Buffer), GLIndexBuffer(IndexStride, Format, Usage)
 	{
 	}

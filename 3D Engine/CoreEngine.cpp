@@ -10,10 +10,10 @@ void CoreEngine::Run()
 {
 	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
 
-	std::array<std::string, 6> Cubemap = { 
+	std::array<std::string, 6> Cubemap = {
 		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
-		"../Images/Cubemaps/DownUnder/down-under_ft.tga", "../Images/Cubemaps/DownUnder/down-under_bk.tga"
 		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
+		"../Images/Cubemaps/DownUnder/down-under_bk.tga", "../Images/Cubemaps/DownUnder/down-under_ft.tga",
 	};
 	GAssetManager.LoadCubemap("Engine-Cubemap-Default", Cubemap);
 

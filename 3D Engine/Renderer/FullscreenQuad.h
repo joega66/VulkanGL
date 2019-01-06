@@ -33,6 +33,6 @@ public:
 //{
 //	0, 1, 2, 1, 3, 2
 //};
-//GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), RU_None, Indices.data());
-//GLVertexBufferRef PositionVertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, VertexPositions.size(), RU_None, VertexPositions.data());
-//GLVertexBufferRef TextureCoordinateVertexBuffer = GLCreateVertexBuffer(IF_R32G32_SFLOAT, VertexUVs.size(), RU_None, VertexUVs.data());
+//GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
+//GLVertexBufferRef PositionVertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, VertexPositions.size(), EResourceUsage::None, VertexPositions.data());
+//GLVertexBufferRef TextureCoordinateVertexBuffer = GLCreateVertexBuffer(IF_R32G32_SFLOAT, VertexUVs.size(), EResourceUsage::None, VertexUVs.data());

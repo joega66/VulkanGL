@@ -19,7 +19,7 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = GPlatform->LoadImage(File, Width, Height, Channels);
-	Images[Name] = GLCreateImage(Width, Height, Format, RU_ShaderResource, Pixels);
+	Images[Name] = GLCreateImage(Width, Height, Format, EResourceUsage::ShaderResource, Pixels);
 	GPlatform->FreeImage(Pixels);
 }
 
@@ -28,7 +28,7 @@ GLImageRef AssetManager::GetImage(const std::string& Name)
 	return GetValue(Images, Name);
 }
 
-void AssetManager::LoadCubemap(const std::string& Name, std::array<std::string, 6>& Files, EImageFormat Format)
+void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EImageFormat Format)
 {
 	CubemapCreateInfo CubemapCreateInfo;
 
@@ -53,7 +53,7 @@ void AssetManager::LoadCubemap(const std::string& Name, std::array<std::string, 
 		Face.Width
 		, Face.Height
 		, Format
-		, EResourceUsageFlags::RU_Cubemap | EResourceUsageFlags::RU_ShaderResource
+		, EResourceUsage::Cubemap | EResourceUsage::ShaderResource
 		, CubemapCreateInfo);
 }
 

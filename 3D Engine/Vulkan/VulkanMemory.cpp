@@ -8,16 +8,16 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 {
 }
 
-SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsageFlags Usage, const void* Data)
+SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsage Usage, const void* Data)
 {
-	// @todo Use an always-mapped strategy for RU_KeepCPUAccessible? 
+	// @todo Use an always-mapped strategy for EResourceUsage::KeepCPUAccessible? 
 	check(Size > 0, "Buffer size must be > 0.");
 
-	VulkanUsage |= Usage & RU_UnorderedAccess ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
-	VulkanUsage |= Usage & RU_IndirectBuffer ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
-	VulkanUsage |= !(Usage & RU_KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
+	VulkanUsage |= Any(Usage & EResourceUsage::UnorderedAccess) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EResourceUsage::IndirectBuffer) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
+	VulkanUsage |= !Any(Usage & EResourceUsage::KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
 
-	VkMemoryPropertyFlags Properties = Usage & RU_KeepCPUAccessible ? 
+	VkMemoryPropertyFlags Properties = Any(Usage & EResourceUsage::KeepCPUAccessible) ? 
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 	for (auto& Buffer : Buffers)
@@ -244,7 +244,7 @@ void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
 	VulkanScopedCommandBuffer CommandBuffer(Device);
 	std::vector<VkBufferImageCopy> Regions;
 
-	if (Image->Usage & RU_Cubemap)
+	if (Any(Image->Usage & EResourceUsage::Cubemap))
 	{
 		Size /= 6;
 		Regions.resize(6, {});
@@ -252,7 +252,7 @@ void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
 		for (uint32 LayerIndex = 0; LayerIndex < Regions.size(); LayerIndex++)
 		{
 			// VkImageSubresourceRange(3) Manual Page:
-			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z" 
+			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
 			VkBufferImageCopy& Region = Regions[LayerIndex];
 			Region.bufferOffset = LayerIndex * Size;
 			Region.bufferRowLength = 0;
