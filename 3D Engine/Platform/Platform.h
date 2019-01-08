@@ -145,13 +145,13 @@ extern IPlatformRef GPlatform;
 #define signal_unimplemented() fail("UNIMPLEMENTED") \
 
 template<typename K, typename V>
-using Map = std::unordered_map<K, V>;
+using HashTable = std::unordered_map<K, V>;
 
 template<typename K, typename V>
-const K& GetKey(const Map<K, V>& Map, const V& Value)
+const K& GetKey(const HashTable<K, V>& HashTable, const V& Value)
 {
-	auto Iter = Map.begin();
-	while (Iter != Map.end())
+	auto Iter = HashTable.begin();
+	while (Iter != HashTable.end())
 	{
 		if (Iter->second == Value)
 		{
@@ -164,9 +164,9 @@ const K& GetKey(const Map<K, V>& Map, const V& Value)
 }
 
 template<typename K, typename V>
-inline const V& GetValue(const Map<K, V>& Map, const K& Key)
+inline const V& GetValue(const HashTable<K, V>& HashTable, const K& Key)
 {
-	return Map.at(Key);
+	return HashTable.at(Key);
 }
 
 template<typename ContainerType, typename ElementType>

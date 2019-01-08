@@ -23,8 +23,8 @@ public:
 		, const ShaderMetadata& Meta
 		, const std::vector<VkVertexInputAttributeDescription>& Attributes
 		, const std::vector<VkDescriptorSetLayoutBinding>& Bindings
-		, const Map<std::string, uint32>& AttributeLocations
-		, const Map<std::string, uint32>& UniformLocations
+		, const HashTable<std::string, uint32>& AttributeLocations
+		, const HashTable<std::string, uint32>& UniformLocations
 	);
 
 	virtual void ReleaseGL() final;
@@ -37,7 +37,7 @@ private:
 
 CLASS(VulkanShader);
 
-const Map<std::string, VkFormat> GLSLTypeToVulkanFormat =
+const HashTable<std::string, VkFormat> GLSLTypeToVulkanFormat =
 {
 	ENTRY("vec4", VK_FORMAT_R32G32B32A32_SFLOAT)
 	ENTRY("vec3", VK_FORMAT_R32G32B32_SFLOAT)
@@ -47,7 +47,7 @@ const Map<std::string, VkFormat> GLSLTypeToVulkanFormat =
 	ENTRY("uint", VK_FORMAT_R32_UINT)
 };
 
-const Map<std::string, uint32> GLSLTypeSizes =
+const HashTable<std::string, uint32> GLSLTypeSizes =
 {
 	ENTRY("bool", 1)
 	ENTRY("int", 4)

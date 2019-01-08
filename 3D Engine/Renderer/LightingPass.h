@@ -32,20 +32,20 @@ public:
 	}
 };
 
-template<bool bHasNormalMap, EMeshType MeshType>
+template<bool bHasDiffuseMap, bool bHasNormalMap, EMeshType MeshType>
 class LightingPassFS : public LightingPassBaseFS
 {
 public:
 	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
 	{
-		MaterialFS<bHasNormalMap, MeshType>::ModifyCompilationEnvironment(Worker);
+		MaterialFS<bHasDiffuseMap, bHasNormalMap, MeshType>::ModifyCompilationEnvironment(Worker);
 	}
 };
 
 class LightingPassDrawingPlan : public MaterialDrawingPlan
 {
 public:
-	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, const MaterialProxy& MaterialProxy, GLUniformBufferRef LocalToWorldUniform);
+	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, CMaterial& CMaterial, GLUniformBufferRef LocalToWorldUniform);
 
 	GraphicsPipeline GetGraphicsPipeline() const;
 	void SetUniforms(const View& View);

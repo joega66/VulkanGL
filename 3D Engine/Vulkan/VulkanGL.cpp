@@ -11,9 +11,9 @@ CAST(GLVertexBuffer, VulkanVertexBuffer);
 CAST(GLUniformBuffer, VulkanUniformBuffer);
 CAST(GLIndexBuffer, VulkanIndexBuffer);
 
-const Map<EImageFormat, uint32> ConvertImageFormatToSize()
+const HashTable<EImageFormat, uint32> ConvertImageFormatToSize()
 {
-	Map<EImageFormat, uint32> ImageFormatToGLSLSize;
+	HashTable<EImageFormat, uint32> ImageFormatToGLSLSize;
 
 	for (auto& [GLSLType, Format] : GLSLTypeToVulkanFormat)
 	{
@@ -25,9 +25,9 @@ const Map<EImageFormat, uint32> ConvertImageFormatToSize()
 	return ImageFormatToGLSLSize;
 }
 
-const Map<VkFormat, uint32> ConvertVulkanFormatToSize()
+const HashTable<VkFormat, uint32> ConvertVulkanFormatToSize()
 {
-	Map<VkFormat, uint32> SizeOfVulkanFormat;
+	HashTable<VkFormat, uint32> SizeOfVulkanFormat;
 
 	for (auto& [GLSLType, Format] : GLSLTypeToVulkanFormat)
 	{
@@ -436,6 +436,13 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 
 void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
 {
+	if (Pending.Vertex == Vertex &&
+		Pending.TessControl == TessControl &&
+		Pending.TessEval == TessEval &&
+		Pending.Geometry == Geometry &&
+		Pending.Fragment == Fragment)
+		return;
+
 	DescriptorImages.clear();
 	DescriptorBuffers.clear();
 
@@ -662,7 +669,7 @@ void VulkanGL::SetViewport(float X, float Y, float Width, float Height, float Mi
 
 void VulkanGL::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest)
 {
-	static const Map<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
+	static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 	{
 		ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
 		ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
@@ -696,7 +703,7 @@ void VulkanGL::SetStencilState(ECompareOp CompareOp,
 	uint32 WriteMask, 
 	uint32 Reference)
 {
-	static const Map<ECompareOp, VkCompareOp> VulkanCompareOp =
+	static const HashTable<ECompareOp, VkCompareOp> VulkanCompareOp =
 	{
 		ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
 		ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
@@ -708,7 +715,7 @@ void VulkanGL::SetStencilState(ECompareOp CompareOp,
 		ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
 	};
 
-	static const Map<EStencilOp, VkStencilOp> VulkanStencilOp =
+	static const HashTable<EStencilOp, VkStencilOp> VulkanStencilOp =
 	{
 		ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
 		ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
@@ -730,7 +737,7 @@ void VulkanGL::SetStencilState(ECompareOp CompareOp,
 
 void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode PolygonMode, float LineWidth)
 {
-	static const Map<ECullMode, VkCullModeFlags> VulkanCullMode =
+	static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
 	{
 		ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
 		ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
@@ -738,13 +745,13 @@ void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPol
 		ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
 	};
 
-	static const Map<EFrontFace, VkFrontFace> VulkanFrontFace =
+	static const HashTable<EFrontFace, VkFrontFace> VulkanFrontFace =
 	{
 		ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
 		ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
 	};
 
-	static const Map<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
+	static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	{
 		ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
 		ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)

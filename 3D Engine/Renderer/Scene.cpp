@@ -15,6 +15,11 @@ void Scene::Render()
 	RenderEditorPrimitives();
 }
 
+void Scene::DrawLine(const DrawLineInfo& DrawLineInfo)
+{
+	Lines.push_back(DrawLineInfo);
+}
+
 void Scene::RenderLightingPass()
 {
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
@@ -31,19 +36,28 @@ void Scene::RenderLightingPass()
 
 void Scene::RenderEditorPrimitives()
 {
+	RenderLines();
 	RenderSkybox();
 	RenderOutlines();
+}
+
+void Scene::RenderLines()
+{
+	// @todo Create one big vertex buffer and use FirstVertex param.
+
+	//GLSetGraphicsPipeline()
+	std::for_each(Lines.begin(), Lines.end(), [&](const auto& Line)
+	{
+		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Line.Width);
+	});
 }
 
 void Scene::RenderSkybox()
 {
 	GLShaderRef VertShader = GLCreateShader<SkyboxVS>();
 	GLShaderRef FragShader = GLCreateShader<SkyboxFS>();
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Load, EStoreAction::Store, 1.0f, 0);
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
-	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 	GLSetDepthTest(true, EDepthCompareTest::LEqual);
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 	GLSetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);

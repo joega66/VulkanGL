@@ -16,9 +16,9 @@ public:
 	GLImageRef GetCubemap(const std::string& Name);
 
 private:
-	Map<std::string, StaticMeshRef> StaticMeshes;
-	Map<std::string, GLImageRef> Images;
-	Map<std::string, GLImageRef> Cubemaps;
+	HashTable<std::string, StaticMeshRef> StaticMeshes;
+	HashTable<std::string, GLImageRef> Images;
+	HashTable<std::string, GLImageRef> Cubemaps;
 };
 
 extern AssetManager GAssetManager;

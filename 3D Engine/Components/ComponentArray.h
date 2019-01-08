@@ -4,11 +4,10 @@
 class IComponentArray
 {
 public:
-	virtual void RemoveComponent(const uint64 EntityID) = 0;
+	virtual void RemoveComponent(uint64 EntityID) = 0;
 	virtual std::shared_ptr<void> CopyComponent(const uint64 EntityID) = 0;
 	virtual void AddComponent(const uint64 EntityID, std::shared_ptr<void> Data) = 0;
 	virtual bool HasComponent(const uint64 EntityID) = 0;
-	void QueueEntityForRenderUpdate(const uint64 EntityID);
 };
 
 template<typename TComponent>
@@ -23,20 +22,12 @@ public:
 	template<typename ...Args>
 	TComponent& AddComponent(const uint64 EntityID, Args&& ...InArgs)
 	{
-		if constexpr (TComponent::bNeedsRenderUpdate)
-		{
-			QueueEntityForRenderUpdate(EntityID);
-		}
-		Components.emplace(EntityID, TComponent(std::forward<Args>(InArgs)...));
+		Components.emplace(EntityID, std::move(TComponent(std::forward<Args>(InArgs)...)));
 		return Components[EntityID];
 	}
 
 	void AddComponent(const uint64 EntityID, std::shared_ptr<void> Data)
 	{
-		if constexpr (TComponent::bNeedsRenderUpdate)
-		{
-			QueueEntityForRenderUpdate(EntityID);
-		}
 		Components.emplace(EntityID, *std::static_pointer_cast<TComponent>(Data));
 	}
 
@@ -55,12 +46,13 @@ public:
 		return Contains(Components, EntityID);
 	}
 
-	virtual void RemoveComponent(const uint64 EntityID) final
+	virtual void RemoveComponent(uint64 EntityID) final
 	{
 		Components.erase(EntityID);
+		Entity Entity{ EntityID };
 		for (auto& ComponentSystem : OnRemoveListeners)
 		{
-			ComponentSystem.get().OnRemove(std::type_index(typeid(TComponent)), EntityID);
+			ComponentSystem.get().OnRemove(std::type_index(typeid(TComponent)), Entity);
 		}
 	}
 
@@ -77,7 +69,6 @@ public:
 
 private:
 	// @todo Object pool for components
-	Map<uint64, TComponent> Components;
+	HashTable<uint64, TComponent> Components;
 	std::vector<std::reference_wrapper<ComponentSystem>> OnRemoveListeners;
-	std::vector<Entity> RemovedEntities;
 };

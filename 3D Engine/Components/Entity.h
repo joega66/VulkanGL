@@ -55,28 +55,14 @@ private:
 class EntityManager
 {
 public:
+	EntityManager();
+
 	Entity CreatePrefab(const std::string& Name);
 	Entity CreateEntity();
 	Entity CreateFromPrefab(Entity Prefab);
 	Entity CreateFromPrefab(const std::string& Name);
 
 	void DestroyEntity(const uint64 EntityID);
-
-	template<typename ...TComponents>
-	std::vector<Entity> GetEntitiesForRenderUpdate()
-	{
-		std::vector<Entity> EntitiesWithComponents;
-
-		for (auto Entity : EntitiesForRenderUpdate)
-		{
-			if (EntityHasComponents<TComponents...>(Entity))
-			{
-				EntitiesWithComponents.push_back(Entity);
-			}
-		}
-
-		return EntitiesWithComponents;
-	}
 
 	template<typename ...TComponents>
 	std::vector<Entity> GetEntities()
@@ -95,11 +81,7 @@ public:
 	}
 
 private:
-	friend class ComponentSystemManager;
-	friend class IComponentArray;
 	friend class Entity;
-
-	void QueueEntityForRenderUpdate(Entity Entity);
 
 	template<typename T>
 	static bool EntityHasComponents(Entity Entity)
@@ -114,10 +96,9 @@ private:
 	}
 
 	uint64 NextEntityID = 0;
-	Map<std::string, Entity> Prefabs;
-	Map<uint64, std::string> PrefabNames;
+	HashTable<std::string, Entity> Prefabs;
+	HashTable<uint64, std::string> PrefabNames;
 	std::vector<Entity> Entities;
-	std::vector<Entity> EntitiesForRenderUpdate;
 };
 
 extern EntityManager GEntityManager;

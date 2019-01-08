@@ -17,7 +17,7 @@ struct StaticMeshResources
 	GLVertexBufferRef NormalBuffer;
 	GLVertexBufferRef TangentBuffer;
 
-	MaterialProxyRef Materials;
+	CMaterial Material;
 	
 	StaticMeshResources(
 		uint32 IndexCount
@@ -26,14 +26,14 @@ struct StaticMeshResources
 		, GLVertexBufferRef TextureCoordinateBuffer
 		, GLVertexBufferRef NormalBuffer
 		, GLVertexBufferRef TangentBuffer
-		, MaterialProxyRef Materials)
+		, const CMaterial& Material)
 		: IndexCount(IndexCount)
 		, IndexBuffer(IndexBuffer)
 		, PositionBuffer(PositionBuffer)
 		, TextureCoordinateBuffer(TextureCoordinateBuffer)
 		, NormalBuffer(NormalBuffer)
 		, TangentBuffer(TangentBuffer)
-		, Materials(Materials)
+		, Material(Material)
 	{
 	}
 };

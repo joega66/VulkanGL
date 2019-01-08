@@ -42,3 +42,11 @@ public:
 		return Base;
 	}
 };
+
+struct DrawLineInfo
+{
+	glm::vec3 A;
+	glm::vec3 B;
+	glm::vec3 Color;
+	float Width = 1.0f;
+};

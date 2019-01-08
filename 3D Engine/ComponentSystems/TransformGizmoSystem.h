@@ -5,11 +5,18 @@
 class TransformGizmoSystem : public ComponentSystem
 {
 public:
+	struct
+	{
+		Entity X, Y, Z;
+	} TransformWidget;
+
 	Entity SelectedEntity;
 	float LastX, LastY;
 	bool bFirstPress = true;
 
 	TransformGizmoSystem();
 	virtual void Update() final;
-	void RemoveOutline(Entity Entity);
+
+private:
+	void DrawOutline(Entity Entity);
 };

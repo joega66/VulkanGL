@@ -5,27 +5,34 @@
 #include <ComponentSystems/TransformGizmoSystem.h>
 #include <ComponentSystems/EditorControllerSystem.h>
 #include <ComponentSystems/GameSystem.h>
+#include <Components/CTransform.h>
+#include <Components/CTransform.h>
+
+/*
+	What to do next?
+		- Lighting
+		- Shadows
+*/
 
 void CoreEngine::Run()
 {
-	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
-
 	std::array<std::string, 6> Cubemap = {
 		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
 		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
 		"../Images/Cubemaps/DownUnder/down-under_bk.tga", "../Images/Cubemaps/DownUnder/down-under_ft.tga",
 	};
 	GAssetManager.LoadCubemap("Engine-Cubemap-Default", Cubemap);
-
+	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
+	GAssetManager.LoadStaticMesh("Transform Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 	GAssetManager.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
 
 	auto& Scene = Scene::Get();
 
-	// @todo Code generation
+	// @todo Code generation. Or, for now, COMPONENT_SYSTEM() macro. 
 
 	StaticMeshSystem StaticMeshSystem;
-	GComponentSystemManager.AddRenderSystem(StaticMeshSystem);
+	GComponentSystemManager.AddComponentSystem(StaticMeshSystem);
 
 	TransformGizmoSystem TransformGizmoSystem;
 	GComponentSystemManager.AddComponentSystem(TransformGizmoSystem);

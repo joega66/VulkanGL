@@ -21,23 +21,19 @@ struct StreamSource
 {
 	GLVertexBufferRef VertexBuffer;
 	uint32 Location;
-
-	StreamSource() = default;
-	StreamSource(GLVertexBufferRef VertexBuffer, uint32 Location)
-		: VertexBuffer(VertexBuffer), Location(Location)
-	{
-	}
 };
 
 struct MaterialSource
 {
 	GLImageRef Image;
 	uint32 Location;
+};
 
-	MaterialSource(GLImageRef Image, uint32 Location)
-		: Image(Image), Location(Location)
-	{
-	}
+struct UniformSource
+{
+	GLShaderRef Shader;
+	GLUniformBufferRef UniformBuffer;
+	uint32 Location;
 };
 
 template<typename DrawingPlanType>
@@ -52,6 +48,11 @@ public:
 	inline void Remove(Entity Entity)
 	{
 		DrawingPlans.erase(Entity.GetEntityID());
+	}
+
+	inline void Clear()
+	{
+		DrawingPlans.clear();
 	}
 	
 	void Execute(const View& View);
@@ -78,4 +79,6 @@ inline void DrawingPlanList<DrawingPlanType>::Execute(const View& View)
 
 		DrawingPlan.Draw();
 	}
+
+	Clear();
 }

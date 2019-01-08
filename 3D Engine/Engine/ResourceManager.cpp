@@ -53,7 +53,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 		Face.Width
 		, Face.Height
 		, Format
-		, EResourceUsage::Cubemap | EResourceUsage::ShaderResource
+		, EResourceUsage::ShaderResource
 		, CubemapCreateInfo);
 }
 

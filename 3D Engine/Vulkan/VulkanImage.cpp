@@ -2,7 +2,7 @@
 #include "VulkanGL.h"
 #include "VulkanCommands.h"
 
-const Map<EImageFormat, VkFormat> VulkanFormat =
+const HashTable<EImageFormat, VkFormat> VulkanFormat =
 {
 	ENTRY(IF_UNDEFINED, VK_FORMAT_UNDEFINED)
 	ENTRY(IF_R8G8_UINT, VK_FORMAT_R8_UINT)

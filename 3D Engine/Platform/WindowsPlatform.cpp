@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <GLFW/glfw3.h>
 
-Map<int32, Input::EButton> GLFWToEngineFormat
+HashTable<int32, Input::EButton> GLFWToEngineFormat
 {
 	ENTRY(GLFW_MOUSE_BUTTON_LEFT, Input::MouseLeft)
 };

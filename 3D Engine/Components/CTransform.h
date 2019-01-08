@@ -16,7 +16,6 @@ public:
 	void Rotate(const glm::vec3& Axis, float Angle);
 	void Scale(const glm::vec3& ScaleBy);
 	void SetParent(CTransform* Parent);
-	void AddChild(CTransform* Child);
 	void RemoveChild(CTransform* Child);
 
 	const glm::vec3& GetPosition() const
@@ -46,6 +45,7 @@ private:
 	CTransform* Parent = nullptr;
 	std::list<CTransform*> Children;
 
+	void AddChild(CTransform* Child);
 	const glm::mat4& GetLocalToParent();
 	void Clean();
 };

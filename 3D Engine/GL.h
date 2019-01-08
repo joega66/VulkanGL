@@ -203,6 +203,7 @@ void GLUnlockBuffer(GLIndexBufferRef IndexBuffer);
 void GLRebuildResolutionDependents();
 std::string GLGetDeviceName();
 
+// @todo This does not need to be templated.
 template<typename UniformBufferType>
 GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
 {
@@ -217,7 +218,7 @@ GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data, EUniform
 
 template<typename ShaderType>
 GLShaderRef GLCreateShader()
-{	
+{
 	if (GLShaderRef Shader = GShaderCompiler->FindShader(std::type_index(typeid(ShaderType))); Shader)
 	{
 		return Shader;

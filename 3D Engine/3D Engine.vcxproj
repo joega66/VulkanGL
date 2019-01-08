@@ -24,8 +24,6 @@
     <ClCompile Include="ComponentSystems\GameSystem.cpp" />
     <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp" />
     <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp" />
-    <ClCompile Include="Components\CMaterial.cpp" />
-    <ClCompile Include="Components\ComponentArray.cpp" />
     <ClCompile Include="Components\CStaticMesh.cpp" />
     <ClCompile Include="Components\CTransform.cpp" />
     <ClCompile Include="Components\Entity.cpp" />
@@ -67,6 +65,7 @@
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\CMaterial.h" />
     <ClInclude Include="Components\ComponentArray.h" />
+    <ClInclude Include="Components\CRenderer.h" />
     <ClInclude Include="Components\CStaticMesh.h" />
     <ClInclude Include="Components\CTransform.h" />
     <ClInclude Include="Components\Entity.h" />

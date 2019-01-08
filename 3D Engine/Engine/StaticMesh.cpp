@@ -6,7 +6,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
-using TextureCache = Map<std::string, GLImageRef>;
+using TextureCache = HashTable<std::string, GLImageRef>;
 
 GLImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
 {
@@ -43,29 +43,25 @@ GLImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, a
 	return nullptr;
 }
 
-MaterialProxyRef ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* Material, TextureCache& TextureCache)
+CMaterial ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
 {
-	MaterialProxyRef Materials = MakeRef<MaterialProxy>();
+	CMaterial Material;
 
-	GLImageRef DiffuseMap = LoadMaterials(StaticMesh->Directory, Material, aiTextureType_DIFFUSE, TextureCache);
-
-	if (DiffuseMap)
+	if (GLImageRef DiffuseMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); DiffuseMap)
 	{
-		Materials->Add(MakeRef<CMaterial>(DiffuseMap, EMaterialType::Diffuse));
+		Material.Diffuse = DiffuseMap;
 	}
 	else
 	{
-		Materials->Add(MakeRef<CMaterial>(GAssetManager.GetImage("Engine-Diffuse-Default"), EMaterialType::Diffuse));
+		Material.Diffuse = GAssetManager.GetImage("Engine-Diffuse-Default");
 	}
 
-	GLImageRef NormalMap = LoadMaterials(StaticMesh->Directory, Material, aiTextureType_NORMALS, TextureCache);
-
-	if (NormalMap)
+	if (GLImageRef NormalMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_NORMALS, TextureCache); NormalMap)
 	{
-		Materials->Add(MakeRef<CMaterial>(NormalMap, EMaterialType::Normal));
+		Material.Normal = NormalMap;
 	}
 
-	return Materials;
+	return Material;
 }
 
 void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
@@ -115,7 +111,7 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 		}
 	}
 
-	MaterialProxyRef Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
+	CMaterial Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
 	GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
 	GLVertexBufferRef PositionBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());

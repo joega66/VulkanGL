@@ -16,10 +16,11 @@ CTransform::CTransform(const glm::vec3& Position, const glm::vec3& Rotation, flo
 
 CTransform::~CTransform()
 {
-	if (Parent)
+	/*if (Parent)
 	{
 		Parent->RemoveChild(this);
-	}
+	}*/
+	// @todo TransformComponentSystem that removes the child when component is removed? 
 }
 
 const glm::mat4& CTransform::GetLocalToWorld()
@@ -58,13 +59,24 @@ void CTransform::Scale(const glm::vec3& InScale)
 
 void CTransform::SetParent(CTransform* NewParent)
 {
+	if (NewParent == this)
+	{
+		return;
+	}
+
 	if (Parent)
 	{
 		Parent->RemoveChild(this);
 	}
 
 	Parent = NewParent;
-	Parent->AddChild(Parent);
+
+	if (Parent == nullptr)
+	{
+		return;
+	}
+
+	Parent->AddChild(this);
 
 	Clean();
 }
@@ -76,7 +88,10 @@ void CTransform::AddChild(CTransform* Child)
 
 void CTransform::RemoveChild(CTransform* Child)
 {
-	Children.remove(Child);
+	if (std::find(Children.begin(), Children.end(), Child) != Children.end())
+	{
+		Children.remove(Child);
+	}
 }
 
 void CTransform::Clean()

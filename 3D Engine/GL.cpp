@@ -99,7 +99,7 @@ GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EReso
 
 GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
-	return GRender->CreateCubemap(Width, Height, Format, UsageFlags, CubemapCreateInfo);
+	return GRender->CreateCubemap(Width, Height, Format, UsageFlags | EResourceUsage::Cubemap, CubemapCreateInfo);
 }
 
 GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)

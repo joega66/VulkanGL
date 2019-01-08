@@ -2,35 +2,45 @@
 #include <Engine/StaticMesh.h>
 
 void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources, 
-	const MaterialProxy& MaterialProxy,
-	GLUniformBufferRef InLocalToWorldUniform, 
+	CMaterial& CMaterial,
+	GLUniformBufferRef LocalToWorldUniform, 
 	GraphicsPipeline&& Pipeline)
 {
-	LocalToWorldUniform = InLocalToWorldUniform;
 	IndexCount = Resources.IndexCount;
 	IndexBuffer = Resources.IndexBuffer;
 
-	Streams.emplace_back(Resources.PositionBuffer, Pipeline.Vertex->GetAttributeLocation("Position"));
-	Streams.emplace_back(Resources.TextureCoordinateBuffer, Pipeline.Vertex->GetAttributeLocation("UV"));
-	Streams.emplace_back(Resources.NormalBuffer, Pipeline.Vertex->GetAttributeLocation("Normal"));
-	Streams.emplace_back(Resources.TangentBuffer, Pipeline.Vertex->GetAttributeLocation("Tangent"));
+	Streams.push_back({ Resources.PositionBuffer, Pipeline.Vertex->GetAttributeLocation("Position") });
+	Streams.push_back({ Resources.TextureCoordinateBuffer, Pipeline.Vertex->GetAttributeLocation("UV") });
+	Streams.push_back({ Resources.NormalBuffer, Pipeline.Vertex->GetAttributeLocation("Normal") });
+	Streams.push_back({ Resources.TangentBuffer, Pipeline.Vertex->GetAttributeLocation("Tangent") });
 
 	ViewLocation = Pipeline.Vertex->GetUniformLocation("ViewUniform");
-	LocalToWorldLocation = Pipeline.Vertex->GetUniformLocation("LocalToWorldUniform");
 
-	CMaterialRef Diffuse = MaterialProxy.Get(EMaterialType::Diffuse);
-	Materials.emplace_back(Diffuse->GetMaterial(), Pipeline.Fragment->GetUniformLocation("Diffuse"));
+	Uniforms.push_back({ Pipeline.Vertex, LocalToWorldUniform, Pipeline.Vertex->GetUniformLocation("LocalToWorldUniform") });
 
-	if (CMaterialRef Normal = MaterialProxy.Get(EMaterialType::Normal); Normal)
+	if (std::holds_alternative<GLImageRef>(CMaterial.Diffuse))
 	{
-		Materials.emplace_back(Normal->GetMaterial(), Pipeline.Fragment->GetUniformLocation("Normal"));
+		Materials.push_back({ std::get<GLImageRef>(CMaterial.Diffuse), Pipeline.Fragment->GetUniformLocation("Diffuse") });
+	}
+	else
+	{
+		Uniforms.push_back({ Pipeline.Fragment, GLCreateUniformBuffer(std::get<glm::vec4>(CMaterial.Diffuse)), Pipeline.Fragment->GetUniformLocation("DiffuseUniform") });
+	}
+
+	if (CMaterial.Normal)
+	{
+		Materials.push_back({ CMaterial.Normal, Pipeline.Fragment->GetUniformLocation("Normal") });
 	}
 }
 
 void MaterialDrawingPlan::SetUniforms(const View& View, GraphicsPipeline&& Pipeline)
 {
 	GLSetUniformBuffer(Pipeline.Vertex, ViewLocation, View.Uniform);
-	GLSetUniformBuffer(Pipeline.Vertex, LocalToWorldLocation, LocalToWorldUniform);
+
+	for (auto& Uniform : Uniforms)
+	{
+		GLSetUniformBuffer(Uniform.Shader, Uniform.Location, Uniform.UniformBuffer);
+	}
 
 	for (auto& Material : Materials)
 	{

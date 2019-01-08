@@ -1,36 +1,39 @@
 #include "StaticMeshSystem.h"
 #include <Components/Entity.h>
+#include <Components/CTransform.h>
+#include <Components/CRenderer.h>
 #include <Renderer/Scene.h>
 
 StaticMeshSystem::StaticMeshSystem()
 {
-	Listen<CStaticMesh>();
 }
 
-void StaticMeshSystem::RenderUpdate()
+void StaticMeshSystem::Update()
 {
 	auto& Scene = Scene::Get();
-
-	for (auto Entity : GEntityManager.GetEntitiesForRenderUpdate<CStaticMesh>())
+	
+	for (auto Entity : GEntityManager.GetEntities<CStaticMesh>())
 	{
-		auto& Component = Entity.GetComponent<CStaticMesh>();
-		auto& StaticMesh = Component.StaticMesh;
-		auto& Materials = Component.Materials;
+		if (!Entity.GetComponent<CRenderer>().bVisible)
+			continue;
+
+		auto& StaticMesh = Entity.GetComponent<CStaticMesh>();
 		auto& Transform = Entity.GetComponent<CTransform>();
 
-		for (auto& Resource : StaticMesh->Resources)
+		if (Entity.HasComponent<CMaterial>())
 		{
-			MaterialProxy MaterialBatch;
-			MaterialBatch.Merge(Resource.Materials);
-			MaterialBatch.Merge(Materials);
-
-			Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Resource, MaterialBatch, Transform.LocalToWorldUniform));
+			auto& Material = Entity.GetComponent<CMaterial>();
+			StaticMesh.ForEach([&](auto& Resource)
+			{
+				Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Resource, Material, Transform.LocalToWorldUniform));
+			});
+		}
+		else
+		{
+			StaticMesh.ForEach([&](auto& Resource)
+			{
+				Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Resource, Resource.Material, Transform.LocalToWorldUniform));
+			});
 		}
 	}
-}
-
-void StaticMeshSystem::OnRemove(std::type_index Type, const Entity& Entity)
-{
-	auto& Scene = Scene::Get();
-	Scene.LightingPassDrawingPlans.Remove(Entity);
 }

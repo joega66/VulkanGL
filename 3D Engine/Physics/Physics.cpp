@@ -1,5 +1,6 @@
 #include "Physics.h"
 #include <Components/CStaticMesh.h>
+#include <Components/CTransform.h>
 
 bool Physics::Raycast(const Ray& Ray, Entity Entity)
 {
@@ -25,7 +26,6 @@ bool Physics::Raycast(const Ray& Ray, Entity Entity)
 
 	float TMin = std::max(std::max(std::min(T1, T2), std::min(T3, T4)), std::min(T5, T6));
 	float TMax = std::min(std::min(std::max(T1, T2), std::max(T3, T4)), std::max(T5, T6));
-
 	float T;
 
 	if (TMax < 0)
@@ -49,27 +49,23 @@ bool Physics::Raycast(const Ray& Ray, Entity Entity)
 	glm::vec3 C = glm::vec3(Min) + Diagonal;
 	float R = glm::length(Diagonal);
 	float R_2 = R * R;
-
 	glm::vec3 L = C - Ray.Origin;
 	float S = glm::dot(L, Ray.Direction);
 	float L_2 = glm::dot(L, L);
 
 	if (S < 0 && L_2 > R_2)
 	{
-	print("S < 0");
-	return false;
+		return false;
 	}
 
 	float M_2 = L_2 - S * S;
 
 	if (M_2 > R_2)
 	{
-	print("M_2 > R_2");
-	return false;
+		return false;
 	}
 
 	float Q = std::sqrt(R_2 - M_2);
-
 	float T = L_2 > R_2 ? S - Q : S + Q;
 
 	return true;*/

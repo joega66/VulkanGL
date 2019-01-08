@@ -8,9 +8,8 @@ class ComponentArray;
 class ComponentSystem
 {
 public:
-	virtual void RenderUpdate() {}
 	virtual void Update() {}
-	virtual void OnRemove(std::type_index Type, const class Entity& Entity) {}
+	virtual void OnRemove(std::type_index Type, class Entity& Entity) {}
 
 	template<typename TComponent>
 	void Listen()
@@ -28,17 +27,15 @@ public:
 
 	void UpdateSystems();
 	void AddComponentSystem(ComponentSystem& ComponentSystem);
-	void AddRenderSystem(ComponentSystem& RenderSystem);
 	void AddComponentArray(IComponentArray& ComponentArray);
 
 private:
 	friend class EntityManager;
 
 	std::vector<std::reference_wrapper<ComponentSystem>> ComponentSystems;
-	std::vector<std::reference_wrapper<ComponentSystem>> RenderSystems;
 	std::vector<std::reference_wrapper<IComponentArray>> ComponentArrays;
 
-	void DestroyEntity(const uint64 EntityID);
+	void DestroyEntity(uint64 EntityID);
 };
 
 extern ComponentSystemManager GComponentSystemManager;

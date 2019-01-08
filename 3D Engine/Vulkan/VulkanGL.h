@@ -128,7 +128,7 @@ private:
 	PendingBuffer<VkDescriptorSet> DescriptorSets;
 
 	template<typename VulkanDescriptorType>
-	using DescriptorMap = Map<EShaderStage, Map<uint32, std::unique_ptr<VulkanDescriptorType>>>;
+	using DescriptorMap = HashTable<EShaderStage, HashTable<uint32, std::unique_ptr<VulkanDescriptorType>>>;
 
 	DescriptorMap<VulkanWriteDescriptorImage> DescriptorImages;
 	DescriptorMap<VulkanWriteDescriptorBuffer> DescriptorBuffers;
@@ -148,8 +148,8 @@ private:
 	VkSampler CreateSampler(const SamplerState& Sampler);
 
 	/** Engine conversions */
-	const Map<EImageFormat, uint32> ImageFormatToGLSLSize;
-	const Map<VkFormat, uint32> SizeOfVulkanFormat;
+	const HashTable<EImageFormat, uint32> ImageFormatToGLSLSize;
+	const HashTable<VkFormat, uint32> SizeOfVulkanFormat;
 };
 
 CLASS(VulkanGL);

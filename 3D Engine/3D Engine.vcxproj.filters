@@ -173,6 +173,9 @@
     <ClInclude Include="ComponentSystems\GameSystem.h">
       <Filter>Source\ComponentSystems</Filter>
     </ClInclude>
+    <ClInclude Include="Components\CRenderer.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -229,9 +232,6 @@
     <ClCompile Include="GLShader.cpp">
       <Filter>Source\Graphics Library</Filter>
     </ClCompile>
-    <ClCompile Include="Components\CMaterial.cpp">
-      <Filter>Source\Components</Filter>
-    </ClCompile>
     <ClCompile Include="Components\CStaticMesh.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
@@ -282,9 +282,6 @@
     </ClCompile>
     <ClCompile Include="CoreEngine.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\ComponentArray.cpp">
-      <Filter>Source\Components</Filter>
     </ClCompile>
     <ClCompile Include="ComponentSystems\GameSystem.cpp">
       <Filter>Source\ComponentSystems</Filter>

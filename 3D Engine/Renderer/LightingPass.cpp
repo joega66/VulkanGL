@@ -1,24 +1,33 @@
 #include "LightingPass.h"
-#include "../GL.h"
+#include <Renderer/Scene.h>
+#include <GL.h>
 
-// @todo Since we're querying attribute/uniform locations anyway, should use glsl compiler option to automatically assign locations?
-
-LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Resources, const MaterialProxy& MaterialProxy, GLUniformBufferRef LocalToWorldUniform)
+LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Resources, CMaterial& CMaterial, GLUniformBufferRef LocalToWorldUniform)
 {
-	const bool bHasNormalMap = MaterialProxy.Count(EMaterialType::Normal);
+	const bool bHasDiffuseMap = std::holds_alternative<GLImageRef>(CMaterial.Diffuse);
+	const bool bHasNormalMap = CMaterial.Normal != nullptr;
 
 	LightingPassVert = GLCreateShader<LightingPassVS<EMeshType::StaticMesh>>();
 
-	if (bHasNormalMap)
+	// @todo This is already becoming unwieldy...
+	if (bHasDiffuseMap && bHasNormalMap)
 	{
-		LightingPassFrag = GLCreateShader<LightingPassFS<true, EMeshType::StaticMesh>>();
+		LightingPassFrag = GLCreateShader<LightingPassFS<true, true, EMeshType::StaticMesh>>();
+	}
+	else if (bHasDiffuseMap && !bHasNormalMap)
+	{
+		LightingPassFrag = GLCreateShader<LightingPassFS<true, false, EMeshType::StaticMesh>>();
+	}
+	else if (!bHasDiffuseMap && bHasNormalMap)
+	{
+		LightingPassFrag = GLCreateShader<LightingPassFS<false, true, EMeshType::StaticMesh>>();
 	}
 	else
 	{
-		LightingPassFrag = GLCreateShader<LightingPassFS<false, EMeshType::StaticMesh>>();
+		LightingPassFrag = GLCreateShader<LightingPassFS<false, false, EMeshType::StaticMesh>>();
 	}
 
-	MaterialDrawingPlan::Construct(Resources, MaterialProxy, LocalToWorldUniform, GetGraphicsPipeline());
+	MaterialDrawingPlan::Construct(Resources, CMaterial, LocalToWorldUniform, GetGraphicsPipeline());
 }
 
 GraphicsPipeline LightingPassDrawingPlan::GetGraphicsPipeline() const

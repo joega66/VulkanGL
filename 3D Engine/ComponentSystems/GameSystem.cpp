@@ -1,6 +1,7 @@
 #include "GameSystem.h"
 #include <Components/Entity.h>
 #include <Components/CStaticMesh.h>
+#include <Components/CTransform.h>
 #include <Engine/ResourceManager.h>
 
 GameSystem::GameSystem()

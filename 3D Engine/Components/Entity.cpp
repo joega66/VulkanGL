@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include <ComponentSystems/ComponentSystem.h>
 #include "CTransform.h"
+#include "CRenderer.h"
 
 EntityManager GEntityManager;
 
@@ -24,21 +25,30 @@ uint64 Entity::GetEntityID() const
 	return EntityID;
 }
 
+EntityManager::EntityManager()
+{
+}
+
+static void Templatize(Entity Entity)
+{
+	Entity.AddComponent<CTransform>();
+	Entity.AddComponent<CRenderer>();
+}
+
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
 	check(!Contains(Prefabs, Name), "Prefab %s already exists.", Name.c_str());
 	Prefabs.emplace(Name, Entity{ NextEntityID++ });
 	Entity Prefab = GetValue(Prefabs, Name);
 	PrefabNames.emplace(Prefab.GetEntityID(), Name);
-	// @todo Allow registering components that all entities inherit
-	Prefab.AddComponent<CTransform>();
+	Templatize(Prefab);
 	return Prefab;
 }
 
 Entity EntityManager::CreateEntity()
 {
 	Entity NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });
-	NewEntity.AddComponent<CTransform>();
+	Templatize(NewEntity);
 	return NewEntity;
 }
 
@@ -77,13 +87,4 @@ void EntityManager::DestroyEntity(const uint64 EntityID)
 	{
 		return EntityID == Other.GetEntityID();
 	}));
-}
-
-void EntityManager::QueueEntityForRenderUpdate(Entity Entity)
-{
-	// Prefabs are not updated by component systems
-	if (!Contains(PrefabNames, Entity.GetEntityID()))
-	{
-		EntitiesForRenderUpdate.push_back(Entity);
-	}
 }

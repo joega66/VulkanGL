@@ -264,7 +264,7 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 		return LHS.binding < RHS.binding;
 	});
 
-	Map<std::string, uint32> AttributeLocations;
+	HashTable<std::string, uint32> AttributeLocations;
 
 	if (Meta.Stage == EShaderStage::Vertex)
 	{
@@ -274,7 +274,7 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 		});
 	}
 
-	Map<std::string, uint32> UniformLocations;
+	HashTable<std::string, uint32> UniformLocations;
 
 	std::for_each(Uniforms.begin(), Uniforms.end(), [&] (const UniformBufferFormat& Uniform)
 	{
@@ -295,8 +295,8 @@ VulkanShader::VulkanShader(
 	, const ShaderMetadata& Meta
 	, const std::vector<VkVertexInputAttributeDescription>& Attributes
 	, const std::vector<VkDescriptorSetLayoutBinding>& Bindings
-	, const Map<std::string, uint32>& AttributeLocations
-	, const Map<std::string, uint32>& UniformLocations
+	, const HashTable<std::string, uint32>& AttributeLocations
+	, const HashTable<std::string, uint32>& UniformLocations
 ) : Device(Device), ShaderModule(ShaderModule), Attributes(Attributes), Bindings(Bindings), GLShader(Meta, AttributeLocations, UniformLocations)
 {
 }

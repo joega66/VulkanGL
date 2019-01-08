@@ -58,7 +58,7 @@ class GLShader : public GLRenderResource
 public:
 	const ShaderMetadata Meta;
 
-	GLShader(const ShaderMetadata& Meta, const Map<std::string, uint32>& AttributeLocations, const Map<std::string, uint32>& UniformLocations)
+	GLShader(const ShaderMetadata& Meta, const HashTable<std::string, uint32>& AttributeLocations, const HashTable<std::string, uint32>& UniformLocations)
 		: Meta(Meta), AttributeLocations(AttributeLocations), UniformLocations(UniformLocations)
 	{
 	}
@@ -78,8 +78,8 @@ public:
 	}
 
 private:
-	Map<std::string, uint32> UniformLocations;
-	Map<std::string, uint32> AttributeLocations;
+	HashTable<std::string, uint32> UniformLocations;
+	HashTable<std::string, uint32> AttributeLocations;
 };
 
 CLASS(GLShader);
@@ -104,7 +104,7 @@ private:
 	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const = 0;
 	void StoreShader(std::type_index Type, GLShaderRef Shader);
 
-	Map<std::type_index, GLShaderRef> Shaders;
+	HashTable<std::type_index, GLShaderRef> Shaders;
 };
 
 CLASS(GLShaderCompiler);
