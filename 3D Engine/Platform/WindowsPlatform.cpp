@@ -3,9 +3,19 @@
 #include <Windows.h>
 #include <GLFW/glfw3.h>
 
-HashTable<int32, Input::EButton> GLFWToEngineFormat
+static HashTable<int32, Input::EButton> GLFWToEngineFormat =
 {
 	ENTRY(GLFW_MOUSE_BUTTON_LEFT, Input::MouseLeft)
+	ENTRY(GLFW_KEY_0, Input::Keypad0)
+	ENTRY(GLFW_KEY_1, Input::Keypad1)
+	ENTRY(GLFW_KEY_2, Input::Keypad2)
+	ENTRY(GLFW_KEY_3, Input::Keypad3)
+	ENTRY(GLFW_KEY_4, Input::Keypad4)
+	ENTRY(GLFW_KEY_5, Input::Keypad5)
+	ENTRY(GLFW_KEY_6, Input::Keypad6)
+	ENTRY(GLFW_KEY_7, Input::Keypad7)
+	ENTRY(GLFW_KEY_8, Input::Keypad8)
+	ENTRY(GLFW_KEY_9, Input::Keypad9)
 };
 
 void WindowsPlatform::OpenWindow(int32 Width, int32 Height)

@@ -62,6 +62,11 @@ void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef 
 	GRender->SetUniformBuffer(Shader, Location, UniformBuffer);
 }
 
+void GLSetUniformBuffer(GLShaderRef Shader, const std::string& Name, GLUniformBufferRef UniformBuffer)
+{
+	GRender->SetUniformBuffer(Shader, Shader->GetUniformLocation(Name), UniformBuffer);
+}
+
 void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
 {
 	GRender->SetShaderImage(Shader, Location, Image, Sampler);

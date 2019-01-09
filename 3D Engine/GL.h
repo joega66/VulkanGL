@@ -86,8 +86,12 @@ struct SamplerState
 
 enum class EUniformUpdate
 {
+	// Use staging buffers
 	Infrequent,
-	Frequent
+	// Use CPU-accessible strategy
+	Frequent,
+	// Use CPU-accessible strategy (?)
+	SingleFrame
 };
 
 enum class EStencilOp
@@ -186,6 +190,7 @@ void GLSetInputAssembly(EPrimitiveTopology Topology);
 void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment);
 void GLSetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer);
 void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer);
+void GLSetUniformBuffer(GLShaderRef Shader, const std::string& Name, GLUniformBufferRef UniformBuffer);
 void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
 void GLDrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);

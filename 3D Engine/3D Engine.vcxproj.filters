@@ -113,9 +113,6 @@
     <ClInclude Include="Components\CMaterial.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\ResourceManager.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\StaticMesh.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -175,6 +172,9 @@
     </ClInclude>
     <ClInclude Include="Components\CRenderer.h">
       <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\AssetManager.h">
+      <Filter>Source\Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -238,9 +238,6 @@
     <ClCompile Include="Components\CTransform.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\ResourceManager.cpp">
-      <Filter>Source\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\StaticMesh.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
@@ -286,6 +283,9 @@
     <ClCompile Include="ComponentSystems\GameSystem.cpp">
       <Filter>Source\ComponentSystems</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\AssetManager.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -322,6 +322,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SkyboxFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\LinesVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\LinesFS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

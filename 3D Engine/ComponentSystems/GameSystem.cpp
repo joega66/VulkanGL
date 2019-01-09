@@ -2,10 +2,12 @@
 #include <Components/Entity.h>
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
-#include <Engine/ResourceManager.h>
+#include <Engine/AssetManager.h>
 
 GameSystem::GameSystem()
 {
+	GAssetManager.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
+
 	Entity Cube = GEntityManager.CreatePrefab("Cube");
 	Cube.AddComponent<CStaticMesh>(GAssetManager.GetStaticMesh("Cube"));
 

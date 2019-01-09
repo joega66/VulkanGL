@@ -141,6 +141,7 @@ private:
 	void CleanPipelineLayout();
 	void CleanPipeline();
 	void CleanDescriptorSets();
+	void CleanVertexStreams();
 
 	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
 	VkFormat FindSupportedDepthFormat(EImageFormat Format);

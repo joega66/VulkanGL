@@ -25,7 +25,7 @@ public:
 		float MouseSensitivity = 0.25f, float MovementSpeed = 1.0f,
 		float Zoom = 45.0f);
 
-	Ray ScreenPointToRay();
+	Ray ScreenPointToRay(const glm::vec2& ScreenPosition);
 
 	void SetLastMousePosition();
 	void LookAround();

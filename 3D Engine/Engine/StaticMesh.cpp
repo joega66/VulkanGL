@@ -1,5 +1,5 @@
 #include "StaticMesh.h"
-#include "ResourceManager.h"
+#include "AssetManager.h"
 #include "../GL.h"
 
 #include <assimp/scene.h>

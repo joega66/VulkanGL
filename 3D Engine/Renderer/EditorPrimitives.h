@@ -47,6 +47,26 @@ struct DrawLineInfo
 {
 	glm::vec3 A;
 	glm::vec3 B;
-	glm::vec3 Color;
+	glm::vec4 Color;
 	float Width = 1.0f;
+};
+
+class LinesVS : public GLShader
+{
+public:
+	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	{
+		static GLBaseShaderInfo Base = { "../Shaders/LinesVS.glsl", "main", EShaderStage::Vertex };
+		return Base;
+	}
+};
+
+class LinesFS : public GLShader
+{
+public:
+	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	{
+		static GLBaseShaderInfo Base = { "../Shaders/LinesFS.glsl", "main", EShaderStage::Fragment };
+		return Base;
+	}
 };

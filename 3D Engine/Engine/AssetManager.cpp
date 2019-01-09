@@ -1,4 +1,4 @@
-#include "ResourceManager.h"
+#include "AssetManager.h"
 #include "../GL.h"
 
 AssetManager GAssetManager;

@@ -565,7 +565,8 @@ GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndi
 
 GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
-	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent ? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
+	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent || UniformUsage == EUniformUpdate::SingleFrame 
+		? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
@@ -919,7 +920,6 @@ void VulkanGL::CleanDescriptorSets()
 
 	for (auto& DescriptorBuffersInShaderStage : DescriptorBuffers)
 	{
-		// @todo God you're ugly. Use a named struct.
 		auto& BufferDescriptors = DescriptorBuffersInShaderStage.second;
 		for (auto& Descriptors : BufferDescriptors)
 		{
@@ -940,7 +940,30 @@ void VulkanGL::CleanDescriptorSets()
 
 	vkUpdateDescriptorSets(Device.Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, nullptr);
 	vkCmdBindDescriptorSets(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineLayouts.Get(), 0, 1, &DescriptorSets.Get(), 0, nullptr);
+
 	bDirtyDescriptorSets = false;
+}
+
+void VulkanGL::CleanVertexStreams()
+{
+	const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
+	std::vector<VkDeviceSize> Offsets;
+	std::vector<VkBuffer> Buffers;
+
+	for (uint32 Location = 0; Location < VertexStreams.size(); Location++)
+	{
+		if (VertexStreams[Location])
+		{
+			VkDeviceSize Offset = VertexStreams[Location]->Buffer->Offset;
+			VkBuffer Buffer = VertexStreams[Location]->Buffer->GetVulkanHandle();
+			Offsets.push_back(Offset);
+			Buffers.push_back(Buffer);
+		}
+	}
+
+	vkCmdBindVertexBuffers(GetCommandBuffer(), 0, Buffers.size(), Buffers.data(), Offsets.data());
+
+	bDirtyVertexStreams = false;
 }
 
 void VulkanGL::PrepareForDraw()
@@ -967,23 +990,7 @@ void VulkanGL::PrepareForDraw()
 
 	if (bDirtyVertexStreams)
 	{
-		const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
-		std::vector<VkDeviceSize> Offsets;
-		std::vector<VkBuffer> Buffers;
-
-		for (uint32 Location = 0; Location < VertexStreams.size(); Location++)
-		{
-			if (VertexStreams[Location])
-			{
-				VkDeviceSize Offset = VertexStreams[Location]->Buffer->Offset;
-				VkBuffer Buffer = VertexStreams[Location]->Buffer->GetVulkanHandle();
-				Offsets.push_back(Offset);
-				Buffers.push_back(Buffer);
-			}
-		}
-
-		vkCmdBindVertexBuffers(GetCommandBuffer(), 0, Buffers.size(), Buffers.data(), Offsets.data());
-		bDirtyVertexStreams = false;
+		CleanVertexStreams();
 	}
 }
 

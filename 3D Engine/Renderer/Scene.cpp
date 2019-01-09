@@ -1,5 +1,5 @@
 #include "Scene.h"
-#include <Engine/ResourceManager.h>
+#include <Engine/AssetManager.h>
 
 Scene::Scene()
 {
@@ -41,21 +41,61 @@ void Scene::RenderEditorPrimitives()
 	RenderOutlines();
 }
 
+// @todo The internal Vulkan renderer should hold a copy of the shared ptr so that we don't have to do 
+// stupid hacks like this.
+std::list<GLUniformBufferRef> InFlightUniforms;
+std::list<GLVertexBufferRef> InFlight;
+
 void Scene::RenderLines()
 {
-	// @todo Create one big vertex buffer and use FirstVertex param.
+	if (Lines.empty())
+		return;
 
-	//GLSetGraphicsPipeline()
+	InFlightUniforms.clear();
+	InFlight.clear();
+
+	GLShaderRef VertShader = GLCreateShader<LinesVS>();
+	GLShaderRef FragShader = GLCreateShader<LinesFS>();
+
+	std::vector<glm::vec3> Positions;
+
 	std::for_each(Lines.begin(), Lines.end(), [&](const auto& Line)
 	{
-		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Line.Width);
+		Positions.push_back(Line.A);
+		Positions.push_back(Line.B);
+		Positions.push_back(Line.B);
 	});
+
+	GLVertexBufferRef VertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
+	InFlight.push_back(VertexBuffer);
+
+	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+
+	for (uint32 i = 0; i < Lines.size(); i++)
+	{
+		GLUniformBufferRef ColorUniform = GLCreateUniformBuffer(Lines[i].Color, EUniformUpdate::SingleFrame);
+		InFlightUniforms.push_back(ColorUniform);
+
+		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Lines[i].Width);
+		GLSetUniformBuffer(VertShader, "ViewUniform", View.Uniform);
+		GLSetUniformBuffer(FragShader, "ColorUniform", ColorUniform);
+		GLSetVertexStream(VertShader->GetAttributeLocation("Position"), VertexBuffer);
+		GLDraw(3, 1, i * 3, 0);
+	}
+
+	GLSetRasterizerState(ECullMode::None);
+
+	if (Input::GetKeyUp(Input::Keypad1))
+	{
+		Lines.clear();
+	}
 }
 
 void Scene::RenderSkybox()
 {
 	GLShaderRef VertShader = GLCreateShader<SkyboxVS>();
 	GLShaderRef FragShader = GLCreateShader<SkyboxFS>();
+
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
 	GLSetDepthTest(true, EDepthCompareTest::LEqual);

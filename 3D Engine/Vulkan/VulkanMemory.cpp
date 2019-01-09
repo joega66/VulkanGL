@@ -16,7 +16,7 @@ SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferU
 	VulkanUsage |= Any(Usage & EResourceUsage::UnorderedAccess) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
 	VulkanUsage |= Any(Usage & EResourceUsage::IndirectBuffer) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
 	VulkanUsage |= !Any(Usage & EResourceUsage::KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
-
+	
 	VkMemoryPropertyFlags Properties = Any(Usage & EResourceUsage::KeepCPUAccessible) ? 
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
@@ -61,11 +61,8 @@ uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemor
 	{
 		const uint32 MemoryTypeBits = (1 << MemoryIndex);
 		const bool IsRequiredMemoryType = MemoryTypeBitsRequirement & MemoryTypeBits;
-
-		const VkMemoryPropertyFlags Properties =
-			MemProperties.memoryTypes[MemoryIndex].propertyFlags;
-		const bool HasRequiredProperties =
-			(Properties & RequiredProperties) == RequiredProperties;
+		const VkMemoryPropertyFlags Properties = MemProperties.memoryTypes[MemoryIndex].propertyFlags;
+		const bool HasRequiredProperties = (Properties & RequiredProperties) == RequiredProperties;
 
 		if (IsRequiredMemoryType && HasRequiredProperties)
 		{

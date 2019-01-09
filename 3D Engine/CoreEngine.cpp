@@ -1,6 +1,6 @@
 #include "CoreEngine.h"
 #include <Renderer/Scene.h>
-#include <Engine/ResourceManager.h>
+#include <Engine/AssetManager.h>
 #include <ComponentSystems/StaticMeshSystem.h>
 #include <ComponentSystems/TransformGizmoSystem.h>
 #include <ComponentSystems/EditorControllerSystem.h>
@@ -21,11 +21,12 @@ void CoreEngine::Run()
 		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
 		"../Images/Cubemaps/DownUnder/down-under_bk.tga", "../Images/Cubemaps/DownUnder/down-under_ft.tga",
 	};
+
+	// Engine primitives/default assets
 	GAssetManager.LoadCubemap("Engine-Cubemap-Default", Cubemap);
 	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
-	GAssetManager.LoadStaticMesh("Transform Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
+	GAssetManager.LoadStaticMesh("Transform-Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
-	GAssetManager.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
 
 	auto& Scene = Scene::Get();
 

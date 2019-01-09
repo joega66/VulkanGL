@@ -1,5 +1,6 @@
 #pragma once
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
@@ -262,6 +263,16 @@ namespace Input
 	enum EButton
 	{
 		MouseLeft,
+		Keypad1,
+		Keypad2,
+		Keypad3,
+		Keypad4,
+		Keypad5,
+		Keypad6,
+		Keypad7,
+		Keypad8,
+		Keypad9,
+		Keypad0
 	};
 
 	inline bool GetKeyDown(uint32 Key)

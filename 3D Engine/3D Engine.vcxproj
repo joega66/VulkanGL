@@ -28,7 +28,7 @@
     <ClCompile Include="Components\CTransform.cpp" />
     <ClCompile Include="Components\Entity.cpp" />
     <ClCompile Include="CoreEngine.cpp" />
-    <ClCompile Include="Engine\ResourceManager.cpp" />
+    <ClCompile Include="Engine\AssetManager.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\View.cpp" />
     <ClCompile Include="GL.cpp" />
@@ -70,7 +70,7 @@
     <ClInclude Include="Components\CTransform.h" />
     <ClInclude Include="Components\Entity.h" />
     <ClInclude Include="CoreEngine.h" />
-    <ClInclude Include="Engine\ResourceManager.h" />
+    <ClInclude Include="Engine\AssetManager.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\View.h" />
     <ClInclude Include="GL.h" />
@@ -110,6 +110,8 @@
     <None Include="..\Shaders\FullscreenVS.glsl" />
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
+    <None Include="..\Shaders\LinesFS.glsl" />
+    <None Include="..\Shaders\LinesVS.glsl" />
     <None Include="..\Shaders\OutlineFS.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />

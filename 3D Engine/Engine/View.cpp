@@ -15,22 +15,37 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 	UpdateView();
 }
 
-Ray View::ScreenPointToRay()
+Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
 {
 	const glm::vec2& Window = GPlatform->GetWindowSize();
-	const glm::vec2& Mouse = GPlatform->GetMousePosition();
 
-	float X = (2.0f * Mouse.x) / Window.x - 1.0f;
-	float Y = (2.0f * Mouse.y) / Window.y - 1.0f;
-	float Z = 1.0f;
+	const float NormalizedX = ScreenPosition.x / (float)Window.x;
+	const float NormalizedY = ScreenPosition.y / (float)Window.y;
 
-	glm::vec3 RayNdc = glm::vec3(X, Y, Z);
-	glm::vec4 RayClip = glm::vec4(RayNdc.x, RayNdc.y, RayNdc.z, 1.0);
-	glm::vec4 RayEye = glm::inverse(GetPerspectiveMatrix()) * RayClip;
-	glm::vec3 RayWorld = glm::vec3(glm::inverse(GetViewMatrix()) * RayEye);
-	RayWorld = glm::normalize(RayWorld);
+	const float ScreenSpaceX = (NormalizedX - 0.5f) * 2.0f;
+	const float ScreenSpaceY = (NormalizedY - 0.5f) * 2.0f;
 
-	return Ray(Position, RayWorld);
+	const glm::vec4 RayStartProjectionSpace = glm::vec4(ScreenSpaceX, ScreenSpaceY, 0.0f, 1.0f);
+	const glm::vec4 RayEndProjectionSpace = glm::vec4(ScreenSpaceX, ScreenSpaceY, 0.5f, 1.0f);
+
+	const glm::mat4 InvViewProjMatrix = glm::inverse(GetPerspectiveMatrix() * GetViewMatrix());
+	const glm::vec4 HRayStartWorldSpace = InvViewProjMatrix * RayStartProjectionSpace;
+	const glm::vec4 HRayEndWorldSpace = InvViewProjMatrix * RayEndProjectionSpace;
+	glm::vec3 RayStartWorldSpace = glm::vec3(HRayStartWorldSpace);
+	glm::vec3 RayEndWorldSpace = glm::vec3(HRayEndWorldSpace);
+
+	if (HRayStartWorldSpace.w != 0.0f)
+	{
+		RayStartWorldSpace /= HRayStartWorldSpace.w;
+	}
+	if (HRayEndWorldSpace.w != 0.0f)
+	{
+		RayEndWorldSpace /= HRayEndWorldSpace.w;
+	}
+
+	const glm::vec3 RayDirWorldSpace = glm::normalize(RayEndWorldSpace - RayStartWorldSpace);
+
+	return Ray(RayStartWorldSpace, RayDirWorldSpace);
 }
 
 void View::UpdateView()
@@ -42,7 +57,7 @@ void View::UpdateView()
 	Right = glm::normalize(glm::cross(Front, WorldUp));
 	Up = glm::normalize(glm::cross(Right, Front));
 
-	ViewUniforms View =
+	const ViewUniforms View =
 	{
 		GetViewMatrix(),
 		GetPerspectiveMatrix()
@@ -69,11 +84,11 @@ void View::LookAround()
 	float XOffset = Mouse.x - LastXPos;
 	float YOffset = LastYPos - Mouse.y;
 
-	LastXPos = Mouse.x;
-	LastYPos = Mouse.y;
-
 	XOffset *= MouseSensitivity;
 	YOffset *= MouseSensitivity;
+
+	LastXPos = Mouse.x;
+	LastYPos = Mouse.y;
 
 	Yaw += XOffset;
 	Pitch += YOffset;
@@ -85,7 +100,7 @@ void View::LookAround()
 
 void View::Translate()
 {
-	float DS = MovementSpeed * GPlatform->GetScrollOffset().y;
+	const float DS = MovementSpeed * GPlatform->GetScrollOffset().y;
 	Position += Front * DS;
 
 	UpdateView();

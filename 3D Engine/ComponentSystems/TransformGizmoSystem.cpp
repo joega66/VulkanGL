@@ -1,13 +1,11 @@
 #include "TransformGizmoSystem.h"
-#include <Engine/ResourceManager.h>
+#include <Engine/AssetManager.h>
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
 #include <Renderer/Scene.h>
 
 TransformGizmoSystem::TransformGizmoSystem()
 {
-	// @todo Renderer component
-
 	TransformWidget =
 	{
 		GEntityManager.CreateEntity(),
@@ -28,7 +26,7 @@ TransformGizmoSystem::TransformGizmoSystem()
 	ZAxis.Translate(glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
-	auto TransformGizmo = GAssetManager.GetStaticMesh("Transform Gizmo");
+	auto TransformGizmo = GAssetManager.GetStaticMesh("Transform-Gizmo");
 
 	TransformWidget.X.AddComponent<CStaticMesh>(TransformGizmo);
 	TransformWidget.Y.AddComponent<CStaticMesh>(TransformGizmo);
@@ -68,32 +66,29 @@ void TransformGizmoSystem::Update()
 			return;
 		}
 
-		Ray Ray = Scene.View.ScreenPointToRay();
+		Ray Ray = Scene.View.ScreenPointToRay(GPlatform->GetMousePosition());
+
 		std::vector<Entity> ClickedEntities;
 
 		for (auto Entity : GEntityManager.GetEntities<CStaticMesh>())
 		{
+			if (Entity.GetEntityID() == TransformWidget.X.GetEntityID() ||
+				Entity.GetEntityID() == TransformWidget.Y.GetEntityID() ||
+				Entity.GetEntityID() == TransformWidget.Z.GetEntityID())
+				continue;
+
 			if (Physics::Raycast(Ray, Entity))
 			{
-				if (Entity != SelectedEntity)
-				{
-					ClickedEntities.push_back(Entity);
-				}
-				break;
+				ClickedEntities.push_back(Entity);
 			}
 		}
 
-		if (ClickedEntities.size())
+		if (!ClickedEntities.empty())
 		{
 			for (auto& Entity : ClickedEntities)
 			{
-				if (Entity.GetEntityID() != TransformWidget.X.GetEntityID() &&
-					Entity.GetEntityID() != TransformWidget.Y.GetEntityID() &&
-					Entity.GetEntityID() != TransformWidget.Z.GetEntityID())
-				{
-					SelectedEntity = Entity;
-					break;
-				}
+				SelectedEntity = Entity;
+				break;
 			}
 		}
 		else
