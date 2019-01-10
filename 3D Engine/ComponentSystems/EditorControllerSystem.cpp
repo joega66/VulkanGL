@@ -10,7 +10,15 @@ void EditorControllerSystem::Update()
 	if (Input::GetKeyDown(Input::MouseLeft))
 	{
 		GPlatform->HideMouse(true);
-		View.LookAround();
+
+		if (!View.bFreeze)
+		{
+			View.LookAround();
+		}
+		else
+		{
+			View.SetLastMousePosition();
+		}
 	}
 	else
 	{

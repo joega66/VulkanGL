@@ -330,5 +330,8 @@
     <None Include="..\Shaders\LinesFS.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Components\ComponentArray.inl">
+      <Filter>Source\Components</Filter>
+    </None>
   </ItemGroup>
 </Project>

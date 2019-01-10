@@ -41,18 +41,11 @@ void Scene::RenderEditorPrimitives()
 	RenderOutlines();
 }
 
-// @todo The internal Vulkan renderer should hold a copy of the shared ptr so that we don't have to do 
-// stupid hacks like this.
-std::list<GLUniformBufferRef> InFlightUniforms;
-std::list<GLVertexBufferRef> InFlight;
-
+// @todo The Vulkan renderer should hold a copy of in-flight resources
 void Scene::RenderLines()
 {
 	if (Lines.empty())
 		return;
-
-	InFlightUniforms.clear();
-	InFlight.clear();
 
 	GLShaderRef VertShader = GLCreateShader<LinesVS>();
 	GLShaderRef FragShader = GLCreateShader<LinesFS>();
@@ -67,14 +60,12 @@ void Scene::RenderLines()
 	});
 
 	GLVertexBufferRef VertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-	InFlight.push_back(VertexBuffer);
 
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 
 	for (uint32 i = 0; i < Lines.size(); i++)
 	{
 		GLUniformBufferRef ColorUniform = GLCreateUniformBuffer(Lines[i].Color, EUniformUpdate::SingleFrame);
-		InFlightUniforms.push_back(ColorUniform);
 
 		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Lines[i].Width);
 		GLSetUniformBuffer(VertShader, "ViewUniform", View.Uniform);
@@ -84,11 +75,6 @@ void Scene::RenderLines()
 	}
 
 	GLSetRasterizerState(ECullMode::None);
-
-	if (Input::GetKeyUp(Input::Keypad1))
-	{
-		Lines.clear();
-	}
 }
 
 void Scene::RenderSkybox()

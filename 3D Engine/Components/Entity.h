@@ -1,57 +1,6 @@
 #pragma once
 #include "ComponentArray.h"
 
-class Entity
-{
-public:
-	static constexpr uint64 InvalidID = std::numeric_limits<uint64>::max();
-
-	Entity();
-
-	Entity(uint64 EntityID);
-
-	bool operator==(const Entity& Entity)
-	{
-		return EntityID == Entity.GetEntityID();
-	}
-
-	bool operator!=(const Entity& Entity)
-	{
-		return EntityID != Entity.GetEntityID();
-	}
-
-	template<typename TComponent, typename ...Args>
-	TComponent& AddComponent(Args&& ...InArgs)
-	{
-		return ComponentArray<TComponent>::Get().AddComponent(EntityID, std::forward<Args>(InArgs)...);
-	}
-
-	template<typename TComponent>
-	TComponent& GetComponent()
-	{
-		return ComponentArray<TComponent>::Get().GetComponent(EntityID);
-	}
-
-	template<typename TComponent>
-	bool HasComponent()
-	{
-		return ComponentArray<TComponent>::Get().HasComponent(EntityID);
-	}
-
-	template<typename TComponent>
-	void RemoveComponent()
-	{
-		ComponentArray<TComponent>::Get().RemoveComponent(EntityID);
-	}
-
-	void DestroyEntity();
-
-	uint64 GetEntityID() const;
-
-private:
-	uint64 EntityID;
-};
-
 class EntityManager
 {
 public:
@@ -62,7 +11,7 @@ public:
 	Entity CreateFromPrefab(Entity Prefab);
 	Entity CreateFromPrefab(const std::string& Name);
 
-	void DestroyEntity(const uint64 EntityID);
+	void DestroyEntity(Entity& Entity);
 
 	template<typename ...TComponents>
 	std::vector<Entity> GetEntities()

@@ -8,15 +8,24 @@ public:
 	struct
 	{
 		Entity X, Y, Z;
-	} TransformWidget;
+	} TranslateAxis;
 
 	Entity SelectedEntity;
 	float LastX, LastY;
-	bool bFirstPress = true;
 
 	TransformGizmoSystem();
 	virtual void Update() final;
 
+	// The current state of the gizmo system.
+	std::function<void()> State;
+	// States.
+	void Null();
+	void Selection();
+	void TranslateTool();
+	void TranslateX();
+	void TranslateY();
+	void TranslateZ();
+	
 private:
 	void DrawOutline(Entity Entity);
 };

@@ -5,11 +5,13 @@
 template<typename TComponent>
 class ComponentArray;
 
+class Entity;
+
 class ComponentSystem
 {
 public:
 	virtual void Update() {}
-	virtual void OnRemove(std::type_index Type, class Entity& Entity) {}
+	virtual void OnRemove(std::type_index Type, Entity& Entity) {}
 
 	template<typename TComponent>
 	void Listen()
@@ -35,7 +37,7 @@ private:
 	std::vector<std::reference_wrapper<ComponentSystem>> ComponentSystems;
 	std::vector<std::reference_wrapper<IComponentArray>> ComponentArrays;
 
-	void DestroyEntity(uint64 EntityID);
+	void DestroyEntity(Entity& Entity);
 };
 
 extern ComponentSystemManager GComponentSystemManager;

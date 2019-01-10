@@ -1,74 +1,88 @@
 #pragma once
 #include <ComponentSystems/ComponentSystem.h>
 
+class Entity;
+
 class IComponentArray
 {
 public:
-	virtual void RemoveComponent(uint64 EntityID) = 0;
-	virtual std::shared_ptr<void> CopyComponent(const uint64 EntityID) = 0;
-	virtual void AddComponent(const uint64 EntityID, std::shared_ptr<void> Data) = 0;
-	virtual bool HasComponent(const uint64 EntityID) = 0;
+	virtual void RemoveComponent(Entity& Entity) {};
+	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) { return nullptr; };
+	virtual void AddComponent(Entity& Entity, std::shared_ptr<void> Data) {};
+	virtual bool HasComponent(Entity& Entity) { return false; };
 };
 
 template<typename TComponent>
 class ComponentArray : public IComponentArray
 {
 public:
-	ComponentArray()
-	{
-		GComponentSystemManager.AddComponentArray(*this);
-	}
-
+	ComponentArray();
+	TComponent& GetComponent(Entity& Entity);
 	template<typename ...Args>
-	TComponent& AddComponent(const uint64 EntityID, Args&& ...InArgs)
-	{
-		Components.emplace(EntityID, std::move(TComponent(std::forward<Args>(InArgs)...)));
-		return Components[EntityID];
-	}
-
-	void AddComponent(const uint64 EntityID, std::shared_ptr<void> Data)
-	{
-		Components.emplace(EntityID, *std::static_pointer_cast<TComponent>(Data));
-	}
-
-	TComponent& GetComponent(const uint64 EntityID)
-	{
-		return Components[EntityID];
-	}
-
-	virtual std::shared_ptr<void> CopyComponent(const uint64 EntityID) final
-	{
-		return std::make_shared<TComponent>(GetComponent(EntityID));
-	}
-
-	virtual bool HasComponent(const uint64 EntityID) final
-	{
-		return Contains(Components, EntityID);
-	}
-
-	virtual void RemoveComponent(uint64 EntityID) final
-	{
-		Components.erase(EntityID);
-		Entity Entity{ EntityID };
-		for (auto& ComponentSystem : OnRemoveListeners)
-		{
-			ComponentSystem.get().OnRemove(std::type_index(typeid(TComponent)), Entity);
-		}
-	}
-
-	void OnRemoveListener(ComponentSystem& ComponentSystem)
-	{
-		OnRemoveListeners.push_back(ComponentSystem);
-	}
-
-	static ComponentArray<TComponent>& Get()
-	{
-		static ComponentArray<TComponent> ComponentArray;
-		return ComponentArray;
-	}
+	TComponent& AddComponent(Entity& Entity, Args&& ...InArgs);
+	virtual void AddComponent(Entity& Entity, std::shared_ptr<void> Data) final;
+	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) final;
+	virtual bool HasComponent(Entity& Entity) final;
+	virtual void RemoveComponent(Entity& Entity) final;
+	void OnRemoveListener(ComponentSystem& ComponentSystem);
+	static ComponentArray<TComponent>& Get();
 
 private:
 	// @todo Object pool for components
 	HashTable<uint64, TComponent> Components;
 	std::vector<std::reference_wrapper<ComponentSystem>> OnRemoveListeners;
 };
+
+class Entity
+{
+public:
+	static constexpr uint64 InvalidID = std::numeric_limits<uint64>::max();
+
+	Entity();
+
+	bool operator==(const Entity& Entity)
+	{
+		return EntityID == Entity.GetEntityID();
+	}
+
+	bool operator!=(const Entity& Entity)
+	{
+		return EntityID != Entity.GetEntityID();
+	}
+
+	template<typename TComponent, typename ...Args>
+	TComponent& AddComponent(Args&& ...InArgs)
+	{
+		return ComponentArray<TComponent>::Get().AddComponent(*this, std::forward<Args>(InArgs)...);
+	}
+
+	template<typename TComponent>
+	TComponent& GetComponent()
+	{
+		return ComponentArray<TComponent>::Get().GetComponent(*this);
+	}
+
+	template<typename TComponent>
+	bool HasComponent()
+	{
+		return ComponentArray<TComponent>::Get().HasComponent(*this);
+	}
+
+	template<typename TComponent>
+	void RemoveComponent()
+	{
+		ComponentArray<TComponent>::Get().RemoveComponent(*this);
+	}
+
+	void DestroyEntity();
+	uint64 GetEntityID() const;
+	explicit operator bool() const;
+
+private:
+	friend class EntityManager;
+	uint64 EntityID;
+
+	Entity(uint64 EntityID);
+};
+
+#include "ComponentArray.inl"

@@ -23,10 +23,10 @@ void ComponentSystemManager::UpdateSystems()
 	}
 }
 
-void ComponentSystemManager::DestroyEntity(uint64 EntityID)
+void ComponentSystemManager::DestroyEntity(Entity& Entity)
 {
 	for (auto& ComponentArray : ComponentArrays)
 	{
-		ComponentArray.get().RemoveComponent(EntityID);
+		ComponentArray.get().RemoveComponent(Entity);
 	}
 }

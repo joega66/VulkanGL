@@ -17,12 +17,17 @@ Entity::Entity(uint64 EntityID)
 
 void Entity::DestroyEntity()
 {
-	GEntityManager.DestroyEntity(EntityID);
+	GEntityManager.DestroyEntity(*this);
 }
 
 uint64 Entity::GetEntityID() const
 {
 	return EntityID;
+}
+
+Entity::operator bool() const
+{
+	return EntityID != InvalidID;
 }
 
 EntityManager::EntityManager()
@@ -59,10 +64,10 @@ Entity EntityManager::CreateFromPrefab(Entity Prefab)
 
 	for (auto& ComponentArray : ComponentArrays)
 	{
-		if (ComponentArray.get().HasComponent(Prefab.GetEntityID()))
+		if (ComponentArray.get().HasComponent(Prefab))
 		{
-			auto Component = ComponentArray.get().CopyComponent(Prefab.GetEntityID());
-			ComponentArray.get().AddComponent(Entity.GetEntityID(), std::move(Component));
+			auto Component = ComponentArray.get().CopyComponent(Prefab);
+			ComponentArray.get().AddComponent(Entity, std::move(Component));
 		}
 	}
 
@@ -71,20 +76,16 @@ Entity EntityManager::CreateFromPrefab(Entity Prefab)
 
 Entity EntityManager::CreateFromPrefab(const std::string& Name)
 {
-	if (Contains(Prefabs, Name))
-	{
-		return CreateFromPrefab(GetValue(Prefabs, Name));
-	}
-
-	return Entity();
+	check(Contains(Prefabs, Name), "No Prefab named %s", Name.c_str());
+	return CreateFromPrefab(GetValue(Prefabs, Name));
 }
 
-void EntityManager::DestroyEntity(const uint64 EntityID)
+void EntityManager::DestroyEntity(Entity& Entity)
 {
-	GComponentSystemManager.DestroyEntity(EntityID);
+	GComponentSystemManager.DestroyEntity(Entity);
 
 	Entities.erase(std::remove_if(Entities.begin(), Entities.end(), [&] (auto& Other)
 	{
-		return EntityID == Other.GetEntityID();
+		return Entity == Other;
 	}));
 }

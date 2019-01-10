@@ -118,6 +118,7 @@
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
     <None Include="..\Shaders\View.glsl" />
+    <None Include="Components\ComponentArray.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
