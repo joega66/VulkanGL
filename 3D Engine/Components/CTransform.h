@@ -2,6 +2,7 @@
 #include "Component.h"
 #include "GLRenderResource.h"
 
+// @todo Highly considering doing per-frame uniforms...
 class CTransform : public Component<CTransform>
 {
 public:

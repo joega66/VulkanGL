@@ -35,6 +35,7 @@ private:
 
 class Entity
 {
+	friend class EntityManager;
 public:
 	static constexpr uint64 InvalidID = std::numeric_limits<uint64>::max();
 
@@ -79,7 +80,6 @@ public:
 	explicit operator bool() const;
 
 private:
-	friend class EntityManager;
 	uint64 EntityID;
 
 	Entity(uint64 EntityID);

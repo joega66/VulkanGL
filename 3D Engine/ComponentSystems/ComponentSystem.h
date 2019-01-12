@@ -24,6 +24,7 @@ class IComponentArray;
 
 class ComponentSystemManager
 {
+	friend class EntityManager;
 public:
 	ComponentSystemManager() = default;
 
@@ -32,8 +33,6 @@ public:
 	void AddComponentArray(IComponentArray& ComponentArray);
 
 private:
-	friend class EntityManager;
-
 	std::vector<std::reference_wrapper<ComponentSystem>> ComponentSystems;
 	std::vector<std::reference_wrapper<IComponentArray>> ComponentArrays;
 

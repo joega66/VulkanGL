@@ -3,6 +3,7 @@
 
 class EntityManager
 {
+	friend class Entity;
 public:
 	EntityManager();
 
@@ -17,7 +18,7 @@ public:
 	std::vector<Entity> GetEntities()
 	{
 		std::vector<Entity> EntitiesWithComponents;
-		
+
 		for (auto Entity : Entities)
 		{
 			if (EntityHasComponents<TComponents...>(Entity))
@@ -30,8 +31,6 @@ public:
 	}
 
 private:
-	friend class Entity;
-
 	template<typename T>
 	static bool EntityHasComponents(Entity Entity)
 	{

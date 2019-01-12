@@ -90,7 +90,7 @@ enum class EUniformUpdate
 	Infrequent,
 	// Use CPU-accessible strategy
 	Frequent,
-	// Use CPU-accessible strategy (?)
+	// Use CPU-accessible strategy
 	SingleFrame
 };
 

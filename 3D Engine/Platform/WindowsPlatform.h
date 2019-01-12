@@ -15,7 +15,7 @@ public:
 	virtual void PollEvents() final;
 	virtual void RemoveNewlines(std::string& String) final;
 	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const final;
-	virtual void HideMouse(bool bHide) final;
+	virtual void MouseState(class Cursor& Cursor) final;
 
 	static void WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y);
 	static void KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);

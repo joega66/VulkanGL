@@ -1,4 +1,3 @@
-#include "Platform.h"
 #include <fstream>
 #include <cstdarg>
 #include <iostream>
@@ -6,6 +5,8 @@
 #include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <Engine/Cursor.h>
+#include <Engine/Input.h>
 
 IPlatformRef GPlatform;
 
@@ -112,16 +113,6 @@ void IPlatform::NotifyWindowListeners(int32 NewX, int32 NewY)
 	}
 }
 
-bool IPlatform::GetKeyDown(uint32 Key)
-{
-	return Key < Private.Keys.size() ? Private.Keys[Key] : false;
-}
-
-bool IPlatform::GetKeyUp(uint32 Key)
-{
-	return Key < Private.KeysPressed.size() ? Private.KeysPressed[Key] : false;
-}
-
 void IPlatform::Memcpy(void* Dst, const void* Src, size_t Size)
 {
 	memcpy(Dst, Src, Size);
@@ -141,7 +132,11 @@ void IPlatform::FreeImage(uint8* Pixels)
 
 void IPlatform::EndFrame()
 {
-	std::fill(Private.KeysPressed.begin(), Private.KeysPressed.end(), false);
+	// Update hardware cursor.
+	GPlatform->MouseState(Cursor);
+
+	// Update hardware input.
+	std::fill(Input.KeysPressed.begin(), Input.KeysPressed.end(), false);
 }
 
 WindowResizeListener::~WindowResizeListener()

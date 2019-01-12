@@ -71,6 +71,8 @@
     <ClInclude Include="Components\Entity.h" />
     <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="Engine\AssetManager.h" />
+    <ClInclude Include="Engine\Cursor.h" />
+    <ClInclude Include="Engine\Input.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\View.h" />
     <ClInclude Include="GL.h" />

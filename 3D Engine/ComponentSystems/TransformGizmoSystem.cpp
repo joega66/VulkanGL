@@ -1,8 +1,6 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
-#include <Components/CTransform.h>
 #include <Components/CRenderer.h>
-#include <Renderer/Scene.h>
 
 TransformGizmoSystem::TransformGizmoSystem()
 	: State(std::bind(&TransformGizmoSystem::Null, this))
@@ -59,11 +57,8 @@ void TransformGizmoSystem::Update()
 
 void TransformGizmoSystem::Null()
 {
-	if (Input::GetKeyDown(Input::MouseLeft))
+	if (Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
-		auto& Scene = Scene::Get();
-		LastX = Scene.View.LastXPos;
-		LastY = Scene.View.LastYPos;
 		State = std::bind(&TransformGizmoSystem::Selection, this);
 	}
 }
@@ -72,11 +67,11 @@ void TransformGizmoSystem::Selection()
 {
 	auto& Scene = Scene::Get();
 
-	// Select on key up
-	if (Input::GetKeyUp(Input::MouseLeft))
+	// Select on key up.
+	if (Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
-		// Don't select while looking around
-		if (!(LastX == Scene.View.LastXPos && LastY == Scene.View.LastYPos))
+		// Don't select while looking around.
+		if (!(Cursor.Last == Cursor.Position))
 		{
 			if (SelectedEntity)
 			{
@@ -90,7 +85,7 @@ void TransformGizmoSystem::Selection()
 			return;
 		}
 
-		const Ray Ray = Scene.View.ScreenPointToRay(GPlatform->GetMousePosition());
+		const Ray Ray = Scene.View.ScreenPointToRay(Cursor.Position);
 
 		std::vector<Entity> Hits;
 
@@ -136,18 +131,18 @@ void TransformGizmoSystem::Selection()
 
 void TransformGizmoSystem::TranslateTool()
 {
-	if (Input::GetKeyDown(Input::MouseLeft))
+	if (Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		auto& Scene = Scene::Get();
 
-		// Check if we're grabbing an axis
+		// Check if we're grabbing an axis.
 		std::vector<Entity> Gizmo = { TranslateAxis.X, TranslateAxis.Y, TranslateAxis.Z };
 		Entity ClosestHit;
 		float Dist = std::numeric_limits<float>::max();
 
 		std::for_each(Gizmo.begin(), Gizmo.end(), [&](auto& Entity)
 		{
-			if (Physics::Raycast(Scene.View.ScreenPointToRay(GPlatform->GetMousePosition()), Entity))
+			if (Physics::Raycast(Scene.View.ScreenPointToRay(Cursor.Position), Entity))
 			{
 				CTransform& Transform = Entity.GetComponent<CTransform>();
 				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.Position); NewDist < Dist)
@@ -157,90 +152,24 @@ void TransformGizmoSystem::TranslateTool()
 				}
 			}
 		});
-
-		LastX = Scene.View.LastXPos;
-		LastY = Scene.View.LastYPos;
-
+		
 		if (ClosestHit == TranslateAxis.X)
 		{
-			State = std::bind(&TransformGizmoSystem::TranslateX, this);
+			State = std::bind(&TransformGizmoSystem::Translate<EAxis::X>, this);
 		}
 		else if (ClosestHit == TranslateAxis.Y)
 		{
-			State = std::bind(&TransformGizmoSystem::TranslateY, this);
+			State = std::bind(&TransformGizmoSystem::Translate<EAxis::Y>, this);
 		}
 		else if (ClosestHit == TranslateAxis.Z)
 		{
-			State = std::bind(&TransformGizmoSystem::TranslateZ, this);
+			State = std::bind(&TransformGizmoSystem::Translate<EAxis::Z>, this);
 		}
 		else
 		{
 			// No axis hit... go back to selection.
 			State = std::bind(&TransformGizmoSystem::Selection, this);
 		}
-	}
-}
-
-void TransformGizmoSystem::TranslateX()
-{
-	auto& Scene = Scene::Get();
-
-	if (Input::GetKeyDown(Input::MouseLeft))
-	{
-		CTransform& Transform = SelectedEntity.GetComponent<CTransform>();
-		glm::vec3 Position = Transform.GetPosition();
-		Position.x += (Scene.View.LastXPos - LastX) / 100.0f;
-		Transform.Translate(Position);
-		LastX = Scene.View.LastXPos;
-		LastY = Scene.View.LastYPos;
-		Scene.View.bFreeze = true;
-	}
-	else if (Input::GetKeyUp(Input::MouseLeft))
-	{
-		Scene.View.bFreeze = false;
-		State = std::bind(&TransformGizmoSystem::TranslateTool, this);
-	}
-}
-
-void TransformGizmoSystem::TranslateY()
-{
-	auto& Scene = Scene::Get();
-
-	if (Input::GetKeyDown(Input::MouseLeft))
-	{
-		CTransform& Transform = SelectedEntity.GetComponent<CTransform>();
-		glm::vec3 Position = Transform.GetPosition();
-		Position.y -= (Scene.View.LastYPos - LastY) / 100.0f;
-		Transform.Translate(Position);
-		LastX = Scene.View.LastXPos;
-		LastY = Scene.View.LastYPos;
-		Scene.View.bFreeze = true;
-	}
-	else if (Input::GetKeyUp(Input::MouseLeft))
-	{
-		Scene.View.bFreeze = false;
-		State = std::bind(&TransformGizmoSystem::TranslateTool, this);
-	}
-}
-
-void TransformGizmoSystem::TranslateZ()
-{
-	auto& Scene = Scene::Get();
-
-	if (Input::GetKeyDown(Input::MouseLeft))
-	{
-		CTransform& Transform = SelectedEntity.GetComponent<CTransform>();
-		glm::vec3 Position = Transform.GetPosition();
-		Position.z += (Scene.View.LastXPos - LastX) / 100.0f;
-		Transform.Translate(Position);
-		LastX = Scene.View.LastXPos;
-		LastY = Scene.View.LastYPos;
-		Scene.View.bFreeze = true;
-	}
-	else if (Input::GetKeyUp(Input::MouseLeft))
-	{
-		Scene.View.bFreeze = false;
-		State = std::bind(&TransformGizmoSystem::TranslateTool, this);
 	}
 }
 

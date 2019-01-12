@@ -15,9 +15,14 @@ void Scene::Render()
 	RenderEditorPrimitives();
 }
 
-void Scene::DrawLine(const DrawLineInfo& DrawLineInfo)
+void Scene::DrawLine(Entity Entity, const DrawLineInfo& DrawLineInfo)
 {
-	Lines.push_back(DrawLineInfo);
+	Lines.emplace(Entity.GetEntityID(), DrawLineInfo);
+}
+
+void Scene::RemoveLine(Entity Entity)
+{
+	Lines.erase(Entity.GetEntityID());
 }
 
 void Scene::RenderLightingPass()
@@ -41,11 +46,17 @@ void Scene::RenderEditorPrimitives()
 	RenderOutlines();
 }
 
+std::list<GLVertexBufferRef> VertexBuffers;
+std::list<GLUniformBufferRef> Uniforms;
+
 // @todo The Vulkan renderer should hold a copy of in-flight resources
 void Scene::RenderLines()
 {
 	if (Lines.empty())
 		return;
+
+	VertexBuffers.clear();
+	Uniforms.clear();
 
 	GLShaderRef VertShader = GLCreateShader<LinesVS>();
 	GLShaderRef FragShader = GLCreateShader<LinesFS>();
@@ -54,24 +65,27 @@ void Scene::RenderLines()
 
 	std::for_each(Lines.begin(), Lines.end(), [&](const auto& Line)
 	{
-		Positions.push_back(Line.A);
-		Positions.push_back(Line.B);
-		Positions.push_back(Line.B);
+		Positions.push_back(Line.second.A);
+		Positions.push_back(Line.second.B);
+		Positions.push_back(Line.second.B);
 	});
 
 	GLVertexBufferRef VertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-
+	VertexBuffers.push_back(VertexBuffer);
+	
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 
-	for (uint32 i = 0; i < Lines.size(); i++)
+	uint32 i = 0;
+	for (const auto& Line : Lines)
 	{
-		GLUniformBufferRef ColorUniform = GLCreateUniformBuffer(Lines[i].Color, EUniformUpdate::SingleFrame);
+		GLUniformBufferRef ColorUniform = GLCreateUniformBuffer(Line.second.Color, EUniformUpdate::SingleFrame);
+		Uniforms.push_back(ColorUniform);
 
-		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Lines[i].Width);
+		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Line.second.Width);
 		GLSetUniformBuffer(VertShader, "ViewUniform", View.Uniform);
 		GLSetUniformBuffer(FragShader, "ColorUniform", ColorUniform);
 		GLSetVertexStream(VertShader->GetAttributeLocation("Position"), VertexBuffer);
-		GLDraw(3, 1, i * 3, 0);
+		GLDraw(3, 1, i++ * 3, 0);
 	}
 
 	GLSetRasterizerState(ECullMode::None);

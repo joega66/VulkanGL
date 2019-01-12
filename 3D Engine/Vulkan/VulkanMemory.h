@@ -6,6 +6,8 @@ class VulkanDevice;
 
 struct VulkanBuffer
 {
+	friend struct SharedVulkanBuffer;
+public:
 	VkBuffer Buffer;
 	VkDeviceMemory Memory;
 	VkBufferUsageFlags Usage;
@@ -18,8 +20,6 @@ struct VulkanBuffer
 	static std::shared_ptr<struct SharedVulkanBuffer> Allocate(std::shared_ptr<VulkanBuffer> Buffer, VkDeviceSize Size);
 
 private:
-	friend struct SharedVulkanBuffer;
-
 	struct Slot
 	{
 		VkDeviceSize Offset;

@@ -55,6 +55,11 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 		, Format
 		, EResourceUsage::ShaderResource
 		, CubemapCreateInfo);
+
+	std::for_each(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(), [&](const auto& Other)
+	{
+		GPlatform->FreeImage(Other.Data);
+	});
 }
 
 GLImageRef AssetManager::GetCubemap(const std::string& Name)

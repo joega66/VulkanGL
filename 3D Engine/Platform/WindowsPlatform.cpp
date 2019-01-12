@@ -2,20 +2,22 @@
 #define WINDOWS_MEAN_AND_LEAN
 #include <Windows.h>
 #include <GLFW/glfw3.h>
+#include <Engine/Cursor.h>
+#include <Engine/Input.h>
 
-static HashTable<int32, Input::EButton> GLFWToEngineFormat =
+static HashTable<int32, EKeyCode> KeyCodes =
 {
-	ENTRY(GLFW_MOUSE_BUTTON_LEFT, Input::MouseLeft)
-	ENTRY(GLFW_KEY_0, Input::Keypad0)
-	ENTRY(GLFW_KEY_1, Input::Keypad1)
-	ENTRY(GLFW_KEY_2, Input::Keypad2)
-	ENTRY(GLFW_KEY_3, Input::Keypad3)
-	ENTRY(GLFW_KEY_4, Input::Keypad4)
-	ENTRY(GLFW_KEY_5, Input::Keypad5)
-	ENTRY(GLFW_KEY_6, Input::Keypad6)
-	ENTRY(GLFW_KEY_7, Input::Keypad7)
-	ENTRY(GLFW_KEY_8, Input::Keypad8)
-	ENTRY(GLFW_KEY_9, Input::Keypad9)
+	ENTRY(GLFW_MOUSE_BUTTON_LEFT, EKeyCode::MouseLeft)
+	ENTRY(GLFW_KEY_0, EKeyCode::Keypad0)
+	ENTRY(GLFW_KEY_1, EKeyCode::Keypad1)
+	ENTRY(GLFW_KEY_2, EKeyCode::Keypad2)
+	ENTRY(GLFW_KEY_3, EKeyCode::Keypad3)
+	ENTRY(GLFW_KEY_4, EKeyCode::Keypad4)
+	ENTRY(GLFW_KEY_5, EKeyCode::Keypad5)
+	ENTRY(GLFW_KEY_6, EKeyCode::Keypad6)
+	ENTRY(GLFW_KEY_7, EKeyCode::Keypad7)
+	ENTRY(GLFW_KEY_8, EKeyCode::Keypad8)
+	ENTRY(GLFW_KEY_9, EKeyCode::Keypad9)
 };
 
 void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
@@ -23,10 +25,9 @@ void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	
+
 	Window = glfwCreateWindow(Width, Height, "VulkanGL", nullptr, nullptr);
-	
-	glfwSetWindowUserPointer(Window, &Private);
+
 	glfwSetFramebufferSizeCallback(Window, WindowResizeCallback);
 	glfwSetKeyCallback(Window, KeyboardCallback);
 	glfwSetScrollCallback(Window, ScrollCallback);
@@ -48,7 +49,8 @@ glm::ivec2 WindowsPlatform::GetWindowSize()
 
 void WindowsPlatform::PollEvents()
 {
-	Private.ScrollOffset = {};
+	Cursor.MouseScrollDelta = {};
+	Cursor.Last = Cursor.Position;
 	glfwPollEvents();
 }
 
@@ -66,7 +68,7 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 	Security.nLength = sizeof(Security);
 	Security.bInheritHandle = TRUE;
 	Security.lpSecurityDescriptor = NULL;
-	
+
 	HANDLE Pipes[NumPipeTypes];
 
 	if (!CreatePipe(&Pipes[ParentWrite], &Pipes[ChildRead], &Security, 0))
@@ -95,7 +97,7 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 
 	ExePathArr.insert(ExePathArr.begin(), ExePath.begin(), ExePath.end());
 	CmdArgsArr.insert(CmdArgsArr.begin(), CmdArgs.begin(), CmdArgs.end());
-	
+
 	if (CreateProcess(ExePathArr.data(), CmdArgsArr.data(),
 		NULL, NULL, TRUE, 0, NULL,
 		NULL, &StartupInfo, &ProcessInfo))
@@ -115,9 +117,24 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 	}
 }
 
-void WindowsPlatform::HideMouse(bool bHide)
+void WindowsPlatform::MouseState(class Cursor& Cursor)
 {
-	glfwSetInputMode(Window, GLFW_CURSOR, bHide ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	uint32 InputMode;
+
+	switch (Cursor.Mode)
+	{
+	case ECursorMode::Normal:
+		InputMode = GLFW_CURSOR_NORMAL;
+		break;
+	case ECursorMode::Hidden:
+		InputMode = GLFW_CURSOR_HIDDEN;
+		break;
+	case ECursorMode::Disabled:
+		InputMode = GLFW_CURSOR_DISABLED;
+		break;
+	}
+
+	glfwSetInputMode(Window, GLFW_CURSOR, InputMode);
 }
 
 void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
@@ -127,55 +144,50 @@ void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
 
 void WindowsPlatform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
 {
-	PlatformPrivate* Private = (PlatformPrivate*)glfwGetWindowUserPointer(Window);
-	
-	if (Key >= 0 && Key <= PlatformPrivate::NUM_KEYS)
+	if (Key >= 0 && Key <= Input::NUM_KEYS)
 	{
-		if (!Contains(GLFWToEngineFormat, Key))
+		if (Contains(KeyCodes, Key))
 		{
-			return;
-		}
+			EKeyCode KeyCode = GetValue(KeyCodes, Key);
 
-		Input::EButton EngineKey = GetValue(GLFWToEngineFormat, Key);
-
-		if (Action == GLFW_PRESS)
-		{
-			Private->Keys[EngineKey] = true;
-		}
-		else if (Action == GLFW_RELEASE)
-		{
-			Private->Keys[EngineKey] = false;
-			Private->KeysPressed[EngineKey] = true;
+			if (Action == GLFW_PRESS)
+			{
+				Input.Keys[(size_t)KeyCode] = true;
+			}
+			else if (Action == GLFW_RELEASE)
+			{
+				Input.Keys[(size_t)KeyCode] = false;
+				Input.KeysPressed[(size_t)KeyCode] = true;
+			}
 		}
 	}
 }
 
 void WindowsPlatform::ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset)
 {
-	PlatformPrivate* Private = (PlatformPrivate*)glfwGetWindowUserPointer(Window);
-	Private->ScrollOffset = glm::dvec2(XOffset, YOffset);
+	Cursor.MouseScrollDelta = glm::vec2(XOffset, YOffset);
 }
 
 void WindowsPlatform::MouseCallback(GLFWwindow* Window, double X, double Y)
 {
-	GPlatform->SetMousePosition(X, Y);
+	// @todo We can get around the annoying glfw cursor jump by tracking state in WindowsPlatform...
+	Cursor.Position = glm::vec2(X, Y);
 }
 
-void WindowsPlatform::MouseButtonCallback(GLFWwindow * Window, int32 Button, int32 Action, int32 Mods)
+void WindowsPlatform::MouseButtonCallback(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods)
 {
-	PlatformPrivate* Private = (PlatformPrivate*)glfwGetWindowUserPointer(Window);
-	if (Button == GLFW_MOUSE_BUTTON_LEFT)
+	if (Contains(KeyCodes, Button))
 	{
-		Input::EButton EngineKey = GetValue(GLFWToEngineFormat, Button);
+		EKeyCode KeyCode = GetValue(KeyCodes, Button);
 
 		if (Action == GLFW_PRESS)
 		{
-			Private->Keys[EngineKey] = true;
+			Input.Keys[(size_t)KeyCode] = true;
 		}
 		else if (Action == GLFW_RELEASE)
 		{
-			Private->Keys[EngineKey] = false;
-			Private->KeysPressed[EngineKey] = true;
+			Input.Keys[(size_t)KeyCode] = false;
+			Input.KeysPressed[(size_t)KeyCode] = true;
 		}
 	}
 }

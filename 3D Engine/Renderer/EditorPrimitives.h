@@ -49,6 +49,12 @@ struct DrawLineInfo
 	glm::vec3 B;
 	glm::vec4 Color;
 	float Width = 1.0f;
+
+	/*DrawLineInfo(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width = 1.0f)
+		: A(A), B(B), Color(Color), Width(Width)
+	{
+
+	}*/
 };
 
 class LinesVS : public GLShader

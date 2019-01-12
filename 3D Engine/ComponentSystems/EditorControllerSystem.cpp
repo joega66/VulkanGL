@@ -1,28 +1,34 @@
 #include "EditorControllerSystem.h"
 #include <Renderer/Scene.h>
+#include <Engine/Cursor.h>
+#include <Engine/Input.h>
 
 void EditorControllerSystem::Update()
 {
 	auto& View = Scene::Get().View;
 
-	View.Translate();
+	// Translate the view.
+	const float DS = Cursor.MouseScrollSpeed * Cursor.MouseScrollDelta.y;
+	View.Translate(DS);
 
-	if (Input::GetKeyDown(Input::MouseLeft))
+	if (Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
-		GPlatform->HideMouse(true);
+		// Disable the mouse while looking around.
+		Cursor.Mode = ECursorMode::Disabled;
 
 		if (!View.bFreeze)
 		{
-			View.LookAround();
-		}
-		else
-		{
-			View.SetLastMousePosition();
+			// Look around.
+			glm::vec2 Offset = glm::vec2(Cursor.Position.x - Cursor.Last.x, Cursor.Last.y - Cursor.Position.y) * Cursor.Sensitivity;
+			// Filter noise from glfw cursor jumping after disabling cursor...
+			if (glm::abs(Offset.x) < 5 && glm::abs(Offset.y) < 5)
+			{
+				View.Axis(Offset);
+			}
 		}
 	}
-	else
+	else if (Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
-		GPlatform->HideMouse(false);
-		View.SetLastMousePosition();
+		Cursor.Mode = ECursorMode::Normal;
 	}
 }

@@ -4,6 +4,5 @@
 template<typename T>
 struct Component
 {
-private:
 	friend class Entity;
 };

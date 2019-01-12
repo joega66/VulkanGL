@@ -57,6 +57,8 @@ public:
 
 using WindowResizeListenerRef = WindowResizeListener*;
 
+// @todo Kill most references to GPlatform
+// IPlatforms don't need to be virtual, since it's known at compile time...
 class IPlatform
 {
 public:	
@@ -67,18 +69,11 @@ public:
 	virtual glm::ivec2 GetWindowSize() = 0;
 	virtual bool WindowShouldClose() = 0;
 	virtual void PollEvents() = 0;
-	virtual void HideMouse(bool bHide) = 0;
+	virtual void MouseState(class Cursor& Cursor) = 0;
 
 	void AddWindowListener(WindowResizeListenerRef WindowListener);
 	void RemoveWindowListener(WindowResizeListenerRef WindowListener);
 	void NotifyWindowListeners(int32 NewX, int32 NewY);
-
-	// Input
-	bool GetKeyDown(uint32 Key);
-	bool GetKeyUp(uint32 Key);
-	const glm::vec2& GetScrollOffset() { return Private.ScrollOffset; }
-	const glm::vec2& GetMousePosition() const { return Private.MousePosition; }
-	void SetMousePosition(double X, double Y) { Private.MousePosition = glm::dvec2(X, Y); }
 
 	// File I/O
 	std::string FileRead(const std::string& Filename) const;
@@ -106,20 +101,10 @@ public:
 	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels);
 	void FreeImage(uint8* Pixels);
 
+	// Sets OS-controlled state.
 	void EndFrame();
 
 protected:
-	struct PlatformPrivate
-	{
-		glm::vec2 ScrollOffset;
-		glm::vec2 MousePosition;
-
-		static constexpr uint32 NUM_KEYS = 1024;
-
-		std::array<bool, NUM_KEYS> Keys;
-		std::array<bool, NUM_KEYS> KeysPressed;
-	} Private;
-
 	std::list<WindowResizeListenerRef> WindowListeners;
 };
 
@@ -127,15 +112,15 @@ CLASS(IPlatform);
 
 extern IPlatformRef GPlatform;
 
-// Print
+// Print.
 #define print(Fmt, ...) \
 	GPlatform->WriteLog(__FILE__, __func__, __LINE__, IPlatform::FormatString(Fmt, __VA_ARGS__)); \
 
-// Print and crash if expression fails
+// Print and crash if expression fails.
 #define check(Expression, Fmt, ...) \
 	((Expression))? ((void)0) : [&] () { GPlatform->WriteLog(#Expression, __FILE__, __func__, __LINE__, IPlatform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }();
 
-// Print error and crash
+// Print error and crash.
 #define fail(Fmt, ...) \
 	if (true) \
 	{ \
@@ -256,32 +241,3 @@ private:
 	const bool bFrequency;
 	std::chrono::system_clock::time_point Start;
 };
-
-// @todo Move this!
-namespace Input
-{
-	enum EButton
-	{
-		MouseLeft,
-		Keypad1,
-		Keypad2,
-		Keypad3,
-		Keypad4,
-		Keypad5,
-		Keypad6,
-		Keypad7,
-		Keypad8,
-		Keypad9,
-		Keypad0
-	};
-
-	inline bool GetKeyDown(uint32 Key)
-	{
-		return GPlatform->GetKeyDown(Key);
-	}
-
-	inline bool GetKeyUp(uint32 Key)
-	{
-		return GPlatform->GetKeyUp(Key);
-	}
-}

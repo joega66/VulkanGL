@@ -8,11 +8,8 @@
 #include <Components/CTransform.h>
 #include <Components/CTransform.h>
 
-/*
-	What to do next?
-		- Lighting
-		- Shadows
-*/
+class Cursor Cursor;
+class Input Input;
 
 void CoreEngine::Run()
 {
@@ -32,14 +29,14 @@ void CoreEngine::Run()
 
 	// @todo Code generation. Or, for now, COMPONENT_SYSTEM() macro. 
 
+	EditorControllerSystem EditorControllerSystem;
+	GComponentSystemManager.AddComponentSystem(EditorControllerSystem);
+
 	StaticMeshSystem StaticMeshSystem;
 	GComponentSystemManager.AddComponentSystem(StaticMeshSystem);
 
 	TransformGizmoSystem TransformGizmoSystem;
 	GComponentSystemManager.AddComponentSystem(TransformGizmoSystem);
-
-	EditorControllerSystem EditorControllerSystem;
-	GComponentSystemManager.AddComponentSystem(EditorControllerSystem);
 
 	GameSystem GameSystem;
 	GComponentSystemManager.AddComponentSystem(GameSystem);
