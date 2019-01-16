@@ -73,6 +73,7 @@
     <ClInclude Include="Engine\AssetManager.h" />
     <ClInclude Include="Engine\Cursor.h" />
     <ClInclude Include="Engine\Input.h" />
+    <ClInclude Include="Engine\Screen.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\View.h" />
     <ClInclude Include="GL.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
+    <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\Scene.h" />
     <ClInclude Include="Renderer\SceneRenderTargets.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
@@ -115,6 +117,7 @@
     <None Include="..\Shaders\LinesFS.glsl" />
     <None Include="..\Shaders\LinesVS.glsl" />
     <None Include="..\Shaders\OutlineFS.glsl" />
+    <None Include="..\Shaders\RayMarching.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />

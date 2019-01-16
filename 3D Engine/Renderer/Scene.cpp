@@ -1,28 +1,26 @@
 #include "Scene.h"
 #include <Engine/AssetManager.h>
+#include <Engine/Screen.h>
+#include "FullscreenQuad.h"
+#include "RayMarching.h"
 
 Scene::Scene()
 {
-	SceneDepth = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
-	OutlineDepthStencil = GLCreateImage(GPlatform->GetWindowSize().x, GPlatform->GetWindowSize().y, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
+	SceneDepth = GLCreateImage(Screen.Width, Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
+	OutlineDepthStencil = GLCreateImage(Screen.Width, Screen.Height, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
 
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
 
 void Scene::Render()
 {
-	RenderLightingPass();
-	RenderEditorPrimitives();
-}
+	GLBeginRender();
 
-void Scene::DrawLine(Entity Entity, const DrawLineInfo& DrawLineInfo)
-{
-	Lines.emplace(Entity.GetEntityID(), DrawLineInfo);
-}
+	RenderRayMarching();
+	/*RenderLightingPass();
+	RenderEditorPrimitives();*/
 
-void Scene::RemoveLine(Entity Entity)
-{
-	Lines.erase(Entity.GetEntityID());
+	GLEndRender();
 }
 
 void Scene::RenderLightingPass()
@@ -31,7 +29,7 @@ void Scene::RenderLightingPass()
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
 
 	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
-	GLSetViewport(0.0f, 0.0f, (float)GPlatform->GetWindowSize().x, (float)GPlatform->GetWindowSize().y);
+	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
 	GLSetDepthTest(true);
 	GLSetColorMask(0, EColorChannel::RGBA);
 	GLSetRasterizerState(ECullMode::None);
@@ -46,48 +44,9 @@ void Scene::RenderEditorPrimitives()
 	RenderOutlines();
 }
 
-std::list<GLVertexBufferRef> VertexBuffers;
-std::list<GLUniformBufferRef> Uniforms;
-
-// @todo The Vulkan renderer should hold a copy of in-flight resources
 void Scene::RenderLines()
 {
-	if (Lines.empty())
-		return;
-
-	VertexBuffers.clear();
-	Uniforms.clear();
-
-	GLShaderRef VertShader = GLCreateShader<LinesVS>();
-	GLShaderRef FragShader = GLCreateShader<LinesFS>();
-
-	std::vector<glm::vec3> Positions;
-
-	std::for_each(Lines.begin(), Lines.end(), [&](const auto& Line)
-	{
-		Positions.push_back(Line.second.A);
-		Positions.push_back(Line.second.B);
-		Positions.push_back(Line.second.B);
-	});
-
-	GLVertexBufferRef VertexBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-	VertexBuffers.push_back(VertexBuffer);
-	
-	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
-
-	uint32 i = 0;
-	for (const auto& Line : Lines)
-	{
-		GLUniformBufferRef ColorUniform = GLCreateUniformBuffer(Line.second.Color, EUniformUpdate::SingleFrame);
-		Uniforms.push_back(ColorUniform);
-
-		GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, Line.second.Width);
-		GLSetUniformBuffer(VertShader, "ViewUniform", View.Uniform);
-		GLSetUniformBuffer(FragShader, "ColorUniform", ColorUniform);
-		GLSetVertexStream(VertShader->GetAttributeLocation("Position"), VertexBuffer);
-		GLDraw(3, 1, i++ * 3, 0);
-	}
-
+	Lines.Execute(View);
 	GLSetRasterizerState(ECullMode::None);
 }
 
@@ -133,6 +92,27 @@ void Scene::RenderOutlines()
 
 	GLSetStencilTest(false);
 	GLSetDepthTest(true);
+}
+
+void Scene::RenderRayMarching()
+{
+	GLShaderRef VertShader = GLCreateShader<FullscreenVS>();
+	GLShaderRef FragShader = GLCreateShader<RayMarchingFS>();
+
+	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
+	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
+
+	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
+	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
+	GLSetDepthTest(true);
+	GLSetColorMask(0, EColorChannel::RGBA);
+	GLSetRasterizerState(ECullMode::None);
+
+	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+
+	GLSetUniformBuffer(FragShader, "ViewUniform", View.Uniform);
+
+	GLDraw(3, 1, 0, 0);
 }
 
 Scene& Scene::Get()

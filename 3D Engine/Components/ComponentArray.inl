@@ -13,7 +13,7 @@ inline TComponent & ComponentArray<TComponent>::AddComponent(Entity & Entity, Ar
 template<typename TComponent>
 inline ComponentArray<TComponent>::ComponentArray()
 {
-	GComponentSystemManager.AddComponentArray(*this);
+	ComponentSystemManager.AddComponentArray(*this);
 }
 
 template<typename TComponent>

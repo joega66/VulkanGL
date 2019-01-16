@@ -182,6 +182,12 @@
     <ClInclude Include="Engine\Input.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Screen.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\RayMarching.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -338,6 +344,9 @@
     </None>
     <None Include="Components\ComponentArray.inl">
       <Filter>Source\Components</Filter>
+    </None>
+    <None Include="..\Shaders\RayMarching.glsl">
+      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

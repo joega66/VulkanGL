@@ -48,17 +48,6 @@ Ref<T> MakeRef(RefArgs&& ...Args)
 #define CLASS(Class) \
 	using Class ## Ref = Ref<Class>;
 
-class WindowResizeListener
-{
-public:
-	~WindowResizeListener();
-	virtual void OnWindowResize(int32 WindowX, int32 WindowY) {};
-};
-
-using WindowResizeListenerRef = WindowResizeListener*;
-
-// @todo Kill most references to GPlatform
-// IPlatforms don't need to be virtual, since it's known at compile time...
 class IPlatform
 {
 public:	
@@ -66,23 +55,15 @@ public:
 
 	// Window
 	virtual void OpenWindow(int32 Width, int32 Height) = 0;
-	virtual glm::ivec2 GetWindowSize() = 0;
 	virtual bool WindowShouldClose() = 0;
 	virtual void PollEvents() = 0;
 	virtual void MouseState(class Cursor& Cursor) = 0;
-
-	void AddWindowListener(WindowResizeListenerRef WindowListener);
-	void RemoveWindowListener(WindowResizeListenerRef WindowListener);
-	void NotifyWindowListeners(int32 NewX, int32 NewY);
 
 	// File I/O
 	std::string FileRead(const std::string& Filename) const;
 	void FileDelete(const std::string& Filename) const;
 	void FileRename(const std::string& Old, const std::string& New) const;
 	bool FileExists(const std::string& Filename) const;
-
-	// Parsing
-	virtual void RemoveNewlines(std::string& String) = 0;
 
 	// Logging
 	void WriteLog(const std::string& Log);
@@ -103,9 +84,6 @@ public:
 
 	// Sets OS-controlled state.
 	void EndFrame();
-
-protected:
-	std::list<WindowResizeListenerRef> WindowListeners;
 };
 
 CLASS(IPlatform);

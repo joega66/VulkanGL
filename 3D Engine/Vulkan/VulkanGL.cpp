@@ -1393,6 +1393,13 @@ void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Devi
 
 	DynamicState.dynamicStateCount = 0;
 	DynamicState.pDynamicStates = nullptr;
+
+	Vertex = nullptr;
+	TessControl = nullptr;
+	TessEval = nullptr;
+	Geometry = nullptr;
+	Fragment = nullptr;
+	Compute = nullptr;
 }
 
 void VulkanGL::PendingGraphicsState::ResetVertexStreams()

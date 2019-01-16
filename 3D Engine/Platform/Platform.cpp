@@ -95,24 +95,6 @@ std::string IPlatform::FormatString(std::string Format, ...)
 	}
 }
 
-void IPlatform::AddWindowListener(WindowResizeListenerRef WindowListener)
-{
-	WindowListeners.push_back(WindowListener);
-}
-
-void IPlatform::RemoveWindowListener(WindowResizeListenerRef WindowListener)
-{
-	WindowListeners.erase(std::remove(WindowListeners.begin(), WindowListeners.end(), WindowListener), WindowListeners.end());
-}
-
-void IPlatform::NotifyWindowListeners(int32 NewX, int32 NewY)
-{
-	for (auto& Listener : WindowListeners)
-	{
-		Listener->OnWindowResize(NewX, NewY);
-	}
-}
-
 void IPlatform::Memcpy(void* Dst, const void* Src, size_t Size)
 {
 	memcpy(Dst, Src, Size);
@@ -135,11 +117,6 @@ void IPlatform::EndFrame()
 	// Update hardware cursor.
 	GPlatform->MouseState(Cursor);
 
-	// Update hardware input.
+	// Clear hardware input.
 	std::fill(Input.KeysPressed.begin(), Input.KeysPressed.end(), false);
-}
-
-WindowResizeListener::~WindowResizeListener()
-{
-	GPlatform->RemoveWindowListener(this);
 }

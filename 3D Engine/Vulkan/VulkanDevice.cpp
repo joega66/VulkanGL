@@ -258,7 +258,7 @@ VulkanDevice::VulkanDevice()
 	vulkan(CreateDebugReportCallbackEXT(Instance, &DebugCallbackInfo, nullptr, &DebugReportCallback));
 #endif
 
-	// @todo-joe This is crap.
+	// @todo-joe This is crap. 
 	if (GPlatform->GetPlatformName() == "Windows")
 	{
 		// Create Vulkan surface

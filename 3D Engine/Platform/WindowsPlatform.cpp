@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
+#include <Engine/Screen.h>
 
 static HashTable<int32, EKeyCode> KeyCodes =
 {
@@ -33,6 +34,8 @@ void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 	glfwSetScrollCallback(Window, ScrollCallback);
 	glfwSetCursorPosCallback(Window, MouseCallback);
 	glfwSetMouseButtonCallback(Window, MouseButtonCallback);
+
+	glfwGetFramebufferSize(Window, &Screen.Width, &Screen.Height);
 }
 
 bool WindowsPlatform::WindowShouldClose()
@@ -40,24 +43,16 @@ bool WindowsPlatform::WindowShouldClose()
 	return glfwWindowShouldClose(Window);
 }
 
-glm::ivec2 WindowsPlatform::GetWindowSize()
-{
-	glm::ivec2 WindowSize;
-	glfwGetFramebufferSize(Window, &WindowSize.x, &WindowSize.y);
-	return WindowSize;
-}
-
 void WindowsPlatform::PollEvents()
 {
 	Cursor.MouseScrollDelta = {};
 	Cursor.Last = Cursor.Position;
-	glfwPollEvents();
-}
 
-void WindowsPlatform::RemoveNewlines(std::string& String)
-{
-	String.erase(std::remove(String.begin(), String.end(), '\r'), String.end());
-	String.erase(std::remove(String.begin(), String.end(), '\n'), String.end());
+	// Process window events.
+	glfwPollEvents();
+
+	// Get this frame's screen dimensions.
+	glfwGetFramebufferSize(Window, &Screen.Width, &Screen.Height);
 }
 
 void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
@@ -139,7 +134,8 @@ void WindowsPlatform::MouseState(class Cursor& Cursor)
 
 void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
 {
-	GPlatform->NotifyWindowListeners(X, Y);
+	Screen.Width = X;
+	Screen.Height = Y;
 }
 
 void WindowsPlatform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
@@ -170,7 +166,6 @@ void WindowsPlatform::ScrollCallback(GLFWwindow* Window, double XOffset, double 
 
 void WindowsPlatform::MouseCallback(GLFWwindow* Window, double X, double Y)
 {
-	// @todo We can get around the annoying glfw cursor jump by tracking state in WindowsPlatform...
 	Cursor.Position = glm::vec2(X, Y);
 }
 

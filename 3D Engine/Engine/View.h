@@ -5,10 +5,12 @@
 class View
 {
 public:
-	struct ViewUniforms
+	struct ViewUniform
 	{
 		glm::mat4 View;
 		glm::mat4 Projection;
+		glm::vec3 Position;
+		float AspectRatio;
 	};
 
 	GLUniformBufferRef Uniform;

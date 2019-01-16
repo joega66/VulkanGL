@@ -3,7 +3,7 @@
 #include <Components/Entity.h>
 #include <Renderer/Scene.h>
 
-ComponentSystemManager GComponentSystemManager;
+class ComponentSystemManager ComponentSystemManager;
 
 void ComponentSystemManager::AddComponentSystem(ComponentSystem& ComponentSystem)
 {
@@ -15,7 +15,7 @@ void ComponentSystemManager::AddComponentArray(IComponentArray& ComponentArray)
 	ComponentArrays.push_back(ComponentArray);
 }
 
-void ComponentSystemManager::UpdateSystems()
+void ComponentSystemManager::Update()
 {
 	for (auto& ComponentSystem : ComponentSystems)
 	{

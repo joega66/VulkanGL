@@ -13,8 +13,7 @@ public:
 
 	GLImageRef Skybox;
 
-	void DrawLine(Entity Entity, const DrawLineInfo& DrawLineInfo);
-	void RemoveLine(Entity Entity);
+	DrawingPlanList<LineDrawingPlan> Lines;
 
 	Scene();
 	Scene(const Scene&) = delete;
@@ -27,12 +26,10 @@ private:
 	GLImageRef SceneDepth;
 	GLImageRef OutlineDepthStencil;
 
-	// @todo Lines are perfect for drawing plans...
-	std::multimap<uint64, DrawLineInfo> Lines;
-
 	void RenderLightingPass();
 	void RenderEditorPrimitives();
 	void RenderLines();
 	void RenderSkybox();
 	void RenderOutlines();
+	void RenderRayMarching();
 };

@@ -2,7 +2,7 @@
 #include "VulkanGL.h"
 #include "VulkanDevice.h"
 #include <Platform/Platform.h>
-#include <algorithm>
+#include <Engine/Screen.h>
 
 VulkanSurface::VulkanSurface(VulkanDevice& Device)
 	: Device(Device)
@@ -61,8 +61,8 @@ VkExtent2D VulkanSurface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& Capab
 	{
 		VkExtent2D ActualExtent = 
 		{
-			(uint32)GPlatform->GetWindowSize().x,
-			(uint32)GPlatform->GetWindowSize().y
+			(uint32)Screen.Width,
+			(uint32)Screen.Height
 		};
 
 		ActualExtent.width = std::max(Capabilities.minImageExtent.width, std::min(Capabilities.maxImageExtent.width, ActualExtent.width));

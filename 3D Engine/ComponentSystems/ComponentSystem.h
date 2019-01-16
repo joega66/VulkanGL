@@ -25,18 +25,18 @@ class IComponentArray;
 class ComponentSystemManager
 {
 	friend class EntityManager;
-public:
-	ComponentSystemManager() = default;
-
-	void UpdateSystems();
-	void AddComponentSystem(ComponentSystem& ComponentSystem);
-	void AddComponentArray(IComponentArray& ComponentArray);
+	template<typename TComponent>
+	friend class ComponentArray;
+	friend class CoreEngine;
 
 private:
 	std::vector<std::reference_wrapper<ComponentSystem>> ComponentSystems;
 	std::vector<std::reference_wrapper<IComponentArray>> ComponentArrays;
 
 	void DestroyEntity(Entity& Entity);
+	void AddComponentArray(IComponentArray& ComponentArray);
+	void AddComponentSystem(ComponentSystem& ComponentSystem);
+	void Update();
 };
 
-extern ComponentSystemManager GComponentSystemManager;
+extern class ComponentSystemManager ComponentSystemManager;

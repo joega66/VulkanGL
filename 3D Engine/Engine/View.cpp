@@ -1,4 +1,5 @@
 #include "View.h"
+#include "Screen.h"
 
 View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitch, float Zoom)
 	: Position(Position)
@@ -6,7 +7,7 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 	, Yaw(Yaw)
 	, Pitch(Pitch)
 	, ZoomDegree(Zoom)
-	, Uniform(GLCreateUniformBuffer<ViewUniforms>(EUniformUpdate::Frequent))
+	, Uniform(GLCreateUniformBuffer<ViewUniform>(EUniformUpdate::Frequent))
 {
 	UpdateView();
 }
@@ -14,10 +15,8 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 // @todo Move Window to View =) 
 
 Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
-{
-	const glm::vec2 Window = GPlatform->GetWindowSize();
-
-	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)Window.x, ScreenPosition.y / (float)Window.y);
+{ 
+	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)Screen.Width, ScreenPosition.y / (float)Screen.Height);
 
 	const glm::vec2 ScreenSpace = glm::vec2((Normalized.x - 0.5f) * 2.0f, (Normalized.y - 0.5f) * 2.0f);
 	
@@ -50,14 +49,12 @@ bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& Sc
 	const glm::vec4 ProjectiveSpace = GetPerspectiveMatrix() * GetViewMatrix() * glm::vec4(WorldPosition, 1.0f);
 	if (ProjectiveSpace.w > 0.0f)
 	{
-		const glm::vec2 Window = GPlatform->GetWindowSize();
-
 		const float WInv = 1 / ProjectiveSpace.w;
 		const glm::vec4 ClipSpace = glm::vec4(ProjectiveSpace.x * WInv, ProjectiveSpace.y * WInv, ProjectiveSpace.z * WInv, ProjectiveSpace.w);
 
 		// Projective space to normalized [0, 1] space.
 		const glm::vec2 Normalized = glm::vec2((ClipSpace.x / 2.0f) + 0.5f, (ClipSpace.y / 2.0f) + 0.5f);
-		ScreenPosition = glm::vec2(Normalized.x * Window.x, Normalized.y * Window.y);
+		ScreenPosition = glm::vec2(Normalized.x * Screen.Width, Normalized.y * Screen.Height);
 
 		return true;
 	}
@@ -74,10 +71,12 @@ void View::UpdateView()
 	Right = glm::normalize(glm::cross(Front, WorldUp));
 	Up = glm::normalize(glm::cross(Right, Front));
 
-	const ViewUniforms View =
+	const ViewUniform View =
 	{
 		GetViewMatrix(),
-		GetPerspectiveMatrix()
+		GetPerspectiveMatrix(),
+		Position,
+		(float)Screen.Width / Screen.Height,
 	};
 
 	Uniform->Set(View);
@@ -106,7 +105,7 @@ void View::Translate(const float DS)
 
 glm::mat4 View::GetPerspectiveMatrix() const
 {
-	glm::mat4 Perspective = glm::perspective(glm::radians(ZoomDegree), (float)GPlatform->GetWindowSize().x / GPlatform->GetWindowSize().y, 0.1f, 100.0f);
+	glm::mat4 Perspective = glm::perspective(glm::radians(ZoomDegree), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
 	// @todo VK_KHR_maintenance1
 	Perspective[1][1] *= -1;
 	return Perspective;

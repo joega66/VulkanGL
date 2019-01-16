@@ -17,6 +17,8 @@ int main(int argc, char* argv[])
 	int32 WinX = Result["width"].as<int32>();
 	int32 WinY = Result["height"].as<int32>();
 
+	// @todo Platform does not have to be virtual...
+	// Will also make the Vulkan surface creation far less hacky.
 #ifdef _WIN32
 	GPlatform = MakeRef<WindowsPlatform>();
 #endif

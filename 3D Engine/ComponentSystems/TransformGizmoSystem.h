@@ -9,15 +9,18 @@
 class TransformGizmoSystem : public ComponentSystem
 {
 public:
+	TransformGizmoSystem();
+	virtual void Update() final;
+	
+private:
+	// X,Y,Z axes of the translate gizmo. 
 	struct
 	{
 		Entity X, Y, Z;
 	} TranslateAxis;
 
+	// Currently selected entity.
 	Entity SelectedEntity;
-
-	TransformGizmoSystem();
-	virtual void Update() final;
 
 	// The current state of the gizmo system.
 	std::function<void()> State;
@@ -69,7 +72,7 @@ public:
 					Position.z += Ray1.Intersection(T1).z - Ray0.Intersection(T0).z;
 				}
 			}
-			
+
 			Transform.Translate(Position);
 			Scene.View.bFreeze = true;
 		}
@@ -79,7 +82,6 @@ public:
 			Scene.View.bFreeze = false;
 		}
 	}
-	
-private:
+
 	void DrawOutline(Entity Entity);
 };
