@@ -2,6 +2,13 @@
 #include "../GLShader.h"
 #include <vulkan/vulkan.h>
 
+/* @todo (Thoughts on why the shader system is crap.)
+	Instead of providing a VulkanShader implementation of GLShader, 
+	the Vulkan Shader Compiler should just keep a mapping between the shader type and 
+	Vulkan stuff it needs to track. This lets the client use the actual shader type. 
+	(* Instead of casting the GLShader, we cast the GLShaderCompiler.)
+*/
+
 class VulkanDevice;
 
 class VulkanShaderCompiler : public GLShaderCompiler
@@ -28,7 +35,6 @@ public:
 	);
 
 	virtual void ReleaseGL() final;
-
 	VkShaderStageFlagBits GetVulkanStage() const;
 
 private:

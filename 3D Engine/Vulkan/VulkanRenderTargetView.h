@@ -19,9 +19,8 @@ public:
 		, GLImageRef Image
 		, ELoadAction LoadAction
 		, EStoreAction StoreAction
-		, float DepthClear
-		, uint32 StencilClear)
-		: Device(Device), GLRenderTargetView(Image, LoadAction, StoreAction, DepthClear, StencilClear)
+		, const ClearDepthStencilValue& DepthStencil)
+		: Device(Device), GLRenderTargetView(Image, LoadAction, StoreAction, DepthStencil)
 	{
 	}
 

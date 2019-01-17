@@ -1,18 +1,16 @@
 #include "View.h"
 #include "Screen.h"
 
-View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitch, float Zoom)
+View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitch, float FieldOfView)
 	: Position(Position)
 	, WorldUp(Up)
 	, Yaw(Yaw)
 	, Pitch(Pitch)
-	, ZoomDegree(Zoom)
+	, FieldOfView(FieldOfView)
 	, Uniform(GLCreateUniformBuffer<ViewUniform>(EUniformUpdate::Frequent))
 {
 	UpdateView();
 }
-
-// @todo Move Window to View =) 
 
 Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
 { 
@@ -76,7 +74,9 @@ void View::UpdateView()
 		GetViewMatrix(),
 		GetPerspectiveMatrix(),
 		Position,
+		0.0f,
 		(float)Screen.Width / Screen.Height,
+		FieldOfView,
 	};
 
 	Uniform->Set(View);
@@ -105,7 +105,7 @@ void View::Translate(const float DS)
 
 glm::mat4 View::GetPerspectiveMatrix() const
 {
-	glm::mat4 Perspective = glm::perspective(glm::radians(ZoomDegree), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
+	glm::mat4 Perspective = glm::perspective(glm::radians(FieldOfView), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
 	// @todo VK_KHR_maintenance1
 	Perspective[1][1] *= -1;
 	return Perspective;

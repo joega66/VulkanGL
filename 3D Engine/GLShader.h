@@ -78,8 +78,8 @@ public:
 	}
 
 private:
-	HashTable<std::string, uint32> UniformLocations;
 	HashTable<std::string, uint32> AttributeLocations;
+	HashTable<std::string, uint32> UniformLocations;
 };
 
 CLASS(GLShader);

@@ -45,11 +45,10 @@ GLRenderTargetView::GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction,
 {
 }
 
-GLRenderTargetView::GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear)
+GLRenderTargetView::GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
 	: Image(Image)
 	, LoadAction(LoadAction)
 	, StoreAction(StoreAction)
-	, DepthClear(DepthClear)
-	, StencilClear(StencilClear)
+	, ClearValue(DepthStencil)
 {
 }

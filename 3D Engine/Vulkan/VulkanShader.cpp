@@ -177,11 +177,11 @@ static void CreateDescriptorSetLayoutBindings(
 GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const
 {
 	VulkanGLRef Vulkan = std::static_pointer_cast<VulkanGL>(GRender);
-
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
 	std::string BaseBinding;
 
+	// Not a great approach. 
 	const std::string ShaderExt = [&] ()
 	{
 		switch (Meta.Stage)
@@ -247,8 +247,8 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
 
 	std::vector<VertexStreamFormat> VertexStreams = ParseStageInputs(GLSL, Resources);
-	std::vector<ImageFormat> Images = ParseSampledImages(GLSL, Resources);
 	std::vector<UniformBufferFormat> Uniforms = ParseUniformBuffers(GLSL, Resources);
+	std::vector<ImageFormat> Images = ParseSampledImages(GLSL, Resources);
 
 	std::vector<VkVertexInputAttributeDescription> Attributes = CreateVertexInputAttributeDescriptions(VertexStreams);
 	std::vector<VkDescriptorSetLayoutBinding> Bindings;

@@ -11,6 +11,13 @@ public:
 	}
 };
 
+enum class EVisualize
+{
+	Depth,
+	Default,
+};
+
+template<EVisualize Visualize = EVisualize::Default>
 class FullscreenFS : public GLShader
 {
 public:
@@ -18,5 +25,13 @@ public:
 	{
 		static GLBaseShaderInfo Base = { "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
+	}
+
+	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	{
+		if constexpr (Visualize == EVisualize::Depth)
+		{
+			Worker.SetDefine("DEPTH");
+		}
 	}
 };

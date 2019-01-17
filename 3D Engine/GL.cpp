@@ -112,9 +112,9 @@ GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction L
 	return GRender->CreateRenderTargetView(GLImage, LoadAction, StoreAction, ClearValue);
 }
 
-GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear)
+GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
 {
-	return GRender->CreateRenderTargetView(GLImage, LoadAction, StoreAction, DepthClear, StencilClear);
+	return GRender->CreateRenderTargetView(GLImage, LoadAction, StoreAction, DepthStencil);
 }
 
 GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)

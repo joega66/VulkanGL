@@ -10,7 +10,10 @@ public:
 		glm::mat4 View;
 		glm::mat4 Projection;
 		glm::vec3 Position;
+		float Padding;
 		float AspectRatio;
+		float FieldOfView;
+		glm::vec2 MorePadding;
 	};
 
 	GLUniformBufferRef Uniform;
@@ -21,7 +24,7 @@ public:
 	View(const glm::vec3 &Position = glm::vec3(0.0f, 0.0f, 0.0f),
 		const glm::vec3 &Up = glm::vec3(0.0f, 1.0f, 0.0f),
 		float Yaw = -90.0f, float Pitch = 0.0f,
-		float Zoom = 45.0f);
+		float FieldOfView = 45.0f);
 	// Transform screen coordinate to world ray
 	Ray ScreenPointToRay(const glm::vec2& ScreenPosition);
 	// Project world coordinate to screen coordinate.
@@ -45,7 +48,7 @@ private:
 
 	float Yaw;
 	float Pitch;
-	float ZoomDegree;
+	float FieldOfView;
 
 	void UpdateView();
 };

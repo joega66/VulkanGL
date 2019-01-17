@@ -17,16 +17,32 @@ void Scene::Render()
 	GLBeginRender();
 
 	RenderRayMarching();
-	/*RenderLightingPass();
-	RenderEditorPrimitives();*/
+	RenderLightingPass();
+	RenderEditorPrimitives();
 
 	GLEndRender();
 }
 
+void Scene::RenderRayMarching()
+{
+	GLShaderRef VertShader = GLCreateShader<FullscreenVS>();
+	GLShaderRef FragShader = GLCreateShader<RayMarchingFS>();
+
+	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
+	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+
+	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
+	GLSetDepthTest(true);
+	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+	GLSetUniformBuffer(FragShader, "ViewUniform", View.Uniform);
+
+	GLDraw(3, 1, 0, 0);
+}
+
 void Scene::RenderLightingPass()
 {
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
+	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
+	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
@@ -73,7 +89,7 @@ void Scene::RenderSkybox()
 
 void Scene::RenderOutlines()
 {
-	GLRenderTargetViewRef StencilView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
+	GLRenderTargetViewRef StencilView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(0, nullptr, StencilView, EDepthStencilAccess::DepthWriteStencilWrite);
 	GLSetStencilTest(true);
@@ -82,7 +98,7 @@ void Scene::RenderOutlines()
 	Stencil.Execute(View);
 
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef OutlineView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, 1.0f, 0);
+	GLRenderTargetViewRef OutlineView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
 	GLSetDepthTest(false);
@@ -92,27 +108,6 @@ void Scene::RenderOutlines()
 
 	GLSetStencilTest(false);
 	GLSetDepthTest(true);
-}
-
-void Scene::RenderRayMarching()
-{
-	GLShaderRef VertShader = GLCreateShader<FullscreenVS>();
-	GLShaderRef FragShader = GLCreateShader<RayMarchingFS>();
-
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, 1.0f, 0);
-
-	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
-	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
-	GLSetDepthTest(true);
-	GLSetColorMask(0, EColorChannel::RGBA);
-	GLSetRasterizerState(ECullMode::None);
-
-	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
-
-	GLSetUniformBuffer(FragShader, "ViewUniform", View.Uniform);
-
-	GLDraw(3, 1, 0, 0);
 }
 
 Scene& Scene::Get()

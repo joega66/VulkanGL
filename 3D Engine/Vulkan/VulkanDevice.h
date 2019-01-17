@@ -15,7 +15,7 @@ public:
 	VkPhysicalDeviceFeatures Features;
 
 	VulkanDevice();
-
+	// @todo Remove these overloads
 	operator VkDevice() { return Device; }
 	operator VkPhysicalDevice() { return PhysicalDevice; }
 

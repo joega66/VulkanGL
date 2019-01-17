@@ -7,5 +7,9 @@ uniform sampler2D Sampler;
 
 void main()
 {
+#ifdef DEPTH
+	OutColor = vec4(vec3(texture(Sampler, InUV).r), 1.0f);
+#else
 	OutColor = vec4(texture(Sampler, InUV).rgb, 1.0f);
+#endif
 }

@@ -82,12 +82,19 @@ enum class EStoreAction
 
 enum class EDepthStencilAccess
 {
+	// Disable depth writes.
 	None,
+	// Enable depth writes.
 	DepthWrite,
+	// Disable depth writes and enable stencil attachment.
 	StencilWrite,
+	// Enable depth writes. (Really has same effect as DepthWrite.)
 	DepthWriteStencilWrite,
+	// Transitions depth to shader read for the depth aspect.
 	DepthReadStencilWrite,
+	// Transitions depth to shader read for the stencil aspect.
 	DepthWriteStencilRead,
+	// Transitions depth to shader read for depth/stencil aspect.
 	DepthReadStencilRead,
 };
 
@@ -177,6 +184,12 @@ public:
 
 CLASS(GLImage);
 
+struct ClearDepthStencilValue
+{
+	float DepthClear;
+	uint32 StencilClear;
+};
+
 class GLRenderTargetView : public GLRenderResource
 {
 public:
@@ -184,13 +197,10 @@ public:
 	ELoadAction LoadAction;
 	EStoreAction StoreAction;
 
-	// @todo std::variant? 
-	std::array<float, 4> ClearValue;
-	float DepthClear;
-	uint32 StencilClear;
+	std::variant<std::array<float, 4>, ClearDepthStencilValue> ClearValue;
 
 	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear);
+	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
 };
 
 CLASS(GLRenderTargetView);

@@ -399,7 +399,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 	Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	Subpass.pColorAttachments = ColorRefs.data();
 	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-	Subpass.pDepthStencilAttachment = !DepthTarget /*|| Access == EDepthStencilAccess::None*/ ? nullptr : &DepthRef;
+	Subpass.pDepthStencilAttachment = !DepthTarget ? nullptr : &DepthRef;
 	
 	std::array<VkSubpassDependency, 2> Dependencies;
 
@@ -642,7 +642,7 @@ GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAc
 	return RTView;
 }
 
-GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, float DepthClear, uint32 StencilClear)
+GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -650,8 +650,7 @@ GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAc
 		VulkanImage,
 		LoadAction,
 		StoreAction,
-		DepthClear,
-		StencilClear);
+		DepthStencil);
 	return RTView;
 }
 
@@ -1021,7 +1020,7 @@ void VulkanGL::CleanRenderPass()
 		VulkanRenderTargetViewRef ColorTarget = Pending.ColorTargets[i];
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
-		const auto& ClearValue = ColorTarget->ClearValue;
+		const auto& ClearValue = std::get<std::array<float, 4>>(ColorTarget->ClearValue);
 		ClearValues[i].color.float32[0] = ClearValue[0];
 		ClearValues[i].color.float32[1] = ClearValue[1];
 		ClearValues[i].color.float32[2] = ClearValue[2];
@@ -1039,18 +1038,17 @@ void VulkanGL::CleanRenderPass()
 
 		if (Image->IsDepth())
 		{
-			ClearValues[NumRTs].depthStencil.depth = DepthTarget->DepthClear;
+			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(DepthTarget->ClearValue).DepthClear;
 		}
 
 		if (Image->IsStencil())
 		{
-			ClearValues[NumRTs].depthStencil.stencil = DepthTarget->StencilClear;
+			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(DepthTarget->ClearValue).StencilClear;
 		}
 
 		AttachmentViews[NumRTs] = Image->ImageView;
 	}
 
-	// @todo Bug waiting to happen
 	GLImageRef Image = Pending.DepthTarget ? Pending.DepthTarget->Image : Pending.ColorTargets[0]->Image;
 
 	VkRect2D RenderArea = {};

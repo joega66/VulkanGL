@@ -26,10 +26,10 @@ private:
 	GLImageRef SceneDepth;
 	GLImageRef OutlineDepthStencil;
 
+	void RenderRayMarching();
 	void RenderLightingPass();
 	void RenderEditorPrimitives();
 	void RenderLines();
 	void RenderSkybox();
 	void RenderOutlines();
-	void RenderRayMarching();
 };
