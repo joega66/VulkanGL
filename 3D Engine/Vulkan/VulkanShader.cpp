@@ -17,7 +17,7 @@ struct UniformBufferFormat
 	uint32 Size = 0;
 };
 
-struct ImageFormat
+struct ResourceFormat
 {
 	std::string Name;
 	int32 Binding = -1;
@@ -95,13 +95,13 @@ static std::vector<VertexStreamFormat> ParseStageInputs(const spirv_cross::Compi
 	return VertexStreams;
 }
 
-static std::vector<ImageFormat> ParseSampledImages(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+static std::vector<ResourceFormat> ParseSampledImages(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
 {
-	std::vector<ImageFormat> Images;
+	std::vector<ResourceFormat> Images;
 
 	for (auto& Resource : Resources.sampled_images)
 	{
-		ImageFormat Image;
+		ResourceFormat Image;
 		Image.Name = Resource.name;
 		Image.Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
 
@@ -128,6 +128,22 @@ static std::vector<UniformBufferFormat> ParseUniformBuffers(const spirv_cross::C
 	}
 
 	return Uniforms;
+}
+
+static std::vector<ResourceFormat> ParseStorageBuffers(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+{
+	std::vector<ResourceFormat> StorageBuffers;
+
+	for (auto& Resource : Resources.storage_buffers)
+	{
+		ResourceFormat StorageBuffer;
+		StorageBuffer.Name = Resource.name;
+		StorageBuffer.Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
+
+		StorageBuffers.push_back(StorageBuffer);
+	}
+
+	return StorageBuffers;
 }
 
 static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttributeDescriptions(std::vector<VertexStreamFormat>& Streams)
@@ -248,7 +264,8 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 
 	std::vector<VertexStreamFormat> VertexStreams = ParseStageInputs(GLSL, Resources);
 	std::vector<UniformBufferFormat> Uniforms = ParseUniformBuffers(GLSL, Resources);
-	std::vector<ImageFormat> Images = ParseSampledImages(GLSL, Resources);
+	std::vector<ResourceFormat> Images = ParseSampledImages(GLSL, Resources);
+	std::vector<ResourceFormat> StorageBuffers = ParseStorageBuffers(GLSL, Resources);
 
 	std::vector<VkVertexInputAttributeDescription> Attributes = CreateVertexInputAttributeDescriptions(VertexStreams);
 	std::vector<VkDescriptorSetLayoutBinding> Bindings;
@@ -256,7 +273,7 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 
 	CreateDescriptorSetLayoutBindings(Uniforms, Bindings, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Stage);
 	CreateDescriptorSetLayoutBindings(Images, Bindings, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Stage);
-	// @todo-joe UAVs
+	CreateDescriptorSetLayoutBindings(StorageBuffers, Bindings, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, Stage);
 
 	std::sort(Bindings.begin(), Bindings.end(),
 		[] (const VkDescriptorSetLayoutBinding& LHS, const VkDescriptorSetLayoutBinding& RHS)
@@ -281,9 +298,14 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 		UniformLocations[Uniform.Name] = Uniform.Binding;
 	});
 
-	std::for_each(Images.begin(), Images.end(), [&] (const ImageFormat& Image)
+	std::for_each(Images.begin(), Images.end(), [&] (const ResourceFormat& Image)
 	{
 		UniformLocations[Image.Name] = Image.Binding;
+	});
+
+	std::for_each(StorageBuffers.begin(), StorageBuffers.end(), [&](const ResourceFormat& StorageBuffer)
+	{
+		UniformLocations[StorageBuffer.Name] = StorageBuffer.Binding;
 	});
 
 	return MakeRef<VulkanShader>(Vulkan->GetDevice(), ShaderModule, Meta, Attributes, Bindings, AttributeLocations, UniformLocations);

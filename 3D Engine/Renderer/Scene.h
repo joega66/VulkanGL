@@ -11,6 +11,8 @@ public:
 	DrawingPlanList<DepthPassDrawingPlan> Stencil;
 	DrawingPlanList<OutlineDrawingPlan> Outline;
 
+	GLStorageBufferRef LightBuffer;
+
 	GLImageRef Skybox;
 
 	DrawingPlanList<LineDrawingPlan> Lines;

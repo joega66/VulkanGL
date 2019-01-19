@@ -14,6 +14,7 @@ public:
 
 	void DestroyEntity(Entity& Entity);
 
+	// @todo Iterator
 	template<typename ...TComponents>
 	std::vector<Entity> GetEntities()
 	{

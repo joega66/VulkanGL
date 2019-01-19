@@ -115,7 +115,7 @@ void IPlatform::FreeImage(uint8* Pixels)
 void IPlatform::EndFrame()
 {
 	// Update hardware cursor.
-	GPlatform->MouseState(Cursor);
+	MouseState(Cursor);
 
 	// Clear hardware input.
 	std::fill(Input.KeysPressed.begin(), Input.KeysPressed.end(), false);

@@ -28,3 +28,8 @@ VkAttachmentStoreOp VulkanRenderTargetView::GetVulkanStoreOp() const
 		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	}
 }
+
+VulkanRenderTargetViewRef ResourceCast(GLRenderTargetViewRef From) 
+{ 
+	return std::static_pointer_cast<VulkanRenderTargetView>(From); 
+}

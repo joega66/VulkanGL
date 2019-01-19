@@ -9,7 +9,6 @@ LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Reso
 
 	LightingPassVert = GLCreateShader<LightingPassVS<EMeshType::StaticMesh>>();
 
-	// @todo This is already becoming unwieldy...
 	if (bHasDiffuseMap && bHasNormalMap)
 	{
 		LightingPassFrag = GLCreateShader<LightingPassFS<true, true, EMeshType::StaticMesh>>();

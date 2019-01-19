@@ -15,15 +15,13 @@ public:
 	VkPhysicalDeviceFeatures Features;
 
 	VulkanDevice();
-	// @todo Remove these overloads
 	operator VkDevice() { return Device; }
 	operator VkPhysicalDevice() { return PhysicalDevice; }
-
-	VkDevice Device;
 
 private:
 	VkInstance Instance;
 	VkDebugReportCallbackEXT DebugReportCallback;
+	VkDevice Device;
 	VkPhysicalDevice PhysicalDevice;
 };
 
@@ -31,7 +29,6 @@ CLASS(VulkanDevice);
 
 struct QueueFamilyIndices
 {
-	// @todo Change to uint32
 	int GraphicsFamily = -1;
 	int PresentFamily = -1;
 

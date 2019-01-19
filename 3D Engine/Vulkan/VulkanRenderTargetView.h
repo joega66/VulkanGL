@@ -32,3 +32,5 @@ private:
 };
 
 CLASS(VulkanRenderTargetView);
+
+VulkanRenderTargetViewRef ResourceCast(GLRenderTargetViewRef From);

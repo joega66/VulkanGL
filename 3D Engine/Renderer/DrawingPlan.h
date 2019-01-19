@@ -2,21 +2,6 @@
 #include "GLShader.h"
 #include <Engine/View.h>
 
-struct GraphicsPipeline
-{
-	GLShaderRef Vertex;
-	GLShaderRef TessControl;
-	GLShaderRef TessEval;
-	GLShaderRef Geometry;
-	GLShaderRef Fragment;
-
-	GraphicsPipeline() = default;
-	GraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
-		: Vertex(Vertex), TessControl(TessControl), TessEval(TessEval), Geometry(Geometry), Fragment(Fragment)
-	{
-	}
-};
-
 struct StreamSource
 {
 	GLVertexBufferRef VertexBuffer;

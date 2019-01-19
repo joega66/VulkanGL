@@ -16,11 +16,6 @@ CTransform::CTransform(const glm::vec3& Position, const glm::vec3& Rotation, flo
 
 CTransform::~CTransform()
 {
-	/*if (Parent)
-	{
-		Parent->RemoveChild(this);
-	}*/
-	// @todo TransformComponentSystem that removes the child when component is removed? 
 }
 
 const glm::mat4& CTransform::GetLocalToWorld()
@@ -28,9 +23,9 @@ const glm::mat4& CTransform::GetLocalToWorld()
 	return LocalToWorld;
 }
 
-const glm::mat4& CTransform::GetLocalToParent()
+glm::mat4 CTransform::GetLocalToParent()
 {
-	LocalToParent = glm::mat4();
+	glm::mat4 LocalToParent = glm::mat4();
 	LocalToParent = glm::translate(LocalToParent, Position);
 	LocalToParent = glm::rotate(LocalToParent, glm::radians(Angle), Rotation);
 	LocalToParent = glm::scale(LocalToParent, ScaleBy);

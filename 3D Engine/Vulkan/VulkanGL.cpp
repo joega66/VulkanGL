@@ -2,41 +2,12 @@
 #include "VulkanRenderTargetView.h"
 #include "VulkanCommands.h"
 
-#define CAST(FromType, ToType) ToType ## Ref ResourceCast(FromType ## Ref From) { return std::static_pointer_cast<ToType>(From); }
-
 CAST(GLImage, VulkanImage);
-CAST(GLRenderTargetView, VulkanRenderTargetView);
 CAST(GLShader, VulkanShader);
 CAST(GLVertexBuffer, VulkanVertexBuffer);
 CAST(GLUniformBuffer, VulkanUniformBuffer);
+CAST(GLStorageBuffer, VulkanStorageBuffer);
 CAST(GLIndexBuffer, VulkanIndexBuffer);
-
-const HashTable<EImageFormat, uint32> ConvertImageFormatToSize()
-{
-	HashTable<EImageFormat, uint32> ImageFormatToGLSLSize;
-
-	for (auto& [GLSLType, Format] : GLSLTypeToVulkanFormat)
-	{
-		auto ImageFormat = VulkanImage::GetEngineFormat(Format);
-		auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType);
-		ImageFormatToGLSLSize[ImageFormat] = GLSLSize;
-	}
-
-	return ImageFormatToGLSLSize;
-}
-
-const HashTable<VkFormat, uint32> ConvertVulkanFormatToSize()
-{
-	HashTable<VkFormat, uint32> SizeOfVulkanFormat;
-
-	for (auto& [GLSLType, Format] : GLSLTypeToVulkanFormat)
-	{
-		auto SizeOf = GetValue(GLSLTypeSizes, GLSLType);
-		SizeOfVulkanFormat[Format] = SizeOf;
-	}
-
-	return SizeOfVulkanFormat;
-}
 
 VulkanGL::VulkanGL()
 	: Swapchain(Device)
@@ -49,88 +20,11 @@ VulkanGL::VulkanGL()
 	, PipelineLayouts([&] (VkPipelineLayout PipelineLayout) { vkDestroyPipelineLayout(Device, PipelineLayout, nullptr); })
 	, Pipelines([&] (VkPipeline Pipeline) { vkDestroyPipeline(Device, Pipeline, nullptr); })
 	, Samplers([&] (VkSampler Sampler) { vkDestroySampler(Device, Sampler, nullptr); })
-	, DescriptorSets([&] (VkDescriptorSet DescriptorSet) {})
-	, ImageFormatToGLSLSize(ConvertImageFormatToSize())
-	, SizeOfVulkanFormat(ConvertVulkanFormatToSize())
+	, ImageFormatToGLSLSize([&](){HashTable<EImageFormat,uint32>Result;for(auto&[GLSLType,Format]:GLSLTypeToVulkanFormat){
+		auto ImageFormat=VulkanImage::GetEngineFormat(Format);auto GLSLSize=GetValue(GLSLTypeSizes,GLSLType); Result[ImageFormat]=GLSLSize;}return Result;}())
+	, SizeOfVulkanFormat([&](){HashTable<VkFormat,uint32>Result;for(auto&[GLSLType,Format]:GLSLTypeToVulkanFormat){auto SizeOf=GetValue(GLSLTypeSizes,GLSLType);
+		Result[Format]=SizeOf;}return Result;}())
 {
-}
-
-void VulkanSurface::InitSwapchain()
-{
-	SwapchainSupportDetails SwapchainSupport = {};
-	SwapchainSupport.QuerySwapchainSupport(Device, Device.Surface);
-
-	VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
-	VkPresentModeKHR PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
-
-	VkExtent2D Extent = ChooseSwapExtent(SwapchainSupport.Capabilities);
-
-	uint32 ImageCount = SwapchainSupport.Capabilities.minImageCount + 1;
-
-	if (SwapchainSupport.Capabilities.maxImageCount > 0 && ImageCount > SwapchainSupport.Capabilities.maxImageCount)
-	{
-		ImageCount = SwapchainSupport.Capabilities.maxImageCount;
-	}
-
-	VkSwapchainCreateInfoKHR SwapchainInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	SwapchainInfo.surface = Device.Surface;
-	SwapchainInfo.minImageCount = ImageCount;
-	SwapchainInfo.imageFormat = SurfaceFormat.format;
-	SwapchainInfo.imageColorSpace = SurfaceFormat.colorSpace;
-	SwapchainInfo.imageExtent = Extent;
-	SwapchainInfo.imageArrayLayers = 1;
-	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-	QueueFamilyIndices Indices = {};
-	Indices.FindQueueFamilies(Device, Device.Surface);
-
-	uint32 QueueFamilyIndices[] = { static_cast<uint32>(Indices.GraphicsFamily), static_cast<uint32>(Indices.PresentFamily) };
-
-	if (Indices.GraphicsFamily != Indices.PresentFamily)
-	{
-		SwapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-		SwapchainInfo.queueFamilyIndexCount = 2;
-		SwapchainInfo.pQueueFamilyIndices = QueueFamilyIndices;
-	}
-	else
-	{
-		SwapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	}
-
-	SwapchainInfo.preTransform = SwapchainSupport.Capabilities.currentTransform;
-	SwapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	SwapchainInfo.presentMode = PresentMode;
-	SwapchainInfo.clipped = VK_TRUE;
-
-	vulkan(vkCreateSwapchainKHR(Device, &SwapchainInfo, nullptr, &Swapchain));
-
-	vkGetSwapchainImagesKHR(Device, Swapchain, &ImageCount, nullptr);
-
-	std::vector<VkImage> VkImages(ImageCount);
-
-	vkGetSwapchainImagesKHR(Device, Swapchain, &ImageCount, VkImages.data());
-
-	Images.resize(ImageCount);
-
-	for (uint32 i = 0; i < ImageCount; i++)
-	{
-		Images[i] = MakeRef<VulkanImage>(Device
-			, VkImages[i]
-			, VkDeviceMemory()
-			, VK_IMAGE_LAYOUT_UNDEFINED
-			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
-			, Extent.width
-			, Extent.height
-			, EResourceUsage::RenderTargetable
-			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-	}
-
-	RTViews.resize(ImageCount);
-
-	for (uint32 i = 0; i < RTViews.size(); i++)
-	{
-		RTViews[i] = ResourceCast(GRender->CreateRenderTargetView(Images[i], ELoadAction::Clear, EStoreAction::Store, { 0.0f, 0.0f, 0.0f, 0.0f }));
-	}
 }
 
 void VulkanGL::InitGL()
@@ -225,7 +119,6 @@ void VulkanGL::EndRender()
 	PipelineLayouts.Destroy();
 	Pipelines.Destroy();
 	Samplers.Destroy();
-	DescriptorSets.Destroy();
 
 	DescriptorImages.clear();
 	DescriptorBuffers.clear();
@@ -536,6 +429,33 @@ void VulkanGL::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Im
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
+void VulkanGL::SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer)
+{
+	// @todo
+	VulkanShaderRef VulkanShader = ResourceCast(Shader);
+	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
+	auto& Bindings = VulkanShader->Bindings;
+	auto SharedBuffer = VulkanStorageBuffer->Buffer;
+
+	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, "Invalid buffer type.");
+
+	for (const auto& Binding : Bindings)
+	{
+		if (Binding.binding == Location)
+		{
+			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, "Shader resource at this location isn't a storage buffer.");
+
+			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
+			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
+			bDirtyDescriptorSets = true;
+
+			return;
+		}
+	}
+
+	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
+}
+
 void VulkanGL::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
 	PrepareForDraw();
@@ -569,6 +489,12 @@ GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, 
 		? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
+}
+
+GLStorageBufferRef VulkanGL::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
+{
+	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
+	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
 GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
@@ -893,8 +819,6 @@ void VulkanGL::CleanPipelineLayout()
 void VulkanGL::CleanDescriptorSets()
 {
 	VkDescriptorSet DescriptorSet = DescriptorPool.Spawn(DescriptorSetLayouts.Get());
-	DescriptorSets.Push(DescriptorSet);
-
 	std::vector<VkWriteDescriptorSet> WriteDescriptors;
 
 	for (auto& DescriptorImagesInShaderStage : DescriptorImages)
@@ -906,7 +830,7 @@ void VulkanGL::CleanDescriptorSets()
 			const auto& Binding = WriteDescriptorImage->Binding;
 
 			VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-			WriteDescriptor.dstSet = DescriptorSets.Get();
+			WriteDescriptor.dstSet = DescriptorSet;
 			WriteDescriptor.dstBinding = Binding.binding;
 			WriteDescriptor.dstArrayElement = 0;
 			WriteDescriptor.descriptorType = Binding.descriptorType;
@@ -922,23 +846,23 @@ void VulkanGL::CleanDescriptorSets()
 		auto& BufferDescriptors = DescriptorBuffersInShaderStage.second;
 		for (auto& Descriptors : BufferDescriptors)
 		{
-			const auto& WriteDescriptorImage = Descriptors.second;
-			const auto& Binding = WriteDescriptorImage->Binding;
+			const auto& WriteDescriptorBuffer = Descriptors.second;
+			const auto& Binding = WriteDescriptorBuffer->Binding;
 
 			VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-			WriteDescriptor.dstSet = DescriptorSets.Get();
+			WriteDescriptor.dstSet = DescriptorSet;
 			WriteDescriptor.dstBinding = Binding.binding;
 			WriteDescriptor.dstArrayElement = 0;
 			WriteDescriptor.descriptorType = Binding.descriptorType;
 			WriteDescriptor.descriptorCount = 1;
-			WriteDescriptor.pBufferInfo = &WriteDescriptorImage->DescriptorBuffer;
-
+			WriteDescriptor.pBufferInfo = &WriteDescriptorBuffer->DescriptorBuffer;
+			
 			WriteDescriptors.push_back(WriteDescriptor);
 		}
 	}
 
-	vkUpdateDescriptorSets(Device.Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, nullptr);
-	vkCmdBindDescriptorSets(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineLayouts.Get(), 0, 1, &DescriptorSets.Get(), 0, nullptr);
+	vkUpdateDescriptorSets(Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, nullptr);
+	vkCmdBindDescriptorSets(GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineLayouts.Get(), 0, 1, &DescriptorSet, 0, nullptr);
 
 	bDirtyDescriptorSets = false;
 }

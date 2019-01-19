@@ -48,6 +48,8 @@ Ref<T> MakeRef(RefArgs&& ...Args)
 #define CLASS(Class) \
 	using Class ## Ref = Ref<Class>;
 
+#define CAST(FromType, ToType) ToType ## Ref ResourceCast(FromType ## Ref From) { return std::static_pointer_cast<ToType>(From); }
+
 class IPlatform
 {
 public:	
@@ -140,7 +142,7 @@ inline bool Contains(const ContainerType& Container, const ElementType& Element)
 }
 
 template<typename T, std::size_t N>
-constexpr std::size_t ARRAY_LENGTH(T(&)[N])
+constexpr std::size_t ArrayLength(T(&)[N])
 {
 	return N;
 }

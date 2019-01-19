@@ -21,7 +21,7 @@ void EditorControllerSystem::Update()
 			// Look around.
 			glm::vec2 Offset = glm::vec2(Cursor.Position.x - Cursor.Last.x, Cursor.Last.y - Cursor.Position.y) * Cursor.Sensitivity;
 			// Filter noise from glfw cursor jumping after disabling cursor...
-			if (glm::abs(Offset.x) < 5 && glm::abs(Offset.y) < 5)
+			if (glm::abs(Offset.x) < 10 && glm::abs(Offset.y) < 10)
 			{
 				View.Axis(Offset);
 			}

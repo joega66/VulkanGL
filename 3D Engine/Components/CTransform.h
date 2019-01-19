@@ -40,13 +40,12 @@ private:
 	float Angle = 0.0f;
 	glm::vec3 ScaleBy = glm::vec3(1.0f);
 
-	glm::mat4 LocalToParent;
 	glm::mat4 LocalToWorld;
 
 	CTransform* Parent = nullptr;
 	std::list<CTransform*> Children;
 
 	void AddChild(CTransform* Child);
-	const glm::mat4& GetLocalToParent();
+	glm::mat4 GetLocalToParent();
 	void Clean();
 };

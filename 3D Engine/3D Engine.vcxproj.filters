@@ -131,9 +131,6 @@
     <ClInclude Include="Renderer\MaterialShader.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\SceneRenderTargets.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\Scene.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -186,6 +183,15 @@
       <Filter>Source\Engine</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\RayMarching.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CLight.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentSystems\LightSystem.h">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Light.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
@@ -298,6 +304,9 @@
     <ClCompile Include="Engine\AssetManager.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="ComponentSystems\LightSystem.cpp">
+      <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -346,6 +355,12 @@
       <Filter>Source\Components</Filter>
     </None>
     <None Include="..\Shaders\RayMarching.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\LightingCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\RayMarchingCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

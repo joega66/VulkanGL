@@ -114,10 +114,19 @@ public:
 	}
 
 	virtual uint32 GetSize() final { return (uint32)Buffer->Size; }
+};
 
-	~VulkanUniformBuffer()
+CLASS(VulkanUniformBuffer);
+
+class VulkanStorageBuffer : public GLStorageBuffer
+{
+public:
+	SharedVulkanBufferRef Buffer;
+
+	VulkanStorageBuffer(SharedVulkanBufferRef Buffer, EResourceUsage Usage)
+		: Buffer(Buffer), GLStorageBuffer(Usage)
 	{
 	}
 };
 
-CLASS(VulkanUniformBuffer);
+CLASS(VulkanStorageBuffer);

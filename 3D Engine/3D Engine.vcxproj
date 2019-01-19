@@ -22,6 +22,7 @@
     <ClCompile Include="ComponentSystems\ComponentSystem.cpp" />
     <ClCompile Include="ComponentSystems\EditorControllerSystem.cpp" />
     <ClCompile Include="ComponentSystems\GameSystem.cpp" />
+    <ClCompile Include="ComponentSystems\LightSystem.cpp" />
     <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp" />
     <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp" />
     <ClCompile Include="Components\CStaticMesh.cpp" />
@@ -60,8 +61,10 @@
     <ClInclude Include="ComponentSystems\ComponentSystem.h" />
     <ClInclude Include="ComponentSystems\EditorControllerSystem.h" />
     <ClInclude Include="ComponentSystems\GameSystem.h" />
+    <ClInclude Include="ComponentSystems\LightSystem.h" />
     <ClInclude Include="ComponentSystems\TransformGizmoSystem.h" />
     <ClInclude Include="ComponentSystems\StaticMeshSystem.h" />
+    <ClInclude Include="Components\CLight.h" />
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\CMaterial.h" />
     <ClInclude Include="Components\ComponentArray.h" />
@@ -86,11 +89,11 @@
     <ClInclude Include="Renderer\DrawingPlan.h" />
     <ClInclude Include="Renderer\EditorPrimitives.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
+    <ClInclude Include="Renderer\Light.h" />
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\Scene.h" />
-    <ClInclude Include="Renderer\SceneRenderTargets.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="SPIRV-Cross\spirv.hpp" />
     <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp" />
@@ -112,12 +115,14 @@
     <None Include="..\Shaders\DepthPassVS.glsl" />
     <None Include="..\Shaders\FullscreenFS.glsl" />
     <None Include="..\Shaders\FullscreenVS.glsl" />
+    <None Include="..\Shaders\LightingCommon.glsl" />
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
     <None Include="..\Shaders\LinesFS.glsl" />
     <None Include="..\Shaders\LinesVS.glsl" />
     <None Include="..\Shaders\OutlineFS.glsl" />
     <None Include="..\Shaders\RayMarching.glsl" />
+    <None Include="..\Shaders\RayMarchingCommon.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />

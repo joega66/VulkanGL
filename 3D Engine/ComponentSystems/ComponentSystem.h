@@ -2,10 +2,10 @@
 #include <Platform/Platform.h>
 #include <typeindex>
 
+class Entity;
+class IComponentArray;
 template<typename TComponent>
 class ComponentArray;
-
-class Entity;
 
 class ComponentSystem
 {
@@ -20,16 +20,15 @@ public:
 	}
 };
 
-class IComponentArray;
-
 class ComponentSystemManager
 {
 	friend class EntityManager;
 	template<typename TComponent>
 	friend class ComponentArray;
 	friend class CoreEngine;
-
+	
 private:
+
 	std::vector<std::reference_wrapper<ComponentSystem>> ComponentSystems;
 	std::vector<std::reference_wrapper<IComponentArray>> ComponentArrays;
 

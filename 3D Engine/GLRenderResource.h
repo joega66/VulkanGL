@@ -162,6 +162,19 @@ private:
 
 CLASS(GLUniformBuffer);
 
+class GLStorageBuffer : public GLRenderResource
+{
+public:
+	const EResourceUsage Usage;
+
+	GLStorageBuffer(EResourceUsage Usage)
+		: Usage(Usage)
+	{
+	}
+};
+
+CLASS(GLStorageBuffer);
+
 class GLImage : public GLRenderResource
 {
 public:

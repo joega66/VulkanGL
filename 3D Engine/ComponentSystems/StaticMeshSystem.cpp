@@ -14,7 +14,6 @@ void StaticMeshSystem::Update()
 	
 	for (auto Entity : GEntityManager.GetEntities<CStaticMesh>())
 	{
-		// @todo Move this to DrawingPlanList...?
 		if (!Entity.GetComponent<CRenderer>().bVisible)
 			continue;
 

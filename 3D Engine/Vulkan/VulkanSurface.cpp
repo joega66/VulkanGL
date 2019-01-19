@@ -9,6 +9,85 @@ VulkanSurface::VulkanSurface(VulkanDevice& Device)
 {
 }
 
+void VulkanSurface::InitSwapchain()
+{
+	SwapchainSupportDetails SwapchainSupport = {};
+	SwapchainSupport.QuerySwapchainSupport(Device, Device.Surface);
+
+	VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
+	VkPresentModeKHR PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
+
+	VkExtent2D Extent = ChooseSwapExtent(SwapchainSupport.Capabilities);
+
+	uint32 ImageCount = SwapchainSupport.Capabilities.minImageCount + 1;
+
+	if (SwapchainSupport.Capabilities.maxImageCount > 0 && ImageCount > SwapchainSupport.Capabilities.maxImageCount)
+	{
+		ImageCount = SwapchainSupport.Capabilities.maxImageCount;
+	}
+
+	VkSwapchainCreateInfoKHR SwapchainInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+	SwapchainInfo.surface = Device.Surface;
+	SwapchainInfo.minImageCount = ImageCount;
+	SwapchainInfo.imageFormat = SurfaceFormat.format;
+	SwapchainInfo.imageColorSpace = SurfaceFormat.colorSpace;
+	SwapchainInfo.imageExtent = Extent;
+	SwapchainInfo.imageArrayLayers = 1;
+	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	QueueFamilyIndices Indices = {};
+	Indices.FindQueueFamilies(Device, Device.Surface);
+
+	uint32 QueueFamilyIndices[] = { static_cast<uint32>(Indices.GraphicsFamily), static_cast<uint32>(Indices.PresentFamily) };
+
+	if (Indices.GraphicsFamily != Indices.PresentFamily)
+	{
+		SwapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		SwapchainInfo.queueFamilyIndexCount = 2;
+		SwapchainInfo.pQueueFamilyIndices = QueueFamilyIndices;
+	}
+	else
+	{
+		SwapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	}
+
+	SwapchainInfo.preTransform = SwapchainSupport.Capabilities.currentTransform;
+	SwapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	SwapchainInfo.presentMode = PresentMode;
+	SwapchainInfo.clipped = VK_TRUE;
+
+	vulkan(vkCreateSwapchainKHR(Device, &SwapchainInfo, nullptr, &Swapchain));
+
+	vkGetSwapchainImagesKHR(Device, Swapchain, &ImageCount, nullptr);
+
+	std::vector<VkImage> VkImages(ImageCount);
+
+	vkGetSwapchainImagesKHR(Device, Swapchain, &ImageCount, VkImages.data());
+
+	Images.resize(ImageCount);
+
+	for (uint32 i = 0; i < ImageCount; i++)
+	{
+		Images[i] = MakeRef<VulkanImage>(Device
+			, VkImages[i]
+			, VkDeviceMemory()
+			, VK_IMAGE_LAYOUT_UNDEFINED
+			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
+			, Extent.width
+			, Extent.height
+			, EResourceUsage::RenderTargetable
+			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+	}
+
+	RTViews.resize(ImageCount);
+	
+	for (uint32 i = 0; i < RTViews.size(); i++)
+	{
+		RTViews[i] = ResourceCast(GRender->CreateRenderTargetView(Images[i], ELoadAction::Clear, EStoreAction::Store, { 0.0f, 0.0f, 0.0f, 0.0f }));
+	}
+}
+
+
 void VulkanSurface::ReleaseGL()
 {
 	vkDestroySwapchainKHR(Device, Swapchain, nullptr);

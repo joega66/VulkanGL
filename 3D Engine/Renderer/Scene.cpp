@@ -4,6 +4,8 @@
 #include "FullscreenQuad.h"
 #include "RayMarching.h"
 
+#include "Light.h"
+
 Scene::Scene()
 {
 	SceneDepth = GLCreateImage(Screen.Width, Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
@@ -16,7 +18,7 @@ void Scene::Render()
 {
 	GLBeginRender();
 
-	RenderRayMarching();
+	RenderRayMarching();  
 	RenderLightingPass();
 	RenderEditorPrimitives();
 
@@ -32,24 +34,19 @@ void Scene::RenderRayMarching()
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
+	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
 	GLSetDepthTest(true);
+	GLSetColorMask(0, EColorChannel::RGBA);
+	GLSetRasterizerState(ECullMode::None);
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 	GLSetUniformBuffer(FragShader, "ViewUniform", View.Uniform);
+	GLSetStorageBuffer(FragShader, FragShader->GetUniformLocation("LightBuffer"), LightBuffer);
 
 	GLDraw(3, 1, 0, 0);
 }
 
 void Scene::RenderLightingPass()
 {
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
-
-	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
-	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
-	GLSetDepthTest(true);
-	GLSetColorMask(0, EColorChannel::RGBA);
-	GLSetRasterizerState(ECullMode::None);
-
 	LightingPassDrawingPlans.Execute(View);
 }
 

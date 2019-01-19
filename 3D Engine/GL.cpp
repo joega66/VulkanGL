@@ -72,6 +72,11 @@ void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, con
 	GRender->SetShaderImage(Shader, Location, Image, Sampler);
 }
 
+void GLSetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer)
+{
+	GRender->SetStorageBuffer(Shader, Location, StorageBuffer);
+}
+
 void GLDrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
 	GRender->DrawIndexed(IndexBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
@@ -95,6 +100,11 @@ void GLSetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void * Data)
 {
 	return GRender->CreateVertexBuffer(Format, NumElements, Usage, Data);
+}
+
+GLStorageBufferRef GLCreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage)
+{
+	return GRender->CreateStorageBuffer(Size, Data, Usage);
 }
 
 GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data)

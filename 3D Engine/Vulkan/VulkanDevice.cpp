@@ -258,18 +258,13 @@ VulkanDevice::VulkanDevice()
 	vulkan(CreateDebugReportCallbackEXT(Instance, &DebugCallbackInfo, nullptr, &DebugReportCallback));
 #endif
 
-	// @todo-joe This is crap. 
-	if (GPlatform->GetPlatformName() == "Windows")
-	{
-		// Create Vulkan surface
-		WindowsPlatformRef Windows = std::static_pointer_cast<WindowsPlatform>(GPlatform);
-		vulkan(glfwCreateWindowSurface(Instance, Windows->Window, nullptr, &Surface));
-	}
-	else
-	{
-		signal_unimplemented();
-	}
-	
+#ifdef _WIN32
+	WindowsPlatformRef Windows = std::static_pointer_cast<WindowsPlatform>(GPlatform);
+	vulkan(glfwCreateWindowSurface(Instance, Windows->Window, nullptr, &Surface));
+#elif
+	signal_unimplemented();
+#endif
+
 	// Select Vulkan-capable physical device
 	PhysicalDevice = SelectPhysicalDevice(Instance, Surface, DeviceExtensions);
 

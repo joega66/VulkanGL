@@ -6,6 +6,7 @@
 #include <ComponentSystems/TransformGizmoSystem.h>
 #include <ComponentSystems/EditorControllerSystem.h>
 #include <ComponentSystems/GameSystem.h>
+#include <ComponentSystems/LightSystem.h>
 
 class Cursor Cursor;
 class Input Input;
@@ -38,6 +39,9 @@ void CoreEngine::Run()
 
 	TransformGizmoSystem TransformGizmoSystem;
 	ComponentSystemManager.AddComponentSystem(TransformGizmoSystem);
+
+	LightSystem LightSystem;
+	ComponentSystemManager.AddComponentSystem(LightSystem);
 
 	GameSystem GameSystem;
 	ComponentSystemManager.AddComponentSystem(GameSystem);

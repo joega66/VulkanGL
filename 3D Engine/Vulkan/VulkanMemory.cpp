@@ -10,8 +10,7 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 
 SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsage Usage, const void* Data)
 {
-	// @todo Use an always-mapped strategy for EResourceUsage::KeepCPUAccessible? 
-	check(Size > 0, "Buffer size must be > 0.");
+	// @todo Use an always-mapped strategy for EResourceUsage::KeepCPUAccessible?
 
 	VulkanUsage |= Any(Usage & EResourceUsage::UnorderedAccess) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
 	VulkanUsage |= Any(Usage & EResourceUsage::IndirectBuffer) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
