@@ -3,14 +3,14 @@
 #include <Engine/Screen.h>
 #include "FullscreenQuad.h"
 #include "RayMarching.h"
-
 #include "Light.h"
+
+// @todo-joe All functions that don't require a command list should be wrapped in graphics utils class.
 
 Scene::Scene()
 {
-	SceneDepth = GLCreateImage(Screen.Width, Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
-	OutlineDepthStencil = GLCreateImage(Screen.Width, Screen.Height, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
-
+	SceneDepth = GLCreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
+	OutlineDepthStencil = GLCreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
 
@@ -18,7 +18,7 @@ void Scene::Render()
 {
 	GLBeginRender();
 
-	//RenderRayMarching();  
+	//RenderRayMarching();
 	RenderLightingPass();
 	RenderEditorPrimitives();
 
@@ -27,6 +27,8 @@ void Scene::Render()
 
 void Scene::RenderRayMarching()
 {
+	PipelineStateInitializer PSOInit = {};
+
 	GLShaderRef VertShader = GLCreateShader<FullscreenVS>();
 	GLShaderRef FragShader = GLCreateShader<RayMarchingFS>();
 
@@ -34,11 +36,22 @@ void Scene::RenderRayMarching()
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
-	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
-	GLSetDepthTest(true);
-	GLSetColorMask(0, EColorChannel::RGBA);
-	GLSetRasterizerState(ECullMode::None);
+	
+	PSOInit.Viewport.X = 0.0f;
+	PSOInit.Viewport.Y = 0.0f;
+	PSOInit.Viewport.Width = Screen.Width;
+	PSOInit.Viewport.Height = Screen.Height;
+
+	PSOInit.DepthStencilState.DepthTestEnable = true;
+
+	PSOInit.ColorBlendAttachmentStates[0].ColorWriteMask = EColorChannel::RGBA;
+
+	PSOInit.RasterizationState.CullMode = ECullMode::None;
+
+	GRenderCmdList->SetPipelineState(PSOInit);
+
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+
 	GLSetUniformBuffer(FragShader, "ViewUniform", View.Uniform);
 	GLSetStorageBuffer(FragShader, FragShader->GetUniformLocation("LightBuffer"), LightBuffer);
 
@@ -51,12 +64,21 @@ void Scene::RenderLightingPass()
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
-	GLSetViewport(0.0f, 0.0f, (float)Screen.Width, (float)Screen.Height);
-	GLSetDepthTest(true);
-	GLSetColorMask(0, EColorChannel::RGBA);
-	GLSetRasterizerState(ECullMode::None);
 
-	LightingPassDrawingPlans.Execute(View);
+	PipelineStateInitializer PSOInit = {};
+
+	PSOInit.Viewport.X = 0.0f;
+	PSOInit.Viewport.Y = 0.0f;
+	PSOInit.Viewport.Width = Screen.Width;
+	PSOInit.Viewport.Height = Screen.Height;
+
+	PSOInit.DepthStencilState.DepthTestEnable = true;
+
+	PSOInit.ColorBlendAttachmentStates[0].ColorWriteMask = EColorChannel::RGBA;
+
+	PSOInit.RasterizationState.CullMode = ECullMode::None;
+
+	LightingPassDrawingPlans.Execute(PSOInit, View);
 }
 
 void Scene::RenderEditorPrimitives()
@@ -68,19 +90,48 @@ void Scene::RenderEditorPrimitives()
 
 void Scene::RenderLines()
 {
-	Lines.Execute(View);
-	GLSetRasterizerState(ECullMode::None);
+	PipelineStateInitializer PSOInit = {};
+
+	PSOInit.Viewport.X = 0.0f;
+	PSOInit.Viewport.Y = 0.0f;
+	PSOInit.Viewport.Width = Screen.Width;
+	PSOInit.Viewport.Height = Screen.Height;
+
+	PSOInit.DepthStencilState.DepthTestEnable = true;
+
+	PSOInit.ColorBlendAttachmentStates[0].ColorWriteMask = EColorChannel::RGBA;
+
+	PSOInit.RasterizationState.CullMode = ECullMode::None;
+	PSOInit.RasterizationState.PolygonMode = EPolygonMode::Line;
+
+	Lines.Execute(PSOInit, View);
 }
 
 void Scene::RenderSkybox()
 {
+	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
+
 	GLShaderRef VertShader = GLCreateShader<SkyboxVS>();
 	GLShaderRef FragShader = GLCreateShader<SkyboxFS>();
 
-	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
+	PipelineStateInitializer PSOInit = {};
 
-	GLSetDepthTest(true, EDepthCompareTest::LEqual);
+	PSOInit.Viewport.X = 0.0f;
+	PSOInit.Viewport.Y = 0.0f;
+	PSOInit.Viewport.Width = Screen.Width;
+	PSOInit.Viewport.Height = Screen.Height;
+
+	PSOInit.DepthStencilState.DepthTestEnable = true;
+	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::LEqual;
+
+	PSOInit.ColorBlendAttachmentStates[0].ColorWriteMask = EColorChannel::RGBA;
+
+	PSOInit.RasterizationState.CullMode = ECullMode::None;
+
+	GRenderCmdList->SetPipelineState(PSOInit);
+
 	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+
 	GLSetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
 	GLSetShaderImage(FragShader, FragShader->GetUniformLocation("Skybox"), Skybox, SamplerState{EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear});
 
@@ -89,8 +140,6 @@ void Scene::RenderSkybox()
 		GLSetVertexStream(VertShader->GetAttributeLocation("Position"), Resource.PositionBuffer);
 		GLDrawIndexed(Resource.IndexBuffer, Resource.IndexCount, 1, 0, 0, 0);
 	}
-
-	GLSetDepthTest(true);
 }
 
 void Scene::RenderOutlines()
@@ -98,22 +147,45 @@ void Scene::RenderOutlines()
 	GLRenderTargetViewRef StencilView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(0, nullptr, StencilView, EDepthStencilAccess::DepthWriteStencilWrite);
-	GLSetStencilTest(true);
-	GLSetStencilState(ECompareOp::Always, EStencilOp::Replace, EStencilOp::Replace, EStencilOp::Replace, 0xff, 0xff, 1);
 
-	Stencil.Execute(View);
+	PipelineStateInitializer PSOInit = {};
+
+	PSOInit.Viewport.X = 0.0f;
+	PSOInit.Viewport.Y = 0.0f;
+	PSOInit.Viewport.Width = Screen.Width;
+	PSOInit.Viewport.Height = Screen.Height;
+
+	PSOInit.DepthStencilState.DepthTestEnable = true;
+	PSOInit.DepthStencilState.StencilTestEnable = true;
+
+	PSOInit.DepthStencilState.Back.CompareOp = ECompareOp::Always;
+	PSOInit.DepthStencilState.Back.FailOp = EStencilOp::Replace;
+	PSOInit.DepthStencilState.Back.DepthFailOp = EStencilOp::Replace;
+	PSOInit.DepthStencilState.Back.PassOp = EStencilOp::Replace;
+	PSOInit.DepthStencilState.Back.CompareMask = 0xff;
+	PSOInit.DepthStencilState.Back.WriteMask = 0xff;
+	PSOInit.DepthStencilState.Back.Reference = 1;
+
+	Stencil.Execute(PSOInit, View);
 
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
 	GLRenderTargetViewRef OutlineView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	GLSetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
-	GLSetDepthTest(false);
-	GLSetStencilState(ECompareOp::NotEqual, EStencilOp::Keep, EStencilOp::Keep, EStencilOp::Replace, 0xff, 0, 1);
 
-	Outline.Execute(View);
+	PSOInit.DepthStencilState.DepthTestEnable = false;
 
-	GLSetStencilTest(false);
-	GLSetDepthTest(true);
+	PSOInit.DepthStencilState.Back.CompareOp = ECompareOp::NotEqual;
+	PSOInit.DepthStencilState.Back.FailOp = EStencilOp::Keep;
+	PSOInit.DepthStencilState.Back.DepthFailOp = EStencilOp::Keep;
+	PSOInit.DepthStencilState.Back.PassOp = EStencilOp::Replace;
+	PSOInit.DepthStencilState.Back.CompareMask = 0xff;
+	PSOInit.DepthStencilState.Back.WriteMask = 0;
+	PSOInit.DepthStencilState.Back.Reference = 1;
+
+	GRenderCmdList->SetPipelineState(PSOInit);
+
+	Outline.Execute(PSOInit, View);
 }
 
 Scene& Scene::Get()

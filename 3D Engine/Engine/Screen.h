@@ -4,8 +4,8 @@
 class Screen
 {
 public:
-	int32 Width;
-	int32 Height;
+	float Width;
+	float Height;
 };
 
 extern class Screen Screen;

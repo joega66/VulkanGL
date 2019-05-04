@@ -18,20 +18,7 @@ public:
 	virtual void EndFrame();
 
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
-	virtual void SetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f);
-	virtual void SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest = EDepthCompareTest::Less);
-	virtual void SetStencilTest(bool bStencilTestEnable);
-	virtual void SetStencilState(
-		ECompareOp CompareOp,
-		EStencilOp FailOp,
-		EStencilOp DepthFailOp,
-		EStencilOp PassOp,
-		uint32 CompareMask,
-		uint32 WriteMask,
-		uint32 Reference);
-	virtual void SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace = EFrontFace::CCW, EPolygonMode PolygonMode = EPolygonMode::Fill, float LineWidth = 1.0f);
-	virtual void SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask);
-	virtual void SetInputAssembly(EPrimitiveTopology Topology);
+	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit);
 	virtual void SetGraphicsPipeline(
 		GLShaderRef Vertex,
 		GLShaderRef TessControl,
@@ -109,7 +96,7 @@ private:
 		VkPipelineMultisampleStateCreateInfo	MultisampleState	{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 		VkPipelineDepthStencilStateCreateInfo	DepthStencilState	{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 		VkPipelineColorBlendStateCreateInfo		ColorBlendState =	{ VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-		std::array<VkPipelineColorBlendAttachmentState, MaxSimultaneousRenderTargets> ColorBlendAttachments;
+		std::array<VkPipelineColorBlendAttachmentState, MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
 		VkPipelineDynamicStateCreateInfo		DynamicState		{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 		VkViewport								Viewport			{};
 		VkRect2D								Scissor				{};

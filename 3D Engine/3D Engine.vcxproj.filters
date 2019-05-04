@@ -311,7 +311,7 @@
       <Filter>Source\ComponentSystems</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Timers.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

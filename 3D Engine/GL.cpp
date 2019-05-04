@@ -17,41 +17,6 @@ void GLSetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets
 	GRenderCmdList->SetRenderTargets(NumRTs, ColorTargets, DepthTarget, Access);
 }
 
-void GLSetViewport(float X, float Y, float Width, float Height, float MinDepth, float MaxDepth)
-{
-	GRenderCmdList->SetViewport(X, Y, Width, Height, MinDepth, MaxDepth);
-}
-
-void GLSetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest)
-{
-	GRenderCmdList->SetDepthTest(bDepthTestEnable, CompareTest);
-}
-
-void GLSetStencilTest(bool bStencilTestEnable)
-{
-	GRenderCmdList->SetStencilTest(bStencilTestEnable);
-}
-
-void GLSetStencilState(ECompareOp CompareOp, EStencilOp FailOp, EStencilOp DepthFailOp, EStencilOp PassOp, uint32 CompareMask, uint32 WriteMask, uint32 Reference)
-{
-	GRenderCmdList->SetStencilState(CompareOp, FailOp, DepthFailOp, PassOp, CompareMask, WriteMask, Reference);
-}
-
-void GLSetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode PolygonMode, float LineWidth)
-{
-	GRenderCmdList->SetRasterizerState(CullMode, FrontFace, PolygonMode, LineWidth);
-}
-
-void GLSetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask)
-{
-	GRenderCmdList->SetColorMask(RenderTargetIndex, ColorWriteMask);
-}
-
-void GLSetInputAssembly(EPrimitiveTopology Topology)
-{
-	GRenderCmdList->SetInputAssembly(Topology);
-}
-
 void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
 {
 	GRenderCmdList->SetGraphicsPipeline(Vertex, TessControl, TessEval, Geometry, Fragment);

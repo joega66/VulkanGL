@@ -41,6 +41,11 @@ LineDrawingPlan::LineDrawingPlan(const glm::vec3 & A, const glm::vec3 & B, const
 	ColorUniform = GLCreateUniformBuffer(Color, EUniformUpdate::SingleFrame);
 }
 
+void LineDrawingPlan::GetPipelineState(PipelineStateInitializer& PSOInit) const
+{
+	PSOInit.RasterizationState.LineWidth = LineWidth;
+}
+
 GraphicsPipeline LineDrawingPlan::GetGraphicsPipeline() const
 {
 	return GraphicsPipeline(
@@ -57,7 +62,6 @@ void LineDrawingPlan::SetUniforms(const View& View)
 	GLShaderRef VertShader = GLCreateShader<LinesVS>();
 	GLShaderRef FragShader = GLCreateShader<LinesFS>();
 
-	GLSetRasterizerState(ECullMode::None, EFrontFace::CCW, EPolygonMode::Line, LineWidth);
 	GLSetUniformBuffer(VertShader, "ViewUniform", View.Uniform);
 	GLSetUniformBuffer(FragShader, "ColorUniform", ColorUniform);
 }

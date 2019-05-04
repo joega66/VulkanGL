@@ -1,6 +1,6 @@
 #pragma once
-#include "GLShader.h"
 #include <Engine/View.h>
+#include <GL.h>
 
 struct StreamSource
 {
@@ -40,18 +40,24 @@ public:
 		DrawingPlans.clear();
 	}
 	
-	void Execute(const View& View);
+	void Execute(const PipelineStateInitializer& PSOInit, const View& View);
 
 private:
 	std::multimap<uint64, DrawingPlanType> DrawingPlans;
 };
 
 template<typename DrawingPlanType>
-inline void DrawingPlanList<DrawingPlanType>::Execute(const View& View)
+inline void DrawingPlanList<DrawingPlanType>::Execute(const PipelineStateInitializer& ParentPSOInit, const View& View)
 {
 	for (auto& [EntityID, DrawingPlan] : DrawingPlans)
 	{
+		PipelineStateInitializer PSOInit = ParentPSOInit;
+		
+		DrawingPlan.GetPipelineState(PSOInit);
+
 		const GraphicsPipeline Pipeline = DrawingPlan.GetGraphicsPipeline();
+
+		GRenderCmdList->SetPipelineState(PSOInit);
 
 		GLSetGraphicsPipeline(
 			Pipeline.Vertex

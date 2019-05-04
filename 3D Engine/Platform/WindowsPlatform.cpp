@@ -21,13 +21,13 @@ static HashTable<int32, EKeyCode> KeyCodes =
 	ENTRY(GLFW_KEY_9, EKeyCode::Keypad9)
 };
 
-void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
+void WindowsPlatform::OpenWindow(int32 DesiredWidth, int32 DesiredHeight)
 {
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	Window = glfwCreateWindow(Width, Height, "VulkanGL", nullptr, nullptr);
+	Window = glfwCreateWindow(DesiredWidth, DesiredHeight, "VulkanGL", nullptr, nullptr);
 
 	glfwSetFramebufferSizeCallback(Window, WindowResizeCallback);
 	glfwSetKeyCallback(Window, KeyboardCallback);
@@ -35,7 +35,10 @@ void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 	glfwSetCursorPosCallback(Window, MouseCallback);
 	glfwSetMouseButtonCallback(Window, MouseButtonCallback);
 
-	glfwGetFramebufferSize(Window, &Screen.Width, &Screen.Height);
+	int32 Width, Height;
+	glfwGetFramebufferSize(Window, &Width, &Height);
+	Screen.Width = (float)Width;
+	Screen.Height = (float)Height;
 }
 
 bool WindowsPlatform::WindowShouldClose()
@@ -52,7 +55,10 @@ void WindowsPlatform::PollEvents()
 	glfwPollEvents();
 
 	// Get this frame's screen dimensions.
-	glfwGetFramebufferSize(Window, &Screen.Width, &Screen.Height);
+	int32 Width, Height;
+	glfwGetFramebufferSize(Window, &Width, &Height);
+	Screen.Width = (float)Width;
+	Screen.Height = (float)Height;
 }
 
 void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
@@ -134,8 +140,8 @@ void WindowsPlatform::MouseState(class Cursor& Cursor)
 
 void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
 {
-	Screen.Width = X;
-	Screen.Height = Y;
+	Screen.Width = (float)X;
+	Screen.Height = (float)Y;
 }
 
 void WindowsPlatform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)

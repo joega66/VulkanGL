@@ -22,6 +22,7 @@ class DepthPassDrawingPlan
 {
 public:
 	DepthPassDrawingPlan(const struct StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform);
+	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
 	GraphicsPipeline GetGraphicsPipeline() const;
 	void SetUniforms(const View& View);
 	void Draw() const;
