@@ -1,6 +1,7 @@
 #include "VulkanGL.h"
 #include "VulkanRenderTargetView.h"
 #include "VulkanCommands.h"
+#include <Engine/Timers.h>
 
 CAST(GLImage, VulkanImage);
 CAST(GLShader, VulkanShader);
@@ -9,7 +10,7 @@ CAST(GLUniformBuffer, VulkanUniformBuffer);
 CAST(GLStorageBuffer, VulkanStorageBuffer);
 CAST(GLIndexBuffer, VulkanIndexBuffer);
 
-VulkanGL::VulkanGL()
+VulkanCommandList::VulkanCommandList()
 	: Swapchain(Device)
 	, Allocator(Device)
 	, DescriptorPool(Device)
@@ -27,7 +28,7 @@ VulkanGL::VulkanGL()
 {
 }
 
-void VulkanGL::InitGL()
+void VulkanCommandList::Init()
 {
 	Swapchain.InitSwapchain();
 
@@ -46,14 +47,14 @@ void VulkanGL::InitGL()
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &RenderEndSem));
 }
 
-void VulkanGL::ReleaseGL()
+void VulkanCommandList::Release()
 {
 	vkDestroySemaphore(Device, RenderEndSem, nullptr);
 	vkDestroySemaphore(Device, ImageAvailableSem, nullptr);
 	vkFreeCommandBuffers(Device, Device.CommandPool, CommandBuffers.size(), CommandBuffers.data());
 }
 
-void VulkanGL::BeginRender()
+void VulkanCommandList::BeginFrame()
 {
 	if (VkResult Result = vkAcquireNextImageKHR(Device, 
 		Swapchain, 
@@ -76,7 +77,7 @@ void VulkanGL::BeginRender()
 	vulkan(vkBeginCommandBuffer(GetCommandBuffer(), &BeginInfo));
 }
 
-void VulkanGL::EndRender()
+void VulkanCommandList::EndFrame()
 {
 	if (RenderPasses.Size())
 	{
@@ -122,7 +123,6 @@ void VulkanGL::EndRender()
 
 	DescriptorImages.clear();
 	DescriptorBuffers.clear();
-
 	DescriptorPool.Reset();
 
 	// "Transition" render targets back to UNDEFINED
@@ -143,7 +143,7 @@ void VulkanGL::EndRender()
 	Pending.SetDefaultPipeline(Device);
 }
 
-void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
+void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
 {
 	// @todo Pretty heavyweight function... Should just defer the creation of this stuff until draw.
 	// @todo Check if the render pass is the same. 
@@ -327,7 +327,7 @@ void VulkanGL::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* Colo
 	bDirtyRenderPass = true;
 }
 
-void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
+void VulkanCommandList::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
 {
 	if (Pending.Vertex == Vertex &&
 		Pending.TessControl == TessControl &&
@@ -350,7 +350,7 @@ void VulkanGL::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, 
 	bDirtyPipelineLayout = true;
 }
 
-void VulkanGL::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
+void VulkanCommandList::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 {
 	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
 
@@ -362,14 +362,14 @@ void VulkanGL::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
 	bDirtyVertexStreams = true;
 }
 
-GLVertexBufferRef VulkanGL::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
+GLVertexBufferRef VulkanCommandList::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
 }
 
-void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
+void VulkanCommandList::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
@@ -401,7 +401,7 @@ void VulkanGL::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBu
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
-void VulkanGL::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
+void VulkanCommandList::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanImageRef VulkanImage = ResourceCast(Image);
@@ -429,9 +429,8 @@ void VulkanGL::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Im
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
-void VulkanGL::SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer)
+void VulkanCommandList::SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer)
 {
-	// @todo
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
 	auto& Bindings = VulkanShader->Bindings;
@@ -456,7 +455,7 @@ void VulkanGL::SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBu
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
-void VulkanGL::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
+void VulkanCommandList::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
 	PrepareForDraw();
 
@@ -467,14 +466,14 @@ void VulkanGL::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint
 	vkCmdDrawIndexed(GetCommandBuffer(), IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
-void VulkanGL::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
+void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
 {
 	PrepareForDraw();
 
 	vkCmdDraw(GetCommandBuffer(), VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
+GLIndexBufferRef VulkanCommandList::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
 	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
 
@@ -483,7 +482,7 @@ GLIndexBufferRef VulkanGL::CreateIndexBuffer(EImageFormat Format, uint32 NumIndi
 	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
 }
 
-GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
+GLUniformBufferRef VulkanCommandList::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
 	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent || UniformUsage == EUniformUpdate::SingleFrame 
 		? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
@@ -491,13 +490,13 @@ GLUniformBufferRef VulkanGL::CreateUniformBuffer(uint32 Size, const void* Data, 
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-GLStorageBufferRef VulkanGL::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
+GLStorageBufferRef VulkanCommandList::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
 {
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
-GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
+GLImageRef VulkanCommandList::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
@@ -524,7 +523,7 @@ GLImageRef VulkanGL::CreateImage(uint32 Width, uint32 Height, EImageFormat Forma
 	return GLImage;
 }
 
-GLImageRef VulkanGL::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+GLImageRef VulkanCommandList::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;
@@ -556,7 +555,7 @@ GLImageRef VulkanGL::CreateCubemap(uint32 Width, uint32 Height, EImageFormat For
 	return GLImage;
 }
 
-GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+GLRenderTargetViewRef VulkanCommandList::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -568,7 +567,7 @@ GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAc
 	return RTView;
 }
 
-GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
+GLRenderTargetViewRef VulkanCommandList::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -580,7 +579,7 @@ GLRenderTargetViewRef VulkanGL::CreateRenderTargetView(GLImageRef Image, ELoadAc
 	return RTView;
 }
 
-void VulkanGL::SetViewport(float X, float Y, float Width, float Height, float MinDepth, float MaxDepth)
+void VulkanCommandList::SetViewport(float X, float Y, float Width, float Height, float MinDepth, float MaxDepth)
 {
 	VkViewport& Viewport = Pending.Viewport;
 	Viewport.x = X;
@@ -593,7 +592,7 @@ void VulkanGL::SetViewport(float X, float Y, float Width, float Height, float Mi
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest)
+void VulkanCommandList::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest)
 {
 	static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 	{
@@ -614,14 +613,14 @@ void VulkanGL::SetDepthTest(bool bDepthTestEnable, EDepthCompareTest CompareTest
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetStencilTest(bool bStencilTestEnable)
+void VulkanCommandList::SetStencilTest(bool bStencilTestEnable)
 {
 	Pending.DepthStencilState.stencilTestEnable = bStencilTestEnable;
 
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetStencilState(ECompareOp CompareOp,
+void VulkanCommandList::SetStencilState(ECompareOp CompareOp,
 	EStencilOp FailOp, 
 	EStencilOp DepthFailOp, 
 	EStencilOp PassOp, 
@@ -661,7 +660,7 @@ void VulkanGL::SetStencilState(ECompareOp CompareOp,
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode PolygonMode, float LineWidth)
+void VulkanCommandList::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPolygonMode PolygonMode, float LineWidth)
 {
 	static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
 	{
@@ -693,7 +692,7 @@ void VulkanGL::SetRasterizerState(ECullMode CullMode, EFrontFace FrontFace, EPol
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask)
+void VulkanCommandList::SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMask)
 {
 	check(RenderTargetIndex < MaxSimultaneousRenderTargets, "Invalid render target index.");
 
@@ -708,7 +707,7 @@ void VulkanGL::SetColorMask(uint32 RenderTargetIndex, EColorChannel ColorWriteMa
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::SetInputAssembly(EPrimitiveTopology Topology)
+void VulkanCommandList::SetInputAssembly(EPrimitiveTopology Topology)
 {
 	for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
 	{
@@ -724,7 +723,7 @@ void VulkanGL::SetInputAssembly(EPrimitiveTopology Topology)
 	fail("VkPrimitiveTopology not found.");
 }
 
-GLRenderTargetViewRef VulkanGL::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+GLRenderTargetViewRef VulkanCommandList::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	VulkanRenderTargetViewRef SurfaceView = GetCurrentSwapchainRTView();
 	SurfaceView->LoadAction = LoadAction;
@@ -733,48 +732,48 @@ GLRenderTargetViewRef VulkanGL::GetSurfaceView(ELoadAction LoadAction, EStoreAct
 	return SurfaceView;
 }
 
-void* VulkanGL::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+void* VulkanCommandList::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	return Allocator.LockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void VulkanGL::UnlockBuffer(GLVertexBufferRef VertexBuffer)
+void VulkanCommandList::UnlockBuffer(GLVertexBufferRef VertexBuffer)
 {
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	Allocator.UnlockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void* VulkanGL::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+void* VulkanCommandList::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	return Allocator.LockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanGL::UnlockBuffer(GLIndexBufferRef IndexBuffer)
+void VulkanCommandList::UnlockBuffer(GLIndexBufferRef IndexBuffer)
 {
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanGL::RebuildResolutionDependents()
+void VulkanCommandList::RebuildResolutionDependents()
 {
 	// @todo-joe
 }
 
-VkCommandBuffer& VulkanGL::GetCommandBuffer()
+VkCommandBuffer& VulkanCommandList::GetCommandBuffer()
 {
 	return CommandBuffers[SwapchainIndex];
 }
 
-VulkanRenderTargetViewRef VulkanGL::GetCurrentSwapchainRTView()
+VulkanRenderTargetViewRef VulkanCommandList::GetCurrentSwapchainRTView()
 {
 	return Swapchain.RTViews[SwapchainIndex];
 }
 
-void VulkanGL::CleanPipelineLayout()
+void VulkanCommandList::CleanPipelineLayout()
 {
 	std::vector<VkDescriptorSetLayoutBinding> AllBindings;
 
@@ -816,7 +815,7 @@ void VulkanGL::CleanPipelineLayout()
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::CleanDescriptorSets()
+void VulkanCommandList::CleanDescriptorSets()
 {
 	VkDescriptorSet DescriptorSet = DescriptorPool.Spawn(DescriptorSetLayouts.Get());
 	std::vector<VkWriteDescriptorSet> WriteDescriptors;
@@ -867,7 +866,7 @@ void VulkanGL::CleanDescriptorSets()
 	bDirtyDescriptorSets = false;
 }
 
-void VulkanGL::CleanVertexStreams()
+void VulkanCommandList::CleanVertexStreams()
 {
 	const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
 	std::vector<VkDeviceSize> Offsets;
@@ -889,7 +888,7 @@ void VulkanGL::CleanVertexStreams()
 	bDirtyVertexStreams = false;
 }
 
-void VulkanGL::PrepareForDraw()
+void VulkanCommandList::PrepareForDraw()
 {
 	if (bDirtyRenderPass)
 	{
@@ -917,7 +916,7 @@ void VulkanGL::PrepareForDraw()
 	}
 }
 
-void VulkanGL::CleanRenderPass()
+void VulkanCommandList::CleanRenderPass()
 {
 	if (RenderPasses.Size() > 1)
 	{
@@ -1004,7 +1003,7 @@ void VulkanGL::CleanRenderPass()
 	bDirtyPipeline = true;
 }
 
-void VulkanGL::CleanPipeline()
+void VulkanCommandList::CleanPipeline()
 {
 	check(Pending.Vertex, "No vertex shader bound...");
 
@@ -1104,7 +1103,7 @@ void VulkanGL::CleanPipeline()
 	bDirtyPipeline = false;
 }
 
-void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
+void VulkanCommandList::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
 	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);
 
@@ -1150,7 +1149,7 @@ void VulkanGL::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayo
 	Image->Stage = DestinationStage;
 }
 
-void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
+void VulkanCommandList::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
 	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit)
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1202,7 +1201,7 @@ void VulkanGL::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout
 	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
 }
 
-VkSampler VulkanGL::CreateSampler(const SamplerState& SamplerState)
+VkSampler VulkanCommandList::CreateSampler(const SamplerState& SamplerState)
 {
 	static const VkFilter VulkanFilters[] =
 	{
@@ -1250,13 +1249,13 @@ VkSampler VulkanGL::CreateSampler(const SamplerState& SamplerState)
 	return Sampler;
 }
 
-VulkanGL::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
+VulkanCommandList::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
 {
 	VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings);
 	SetDefaultPipeline(Device);
 }
 
-void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Device)
+void VulkanCommandList::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Device)
 {
 	NumRTs = 0;
 	std::fill(ColorTargets.begin(), ColorTargets.end(), VulkanRenderTargetViewRef());
@@ -1324,7 +1323,7 @@ void VulkanGL::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Devi
 	Compute = nullptr;
 }
 
-void VulkanGL::PendingGraphicsState::ResetVertexStreams()
+void VulkanCommandList::PendingGraphicsState::ResetVertexStreams()
 {
 	std::fill(VertexStreams.begin(), VertexStreams.end(), VulkanVertexBufferRef());
 }

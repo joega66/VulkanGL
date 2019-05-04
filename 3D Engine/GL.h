@@ -86,11 +86,11 @@ struct SamplerState
 
 enum class EUniformUpdate
 {
-	// Use staging buffers
+	// Use staging buffers.
 	Infrequent,
-	// Use CPU-accessible strategy
+	// Use CPU-accessible strategy.
 	Frequent,
-	// Use CPU-accessible strategy
+	// Use CPU-accessible strategy.
 	SingleFrame
 };
 
@@ -114,14 +114,14 @@ enum class ECompareOp
 };
 
 /** Graphics Library Interface */
-class GL : public GLRenderResource
+class RenderCommandList : public GLRenderResource
 {
 public:
-	virtual void InitGL() = 0;
-	virtual void ReleaseGL() = 0;
+	virtual void Init() = 0;
+	virtual void Release() = 0;
 
-	virtual void BeginRender() = 0;
-	virtual void EndRender() = 0;
+	virtual void BeginFrame() = 0;
+	virtual void EndFrame() = 0;
 
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
 	virtual void SetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f) = 0;
@@ -168,9 +168,9 @@ public:
 	virtual std::string GetDeviceName() = 0;
 };
 
-CLASS(GL);
+CLASS(RenderCommandList);
 
-extern GLRef GRender;
+extern RenderCommandListRef GRenderCmdList;
 
 void GLBeginRender();
 void GLEndRender();
@@ -234,11 +234,11 @@ GLShaderRef GLCreateShader()
 template<typename UniformBufferType>
 inline GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage)
 {
-	return GRender->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
+	return GRenderCmdList->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
 }
 
 template<typename UniformBufferType>
 inline GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType & Data, EUniformUpdate Usage)
 {
-	return GRender->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
+	return GRenderCmdList->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
 }

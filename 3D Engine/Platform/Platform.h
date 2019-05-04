@@ -11,7 +11,6 @@
 #include <unordered_set>
 #include <array>
 #include <vector>
-#include <chrono>
 #include <mutex>
 #include <future>
 #include <tuple>
@@ -94,7 +93,7 @@ extern IPlatformRef GPlatform;
 
 // Print.
 #define print(Fmt, ...) \
-	GPlatform->WriteLog(__FILE__, __func__, __LINE__, IPlatform::FormatString(Fmt, __VA_ARGS__)); \
+	GPlatform->WriteLog(IPlatform::FormatString(Fmt, __VA_ARGS__)); \
 
 // Print and crash if expression fails.
 #define check(Expression, Fmt, ...) \
@@ -199,25 +198,4 @@ public:
 private:
 	const std::function<void(T)> Deallocator;
 	std::list<T> Resources;
-};
-
-class ScopedTimer
-{
-public:
-	ScopedTimer(bool bFrequency = false)
-		: bFrequency(bFrequency)
-	{
-		Start = std::chrono::system_clock::now();
-	}
-
-	~ScopedTimer()
-	{
-		auto End = std::chrono::system_clock::now();
-		std::chrono::duration<float> Duration = End - Start;
-		print("Elapsed time: %.3f", bFrequency ? 1 / Duration.count() : Duration.count());
-	}
-
-private:
-	const bool bFrequency;
-	std::chrono::system_clock::time_point Start;
 };

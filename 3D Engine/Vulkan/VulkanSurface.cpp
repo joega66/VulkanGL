@@ -83,7 +83,7 @@ void VulkanSurface::InitSwapchain()
 	
 	for (uint32 i = 0; i < RTViews.size(); i++)
 	{
-		RTViews[i] = ResourceCast(GRender->CreateRenderTargetView(Images[i], ELoadAction::Clear, EStoreAction::Store, { 0.0f, 0.0f, 0.0f, 0.0f }));
+		RTViews[i] = ResourceCast(GRenderCmdList->CreateRenderTargetView(Images[i], ELoadAction::Clear, EStoreAction::Store, { 0.0f, 0.0f, 0.0f, 0.0f }));
 	}
 }
 

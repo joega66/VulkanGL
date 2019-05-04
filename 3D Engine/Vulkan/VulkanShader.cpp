@@ -192,7 +192,7 @@ static void CreateDescriptorSetLayoutBindings(
 
 GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const
 {
-	VulkanGLRef Vulkan = std::static_pointer_cast<VulkanGL>(GRender);
+	VulkanCommandListRef Vulkan = std::static_pointer_cast<VulkanCommandList>(GRenderCmdList);
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
 	std::string BaseBinding;

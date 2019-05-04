@@ -81,6 +81,7 @@ private:
 			State = std::bind(&TransformGizmoSystem::TranslateTool, this);
 			Scene.View.bFreeze = false;
 		}
+
 	}
 
 	void DrawOutline(Entity Entity);

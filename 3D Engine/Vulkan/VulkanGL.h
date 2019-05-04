@@ -6,16 +6,16 @@
 #include "VulkanDescriptors.h"
 #include "VulkanShader.h"
 
-class VulkanGL final : public GL
+class VulkanCommandList final : public RenderCommandList
 {
 public:
-	VulkanGL();
+	VulkanCommandList();
 
-	virtual void InitGL();
-	virtual void ReleaseGL();
+	virtual void Init();
+	virtual void Release();
 
-	virtual void BeginRender();
-	virtual void EndRender();
+	virtual void BeginFrame();
+	virtual void EndFrame();
 
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 	virtual void SetViewport(float X, float Y, float Width, float Height, float MinDepth = 0.0f, float MaxDepth = 1.0f);
@@ -154,4 +154,4 @@ private:
 	const HashTable<VkFormat, uint32> SizeOfVulkanFormat;
 };
 
-CLASS(VulkanGL);
+CLASS(VulkanCommandList);

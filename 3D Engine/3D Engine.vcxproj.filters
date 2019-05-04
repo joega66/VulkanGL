@@ -194,6 +194,9 @@
     <ClInclude Include="Renderer\Light.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Timers.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -306,6 +309,9 @@
     </ClCompile>
     <ClCompile Include="ComponentSystems\LightSystem.cpp">
       <Filter>Source\ComponentSystems</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Timers.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

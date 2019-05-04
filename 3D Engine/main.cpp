@@ -25,16 +25,16 @@ int main(int argc, char* argv[])
 
 	if (Result.count("vulkan"))
 	{
-		GRender = MakeRef<VulkanGL>();
+		GRenderCmdList = MakeRef<VulkanCommandList>();
 		GShaderCompiler = MakeRef<VulkanShaderCompiler>();
 	}
 
-	GRender->InitGL();
+	GRenderCmdList->Init();
 
 	CoreEngine CoreEngine;
 	CoreEngine.Run();
 
-	GRender->ReleaseGL();
+	GRenderCmdList->Release();
 
 	return 0;
 }

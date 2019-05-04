@@ -163,7 +163,7 @@ static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFo
 	fail("Failed to find supported format.");
 }
 
-VkFormat VulkanGL::FindSupportedDepthFormat(EImageFormat Format)
+VkFormat VulkanCommandList::FindSupportedDepthFormat(EImageFormat Format)
 {
 	const std::vector<VkFormat> Candidates =
 	{
