@@ -52,8 +52,8 @@ public:
 		CMaterial& CMaterial,
 		GLUniformBufferRef LocalToWorldUniform,
 		GraphicsPipeline&& Pipeline);
-	void SetUniforms(const View& View, GraphicsPipeline&& Pipeline);
-	void Draw() const;
+	void SetUniforms(RenderCommandList& CmdList, const View& View, GraphicsPipeline&& Pipeline);
+	void Draw(RenderCommandList& CmdList) const;
 
 private:
 	uint32 ViewLocation;

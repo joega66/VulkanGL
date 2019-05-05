@@ -26,14 +26,14 @@ GraphicsPipeline DepthPassDrawingPlan::GetGraphicsPipeline() const
 		, nullptr);
 }
 
-void DepthPassDrawingPlan::SetUniforms(const View& View)
+void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 {
-	GLSetUniformBuffer(VertexShader, ViewLocation, View.Uniform);
-	GLSetUniformBuffer(VertexShader, LocalToWorldLocation, LocalToWorldUniform);
+	CmdList.SetUniformBuffer(VertexShader, ViewLocation, View.Uniform);
+	CmdList.SetUniformBuffer(VertexShader, LocalToWorldLocation, LocalToWorldUniform);
 }
 
-void DepthPassDrawingPlan::Draw() const
+void DepthPassDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	GLSetVertexStream(PositionStream.Location, PositionStream.VertexBuffer);
-	GLDrawIndexed(IndexBuffer, IndexCount, 1, 0, 0, 0);
+	CmdList.SetVertexStream(PositionStream.Location, PositionStream.VertexBuffer);
+	CmdList.DrawIndexed(IndexBuffer, IndexCount, 1, 0, 0, 0);
 }

@@ -19,14 +19,14 @@ GraphicsPipeline OutlineDrawingPlan::GetGraphicsPipeline() const
 	, FragmentShader);
 }
 
-void OutlineDrawingPlan::SetUniforms(const View& View)
+void OutlineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 {
-	DepthPassDrawingPlan::SetUniforms(View);
+	DepthPassDrawingPlan::SetUniforms(CmdList, View);
 }
 
-void OutlineDrawingPlan::Draw() const
+void OutlineDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	DepthPassDrawingPlan::Draw();
+	DepthPassDrawingPlan::Draw(CmdList);
 }
 
 LineDrawingPlan::LineDrawingPlan(const glm::vec3 & A, const glm::vec3 & B, const glm::vec4 & Color, float Width)
@@ -57,19 +57,19 @@ GraphicsPipeline LineDrawingPlan::GetGraphicsPipeline() const
 	);
 }
 
-void LineDrawingPlan::SetUniforms(const View& View)
+void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 {
 	GLShaderRef VertShader = GLCreateShader<LinesVS>();
 	GLShaderRef FragShader = GLCreateShader<LinesFS>();
 
-	GLSetUniformBuffer(VertShader, "ViewUniform", View.Uniform);
-	GLSetUniformBuffer(FragShader, "ColorUniform", ColorUniform);
+	CmdList.SetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
+	CmdList.SetUniformBuffer(FragShader, FragShader->GetUniformLocation("ColorUniform"), ColorUniform);
 }
 
-void LineDrawingPlan::Draw() const
+void LineDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
 	GLShaderRef VertShader = GLCreateShader<LinesVS>();
 
-	GLSetVertexStream(VertShader->GetAttributeLocation("Position"), PositionBuffer);
-	GLDraw(3, 1, 0, 0);
+	CmdList.SetVertexStream(VertShader->GetAttributeLocation("Position"), PositionBuffer);
+	CmdList.Draw(3, 1, 0, 0);
 }

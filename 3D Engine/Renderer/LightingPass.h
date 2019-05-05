@@ -49,8 +49,8 @@ public:
 
 	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
 	GraphicsPipeline GetGraphicsPipeline() const;
-	void SetUniforms(const View& View);
-	void Draw() const;
+	void SetUniforms(RenderCommandList& CmdList, const View& View);
+	void Draw(RenderCommandList& CmdList) const;
 
 private:
 	GLShaderRef LightingPassVert;

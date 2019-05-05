@@ -5,8 +5,6 @@
 #include "RayMarching.h"
 #include "Light.h"
 
-// @todo-joe All functions that don't require a command list should be wrapped in graphics utils class.
-
 Scene::Scene()
 {
 	SceneDepth = GLCreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
@@ -16,16 +14,20 @@ Scene::Scene()
 
 void Scene::Render()
 {
-	GLBeginRender();
+	// @todo-joe All functions that don't require a command list should be wrapped in the graphics backend class.
+
+	RenderCommandList& CmdList = *GRenderCmdList;
+
+	CmdList.BeginFrame();
 
 	//RenderRayMarching();
-	RenderLightingPass();
-	RenderEditorPrimitives();
+	RenderLightingPass(CmdList);
+	RenderEditorPrimitives(CmdList);
 
-	GLEndRender();
+	CmdList.EndFrame();
 }
 
-void Scene::RenderRayMarching()
+void Scene::RenderRayMarching(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
@@ -35,7 +37,7 @@ void Scene::RenderRayMarching()
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
-	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
+	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 	
 	PSOInit.Viewport.X = 0.0f;
 	PSOInit.Viewport.Y = 0.0f;
@@ -48,22 +50,22 @@ void Scene::RenderRayMarching()
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
-	GRenderCmdList->SetPipelineState(PSOInit);
+	CmdList.SetPipelineState(PSOInit);
 
-	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+	CmdList.SetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 
-	GLSetUniformBuffer(FragShader, "ViewUniform", View.Uniform);
-	GLSetStorageBuffer(FragShader, FragShader->GetUniformLocation("LightBuffer"), LightBuffer);
+	CmdList.SetUniformBuffer(FragShader, FragShader->GetUniformLocation("ViewUniform"), View.Uniform);
+	CmdList.SetStorageBuffer(FragShader, FragShader->GetUniformLocation("LightBuffer"), LightBuffer);
 
-	GLDraw(3, 1, 0, 0);
+	CmdList.Draw(3, 1, 0, 0);
 }
 
-void Scene::RenderLightingPass()
+void Scene::RenderLightingPass(RenderCommandList& CmdList)
 {
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
 	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
-	GLSetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
+	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 
 	PipelineStateInitializer PSOInit = {};
 
@@ -78,17 +80,17 @@ void Scene::RenderLightingPass()
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
-	LightingPassDrawingPlans.Execute(PSOInit, View);
+	LightingPassDrawingPlans.Execute(CmdList, PSOInit, View);
 }
 
-void Scene::RenderEditorPrimitives()
+void Scene::RenderEditorPrimitives(RenderCommandList& CmdList)
 {
-	RenderLines();
-	RenderSkybox();
-	RenderOutlines();
+	RenderLines(CmdList);
+	RenderSkybox(CmdList);
+	RenderOutlines(CmdList);
 }
 
-void Scene::RenderLines()
+void Scene::RenderLines(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
@@ -104,10 +106,10 @@ void Scene::RenderLines()
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 	PSOInit.RasterizationState.PolygonMode = EPolygonMode::Line;
 
-	Lines.Execute(PSOInit, View);
+	Lines.Execute(CmdList, PSOInit, View);
 }
 
-void Scene::RenderSkybox()
+void Scene::RenderSkybox(RenderCommandList& CmdList)
 {
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
@@ -128,25 +130,25 @@ void Scene::RenderSkybox()
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
-	GRenderCmdList->SetPipelineState(PSOInit);
+	CmdList.SetPipelineState(PSOInit);
 
-	GLSetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
+	CmdList.SetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 
-	GLSetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
-	GLSetShaderImage(FragShader, FragShader->GetUniformLocation("Skybox"), Skybox, SamplerState{EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear});
+	CmdList.SetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
+	CmdList.SetShaderImage(FragShader, FragShader->GetUniformLocation("Skybox"), Skybox, SamplerState{EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear});
 
 	for (const auto& Resource : Cube->Resources)
 	{
-		GLSetVertexStream(VertShader->GetAttributeLocation("Position"), Resource.PositionBuffer);
-		GLDrawIndexed(Resource.IndexBuffer, Resource.IndexCount, 1, 0, 0, 0);
+		CmdList.SetVertexStream(VertShader->GetAttributeLocation("Position"), Resource.PositionBuffer);
+		CmdList.DrawIndexed(Resource.IndexBuffer, Resource.IndexCount, 1, 0, 0, 0);
 	}
 }
 
-void Scene::RenderOutlines()
+void Scene::RenderOutlines(RenderCommandList& CmdList)
 {
 	GLRenderTargetViewRef StencilView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
-	GLSetRenderTargets(0, nullptr, StencilView, EDepthStencilAccess::DepthWriteStencilWrite);
+	CmdList.SetRenderTargets(0, nullptr, StencilView, EDepthStencilAccess::DepthWriteStencilWrite);
 
 	PipelineStateInitializer PSOInit = {};
 
@@ -166,12 +168,12 @@ void Scene::RenderOutlines()
 	PSOInit.DepthStencilState.Back.WriteMask = 0xff;
 	PSOInit.DepthStencilState.Back.Reference = 1;
 
-	Stencil.Execute(PSOInit, View);
+	Stencil.Execute(CmdList, PSOInit, View);
 
 	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
 	GLRenderTargetViewRef OutlineView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
-	GLSetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
+	CmdList.SetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
 
 	PSOInit.DepthStencilState.DepthTestEnable = false;
 
@@ -183,9 +185,7 @@ void Scene::RenderOutlines()
 	PSOInit.DepthStencilState.Back.WriteMask = 0;
 	PSOInit.DepthStencilState.Back.Reference = 1;
 
-	GRenderCmdList->SetPipelineState(PSOInit);
-
-	Outline.Execute(PSOInit, View);
+	Outline.Execute(CmdList, PSOInit, View);
 }
 
 Scene& Scene::Get()

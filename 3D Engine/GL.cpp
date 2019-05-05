@@ -2,64 +2,9 @@
 
 RenderCommandListRef GRenderCmdList;
 
-void GLBeginRender()
-{
-	GRenderCmdList->BeginFrame();
-}
-
-void GLEndRender()
-{
-	GRenderCmdList->EndFrame();
-}
-
-void GLSetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
-{
-	GRenderCmdList->SetRenderTargets(NumRTs, ColorTargets, DepthTarget, Access);
-}
-
-void GLSetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
-{
-	GRenderCmdList->SetGraphicsPipeline(Vertex, TessControl, TessEval, Geometry, Fragment);
-}
-
-void GLSetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
-{
-	GRenderCmdList->SetUniformBuffer(Shader, Location, UniformBuffer);
-}
-
-void GLSetUniformBuffer(GLShaderRef Shader, const std::string& Name, GLUniformBufferRef UniformBuffer)
-{
-	GRenderCmdList->SetUniformBuffer(Shader, Shader->GetUniformLocation(Name), UniformBuffer);
-}
-
-void GLSetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
-{
-	GRenderCmdList->SetShaderImage(Shader, Location, Image, Sampler);
-}
-
-void GLSetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer)
-{
-	GRenderCmdList->SetStorageBuffer(Shader, Location, StorageBuffer);
-}
-
-void GLDrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
-{
-	GRenderCmdList->DrawIndexed(IndexBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
-}
-
-void GLDraw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
-{
-	GRenderCmdList->Draw(VertexCount, InstanceCount, FirstVertex, FirstInstance);
-}
-
 GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
 	return GRenderCmdList->CreateIndexBuffer(Format, NumIndices, Usage, Data);
-}
-
-void GLSetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
-{
-	GRenderCmdList->SetVertexStream(Location, VertexBuffer);
 }
 
 GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void * Data)

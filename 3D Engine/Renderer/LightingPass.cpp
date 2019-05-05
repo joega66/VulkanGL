@@ -40,12 +40,12 @@ GraphicsPipeline LightingPassDrawingPlan::GetGraphicsPipeline() const
 	);
 }
 
-void LightingPassDrawingPlan::SetUniforms(const View& View)
+void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 {
-	MaterialDrawingPlan::SetUniforms(View, GetGraphicsPipeline());
+	MaterialDrawingPlan::SetUniforms(CmdList, View, GetGraphicsPipeline());
 }
 
-void LightingPassDrawingPlan::Draw() const
+void LightingPassDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	MaterialDrawingPlan::Draw();
+	MaterialDrawingPlan::Draw(CmdList);
 }

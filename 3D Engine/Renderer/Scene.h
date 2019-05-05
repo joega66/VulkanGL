@@ -10,12 +10,11 @@ public:
 	DrawingPlanList<LightingPassDrawingPlan> LightingPassDrawingPlans;
 	DrawingPlanList<DepthPassDrawingPlan> Stencil;
 	DrawingPlanList<OutlineDrawingPlan> Outline;
+	DrawingPlanList<LineDrawingPlan> Lines;
 
 	GLStorageBufferRef LightBuffer;
 
 	GLImageRef Skybox;
-
-	DrawingPlanList<LineDrawingPlan> Lines;
 
 	Scene();
 	Scene(const Scene&) = delete;
@@ -28,10 +27,11 @@ private:
 	GLImageRef SceneDepth;
 	GLImageRef OutlineDepthStencil;
 
-	void RenderRayMarching();
-	void RenderLightingPass();
-	void RenderEditorPrimitives();
-	void RenderLines();
-	void RenderSkybox();
-	void RenderOutlines();
+	void RenderRayMarching(RenderCommandList& CmdList);
+	void RenderLightingPass(RenderCommandList& CmdList);
+	void RenderEditorPrimitives(RenderCommandList& CmdList);
+
+	void RenderLines(RenderCommandList& CmdList);
+	void RenderSkybox(RenderCommandList& CmdList);
+	void RenderOutlines(RenderCommandList& CmdList);
 };

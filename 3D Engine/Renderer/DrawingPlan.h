@@ -40,15 +40,20 @@ public:
 		DrawingPlans.clear();
 	}
 	
-	void Execute(const PipelineStateInitializer& PSOInit, const View& View);
+	void Execute(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const View& View);
 
 private:
 	std::multimap<uint64, DrawingPlanType> DrawingPlans;
 };
 
 template<typename DrawingPlanType>
-inline void DrawingPlanList<DrawingPlanType>::Execute(const PipelineStateInitializer& ParentPSOInit, const View& View)
+inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const View& View)
 {
+	if (DrawingPlans.empty())
+	{
+		return;
+	}
+
 	for (auto& [EntityID, DrawingPlan] : DrawingPlans)
 	{
 		PipelineStateInitializer PSOInit = ParentPSOInit;
@@ -57,18 +62,18 @@ inline void DrawingPlanList<DrawingPlanType>::Execute(const PipelineStateInitial
 
 		const GraphicsPipeline Pipeline = DrawingPlan.GetGraphicsPipeline();
 
-		GRenderCmdList->SetPipelineState(PSOInit);
+		CmdList.SetPipelineState(PSOInit);
 
-		GLSetGraphicsPipeline(
+		CmdList.SetGraphicsPipeline(
 			Pipeline.Vertex
 			, Pipeline.TessControl
 			, Pipeline.TessEval
 			, Pipeline.Geometry
 			, Pipeline.Fragment);
 
-		DrawingPlan.SetUniforms(View);
+		DrawingPlan.SetUniforms(CmdList, View);
 
-		DrawingPlan.Draw();
+		DrawingPlan.Draw(CmdList);
 	}
 
 	Clear();

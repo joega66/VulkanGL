@@ -33,27 +33,27 @@ void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources,
 	}
 }
 
-void MaterialDrawingPlan::SetUniforms(const View& View, GraphicsPipeline&& Pipeline)
+void MaterialDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View, GraphicsPipeline&& Pipeline)
 {
-	GLSetUniformBuffer(Pipeline.Vertex, ViewLocation, View.Uniform);
+	CmdList.SetUniformBuffer(Pipeline.Vertex, ViewLocation, View.Uniform);
 
 	for (auto& Uniform : Uniforms)
 	{
-		GLSetUniformBuffer(Uniform.Shader, Uniform.Location, Uniform.UniformBuffer);
+		CmdList.SetUniformBuffer(Uniform.Shader, Uniform.Location, Uniform.UniformBuffer);
 	}
 
 	for (auto& Material : Materials)
 	{
-		GLSetShaderImage(Pipeline.Fragment, Material.Location, Material.Image, SamplerState{});
+		CmdList.SetShaderImage(Pipeline.Fragment, Material.Location, Material.Image, SamplerState{});
 	}
 }
 
-void MaterialDrawingPlan::Draw() const
+void MaterialDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
 	for (const StreamSource& Stream : Streams)
 	{
-		GLSetVertexStream(Stream.Location, Stream.VertexBuffer);
+		CmdList.SetVertexStream(Stream.Location, Stream.VertexBuffer);
 	}
 
-	GLDrawIndexed(IndexBuffer, IndexCount, 1, 0, 0, 0);
+	CmdList.DrawIndexed(IndexBuffer, IndexCount, 1, 0, 0, 0);
 }
