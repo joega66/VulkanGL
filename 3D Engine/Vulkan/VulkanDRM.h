@@ -18,20 +18,20 @@ public:
 	virtual void EndFrame(RenderCommandListRef CmdList);
 
 	virtual RenderCommandListRef CreateCommandList();
-	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
-	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
-	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage);
-	virtual GLStorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage);
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data);
-	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
-	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
-	virtual GLImageRef GetSurface();
-	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	virtual void* LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
-	virtual void UnlockBuffer(GLVertexBufferRef VertexBuffer);
-	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
-	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer);
+	virtual drm::IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
+	virtual drm::VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
+	virtual drm::UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage);
+	virtual drm::StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage);
+	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data);
+	virtual drm::ImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
+	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
+	virtual drm::ImageRef GetSurface();
+	virtual drm::RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	virtual void* LockBuffer(drm::VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
+	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer);
+	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
+	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer);
 	virtual void RebuildResolutionDependents();
 	virtual std::string GetDRMName() { return "Vulkan"; }
 
@@ -45,6 +45,8 @@ private:
 	uint32 SwapchainIndex = -1;
 	VkSemaphore ImageAvailableSem;
 	VkSemaphore RenderEndSem;
+
+	virtual drm::ShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
 
 	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
 	VkFormat FindSupportedDepthFormat(EImageFormat Format);

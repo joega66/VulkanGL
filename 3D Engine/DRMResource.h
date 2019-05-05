@@ -69,102 +69,16 @@ enum class EResourceUsage
 
 enum class ELoadAction
 {
-	None,
+	DontCare,
 	Clear,
 	Load
 };
 
 enum class EStoreAction
 {
-	None,
+	DontCare,
 	Store
 };
-
-class GLVertexBuffer
-{
-public:
-	EImageFormat Format;
-	EResourceUsage Usage;
-
-	GLVertexBuffer(EImageFormat Format, EResourceUsage Usage)
-		: Format(Format), Usage(Usage)
-	{
-	}
-};
-
-CLASS(GLVertexBuffer);
-
-class GLIndexBuffer
-{
-public:
-	EImageFormat Format;
-	EResourceUsage Usage;
-	uint32 IndexStride;
-
-	GLIndexBuffer(uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
-		: IndexStride(IndexStride), Format(Format), Usage(Usage)
-	{
-	}
-};
-
-CLASS(GLIndexBuffer);
-
-class GLUniformBuffer
-{
-public:
-	bool bDirty = false;
-
-	template<typename UniformType>
-	void Set(const UniformType& UniformData)
-	{
-		check(GetSize() == sizeof(UniformType), "Size mismatch.");
-		Data = std::make_shared<UniformType>(UniformData);
-		bDirty = true;
-	}
-
-	const void* GetData() { return Data.get(); }
-	virtual uint32 GetSize() = 0;
-
-private:
-	std::shared_ptr<void> Data;
-};
-
-CLASS(GLUniformBuffer);
-
-class GLStorageBuffer
-{
-public:
-	const EResourceUsage Usage;
-
-	GLStorageBuffer(EResourceUsage Usage)
-		: Usage(Usage)
-	{
-	}
-};
-
-CLASS(GLStorageBuffer);
-
-class GLImage
-{
-public:
-	EImageFormat Format;
-	uint32 Width;
-	uint32 Height;
-	EResourceUsage Usage;
-
-	GLImage(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
-		: Format(Format), Width(Width), Height(Height), Usage(UsageFlags)
-	{
-	}
-
-	bool IsColor();
-	bool IsDepthStencil();
-	bool IsStencil();
-	static bool IsDepth(EImageFormat Format);
-	bool IsDepth();
-};
-
-CLASS(GLImage);
 
 struct ClearDepthStencilValue
 {
@@ -172,17 +86,106 @@ struct ClearDepthStencilValue
 	uint32 StencilClear;
 };
 
-class GLRenderTargetView
+namespace drm
 {
-public:
-	GLImageRef Image;
-	ELoadAction LoadAction;
-	EStoreAction StoreAction;
+	class VertexBuffer
+	{
+	public:
+		EImageFormat Format;
+		EResourceUsage Usage;
 
-	std::variant<std::array<float, 4>, ClearDepthStencilValue> ClearValue;
+		VertexBuffer(EImageFormat Format, EResourceUsage Usage)
+			: Format(Format), Usage(Usage)
+		{
+		}
+	};
 
-	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	GLRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
-};
+	CLASS(VertexBuffer);
 
-CLASS(GLRenderTargetView);
+	class IndexBuffer
+	{
+	public:
+		EImageFormat Format;
+		EResourceUsage Usage;
+		uint32 IndexStride;
+
+		IndexBuffer(uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
+			: IndexStride(IndexStride), Format(Format), Usage(Usage)
+		{
+		}
+	};
+
+	CLASS(IndexBuffer);
+
+	class UniformBuffer
+	{
+	public:
+		bool bDirty = false;
+
+		template<typename UniformType>
+		void Set(const UniformType& UniformData)
+		{
+			check(GetSize() == sizeof(UniformType), "Size mismatch.");
+			Data = std::make_shared<UniformType>(UniformData);
+			bDirty = true;
+		}
+
+		const void* GetData() { return Data.get(); }
+		virtual uint32 GetSize() = 0;
+
+	private:
+		std::shared_ptr<void> Data;
+	};
+
+	CLASS(UniformBuffer);
+
+	class StorageBuffer
+	{
+	public:
+		const EResourceUsage Usage;
+
+		StorageBuffer(EResourceUsage Usage)
+			: Usage(Usage)
+		{
+		}
+	};
+
+	CLASS(StorageBuffer);
+
+	class Image
+	{
+	public:
+		EImageFormat Format;
+		uint32 Width;
+		uint32 Height;
+		EResourceUsage Usage;
+
+		Image(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
+			: Format(Format), Width(Width), Height(Height), Usage(UsageFlags)
+		{
+		}
+
+		bool IsColor();
+		bool IsDepthStencil();
+		bool IsStencil();
+		static bool IsDepth(EImageFormat Format);
+		bool IsDepth();
+	};
+
+	CLASS(Image);
+
+	class RenderTargetView
+	{
+	public:
+		ImageRef Image;
+		ELoadAction LoadAction;
+		EStoreAction StoreAction;
+
+		std::variant<std::array<float, 4>, ClearDepthStencilValue> ClearValue;
+
+		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
+	};
+
+	CLASS(RenderTargetView);
+}

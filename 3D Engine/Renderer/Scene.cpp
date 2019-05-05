@@ -7,16 +7,16 @@
 
 Scene::Scene()
 {
-	SceneDepth = GLCreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
-	OutlineDepthStencil = GLCreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
+	SceneDepth = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT, EResourceUsage::RenderTargetable);
+	OutlineDepthStencil = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, IF_D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
 
 void Scene::Render()
 {
-	GDRM->BeginFrame();
+	drm::BeginFrame();
 
-	RenderCommandListRef CmdList = GDRM->CreateCommandList();
+	RenderCommandListRef CmdList = drm::CreateCommandList();
 
 	//RenderRayMarching(*CmdList);
 	RenderLightingPass(*CmdList);
@@ -24,18 +24,18 @@ void Scene::Render()
 
 	CmdList->Finish();
 
-	GDRM->EndFrame(CmdList);
+	drm::EndFrame(CmdList);
 }
 
 void Scene::RenderRayMarching(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
-	GLShaderRef VertShader = GLCreateShader<FullscreenVS>();
-	GLShaderRef FragShader = GLCreateShader<RayMarchingFS>();
+	drm::ShaderRef VertShader = drm::CreateShader<FullscreenVS>();
+	drm::ShaderRef FragShader = drm::CreateShader<RayMarchingFS>();
 
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
+	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 	
@@ -62,8 +62,8 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 
 void Scene::RenderLightingPass(RenderCommandList& CmdList)
 {
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef DepthView = GLCreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
+	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
 
@@ -113,8 +113,8 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 {
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
-	GLShaderRef VertShader = GLCreateShader<SkyboxVS>();
-	GLShaderRef FragShader = GLCreateShader<SkyboxFS>();
+	drm::ShaderRef VertShader = drm::CreateShader<SkyboxVS>();
+	drm::ShaderRef FragShader = drm::CreateShader<SkyboxFS>();
 
 	PipelineStateInitializer PSOInit = {};
 
@@ -139,14 +139,14 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 
 	for (const auto& Resource : Cube->Resources)
 	{
-		CmdList.SetVertexStream(VertShader->GetAttributeLocation("Position"), Resource.PositionBuffer);
+		CmdList.SetVertexStream(0, Resource.PositionBuffer);
 		CmdList.DrawIndexed(Resource.IndexBuffer, Resource.IndexCount, 1, 0, 0, 0);
 	}
 }
 
 void Scene::RenderOutlines(RenderCommandList& CmdList)
 {
-	GLRenderTargetViewRef StencilView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+	drm::RenderTargetViewRef StencilView = CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	CmdList.SetRenderTargets(0, nullptr, StencilView, EDepthStencilAccess::DepthWriteStencilWrite);
 
@@ -170,8 +170,8 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 
 	Stencil.Execute(CmdList, PSOInit, View);
 
-	GLRenderTargetViewRef SurfaceView = GLGetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
-	GLRenderTargetViewRef OutlineView = GLCreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
+	drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	CmdList.SetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
 

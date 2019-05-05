@@ -6,9 +6,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
-using TextureCache = HashTable<std::string, GLImageRef>;
+using TextureCache = HashTable<std::string, drm::ImageRef>;
 
-GLImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
+drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
 {
 	for (uint32 TextureIndex = 0; TextureIndex < AiMaterial->GetTextureCount(AiType); TextureIndex++)
 	{
@@ -25,11 +25,11 @@ GLImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, a
 
 			int32 Width, Height, NumChannels;
 			uint8* Pixels = GPlatform->LoadImage(Directory + "/" + TexturePath, Width, Height, NumChannels);
-			GLImageRef Material;
+			drm::ImageRef Material;
 
 			if (Pixels)
 			{
-				Material = GLCreateImage(Width, Height, IF_R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Pixels);
+				Material = drm::CreateImage(Width, Height, IF_R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Pixels);
 			}
 
 			GPlatform->FreeImage(Pixels);
@@ -47,7 +47,7 @@ CMaterial ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, Textu
 {
 	CMaterial Material;
 
-	if (GLImageRef DiffuseMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); DiffuseMap)
+	if (drm::ImageRef DiffuseMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); DiffuseMap)
 	{
 		Material.Diffuse = DiffuseMap;
 	}
@@ -56,7 +56,7 @@ CMaterial ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, Textu
 		Material.Diffuse = GAssetManager.GetImage("Engine-Diffuse-Default");
 	}
 
-	if (GLImageRef NormalMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_NORMALS, TextureCache); NormalMap)
+	if (drm::ImageRef NormalMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_NORMALS, TextureCache); NormalMap)
 	{
 		Material.Normal = NormalMap;
 	}
@@ -113,11 +113,11 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 
 	CMaterial Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
-	GLIndexBufferRef IndexBuffer = GLCreateIndexBuffer(IF_R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
-	GLVertexBufferRef PositionBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-	GLVertexBufferRef TextureCoordinateBuffer = GLCreateVertexBuffer(IF_R32G32_SFLOAT, TextureCoordinates.size(), EResourceUsage::None, TextureCoordinates.data());
-	GLVertexBufferRef NormalBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Normals.size(), EResourceUsage::None, Normals.data());
-	GLVertexBufferRef TangentBuffer = GLCreateVertexBuffer(IF_R32G32B32_SFLOAT, Tangents.size(), EResourceUsage::None, Tangents.data());
+	drm::IndexBufferRef IndexBuffer = drm::CreateIndexBuffer(IF_R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
+	drm::VertexBufferRef PositionBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
+	drm::VertexBufferRef TextureCoordinateBuffer = drm::CreateVertexBuffer(IF_R32G32_SFLOAT, TextureCoordinates.size(), EResourceUsage::None, TextureCoordinates.data());
+	drm::VertexBufferRef NormalBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Normals.size(), EResourceUsage::None, Normals.data());
+	drm::VertexBufferRef TangentBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Tangents.size(), EResourceUsage::None, Tangents.data());
 
 	StaticMesh->Resources.emplace_back(StaticMeshResources(
 		Indices.size()

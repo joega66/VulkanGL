@@ -4,6 +4,6 @@
 
 struct CMaterial : Component<CMaterial>
 {
-	std::variant<glm::vec4, GLImageRef> Diffuse = glm::vec4(1.0f);
-	GLImageRef Normal;
+	std::variant<glm::vec4, drm::ImageRef> Diffuse = glm::vec4(1.0f);
+	drm::ImageRef Normal;
 };

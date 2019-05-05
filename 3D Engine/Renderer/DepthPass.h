@@ -1,13 +1,14 @@
 #pragma once
 #include "MaterialShader.h"
+#include <DRM.h>
 
 template<EMeshType MeshType>
 class DepthPassVS : public MaterialVS<MeshType>
 {
 public:
-	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	static const BaseShaderInfo& GetBaseShaderInfo()
 	{
-		static GLBaseShaderInfo Base = { "../Shaders/DepthPassVS.glsl", "main", EShaderStage::Vertex };
+		static BaseShaderInfo Base = { "../Shaders/DepthPassVS.glsl", "main", EShaderStage::Vertex };
 		return Base;
 	}
 
@@ -21,18 +22,18 @@ public:
 class DepthPassDrawingPlan
 {
 public:
-	DepthPassDrawingPlan(const struct StaticMeshResources& Resources, GLUniformBufferRef LocalToWorldUniform);
+	DepthPassDrawingPlan(const struct StaticMeshResources& Resources, drm::UniformBufferRef LocalToWorldUniform);
 	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
-	GraphicsPipeline GetGraphicsPipeline() const;
+	GraphicsPipelineState GetGraphicsPipeline() const;
 	void SetUniforms(RenderCommandList& CmdList, const View& View);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
 	uint32 ViewLocation;
 	uint32 LocalToWorldLocation;
-	GLUniformBufferRef LocalToWorldUniform;
+	drm::UniformBufferRef LocalToWorldUniform;
 	uint32 IndexCount;
-	GLIndexBufferRef IndexBuffer;
+	drm::IndexBufferRef IndexBuffer;
 	StreamSource PositionStream;
-	GLShaderRef VertexShader;
+	drm::ShaderRef VertexShader;
 };

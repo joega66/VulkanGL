@@ -14,20 +14,20 @@ public:
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
 	~VulkanCommandList();
 
-	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
+	virtual void SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit);
 	virtual void SetGraphicsPipeline(
-		GLShaderRef Vertex,
-		GLShaderRef TessControl,
-		GLShaderRef TessEval,
-		GLShaderRef Geometry,
-		GLShaderRef Fragment
+		drm::ShaderRef Vertex,
+		drm::ShaderRef TessControl,
+		drm::ShaderRef TessEval,
+		drm::ShaderRef Geometry,
+		drm::ShaderRef Fragment
 	);
-	virtual void SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer);
-	virtual void SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer);
-	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler);
-	virtual void SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer);
-	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
+	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer);
+	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer);
+	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler);
+	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer);
+	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
 
 	virtual void Finish();
@@ -56,12 +56,7 @@ private:
 		VulkanRenderTargetViewRef DepthTarget;
 
 		/** Graphics pipeline */
-		VulkanShaderRef Vertex;
-		VulkanShaderRef TessControl;
-		VulkanShaderRef TessEval;
-		VulkanShaderRef Geometry;
-		VulkanShaderRef Fragment;
-		VulkanShaderRef Compute;
+		GraphicsPipelineState GraphicsPipeline;
 
 		/** Pipeline state */
 		VkPipelineShaderStageCreateInfo			Stages{ VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

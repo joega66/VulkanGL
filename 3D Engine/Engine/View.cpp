@@ -7,7 +7,7 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 	, Yaw(Yaw)
 	, Pitch(Pitch)
 	, FieldOfView(FieldOfView)
-	, Uniform(GLCreateUniformBuffer<ViewUniform>(EUniformUpdate::Frequent))
+	, Uniform(drm::CreateUniformBuffer<ViewUniform>(EUniformUpdate::Frequent))
 {
 	UpdateView();
 }

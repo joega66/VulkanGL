@@ -1,5 +1,5 @@
 #pragma once
-#include "../GLShader.h"
+#include "../DRMShader.h"
 #include "DrawingPlan.h"
 #include <Components/CMaterial.h>
 
@@ -9,7 +9,7 @@ enum class EMeshType
 };
 
 template<EMeshType MeshType>
-class MaterialVS : public GLShader
+class MaterialVS : public drm::Shader
 {
 public:
 	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
@@ -22,7 +22,7 @@ public:
 };
 
 template<bool bHasDiffuseMap, bool bHasNormalMap, EMeshType MeshType>
-class MaterialFS : public GLShader
+class MaterialFS : public drm::Shader
 {
 public:
 	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
@@ -50,9 +50,9 @@ class MaterialDrawingPlan
 public:
 	void Construct(const struct StaticMeshResources& Resources, 
 		CMaterial& CMaterial,
-		GLUniformBufferRef LocalToWorldUniform,
-		GraphicsPipeline&& Pipeline);
-	void SetUniforms(RenderCommandList& CmdList, const View& View, GraphicsPipeline&& Pipeline);
+		drm::UniformBufferRef LocalToWorldUniform,
+		GraphicsPipelineState&& Pipeline);
+	void SetUniforms(RenderCommandList& CmdList, const View& View, GraphicsPipelineState&& Pipeline);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
@@ -60,6 +60,6 @@ private:
 	std::vector<MaterialSource> Materials;
 	std::vector<UniformSource> Uniforms;
 	uint32 IndexCount;
-	GLIndexBufferRef IndexBuffer;
+	drm::IndexBufferRef IndexBuffer;
 	std::vector<StreamSource> Streams;
 };

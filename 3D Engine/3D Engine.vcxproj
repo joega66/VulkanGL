@@ -35,7 +35,6 @@
     <ClCompile Include="Engine\View.cpp" />
     <ClCompile Include="DRM.cpp" />
     <ClCompile Include="DRMResource.cpp" />
-    <ClCompile Include="GLShader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
@@ -84,7 +83,7 @@
     <ClInclude Include="Engine\View.h" />
     <ClInclude Include="DRM.h" />
     <ClInclude Include="DRMResource.h" />
-    <ClInclude Include="GLShader.h" />
+    <ClInclude Include="DRMShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Platform\WindowsPlatform.h" />

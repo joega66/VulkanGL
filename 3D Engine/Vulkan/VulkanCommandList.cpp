@@ -1,13 +1,13 @@
 #include "VulkanCommandList.h"
 #include "VulkanDRM.h"
 
-static CAST(GLRenderTargetView, VulkanRenderTargetView);
-static CAST(GLImage, VulkanImage);
-static CAST(GLShader, VulkanShader);
-static CAST(GLVertexBuffer, VulkanVertexBuffer);
-static CAST(GLUniformBuffer, VulkanUniformBuffer);
-static CAST(GLStorageBuffer, VulkanStorageBuffer);
-static CAST(GLIndexBuffer, VulkanIndexBuffer);
+static CAST(drm::RenderTargetView, VulkanRenderTargetView);
+static CAST(drm::Image, VulkanImage);
+static CAST(drm::Shader, VulkanShader);
+static CAST(drm::VertexBuffer, VulkanVertexBuffer);
+static CAST(drm::UniformBuffer, VulkanUniformBuffer);
+static CAST(drm::StorageBuffer, VulkanStorageBuffer);
+static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 
 VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool)
@@ -70,7 +70,7 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
 }
 
-void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
+void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
 {
 	// @todo Pretty heavyweight function... Should just defer the creation of this stuff until draw.
 	// @todo Check if the render pass is the same. 
@@ -255,13 +255,13 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const GLRenderTargetView
 	bDirtyRenderPass = true;
 }
 
-void VulkanCommandList::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef TessControl, GLShaderRef TessEval, GLShaderRef Geometry, GLShaderRef Fragment)
+void VulkanCommandList::SetGraphicsPipeline(drm::ShaderRef Vertex, drm::ShaderRef TessControl, drm::ShaderRef TessEval, drm::ShaderRef Geometry, drm::ShaderRef Fragment)
 {
-	if (Pending.Vertex == Vertex &&
-		Pending.TessControl == TessControl &&
-		Pending.TessEval == TessEval &&
-		Pending.Geometry == Geometry &&
-		Pending.Fragment == Fragment)
+	if (Pending.GraphicsPipeline.Vertex == Vertex &&
+		Pending.GraphicsPipeline.TessControl == TessControl &&
+		Pending.GraphicsPipeline.TessEval == TessEval &&
+		Pending.GraphicsPipeline.Geometry == Geometry &&
+		Pending.GraphicsPipeline.Fragment == Fragment)
 		return;
 
 	DescriptorImages.clear();
@@ -269,16 +269,16 @@ void VulkanCommandList::SetGraphicsPipeline(GLShaderRef Vertex, GLShaderRef Tess
 
 	Pending.ResetVertexStreams();
 
-	Pending.Vertex = ResourceCast(Vertex);
-	Pending.TessControl = ResourceCast(TessControl);
-	Pending.TessEval = ResourceCast(TessEval);
-	Pending.Geometry = ResourceCast(Geometry);
-	Pending.Fragment = ResourceCast(Fragment);
+	Pending.GraphicsPipeline.Vertex = ResourceCast(Vertex);
+	Pending.GraphicsPipeline.TessControl = ResourceCast(TessControl);
+	Pending.GraphicsPipeline.TessEval = ResourceCast(TessEval);
+	Pending.GraphicsPipeline.Geometry = ResourceCast(Geometry);
+	Pending.GraphicsPipeline.Fragment = ResourceCast(Fragment);
 
 	bDirtyPipelineLayout = true;
 }
 
-void VulkanCommandList::SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer)
+void VulkanCommandList::SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer)
 {
 	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
 
@@ -290,7 +290,7 @@ void VulkanCommandList::SetVertexStream(uint32 Location, GLVertexBufferRef Verte
 	bDirtyVertexStreams = true;
 }
 
-void VulkanCommandList::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer)
+void VulkanCommandList::SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
@@ -322,7 +322,7 @@ void VulkanCommandList::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GL
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
-void VulkanCommandList::SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler)
+void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanImageRef VulkanImage = ResourceCast(Image);
@@ -350,7 +350,7 @@ void VulkanCommandList::SetShaderImage(GLShaderRef Shader, uint32 Location, GLIm
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
-void VulkanCommandList::SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer)
+void VulkanCommandList::SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer)
 {
 	VulkanShaderRef VulkanShader = ResourceCast(Shader);
 	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
@@ -376,7 +376,7 @@ void VulkanCommandList::SetStorageBuffer(GLShaderRef Shader, uint32 Location, GL
 	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
 }
 
-void VulkanCommandList::DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
+void VulkanCommandList::DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
 	PrepareForDraw();
 
@@ -552,11 +552,12 @@ void VulkanCommandList::CleanPipelineLayout()
 {
 	std::vector<VkDescriptorSetLayoutBinding> AllBindings;
 
-	auto AddBindings = [&] (const VulkanShaderRef& Shader)
+	auto AddBindings = [&] (const drm::ShaderRef Shader)
 	{
 		if (Shader)
 		{
-			const auto& Bindings = Shader->Bindings;
+			const auto VulkanShader = ResourceCast(Shader);
+			const auto& Bindings = VulkanShader->Bindings;
 			if (Bindings.size() > 0)
 			{
 				AllBindings.insert(AllBindings.end(), Bindings.begin(), Bindings.end());
@@ -564,11 +565,14 @@ void VulkanCommandList::CleanPipelineLayout()
 		}
 	};
 
-	AddBindings(Pending.Vertex);
-	AddBindings(Pending.TessControl);
-	AddBindings(Pending.TessEval);
-	AddBindings(Pending.Geometry);
-	AddBindings(Pending.Fragment);
+	{
+		const auto& GraphicsPipeline = Pending.GraphicsPipeline;
+		AddBindings(GraphicsPipeline.Vertex);
+		AddBindings(GraphicsPipeline.TessControl);
+		AddBindings(GraphicsPipeline.TessEval);
+		AddBindings(GraphicsPipeline.Geometry);
+		AddBindings(GraphicsPipeline.Fragment);
+	}
 
 	VkDescriptorSetLayoutCreateInfo DescriptorSetLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 	DescriptorSetLayoutInfo.bindingCount = static_cast<uint32>(AllBindings.size());
@@ -747,7 +751,7 @@ void VulkanCommandList::CleanRenderPass()
 		AttachmentViews[NumRTs] = Image->ImageView;
 	}
 
-	GLImageRef Image = Pending.DepthTarget ? Pending.DepthTarget->Image : Pending.ColorTargets[0]->Image;
+	drm::ImageRef Image = Pending.DepthTarget ? Pending.DepthTarget->Image : Pending.ColorTargets[0]->Image;
 
 	VkRect2D RenderArea = {};
 	RenderArea.extent = { Image->Width, Image->Height };
@@ -780,27 +784,33 @@ void VulkanCommandList::CleanRenderPass()
 
 void VulkanCommandList::CleanPipeline()
 {
-	check(Pending.Vertex, "No vertex shader bound...");
+	VulkanShaderRef Vertex = ResourceCast(Pending.GraphicsPipeline.Vertex);
+	check(Vertex, "No vertex shader bound...");
+
+	VulkanShaderRef TessControl = ResourceCast(Pending.GraphicsPipeline.TessControl);
+	VulkanShaderRef TessEval = ResourceCast(Pending.GraphicsPipeline.TessEval);
+	VulkanShaderRef Geometry = ResourceCast(Pending.GraphicsPipeline.Geometry);
+	VulkanShaderRef Fragment = ResourceCast(Pending.GraphicsPipeline.Fragment);
 
 	std::vector<VulkanShaderRef> Shaders;
 
-	Shaders.push_back(Pending.Vertex);
+	Shaders.push_back(Vertex);
 
-	if (Pending.TessControl)
+	if (TessControl)
 	{
-		Shaders.push_back(Pending.TessControl);
+		Shaders.push_back(TessControl);
 	}
-	if (Pending.TessEval)
+	if (TessEval)
 	{
-		Shaders.push_back(Pending.TessEval);
+		Shaders.push_back(TessEval);
 	}
-	if (Pending.Geometry)
+	if (Geometry)
 	{
-		Shaders.push_back(Pending.Geometry);
+		Shaders.push_back(Geometry);
 	}
-	if (Pending.Fragment)
+	if (Fragment)
 	{
-		Shaders.push_back(Pending.Fragment);
+		Shaders.push_back(Fragment);
 	}
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStages(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
@@ -815,7 +825,7 @@ void VulkanCommandList::CleanPipeline()
 	}
 
 	VkPipelineVertexInputStateCreateInfo& VertexInputState = Pending.VertexInputState;
-	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = Pending.Vertex->Attributes;
+	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = Vertex->Attributes;
 	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
 
 	for (uint32 i = 0; i < Bindings.size(); i++)
@@ -943,13 +953,6 @@ void VulkanCommandList::PendingGraphicsState::SetDefaultPipeline(const VulkanDev
 
 	DynamicState.dynamicStateCount = 0;
 	DynamicState.pDynamicStates = nullptr;
-
-	Vertex = nullptr;
-	TessControl = nullptr;
-	TessEval = nullptr;
-	Geometry = nullptr;
-	Fragment = nullptr;
-	Compute = nullptr;
 }
 
 void VulkanCommandList::PendingGraphicsState::ResetVertexStreams()

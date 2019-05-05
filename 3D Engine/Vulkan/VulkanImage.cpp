@@ -64,7 +64,7 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 	, Memory(Memory)
 	, Layout(Layout)
 	, Stage(Stage)
-	, GLImage(Format, Width, Height, UsageFlags)
+	, drm::Image(Format, Width, Height, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;

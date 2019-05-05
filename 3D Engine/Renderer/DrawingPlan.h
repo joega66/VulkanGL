@@ -4,20 +4,20 @@
 
 struct StreamSource
 {
-	GLVertexBufferRef VertexBuffer;
+	drm::VertexBufferRef VertexBuffer;
 	uint32 Location;
 };
 
 struct MaterialSource
 {
-	GLImageRef Image;
+	drm::ImageRef Image;
 	uint32 Location;
 };
 
 struct UniformSource
 {
-	GLShaderRef Shader;
-	GLUniformBufferRef UniformBuffer;
+	drm::ShaderRef Shader;
+	drm::UniformBufferRef UniformBuffer;
 	uint32 Location;
 };
 
@@ -60,7 +60,7 @@ inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList
 		
 		DrawingPlan.GetPipelineState(PSOInit);
 
-		const GraphicsPipeline Pipeline = DrawingPlan.GetGraphicsPipeline();
+		const GraphicsPipelineState Pipeline = DrawingPlan.GetGraphicsPipeline();
 
 		CmdList.SetPipelineState(PSOInit);
 

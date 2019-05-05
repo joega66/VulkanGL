@@ -3,8 +3,8 @@
 
 void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources, 
 	CMaterial& CMaterial,
-	GLUniformBufferRef LocalToWorldUniform, 
-	GraphicsPipeline&& Pipeline)
+	drm::UniformBufferRef LocalToWorldUniform, 
+	GraphicsPipelineState&& Pipeline)
 {
 	IndexCount = Resources.IndexCount;
 	IndexBuffer = Resources.IndexBuffer;
@@ -18,13 +18,13 @@ void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources,
 
 	Uniforms.push_back({ Pipeline.Vertex, LocalToWorldUniform, Pipeline.Vertex->GetUniformLocation("LocalToWorldUniform") });
 
-	if (std::holds_alternative<GLImageRef>(CMaterial.Diffuse))
+	if (std::holds_alternative<drm::ImageRef>(CMaterial.Diffuse))
 	{
-		Materials.push_back({ std::get<GLImageRef>(CMaterial.Diffuse), Pipeline.Fragment->GetUniformLocation("Diffuse") });
+		Materials.push_back({ std::get<drm::ImageRef>(CMaterial.Diffuse), Pipeline.Fragment->GetUniformLocation("Diffuse") });
 	}
 	else
 	{
-		Uniforms.push_back({ Pipeline.Fragment, GLCreateUniformBuffer(std::get<glm::vec4>(CMaterial.Diffuse)), Pipeline.Fragment->GetUniformLocation("DiffuseUniform") });
+		Uniforms.push_back({ Pipeline.Fragment, drm::CreateUniformBuffer(std::get<glm::vec4>(CMaterial.Diffuse)), Pipeline.Fragment->GetUniformLocation("DiffuseUniform") });
 	}
 
 	if (CMaterial.Normal)
@@ -33,7 +33,7 @@ void MaterialDrawingPlan::Construct(const StaticMeshResources& Resources,
 	}
 }
 
-void MaterialDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View, GraphicsPipeline&& Pipeline)
+void MaterialDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View, GraphicsPipelineState&& Pipeline)
 {
 	CmdList.SetUniformBuffer(Pipeline.Vertex, ViewLocation, View.Uniform);
 

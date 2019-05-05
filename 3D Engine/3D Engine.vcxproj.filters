@@ -89,9 +89,6 @@
     <ClInclude Include="Platform\WindowsPlatform.h">
       <Filter>Source\Platforms</Filter>
     </ClInclude>
-    <ClInclude Include="GLShader.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
     <ClInclude Include="Components\Component.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
@@ -203,6 +200,9 @@
     <ClInclude Include="DRMResource.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
+    <ClInclude Include="DRMShader.h">
+      <Filter>Source\DRM</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -246,9 +246,6 @@
     </ClCompile>
     <ClCompile Include="Platform\WindowsPlatform.cpp">
       <Filter>Source\Platforms</Filter>
-    </ClCompile>
-    <ClCompile Include="GLShader.cpp">
-      <Filter>Source\DRM</Filter>
     </ClCompile>
     <ClCompile Include="Components\CStaticMesh.cpp">
       <Filter>Source\Components</Filter>

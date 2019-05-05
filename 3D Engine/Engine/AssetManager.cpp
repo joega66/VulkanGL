@@ -19,11 +19,11 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = GPlatform->LoadImage(File, Width, Height, Channels);
-	Images[Name] = GLCreateImage(Width, Height, Format, EResourceUsage::ShaderResource, Pixels);
+	Images[Name] = drm::CreateImage(Width, Height, Format, EResourceUsage::ShaderResource, Pixels);
 	GPlatform->FreeImage(Pixels);
 }
 
-GLImageRef AssetManager::GetImage(const std::string& Name)
+drm::ImageRef AssetManager::GetImage(const std::string& Name)
 {
 	return GetValue(Images, Name);
 }
@@ -49,7 +49,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 		return Face.Width == Other.Width && Face.Height == Other.Height;
 	}), "Cubemap faces must have same dimensions.");
 
-	Cubemaps[Name] = GLCreateCubemap(
+	Cubemaps[Name] = drm::CreateCubemap(
 		Face.Width
 		, Face.Height
 		, Format
@@ -62,7 +62,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 	});
 }
 
-GLImageRef AssetManager::GetCubemap(const std::string& Name)
+drm::ImageRef AssetManager::GetCubemap(const std::string& Name)
 {
 	return Cubemaps[Name];
 }

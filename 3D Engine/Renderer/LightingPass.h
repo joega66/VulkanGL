@@ -2,12 +2,12 @@
 #include "MaterialShader.h"
 #include <Components/CStaticMesh.h>
 
-class LightingPassBaseVS : public GLShader
+class LightingPassBaseVS : public drm::Shader
 {
 public:
-	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	static const BaseShaderInfo& GetBaseShaderInfo()
 	{
-		static GLBaseShaderInfo BaseInfo = { "../Shaders/LightingPassVS.glsl", "main", EShaderStage::Vertex };
+		static BaseShaderInfo BaseInfo = { "../Shaders/LightingPassVS.glsl", "main", EShaderStage::Vertex };
 		return BaseInfo;
 	}
 };
@@ -25,9 +25,9 @@ public:
 class LightingPassBaseFS
 {
 public:
-	static const GLBaseShaderInfo& GetBaseShaderInfo()
+	static const BaseShaderInfo& GetBaseShaderInfo()
 	{
-		static GLBaseShaderInfo BaseInfo = { "../Shaders/LightingPassFS.glsl", "main", EShaderStage::Fragment };
+		static BaseShaderInfo BaseInfo = { "../Shaders/LightingPassFS.glsl", "main", EShaderStage::Fragment };
 		return BaseInfo;
 	}
 };
@@ -45,14 +45,14 @@ public:
 class LightingPassDrawingPlan : public MaterialDrawingPlan
 {
 public:
-	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, CMaterial& CMaterial, GLUniformBufferRef LocalToWorldUniform);
+	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
 
 	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
-	GraphicsPipeline GetGraphicsPipeline() const;
+	GraphicsPipelineState GetGraphicsPipeline() const;
 	void SetUniforms(RenderCommandList& CmdList, const View& View);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
-	GLShaderRef LightingPassVert;
-	GLShaderRef LightingPassFrag;
+	drm::ShaderRef LightingPassVert;
+	drm::ShaderRef LightingPassFrag;
 };

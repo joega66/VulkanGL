@@ -4,13 +4,13 @@
 #include "VulkanCommandList.h"
 #include <Engine/Timers.h>
 
-static CAST(GLRenderTargetView, VulkanRenderTargetView);
-static CAST(GLImage, VulkanImage);
-static CAST(GLShader, VulkanShader);
-static CAST(GLVertexBuffer, VulkanVertexBuffer);
-static CAST(GLUniformBuffer, VulkanUniformBuffer);
-static CAST(GLStorageBuffer, VulkanStorageBuffer);
-static CAST(GLIndexBuffer, VulkanIndexBuffer);
+static CAST(drm::RenderTargetView, VulkanRenderTargetView);
+static CAST(drm::Image, VulkanImage);
+static CAST(drm::Shader, VulkanShader);
+static CAST(drm::VertexBuffer, VulkanVertexBuffer);
+static CAST(drm::UniformBuffer, VulkanUniformBuffer);
+static CAST(drm::StorageBuffer, VulkanStorageBuffer);
+static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 
 /** Engine conversions */
@@ -109,7 +109,7 @@ void VulkanDRM::EndFrame(RenderCommandListRef CmdList)
 	DescriptorPool.Reset();
 }
 
-GLVertexBufferRef VulkanDRM::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
+drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
@@ -121,7 +121,7 @@ RenderCommandListRef VulkanDRM::CreateCommandList()
 	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool);
 }
 
-GLIndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
+drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
 	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
 
@@ -130,7 +130,7 @@ GLIndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 NumInd
 	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
 }
 
-GLUniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
+drm::UniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
 	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent || UniformUsage == EUniformUpdate::SingleFrame
 		? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
@@ -138,13 +138,13 @@ GLUniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data,
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-GLStorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
+drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
 {
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
-GLImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
+drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
@@ -152,7 +152,7 @@ GLImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat Form
 
 	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, Data);
 
-	VulkanImageRef GLImage = MakeRef<VulkanImage>(Device
+	VulkanImageRef DRMImage = MakeRef<VulkanImage>(Device
 		, Image
 		, Memory
 		, Layout
@@ -163,15 +163,15 @@ GLImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat Form
 
 	if (Data)
 	{
-		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
-		Allocator.UploadImageData(GLImage, Data);
-		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		Allocator.UploadImageData(DRMImage, Data);
+		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
-	return GLImage;
+	return DRMImage;
 }
 
-GLImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;
@@ -183,7 +183,7 @@ GLImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Fo
 
 	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, bHasData);
 
-	VulkanImageRef GLImage = MakeRef<VulkanImage>(Device
+	VulkanImageRef DRMImage = MakeRef<VulkanImage>(Device
 		, Image
 		, Memory
 		, Layout
@@ -194,15 +194,15 @@ GLImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Fo
 
 	if (bHasData)
 	{
-		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
-		Allocator.UploadCubemapData(GLImage, CubemapCreateInfo);
-		TransitionImageLayout(GLImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		Allocator.UploadCubemapData(DRMImage, CubemapCreateInfo);
+		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
-	return GLImage;
+	return DRMImage;
 }
 
-GLRenderTargetViewRef VulkanDRM::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -214,7 +214,7 @@ GLRenderTargetViewRef VulkanDRM::CreateRenderTargetView(GLImageRef Image, ELoadA
 	return RTView;
 }
 
-GLRenderTargetViewRef VulkanDRM::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
+drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -226,37 +226,37 @@ GLRenderTargetViewRef VulkanDRM::CreateRenderTargetView(GLImageRef Image, ELoadA
 	return RTView;
 }
 
-GLImageRef VulkanDRM::GetSurface()
+drm::ImageRef VulkanDRM::GetSurface()
 {
 	return Swapchain.Images[SwapchainIndex];
 }
 
-GLRenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+drm::RenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	return MakeRef<VulkanRenderTargetView>(Device, GetSurface(), LoadAction, StoreAction, ClearValue);
 }
 
-void* VulkanDRM::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+void* VulkanDRM::LockBuffer(drm::VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	return Allocator.LockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void VulkanDRM::UnlockBuffer(GLVertexBufferRef VertexBuffer)
+void VulkanDRM::UnlockBuffer(drm::VertexBufferRef VertexBuffer)
 {
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	Allocator.UnlockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void* VulkanDRM::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+void* VulkanDRM::LockBuffer(drm::IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	return Allocator.LockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanDRM::UnlockBuffer(GLIndexBufferRef IndexBuffer)
+void VulkanDRM::UnlockBuffer(drm::IndexBufferRef IndexBuffer)
 {
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
@@ -318,7 +318,7 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayou
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	if (GLImage::IsDepth(Format))
+	if (drm::Image::IsDepth(Format))
 	{
 		Format = VulkanImage::GetEngineFormat(FindSupportedDepthFormat(Format));
 	}
@@ -339,7 +339,7 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayou
 
 		if (Any(UsageFlags & EResourceUsage::RenderTargetable))
 		{
-			Usage |= GLImage::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
 		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;

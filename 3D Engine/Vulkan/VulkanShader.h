@@ -1,16 +1,10 @@
 #pragma once
-#include <GLShader.h>
+#include <DRMShader.h>
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
 
-class VulkanShaderCompiler : public GLShaderCompiler
-{
-public:
-	virtual GLShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const final;
-};
-
-class VulkanShader : public GLShader
+class VulkanShader : public drm::Shader
 {
 public:
 	std::vector<VkVertexInputAttributeDescription> Attributes;

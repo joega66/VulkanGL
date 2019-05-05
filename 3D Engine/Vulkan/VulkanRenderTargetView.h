@@ -3,24 +3,24 @@
 
 class VulkanDevice;
 
-class VulkanRenderTargetView : public GLRenderTargetView
+class VulkanRenderTargetView : public drm::RenderTargetView
 {
 public:
 	VulkanRenderTargetView(VulkanDevice& Device
-		, GLImageRef Image
+		, drm::ImageRef Image
 		, ELoadAction LoadAction
 		, EStoreAction StoreAction
 		, const std::array<float, 4>& ClearValue) 
-		: Device(Device), GLRenderTargetView(Image, LoadAction, StoreAction, ClearValue) 
+		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, ClearValue) 
 	{
 	}
 
 	VulkanRenderTargetView(VulkanDevice& Device
-		, GLImageRef Image
+		, drm::ImageRef Image
 		, ELoadAction LoadAction
 		, EStoreAction StoreAction
 		, const ClearDepthStencilValue& DepthStencil)
-		: Device(Device), GLRenderTargetView(Image, LoadAction, StoreAction, DepthStencil)
+		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, DepthStencil)
 	{
 	}
 

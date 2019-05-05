@@ -189,9 +189,8 @@ static void CreateDescriptorSetLayoutBindings(
 	}
 }
 
-GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) const
+drm::ShaderRef VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
-	VulkanDRMRef Vulkan = std::static_pointer_cast<VulkanDRM>(GDRM);
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
 	std::string BaseBinding;
@@ -256,7 +255,7 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 	CreateInfo.pCode = reinterpret_cast<const uint32*>(SPIRV.data());
 
 	VkShaderModule ShaderModule;
-	vulkan(vkCreateShaderModule(Vulkan->GetDevice(), &CreateInfo, nullptr, &ShaderModule));
+	vulkan(vkCreateShaderModule(Device, &CreateInfo, nullptr, &ShaderModule));
 
 	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
@@ -307,7 +306,7 @@ GLShaderRef VulkanShaderCompiler::CompileShader(ShaderCompilerWorker& Worker, co
 		UniformLocations[StorageBuffer.Name] = StorageBuffer.Binding;
 	});
 
-	return MakeRef<VulkanShader>(Vulkan->GetDevice(), ShaderModule, Meta, Attributes, Bindings, AttributeLocations, UniformLocations);
+	return MakeRef<VulkanShader>(Device, ShaderModule, Meta, Attributes, Bindings, AttributeLocations, UniformLocations);
 }
 
 VulkanShader::VulkanShader(
@@ -318,7 +317,7 @@ VulkanShader::VulkanShader(
 	, const std::vector<VkDescriptorSetLayoutBinding>& Bindings
 	, const HashTable<std::string, uint32>& AttributeLocations
 	, const HashTable<std::string, uint32>& UniformLocations
-) : Device(Device), ShaderModule(ShaderModule), Attributes(Attributes), Bindings(Bindings), GLShader(Meta, AttributeLocations, UniformLocations)
+) : Device(Device), ShaderModule(ShaderModule), Attributes(Attributes), Bindings(Bindings), drm::Shader(Meta, AttributeLocations, UniformLocations)
 {
 }
 

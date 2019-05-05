@@ -4,7 +4,7 @@
 
 class VulkanDevice;
 
-class VulkanImage : public GLImage
+class VulkanImage : public drm::Image
 {
 public:
 	VkImage Image;

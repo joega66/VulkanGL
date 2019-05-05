@@ -1,14 +1,14 @@
 #include "DepthPass.h"
 #include <Engine/StaticMesh.h>
 
-DepthPassDrawingPlan::DepthPassDrawingPlan(const StaticMeshResources& Resources, GLUniformBufferRef InLocalToWorldUniform)
+DepthPassDrawingPlan::DepthPassDrawingPlan(const StaticMeshResources& Resources, drm::UniformBufferRef InLocalToWorldUniform)
 {
 	LocalToWorldUniform = InLocalToWorldUniform;
 
 	IndexCount = Resources.IndexCount;
 	IndexBuffer = Resources.IndexBuffer;
 
-	VertexShader = GLCreateShader<DepthPassVS<EMeshType::StaticMesh>>();
+	VertexShader = drm::CreateShader<DepthPassVS<EMeshType::StaticMesh>>();
 
 	PositionStream = { Resources.PositionBuffer, VertexShader->GetAttributeLocation("Position") };
 
@@ -16,14 +16,14 @@ DepthPassDrawingPlan::DepthPassDrawingPlan(const StaticMeshResources& Resources,
 	LocalToWorldLocation = VertexShader->GetUniformLocation("LocalToWorldUniform");
 }
 
-GraphicsPipeline DepthPassDrawingPlan::GetGraphicsPipeline() const
+GraphicsPipelineState DepthPassDrawingPlan::GetGraphicsPipeline() const
 {
-	return GraphicsPipeline(
+	return GraphicsPipelineState{
 		VertexShader
 		, nullptr
 		, nullptr
 		, nullptr
-		, nullptr);
+		, nullptr };
 }
 
 void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)

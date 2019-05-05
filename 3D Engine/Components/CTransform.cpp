@@ -8,7 +8,7 @@ CTransform::CTransform(const CTransform& Other)
 
 CTransform::CTransform(const glm::vec3& Position, const glm::vec3& Rotation, float Angle, const glm::vec3& InScale)
 {
-	LocalToWorldUniform = GLCreateUniformBuffer<glm::mat4>(EUniformUpdate::Frequent);
+	LocalToWorldUniform = drm::CreateUniformBuffer<glm::mat4>(EUniformUpdate::Frequent);
 	Translate(Position);
 	Rotate(Rotation, Angle);
 	Scale(InScale);

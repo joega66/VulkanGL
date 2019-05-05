@@ -25,71 +25,119 @@ public:
 	virtual void EndFrame(RenderCommandListRef CmdList) = 0;
 
 	virtual RenderCommandListRef CreateCommandList() = 0;
-	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
-	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr) = 0;
-	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage) = 0;
-	virtual GLStorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage) = 0;
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr) = 0;
-	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
-	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
-	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil) = 0;
-	virtual GLImageRef GetSurface() = 0;
-	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
-	virtual void* LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset) = 0;
-	virtual void UnlockBuffer(GLVertexBufferRef VertexBuffer) = 0;
-	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset) = 0;
-	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer) = 0;
+	virtual drm::IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
+	virtual drm::VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr) = 0;
+	virtual drm::UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage) = 0;
+	virtual drm::StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage) = 0;
+	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr) = 0;
+	virtual drm::ImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
+	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
+	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil) = 0;
+	virtual drm::ImageRef GetSurface() = 0;
+	virtual drm::RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
+	virtual void* LockBuffer(drm::VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset) = 0;
+	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer) = 0;
+	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset) = 0;
+	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void RebuildResolutionDependents() = 0;
 	virtual std::string GetDRMName() = 0;
+
+	template<typename ShaderType>
+	drm::ShaderRef CompileShader()
+	{
+		if (auto CachedShader = (
+			FindShader(std::type_index(typeid(ShaderType)))); CachedShader)
+		{
+			return CachedShader;
+		}
+		else
+		{
+			ShaderCompilerWorker Worker;
+			ShaderType::ModifyCompilationEnvironment(Worker);
+			const auto&[Filename, EntryPoint, Stage] = ShaderType::GetBaseShaderInfo();
+			ShaderMetadata Meta(Filename, EntryPoint, Stage);
+			drm::ShaderRef Shader = CompileShader(Worker, Meta);
+			CacheShader(std::type_index(typeid(ShaderType)), Shader);
+			return Shader;
+		}
+	}
+
+private:
+	HashTable<std::type_index, drm::ShaderRef> Shaders;
+
+	virtual drm::ShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
+
+	void CacheShader(std::type_index Type, drm::ShaderRef Shader)
+	{
+		Shaders[Type] = Shader;
+	}
+
+	drm::ShaderRef FindShader(std::type_index Type)
+	{
+		if (Contains(Shaders, Type))
+		{
+			return Shaders[Type];
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
 };
 
 CLASS(DRM);
 
 extern DRMRef GDRM;
 
-GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
-GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
-GLStorageBufferRef GLCreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage = EResourceUsage::None);
-GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr);
-GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
-GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-GLRenderTargetViewRef GLCreateRenderTargetView(GLImageRef GLImage, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
-
 namespace drm
 {
-	GLImageRef GetSurface();
-}
+	void BeginFrame();
+	void EndFrame(RenderCommandListRef CmdList);
+	RenderCommandListRef CreateCommandList();
+	IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
+	VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
+	StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage = EResourceUsage::None);
+	ImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr);
+	ImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
+	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
+	ImageRef GetSurface();
+	RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	void* LockBuffer(VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
+	void UnlockBuffer(VertexBufferRef VertexBuffer);
+	void* LockBuffer(IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
+	void UnlockBuffer(IndexBufferRef IndexBuffer);
+	void RebuildResolutionDependents();
+	std::string GetDeviceName();
 
-GLRenderTargetViewRef GLGetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-void* GLLockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
-void GLUnlockBuffer(GLVertexBufferRef VertexBuffer);
-void* GLLockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
-void GLUnlockBuffer(GLIndexBufferRef IndexBuffer);
-void GLRebuildResolutionDependents();
-std::string GLGetDeviceName();
+	template<typename ShaderType>
+	inline ShaderRef CreateShader()
+	{
+		return GDRM->CompileShader<ShaderType>();
+	}
+
+	template<typename UniformBufferType>
+	inline UniformBufferRef CreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
+	{
+		return GDRM->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
+	}
+
+	template<typename UniformBufferType>
+	inline UniformBufferRef CreateUniformBuffer(const UniformBufferType& Data, EUniformUpdate Usage = EUniformUpdate::Infrequent)
+	{
+		return GDRM->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
+	}
+}
 
 template<typename ShaderType>
-GLShaderRef GLCreateShader()
+class ShaderMapRef
 {
-	if (GLShaderRef Shader = GShaderCompiler->FindShader(std::type_index(typeid(ShaderType))); Shader)
+public:
+	ShaderMapRef()
 	{
-		return Shader;
+		Shader = GDRM->CompileShader<ShaderType>();
 	}
-	else
-	{
-		const auto& [Filename, EntryPoint, Stage] = ShaderType::GetBaseShaderInfo();
-		return GShaderCompiler->CompileShader<ShaderType>(Filename, EntryPoint, Stage);
-	}
-}
 
-template<typename UniformBufferType>
-inline GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
-{
-	return GDRM->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
-}
-
-template<typename UniformBufferType>
-inline GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data, EUniformUpdate Usage = EUniformUpdate::Infrequent)
-{
-	return GDRM->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
-}
+private:
+	std::shared_ptr<ShaderType> Shader;
+};

@@ -77,33 +77,33 @@ private:
 	void UnlockImage(const VulkanImageRef Image, VkDeviceSize Size);
 };
 
-class VulkanVertexBuffer : public GLVertexBuffer
+class VulkanVertexBuffer : public drm::VertexBuffer
 {
 public:
 	SharedVulkanBufferRef Buffer;
 
 	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EImageFormat Format, EResourceUsage Usage)
-		: Buffer(Buffer), GLVertexBuffer(Format, Usage)
+		: Buffer(Buffer), drm::VertexBuffer(Format, Usage)
 	{
 	}
 };
 
 CLASS(VulkanVertexBuffer);
 
-class VulkanIndexBuffer : public GLIndexBuffer
+class VulkanIndexBuffer : public drm::IndexBuffer
 {
 public:
 	SharedVulkanBufferRef Buffer;
 
 	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
-		: Buffer(Buffer), GLIndexBuffer(IndexStride, Format, Usage)
+		: Buffer(Buffer), drm::IndexBuffer(IndexStride, Format, Usage)
 	{
 	}
 };
 
 CLASS(VulkanIndexBuffer);
 
-class VulkanUniformBuffer : public GLUniformBuffer
+class VulkanUniformBuffer : public drm::UniformBuffer
 {
 public:
 	SharedVulkanBufferRef Buffer;
@@ -118,13 +118,13 @@ public:
 
 CLASS(VulkanUniformBuffer);
 
-class VulkanStorageBuffer : public GLStorageBuffer
+class VulkanStorageBuffer : public drm::StorageBuffer
 {
 public:
 	SharedVulkanBufferRef Buffer;
 
 	VulkanStorageBuffer(SharedVulkanBufferRef Buffer, EResourceUsage Usage)
-		: Buffer(Buffer), GLStorageBuffer(Usage)
+		: Buffer(Buffer), drm::StorageBuffer(Usage)
 	{
 	}
 };

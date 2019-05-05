@@ -23,5 +23,5 @@ void LightSystem::Update()
 		}
 	}
 	
-	Scene.LightBuffer = GLCreateStorageBuffer(sizeof(PointLightProxy) * LightProxies.size(), LightProxies.data());
+	Scene.LightBuffer = drm::CreateStorageBuffer(sizeof(PointLightProxy) * LightProxies.size(), LightProxies.data());
 }

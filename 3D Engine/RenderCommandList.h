@@ -1,5 +1,6 @@
 #pragma once
-#include "GLShader.h"
+#include "DRMShader.h"
+#include "DRMResource.h"
 
 enum class EDepthStencilAccess
 {
@@ -206,11 +207,11 @@ struct InputAssemblyState
 
 struct GraphicsPipelineState
 {
-	GLShaderRef Vertex;
-	GLShaderRef TessControl;
-	GLShaderRef TessEval;
-	GLShaderRef Geometry;
-	GLShaderRef Fragment;
+	drm::ShaderRef Vertex;
+	drm::ShaderRef TessControl;
+	drm::ShaderRef TessEval;
+	drm::ShaderRef Geometry;
+	drm::ShaderRef Fragment;
 };
 
 struct PipelineStateInitializer
@@ -231,20 +232,20 @@ struct PipelineStateInitializer
 class RenderCommandList
 {
 public:
-	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
+	virtual void SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit) = 0;
 	virtual void SetGraphicsPipeline(
-		GLShaderRef Vertex,
-		GLShaderRef TessControl,
-		GLShaderRef TessEval,
-		GLShaderRef Geometry,
-		GLShaderRef Fragment
+		drm::ShaderRef Vertex,
+		drm::ShaderRef TessControl,
+		drm::ShaderRef TessEval,
+		drm::ShaderRef Geometry,
+		drm::ShaderRef Fragment
 	) = 0;
-	virtual void SetVertexStream(uint32 Location, GLVertexBufferRef VertexBuffer) = 0;
-	virtual void SetUniformBuffer(GLShaderRef Shader, uint32 Location, GLUniformBufferRef UniformBuffer) = 0;
-	virtual void SetShaderImage(GLShaderRef Shader, uint32 Location, GLImageRef Image, const SamplerState& Sampler) = 0;
-	virtual void SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer) = 0;
-	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
+	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
+	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;
+	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler) = 0;
+	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer) = 0;
+	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 
 	virtual void Finish() = 0;

@@ -10,22 +10,22 @@ struct aiMaterial;
 struct StaticMeshResources
 {
 	const uint32 IndexCount;
-	GLIndexBufferRef IndexBuffer;
+	drm::IndexBufferRef IndexBuffer;
 
-	GLVertexBufferRef PositionBuffer;
-	GLVertexBufferRef TextureCoordinateBuffer;
-	GLVertexBufferRef NormalBuffer;
-	GLVertexBufferRef TangentBuffer;
+	drm::VertexBufferRef PositionBuffer;
+	drm::VertexBufferRef TextureCoordinateBuffer;
+	drm::VertexBufferRef NormalBuffer;
+	drm::VertexBufferRef TangentBuffer;
 
 	CMaterial Material;
 	
 	StaticMeshResources(
 		uint32 IndexCount
-		, GLIndexBufferRef IndexBuffer
-		, GLVertexBufferRef PositionBuffer
-		, GLVertexBufferRef TextureCoordinateBuffer
-		, GLVertexBufferRef NormalBuffer
-		, GLVertexBufferRef TangentBuffer
+		, drm::IndexBufferRef IndexBuffer
+		, drm::VertexBufferRef PositionBuffer
+		, drm::VertexBufferRef TextureCoordinateBuffer
+		, drm::VertexBufferRef NormalBuffer
+		, drm::VertexBufferRef TangentBuffer
 		, const CMaterial& Material)
 		: IndexCount(IndexCount)
 		, IndexBuffer(IndexBuffer)

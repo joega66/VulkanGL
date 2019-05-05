@@ -12,9 +12,9 @@ public:
 	DrawingPlanList<OutlineDrawingPlan> Outline;
 	DrawingPlanList<LineDrawingPlan> Lines;
 
-	GLStorageBufferRef LightBuffer;
+	drm::StorageBufferRef LightBuffer;
 
-	GLImageRef Skybox;
+	drm::ImageRef Skybox;
 
 	Scene();
 	Scene(const Scene&) = delete;
@@ -24,8 +24,8 @@ public:
 	static Scene& Get();
 
 private:
-	GLImageRef SceneDepth;
-	GLImageRef OutlineDepthStencil;
+	drm::ImageRef SceneDepth;
+	drm::ImageRef OutlineDepthStencil;
 
 	void RenderRayMarching(RenderCommandList& CmdList);
 	void RenderLightingPass(RenderCommandList& CmdList);

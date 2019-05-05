@@ -16,7 +16,7 @@ public:
 		glm::vec2 MorePadding;
 	};
 
-	GLUniformBufferRef Uniform;
+	drm::UniformBufferRef Uniform;
 
 	glm::vec3 Position;
 	glm::vec3 Front = glm::vec3(0.0f, 0.0f, 1.0f);
