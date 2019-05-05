@@ -14,17 +14,16 @@ Scene::Scene()
 
 void Scene::Render()
 {
-	// @todo-joe All functions that don't require a command list should be wrapped in the graphics backend class.
-
-	RenderCommandList& CmdList = *GRenderCmdList;
-
-	CmdList.BeginFrame();
+	RenderCommandListRef CmdListPtr = GDRM->BeginFrame();
+	RenderCommandList& CmdList = *CmdListPtr;
 
 	//RenderRayMarching();
 	RenderLightingPass(CmdList);
 	RenderEditorPrimitives(CmdList);
 
-	CmdList.EndFrame();
+	CmdList.Finish();
+
+	GDRM->EndFrame(CmdListPtr);
 }
 
 void Scene::RenderRayMarching(RenderCommandList& CmdList)

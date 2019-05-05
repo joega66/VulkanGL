@@ -11,7 +11,7 @@ VkAttachmentLoadOp VulkanRenderTargetView::GetVulkanLoadOp() const
 	{
 		return VK_ATTACHMENT_LOAD_OP_LOAD;
 	}
-	else // ELoadAction::None
+	else // ELoadAction::DontCare
 	{
 		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	}
@@ -23,7 +23,7 @@ VkAttachmentStoreOp VulkanRenderTargetView::GetVulkanStoreOp() const
 	{
 		return VK_ATTACHMENT_STORE_OP_STORE;
 	}
-	else // EStoreAction::None
+	else // EStoreAction::DontCare
 	{
 		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	}

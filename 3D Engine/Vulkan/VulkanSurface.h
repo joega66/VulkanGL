@@ -21,7 +21,7 @@ public:
 
 	VulkanSurface(VulkanDevice& Device);
 
-	void InitSwapchain();
+	void Init();
 	virtual void ReleaseGL() final;
 	operator VkSwapchainKHR() { return Swapchain; }
 

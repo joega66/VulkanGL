@@ -9,28 +9,39 @@ CAST(GLVertexBuffer, VulkanVertexBuffer);
 CAST(GLUniformBuffer, VulkanUniformBuffer);
 CAST(GLStorageBuffer, VulkanStorageBuffer);
 CAST(GLIndexBuffer, VulkanIndexBuffer);
+CAST(RenderCommandList, VulkanCommandList);
+CAST(DRM, VulkanDRM);
 
-VulkanCommandList::VulkanCommandList()
+/** Engine conversions */
+HashTable<EImageFormat, uint32> ImageFormatToGLSLSize;
+HashTable<VkFormat, uint32> SizeOfVulkanFormat;
+
+VulkanDRM::VulkanDRM()
 	: Swapchain(Device)
 	, Allocator(Device)
 	, DescriptorPool(Device)
-	, Pending(Device)
-	, RenderPasses([&] (VkRenderPass RenderPass) { vkDestroyRenderPass(Device, RenderPass, nullptr); })
-	, Framebuffers([&] (VkFramebuffer Framebuffer) { vkDestroyFramebuffer(Device, Framebuffer, nullptr); })
-	, DescriptorSetLayouts([&] (VkDescriptorSetLayout DescriptorSetLayout) { vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr); })
-	, PipelineLayouts([&] (VkPipelineLayout PipelineLayout) { vkDestroyPipelineLayout(Device, PipelineLayout, nullptr); })
-	, Pipelines([&] (VkPipeline Pipeline) { vkDestroyPipeline(Device, Pipeline, nullptr); })
-	, Samplers([&] (VkSampler Sampler) { vkDestroySampler(Device, Sampler, nullptr); })
-	, ImageFormatToGLSLSize([&](){HashTable<EImageFormat,uint32>Result;for(auto&[GLSLType,Format]:GLSLTypeToVulkanFormat){
-		auto ImageFormat=VulkanImage::GetEngineFormat(Format);auto GLSLSize=GetValue(GLSLTypeSizes,GLSLType); Result[ImageFormat]=GLSLSize;}return Result;}())
-	, SizeOfVulkanFormat([&](){HashTable<VkFormat,uint32>Result;for(auto&[GLSLType,Format]:GLSLTypeToVulkanFormat){auto SizeOf=GetValue(GLSLTypeSizes,GLSLType);
-		Result[Format]=SizeOf;}return Result;}())
 {
+	SizeOfVulkanFormat = ([&] ()
+	{
+		HashTable<VkFormat, uint32> Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+		{
+			auto SizeOf = GetValue(GLSLTypeSizes, GLSLType);
+			Result[Format] = SizeOf;
+		} return Result;
+	}());
+
+	ImageFormatToGLSLSize = ([&] ()
+	{
+		HashTable<EImageFormat, uint32>Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+		{
+			auto ImageFormat = VulkanImage::GetEngineFormat(Format); auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType); Result[ImageFormat] = GLSLSize;
+		}return Result;
+	}());
 }
 
-void VulkanCommandList::Init()
+void VulkanDRM::Init()
 {
-	Swapchain.InitSwapchain();
+	Swapchain.Init();
 
 	CommandBuffers.resize(Swapchain.Images.size());
 
@@ -47,20 +58,20 @@ void VulkanCommandList::Init()
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &RenderEndSem));
 }
 
-void VulkanCommandList::Release()
+void VulkanDRM::Release()
 {
 	vkDestroySemaphore(Device, RenderEndSem, nullptr);
 	vkDestroySemaphore(Device, ImageAvailableSem, nullptr);
 	vkFreeCommandBuffers(Device, Device.CommandPool, CommandBuffers.size(), CommandBuffers.data());
 }
 
-void VulkanCommandList::BeginFrame()
+RenderCommandListRef VulkanDRM::BeginFrame()
 {
-	if (VkResult Result = vkAcquireNextImageKHR(Device, 
-		Swapchain, 
-		std::numeric_limits<uint32>::max(), 
-		ImageAvailableSem, 
-		VK_NULL_HANDLE, 
+	if (VkResult Result = vkAcquireNextImageKHR(Device,
+		Swapchain,
+		std::numeric_limits<uint32>::max(),
+		ImageAvailableSem,
+		VK_NULL_HANDLE,
 		&SwapchainIndex); Result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		signal_unimplemented();
@@ -73,19 +84,13 @@ void VulkanCommandList::BeginFrame()
 
 	vulkan(vkResetCommandBuffer(GetCommandBuffer(), 0));
 
-	VkCommandBufferBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	vulkan(vkBeginCommandBuffer(GetCommandBuffer(), &BeginInfo));
+	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool, GetCommandBuffer());
 }
 
-void VulkanCommandList::EndFrame()
+void VulkanDRM::EndFrame(RenderCommandListRef CmdList)
 {
-	if (RenderPasses.Size())
-	{
-		vkCmdEndRenderPass(GetCommandBuffer());
-	}
-
-	vulkan(vkEndCommandBuffer(GetCommandBuffer()));
-
+	VulkanCommandListRef VulkanCmdList = ResourceCast(CmdList);
+	
 	VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
 	SubmitInfo.waitSemaphoreCount = 1;
@@ -114,16 +119,34 @@ void VulkanCommandList::EndFrame()
 
 	vkQueueWaitIdle(Device.PresentQueue);
 
+	DescriptorPool.Reset();
+}
+
+VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool, VkCommandBuffer CommandBuffer)
+	: Device(Device)
+	, Pending(Device)
+	, DescriptorPool(DescriptorPool)
+	, CommandBuffer(CommandBuffer)
+	, Allocator(Allocator)
+	, RenderPasses([&] (VkRenderPass RenderPass) { vkDestroyRenderPass(Device, RenderPass, nullptr); })
+	, Framebuffers([&] (VkFramebuffer Framebuffer) { vkDestroyFramebuffer(Device, Framebuffer, nullptr); })
+	, DescriptorSetLayouts([&] (VkDescriptorSetLayout DescriptorSetLayout) { vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr); })
+	, PipelineLayouts([&] (VkPipelineLayout PipelineLayout) { vkDestroyPipelineLayout(Device, PipelineLayout, nullptr); })
+	, Pipelines([&] (VkPipeline Pipeline) { vkDestroyPipeline(Device, Pipeline, nullptr); })
+	, Samplers([&] (VkSampler Sampler) { vkDestroySampler(Device, Sampler, nullptr); })
+{
+	VkCommandBufferBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+	vulkan(vkBeginCommandBuffer(GetCommandBuffer(), &BeginInfo));
+}
+
+VulkanCommandList::~VulkanCommandList()
+{
 	RenderPasses.Destroy();
 	Framebuffers.Destroy();
 	DescriptorSetLayouts.Destroy();
 	PipelineLayouts.Destroy();
 	Pipelines.Destroy();
 	Samplers.Destroy();
-
-	DescriptorImages.clear();
-	DescriptorBuffers.clear();
-	DescriptorPool.Reset();
 
 	// "Transition" render targets back to UNDEFINED
 	// This is mainly for consistency with non-rendertargetable images and error checking
@@ -179,7 +202,8 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const GLRenderTargetView
 
 		Image->Layout = [&] ()
 		{
-			if (ColorTarget == GetCurrentSwapchainRTView())
+			// @todo-joe UGLY AF
+			if (ColorTarget == ResourceCast(GDRM)->GetCurrentSwapchainRTView())
 			{
 				return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			}
@@ -293,7 +317,7 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const GLRenderTargetView
 	Subpass.pColorAttachments = ColorRefs.data();
 	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
 	Subpass.pDepthStencilAttachment = !DepthTarget ? nullptr : &DepthRef;
-	
+
 	std::array<VkSubpassDependency, 2> Dependencies;
 
 	Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -362,7 +386,7 @@ void VulkanCommandList::SetVertexStream(uint32 Location, GLVertexBufferRef Verte
 	bDirtyVertexStreams = true;
 }
 
-GLVertexBufferRef VulkanCommandList::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
+GLVertexBufferRef VulkanDRM::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
@@ -389,7 +413,7 @@ void VulkanCommandList::SetUniformBuffer(GLShaderRef Shader, uint32 Location, GL
 		if (Binding.binding == Location)
 		{
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
-			
+
 			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
 			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
 			bDirtyDescriptorSets = true;
@@ -415,7 +439,7 @@ void VulkanCommandList::SetShaderImage(GLShaderRef Shader, uint32 Location, GLIm
 		{
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, "Shader resource at this location isn't a combined image sampler.");
 
-			VkSampler VulkanSampler = CreateSampler(Sampler);
+			VkSampler VulkanSampler = ResourceCast(GDRM)->CreateSampler(Sampler);
 			Samplers.Push(VulkanSampler);
 
 			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->Layout };
@@ -473,7 +497,17 @@ void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 Fi
 	vkCmdDraw(GetCommandBuffer(), VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-GLIndexBufferRef VulkanCommandList::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
+void VulkanCommandList::Finish()
+{
+	if (RenderPasses.Size())
+	{
+		vkCmdEndRenderPass(GetCommandBuffer());
+	}
+
+	vulkan(vkEndCommandBuffer(GetCommandBuffer()));
+}
+
+GLIndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
 	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
 
@@ -482,21 +516,21 @@ GLIndexBufferRef VulkanCommandList::CreateIndexBuffer(EImageFormat Format, uint3
 	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
 }
 
-GLUniformBufferRef VulkanCommandList::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
+GLUniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
-	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent || UniformUsage == EUniformUpdate::SingleFrame 
+	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent || UniformUsage == EUniformUpdate::SingleFrame
 		? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-GLStorageBufferRef VulkanCommandList::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
+GLStorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
 {
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
-GLImageRef VulkanCommandList::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
+GLImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
@@ -523,7 +557,7 @@ GLImageRef VulkanCommandList::CreateImage(uint32 Width, uint32 Height, EImageFor
 	return GLImage;
 }
 
-GLImageRef VulkanCommandList::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+GLImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;
@@ -531,7 +565,7 @@ GLImageRef VulkanCommandList::CreateCubemap(uint32 Width, uint32 Height, EImageF
 	VkImageLayout Layout;
 
 	bool bHasData = std::find_if(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(),
-		[](const auto& TextureInfo) { return TextureInfo.Data; })
+		[] (const auto& TextureInfo) { return TextureInfo.Data; })
 		!= CubemapCreateInfo.CubeFaces.end();
 
 	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, bHasData);
@@ -555,7 +589,7 @@ GLImageRef VulkanCommandList::CreateCubemap(uint32 Width, uint32 Height, EImageF
 	return GLImage;
 }
 
-GLRenderTargetViewRef VulkanCommandList::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+GLRenderTargetViewRef VulkanDRM::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -567,7 +601,7 @@ GLRenderTargetViewRef VulkanCommandList::CreateRenderTargetView(GLImageRef Image
 	return RTView;
 }
 
-GLRenderTargetViewRef VulkanCommandList::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
+GLRenderTargetViewRef VulkanDRM::CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -723,7 +757,7 @@ void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit
 	}
 }
 
-GLRenderTargetViewRef VulkanCommandList::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+GLRenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
 {
 	VulkanRenderTargetViewRef SurfaceView = GetCurrentSwapchainRTView();
 	SurfaceView->LoadAction = LoadAction;
@@ -732,43 +766,43 @@ GLRenderTargetViewRef VulkanCommandList::GetSurfaceView(ELoadAction LoadAction, 
 	return SurfaceView;
 }
 
-void* VulkanCommandList::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+void* VulkanDRM::LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	return Allocator.LockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void VulkanCommandList::UnlockBuffer(GLVertexBufferRef VertexBuffer)
+void VulkanDRM::UnlockBuffer(GLVertexBufferRef VertexBuffer)
 {
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	Allocator.UnlockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void* VulkanCommandList::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+void* VulkanDRM::LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
 {
 	// @todo-joe Handle Size, Offset
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	return Allocator.LockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanCommandList::UnlockBuffer(GLIndexBufferRef IndexBuffer)
+void VulkanDRM::UnlockBuffer(GLIndexBufferRef IndexBuffer)
 {
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanCommandList::RebuildResolutionDependents()
+void VulkanDRM::RebuildResolutionDependents()
 {
 	// @todo-joe
 }
 
-VkCommandBuffer& VulkanCommandList::GetCommandBuffer()
+VkCommandBuffer& VulkanDRM::GetCommandBuffer()
 {
 	return CommandBuffers[SwapchainIndex];
 }
 
-VulkanRenderTargetViewRef VulkanCommandList::GetCurrentSwapchainRTView()
+VulkanRenderTargetViewRef VulkanDRM::GetCurrentSwapchainRTView()
 {
 	return Swapchain.RTViews[SwapchainIndex];
 }
@@ -855,7 +889,7 @@ void VulkanCommandList::CleanDescriptorSets()
 			WriteDescriptor.descriptorType = Binding.descriptorType;
 			WriteDescriptor.descriptorCount = 1;
 			WriteDescriptor.pBufferInfo = &WriteDescriptorBuffer->DescriptorBuffer;
-			
+
 			WriteDescriptors.push_back(WriteDescriptor);
 		}
 	}
@@ -1103,7 +1137,7 @@ void VulkanCommandList::CleanPipeline()
 	bDirtyPipeline = false;
 }
 
-void VulkanCommandList::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
+void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
 	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);
 
@@ -1149,7 +1183,7 @@ void VulkanCommandList::TransitionImageLayout(VulkanImageRef Image, VkImageLayou
 	Image->Stage = DestinationStage;
 }
 
-void VulkanCommandList::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
+void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
 	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit)
 {
 	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1172,7 +1206,7 @@ void VulkanCommandList::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkIm
 	Info.usage = [&] ()
 	{
 		VkFlags Usage = 0;
-		
+
 		if (Any(UsageFlags & EResourceUsage::RenderTargetable))
 		{
 			Usage |= GLImage::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -1201,7 +1235,7 @@ void VulkanCommandList::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkIm
 	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
 }
 
-VkSampler VulkanCommandList::CreateSampler(const SamplerState& SamplerState)
+VkSampler VulkanDRM::CreateSampler(const SamplerState& SamplerState)
 {
 	static const VkFilter VulkanFilters[] =
 	{
@@ -1260,7 +1294,7 @@ void VulkanCommandList::PendingGraphicsState::SetDefaultPipeline(const VulkanDev
 	NumRTs = 0;
 	std::fill(ColorTargets.begin(), ColorTargets.end(), VulkanRenderTargetViewRef());
 	DepthTarget = nullptr;
-	
+
 	ResetVertexStreams();
 
 	VertexInputState.pVertexAttributeDescriptions = nullptr;

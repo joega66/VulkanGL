@@ -6,16 +6,63 @@
 #include "VulkanDescriptors.h"
 #include "VulkanShader.h"
 
-class VulkanCommandList final : public RenderCommandList
+class VulkanDRM final : public DRM
 {
 public:
-	VulkanCommandList();
+	VulkanDRM();
 
 	virtual void Init();
 	virtual void Release();
 
-	virtual void BeginFrame();
-	virtual void EndFrame();
+	virtual RenderCommandListRef BeginFrame();
+	virtual void EndFrame(RenderCommandListRef CmdList);
+
+	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
+	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
+	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent);
+	virtual GLStorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage);
+	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data);
+	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
+	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
+	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+	virtual void* LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
+	virtual void UnlockBuffer(GLVertexBufferRef VertexBuffer);
+	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
+	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer);
+	virtual void RebuildResolutionDependents();
+	virtual std::string GetDRMName() { return "Vulkan"; }
+
+	VulkanDevice& GetDevice() { return Device; }
+
+private:
+	friend class VulkanCommandList;
+
+	VulkanDevice Device;
+	VulkanSurface Swapchain;
+	VulkanAllocator Allocator;
+	VulkanDescriptorPool DescriptorPool;
+	std::vector<VkCommandBuffer> CommandBuffers;
+	uint32 SwapchainIndex = -1;
+	VkSemaphore ImageAvailableSem;
+	VkSemaphore RenderEndSem;
+
+	VkCommandBuffer& GetCommandBuffer();
+	VulkanRenderTargetViewRef GetCurrentSwapchainRTView();
+
+	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
+	VkFormat FindSupportedDepthFormat(EImageFormat Format);
+	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit);
+	VkSampler CreateSampler(const SamplerState& Sampler);
+};
+
+CLASS(VulkanDRM);
+
+class VulkanCommandList final : public RenderCommandList
+{
+public:
+	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool, VkCommandBuffer CommandBuffer);
+	~VulkanCommandList();
 
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit);
@@ -32,33 +79,14 @@ public:
 	virtual void SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer);
 	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
-	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
-	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
-	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent);
-	virtual GLStorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage);
-	virtual GLImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data);
-	virtual GLImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
-	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	virtual GLRenderTargetViewRef CreateRenderTargetView(GLImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
-	virtual GLRenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	virtual void* LockBuffer(GLVertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
-	virtual void UnlockBuffer(GLVertexBufferRef VertexBuffer);
-	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
-	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer);
-	virtual void RebuildResolutionDependents();
-	virtual std::string GetDeviceName() { return "Vulkan"; }
 
-	VulkanDevice& GetDevice() { return Device; }
+	virtual void Finish();
 
 private:
-	VulkanDevice Device;
-	VulkanSurface Swapchain;
-	VulkanAllocator Allocator;
-	VulkanDescriptorPool DescriptorPool;
-	std::vector<VkCommandBuffer> CommandBuffers;
-	uint32 SwapchainIndex = -1;
-	VkSemaphore ImageAvailableSem;
-	VkSemaphore RenderEndSem;
+	VulkanDevice& Device;
+	VulkanAllocator& Allocator;
+	VulkanDescriptorPool& DescriptorPool;
+	VkCommandBuffer CommandBuffer;
 
 	bool bDirtyRenderPass = false;
 	bool bDirtyPipelineLayout = false;
@@ -121,9 +149,6 @@ private:
 	DescriptorMap<VulkanWriteDescriptorImage> DescriptorImages;
 	DescriptorMap<VulkanWriteDescriptorBuffer> DescriptorBuffers;
 
-	VkCommandBuffer& GetCommandBuffer();
-	VulkanRenderTargetViewRef GetCurrentSwapchainRTView();
-
 	void PrepareForDraw();
 	void CleanRenderPass();
 	void CleanPipelineLayout();
@@ -131,14 +156,7 @@ private:
 	void CleanDescriptorSets();
 	void CleanVertexStreams();
 
-	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
-	VkFormat FindSupportedDepthFormat(EImageFormat Format);
-	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit);
-	VkSampler CreateSampler(const SamplerState& Sampler);
-
-	/** Engine conversions */
-	const HashTable<EImageFormat, uint32> ImageFormatToGLSLSize;
-	const HashTable<VkFormat, uint32> SizeOfVulkanFormat;
+	VkCommandBuffer GetCommandBuffer() { return CommandBuffer; }
 };
 
 CLASS(VulkanCommandList);

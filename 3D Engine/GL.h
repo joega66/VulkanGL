@@ -211,16 +211,9 @@ struct PipelineStateInitializer
 	GraphicsPipelineState GraphicsPipelineState;
 };
 
-/** Graphics Library Interface */
-class RenderCommandList : public GLRenderResource
+class RenderCommandList
 {
 public:
-	virtual void Init() = 0;
-	virtual void Release() = 0;
-
-	virtual void BeginFrame() = 0;
-	virtual void EndFrame() = 0;
-
 	virtual void SetRenderTargets(uint32 NumRTs, const GLRenderTargetViewRef* ColorTargets, const GLRenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit) = 0;
 	virtual void SetGraphicsPipeline(
@@ -236,6 +229,22 @@ public:
 	virtual void SetStorageBuffer(GLShaderRef Shader, uint32 Location, GLStorageBufferRef StorageBuffer) = 0;
 	virtual void DrawIndexed(GLIndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
+
+	virtual void Finish() = 0;
+};
+
+CLASS(RenderCommandList);
+
+/** Direct Rendering Manager */
+class DRM
+{
+public:
+	virtual void Init() = 0;
+	virtual void Release() = 0;
+
+	virtual RenderCommandListRef BeginFrame() = 0;
+	virtual void EndFrame(RenderCommandListRef CmdList) = 0;
+
 	virtual GLIndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
 	virtual GLVertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr) = 0;
 	virtual GLUniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage = EUniformUpdate::Infrequent) = 0;
@@ -250,19 +259,15 @@ public:
 	virtual void* LockBuffer(GLIndexBufferRef IndexBuffer, uint32 Size, uint32 Offset) = 0;
 	virtual void UnlockBuffer(GLIndexBufferRef IndexBuffer) = 0;
 	virtual void RebuildResolutionDependents() = 0;
-	virtual std::string GetDeviceName() = 0;
+	virtual std::string GetDRMName() = 0;
 };
 
-CLASS(RenderCommandList);
+CLASS(DRM);
 
-extern RenderCommandListRef GRenderCmdList;
+extern DRMRef GDRM;
 
 GLIndexBufferRef GLCreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
 GLVertexBufferRef GLCreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
-template<typename UniformBufferType>
-GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent);
-template<typename UniformBufferType>
-GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data, EUniformUpdate Usage = EUniformUpdate::Infrequent);
 GLStorageBufferRef GLCreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage = EResourceUsage::None);
 GLImageRef GLCreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr);
 GLImageRef GLCreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
@@ -291,13 +296,13 @@ GLShaderRef GLCreateShader()
 }
 
 template<typename UniformBufferType>
-inline GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage)
+inline GLUniformBufferRef GLCreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
 {
-	return GRenderCmdList->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
+	return GDRM->CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
 }
 
 template<typename UniformBufferType>
-inline GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType & Data, EUniformUpdate Usage)
+inline GLUniformBufferRef GLCreateUniformBuffer(const UniformBufferType& Data, EUniformUpdate Usage = EUniformUpdate::Infrequent)
 {
-	return GRenderCmdList->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
+	return GDRM->CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
 }
