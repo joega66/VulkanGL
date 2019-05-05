@@ -14,16 +14,17 @@ Scene::Scene()
 
 void Scene::Render()
 {
-	RenderCommandListRef CmdListPtr = GDRM->BeginFrame();
-	RenderCommandList& CmdList = *CmdListPtr;
+	GDRM->BeginFrame();
 
-	//RenderRayMarching();
-	RenderLightingPass(CmdList);
-	RenderEditorPrimitives(CmdList);
+	RenderCommandListRef CmdList = GDRM->CreateCommandList();
 
-	CmdList.Finish();
+	//RenderRayMarching(*CmdList);
+	RenderLightingPass(*CmdList);
+	RenderEditorPrimitives(*CmdList);
 
-	GDRM->EndFrame(CmdListPtr);
+	CmdList->Finish();
+
+	GDRM->EndFrame(CmdList);
 }
 
 void Scene::RenderRayMarching(RenderCommandList& CmdList)

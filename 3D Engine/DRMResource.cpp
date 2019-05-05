@@ -1,4 +1,4 @@
-#include "GLRenderResource.h"
+#include "DRMResource.h"
 
 bool GLImage::IsColor()
 {

@@ -12,17 +12,16 @@ struct SwapchainSupportDetails
 	void QuerySwapchainSupport(VkPhysicalDevice Device, VkSurfaceKHR Surface);
 };
 
-class VulkanSurface : public GLRenderResource
+class VulkanSurface
 {
 public:
 	VkSwapchainKHR Swapchain;
 	std::vector<VulkanImageRef> Images;
-	std::vector<VulkanRenderTargetViewRef> RTViews;
 
 	VulkanSurface(VulkanDevice& Device);
+	~VulkanSurface();
 
 	void Init();
-	virtual void ReleaseGL() final;
 	operator VkSwapchainKHR() { return Swapchain; }
 
 private:

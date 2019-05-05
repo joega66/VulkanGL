@@ -1,5 +1,5 @@
 #include "VulkanSurface.h"
-#include "VulkanGL.h"
+#include "VulkanDRM.h"
 #include "VulkanDevice.h"
 #include <Platform/Platform.h>
 #include <Engine/Screen.h>
@@ -7,6 +7,11 @@
 VulkanSurface::VulkanSurface(VulkanDevice& Device)
 	: Device(Device)
 {
+}
+
+VulkanSurface::~VulkanSurface()
+{
+	vkDestroySwapchainKHR(Device, Swapchain, nullptr);
 }
 
 void VulkanSurface::Init()
@@ -78,19 +83,6 @@ void VulkanSurface::Init()
 			, EResourceUsage::RenderTargetable
 			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 	}
-
-	RTViews.resize(ImageCount);
-	
-	for (uint32 i = 0; i < RTViews.size(); i++)
-	{
-		RTViews[i] = ResourceCast(GDRM->CreateRenderTargetView(Images[i], ELoadAction::Clear, EStoreAction::Store, { 0.0f, 0.0f, 0.0f, 0.0f }));
-	}
-}
-
-
-void VulkanSurface::ReleaseGL()
-{
-	vkDestroySwapchainKHR(Device, Swapchain, nullptr);
 }
 
 VkSurfaceFormatKHR VulkanSurface::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)

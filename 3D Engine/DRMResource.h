@@ -80,38 +80,7 @@ enum class EStoreAction
 	Store
 };
 
-enum class EDepthStencilAccess
-{
-	// Disable depth writes.
-	None,
-	// Enable depth writes.
-	DepthWrite,
-	// Disable depth writes and enable stencil attachment.
-	StencilWrite,
-	// Enable depth writes. (Really has same effect as DepthWrite.)
-	DepthWriteStencilWrite,
-	// Transitions depth to shader read for the depth aspect.
-	DepthReadStencilWrite,
-	// Transitions depth to shader read for the stencil aspect.
-	DepthWriteStencilRead,
-	// Transitions depth to shader read for depth/stencil aspect.
-	DepthReadStencilRead,
-};
-
-class GLRenderResource
-{
-public:
-	virtual void ReleaseGL() {}
-
-	inline ~GLRenderResource()
-	{
-		ReleaseGL();
-	}
-};
-
-CLASS(GLRenderResource);
-
-class GLVertexBuffer : public GLRenderResource
+class GLVertexBuffer
 {
 public:
 	EImageFormat Format;
@@ -125,7 +94,7 @@ public:
 
 CLASS(GLVertexBuffer);
 
-class GLIndexBuffer : public GLRenderResource
+class GLIndexBuffer
 {
 public:
 	EImageFormat Format;
@@ -140,7 +109,7 @@ public:
 
 CLASS(GLIndexBuffer);
 
-class GLUniformBuffer : public GLRenderResource
+class GLUniformBuffer
 {
 public:
 	bool bDirty = false;
@@ -162,7 +131,7 @@ private:
 
 CLASS(GLUniformBuffer);
 
-class GLStorageBuffer : public GLRenderResource
+class GLStorageBuffer
 {
 public:
 	const EResourceUsage Usage;
@@ -175,7 +144,7 @@ public:
 
 CLASS(GLStorageBuffer);
 
-class GLImage : public GLRenderResource
+class GLImage
 {
 public:
 	EImageFormat Format;
@@ -203,7 +172,7 @@ struct ClearDepthStencilValue
 	uint32 StencilClear;
 };
 
-class GLRenderTargetView : public GLRenderResource
+class GLRenderTargetView
 {
 public:
 	GLImageRef Image;
@@ -217,16 +186,3 @@ public:
 };
 
 CLASS(GLRenderTargetView);
-
-struct TextureCreateInfo
-{
-	int32 Width;
-	int32 Height;
-	uint8* Data;
-};
-
-struct CubemapCreateInfo
-{
-	// +X, -X, +Y, -Y, +Z, -Z
-	std::array<TextureCreateInfo, 6> CubeFaces;
-};

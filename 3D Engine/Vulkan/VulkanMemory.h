@@ -1,5 +1,5 @@
 #pragma once
-#include "../GLRenderResource.h"
+#include "../DRMResource.h"
 #include "VulkanImage.h"
 
 class VulkanDevice;
@@ -60,7 +60,7 @@ public:
 	void* LockBuffer(const SharedVulkanBuffer& Buffer);
 	void UnlockBuffer(const SharedVulkanBuffer& Buffer);
 	void UploadImageData(const VulkanImageRef Image, const uint8* Pixels);
-	void UploadCubemapData(const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo);
+	void UploadCubemapData(const VulkanImageRef Image, const struct CubemapCreateInfo& CubemapCreateInfo);
 
 private:
 	VulkanDevice& Device;

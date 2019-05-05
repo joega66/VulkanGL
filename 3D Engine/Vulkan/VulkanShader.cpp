@@ -1,6 +1,5 @@
 #include "VulkanShader.h"
-#include "VulkanGL.h"
-#include "../GL.h"
+#include "VulkanDRM.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 
 struct VertexStreamFormat
@@ -323,7 +322,7 @@ VulkanShader::VulkanShader(
 {
 }
 
-void VulkanShader::ReleaseGL()
+VulkanShader::~VulkanShader()
 {
 	vkDestroyShaderModule(Device, ShaderModule, nullptr);
 }

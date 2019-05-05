@@ -1,5 +1,5 @@
 #pragma once
-#include "GLRenderResource.h"
+#include "DRMResource.h"
 #include <typeindex>
 
 enum class EShaderStage
@@ -53,7 +53,7 @@ struct ShaderMetadata
 
 using GLBaseShaderInfo = std::tuple<std::string, std::string, EShaderStage>;
 
-class GLShader : public GLRenderResource
+class GLShader
 {
 public:
 	const ShaderMetadata Meta;

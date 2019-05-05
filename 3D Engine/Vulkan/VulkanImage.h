@@ -1,5 +1,5 @@
 #pragma once
-#include "../GLRenderResource.h"
+#include "../DRMResource.h"
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
@@ -22,14 +22,14 @@ public:
 		, uint32 Height
 		, EResourceUsage UsageFlags
 		, VkPipelineStageFlags Stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
-	virtual void ReleaseGL() final;
+	~VulkanImage();
 
 	operator VkImage();
 
 	static VkFormat GetVulkanFormat(EImageFormat Format);
 	static EImageFormat GetEngineFormat(VkFormat Format);
 	static bool IsDepthLayout(VkImageLayout Layout);
+	static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
 
 	bool IsInDepthLayout();
 	VkFormat GetVulkanFormat() const;

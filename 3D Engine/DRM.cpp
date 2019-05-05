@@ -1,4 +1,4 @@
-#include "GL.h"
+#include "DRM.h"
 
 DRMRef GDRM;
 
@@ -70,4 +70,12 @@ void GLRebuildResolutionDependents()
 std::string GLGetDeviceName()
 {
 	return GDRM->GetDRMName();
+}
+
+namespace drm
+{
+	GLImageRef GetSurface()
+	{
+		return GDRM->GetSurface();
+	}
 }

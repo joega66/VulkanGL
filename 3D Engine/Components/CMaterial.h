@@ -1,6 +1,6 @@
 #pragma once
 #include "Component.h"
-#include "../GLRenderResource.h"
+#include "../DRMResource.h"
 
 struct CMaterial : Component<CMaterial>
 {

@@ -1,6 +1,7 @@
 #include "VulkanImage.h"
-#include "VulkanGL.h"
+#include "VulkanDRM.h"
 #include "VulkanCommands.h"
+#include "RenderCommandList.h"
 
 const HashTable<EImageFormat, VkFormat> VulkanFormat =
 {
@@ -79,11 +80,11 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
 }
 
-void VulkanImage::ReleaseGL()
+VulkanImage::~VulkanImage()
 {
-	vkDestroyImageView(Device, ImageView, nullptr);
-	vkDestroyImage(Device, Image, nullptr);
 	vkFreeMemory(Device, Memory, nullptr);
+	vkDestroyImage(Device, Image, nullptr);
+	vkDestroyImageView(Device, ImageView, nullptr);
 }
 
 VulkanImage::operator VkImage() { return Image; }
@@ -109,6 +110,54 @@ bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
 	};
 
 	return Contains(VulkanDepthLayouts, Layout);
+}
+
+VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& SamplerState)
+{
+	static const VkFilter VulkanFilters[] =
+	{
+		VK_FILTER_NEAREST,
+		VK_FILTER_LINEAR,
+		VK_FILTER_CUBIC_IMG
+	};
+
+	static const VkSamplerMipmapMode VulkanMipmapModes[] =
+	{
+		VK_SAMPLER_MIPMAP_MODE_NEAREST,
+		VK_SAMPLER_MIPMAP_MODE_LINEAR
+	};
+
+	static const VkSamplerAddressMode VulkanAddressModes[] =
+	{
+		VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
+	};
+
+	VkFilter Filter = VulkanFilters[(uint32)SamplerState.Filter];
+	VkSamplerMipmapMode SMM = VulkanMipmapModes[(uint32)SamplerState.SMM];
+	VkSamplerAddressMode SAM = VulkanAddressModes[(uint32)SamplerState.SAM];
+
+	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+	SamplerInfo.magFilter = Filter;
+	SamplerInfo.minFilter = Filter;
+	SamplerInfo.mipmapMode = SMM;
+	SamplerInfo.addressModeU = SAM;
+	SamplerInfo.addressModeV = SAM;
+	SamplerInfo.addressModeW = SAM;
+	SamplerInfo.anisotropyEnable = Device.Features.samplerAnisotropy;
+	SamplerInfo.maxAnisotropy = Device.Features.samplerAnisotropy ? Device.Properties.limits.maxSamplerAnisotropy : 1.0f;
+	SamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
+	SamplerInfo.compareEnable = VK_FALSE;
+	SamplerInfo.compareOp = VK_COMPARE_OP_NEVER;
+
+	VkSampler Sampler;
+	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
+
+	return Sampler;
 }
 
 bool VulkanImage::IsInDepthLayout()

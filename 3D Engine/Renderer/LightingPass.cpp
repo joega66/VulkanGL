@@ -1,6 +1,6 @@
 #include "LightingPass.h"
 #include <Renderer/Scene.h>
-#include <GL.h>
+#include <DRM.h>
 
 LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Resources, CMaterial& CMaterial, GLUniformBufferRef LocalToWorldUniform)
 {

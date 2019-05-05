@@ -3,8 +3,6 @@
 #include <Platform/WindowsPlatform.h>
 #include <GLFW/glfw3.h>
 
-#define DEBUG_BUILD
-
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT Flags, VkDebugReportObjectTypeEXT ObjType,
 	uint64 Obj, size_t Location, int32 Code, const char* LayerPrefix, const char* Msg, void* UserData)
 {

@@ -26,8 +26,8 @@ public:
 		, const HashTable<std::string, uint32>& AttributeLocations
 		, const HashTable<std::string, uint32>& UniformLocations
 	);
+	~VulkanShader();
 
-	virtual void ReleaseGL() final;
 	VkShaderStageFlagBits GetVulkanStage() const;
 
 private:
