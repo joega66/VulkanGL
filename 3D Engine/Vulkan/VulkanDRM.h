@@ -15,8 +15,9 @@ public:
 	virtual void Release();
 
 	virtual void BeginFrame();
-	virtual void EndFrame(RenderCommandListRef CmdList);
+	virtual void EndFrame();
 
+	virtual void SubmitCommands(RenderCommandListRef CmdList);
 	virtual RenderCommandListRef CreateCommandList();
 	virtual drm::IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
 	virtual drm::VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);

@@ -9,9 +9,14 @@ namespace drm
 		GDRM->BeginFrame();
 	}
 
-	void EndFrame(RenderCommandListRef CmdList)
+	void EndFrame()
 	{
-		GDRM->EndFrame(CmdList);
+		GDRM->EndFrame();
+	}
+
+	void SubmitCommands(RenderCommandListRef CmdList)
+	{
+		GDRM->SubmitCommands(CmdList);
 	}
 
 	RenderCommandListRef CreateCommandList()

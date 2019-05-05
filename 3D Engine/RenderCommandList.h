@@ -4,13 +4,8 @@
 
 enum class EDepthStencilAccess
 {
-	// Disable depth writes.
 	None,
-	// Enable depth writes.
-	DepthWrite,
-	// Disable depth writes and enable stencil attachment.
-	StencilWrite,
-	// Enable depth writes. (Really has same effect as DepthWrite.)
+	// No transition.
 	DepthWriteStencilWrite,
 	// Transitions depth to shader read for the depth aspect.
 	DepthReadStencilWrite,
@@ -179,6 +174,28 @@ struct RasterizationState
 	float LineWidth = 1.0f;
 };
 
+enum ESampleCount
+{
+	None = 0,
+	Samples1 = 0x01,
+	Samples2 = 0x02,
+	Samples4 = 0x04,
+	Samples8 = 0x08,
+	Samples16 = 0x10,
+	Samples32 = 0x20,
+	Samples64 = 0x40
+};
+
+struct MultisampleState
+{
+	ESampleCount RasterizationSamples = ESampleCount::Samples1;
+	bool SampleShadingEnable = false;
+	float MinSampleShading = 0.0f;
+	const uint32* SampleMask = nullptr;
+	bool AlphaToCoverageEnable = false;
+	bool AlphaToOneEnable = false;
+};
+
 enum class EBlendFactor
 {
 };
@@ -224,6 +241,7 @@ struct PipelineStateInitializer
 	Viewport Viewport;
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
+	MultisampleState MultisampleState;
 	std::array<ColorBlendAttachmentState, MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	GraphicsPipelineState GraphicsPipelineState;

@@ -50,23 +50,6 @@ VulkanCommandList::~VulkanCommandList()
 	Pipelines.Destroy();
 	Samplers.Destroy();
 
-	// "Transition" render targets back to UNDEFINED
-	// This is mainly for consistency with non-rendertargetable images and error checking
-	for (uint32 i = 0; i < Pending.NumRTs; i++)
-	{
-		VulkanImageRef Image = ResourceCast(Pending.ColorTargets[i]->Image);
-		Image->Layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	}
-
-	if (Pending.DepthTarget)
-	{
-		VulkanImageRef Image = ResourceCast(Pending.DepthTarget->Image);
-		Image->Layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		Pending.DepthTarget = nullptr;
-	}
-
-	Pending.SetDefaultPipeline(Device);
-
 	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
 }
 
@@ -74,7 +57,7 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetV
 {
 	// @todo Pretty heavyweight function... Should just defer the creation of this stuff until draw.
 	// @todo Check if the render pass is the same. 
-	check(NumRTs < MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
+	check(NumRTs < PipelineStateInitializer::MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
 
 	Pending.NumRTs = NumRTs;
 	Pending.DepthTarget = ResourceCast(DepthTarget);
@@ -98,7 +81,7 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetV
 
 		VulkanRenderTargetViewRef ColorTarget = ResourceCast(ColorTargets[i]);
 		Pending.ColorTargets[i] = ColorTarget;
-		ColorTarget = ResourceCast(ColorTargets[i]);
+
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
 		check(Image && Any(Image->Usage & EResourceUsage::RenderTargetable), "Color target is invalid.");
@@ -106,9 +89,9 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetV
 
 		Image->Layout = [&] ()
 		{
-			// @todo-joe UGLY AF
-			if (ColorTarget->Image == drm::GetSurface())
+			if (Image == drm::GetSurface())
 			{
+				bTouchedSurface = true;
 				return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			}
 			else if (Any(Image->Usage & EResourceUsage::ShaderResource))
@@ -144,11 +127,7 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetV
 
 	VkPipelineDepthStencilStateCreateInfo& DepthStencil = Pending.DepthStencilState;
 
-	if (Access == EDepthStencilAccess::None)
-	{
-		DepthStencil.depthWriteEnable = false;
-	}
-	else
+	if (Access != EDepthStencilAccess::None)
 	{
 		VulkanRenderTargetViewRef DepthTarget = Pending.DepthTarget;
 		check(DepthTarget, "Depth target is invalid.");
@@ -162,36 +141,20 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetV
 			if (Access == EDepthStencilAccess::DepthReadStencilRead)
 			{
 				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
-				DepthStencil.depthWriteEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			}
 			else if (Access == EDepthStencilAccess::DepthReadStencilWrite)
 			{
 				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
-				DepthStencil.depthWriteEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 			}
 			else if (Access == EDepthStencilAccess::DepthWriteStencilRead)
 			{
 				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
-				DepthStencil.depthWriteEnable = true;
 				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
 			}
-			else
+			else // DepthWriteStencilWrite
 			{
-				if (Access == EDepthStencilAccess::DepthWrite)
-				{
-					DepthStencil.depthWriteEnable = true;
-				}
-				else if (Access == EDepthStencilAccess::StencilWrite)
-				{
-					DepthStencil.depthWriteEnable = false;
-				}
-				else // DepthWriteStencilWrite
-				{
-					DepthStencil.depthWriteEnable = true;
-				}
-
 				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			}
 		}();
@@ -267,7 +230,7 @@ void VulkanCommandList::SetGraphicsPipeline(drm::ShaderRef Vertex, drm::ShaderRe
 	DescriptorImages.clear();
 	DescriptorBuffers.clear();
 
-	Pending.ResetVertexStreams();
+	std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
 
 	Pending.GraphicsPipeline.Vertex = ResourceCast(Vertex);
 	Pending.GraphicsPipeline.TessControl = ResourceCast(TessControl);
@@ -402,13 +365,15 @@ void VulkanCommandList::Finish()
 	}
 
 	vulkan(vkEndCommandBuffer(CommandBuffer));
+
+	bFinished = true;
 }
 
 void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit)
 {
 	{
 		const Viewport& In = PSOInit.Viewport;
-		VkViewport& Out = Pending.Viewport;
+		auto& Out = Pending.Viewport;
 		Out.x = In.X;
 		Out.y = In.Y;
 		Out.width = In.Width;
@@ -450,9 +415,10 @@ void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit
 		};
 
 		const DepthStencilState& In = PSOInit.DepthStencilState;
-		VkPipelineDepthStencilStateCreateInfo& Out = Pending.DepthStencilState;
+		auto& Out = Pending.DepthStencilState;
 
 		Out.depthTestEnable = In.DepthTestEnable;
+		Out.depthWriteEnable = In.DepthWriteEnable;
 		Out.depthCompareOp = GetValue(VulkanDepthCompare, In.DepthCompareTest);
 		Out.stencilTestEnable = In.StencilTestEnable;
 
@@ -491,7 +457,7 @@ void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit
 		};
 
 		const RasterizationState& In = PSOInit.RasterizationState;
-		VkPipelineRasterizationStateCreateInfo& Out = Pending.RasterizationState;
+		auto& Out = Pending.RasterizationState;
 
 		Out.depthClampEnable = In.DepthClampEnable;
 		Out.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
@@ -506,10 +472,23 @@ void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit
 	}
 
 	{
-		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < MaxSimultaneousRenderTargets; RenderTargetIndex++)
+		const MultisampleState& In = PSOInit.MultisampleState;
+		auto& Out = Pending.MultisampleState;
+
+		Out.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
+		Out.sampleShadingEnable = In.SampleShadingEnable;
+		Out.minSampleShading = In.MinSampleShading;
+		Out.pSampleMask = In.SampleMask;
+		Out.alphaToCoverageEnable = In.AlphaToCoverageEnable;
+		Out.alphaToOneEnable = In.AlphaToOneEnable;
+	}
+
+	{
+		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < PSOInit.ColorBlendAttachmentStates.size(); RenderTargetIndex++)
 		{
 			const ColorBlendAttachmentState& In = PSOInit.ColorBlendAttachmentStates[RenderTargetIndex];
-			VkPipelineColorBlendAttachmentState& Out = Pending.ColorBlendAttachmentStates[RenderTargetIndex];
+			auto& Out = Pending.ColorBlendAttachmentStates[RenderTargetIndex];
+			Out = {};
 
 			Out.blendEnable = In.BlendEnable;
 
@@ -530,7 +509,7 @@ void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit
 
 	{
 		const InputAssemblyState& In = PSOInit.InputAssemblyState;
-		VkPipelineInputAssemblyStateCreateInfo& Out = Pending.InputAssemblyState;
+		auto& Out = Pending.InputAssemblyState;
 
 		for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
 		{
@@ -890,50 +869,11 @@ void VulkanCommandList::CleanPipeline()
 
 VulkanCommandList::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
 {
-	VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings);
-	SetDefaultPipeline(Device);
-}
+	VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings, VulkanVertexBufferRef());
 
-void VulkanCommandList::PendingGraphicsState::SetDefaultPipeline(const VulkanDevice& Device)
-{
 	NumRTs = 0;
 	std::fill(ColorTargets.begin(), ColorTargets.end(), VulkanRenderTargetViewRef());
 	DepthTarget = nullptr;
-
-	ResetVertexStreams();
-
-	VertexInputState.pVertexAttributeDescriptions = nullptr;
-	VertexInputState.pVertexBindingDescriptions = nullptr;
-	VertexInputState.vertexAttributeDescriptionCount = 0;
-	VertexInputState.vertexBindingDescriptionCount = 0;
-
-	InputAssemblyState.primitiveRestartEnable = false;
-	InputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-	ViewportState.pScissors = nullptr;
-	ViewportState.pViewports = nullptr;
-	ViewportState.scissorCount = 0;
-	ViewportState.viewportCount = 0;
-
-	RasterizationState.cullMode = VK_CULL_MODE_NONE;
-	RasterizationState.depthBiasClamp = false;
-	RasterizationState.depthBiasEnable = false;
-	RasterizationState.depthClampEnable = false;
-	RasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	RasterizationState.lineWidth = 1.0f;
-	RasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
-	RasterizationState.rasterizerDiscardEnable = false;
-
-	MultisampleState.alphaToCoverageEnable = false;
-	MultisampleState.alphaToOneEnable = false;
-	MultisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-	MultisampleState.sampleShadingEnable = true;
-
-	DepthStencilState.depthBoundsTestEnable = false;
-	DepthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
-	DepthStencilState.depthTestEnable = true;
-	DepthStencilState.depthWriteEnable = true;
-	DepthStencilState.stencilTestEnable = false;
 
 	ColorBlendState.attachmentCount = 0;
 	ColorBlendState.blendConstants[0] = 0.0f;
@@ -944,18 +884,6 @@ void VulkanCommandList::PendingGraphicsState::SetDefaultPipeline(const VulkanDev
 	ColorBlendState.logicOpEnable = false;
 	ColorBlendState.pAttachments = nullptr;
 
-	for (VkPipelineColorBlendAttachmentState& ColorBlendAttachment : ColorBlendAttachmentStates)
-	{
-		ColorBlendAttachment = {};
-		ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		ColorBlendAttachment.blendEnable = false;
-	}
-
 	DynamicState.dynamicStateCount = 0;
 	DynamicState.pDynamicStates = nullptr;
-}
-
-void VulkanCommandList::PendingGraphicsState::ResetVertexStreams()
-{
-	std::fill(VertexStreams.begin(), VertexStreams.end(), VulkanVertexBufferRef());
 }

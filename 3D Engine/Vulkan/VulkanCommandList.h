@@ -10,6 +10,8 @@ class VulkanCommandList final : public RenderCommandList
 {
 public:
 	const VkCommandBuffer CommandBuffer;
+	bool bTouchedSurface = false;
+	bool bFinished = false;
 
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
 	~VulkanCommandList();
@@ -43,16 +45,11 @@ private:
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
 
-	enum EVulkanConstants
-	{
-		MaxSimultaneousRenderTargets = 8,
-	};
-
 	struct PendingGraphicsState
 	{
 		/** Render targets */
 		uint32 NumRTs = 0;
-		std::array<VulkanRenderTargetViewRef, MaxSimultaneousRenderTargets> ColorTargets;
+		std::array<VulkanRenderTargetViewRef, PipelineStateInitializer::MaxSimultaneousRenderTargets> ColorTargets;
 		VulkanRenderTargetViewRef DepthTarget;
 
 		/** Graphics pipeline */
@@ -68,7 +65,7 @@ private:
 		VkPipelineMultisampleStateCreateInfo	MultisampleState{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 		VkPipelineDepthStencilStateCreateInfo	DepthStencilState{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 		VkPipelineColorBlendStateCreateInfo		ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-		std::array<VkPipelineColorBlendAttachmentState, MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
+		std::array<VkPipelineColorBlendAttachmentState, PipelineStateInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
 		VkPipelineDynamicStateCreateInfo		DynamicState{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 		VkViewport								Viewport{};
 		VkRect2D								Scissor{};
@@ -76,8 +73,6 @@ private:
 		std::vector<VulkanVertexBufferRef> VertexStreams;
 
 		PendingGraphicsState(VulkanDevice& Device);
-		void SetDefaultPipeline(const VulkanDevice& Device);
-		void ResetVertexStreams();
 	} Pending;
 
 	PendingBuffer<VkRenderPass> RenderPasses;

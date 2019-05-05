@@ -83,8 +83,8 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 VulkanImage::~VulkanImage()
 {
 	vkFreeMemory(Device, Memory, nullptr);
-	vkDestroyImage(Device, Image, nullptr);
 	vkDestroyImageView(Device, ImageView, nullptr);
+	vkDestroyImage(Device, Image, nullptr);
 }
 
 VulkanImage::operator VkImage() { return Image; }

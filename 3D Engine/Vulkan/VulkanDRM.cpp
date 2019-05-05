@@ -74,38 +74,8 @@ void VulkanDRM::BeginFrame()
 	}
 }
 
-void VulkanDRM::EndFrame(RenderCommandListRef CmdList)
+void VulkanDRM::EndFrame()
 {
-	VulkanCommandListRef VulkanCmdList = ResourceCast(CmdList);
-
-	VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
-	SubmitInfo.waitSemaphoreCount = 1;
-	SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
-	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pSignalSemaphores = &RenderEndSem;
-	SubmitInfo.signalSemaphoreCount = 1;
-
-	vulkan(vkQueueSubmit(Device.GraphicsQueue, 1, &SubmitInfo, VK_NULL_HANDLE));
-
-	VkPresentInfoKHR PresentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-	PresentInfo.pWaitSemaphores = &RenderEndSem;
-	PresentInfo.waitSemaphoreCount = 1;
-	PresentInfo.pSwapchains = &Swapchain.Swapchain;
-	PresentInfo.swapchainCount = 1;
-	PresentInfo.pImageIndices = &SwapchainIndex;
-
-	if (VkResult Result = vkQueuePresentKHR(Device.PresentQueue, &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
-	{
-		signal_unimplemented();
-	}
-	else
-	{
-		vulkan(Result);
-	}
-
-	vkQueueWaitIdle(Device.PresentQueue);
-
 	DescriptorPool.Reset();
 }
 
@@ -114,6 +84,48 @@ drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EImageFormat EngineFormat, ui
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
+}
+
+void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
+{ 
+	VulkanCommandListRef VulkanCmdList = ResourceCast(CmdList);
+
+	check(VulkanCmdList->bFinished, "Failed to call Finish() before submission.");
+
+	if (VulkanCmdList->bTouchedSurface)
+	{
+		VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+		SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
+		SubmitInfo.waitSemaphoreCount = 1;
+		SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
+		SubmitInfo.commandBufferCount = 1;
+		SubmitInfo.pSignalSemaphores = &RenderEndSem;
+		SubmitInfo.signalSemaphoreCount = 1;
+
+		vulkan(vkQueueSubmit(Device.GraphicsQueue, 1, &SubmitInfo, VK_NULL_HANDLE));
+
+		VkPresentInfoKHR PresentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+		PresentInfo.pWaitSemaphores = &RenderEndSem;
+		PresentInfo.waitSemaphoreCount = 1;
+		PresentInfo.pSwapchains = &Swapchain.Swapchain;
+		PresentInfo.swapchainCount = 1;
+		PresentInfo.pImageIndices = &SwapchainIndex;
+
+		if (VkResult Result = vkQueuePresentKHR(Device.PresentQueue, &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
+		{
+			signal_unimplemented();
+		}
+		else
+		{
+			vulkan(Result);
+		}
+	}
+	else
+	{
+		signal_unimplemented();
+	}
+
+	vkQueueWaitIdle(Device.PresentQueue);
 }
 
 RenderCommandListRef VulkanDRM::CreateCommandList()

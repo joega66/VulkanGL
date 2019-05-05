@@ -21,10 +21,12 @@ void Scene::Render()
 	//RenderRayMarching(*CmdList);
 	RenderLightingPass(*CmdList);
 	RenderEditorPrimitives(*CmdList);
-
 	CmdList->Finish();
 
-	drm::EndFrame(CmdList);
+	drm::SubmitCommands(CmdList);
+
+	// @todo EndFrame should only reset the descriptor sets owned by the command list.
+	drm::EndFrame();
 }
 
 void Scene::RenderRayMarching(RenderCommandList& CmdList)
@@ -37,8 +39,8 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
-	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
-	
+	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWriteStencilWrite);
+
 	PSOInit.Viewport.X = 0.0f;
 	PSOInit.Viewport.Y = 0.0f;
 	PSOInit.Viewport.Width = Screen.Width;
@@ -52,6 +54,7 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 
 	CmdList.SetPipelineState(PSOInit);
 
+	// @todo Use GraphicsPipelineState object
 	CmdList.SetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 
 	CmdList.SetUniformBuffer(FragShader, FragShader->GetUniformLocation("ViewUniform"), View.Uniform);
@@ -65,7 +68,7 @@ void Scene::RenderLightingPass(RenderCommandList& CmdList)
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
-	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWrite);
+	CmdList.SetRenderTargets(1, &SurfaceView, DepthView, EDepthStencilAccess::DepthWriteStencilWrite);
 
 	PipelineStateInitializer PSOInit = {};
 
@@ -135,7 +138,7 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 	CmdList.SetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
 
 	CmdList.SetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
-	CmdList.SetShaderImage(FragShader, FragShader->GetUniformLocation("Skybox"), Skybox, SamplerState{EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear});
+	CmdList.SetShaderImage(FragShader, FragShader->GetUniformLocation("Skybox"), Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	for (const auto& Resource : Cube->Resources)
 	{
@@ -171,11 +174,12 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 	Stencil.Execute(CmdList, PSOInit, View);
 
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
-	drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+	drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{ 1.0f, 0 });
 
-	CmdList.SetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::StencilWrite);
+	CmdList.SetRenderTargets(1, &SurfaceView, OutlineView, EDepthStencilAccess::DepthWriteStencilWrite);
 
 	PSOInit.DepthStencilState.DepthTestEnable = false;
+	PSOInit.DepthStencilState.DepthWriteEnable = false;
 
 	PSOInit.DepthStencilState.Back.CompareOp = ECompareOp::NotEqual;
 	PSOInit.DepthStencilState.Back.FailOp = EStencilOp::Keep;

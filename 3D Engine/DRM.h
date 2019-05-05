@@ -22,8 +22,9 @@ public:
 	virtual void Release() = 0;
 
 	virtual void BeginFrame() = 0;
-	virtual void EndFrame(RenderCommandListRef CmdList) = 0;
+	virtual void EndFrame() = 0;
 
+	virtual void SubmitCommands(RenderCommandListRef CmdList) = 0;
 	virtual RenderCommandListRef CreateCommandList() = 0;
 	virtual drm::IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
 	virtual drm::VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr) = 0;
@@ -92,7 +93,8 @@ extern DRMRef GDRM;
 namespace drm
 {
 	void BeginFrame();
-	void EndFrame(RenderCommandListRef CmdList);
+	void EndFrame();
+	void SubmitCommands(RenderCommandListRef CmdList);
 	RenderCommandListRef CreateCommandList();
 	IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
 	VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
