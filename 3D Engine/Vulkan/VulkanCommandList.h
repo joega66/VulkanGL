@@ -38,37 +38,11 @@ private:
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
 
-	RenderPassInitializer PendingRenderPass;
-	//PipelineStateInitializer PendingPSO;
-
-	struct PendingGraphicsState
+	struct PendingState
 	{
-		/** Render targets */
-		uint32 NumRTs = 0;
-		std::array<VulkanRenderTargetViewRef, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorTargets;
-		VulkanRenderTargetViewRef DepthTarget;
-
-		/** Graphics pipeline */
-		GraphicsPipelineState GraphicsPipeline;
-
-		/** Pipeline state */
-		VkPipelineShaderStageCreateInfo			Stages{ VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
-		VkPipelineVertexInputStateCreateInfo	VertexInputState{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-		VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-		VkPipelineTessellationStateCreateInfo	TessellationState{ VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
-		VkPipelineViewportStateCreateInfo		ViewportState{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-		VkPipelineRasterizationStateCreateInfo	RasterizationState{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-		VkPipelineMultisampleStateCreateInfo	MultisampleState{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-		VkPipelineDepthStencilStateCreateInfo	DepthStencilState{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-		VkPipelineColorBlendStateCreateInfo		ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-		std::array<VkPipelineColorBlendAttachmentState, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
-		VkPipelineDynamicStateCreateInfo		DynamicState{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-		VkViewport								Viewport{};
-		VkRect2D								Scissor{};
-
+		RenderPassInitializer RPInit;
+		PipelineStateInitializer PSOInit;
 		std::vector<VulkanVertexBufferRef> VertexStreams;
-
-		PendingGraphicsState(VulkanDevice& Device);
 	} Pending;
 
 	PendingBuffer<VkRenderPass> RenderPasses;

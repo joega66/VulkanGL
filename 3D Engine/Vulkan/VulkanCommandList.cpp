@@ -11,7 +11,6 @@ static CAST(RenderCommandList, VulkanCommandList);
 
 VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool)
 	: Device(Device)
-	, Pending(Device)
 	, DescriptorPool(DescriptorPool)
 	, Allocator(Allocator)
 	, RenderPasses([&] (VkRenderPass RenderPass) { vkDestroyRenderPass(Device, RenderPass, nullptr); })
@@ -38,6 +37,7 @@ VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allo
 	return CommandBuffer;
 }())
 {
+	Pending.VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings, VulkanVertexBufferRef());
 }
 
 VulkanCommandList::~VulkanCommandList()
@@ -54,12 +54,12 @@ VulkanCommandList::~VulkanCommandList()
 
 void VulkanCommandList::SetRenderTargets(const RenderPassInitializer& RenderPassInit)
 {
-	if (PendingRenderPass == RenderPassInit)
+	if (Pending.RPInit == RenderPassInit)
 	{
 		return;
 	}
 
-	PendingRenderPass = RenderPassInit;
+	Pending.RPInit = RenderPassInit;
 
 	bDirtyRenderPass = true;
 }
@@ -195,171 +195,17 @@ void VulkanCommandList::Finish()
 void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit)
 {
 	{
-		if (Pending.GraphicsPipeline != PSOInit.GraphicsPipelineState)
+		if (Pending.PSOInit.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
 		{
 			// Clear descriptors and vertex streams.
 			DescriptorImages.clear();
 			DescriptorBuffers.clear();
 			std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
-			Pending.GraphicsPipeline = PSOInit.GraphicsPipelineState;
 			bDirtyPipelineLayout = true;
 		}
 	}
 
-	{
-		const Viewport& In = PSOInit.Viewport;
-		auto& Out = Pending.Viewport;
-		Out.x = In.X;
-		Out.y = In.Y;
-		Out.width = In.Width;
-		Out.height = In.Height;
-		Out.minDepth = In.MinDepth;
-		Out.maxDepth = In.MaxDepth;
-	}
-
-	{
-		static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
-		{
-			ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
-			ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
-			ENTRY(EDepthCompareTest::Equal, VK_COMPARE_OP_EQUAL)
-			ENTRY(EDepthCompareTest::LEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
-			ENTRY(EDepthCompareTest::Greater, VK_COMPARE_OP_GREATER)
-			ENTRY(EDepthCompareTest::NEqual, VK_COMPARE_OP_NOT_EQUAL)
-			ENTRY(EDepthCompareTest::GEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
-			ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
-		};
-
-		static const HashTable<ECompareOp, VkCompareOp> VulkanCompareOp =
-		{
-			ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
-			ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
-			ENTRY(ECompareOp::Equal, VK_COMPARE_OP_EQUAL)
-			ENTRY(ECompareOp::LessOrEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
-			ENTRY(ECompareOp::Greater, VK_COMPARE_OP_GREATER)
-			ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
-			ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
-			ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
-		};
-
-		static const HashTable<EStencilOp, VkStencilOp> VulkanStencilOp =
-		{
-			ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
-			ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
-			ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
-		};
-
-		const DepthStencilState& In = PSOInit.DepthStencilState;
-		auto& Out = Pending.DepthStencilState;
-
-		Out.depthTestEnable = In.DepthTestEnable;
-		Out.depthWriteEnable = In.DepthWriteEnable;
-		Out.depthCompareOp = GetValue(VulkanDepthCompare, In.DepthCompareTest);
-		Out.stencilTestEnable = In.StencilTestEnable;
-
-		const StencilOpState& Back = In.Back;
-
-		Out.back.failOp = GetValue(VulkanStencilOp, Back.FailOp);
-		Out.back.passOp = GetValue(VulkanStencilOp, Back.PassOp);
-		Out.back.depthFailOp = GetValue(VulkanStencilOp, Back.DepthFailOp);
-		Out.back.compareOp = GetValue(VulkanCompareOp, Back.CompareOp);
-		Out.back.compareMask = Back.CompareMask;
-		Out.back.writeMask = Back.WriteMask;
-		Out.back.reference = Back.Reference;
-		Out.front = Out.back;
-	}
-
-	{
-		static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
-		{
-			ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
-			ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
-			ENTRY(ECullMode::Front, VK_CULL_MODE_FRONT_BIT)
-			ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
-		};
-
-		static const HashTable<EFrontFace, VkFrontFace> VulkanFrontFace =
-		{
-			ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
-			ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-		};
-
-		static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
-		{
-			ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
-			ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)
-			ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
-		};
-
-		const RasterizationState& In = PSOInit.RasterizationState;
-		auto& Out = Pending.RasterizationState;
-
-		Out.depthClampEnable = In.DepthClampEnable;
-		Out.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
-		Out.polygonMode = GetValue(VulkanPolygonMode, In.PolygonMode);
-		Out.cullMode = GetValue(VulkanCullMode, In.CullMode);
-		Out.frontFace = GetValue(VulkanFrontFace, In.FrontFace);
-		Out.depthBiasEnable = In.DepthBiasEnable;
-		Out.depthBiasConstantFactor = In.DepthBiasConstantFactor;
-		Out.depthBiasClamp = In.DepthBiasClamp;
-		Out.depthBiasSlopeFactor = In.DepthBiasSlopeFactor;
-		Out.lineWidth = In.LineWidth;
-	}
-
-	{
-		const MultisampleState& In = PSOInit.MultisampleState;
-		auto& Out = Pending.MultisampleState;
-
-		Out.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
-		Out.sampleShadingEnable = In.SampleShadingEnable;
-		Out.minSampleShading = In.MinSampleShading;
-		Out.pSampleMask = In.SampleMask;
-		Out.alphaToCoverageEnable = In.AlphaToCoverageEnable;
-		Out.alphaToOneEnable = In.AlphaToOneEnable;
-	}
-
-	{
-		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < PSOInit.ColorBlendAttachmentStates.size(); RenderTargetIndex++)
-		{
-			const ColorBlendAttachmentState& In = PSOInit.ColorBlendAttachmentStates[RenderTargetIndex];
-			auto& Out = Pending.ColorBlendAttachmentStates[RenderTargetIndex];
-			Out = {};
-
-			Out.blendEnable = In.BlendEnable;
-
-			// @todo-joe Blend factors
-			/*Out.srcColorBlendFactor = In.SrcColorBlendFactor;
-			Out.dstColorBlendFactor = In.DstColorBlendFactor;
-			Out.colorBlendOp = In.ColorBlendOp;
-			Out.srcAlphaBlendFactor = In.SrcAlphaBlendFactor;
-			Out.dstAlphaBlendFactor = In.DstAlphaBlendFactor;
-			Out.alphaBlendOp = In.AlphaBlendOp;*/
-
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
-		}
-	}
-
-	{
-		const InputAssemblyState& In = PSOInit.InputAssemblyState;
-		auto& Out = Pending.InputAssemblyState;
-
-		for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
-		{
-			if ((uint32)In.Topology == VulkanTopology)
-			{
-				Out.topology = VulkanTopology;
-				return;
-			}
-			VulkanTopology = VkPrimitiveTopology(VulkanTopology + 1);
-		}
-
-		Out.primitiveRestartEnable = In.PrimitiveRestartEnable;
-
-		fail("VkPrimitiveTopology not found.");
-	}
+	Pending.PSOInit = PSOInit;
 
 	bDirtyPipeline = true;
 }
@@ -382,12 +228,12 @@ void VulkanCommandList::CleanPipelineLayout()
 	};
 
 	{
-		const auto& GraphicsPipeline = Pending.GraphicsPipeline;
-		AddBindings(GraphicsPipeline.Vertex);
-		AddBindings(GraphicsPipeline.TessControl);
-		AddBindings(GraphicsPipeline.TessEval);
-		AddBindings(GraphicsPipeline.Geometry);
-		AddBindings(GraphicsPipeline.Fragment);
+		const auto& GraphicsPipelineState = Pending.PSOInit.GraphicsPipelineState;
+		AddBindings(GraphicsPipelineState.Vertex);
+		AddBindings(GraphicsPipelineState.TessControl);
+		AddBindings(GraphicsPipelineState.TessEval);
+		AddBindings(GraphicsPipelineState.Geometry);
+		AddBindings(GraphicsPipelineState.Fragment);
 	}
 
 	VkDescriptorSetLayoutCreateInfo DescriptorSetLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -520,31 +366,26 @@ void VulkanCommandList::CleanRenderPass()
 
 	{
 		// Create the render pass.
-		check(PendingRenderPass.NumRenderTargets < RenderPassInitializer::MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
-
-		Pending.NumRTs = PendingRenderPass.NumRenderTargets;
-		Pending.DepthTarget = ResourceCast(PendingRenderPass.DepthTarget);
+		check(Pending.RPInit.NumRenderTargets < RenderPassInitializer::MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
 
 		std::vector<VkAttachmentDescription> Descriptions;
-		std::vector<VkAttachmentReference> ColorRefs(PendingRenderPass.NumRenderTargets);
+		std::vector<VkAttachmentReference> ColorRefs(Pending.RPInit.NumRenderTargets);
 		VkAttachmentReference DepthRef = {};
 
-		if (PendingRenderPass.DepthTarget)
+		if (Pending.RPInit.DepthTarget)
 		{
-			Descriptions.resize(PendingRenderPass.NumRenderTargets + 1);
+			Descriptions.resize(Pending.RPInit.NumRenderTargets + 1);
 		}
 		else
 		{
-			Descriptions.resize(PendingRenderPass.NumRenderTargets);
+			Descriptions.resize(Pending.RPInit.NumRenderTargets);
 		}
 
-		for (uint32 i = 0; i < PendingRenderPass.NumRenderTargets; i++)
+		for (uint32 i = 0; i < Pending.RPInit.NumRenderTargets; i++)
 		{
-			check(PendingRenderPass.ColorTargets[i], "Color target is null.");
+			check(Pending.RPInit.ColorTargets[i], "Color target is null.");
 
-			VulkanRenderTargetViewRef ColorTarget = ResourceCast(PendingRenderPass.ColorTargets[i]);
-			Pending.ColorTargets[i] = ColorTarget;
-
+			VulkanRenderTargetViewRef ColorTarget = ResourceCast(Pending.RPInit.ColorTargets[i]);
 			VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
 			check(Image && Any(Image->Usage & EResourceUsage::RenderTargetable), "Color target is invalid.");
@@ -588,11 +429,9 @@ void VulkanCommandList::CleanRenderPass()
 			ColorRefs[i] = ColorRef;
 		}
 
-		VkPipelineDepthStencilStateCreateInfo& DepthStencil = Pending.DepthStencilState;
-
-		if (PendingRenderPass.DepthStencilTransition != EDepthStencilTransition::None)
+		if (Pending.RPInit.DepthStencilTransition != EDepthStencilTransition::None)
 		{
-			VulkanRenderTargetViewRef DepthTarget = Pending.DepthTarget;
+			VulkanRenderTargetViewRef DepthTarget = ResourceCast(Pending.RPInit.DepthTarget);
 			check(DepthTarget, "Depth target is invalid.");
 
 			VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
@@ -601,17 +440,17 @@ void VulkanCommandList::CleanRenderPass()
 
 			VkImageLayout FinalLayout = [&] ()
 			{
-				if (PendingRenderPass.DepthStencilTransition == EDepthStencilTransition::DepthReadStencilRead)
+				if (Pending.RPInit.DepthStencilTransition == EDepthStencilTransition::DepthReadStencilRead)
 				{
 					check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
 					return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 				}
-				else if (PendingRenderPass.DepthStencilTransition == EDepthStencilTransition::DepthReadStencilWrite)
+				else if (Pending.RPInit.DepthStencilTransition == EDepthStencilTransition::DepthReadStencilWrite)
 				{
 					check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
 					return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 				}
-				else if (PendingRenderPass.DepthStencilTransition == EDepthStencilTransition::DepthWriteStencilRead)
+				else if (Pending.RPInit.DepthStencilTransition == EDepthStencilTransition::DepthWriteStencilRead)
 				{
 					check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
 					return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
@@ -634,9 +473,9 @@ void VulkanCommandList::CleanRenderPass()
 			DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			DepthDescription.initialLayout = DepthImage->Layout;
 			DepthDescription.finalLayout = FinalLayout;
-			Descriptions[PendingRenderPass.NumRenderTargets] = DepthDescription;
+			Descriptions[Pending.RPInit.NumRenderTargets] = DepthDescription;
 
-			DepthRef.attachment = PendingRenderPass.NumRenderTargets;
+			DepthRef.attachment = Pending.RPInit.NumRenderTargets;
 			DepthRef.layout = FinalLayout;
 
 			DepthImage->Layout = FinalLayout;
@@ -646,7 +485,7 @@ void VulkanCommandList::CleanRenderPass()
 		Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		Subpass.pColorAttachments = ColorRefs.data();
 		Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-		Subpass.pDepthStencilAttachment = !PendingRenderPass.DepthTarget ? nullptr : &DepthRef;
+		Subpass.pDepthStencilAttachment = !Pending.RPInit.DepthTarget ? nullptr : &DepthRef;
 
 		std::array<VkSubpassDependency, 2> Dependencies;
 
@@ -679,11 +518,11 @@ void VulkanCommandList::CleanRenderPass()
 		RenderPasses.Push(RenderPass);
 	}
 
-	const uint32 NumRTs = Pending.NumRTs;
+	const uint32 NumRTs = Pending.RPInit.NumRenderTargets;
 	std::vector<VkClearValue> ClearValues;
 	std::vector<VkImageView> AttachmentViews;
 
-	if (Pending.DepthTarget)
+	if (Pending.RPInit.DepthTarget)
 	{
 		ClearValues.resize(NumRTs + 1);
 		AttachmentViews.resize(NumRTs + 1);
@@ -696,7 +535,7 @@ void VulkanCommandList::CleanRenderPass()
 
 	for (uint32 i = 0; i < NumRTs; i++)
 	{
-		VulkanRenderTargetViewRef ColorTarget = Pending.ColorTargets[i];
+		VulkanRenderTargetViewRef ColorTarget = ResourceCast(Pending.RPInit.ColorTargets[i]);
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
 		const auto& ClearValue = std::get<std::array<float, 4>>(ColorTarget->ClearValue);
@@ -708,9 +547,9 @@ void VulkanCommandList::CleanRenderPass()
 		AttachmentViews[i] = Image->ImageView;
 	}
 
-	if (Pending.DepthTarget)
+	if (Pending.RPInit.DepthTarget)
 	{
-		VulkanRenderTargetViewRef DepthTarget = Pending.DepthTarget;
+		VulkanRenderTargetViewRef DepthTarget = ResourceCast(Pending.RPInit.DepthTarget);
 		VulkanImageRef Image = ResourceCast(DepthTarget->Image);
 
 		ClearValues[NumRTs].depthStencil = { 0, 0 };
@@ -728,7 +567,7 @@ void VulkanCommandList::CleanRenderPass()
 		AttachmentViews[NumRTs] = Image->ImageView;
 	}
 
-	drm::ImageRef Image = Pending.DepthTarget ? Pending.DepthTarget->Image : Pending.ColorTargets[0]->Image;
+	drm::ImageRef Image = Pending.RPInit.DepthTarget ? Pending.RPInit.DepthTarget->Image : Pending.RPInit.ColorTargets[0]->Image;
 
 	VkRect2D RenderArea = {};
 	RenderArea.extent = { Image->Width, Image->Height };
@@ -761,7 +600,138 @@ void VulkanCommandList::CleanRenderPass()
 
 void VulkanCommandList::CleanPipeline()
 {
-	const auto& GraphicsPipeline = Pending.GraphicsPipeline;
+	VkPipelineDepthStencilStateCreateInfo DepthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+
+	{
+		static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
+		{
+			ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
+			ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
+			ENTRY(EDepthCompareTest::Equal, VK_COMPARE_OP_EQUAL)
+			ENTRY(EDepthCompareTest::LEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
+			ENTRY(EDepthCompareTest::Greater, VK_COMPARE_OP_GREATER)
+			ENTRY(EDepthCompareTest::NEqual, VK_COMPARE_OP_NOT_EQUAL)
+			ENTRY(EDepthCompareTest::GEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
+			ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
+		};
+
+		static const HashTable<ECompareOp, VkCompareOp> VulkanCompareOp =
+		{
+			ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
+			ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
+			ENTRY(ECompareOp::Equal, VK_COMPARE_OP_EQUAL)
+			ENTRY(ECompareOp::LessOrEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
+			ENTRY(ECompareOp::Greater, VK_COMPARE_OP_GREATER)
+			ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
+			ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
+			ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
+		};
+
+		static const HashTable<EStencilOp, VkStencilOp> VulkanStencilOp =
+		{
+			ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
+			ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
+			ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
+		};
+
+		const auto& In = Pending.PSOInit.DepthStencilState;
+
+		DepthStencilState.depthTestEnable = In.DepthTestEnable;
+		DepthStencilState.depthWriteEnable = In.DepthWriteEnable;
+		DepthStencilState.depthCompareOp = GetValue(VulkanDepthCompare, In.DepthCompareTest);
+		DepthStencilState.stencilTestEnable = In.StencilTestEnable;
+
+		const auto& Back = In.Back;
+
+		DepthStencilState.back.failOp = GetValue(VulkanStencilOp, Back.FailOp);
+		DepthStencilState.back.passOp = GetValue(VulkanStencilOp, Back.PassOp);
+		DepthStencilState.back.depthFailOp = GetValue(VulkanStencilOp, Back.DepthFailOp);
+		DepthStencilState.back.compareOp = GetValue(VulkanCompareOp, Back.CompareOp);
+		DepthStencilState.back.compareMask = Back.CompareMask;
+		DepthStencilState.back.writeMask = Back.WriteMask;
+		DepthStencilState.back.reference = Back.Reference;
+		DepthStencilState.front = DepthStencilState.back;
+	}
+
+	VkPipelineRasterizationStateCreateInfo RasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+
+	{
+		static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
+		{
+			ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
+			ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
+			ENTRY(ECullMode::Front, VK_CULL_MODE_FRONT_BIT)
+			ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
+		};
+
+		static const HashTable<EFrontFace, VkFrontFace> VulkanFrontFace =
+		{
+			ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
+			ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+		};
+
+		static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
+		{
+			ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
+			ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)
+			ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
+		};
+
+		const auto& In = Pending.PSOInit.RasterizationState;
+
+		RasterizationState.depthClampEnable = In.DepthClampEnable;
+		RasterizationState.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
+		RasterizationState.polygonMode = GetValue(VulkanPolygonMode, In.PolygonMode);
+		RasterizationState.cullMode = GetValue(VulkanCullMode, In.CullMode);
+		RasterizationState.frontFace = GetValue(VulkanFrontFace, In.FrontFace);
+		RasterizationState.depthBiasEnable = In.DepthBiasEnable;
+		RasterizationState.depthBiasConstantFactor = In.DepthBiasConstantFactor;
+		RasterizationState.depthBiasClamp = In.DepthBiasClamp;
+		RasterizationState.depthBiasSlopeFactor = In.DepthBiasSlopeFactor;
+		RasterizationState.lineWidth = In.LineWidth;
+	}
+
+	VkPipelineMultisampleStateCreateInfo MultisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+
+	{
+		const auto& In = Pending.PSOInit.MultisampleState;
+
+		MultisampleState.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
+		MultisampleState.sampleShadingEnable = In.SampleShadingEnable;
+		MultisampleState.minSampleShading = In.MinSampleShading;
+		MultisampleState.pSampleMask = In.SampleMask;
+		MultisampleState.alphaToCoverageEnable = In.AlphaToCoverageEnable;
+		MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
+	}
+
+	std::array<VkPipelineColorBlendAttachmentState, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
+
+	{
+		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < Pending.RPInit.NumRenderTargets; RenderTargetIndex++)
+		{
+			const auto& In = Pending.PSOInit.ColorBlendAttachmentStates[RenderTargetIndex];
+			auto& Out = ColorBlendAttachmentStates[RenderTargetIndex];
+
+			Out = {};
+
+			Out.blendEnable = In.BlendEnable;
+
+			// @todo-joe Blend factors
+			/*Out.srcColorBlendFactor = In.SrcColorBlendFactor;
+			Out.dstColorBlendFactor = In.DstColorBlendFactor;
+			Out.colorBlendOp = In.ColorBlendOp;
+			Out.srcAlphaBlendFactor = In.SrcAlphaBlendFactor;
+			Out.dstAlphaBlendFactor = In.DstAlphaBlendFactor;
+			Out.alphaBlendOp = In.AlphaBlendOp;*/
+
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
+		}
+	}
+
+	const auto& GraphicsPipeline = Pending.PSOInit.GraphicsPipelineState;
 
 	check(GraphicsPipeline.Vertex, "No vertex shader bound...");
 
@@ -798,7 +768,7 @@ void VulkanCommandList::CleanPipeline()
 		ShaderStage.pName = Shader->Entrypoint.data();
 	}
 
-	VkPipelineVertexInputStateCreateInfo& VertexInputState = Pending.VertexInputState;
+	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = Device.ShaderCache[GraphicsPipeline.Vertex->Type].Attributes;
 	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
 
@@ -815,28 +785,57 @@ void VulkanCommandList::CleanPipeline()
 	VertexInputState.pVertexAttributeDescriptions = AttributeDescriptions.data();
 	VertexInputState.vertexAttributeDescriptionCount = AttributeDescriptions.size();
 
-	VkPipelineInputAssemblyStateCreateInfo& InputAssemblyState = Pending.InputAssemblyState;
+	VkPipelineInputAssemblyStateCreateInfo InputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+	{
+		const auto& In = Pending.PSOInit.InputAssemblyState;
+		InputAssemblyState.topology = [&] ()
+		{
+			for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
+			{
+				if ((uint32)In.Topology == VulkanTopology)
+				{
+					return VulkanTopology;
+				}
+				VulkanTopology = VkPrimitiveTopology(VulkanTopology + 1);
+			}
+			fail("VkPrimitiveTopology not found.");
+		}();
+		InputAssemblyState.primitiveRestartEnable = In.PrimitiveRestartEnable;
+	}
 
-	VkViewport& Viewport = Pending.Viewport;
+	VkViewport Viewport = {};
+	{
+		const auto& In = Pending.PSOInit.Viewport;
+		Viewport.x = In.X;
+		Viewport.y = In.Y;
+		Viewport.width = In.Width;
+		Viewport.height = In.Height;
+		Viewport.minDepth = In.MinDepth;
+		Viewport.maxDepth = In.MaxDepth;
+	}
 
-	VkRect2D& Scissor = Pending.Scissor;
-	Scissor.extent.width = (uint32)Viewport.width;
-	Scissor.extent.height = (uint32)Viewport.height;
-	Scissor.offset = { 0, 0 };
-
-	VkPipelineViewportStateCreateInfo& ViewportState = Pending.ViewportState;
+	VkRect2D Scissor = {};
+	{
+		Scissor.extent.width = (uint32)Viewport.width;
+		Scissor.extent.height = (uint32)Viewport.height;
+		Scissor.offset = { 0, 0 };
+	}
+	
+	VkPipelineViewportStateCreateInfo ViewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	ViewportState.pViewports = &Viewport;
 	ViewportState.viewportCount = 1;
 	ViewportState.pScissors = &Scissor;
 	ViewportState.scissorCount = 1;
 
-	VkPipelineRasterizationStateCreateInfo& RasterizationState = Pending.RasterizationState;
-	VkPipelineMultisampleStateCreateInfo& MultisampleState = Pending.MultisampleState;
-	VkPipelineDepthStencilStateCreateInfo& DepthStencilState = Pending.DepthStencilState;
-
-	VkPipelineColorBlendStateCreateInfo& ColorBlendState = Pending.ColorBlendState;
-	ColorBlendState.pAttachments = Pending.ColorBlendAttachmentStates.data();
-	ColorBlendState.attachmentCount = Pending.NumRTs;
+	VkPipelineColorBlendStateCreateInfo ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+	ColorBlendState.blendConstants[0] = 0.0f;
+	ColorBlendState.blendConstants[1] = 0.0f;
+	ColorBlendState.blendConstants[2] = 0.0f;
+	ColorBlendState.blendConstants[3] = 0.0f;
+	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
+	ColorBlendState.logicOpEnable = false;
+	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
+	ColorBlendState.attachmentCount = Pending.RPInit.NumRenderTargets;
 
 	VkGraphicsPipelineCreateInfo PipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	PipelineInfo.stageCount = ShaderStages.size();
@@ -860,25 +859,4 @@ void VulkanCommandList::CleanPipeline()
 	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipelines.Get());
 
 	bDirtyPipeline = false;
-}
-
-VulkanCommandList::PendingGraphicsState::PendingGraphicsState(VulkanDevice& Device)
-{
-	VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings, VulkanVertexBufferRef());
-
-	NumRTs = 0;
-	std::fill(ColorTargets.begin(), ColorTargets.end(), VulkanRenderTargetViewRef());
-	DepthTarget = nullptr;
-
-	ColorBlendState.attachmentCount = 0;
-	ColorBlendState.blendConstants[0] = 0.0f;
-	ColorBlendState.blendConstants[1] = 0.0f;
-	ColorBlendState.blendConstants[2] = 0.0f;
-	ColorBlendState.blendConstants[3] = 0.0f;
-	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
-	ColorBlendState.logicOpEnable = false;
-	ColorBlendState.pAttachments = nullptr;
-
-	DynamicState.dynamicStateCount = 0;
-	DynamicState.pDynamicStates = nullptr;
 }
