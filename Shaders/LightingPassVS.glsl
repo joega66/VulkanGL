@@ -9,5 +9,5 @@ void main()
 
 	SetVSInterpolants(WorldPosition);
 
-	gl_Position = View.Projection * View.View * WorldPosition;
+	gl_Position = View.WorldToClip * WorldPosition;
 }

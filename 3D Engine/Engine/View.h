@@ -7,8 +7,9 @@ class View
 public:
 	struct ViewUniform
 	{
-		glm::mat4 View;
-		glm::mat4 Projection;
+		glm::mat4 WorldToView;
+		glm::mat4 ViewToClip;
+		glm::mat4 WorldToClip;
 		glm::vec3 Position;
 		float Padding;
 		float AspectRatio;
@@ -34,9 +35,9 @@ public:
 	// Translate the view forward/backward
 	void Translate(const float DS);
 	// Get the World-to-View matrix
-	glm::mat4 GetViewMatrix() const;
+	glm::mat4 GetWorldToView() const;
 	// Get the View-to-Projective matrix
-	glm::mat4 GetPerspectiveMatrix() const;
+	glm::mat4 GetViewToClip() const;
 
 	// Freeze/Unfreeze the view.
 	bool bFreeze = false;

@@ -21,7 +21,7 @@ Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
 	const glm::vec4 RayStartClipSpace = glm::vec4(ScreenSpace.x, ScreenSpace.y, 0.0f, 1.0f);
 	const glm::vec4 RayEndClipSpace = glm::vec4(ScreenSpace.x, ScreenSpace.y, 0.5f, 1.0f);
 
-	const glm::mat4 InvViewProjMatrix = glm::inverse(GetPerspectiveMatrix() * GetViewMatrix());
+	const glm::mat4 InvViewProjMatrix = glm::inverse(GetViewToClip() * GetWorldToView());
 	const glm::vec4 HRayStartWorldSpace = InvViewProjMatrix * RayStartClipSpace;
 	const glm::vec4 HRayEndWorldSpace = InvViewProjMatrix * RayEndClipSpace;
 
@@ -44,7 +44,7 @@ Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
 
 bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition)
 {
-	const glm::vec4 ProjectiveSpace = GetPerspectiveMatrix() * GetViewMatrix() * glm::vec4(WorldPosition, 1.0f);
+	const glm::vec4 ProjectiveSpace = GetViewToClip() * GetWorldToView() * glm::vec4(WorldPosition, 1.0f);
 	if (ProjectiveSpace.w > 0.0f)
 	{
 		const float WInv = 1 / ProjectiveSpace.w;
@@ -69,10 +69,15 @@ void View::UpdateView()
 	Right = glm::normalize(glm::cross(Front, WorldUp));
 	Up = glm::normalize(glm::cross(Right, Front));
 
+	const glm::mat4 WorldToView = GetWorldToView();
+	const glm::mat4 ViewToClip = GetViewToClip();
+	const glm::mat4 WorldToClip = ViewToClip * WorldToView;
+
 	const ViewUniform View =
 	{
-		GetViewMatrix(),
-		GetPerspectiveMatrix(),
+		WorldToView,
+		ViewToClip,
+		WorldToClip,
 		Position,
 		0.0f,
 		(float)Screen.Width / Screen.Height,
@@ -82,7 +87,7 @@ void View::UpdateView()
 	Uniform->Set(View);
 }
 
-glm::mat4 View::GetViewMatrix() const
+glm::mat4 View::GetWorldToView() const
 {
 	return glm::lookAt(Position, Position + Front, Up);
 }
@@ -103,7 +108,7 @@ void View::Translate(const float DS)
 	UpdateView();
 }
 
-glm::mat4 View::GetPerspectiveMatrix() const
+glm::mat4 View::GetViewToClip() const
 {
 	glm::mat4 Perspective = glm::perspective(glm::radians(FieldOfView), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
 	// @todo VK_KHR_maintenance1

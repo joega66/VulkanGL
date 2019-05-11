@@ -4,7 +4,7 @@ layout(location = 0) out vec3 OutTexCoord;
 
 void main()
 {
-	vec4 OutPosition = View.Projection * vec4(mat3(View.View) * Position, 0.0f);
+	vec4 OutPosition = View.ViewToClip * vec4(mat3(View.WorldToView) * Position, 0.0f);
 	gl_Position = OutPosition.xyzz;
 	OutTexCoord = Position;
 	OutTexCoord.y *= -1;
