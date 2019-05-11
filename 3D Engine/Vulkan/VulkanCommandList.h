@@ -16,7 +16,7 @@ public:
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
 	~VulkanCommandList();
 
-	virtual void SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
+	virtual void SetRenderTargets(const RenderPassInitializer& RenderPassInit);
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit);
 	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer);
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer);
@@ -38,15 +38,14 @@ private:
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
 
-	// @todo-joe Deferred drm translation / render pass creation
-
+	RenderPassInitializer PendingRenderPass;
 	//PipelineStateInitializer PendingPSO;
 
 	struct PendingGraphicsState
 	{
 		/** Render targets */
 		uint32 NumRTs = 0;
-		std::array<VulkanRenderTargetViewRef, PipelineStateInitializer::MaxSimultaneousRenderTargets> ColorTargets;
+		std::array<VulkanRenderTargetViewRef, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorTargets;
 		VulkanRenderTargetViewRef DepthTarget;
 
 		/** Graphics pipeline */
@@ -62,7 +61,7 @@ private:
 		VkPipelineMultisampleStateCreateInfo	MultisampleState{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 		VkPipelineDepthStencilStateCreateInfo	DepthStencilState{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 		VkPipelineColorBlendStateCreateInfo		ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-		std::array<VkPipelineColorBlendAttachmentState, PipelineStateInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
+		std::array<VkPipelineColorBlendAttachmentState, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
 		VkPipelineDynamicStateCreateInfo		DynamicState{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 		VkViewport								Viewport{};
 		VkRect2D								Scissor{};

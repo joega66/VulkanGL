@@ -2,7 +2,7 @@
 #include "DRMShader.h"
 #include "DRMResource.h"
 
-enum class EDepthStencilAccess
+enum class EDepthStencilTransition
 {
 	None,
 	// No transition.
@@ -244,21 +244,46 @@ struct GraphicsPipelineState
 
 struct RenderPassInitializer
 {
-	// @todo 
-};
-
-struct PipelineStateInitializer
-{
 	enum
 	{
 		MaxSimultaneousRenderTargets = 8
 	};
 
+	uint32 NumRenderTargets = 0;
+	std::array<drm::RenderTargetViewRef, MaxSimultaneousRenderTargets> ColorTargets;
+	drm::RenderTargetViewRef DepthTarget;
+	EDepthStencilTransition DepthStencilTransition;
+
+	friend bool operator==(const RenderPassInitializer& L, const RenderPassInitializer& R)
+	{
+		if (L.NumRenderTargets == R.NumRenderTargets
+			&& L.DepthTarget == R.DepthTarget
+			&& L.DepthStencilTransition == R.DepthStencilTransition)
+		{
+			for (uint32 RenderTargetIndex = 0; RenderTargetIndex < L.NumRenderTargets; RenderTargetIndex++)
+			{
+				if (L.ColorTargets[RenderTargetIndex] != R.ColorTargets[RenderTargetIndex])
+				{
+					return false;
+				}
+			}
+		}
+		else
+		{
+			return false;
+		}
+
+		return true;
+	}
+};
+
+struct PipelineStateInitializer
+{
 	Viewport Viewport;
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::array<ColorBlendAttachmentState, MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
+	std::array<ColorBlendAttachmentState, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	GraphicsPipelineState GraphicsPipelineState;
 };
@@ -266,7 +291,7 @@ struct PipelineStateInitializer
 class RenderCommandList
 {
 public:
-	virtual void SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
+	virtual void SetRenderTargets(const RenderPassInitializer& RenderPassInit) = 0;
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit) = 0;
 	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;

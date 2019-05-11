@@ -52,167 +52,14 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
 }
 
-void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access)
+void VulkanCommandList::SetRenderTargets(const RenderPassInitializer& RenderPassInit)
 {
-	// @todo Pretty heavyweight function... Should just defer the creation of this stuff until draw.
-	// @todo Check if the render pass is the same. 
-	check(NumRTs < PipelineStateInitializer::MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
-
-	Pending.NumRTs = NumRTs;
-	Pending.DepthTarget = ResourceCast(DepthTarget);
-
-	std::vector<VkAttachmentDescription> Descriptions;
-	std::vector<VkAttachmentReference> ColorRefs(NumRTs);
-	VkAttachmentReference DepthRef = {};
-
-	if (DepthTarget)
+	if (PendingRenderPass == RenderPassInit)
 	{
-		Descriptions.resize(NumRTs + 1);
-	}
-	else
-	{
-		Descriptions.resize(NumRTs);
+		return;
 	}
 
-	for (uint32 i = 0; i < NumRTs; i++)
-	{
-		check(ColorTargets[i], "Color target is null.");
-
-		VulkanRenderTargetViewRef ColorTarget = ResourceCast(ColorTargets[i]);
-		Pending.ColorTargets[i] = ColorTarget;
-
-		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
-
-		check(Image && Any(Image->Usage & EResourceUsage::RenderTargetable), "Color target is invalid.");
-		check(Image->IsColor(), "Color target was not created in color format.");
-
-		Image->Layout = [&] ()
-		{
-			if (Image == drm::GetSurface())
-			{
-				bTouchedSurface = true;
-				return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-			}
-			else if (Any(Image->Usage & EResourceUsage::ShaderResource))
-			{
-				return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			}
-			else if (Any(Image->Usage & EResourceUsage::RenderTargetable))
-			{
-				return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			}
-			else
-			{
-				fail("Underspecified Resource Create Flags.");
-			}
-		}();
-
-		VkAttachmentDescription ColorDescription = {};
-		ColorDescription.format = Image->GetVulkanFormat();
-		ColorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		ColorDescription.loadOp = ColorTarget->GetVulkanLoadOp();
-		ColorDescription.storeOp = ColorTarget->GetVulkanStoreOp();
-		ColorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		ColorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ColorDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		ColorDescription.finalLayout = Image->Layout;
-		Descriptions[i] = ColorDescription;
-
-		VkAttachmentReference ColorRef = {};
-		ColorRef.attachment = i;
-		ColorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		ColorRefs[i] = ColorRef;
-	}
-
-	VkPipelineDepthStencilStateCreateInfo& DepthStencil = Pending.DepthStencilState;
-
-	if (Access != EDepthStencilAccess::None)
-	{
-		VulkanRenderTargetViewRef DepthTarget = Pending.DepthTarget;
-		check(DepthTarget, "Depth target is invalid.");
-
-		VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
-		check(DepthImage && Any(DepthImage->Usage & EResourceUsage::RenderTargetable), "Depth target is invalid.");
-		check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
-
-		VkImageLayout FinalLayout = [&] ()
-		{
-			if (Access == EDepthStencilAccess::DepthReadStencilRead)
-			{
-				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
-				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-			}
-			else if (Access == EDepthStencilAccess::DepthReadStencilWrite)
-			{
-				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
-				return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
-			}
-			else if (Access == EDepthStencilAccess::DepthWriteStencilRead)
-			{
-				check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
-				return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
-			}
-			else // DepthWriteStencilWrite
-			{
-				return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			}
-		}();
-
-		VkAttachmentLoadOp LoadOp = DepthTarget->GetVulkanLoadOp();
-		VkAttachmentStoreOp StoreOp = DepthTarget->GetVulkanStoreOp();
-
-		VkAttachmentDescription DepthDescription = {};
-		DepthDescription.format = DepthImage->GetVulkanFormat();
-		DepthDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		DepthDescription.loadOp = DepthImage->IsDepth() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		DepthDescription.storeOp = DepthImage->IsDepth() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		DepthDescription.initialLayout = DepthImage->Layout;
-		DepthDescription.finalLayout = FinalLayout;
-		Descriptions[NumRTs] = DepthDescription;
-
-		DepthRef.attachment = NumRTs;
-		DepthRef.layout = FinalLayout;
-
-		DepthImage->Layout = FinalLayout;
-	}
-
-	VkSubpassDescription Subpass = {};
-	Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	Subpass.pColorAttachments = ColorRefs.data();
-	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-	Subpass.pDepthStencilAttachment = !DepthTarget ? nullptr : &DepthRef;
-
-	std::array<VkSubpassDependency, 2> Dependencies;
-
-	Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	Dependencies[0].dstSubpass = 0;
-	Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	Dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	Dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	Dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	Dependencies[1].srcSubpass = 0;
-	Dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	Dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	Dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	Dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	Dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	VkRenderPassCreateInfo RenderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-	RenderPassInfo.pAttachments = Descriptions.data();
-	RenderPassInfo.attachmentCount = static_cast<uint32>(Descriptions.size());
-	RenderPassInfo.subpassCount = 1;
-	RenderPassInfo.pSubpasses = &Subpass;
-	RenderPassInfo.pDependencies = Dependencies.data();
-	RenderPassInfo.dependencyCount = static_cast<uint32>(Dependencies.size());
-
-	VkRenderPass RenderPass;
-	vulkan(vkCreateRenderPass(Device, &RenderPassInfo, nullptr, &RenderPass));
-	RenderPasses.Push(RenderPass);
+	PendingRenderPass = RenderPassInit;
 
 	bDirtyRenderPass = true;
 }
@@ -669,6 +516,167 @@ void VulkanCommandList::CleanRenderPass()
 	if (RenderPasses.Size() > 1)
 	{
 		vkCmdEndRenderPass(CommandBuffer);
+	}
+
+	{
+		// Create the render pass.
+		check(PendingRenderPass.NumRenderTargets < RenderPassInitializer::MaxSimultaneousRenderTargets, "Trying to set too many render targets.");
+
+		Pending.NumRTs = PendingRenderPass.NumRenderTargets;
+		Pending.DepthTarget = ResourceCast(PendingRenderPass.DepthTarget);
+
+		std::vector<VkAttachmentDescription> Descriptions;
+		std::vector<VkAttachmentReference> ColorRefs(PendingRenderPass.NumRenderTargets);
+		VkAttachmentReference DepthRef = {};
+
+		if (PendingRenderPass.DepthTarget)
+		{
+			Descriptions.resize(PendingRenderPass.NumRenderTargets + 1);
+		}
+		else
+		{
+			Descriptions.resize(PendingRenderPass.NumRenderTargets);
+		}
+
+		for (uint32 i = 0; i < PendingRenderPass.NumRenderTargets; i++)
+		{
+			check(PendingRenderPass.ColorTargets[i], "Color target is null.");
+
+			VulkanRenderTargetViewRef ColorTarget = ResourceCast(PendingRenderPass.ColorTargets[i]);
+			Pending.ColorTargets[i] = ColorTarget;
+
+			VulkanImageRef Image = ResourceCast(ColorTarget->Image);
+
+			check(Image && Any(Image->Usage & EResourceUsage::RenderTargetable), "Color target is invalid.");
+			check(Image->IsColor(), "Color target was not created in color format.");
+
+			Image->Layout = [&] ()
+			{
+				if (Image == drm::GetSurface())
+				{
+					bTouchedSurface = true;
+					return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				}
+				else if (Any(Image->Usage & EResourceUsage::ShaderResource))
+				{
+					return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				}
+				else if (Any(Image->Usage & EResourceUsage::RenderTargetable))
+				{
+					return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				}
+				else
+				{
+					fail("Underspecified Resource Create Flags.");
+				}
+			}();
+
+			VkAttachmentDescription ColorDescription = {};
+			ColorDescription.format = Image->GetVulkanFormat();
+			ColorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+			ColorDescription.loadOp = ColorTarget->GetVulkanLoadOp();
+			ColorDescription.storeOp = ColorTarget->GetVulkanStoreOp();
+			ColorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			ColorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			ColorDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			ColorDescription.finalLayout = Image->Layout;
+			Descriptions[i] = ColorDescription;
+
+			VkAttachmentReference ColorRef = {};
+			ColorRef.attachment = i;
+			ColorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			ColorRefs[i] = ColorRef;
+		}
+
+		VkPipelineDepthStencilStateCreateInfo& DepthStencil = Pending.DepthStencilState;
+
+		if (PendingRenderPass.DepthStencilTransition != EDepthStencilTransition::None)
+		{
+			VulkanRenderTargetViewRef DepthTarget = Pending.DepthTarget;
+			check(DepthTarget, "Depth target is invalid.");
+
+			VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
+			check(DepthImage && Any(DepthImage->Usage & EResourceUsage::RenderTargetable), "Depth target is invalid.");
+			check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
+
+			VkImageLayout FinalLayout = [&] ()
+			{
+				if (PendingRenderPass.DepthStencilTransition == EDepthStencilTransition::DepthReadStencilRead)
+				{
+					check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
+					return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+				}
+				else if (PendingRenderPass.DepthStencilTransition == EDepthStencilTransition::DepthReadStencilWrite)
+				{
+					check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
+					return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+				}
+				else if (PendingRenderPass.DepthStencilTransition == EDepthStencilTransition::DepthWriteStencilRead)
+				{
+					check(Any(DepthImage->Usage & EResourceUsage::ShaderResource), "Depth Image must be created with EResourceUsage::ShaderResource.");
+					return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+				}
+				else // DepthWriteStencilWrite
+				{
+					return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				}
+			}();
+
+			VkAttachmentLoadOp LoadOp = DepthTarget->GetVulkanLoadOp();
+			VkAttachmentStoreOp StoreOp = DepthTarget->GetVulkanStoreOp();
+
+			VkAttachmentDescription DepthDescription = {};
+			DepthDescription.format = DepthImage->GetVulkanFormat();
+			DepthDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+			DepthDescription.loadOp = DepthImage->IsDepth() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			DepthDescription.storeOp = DepthImage->IsDepth() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			DepthDescription.initialLayout = DepthImage->Layout;
+			DepthDescription.finalLayout = FinalLayout;
+			Descriptions[PendingRenderPass.NumRenderTargets] = DepthDescription;
+
+			DepthRef.attachment = PendingRenderPass.NumRenderTargets;
+			DepthRef.layout = FinalLayout;
+
+			DepthImage->Layout = FinalLayout;
+		}
+
+		VkSubpassDescription Subpass = {};
+		Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		Subpass.pColorAttachments = ColorRefs.data();
+		Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
+		Subpass.pDepthStencilAttachment = !PendingRenderPass.DepthTarget ? nullptr : &DepthRef;
+
+		std::array<VkSubpassDependency, 2> Dependencies;
+
+		Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		Dependencies[0].dstSubpass = 0;
+		Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		Dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		Dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		Dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		Dependencies[1].srcSubpass = 0;
+		Dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+		Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		Dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		Dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		Dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		Dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		VkRenderPassCreateInfo RenderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+		RenderPassInfo.pAttachments = Descriptions.data();
+		RenderPassInfo.attachmentCount = static_cast<uint32>(Descriptions.size());
+		RenderPassInfo.subpassCount = 1;
+		RenderPassInfo.pSubpasses = &Subpass;
+		RenderPassInfo.pDependencies = Dependencies.data();
+		RenderPassInfo.dependencyCount = static_cast<uint32>(Dependencies.size());
+
+		VkRenderPass RenderPass;
+		vulkan(vkCreateRenderPass(Device, &RenderPassInfo, nullptr, &RenderPass));
+		RenderPasses.Push(RenderPass);
 	}
 
 	const uint32 NumRTs = Pending.NumRTs;
