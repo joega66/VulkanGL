@@ -4,31 +4,21 @@
 
 class VulkanDevice;
 
-class VulkanShader : public drm::Shader
+class VulkanShader
 {
 public:
 	std::vector<VkVertexInputAttributeDescription> Attributes;
 	std::vector<VkDescriptorSetLayoutBinding> Bindings;
 	VkShaderModule ShaderModule;
 
+	VulkanShader() = default;
 	VulkanShader(
-		VulkanDevice& Device
-		, VkShaderModule ShaderModule
-		, const ShaderMetadata& Meta
+		VkShaderModule ShaderModule
 		, const std::vector<VkVertexInputAttributeDescription>& Attributes
-		, const std::vector<VkDescriptorSetLayoutBinding>& Bindings
-		, const HashTable<std::string, uint32>& AttributeLocations
-		, const HashTable<std::string, uint32>& UniformLocations
-	);
-	~VulkanShader();
+		, const std::vector<VkDescriptorSetLayoutBinding>& Bindings);
 
-	VkShaderStageFlagBits GetVulkanStage() const;
-
-private:
-	VulkanDevice& Device;
+	static VkShaderStageFlagBits GetVulkanStage(EShaderStage Stage);
 };
-
-CLASS(VulkanShader);
 
 const HashTable<std::string, VkFormat> GLSLTypeToVulkanFormat =
 {

@@ -229,6 +229,22 @@ struct GraphicsPipelineState
 	drm::ShaderRef TessEval;
 	drm::ShaderRef Geometry;
 	drm::ShaderRef Fragment;
+
+	friend bool operator==(const GraphicsPipelineState& L, const GraphicsPipelineState& R)
+	{
+		return L.Vertex == R.Vertex && L.TessControl == R.TessControl && L.TessEval == R.TessEval 
+			&& L.Geometry == R.Geometry && L.Fragment == R.Fragment;
+	}
+
+	friend bool operator!=(const GraphicsPipelineState& L, const GraphicsPipelineState& R)
+	{
+		return !(L == R);
+	}
+};
+
+struct RenderPassInitializer
+{
+	// @todo 
 };
 
 struct PipelineStateInitializer
@@ -252,13 +268,6 @@ class RenderCommandList
 public:
 	virtual void SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access) = 0;
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit) = 0;
-	virtual void SetGraphicsPipeline(
-		drm::ShaderRef Vertex,
-		drm::ShaderRef TessControl,
-		drm::ShaderRef TessEval,
-		drm::ShaderRef Geometry,
-		drm::ShaderRef Fragment
-	) = 0;
 	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;
 	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler) = 0;

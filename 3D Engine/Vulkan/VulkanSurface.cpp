@@ -17,7 +17,7 @@ VulkanSurface::~VulkanSurface()
 void VulkanSurface::Init()
 {
 	SwapchainSupportDetails SwapchainSupport = {};
-	SwapchainSupport.QuerySwapchainSupport(Device, Device.Surface);
+	SwapchainSupport.QuerySwapchainSupport(Device.PhysicalDevice, Device.Surface);
 
 	VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
 	VkPresentModeKHR PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
@@ -41,7 +41,7 @@ void VulkanSurface::Init()
 	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 	QueueFamilyIndices Indices = {};
-	Indices.FindQueueFamilies(Device, Device.Surface);
+	Indices.FindQueueFamilies(Device.PhysicalDevice, Device.Surface);
 
 	uint32 QueueFamilyIndices[] = { static_cast<uint32>(Indices.GraphicsFamily), static_cast<uint32>(Indices.PresentFamily) };
 

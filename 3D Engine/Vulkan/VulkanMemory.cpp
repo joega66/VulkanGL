@@ -54,7 +54,7 @@ SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferU
 uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemoryPropertyFlags RequiredProperties)
 {
 	VkPhysicalDeviceMemoryProperties MemProperties;
-	vkGetPhysicalDeviceMemoryProperties(Device, &MemProperties);
+	vkGetPhysicalDeviceMemoryProperties(Device.PhysicalDevice, &MemProperties);
 
 	const uint32 MemoryCount = MemProperties.memoryTypeCount;
 	for (uint32 MemoryIndex = 0; MemoryIndex < MemoryCount; ++MemoryIndex)

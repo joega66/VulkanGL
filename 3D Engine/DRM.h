@@ -42,23 +42,32 @@ public:
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void RebuildResolutionDependents() = 0;
 	virtual std::string GetDRMName() = 0;
-
+	
 	template<typename ShaderType>
-	drm::ShaderRef CompileShader()
+	Ref<ShaderType> CompileShader()
 	{
-		if (auto CachedShader = (
-			FindShader(std::type_index(typeid(ShaderType)))); CachedShader)
+		std::type_index Type = std::type_index(typeid(ShaderType));
+
+		if (auto CachedShader = std::static_pointer_cast<ShaderType>(FindShader(Type)); CachedShader)
 		{
 			return CachedShader;
 		}
 		else
 		{
 			ShaderCompilerWorker Worker;
+
 			ShaderType::ModifyCompilationEnvironment(Worker);
-			const auto&[Filename, EntryPoint, Stage] = ShaderType::GetBaseShaderInfo();
-			ShaderMetadata Meta(Filename, EntryPoint, Stage);
-			drm::ShaderRef Shader = CompileShader(Worker, Meta);
-			CacheShader(std::type_index(typeid(ShaderType)), Shader);
+
+			const auto&[Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
+
+			ShaderMetadata Meta(Filename, EntryPoint, Stage, Type);
+			// @todo Construct ShaderResourceTable up here
+			const ShaderResourceTable ResourceTable = CompileShader(Worker, Meta);
+
+			Ref<ShaderType> Shader = MakeRef<ShaderType>(ResourceTable);
+
+			CacheShader(Shader);
+
 			return Shader;
 		}
 	}
@@ -66,11 +75,11 @@ public:
 private:
 	HashTable<std::type_index, drm::ShaderRef> Shaders;
 
-	virtual drm::ShaderRef CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
+	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
 
-	void CacheShader(std::type_index Type, drm::ShaderRef Shader)
+	void CacheShader(drm::ShaderRef Shader)
 	{
-		Shaders[Type] = Shader;
+		Shaders[Shader->Type] = Shader;
 	}
 
 	drm::ShaderRef FindShader(std::type_index Type)
@@ -112,12 +121,6 @@ namespace drm
 	void RebuildResolutionDependents();
 	std::string GetDeviceName();
 
-	template<typename ShaderType>
-	inline ShaderRef CreateShader()
-	{
-		return GDRM->CompileShader<ShaderType>();
-	}
-
 	template<typename UniformBufferType>
 	inline UniformBufferRef CreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
 	{
@@ -137,9 +140,15 @@ class ShaderMapRef
 public:
 	ShaderMapRef()
 	{
+		// @todo Move all the templated stuff up here so GDRM only needs type_index (reduce template instantiations).
 		Shader = GDRM->CompileShader<ShaderType>();
 	}
 
+	Ref<ShaderType> operator*()
+	{
+		return Shader;
+	}
+
 private:
-	std::shared_ptr<ShaderType> Shader;
+	Ref<ShaderType> Shader;
 };

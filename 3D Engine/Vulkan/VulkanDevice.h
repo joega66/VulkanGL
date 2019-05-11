@@ -1,6 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
-#include <vulkan/vulkan.h>
+#include "VulkanShader.h"
 #include <sstream>
 #include <iostream>
 
@@ -13,16 +13,17 @@ public:
 	VkCommandPool CommandPool;
 	VkPhysicalDeviceProperties Properties;
 	VkPhysicalDeviceFeatures Features;
+	HashTable<std::type_index, VulkanShader> ShaderCache;
 
 	VulkanDevice();
 	operator VkDevice() { return Device; }
-	operator VkPhysicalDevice() { return PhysicalDevice; }
+
+	VkPhysicalDevice PhysicalDevice;
 
 private:
 	VkInstance Instance;
 	VkDebugReportCallbackEXT DebugReportCallback;
 	VkDevice Device;
-	VkPhysicalDevice PhysicalDevice;
 };
 
 CLASS(VulkanDevice);

@@ -30,7 +30,6 @@ int main(int argc, char* argv[])
 
 	// @todo-joe 
 	// 2. Vulkan Semaphores
-	// 4. Store shader metadata in Vulkan compiler / allow DRM shaders to be subclassed!!
 
 	GDRM->Init();
 

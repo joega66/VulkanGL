@@ -262,9 +262,6 @@
     <ClCompile Include="Renderer\LightingPass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\MaterialShader.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\Scene.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>

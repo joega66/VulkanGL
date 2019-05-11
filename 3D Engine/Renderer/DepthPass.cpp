@@ -8,12 +8,9 @@ DepthPassDrawingPlan::DepthPassDrawingPlan(const StaticMeshResources& Resources,
 	IndexCount = Resources.IndexCount;
 	IndexBuffer = Resources.IndexBuffer;
 
-	VertexShader = drm::CreateShader<DepthPassVS<EMeshType::StaticMesh>>();
+	VertexShader = *ShaderMapRef<DepthPassVS<EMeshType::StaticMesh>>();
 
-	PositionStream = { Resources.PositionBuffer, VertexShader->GetAttributeLocation("Position") };
-
-	ViewLocation = VertexShader->GetUniformLocation("ViewUniform");
-	LocalToWorldLocation = VertexShader->GetUniformLocation("LocalToWorldUniform");
+	PositionStream = { Resources.PositionBuffer, 0 };
 }
 
 GraphicsPipelineState DepthPassDrawingPlan::GetGraphicsPipeline() const
@@ -28,8 +25,7 @@ GraphicsPipelineState DepthPassDrawingPlan::GetGraphicsPipeline() const
 
 void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 {
-	CmdList.SetUniformBuffer(VertexShader, ViewLocation, View.Uniform);
-	CmdList.SetUniformBuffer(VertexShader, LocalToWorldLocation, LocalToWorldUniform);
+	VertexShader->SetUniforms(CmdList, View.Uniform, LocalToWorldUniform);
 }
 
 void DepthPassDrawingPlan::Draw(RenderCommandList& CmdList) const

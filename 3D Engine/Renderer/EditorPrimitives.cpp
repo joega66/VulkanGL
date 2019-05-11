@@ -4,7 +4,7 @@
 OutlineDrawingPlan::OutlineDrawingPlan(const StaticMeshResources& Resources, drm::UniformBufferRef LocalToWorldUniform)
 	: DepthPassDrawingPlan(Resources, LocalToWorldUniform)
 {
-	FragmentShader = drm::CreateShader<OutlineFS>();
+	FragmentShader = *ShaderMapRef<OutlineFS>();
 }
 
 GraphicsPipelineState OutlineDrawingPlan::GetGraphicsPipeline() const
@@ -50,27 +50,25 @@ void LineDrawingPlan::GetPipelineState(PipelineStateInitializer& PSOInit) const
 GraphicsPipelineState LineDrawingPlan::GetGraphicsPipeline() const
 {
 	return GraphicsPipelineState{
-		drm::CreateShader<LinesVS>(),
+		*ShaderMapRef<LinesVS>(),
 		nullptr,
 		nullptr,
 		nullptr,
-		drm::CreateShader<LinesFS>()
+		*ShaderMapRef<LinesFS>()
 	};
 }
 
 void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 {
-	drm::ShaderRef VertShader = drm::CreateShader<LinesVS>();
-	drm::ShaderRef FragShader = drm::CreateShader<LinesFS>();
+	Ref<LinesVS> VertShader = *ShaderMapRef<LinesVS>();
+	Ref<LinesFS> FragShader = *ShaderMapRef<LinesFS>();
 
-	CmdList.SetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
-	CmdList.SetUniformBuffer(FragShader, FragShader->GetUniformLocation("ColorUniform"), ColorUniform);
+	VertShader->SetUniforms(CmdList, View.Uniform);
+	FragShader->SetUniforms(CmdList, ColorUniform);
 }
 
 void LineDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	drm::ShaderRef VertShader = drm::CreateShader<LinesVS>();
-
-	CmdList.SetVertexStream(VertShader->GetAttributeLocation("Position"), PositionBuffer);
+	CmdList.SetVertexStream(0, PositionBuffer);
 	CmdList.Draw(3, 1, 0, 0);
 }

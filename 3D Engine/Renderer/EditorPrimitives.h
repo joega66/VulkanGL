@@ -4,9 +4,14 @@
 class OutlineFS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	OutlineFS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/OutlineFS.glsl", "main", EShaderStage::Fragment };
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/OutlineFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
 	}
 };
@@ -21,47 +26,91 @@ public:
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
-	drm::ShaderRef FragmentShader;
+	Ref<OutlineFS> FragmentShader;
 };
 
 class SkyboxVS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	SkyboxVS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
+		Resources.Bind("ViewUniform", View);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
 		return Base;
 	}
+
+	uint32 View;
 };
 
 class SkyboxFS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	SkyboxFS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
+		Resources.Bind("Skybox", Skybox);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
 	}
+
+	uint32 Skybox;
 };
 
 class LinesVS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	LinesVS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/LinesVS.glsl", "main", EShaderStage::Vertex };
+		Resources.Bind("ViewUniform", ViewLocation);
+	}
+
+	void SetUniforms(RenderCommandList& CmdList, drm::UniformBufferRef ViewUniform)
+	{
+		CmdList.SetUniformBuffer(drm::Shader::GetShader(), ViewLocation, ViewUniform);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/LinesVS.glsl", "main", EShaderStage::Vertex };
 		return Base;
 	}
+
+private:
+	uint32 ViewLocation;
 };
 
 class LinesFS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	LinesFS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/LinesFS.glsl", "main", EShaderStage::Fragment };
+		Resources.Bind("ColorUniform", Color);
+	}
+
+	void SetUniforms(RenderCommandList& CmdList, drm::UniformBufferRef ColorUniform)
+	{
+		CmdList.SetUniformBuffer(drm::Shader::GetShader(), Color, ColorUniform);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/LinesFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
 	}
+
+private:
+	uint32 Color;
 };
 
 class LineDrawingPlan

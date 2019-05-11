@@ -25,7 +25,7 @@ void Scene::Render()
 
 	drm::SubmitCommands(CmdList);
 
-	// @todo EndFrame should only reset the descriptor sets owned by the command list.
+	// @todo Descriptor pools should be owned by the command list so they can be freed individually.
 	drm::EndFrame();
 }
 
@@ -33,8 +33,8 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
-	drm::ShaderRef VertShader = drm::CreateShader<FullscreenVS>();
-	drm::ShaderRef FragShader = drm::CreateShader<RayMarchingFS>();
+	Ref<FullscreenVS> VertShader = *ShaderMapRef<FullscreenVS>();
+	Ref<RayMarchingFS> FragShader = *ShaderMapRef<RayMarchingFS>();
 
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
@@ -52,13 +52,12 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
+	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
+
 	CmdList.SetPipelineState(PSOInit);
 
-	// @todo Use GraphicsPipelineState object
-	CmdList.SetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
-
-	CmdList.SetUniformBuffer(FragShader, FragShader->GetUniformLocation("ViewUniform"), View.Uniform);
-	CmdList.SetStorageBuffer(FragShader, FragShader->GetUniformLocation("LightBuffer"), LightBuffer);
+	CmdList.SetUniformBuffer(FragShader, FragShader->View, View.Uniform);
+	CmdList.SetStorageBuffer(FragShader, FragShader->LightBuffer, LightBuffer);
 
 	CmdList.Draw(3, 1, 0, 0);
 }
@@ -116,8 +115,8 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 {
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
-	drm::ShaderRef VertShader = drm::CreateShader<SkyboxVS>();
-	drm::ShaderRef FragShader = drm::CreateShader<SkyboxFS>();
+	Ref<SkyboxVS> VertShader = *ShaderMapRef<SkyboxVS>();
+	Ref<SkyboxFS> FragShader = *ShaderMapRef<SkyboxFS>();
 
 	PipelineStateInitializer PSOInit = {};
 
@@ -133,12 +132,12 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
+	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
+
 	CmdList.SetPipelineState(PSOInit);
 
-	CmdList.SetGraphicsPipeline(VertShader, nullptr, nullptr, nullptr, FragShader);
-
-	CmdList.SetUniformBuffer(VertShader, VertShader->GetUniformLocation("ViewUniform"), View.Uniform);
-	CmdList.SetShaderImage(FragShader, FragShader->GetUniformLocation("Skybox"), Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
+	CmdList.SetUniformBuffer(VertShader, VertShader->View, View.Uniform);
+	CmdList.SetShaderImage(FragShader, FragShader->Skybox, Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	for (const auto& Resource : Cube->Resources)
 	{

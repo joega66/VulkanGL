@@ -42,7 +42,6 @@
     <ClCompile Include="Renderer\DepthPass.cpp" />
     <ClCompile Include="Renderer\EditorPrimitives.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
-    <ClCompile Include="Renderer\MaterialShader.cpp" />
     <ClCompile Include="Renderer\Scene.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />

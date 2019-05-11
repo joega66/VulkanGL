@@ -18,13 +18,6 @@ public:
 
 	virtual void SetRenderTargets(uint32 NumRTs, const drm::RenderTargetViewRef* ColorTargets, const drm::RenderTargetViewRef DepthTarget, EDepthStencilAccess Access);
 	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit);
-	virtual void SetGraphicsPipeline(
-		drm::ShaderRef Vertex,
-		drm::ShaderRef TessControl,
-		drm::ShaderRef TessEval,
-		drm::ShaderRef Geometry,
-		drm::ShaderRef Fragment
-	);
 	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer);
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer);
 	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler);
@@ -44,6 +37,10 @@ private:
 	bool bDirtyPipeline = false;
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
+
+	// @todo-joe Deferred drm translation / render pass creation
+
+	//PipelineStateInitializer PendingPSO;
 
 	struct PendingGraphicsState
 	{

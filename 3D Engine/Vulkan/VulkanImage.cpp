@@ -197,7 +197,7 @@ static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFo
 	for (VkFormat Format : Candidates)
 	{
 		VkFormatProperties Props;
-		vkGetPhysicalDeviceFormatProperties(Device, Format, &Props);
+		vkGetPhysicalDeviceFormatProperties(Device.PhysicalDevice, Format, &Props);
 
 		if (Tiling == VK_IMAGE_TILING_LINEAR && (Props.linearTilingFeatures & Features) == Features)
 		{

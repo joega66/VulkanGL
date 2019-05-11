@@ -2,6 +2,29 @@
 #include "VulkanDRM.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 
+VulkanShader::VulkanShader(
+	VkShaderModule ShaderModule
+	, const std::vector<VkVertexInputAttributeDescription>& Attributes
+	, const std::vector<VkDescriptorSetLayoutBinding>& Bindings)
+	: ShaderModule(ShaderModule), Attributes(Attributes), Bindings(Bindings)
+{
+}
+
+static const VkShaderStageFlagBits VulkanStages[] =
+{
+	VK_SHADER_STAGE_VERTEX_BIT,
+	VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+	VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
+	VK_SHADER_STAGE_GEOMETRY_BIT,
+	VK_SHADER_STAGE_FRAGMENT_BIT,
+	VK_SHADER_STAGE_COMPUTE_BIT
+};
+
+VkShaderStageFlagBits VulkanShader::GetVulkanStage(EShaderStage Stage)
+{
+	return VulkanStages[(int32)Stage];
+}
+
 struct VertexStreamFormat
 {
 	std::string Name;
@@ -20,16 +43,6 @@ struct ResourceFormat
 {
 	std::string Name;
 	int32 Binding = -1;
-};
-
-const VkShaderStageFlagBits VulkanStages[] =
-{
-	VK_SHADER_STAGE_VERTEX_BIT,
-	VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
-	VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
-	VK_SHADER_STAGE_GEOMETRY_BIT,
-	VK_SHADER_STAGE_FRAGMENT_BIT,
-	VK_SHADER_STAGE_COMPUTE_BIT
 };
 
 static std::vector<VertexStreamFormat> ParseStageInputs(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
@@ -147,7 +160,7 @@ static std::vector<ResourceFormat> ParseStorageBuffers(const spirv_cross::Compil
 
 static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttributeDescriptions(std::vector<VertexStreamFormat>& Streams)
 {
-	// This sorting saves us from having to figure out
+	// This sorting saves from having to figure out
 	// a mapping between layout(location = ...) and buffer binding point
 	std::sort(Streams.begin(), Streams.end(),
 		[] (const VertexStreamFormat& LHS, const VertexStreamFormat& RHS)
@@ -189,7 +202,7 @@ static void CreateDescriptorSetLayoutBindings(
 	}
 }
 
-drm::ShaderRef VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
+ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
@@ -305,28 +318,8 @@ drm::ShaderRef VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const Shad
 	{
 		UniformLocations[StorageBuffer.Name] = StorageBuffer.Binding;
 	});
+	
+	Device.ShaderCache.emplace(Meta.Type, VulkanShader{ ShaderModule, Attributes, Bindings });
 
-	return MakeRef<VulkanShader>(Device, ShaderModule, Meta, Attributes, Bindings, AttributeLocations, UniformLocations);
-}
-
-VulkanShader::VulkanShader(
-	VulkanDevice& Device
-	, VkShaderModule ShaderModule
-	, const ShaderMetadata& Meta
-	, const std::vector<VkVertexInputAttributeDescription>& Attributes
-	, const std::vector<VkDescriptorSetLayoutBinding>& Bindings
-	, const HashTable<std::string, uint32>& AttributeLocations
-	, const HashTable<std::string, uint32>& UniformLocations
-) : Device(Device), ShaderModule(ShaderModule), Attributes(Attributes), Bindings(Bindings), drm::Shader(Meta, AttributeLocations, UniformLocations)
-{
-}
-
-VulkanShader::~VulkanShader()
-{
-	vkDestroyShaderModule(Device, ShaderModule, nullptr);
-}
-
-VkShaderStageFlagBits VulkanShader::GetVulkanStage() const
-{
-	return VulkanStages[(int32)Meta.Stage];
+	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, UniformLocations);
 }

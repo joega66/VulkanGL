@@ -29,11 +29,11 @@ GameSystem::GameSystem()
 	auto& Transform4 = Cube4.GetComponent<CTransform>();
 	Transform4.Translate(glm::vec3(0.0f, 0.0f, 10.0f));
 
-	auto Ivysaur = GEntityManager.CreateEntity();
+	/*auto Ivysaur = GEntityManager.CreateEntity();
 	Ivysaur.AddComponent<CStaticMesh>(GAssetManager.GetStaticMesh("Ivysaur"));
 
 	auto& IvysaurTransform = Ivysaur.GetComponent<CTransform>();
-	IvysaurTransform.Translate(glm::vec3(10.0f, 0.0f, 10.0f));
+	IvysaurTransform.Translate(glm::vec3(10.0f, 0.0f, 10.0f));*/
 
 	auto LightEntity = GEntityManager.CreateFromPrefab("Cube");
 	auto& Light = LightEntity.AddComponent<CLight>();

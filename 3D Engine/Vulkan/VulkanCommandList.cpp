@@ -3,7 +3,6 @@
 
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Image, VulkanImage);
-static CAST(drm::Shader, VulkanShader);
 static CAST(drm::VertexBuffer, VulkanVertexBuffer);
 static CAST(drm::UniformBuffer, VulkanUniformBuffer);
 static CAST(drm::StorageBuffer, VulkanStorageBuffer);
@@ -218,29 +217,6 @@ void VulkanCommandList::SetRenderTargets(uint32 NumRTs, const drm::RenderTargetV
 	bDirtyRenderPass = true;
 }
 
-void VulkanCommandList::SetGraphicsPipeline(drm::ShaderRef Vertex, drm::ShaderRef TessControl, drm::ShaderRef TessEval, drm::ShaderRef Geometry, drm::ShaderRef Fragment)
-{
-	if (Pending.GraphicsPipeline.Vertex == Vertex &&
-		Pending.GraphicsPipeline.TessControl == TessControl &&
-		Pending.GraphicsPipeline.TessEval == TessEval &&
-		Pending.GraphicsPipeline.Geometry == Geometry &&
-		Pending.GraphicsPipeline.Fragment == Fragment)
-		return;
-
-	DescriptorImages.clear();
-	DescriptorBuffers.clear();
-
-	std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
-
-	Pending.GraphicsPipeline.Vertex = ResourceCast(Vertex);
-	Pending.GraphicsPipeline.TessControl = ResourceCast(TessControl);
-	Pending.GraphicsPipeline.TessEval = ResourceCast(TessEval);
-	Pending.GraphicsPipeline.Geometry = ResourceCast(Geometry);
-	Pending.GraphicsPipeline.Fragment = ResourceCast(Fragment);
-
-	bDirtyPipelineLayout = true;
-}
-
 void VulkanCommandList::SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer)
 {
 	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
@@ -255,9 +231,9 @@ void VulkanCommandList::SetVertexStream(uint32 Location, drm::VertexBufferRef Ve
 
 void VulkanCommandList::SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer)
 {
-	VulkanShaderRef VulkanShader = ResourceCast(Shader);
+	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
 	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
-	auto& Bindings = VulkanShader->Bindings;
+	auto& Bindings = VulkanShader.Bindings;
 	auto SharedBuffer = VulkanUniformBuffer->Buffer;
 
 	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
@@ -275,21 +251,21 @@ void VulkanCommandList::SetUniformBuffer(drm::ShaderRef Shader, uint32 Location,
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
 
 			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
-			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
+			DescriptorBuffers[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
 			bDirtyDescriptorSets = true;
 
 			return;
 		}
 	}
 
-	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
+	fail("A shader resource doesn't exist at this location.\nLocation: %d", Location);
 }
 
 void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler)
 {
-	VulkanShaderRef VulkanShader = ResourceCast(Shader);
+	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
 	VulkanImageRef VulkanImage = ResourceCast(Image);
-	auto& Bindings = VulkanShader->Bindings;
+	auto& Bindings = VulkanShader.Bindings;
 
 	check(VulkanImage->Layout != VK_IMAGE_LAYOUT_UNDEFINED, "Invalid Vulkan image layout for shader read.");
 
@@ -303,21 +279,21 @@ void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, d
 			Samplers.Push(VulkanSampler);
 
 			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->Layout };
-			DescriptorImages[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
+			DescriptorImages[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
 			bDirtyDescriptorSets = true;
 
 			return;
 		}
 	}
 
-	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
+	fail("A shader resource doesn't exist at this location.\nLocation: %d", Location);
 }
 
 void VulkanCommandList::SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer)
 {
-	VulkanShaderRef VulkanShader = ResourceCast(Shader);
+	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
 	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
-	auto& Bindings = VulkanShader->Bindings;
+	auto& Bindings = VulkanShader.Bindings;
 	auto SharedBuffer = VulkanStorageBuffer->Buffer;
 
 	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, "Invalid buffer type.");
@@ -329,14 +305,14 @@ void VulkanCommandList::SetStorageBuffer(drm::ShaderRef Shader, uint32 Location,
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, "Shader resource at this location isn't a storage buffer.");
 
 			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
-			DescriptorBuffers[VulkanShader->Meta.Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
+			DescriptorBuffers[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
 			bDirtyDescriptorSets = true;
 
 			return;
 		}
 	}
 
-	fail("A shader resource doesn't exist at this location.\nShader: %s, Location: %d", VulkanShader->Meta.EntryPoint.c_str(), Location);
+	fail("A shader resource doesn't exist at this location.\nLocation: %d", Location);
 }
 
 void VulkanCommandList::DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
@@ -371,6 +347,18 @@ void VulkanCommandList::Finish()
 
 void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit)
 {
+	{
+		if (Pending.GraphicsPipeline != PSOInit.GraphicsPipelineState)
+		{
+			// Clear descriptors and vertex streams.
+			DescriptorImages.clear();
+			DescriptorBuffers.clear();
+			std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
+			Pending.GraphicsPipeline = PSOInit.GraphicsPipelineState;
+			bDirtyPipelineLayout = true;
+		}
+	}
+
 	{
 		const Viewport& In = PSOInit.Viewport;
 		auto& Out = Pending.Viewport;
@@ -525,6 +513,8 @@ void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit
 
 		fail("VkPrimitiveTopology not found.");
 	}
+
+	bDirtyPipeline = true;
 }
 
 void VulkanCommandList::CleanPipelineLayout()
@@ -535,8 +525,8 @@ void VulkanCommandList::CleanPipelineLayout()
 	{
 		if (Shader)
 		{
-			const auto VulkanShader = ResourceCast(Shader);
-			const auto& Bindings = VulkanShader->Bindings;
+			const auto& VulkanShader = Device.ShaderCache[Shader->Type];
+			const auto& Bindings = VulkanShader.Bindings;
 			if (Bindings.size() > 0)
 			{
 				AllBindings.insert(AllBindings.end(), Bindings.begin(), Bindings.end());
@@ -763,48 +753,45 @@ void VulkanCommandList::CleanRenderPass()
 
 void VulkanCommandList::CleanPipeline()
 {
-	VulkanShaderRef Vertex = ResourceCast(Pending.GraphicsPipeline.Vertex);
-	check(Vertex, "No vertex shader bound...");
+	const auto& GraphicsPipeline = Pending.GraphicsPipeline;
 
-	VulkanShaderRef TessControl = ResourceCast(Pending.GraphicsPipeline.TessControl);
-	VulkanShaderRef TessEval = ResourceCast(Pending.GraphicsPipeline.TessEval);
-	VulkanShaderRef Geometry = ResourceCast(Pending.GraphicsPipeline.Geometry);
-	VulkanShaderRef Fragment = ResourceCast(Pending.GraphicsPipeline.Fragment);
+	check(GraphicsPipeline.Vertex, "No vertex shader bound...");
 
-	std::vector<VulkanShaderRef> Shaders;
+	std::vector<drm::ShaderRef> Shaders;
 
-	Shaders.push_back(Vertex);
+	Shaders.push_back(GraphicsPipeline.Vertex);
 
-	if (TessControl)
+	if (GraphicsPipeline.TessControl)
 	{
-		Shaders.push_back(TessControl);
+		Shaders.push_back(GraphicsPipeline.TessControl);
 	}
-	if (TessEval)
+	if (GraphicsPipeline.TessEval)
 	{
-		Shaders.push_back(TessEval);
+		Shaders.push_back(GraphicsPipeline.TessEval);
 	}
-	if (Geometry)
+	if (GraphicsPipeline.Geometry)
 	{
-		Shaders.push_back(Geometry);
+		Shaders.push_back(GraphicsPipeline.Geometry);
 	}
-	if (Fragment)
+	if (GraphicsPipeline.Fragment)
 	{
-		Shaders.push_back(Fragment);
+		Shaders.push_back(GraphicsPipeline.Fragment);
 	}
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStages(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
 
 	for (uint32 i = 0; i < ShaderStages.size(); i++)
 	{
-		VulkanShaderRef Shader = Shaders[i];
+		drm::ShaderRef Shader = Shaders[i];
+		const VulkanShader& VulkanShader = Device.ShaderCache[Shader->Type];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[i];
-		ShaderStage.stage = Shader->GetVulkanStage();
-		ShaderStage.module = Shader->ShaderModule;
-		ShaderStage.pName = Shader->Meta.EntryPoint.data();
+		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->Stage);
+		ShaderStage.module = VulkanShader.ShaderModule;
+		ShaderStage.pName = Shader->Entrypoint.data();
 	}
 
 	VkPipelineVertexInputStateCreateInfo& VertexInputState = Pending.VertexInputState;
-	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = Vertex->Attributes;
+	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = Device.ShaderCache[GraphicsPipeline.Vertex->Type].Attributes;
 	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
 
 	for (uint32 i = 0; i < Bindings.size(); i++)
@@ -858,9 +845,9 @@ void VulkanCommandList::CleanPipeline()
 	PipelineInfo.subpass = 0;
 	PipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	VkPipeline GraphicsPipeline;
-	vulkan(vkCreateGraphicsPipelines(Device, VK_NULL_HANDLE, 1, &PipelineInfo, nullptr, &GraphicsPipeline));
-	Pipelines.Push(GraphicsPipeline);
+	VkPipeline Pipeline;
+	vulkan(vkCreateGraphicsPipelines(Device, VK_NULL_HANDLE, 1, &PipelineInfo, nullptr, &Pipeline));
+	Pipelines.Push(Pipeline);
 
 	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipelines.Get());
 

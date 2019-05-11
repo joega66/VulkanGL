@@ -4,9 +4,14 @@
 class FullscreenVS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	FullscreenVS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex };
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex };
 		return Base;
 	}
 };
@@ -21,9 +26,14 @@ template<EVisualize Visualize = EVisualize::Default>
 class FullscreenFS : public drm::Shader
 {
 public:
-	static const BaseShaderInfo& GetBaseShaderInfo()
+	FullscreenFS(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
 	{
-		static BaseShaderInfo Base = { "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment };
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo Base = { "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
 	}
 

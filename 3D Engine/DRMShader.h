@@ -44,24 +44,60 @@ struct ShaderMetadata
 	std::string Filename;
 	std::string EntryPoint;
 	EShaderStage Stage;
+	std::type_index Type;
 
-	ShaderMetadata(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage)
-		: Filename(Filename), EntryPoint(EntryPoint), Stage(Stage)
+	ShaderMetadata(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage, std::type_index Type)
+		: Filename(Filename), EntryPoint(EntryPoint), Stage(Stage), Type(Type)
 	{
 	}
 };
 
-using BaseShaderInfo = std::tuple<std::string, std::string, EShaderStage>;
+struct ShaderInfo
+{
+	std::string Filename;
+	std::string Entrypoint;
+	EShaderStage Stage;
+};
+
+class ShaderResourceTable
+{
+public:
+	const std::type_index Type;
+	const EShaderStage Stage;
+	const std::string Entrypoint;
+
+	ShaderResourceTable(std::type_index Type, EShaderStage Stage, const std::string& Entrypoint, const HashTable<std::string, uint32>& UniformLocations)
+		: Type(Type), Stage(Stage), Entrypoint(Entrypoint), UniformLocations(UniformLocations)
+	{
+	}
+
+	void Bind(const std::string& Name, uint32& Location) const
+	{
+		if (Contains(UniformLocations, Name))
+		{
+			Location = GetValue(UniformLocations, Name);
+		}
+		else
+		{
+			Location = -1;
+		}
+	}
+
+private:
+	HashTable<std::string, uint32> UniformLocations;
+};
 
 namespace drm
 {
-	class Shader
+	class Shader : public std::enable_shared_from_this<Shader>
 	{
 	public:
-		const ShaderMetadata Meta;
+		const std::type_index Type;
+		const EShaderStage Stage;
+		const std::string Entrypoint;
 
-		Shader(const ShaderMetadata& Meta, const HashTable<std::string, uint32>& AttributeLocations, const HashTable<std::string, uint32>& UniformLocations)
-			: Meta(Meta), AttributeLocations(AttributeLocations), UniformLocations(UniformLocations)
+		Shader(const ShaderResourceTable& ResourceTable)
+			: Type(ResourceTable.Type), Stage(ResourceTable.Stage), Entrypoint(ResourceTable.Entrypoint)
 		{
 		}
 
@@ -69,19 +105,10 @@ namespace drm
 		{
 		}
 
-		uint32 GetAttributeLocation(const std::string& Name) const
+		std::shared_ptr<Shader> GetShader()
 		{
-			return GetValue(AttributeLocations, Name);
+			return shared_from_this();
 		}
-
-		uint32 GetUniformLocation(const std::string& Name) const
-		{
-			return GetValue(UniformLocations, Name);
-		}
-
-	private:
-		HashTable<std::string, uint32> AttributeLocations;
-		HashTable<std::string, uint32> UniformLocations;
 	};
 
 	CLASS(Shader);

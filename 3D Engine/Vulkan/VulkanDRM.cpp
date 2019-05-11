@@ -6,7 +6,6 @@
 
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Image, VulkanImage);
-static CAST(drm::Shader, VulkanShader);
 static CAST(drm::VertexBuffer, VulkanVertexBuffer);
 static CAST(drm::UniformBuffer, VulkanUniformBuffer);
 static CAST(drm::StorageBuffer, VulkanStorageBuffer);

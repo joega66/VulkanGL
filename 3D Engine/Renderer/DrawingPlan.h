@@ -60,16 +60,10 @@ inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList
 		
 		DrawingPlan.GetPipelineState(PSOInit);
 
-		const GraphicsPipelineState Pipeline = DrawingPlan.GetGraphicsPipeline();
+		const GraphicsPipelineState GraphicsPipelineState = DrawingPlan.GetGraphicsPipeline();
+		PSOInit.GraphicsPipelineState = GraphicsPipelineState;
 
 		CmdList.SetPipelineState(PSOInit);
-
-		CmdList.SetGraphicsPipeline(
-			Pipeline.Vertex
-			, Pipeline.TessControl
-			, Pipeline.TessEval
-			, Pipeline.Geometry
-			, Pipeline.Fragment);
 
 		DrawingPlan.SetUniforms(CmdList, View);
 
