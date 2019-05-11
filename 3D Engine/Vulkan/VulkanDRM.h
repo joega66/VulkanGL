@@ -36,6 +36,8 @@ public:
 	virtual void RebuildResolutionDependents();
 	virtual std::string GetDRMName() { return "Vulkan"; }
 
+	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
+
 private:
 	VulkanDevice Device;
 	VulkanSurface Swapchain;
@@ -44,8 +46,6 @@ private:
 	uint32 SwapchainIndex = -1;
 	VkSemaphore ImageAvailableSem;
 	VkSemaphore RenderEndSem;
-
-	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
 
 	void TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
 	VkFormat FindSupportedDepthFormat(EImageFormat Format);

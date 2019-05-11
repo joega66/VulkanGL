@@ -73,6 +73,7 @@
     <ClInclude Include="Components\CTransform.h" />
     <ClInclude Include="Components\Entity.h" />
     <ClInclude Include="CoreEngine.h" />
+    <ClInclude Include="DRMPrivate.h" />
     <ClInclude Include="Engine\AssetManager.h" />
     <ClInclude Include="Engine\Cursor.h" />
     <ClInclude Include="Engine\Input.h" />

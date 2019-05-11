@@ -203,6 +203,9 @@
     <ClInclude Include="DRMShader.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
+    <ClInclude Include="DRMPrivate.h">
+      <Filter>Source\DRM</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

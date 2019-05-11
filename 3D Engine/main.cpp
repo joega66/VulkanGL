@@ -1,3 +1,4 @@
+#include <DRMPrivate.h>
 #include <Platform/WindowsPlatform.h>
 #include <Vulkan/VulkanDRM.h>
 #include "CoreEngine.h"
@@ -27,9 +28,6 @@ int main(int argc, char* argv[])
 	{
 		GDRM = MakeRef<VulkanDRM>();
 	}
-
-	// @todo-joe 
-	// 2. Vulkan Semaphores
 
 	GDRM->Init();
 

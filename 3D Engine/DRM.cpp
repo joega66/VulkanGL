@@ -1,4 +1,5 @@
 #include "DRM.h"
+#include "DRMPrivate.h"
 
 DRMRef GDRM;
 
@@ -32,6 +33,11 @@ namespace drm
 	VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data)
 	{
 		return GDRM->CreateVertexBuffer(Format, NumElements, Usage, Data);
+	}
+
+	UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
+	{
+		return GDRM->CreateUniformBuffer(Size, Data, UniformUsage);
 	}
 
 	StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage)
@@ -97,5 +103,27 @@ namespace drm
 	std::string GetDeviceName()
 	{
 		return GDRM->GetDRMName();
+	}
+
+	ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
+	{
+		return GDRM->CompileShader(Worker, Meta);
+	}
+}
+
+void DRM::CacheShader(drm::ShaderRef Shader)
+{
+	GDRM->Shaders[Shader->Type] = Shader;
+}
+
+drm::ShaderRef DRM::FindShader(std::type_index Type)
+{
+	if (Contains(GDRM->Shaders, Type))
+	{
+		return GDRM->Shaders[Type];
+	}
+	else
+	{
+		return nullptr;
 	}
 }
