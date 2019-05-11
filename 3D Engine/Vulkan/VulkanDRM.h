@@ -29,9 +29,9 @@ public:
 	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
 	virtual drm::ImageRef GetSurface();
 	virtual drm::RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	virtual void* LockBuffer(drm::VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
+	virtual void* LockBuffer(drm::VertexBufferRef VertexBuffer);
 	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer);
-	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
+	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer);
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer);
 	virtual void RebuildResolutionDependents();
 	virtual std::string GetDRMName() { return "Vulkan"; }

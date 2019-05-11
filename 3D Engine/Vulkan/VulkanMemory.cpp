@@ -129,7 +129,7 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 		}
 
 		void* MemMapped = nullptr;
-		vkMapMemory(Device, StagingBuffer->Memory, 0, Size, 0, &MemMapped);
+		vulkan(vkMapMemory(Device, StagingBuffer->Memory, 0, Size, 0, &MemMapped));
 
 		LockStagingBuffer(std::move(StagingBuffer));
 
@@ -140,7 +140,7 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 		check(Buffer && Buffer->Shared->Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
 			"CPU-mappable buffer must have these memory properties.");
 		void* MemMapped = nullptr;
-		vkMapMemory(Device, Buffer->Shared->Memory, Buffer->Offset, Buffer->Size, 0, &MemMapped);
+		vulkan(vkMapMemory(Device, Buffer->Shared->Memory, Buffer->Offset, Buffer->Size, 0, &MemMapped));
 		return MemMapped;
 	}
 }
@@ -190,7 +190,7 @@ static VkDeviceSize GetNumBytes(const VulkanImageRef Image)
 
 	switch (Image->Format)
 	{
-	case IF_R8G8B8A8_UNORM:
+	case EImageFormat::R8G8B8A8_UNORM:
 		Bytes = 4;
 		break;
 	default:

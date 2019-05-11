@@ -69,9 +69,9 @@ namespace drm
 		return GDRM->GetSurfaceView(LoadAction, StoreAction, ClearValue);
 	}
 
-	void* LockBuffer(VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+	void* LockBuffer(VertexBufferRef VertexBuffer)
 	{
-		return GDRM->LockBuffer(VertexBuffer, Size, Offset);
+		return GDRM->LockBuffer(VertexBuffer);
 	}
 
 	void UnlockBuffer(VertexBufferRef VertexBuffer)
@@ -79,9 +79,9 @@ namespace drm
 		GDRM->UnlockBuffer(VertexBuffer);
 	}
 
-	void* LockBuffer(IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+	void* LockBuffer(IndexBufferRef IndexBuffer)
 	{
-		return GDRM->LockBuffer(IndexBuffer, Size, Offset);
+		return GDRM->LockBuffer(IndexBuffer);
 	}
 
 	void UnlockBuffer(IndexBufferRef IndexBuffer)

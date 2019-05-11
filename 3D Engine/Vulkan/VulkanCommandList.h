@@ -37,7 +37,7 @@ private:
 	bool bDirtyPipeline = false;
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
-
+	
 	struct PendingState
 	{
 		RenderPassInitializer RPInit;
@@ -54,8 +54,6 @@ private:
 
 	template<typename VulkanDescriptorType>
 	using DescriptorMap = HashTable<EShaderStage, HashTable<uint32, std::unique_ptr<VulkanDescriptorType>>>;
-
-	// @todo-joe Why use a map? Just use an array for each descriptor.
 	DescriptorMap<VulkanWriteDescriptorImage> DescriptorImages;
 	DescriptorMap<VulkanWriteDescriptorBuffer> DescriptorBuffers;
 

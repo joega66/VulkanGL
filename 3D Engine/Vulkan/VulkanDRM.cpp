@@ -134,7 +134,7 @@ RenderCommandListRef VulkanDRM::CreateCommandList()
 
 drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
-	check(Format == IF_R16_UINT || Format == IF_R32_UINT, "Format must be single-channel unsigned type.");
+	check(Format == EImageFormat::R16_UINT || Format == EImageFormat::R32_UINT, "Format must be single-channel unsigned type.");
 
 	uint32 IndexBufferStride = GetValue(ImageFormatToGLSLSize, Format);
 	auto Buffer = Allocator.CreateBuffer(IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
@@ -247,9 +247,8 @@ drm::RenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStor
 	return MakeRef<VulkanRenderTargetView>(Device, GetSurface(), LoadAction, StoreAction, ClearValue);
 }
 
-void* VulkanDRM::LockBuffer(drm::VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset)
+void* VulkanDRM::LockBuffer(drm::VertexBufferRef VertexBuffer)
 {
-	// @todo-joe Handle Size, Offset
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
 	return Allocator.LockBuffer(*VulkanVertexBuffer->Buffer);
 }
@@ -260,9 +259,8 @@ void VulkanDRM::UnlockBuffer(drm::VertexBufferRef VertexBuffer)
 	Allocator.UnlockBuffer(*VulkanVertexBuffer->Buffer);
 }
 
-void* VulkanDRM::LockBuffer(drm::IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset)
+void* VulkanDRM::LockBuffer(drm::IndexBufferRef IndexBuffer)
 {
-	// @todo-joe Handle Size, Offset
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	return Allocator.LockBuffer(*VulkanIndexBuffer->Buffer);
 }

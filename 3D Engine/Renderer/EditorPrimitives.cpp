@@ -38,7 +38,7 @@ LineDrawingPlan::LineDrawingPlan(const glm::vec3 & A, const glm::vec3 & B, const
 		A, B, B
 	};
 
-	PositionBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
+	PositionBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
 	ColorUniform = drm::CreateUniformBuffer(Color, EUniformUpdate::SingleFrame);
 }
 

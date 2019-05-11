@@ -29,7 +29,7 @@ drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial
 
 			if (Pixels)
 			{
-				Material = drm::CreateImage(Width, Height, IF_R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Pixels);
+				Material = drm::CreateImage(Width, Height, EImageFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Pixels);
 			}
 
 			GPlatform->FreeImage(Pixels);
@@ -113,11 +113,11 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 
 	CMaterial Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
-	drm::IndexBufferRef IndexBuffer = drm::CreateIndexBuffer(IF_R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
-	drm::VertexBufferRef PositionBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-	drm::VertexBufferRef TextureCoordinateBuffer = drm::CreateVertexBuffer(IF_R32G32_SFLOAT, TextureCoordinates.size(), EResourceUsage::None, TextureCoordinates.data());
-	drm::VertexBufferRef NormalBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Normals.size(), EResourceUsage::None, Normals.data());
-	drm::VertexBufferRef TangentBuffer = drm::CreateVertexBuffer(IF_R32G32B32_SFLOAT, Tangents.size(), EResourceUsage::None, Tangents.data());
+	drm::IndexBufferRef IndexBuffer = drm::CreateIndexBuffer(EImageFormat::R32_UINT, Indices.size(), EResourceUsage::None, Indices.data());
+	drm::VertexBufferRef PositionBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
+	drm::VertexBufferRef TextureCoordinateBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32_SFLOAT, TextureCoordinates.size(), EResourceUsage::None, TextureCoordinates.data());
+	drm::VertexBufferRef NormalBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Normals.size(), EResourceUsage::None, Normals.data());
+	drm::VertexBufferRef TangentBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Tangents.size(), EResourceUsage::None, Tangents.data());
 
 	StaticMesh->Resources.emplace_back(StaticMeshResources(
 		Indices.size()

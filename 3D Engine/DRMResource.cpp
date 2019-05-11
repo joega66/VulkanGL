@@ -4,32 +4,32 @@ namespace drm
 {
 	bool Image::IsColor()
 	{
-		return !(IsDepth() || IsStencil() || IF_UNDEFINED);
+		return !(IsDepth() || IsStencil() || Format == EImageFormat::UNDEFINED);
 	}
 
 	bool Image::IsDepthStencil()
 	{
-		const std::unordered_set<EImageFormat> DepthFormats =
+		static const std::unordered_set<EImageFormat> DepthFormats =
 		{
-			IF_D32_SFLOAT_S8_UINT, IF_D24_UNORM_S8_UINT
+			EImageFormat::D32_SFLOAT_S8_UINT, EImageFormat::D24_UNORM_S8_UINT
 		};
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
 	bool Image::IsStencil()
 	{
-		const std::unordered_set<EImageFormat> StencilFormats =
+		static const std::unordered_set<EImageFormat> StencilFormats =
 		{
-			IF_S8_UINT
+			EImageFormat::S8_UINT
 		};
 		return IsDepthStencil() || StencilFormats.find(Format) != StencilFormats.end();
 	}
 
 	bool Image::IsDepth(EImageFormat Format)
 	{
-		const std::unordered_set<EImageFormat> DepthFormats =
+		static const std::unordered_set<EImageFormat> DepthFormats =
 		{
-			IF_D16_UNORM, IF_D32_SFLOAT, IF_D32_SFLOAT_S8_UINT, IF_D24_UNORM_S8_UINT
+			EImageFormat::D16_UNORM, EImageFormat::D32_SFLOAT, EImageFormat::D32_SFLOAT_S8_UINT, EImageFormat::D24_UNORM_S8_UINT
 		};
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}

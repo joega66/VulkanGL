@@ -194,15 +194,13 @@ void VulkanCommandList::Finish()
 
 void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit)
 {
+	if (Pending.PSOInit.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
 	{
-		if (Pending.PSOInit.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
-		{
-			// Clear descriptors and vertex streams.
-			DescriptorImages.clear();
-			DescriptorBuffers.clear();
-			std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
-			bDirtyPipelineLayout = true;
-		}
+		// Clear descriptors and vertex streams.
+		DescriptorImages.clear();
+		DescriptorBuffers.clear();
+		std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
+		bDirtyPipelineLayout = true;
 	}
 
 	Pending.PSOInit = PSOInit;
@@ -820,7 +818,7 @@ void VulkanCommandList::CleanPipeline()
 		Scissor.extent.height = (uint32)Viewport.height;
 		Scissor.offset = { 0, 0 };
 	}
-	
+
 	VkPipelineViewportStateCreateInfo ViewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	ViewportState.pViewports = &Viewport;
 	ViewportState.viewportCount = 1;

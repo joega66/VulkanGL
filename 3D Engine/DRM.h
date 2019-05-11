@@ -36,9 +36,9 @@ public:
 	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil) = 0;
 	virtual drm::ImageRef GetSurface() = 0;
 	virtual drm::RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue) = 0;
-	virtual void* LockBuffer(drm::VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset) = 0;
+	virtual void* LockBuffer(drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer) = 0;
-	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset) = 0;
+	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void RebuildResolutionDependents() = 0;
 	virtual std::string GetDRMName() = 0;
@@ -114,9 +114,9 @@ namespace drm
 	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
 	ImageRef GetSurface();
 	RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
-	void* LockBuffer(VertexBufferRef VertexBuffer, uint32 Size, uint32 Offset);
+	void* LockBuffer(VertexBufferRef VertexBuffer);
 	void UnlockBuffer(VertexBufferRef VertexBuffer);
-	void* LockBuffer(IndexBufferRef IndexBuffer, uint32 Size, uint32 Offset);
+	void* LockBuffer(IndexBufferRef IndexBuffer);
 	void UnlockBuffer(IndexBufferRef IndexBuffer);
 	void RebuildResolutionDependents();
 	std::string GetDeviceName();

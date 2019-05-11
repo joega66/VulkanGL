@@ -72,7 +72,7 @@ private:
 	std::list<VulkanBufferRef> Buffers;
 
 	[[nodiscard]] VulkanBuffer CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
-	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, /** Size is the size of the VulkanBuffer, not Shared */
+	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size,
 		std::function<void(std::unique_ptr<VulkanBuffer> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanBuffer* Buffer = nullptr);
 	void UnlockImage(const VulkanImageRef Image, VkDeviceSize Size);
 };
