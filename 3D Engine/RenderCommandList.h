@@ -134,6 +134,15 @@ struct Viewport
 	float Height = 0.0f;
 	float MinDepth = 0.0f;
 	float MaxDepth = 1.0f;
+	friend bool operator==(const Viewport& L, const Viewport& R)
+	{
+		return L.X == R.X
+			&& L.Y == R.Y
+			&& L.Width == R.Width
+			&& L.Height == R.Height
+			&& L.MinDepth == R.MinDepth
+			&& L.MaxDepth == R.MaxDepth;
+	}
 };
 
 struct StencilOpState
@@ -145,6 +154,17 @@ struct StencilOpState
 	uint32 CompareMask = 0;
 	uint32 WriteMask = 0;
 	uint32 Reference = 0;
+
+	friend bool operator==(const StencilOpState& L, const StencilOpState& R)
+	{
+		return L.FailOp == R.FailOp
+			&& L.PassOp == R.PassOp
+			&& L.DepthFailOp == R.DepthFailOp
+			&& L.CompareOp == R.CompareOp
+			&& L.CompareMask == R.CompareMask
+			&& L.WriteMask == R.WriteMask
+			&& L.Reference == R.Reference;
+	}
 };
 
 struct DepthStencilState
@@ -158,6 +178,19 @@ struct DepthStencilState
 	StencilOpState Back;
 	float MinDepthBounds = 0.0f;
 	float MaxDepthBounds = 0.0f;
+
+	friend bool operator==(const DepthStencilState& L, const DepthStencilState& R)
+	{
+		return L.DepthTestEnable == R.DepthTestEnable
+			&& L.DepthWriteEnable == R.DepthWriteEnable
+			&& L.DepthCompareTest == R.DepthCompareTest
+			&& L.DepthBoundsTestEnable == R.DepthBoundsTestEnable
+			&& L.StencilTestEnable == R.StencilTestEnable
+			&& L.Front == R.Front
+			&& L.Back == R.Back
+			&& L.MinDepthBounds == R.MinDepthBounds
+			&& L.MaxDepthBounds == R.MaxDepthBounds;
+	}
 };
 
 struct RasterizationState
@@ -172,6 +205,20 @@ struct RasterizationState
 	float DepthBiasClamp = 0.0f;
 	float DepthBiasSlopeFactor = 0.0f;
 	float LineWidth = 1.0f;
+
+	friend bool operator==(const RasterizationState& L, const RasterizationState& R)
+	{
+		return L.DepthClampEnable == R.DepthClampEnable
+			&& L.RasterizerDiscardEnable == R.RasterizerDiscardEnable
+			&& L.PolygonMode == R.PolygonMode
+			&& L.CullMode == R.CullMode
+			&& L.FrontFace == R.FrontFace
+			&& L.DepthBiasEnable == R.DepthBiasEnable
+			&& L.DepthBiasConstantFactor == R.DepthBiasConstantFactor
+			&& L.DepthBiasClamp == R.DepthBiasClamp
+			&& L.DepthBiasSlopeFactor == R.DepthBiasSlopeFactor
+			&& L.LineWidth == R.LineWidth;
+	}
 };
 
 enum ESampleCount
@@ -191,9 +238,17 @@ struct MultisampleState
 	ESampleCount RasterizationSamples = ESampleCount::Samples1;
 	bool SampleShadingEnable = false;
 	float MinSampleShading = 0.0f;
-	const uint32* SampleMask = nullptr;
 	bool AlphaToCoverageEnable = false;
 	bool AlphaToOneEnable = false;
+
+	friend bool operator==(const MultisampleState& L, const MultisampleState& R)
+	{
+		return L.RasterizationSamples == R.RasterizationSamples
+			&& L.SampleShadingEnable == R.SampleShadingEnable
+			&& L.MinSampleShading == R.MinSampleShading
+			&& L.AlphaToCoverageEnable == R.AlphaToCoverageEnable
+			&& L.AlphaToOneEnable == R.AlphaToOneEnable;
+	}
 };
 
 enum class EBlendFactor
@@ -214,12 +269,34 @@ struct ColorBlendAttachmentState
 	EBlendFactor DstAlphaBlendFactor;
 	EBlendOp AlphaBlendOp;
 	EColorChannel ColorWriteMask = EColorChannel::RGBA;
+
+	friend bool operator==(const ColorBlendAttachmentState& L, const ColorBlendAttachmentState& R)
+	{
+		return L.BlendEnable == R.BlendEnable
+			&& L.SrcColorBlendFactor == R.SrcColorBlendFactor
+			&& L.DstColorBlendFactor == R.DstColorBlendFactor
+			&& L.ColorBlendOp == R.ColorBlendOp
+			&& L.SrcAlphaBlendFactor == R.SrcAlphaBlendFactor
+			&& L.DstAlphaBlendFactor == R.DstAlphaBlendFactor
+			&& L.AlphaBlendOp == R.AlphaBlendOp
+			&& L.ColorWriteMask == R.ColorWriteMask;
+	}
+
+	friend bool operator!=(const ColorBlendAttachmentState& L, const ColorBlendAttachmentState& R)
+	{
+		return !(L == R);
+	}
 };
 
 struct InputAssemblyState
 {
 	EPrimitiveTopology Topology = EPrimitiveTopology::TriangleList;
 	bool PrimitiveRestartEnable = false;
+
+	friend bool operator==(const InputAssemblyState& L, const InputAssemblyState& R)
+	{
+		return L.Topology == R.Topology && L.PrimitiveRestartEnable == R.PrimitiveRestartEnable;
+	}
 };
 
 struct GraphicsPipelineState
@@ -246,11 +323,11 @@ struct RenderPassInitializer
 {
 	enum
 	{
-		MaxSimultaneousRenderTargets = 8
+		MaxRenderTargets = 8
 	};
 
 	uint32 NumRenderTargets = 0;
-	std::array<drm::RenderTargetViewRef, MaxSimultaneousRenderTargets> ColorTargets;
+	std::array<drm::RenderTargetViewRef, MaxRenderTargets> ColorTargets;
 	drm::RenderTargetViewRef DepthTarget;
 	EDepthStencilTransition DepthStencilTransition;
 
@@ -283,9 +360,27 @@ struct PipelineStateInitializer
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::array<ColorBlendAttachmentState, RenderPassInitializer::MaxSimultaneousRenderTargets> ColorBlendAttachmentStates;
+	std::array<ColorBlendAttachmentState, RenderPassInitializer::MaxRenderTargets> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	GraphicsPipelineState GraphicsPipelineState;
+
+	friend bool operator==(const PipelineStateInitializer& L, const PipelineStateInitializer& R)
+	{
+		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < RenderPassInitializer::MaxRenderTargets; RenderTargetIndex++)
+		{
+			if (L.ColorBlendAttachmentStates[RenderTargetIndex] != R.ColorBlendAttachmentStates[RenderTargetIndex])
+			{
+				return false;
+			}
+		}
+
+		return L.Viewport == R.Viewport
+			&& L.DepthStencilState == R.DepthStencilState
+			&& L.RasterizationState == R.RasterizationState
+			&& L.MultisampleState == R.MultisampleState
+			&& L.InputAssemblyState == R.InputAssemblyState
+			&& L.GraphicsPipelineState == R.GraphicsPipelineState;
+	}
 };
 
 class RenderCommandList
@@ -299,7 +394,6 @@ public:
 	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer) = 0;
 	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
-
 	virtual void Finish() = 0;
 };
 

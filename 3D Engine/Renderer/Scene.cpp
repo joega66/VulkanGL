@@ -26,7 +26,6 @@ void Scene::Render()
 
 	drm::SubmitCommands(CmdList);
 
-	// @todo Descriptor pools should be owned by the command list so they can be freed individually.
 	drm::EndFrame();
 }
 

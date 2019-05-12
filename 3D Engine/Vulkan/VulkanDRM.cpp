@@ -118,13 +118,13 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 		{
 			vulkan(Result);
 		}
+
+		vkQueueWaitIdle(Device.PresentQueue);
 	}
 	else
 	{
 		signal_unimplemented();
 	}
-
-	vkQueueWaitIdle(Device.PresentQueue);
 }
 
 RenderCommandListRef VulkanDRM::CreateCommandList()

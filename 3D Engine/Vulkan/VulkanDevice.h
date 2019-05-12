@@ -1,12 +1,15 @@
 #pragma once
-#include <Platform/Platform.h>
+#include <RenderCommandList.h>
 #include "VulkanShader.h"
 #include <sstream>
 #include <iostream>
 
 class VulkanDevice
 {
+	template<typename DRMObject, typename ...VulkanObjects>
+	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
 public:
+	VkPhysicalDevice PhysicalDevice;
 	VkSurfaceKHR Surface;
 	VkQueue GraphicsQueue;
 	VkQueue PresentQueue;
@@ -16,14 +19,27 @@ public:
 	HashTable<std::type_index, VulkanShader> ShaderCache;
 
 	VulkanDevice();
-	operator VkDevice() { return Device; }
+	~VulkanDevice();
+	
+	std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> GetPipeline(const PipelineStateInitializer& PSOInit, VkRenderPass RenderPass, uint32 NumRenderTargets);
 
-	VkPhysicalDevice PhysicalDevice;
+	operator VkDevice() { return Device; }
 
 private:
 	VkInstance Instance;
-	VkDebugReportCallbackEXT DebugReportCallback;
 	VkDevice Device;
+	VkDebugReportCallbackEXT DebugReportCallback;
+
+	SlowCache<GraphicsPipelineState, VkPipelineLayout, VkDescriptorSetLayout> PipelineLayoutCache;
+	SlowCache<PipelineStateInitializer, VkPipeline> PipelineCache;
+
+	std::pair<VkPipelineLayout, VkDescriptorSetLayout> GetPipelineLayout(const GraphicsPipelineState& GraphicsPipelineState);
+
+	[[nodiscard]] VkPipeline CreatePipeline(
+		const PipelineStateInitializer& PSOInit,
+		VkPipelineLayout PipelineLayout,
+		VkRenderPass RenderPass,
+		uint32 NumRenderTargets);
 };
 
 CLASS(VulkanDevice);
@@ -36,8 +52,6 @@ struct QueueFamilyIndices
 	bool IsComplete() const;
 	void FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface);
 };
-
-void VulkanAssert(VkResult Result, const char* Func, const char* File, int Line);
 
 #define vulkan(Result) \
 		if (Result != VK_SUCCESS)	\

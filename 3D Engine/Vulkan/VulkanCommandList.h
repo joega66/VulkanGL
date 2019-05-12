@@ -42,14 +42,14 @@ private:
 	{
 		RenderPassInitializer RPInit;
 		PipelineStateInitializer PSOInit;
+		VkDescriptorSetLayout DescriptorSetLayout;
+		VkPipelineLayout PipelineLayout;
+		VkPipeline Pipeline;
 		std::vector<VulkanVertexBufferRef> VertexStreams;
 	} Pending;
 
 	PendingBuffer<VkRenderPass> RenderPasses;
 	PendingBuffer<VkFramebuffer> Framebuffers;
-	PendingBuffer<VkDescriptorSetLayout> DescriptorSetLayouts;
-	PendingBuffer<VkPipelineLayout> PipelineLayouts;
-	PendingBuffer<VkPipeline> Pipelines;
 	PendingBuffer<VkSampler> Samplers;
 
 	template<typename VulkanDescriptorType>
@@ -59,8 +59,6 @@ private:
 
 	void PrepareForDraw();
 	void CleanRenderPass();
-	void CleanPipelineLayout();
-	void CleanPipeline();
 	void CleanDescriptorSets();
 	void CleanVertexStreams();
 };
