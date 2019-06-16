@@ -54,4 +54,10 @@ namespace drm
 		, ClearValue(DepthStencil)
 	{
 	}
+
+	bool RenderTargetView::operator==(const RenderTargetView& Other)
+	{
+		// Don't compare clear value since it's not part of the render pass.
+		return Image == Other.Image && LoadAction == Other.LoadAction && StoreAction == Other.StoreAction;
+	}
 }

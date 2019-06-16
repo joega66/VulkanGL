@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 
+// 
 class VulkanDevice
 {
 	template<typename DRMObject, typename ...VulkanObjects>
@@ -21,6 +22,8 @@ public:
 	VulkanDevice();
 	~VulkanDevice();
 	
+	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassInitializer& RPInit);
+
 	std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> GetPipeline(const PipelineStateInitializer& PSOInit, VkRenderPass RenderPass, uint32 NumRenderTargets);
 
 	operator VkDevice() { return Device; }
@@ -30,10 +33,13 @@ private:
 	VkDevice Device;
 	VkDebugReportCallbackEXT DebugReportCallback;
 
-	SlowCache<GraphicsPipelineState, VkPipelineLayout, VkDescriptorSetLayout> PipelineLayoutCache;
+	SlowCache<RenderPassInitializer, VkRenderPass, VkFramebuffer> RenderPassCache;
 	SlowCache<PipelineStateInitializer, VkPipeline> PipelineCache;
+	SlowCache<GraphicsPipelineState, VkPipelineLayout, VkDescriptorSetLayout> PipelineLayoutCache;
 
 	std::pair<VkPipelineLayout, VkDescriptorSetLayout> GetPipelineLayout(const GraphicsPipelineState& GraphicsPipelineState);
+
+	[[nodiscard]] std::pair<VkRenderPass, VkFramebuffer> CreateRenderPass(const RenderPassInitializer& RPInit);
 
 	[[nodiscard]] VkPipeline CreatePipeline(
 		const PipelineStateInitializer& PSOInit,

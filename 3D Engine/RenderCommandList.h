@@ -333,13 +333,28 @@ struct RenderPassInitializer
 
 	friend bool operator==(const RenderPassInitializer& L, const RenderPassInitializer& R)
 	{
-		if (L.NumRenderTargets == R.NumRenderTargets
-			&& L.DepthTarget == R.DepthTarget
-			&& L.DepthStencilTransition == R.DepthStencilTransition)
+		// Compare depth attachments.
+		if (!L.DepthTarget && !R.DepthTarget)
+		{
+		}
+		else if (L.DepthTarget && R.DepthTarget)
+		{
+			if (!(*L.DepthTarget == *R.DepthTarget && L.DepthStencilTransition == R.DepthStencilTransition))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+
+		// Compare color attachments.
+		if (L.NumRenderTargets == R.NumRenderTargets)
 		{
 			for (uint32 RenderTargetIndex = 0; RenderTargetIndex < L.NumRenderTargets; RenderTargetIndex++)
 			{
-				if (L.ColorTargets[RenderTargetIndex] != R.ColorTargets[RenderTargetIndex])
+				if (!(*L.ColorTargets[RenderTargetIndex] == *R.ColorTargets[RenderTargetIndex]))
 				{
 					return false;
 				}

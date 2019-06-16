@@ -26,6 +26,7 @@ public:
 		const glm::vec3 &Up = glm::vec3(0.0f, 1.0f, 0.0f),
 		float Yaw = -90.0f, float Pitch = 0.0f,
 		float FieldOfView = 45.0f);
+
 	// Transform screen coordinate to world ray
 	Ray ScreenPointToRay(const glm::vec2& ScreenPosition);
 	// Project world coordinate to screen coordinate.

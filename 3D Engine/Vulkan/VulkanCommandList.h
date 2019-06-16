@@ -11,6 +11,7 @@ class VulkanCommandList final : public RenderCommandList
 public:
 	const VkCommandBuffer CommandBuffer;
 	bool bTouchedSurface = false;
+	bool bInRenderPass = false;
 	bool bFinished = false;
 
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
@@ -24,7 +25,6 @@ public:
 	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer);
 	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
-
 	virtual void Finish();
 
 private:
@@ -33,7 +33,6 @@ private:
 	VulkanDescriptorPool& DescriptorPool;
 
 	bool bDirtyRenderPass = false;
-	bool bDirtyPipelineLayout = false;
 	bool bDirtyPipeline = false;
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
@@ -41,6 +40,8 @@ private:
 	struct PendingState
 	{
 		RenderPassInitializer RPInit;
+		VkRenderPass RenderPass;
+		VkFramebuffer Framebuffer;
 		PipelineStateInitializer PSOInit;
 		VkDescriptorSetLayout DescriptorSetLayout;
 		VkPipelineLayout PipelineLayout;
@@ -48,8 +49,6 @@ private:
 		std::vector<VulkanVertexBufferRef> VertexStreams;
 	} Pending;
 
-	PendingBuffer<VkRenderPass> RenderPasses;
-	PendingBuffer<VkFramebuffer> Framebuffers;
 	PendingBuffer<VkSampler> Samplers;
 
 	template<typename VulkanDescriptorType>
@@ -58,7 +57,6 @@ private:
 	DescriptorMap<VulkanWriteDescriptorBuffer> DescriptorBuffers;
 
 	void PrepareForDraw();
-	void CleanRenderPass();
 	void CleanDescriptorSets();
 	void CleanVertexStreams();
 };

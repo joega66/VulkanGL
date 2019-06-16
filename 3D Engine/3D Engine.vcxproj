@@ -53,6 +53,8 @@
     <ClCompile Include="Vulkan\VulkanDRM.cpp" />
     <ClCompile Include="Vulkan\VulkanImage.cpp" />
     <ClCompile Include="Vulkan\VulkanMemory.cpp" />
+    <ClCompile Include="Vulkan\VulkanPipeline.cpp" />
+    <ClCompile Include="Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="Vulkan\VulkanRenderTargetView.cpp" />
     <ClCompile Include="Vulkan\VulkanShader.cpp" />
     <ClCompile Include="Vulkan\VulkanSurface.cpp" />

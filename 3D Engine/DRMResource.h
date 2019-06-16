@@ -185,6 +185,8 @@ namespace drm
 
 		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
 		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
+
+		bool operator==(const RenderTargetView& Other);
 	};
 
 	CLASS(RenderTargetView);

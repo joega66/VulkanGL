@@ -319,6 +319,12 @@
     <ClCompile Include="DRMResource.cpp">
       <Filter>Source\DRM</Filter>
     </ClCompile>
+    <ClCompile Include="Vulkan\VulkanRenderPass.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanPipeline.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">

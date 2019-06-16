@@ -7,8 +7,8 @@
 
 Scene::Scene()
 {
-	SceneDepth = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, EImageFormat::D32_SFLOAT, EResourceUsage::RenderTargetable);
-	OutlineDepthStencil = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, EImageFormat::D32_SFLOAT_S8_UINT, EResourceUsage::RenderTargetable);
+	SceneDepth = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
+	OutlineDepthStencil = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
 
