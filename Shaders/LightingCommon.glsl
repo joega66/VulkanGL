@@ -1,7 +1,6 @@
 const float PI = 3.14159265;
-
-const float Ambient = 0.1;
-const float Metallic = 1.0;
+const float Ambient = 0.1f;
+const float Metallic = 1.0f;
 
 struct PointLight
 {
@@ -13,7 +12,6 @@ struct PointLight
 
 layout(std430) buffer LightBuffer
 {
-	//int NumPointLights;
 	PointLight PointLights[];
 };
 

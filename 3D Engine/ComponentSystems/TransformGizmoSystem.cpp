@@ -108,8 +108,8 @@ void TransformGizmoSystem::Selection()
 			{
 				CTransform& TransformA = A.GetComponent<CTransform>();
 				CTransform& TransformB = B.GetComponent<CTransform>();
-				return glm::distance(TransformA.GetPosition(), Scene.View.Position) <
-					glm::distance(TransformB.GetPosition(), Scene.View.Position);
+				return glm::distance(TransformA.GetPosition(), Scene.View.GetPosition()) <
+					glm::distance(TransformB.GetPosition(), Scene.View.GetPosition());
 			});
 
 			SelectedEntity = Hits.front();
@@ -145,7 +145,7 @@ void TransformGizmoSystem::TranslateTool()
 			if (Physics::Raycast(Scene.View.ScreenPointToRay(Cursor.Position), Entity))
 			{
 				CTransform& Transform = Entity.GetComponent<CTransform>();
-				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.Position); NewDist < Dist)
+				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.GetPosition()); NewDist < Dist)
 				{
 					ClosestHit = Entity;
 					Dist = NewDist;
@@ -182,11 +182,11 @@ void TransformGizmoSystem::DrawOutline(Entity Entity)
 	auto ScaledUpTransform = Transform;
 	ScaledUpTransform.Scale(ScaledUpTransform.GetScale() * glm::vec3(1.05f));
 
-	StaticMesh.ForEach([&](const auto& Resource)
+	for (auto& Element : StaticMesh.StaticMesh->Batch.Elements)
 	{
-		Scene.Stencil.Add(Entity, DepthPassDrawingPlan(Resource, Transform.LocalToWorldUniform));
-		Scene.Outline.Add(Entity, OutlineDrawingPlan(Resource, ScaledUpTransform.LocalToWorldUniform));
-	});
+		Scene.Stencil.Add(Entity, DepthPassDrawingPlan(Element, Transform.LocalToWorldUniform));
+		Scene.Outline.Add(Entity, OutlineDrawingPlan(Element, ScaledUpTransform.LocalToWorldUniform));
+	}
 
 	TranslateAxis.X.GetComponent<CRenderer>().bVisible = true;
 	TranslateAxis.Y.GetComponent<CRenderer>().bVisible = true;

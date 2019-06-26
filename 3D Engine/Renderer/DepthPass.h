@@ -25,9 +25,9 @@ public:
 		return Info;
 	}
 
-	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		MaterialVS<MeshType>::ModifyCompilationEnvironment(Worker);
+		MaterialVS<MeshType>::SetEnvironmentVariables(Worker);
 		Worker.SetDefine("DEPTH_ONLY");
 	}
 
@@ -39,17 +39,15 @@ private:
 class DepthPassDrawingPlan
 {
 public:
-	DepthPassDrawingPlan(const struct StaticMeshResources& Resources, drm::UniformBufferRef LocalToWorldUniform);
+	DepthPassDrawingPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
 	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
 	GraphicsPipelineState GetGraphicsPipeline() const;
 	void SetUniforms(RenderCommandList& CmdList, const View& View);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
+	const struct MeshElement& Element;
 	drm::UniformBufferRef LocalToWorldUniform;
-	uint32 IndexCount;
-	drm::IndexBufferRef IndexBuffer;
-	StreamSource PositionStream;
 
 	Ref<DepthPassVS<EMeshType::StaticMesh>> VertexShader;
 };

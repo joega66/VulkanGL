@@ -99,11 +99,8 @@ struct SamplerState
 
 enum class EUniformUpdate
 {
-	// Device local.
 	Infrequent,
-	// Use CPU-accessible strategy.
 	Frequent,
-	// Use CPU-accessible strategy.
 	SingleFrame
 };
 
@@ -401,9 +398,9 @@ struct PipelineStateInitializer
 class RenderCommandList
 {
 public:
-	virtual void SetRenderTargets(const RenderPassInitializer& RenderPassInit) = 0;
-	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit) = 0;
-	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
+	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
+	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
+	virtual void BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;
 	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler) = 0;
 	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer) = 0;

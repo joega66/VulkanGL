@@ -95,9 +95,9 @@ namespace drm
 		return GDRM->UnlockBuffer(IndexBuffer);
 	}
 
-	void RebuildResolutionDependents()
+	void ChangeResolution()
 	{
-		GDRM->RebuildResolutionDependents();
+		GDRM->ChangeResolution();
 	}
 
 	std::string GetDeviceName()

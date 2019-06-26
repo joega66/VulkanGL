@@ -19,7 +19,7 @@ public:
 class OutlineDrawingPlan : public DepthPassDrawingPlan
 {
 public:
-	OutlineDrawingPlan(const struct StaticMeshResources& Resources, drm::UniformBufferRef LocalToWorldUniform);
+	OutlineDrawingPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
 	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
 	GraphicsPipelineState GetGraphicsPipeline() const;
 	void SetUniforms(RenderCommandList& CmdList, const View& View);

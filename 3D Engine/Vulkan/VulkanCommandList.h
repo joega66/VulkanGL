@@ -17,9 +17,9 @@ public:
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
 	~VulkanCommandList();
 
-	virtual void SetRenderTargets(const RenderPassInitializer& RenderPassInit);
-	virtual void SetPipelineState(const PipelineStateInitializer& PSOInit);
-	virtual void SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer);
+	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit);
+	virtual void BindPipeline(const PipelineStateInitializer& PSOInit);
+	virtual void BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer);
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer);
 	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler);
 	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer);

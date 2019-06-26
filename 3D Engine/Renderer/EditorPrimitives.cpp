@@ -1,8 +1,8 @@
 #include "EditorPrimitives.h"
 #include <Engine/StaticMesh.h>
 
-OutlineDrawingPlan::OutlineDrawingPlan(const StaticMeshResources& Resources, drm::UniformBufferRef LocalToWorldUniform)
-	: DepthPassDrawingPlan(Resources, LocalToWorldUniform)
+OutlineDrawingPlan::OutlineDrawingPlan(const MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform)
+	: DepthPassDrawingPlan(Element, LocalToWorldUniform)
 {
 	FragmentShader = *ShaderMapRef<OutlineFS>();
 }
@@ -69,6 +69,6 @@ void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
 
 void LineDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	CmdList.SetVertexStream(0, PositionBuffer);
+	CmdList.BindVertexBuffers(0, PositionBuffer);
 	CmdList.Draw(3, 1, 0, 0);
 }

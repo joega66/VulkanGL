@@ -17,7 +17,7 @@ public:
 	{
 	}
 
-	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		if constexpr (MeshType == EMeshType::StaticMesh)
 		{
@@ -35,7 +35,7 @@ public:
 	{
 	}
 
-	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		if constexpr (bHasDiffuseMap)
 		{

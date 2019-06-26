@@ -42,7 +42,7 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
 }
 
-void VulkanCommandList::SetRenderTargets(const RenderPassInitializer& RenderPassInit)
+void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RenderPassInit)
 {
 	if (Pending.RPInit == RenderPassInit)
 	{
@@ -62,7 +62,7 @@ void VulkanCommandList::SetRenderTargets(const RenderPassInitializer& RenderPass
 	}
 }
 
-void VulkanCommandList::SetVertexStream(uint32 Location, drm::VertexBufferRef VertexBuffer)
+void VulkanCommandList::BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer)
 {
 	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
 
@@ -138,7 +138,7 @@ void VulkanCommandList::SetStorageBuffer(drm::ShaderRef Shader, uint32 Location,
 {
 	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
 	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
-	auto& Bindings = VulkanShader.Bindings;
+	const auto& Bindings = VulkanShader.Bindings;
 	auto SharedBuffer = VulkanStorageBuffer->Buffer;
 
 	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, "Invalid buffer type.");
@@ -165,7 +165,7 @@ void VulkanCommandList::DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 Inde
 	PrepareForDraw();
 
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	VkIndexType IndexType = VulkanIndexBuffer->IndexStride == sizeof(uint32) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
+	const VkIndexType IndexType = VulkanIndexBuffer->IndexStride == sizeof(uint32) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 
 	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->Buffer->GetVulkanHandle(), VulkanIndexBuffer->Buffer->Offset, IndexType);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
@@ -191,7 +191,7 @@ void VulkanCommandList::Finish()
 	bFinished = true;
 }
 
-void VulkanCommandList::SetPipelineState(const PipelineStateInitializer& PSOInit)
+void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 {
 	if (Pending.PSOInit.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
 	{

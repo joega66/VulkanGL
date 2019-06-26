@@ -271,7 +271,7 @@ void VulkanDRM::UnlockBuffer(drm::IndexBufferRef IndexBuffer)
 	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanDRM::RebuildResolutionDependents()
+void VulkanDRM::ChangeResolution()
 {
 	// @todo-joe
 }

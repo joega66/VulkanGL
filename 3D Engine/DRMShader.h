@@ -101,7 +101,7 @@ namespace drm
 		{
 		}
 
-		static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+		static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 		{
 		}
 

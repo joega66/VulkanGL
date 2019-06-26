@@ -22,18 +22,24 @@ void StaticMeshSystem::Update()
 
 		if (Entity.HasComponent<CMaterial>())
 		{
+			// The entity has a Material -- render using it.
 			auto& Material = Entity.GetComponent<CMaterial>();
-			StaticMesh.ForEach([&](auto& Resource)
+			auto& Batch = StaticMesh.StaticMesh->Batch;
+			auto& Elements = Batch.Elements;
+			for (auto& Element : Elements)
 			{
-				Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Resource, Material, Transform.LocalToWorldUniform));
-			});
+				Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Element, Material, Transform.LocalToWorldUniform));
+			}
 		}
 		else
 		{
-			StaticMesh.ForEach([&](auto& Resource)
+			// Use the materials that came with the static mesh.
+			auto& Batch = StaticMesh.StaticMesh->Batch;
+			auto& Elements = Batch.Elements;
+			for (auto& Element : Elements)
 			{
-				Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Resource, Resource.Material, Transform.LocalToWorldUniform));
-			});
+				Scene.LightingPassDrawingPlans.Add(Entity, LightingPassDrawingPlan(Element, Element.Material, Transform.LocalToWorldUniform));
+			}
 		}
 	}
 }

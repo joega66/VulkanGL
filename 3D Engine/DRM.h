@@ -23,7 +23,7 @@ public:
 
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;
-
+	
 	virtual void SubmitCommands(RenderCommandListRef CmdList) = 0;
 	virtual RenderCommandListRef CreateCommandList() = 0;
 	virtual drm::IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
@@ -40,9 +40,8 @@ public:
 	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
-	virtual void RebuildResolutionDependents() = 0;
+	virtual void ChangeResolution() = 0;
 	virtual std::string GetDRMName() = 0;
-
 	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
 
 private:
@@ -77,7 +76,7 @@ namespace drm
 	void UnlockBuffer(VertexBufferRef VertexBuffer);
 	void* LockBuffer(IndexBufferRef IndexBuffer);
 	void UnlockBuffer(IndexBufferRef IndexBuffer);
-	void RebuildResolutionDependents();
+	void ChangeResolution();
 	std::string GetDeviceName();
 
 	template<typename UniformBufferType>
@@ -110,7 +109,7 @@ public:
 		else
 		{
 			ShaderCompilerWorker Worker;
-			ShaderType::ModifyCompilationEnvironment(Worker);
+			ShaderType::SetEnvironmentVariables(Worker);
 			const auto&[Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
 			ShaderMetadata Meta(Filename, EntryPoint, Stage, Type);
 			const ShaderResourceTable ResourceTable = drm::CompileShader(Worker, Meta);

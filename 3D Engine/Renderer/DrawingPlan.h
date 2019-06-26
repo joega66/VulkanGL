@@ -63,7 +63,7 @@ inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList
 		const GraphicsPipelineState GraphicsPipelineState = DrawingPlan.GetGraphicsPipeline();
 		PSOInit.GraphicsPipelineState = GraphicsPipelineState;
 
-		CmdList.SetPipelineState(PSOInit);
+		CmdList.BindPipeline(PSOInit);
 
 		DrawingPlan.SetUniforms(CmdList, View);
 

@@ -49,7 +49,7 @@ SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferU
 	return SharedBuffer;
 }
 
-uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemoryPropertyFlags RequiredProperties)
+uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemoryPropertyFlags RequiredProperties) const
 {
 	VkPhysicalDeviceMemoryProperties MemProperties;
 	vkGetPhysicalDeviceMemoryProperties(Device.PhysicalDevice, &MemProperties);
@@ -221,13 +221,13 @@ void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const Cubema
 		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
 	});
 
-	for (uint32 i = 0; i < CubemapCreateInfo.CubeFaces.size(); i++)
+	for (uint32 FaceIndex = 0; FaceIndex < CubemapCreateInfo.CubeFaces.size(); FaceIndex++)
 	{
-		auto& Face = CubemapCreateInfo.CubeFaces[i];
+		auto& Face = CubemapCreateInfo.CubeFaces[FaceIndex];
 
 		if (Face.Data)
 		{
-			GPlatform->Memcpy((uint8*)MemMapped + i * Size / 6, Face.Data, (size_t)Size / 6);
+			GPlatform->Memcpy((uint8*)MemMapped + FaceIndex * Size / 6, Face.Data, (size_t)Size / 6);
 		}
 	}
 

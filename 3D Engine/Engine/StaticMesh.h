@@ -2,12 +2,7 @@
 #include <Components/CMaterial.h>
 #include <Physics/Physics.h>
 
-struct aiNode;
-struct aiScene;
-struct aiMesh;
-struct aiMaterial;
-
-struct StaticMeshResources
+struct MeshElement
 {
 	const uint32 IndexCount;
 	drm::IndexBufferRef IndexBuffer;
@@ -19,7 +14,7 @@ struct StaticMeshResources
 
 	CMaterial Material;
 	
-	StaticMeshResources(
+	MeshElement(
 		uint32 IndexCount
 		, drm::IndexBufferRef IndexBuffer
 		, drm::VertexBufferRef PositionBuffer
@@ -38,16 +33,21 @@ struct StaticMeshResources
 	}
 };
 
+struct MeshBatch
+{
+	std::vector<MeshElement> Elements;
+};
+
 class StaticMesh
 {
 public:
 	const std::string Filename;
 	const std::string Directory;
-	std::vector<StaticMeshResources> Resources;
+	MeshBatch Batch;
 	BoundingBox Bounds;
 
 	StaticMesh(const std::string& Filename);
-	
+
 private:
 	void LoadStaticMesh();
 };

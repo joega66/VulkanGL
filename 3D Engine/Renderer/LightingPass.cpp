@@ -2,14 +2,15 @@
 #include <Renderer/Scene.h>
 #include <DRM.h>
 
-LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Resources, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
+LightingPassDrawingPlan::LightingPassDrawingPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
+	: Element(Element)
 {
 	const bool bHasDiffuseMap = std::holds_alternative<drm::ImageRef>(CMaterial.Diffuse);
 	const bool bHasNormalMap = CMaterial.Normal != nullptr;
 
 	VertShader = *ShaderMapRef<LightingPassVS<EMeshType::StaticMesh>>();
 
-	// @todo Shader permutations
+	// @todo Shader permutations? Or bypass the shader cache?
 	if (bHasDiffuseMap && bHasNormalMap)
 	{
 		FragShader = *ShaderMapRef<LightingPassFS<true, true, EMeshType::StaticMesh>>();
@@ -26,15 +27,6 @@ LightingPassDrawingPlan::LightingPassDrawingPlan(const StaticMeshResources& Reso
 	{
 		FragShader = *ShaderMapRef<LightingPassFS<false, false, EMeshType::StaticMesh>>();
 	}
-
-	// @todo The index buffer and streams should be in static mesh since they won't change much?
-	IndexCount = Resources.IndexCount;
-	IndexBuffer = Resources.IndexBuffer;
-
-	Streams.push_back({ Resources.PositionBuffer, 0 });
-	Streams.push_back({ Resources.TextureCoordinateBuffer, 1 });
-	Streams.push_back({ Resources.NormalBuffer, 2 });
-	Streams.push_back({ Resources.TangentBuffer, 3 });
 
 	Uniforms.push_back({ VertShader, LocalToWorldUniform, VertShader->LocalToWorld });
 
@@ -81,10 +73,9 @@ void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View
 
 void LightingPassDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	for (const StreamSource& Stream : Streams)
-	{
-		CmdList.SetVertexStream(Stream.Location, Stream.VertexBuffer);
-	}
-
-	CmdList.DrawIndexed(IndexBuffer, IndexCount, 1, 0, 0, 0);
+	CmdList.BindVertexBuffers(0, Element.PositionBuffer);
+	CmdList.BindVertexBuffers(1, Element.TextureCoordinateBuffer);
+	CmdList.BindVertexBuffers(2, Element.NormalBuffer);
+	CmdList.BindVertexBuffers(3, Element.TangentBuffer);
+	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
 }

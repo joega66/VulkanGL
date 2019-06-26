@@ -119,7 +119,7 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 	drm::VertexBufferRef NormalBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Normals.size(), EResourceUsage::None, Normals.data());
 	drm::VertexBufferRef TangentBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Tangents.size(), EResourceUsage::None, Tangents.data());
 
-	StaticMesh->Resources.emplace_back(StaticMeshResources(
+	StaticMesh->Batch.Elements.emplace_back(MeshElement(
 		Indices.size()
 		, IndexBuffer
 		, PositionBuffer

@@ -31,9 +31,9 @@ public:
 	{
 	}
 
-	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		MaterialVS<MeshType>::ModifyCompilationEnvironment(Worker);
+		MaterialVS<MeshType>::SetEnvironmentVariables(Worker);
 	}
 };
 
@@ -69,16 +69,16 @@ public:
 
 	}
 
-	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		MaterialFS<bHasDiffuseMap, bHasNormalMap, MeshType>::ModifyCompilationEnvironment(Worker);
+		MaterialFS<bHasDiffuseMap, bHasNormalMap, MeshType>::SetEnvironmentVariables(Worker);
 	}
 };
 
 class LightingPassDrawingPlan
 {
 public:
-	LightingPassDrawingPlan(const struct StaticMeshResources& Resources, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
+	LightingPassDrawingPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
 
 	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
 	GraphicsPipelineState GetGraphicsPipeline() const;
@@ -91,7 +91,5 @@ private:
 
 	std::vector<MaterialSource> Materials;
 	std::vector<UniformSource> Uniforms;
-	uint32 IndexCount;
-	drm::IndexBufferRef IndexBuffer;
-	std::vector<StreamSource> Streams;
+	const struct MeshElement& Element;
 };

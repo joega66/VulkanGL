@@ -37,7 +37,7 @@ public:
 		return Base;
 	}
 
-	static void ModifyCompilationEnvironment(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		if constexpr (Visualize == EVisualize::Depth)
 		{

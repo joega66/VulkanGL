@@ -44,7 +44,7 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	RenderPassInit.DepthTarget = DepthView;
 	RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
 
-	CmdList.SetRenderTargets(RenderPassInit);
+	CmdList.BeginRenderPass(RenderPassInit);
 
 	PSOInit.Viewport.X = 0.0f;
 	PSOInit.Viewport.Y = 0.0f;
@@ -57,7 +57,7 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 
 	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
-	CmdList.SetPipelineState(PSOInit);
+	CmdList.BindPipeline(PSOInit);
 
 	CmdList.SetUniformBuffer(FragShader, FragShader->View, View.Uniform);
 	CmdList.SetStorageBuffer(FragShader, FragShader->LightBuffer, LightBuffer);
@@ -75,7 +75,7 @@ void Scene::RenderLightingPass(RenderCommandList& CmdList)
 	RenderPassInit.DepthTarget = DepthView;
 	RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
 
-	CmdList.SetRenderTargets(RenderPassInit);
+	CmdList.BeginRenderPass(RenderPassInit);
 
 	PipelineStateInitializer PSOInit = {};
 
@@ -136,15 +136,15 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 
 	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
-	CmdList.SetPipelineState(PSOInit);
+	CmdList.BindPipeline(PSOInit);
 
 	CmdList.SetUniformBuffer(VertShader, VertShader->View, View.Uniform);
 	CmdList.SetShaderImage(FragShader, FragShader->Skybox, Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
-	for (const auto& Resource : Cube->Resources)
+	for (const auto& Element : Cube->Batch.Elements)
 	{
-		CmdList.SetVertexStream(0, Resource.PositionBuffer);
-		CmdList.DrawIndexed(Resource.IndexBuffer, Resource.IndexCount, 1, 0, 0, 0);
+		CmdList.BindVertexBuffers(0, Element.PositionBuffer);
+		CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
 	}
 }
 
@@ -159,7 +159,7 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		RenderPassInit.DepthTarget = StencilView;
 		RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
 
-		CmdList.SetRenderTargets(RenderPassInit);
+		CmdList.BeginRenderPass(RenderPassInit);
 
 		PSOInit.Viewport.X = 0.0f;
 		PSOInit.Viewport.Y = 0.0f;
@@ -189,7 +189,7 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		RenderPassInit.DepthTarget = OutlineView;
 		RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
 
-		CmdList.SetRenderTargets(RenderPassInit);
+		CmdList.BeginRenderPass(RenderPassInit);
 
 		PSOInit.DepthStencilState.DepthTestEnable = false;
 		PSOInit.DepthStencilState.DepthWriteEnable = false;

@@ -55,7 +55,7 @@ public:
 		VkBufferUsageFlags VulkanUsage, 
 		EResourceUsage Usage, 
 		const void* Data = nullptr);
-	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties);
+	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
 	void UploadBufferData(const SharedVulkanBuffer& Buffer, const void* Data);
 	void* LockBuffer(const SharedVulkanBuffer& Buffer);
 	void UnlockBuffer(const SharedVulkanBuffer& Buffer);

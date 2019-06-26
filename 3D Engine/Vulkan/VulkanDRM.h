@@ -33,7 +33,7 @@ public:
 	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer);
 	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer);
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer);
-	virtual void RebuildResolutionDependents();
+	virtual void ChangeResolution();
 	virtual std::string GetDRMName() { return "Vulkan"; }
 
 	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);

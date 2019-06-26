@@ -1,18 +1,18 @@
 #include "View.h"
 #include "Screen.h"
 
-View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitch, float FieldOfView)
+View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitch, float FOV)
 	: Position(Position)
 	, WorldUp(Up)
 	, Yaw(Yaw)
 	, Pitch(Pitch)
-	, FieldOfView(FieldOfView)
+	, FOV(FOV)
 	, Uniform(drm::CreateUniformBuffer<ViewUniform>(EUniformUpdate::Frequent))
 {
 	UpdateView();
 }
 
-Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
+Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
 { 
 	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)Screen.Width, ScreenPosition.y / (float)Screen.Height);
 
@@ -42,7 +42,7 @@ Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition)
 	return Ray(RayStartWorldSpace, RayDirWorldSpace);
 }
 
-bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition)
+bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition) const
 {
 	const glm::vec4 ProjectiveSpace = GetViewToClip() * GetWorldToView() * glm::vec4(WorldPosition, 1.0f);
 	if (ProjectiveSpace.w > 0.0f)
@@ -81,7 +81,7 @@ void View::UpdateView()
 		Position,
 		0.0f,
 		(float)Screen.Width / Screen.Height,
-		FieldOfView,
+		FOV,
 	};
 
 	Uniform->Set(View);
@@ -110,7 +110,7 @@ void View::Translate(const float DS)
 
 glm::mat4 View::GetViewToClip() const
 {
-	glm::mat4 Perspective = glm::perspective(glm::radians(FieldOfView), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
+	glm::mat4 Perspective = glm::perspective(glm::radians(FOV), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
 	// @todo VK_KHR_maintenance1
 	Perspective[1][1] *= -1;
 	return Perspective;
