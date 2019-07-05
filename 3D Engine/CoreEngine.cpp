@@ -47,6 +47,7 @@ void CoreEngine::Run()
 	GameSystem GameSystem;
 	ComponentSystemManager.AddComponentSystem(GameSystem);
 
+	// @todo ViewportChanged lambda callbacks
 	while (!GPlatform->WindowShouldClose())
 	{
 		GPlatform->PollEvents();

@@ -143,13 +143,12 @@ drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 Num
 
 drm::UniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
-	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent || UniformUsage == EUniformUpdate::SingleFrame
-		? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
+	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent ? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void * Data, EResourceUsage Usage)
+drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage)
 {
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);

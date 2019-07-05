@@ -67,7 +67,6 @@ void VulkanCommandList::BindVertexBuffers(uint32 Location, drm::VertexBufferRef 
 	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
 
 	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
-	check(VulkanVertexBuffer, "Invalid vertex buffer.");
 
 	Pending.VertexStreams[Location] = VulkanVertexBuffer;
 

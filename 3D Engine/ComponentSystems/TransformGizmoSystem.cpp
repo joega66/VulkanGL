@@ -31,14 +31,14 @@ TransformGizmoSystem::TransformGizmoSystem()
 	TranslateAxis.Y.AddComponent<CStaticMesh>(TransformGizmo);
 	TranslateAxis.Z.AddComponent<CStaticMesh>(TransformGizmo);
 
-	auto& MatX = TranslateAxis.X.AddComponent<CMaterial>();
+	/*auto& MatX = TranslateAxis.X.AddComponent<CMaterial>();
 	MatX.Diffuse = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
 	auto& MatY = TranslateAxis.Y.AddComponent<CMaterial>();
 	MatY.Diffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
 	auto& MatZ = TranslateAxis.Z.AddComponent<CMaterial>();
-	MatZ.Diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	MatZ.Diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);*/
 
 	TranslateAxis.X.GetComponent<CRenderer>().bVisible = false;
 	TranslateAxis.Y.GetComponent<CRenderer>().bVisible = false;

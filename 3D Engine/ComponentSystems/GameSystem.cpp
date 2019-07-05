@@ -42,8 +42,8 @@ GameSystem::GameSystem()
 	LightTransform.Scale(glm::vec3(0.1f));
 	LightTransform.Translate(glm::vec3(1.0f));
 
-	auto& Material = LightEntity.AddComponent<CMaterial>();
-	Material.Diffuse = glm::vec4(Light.Color, 1.0f);
+	//auto& Material = LightEntity.AddComponent<CMaterial>();
+	//Material.Diffuse = glm::vec4(Light.Color, 1.0f);
 }
 
 void GameSystem::Update()

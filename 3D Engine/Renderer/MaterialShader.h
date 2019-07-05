@@ -26,7 +26,7 @@ public:
 	}
 };
 
-template<bool bHasDiffuseMap, bool bHasNormalMap, EMeshType MeshType>
+template<bool bHasNormalMap, EMeshType MeshType>
 class MaterialFS : public drm::Shader
 {
 public:
@@ -37,11 +37,6 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		if constexpr (bHasDiffuseMap)
-		{
-			Worker.SetDefine("HAS_DIFFUSE_MAP");
-		}
-
 		if constexpr (bHasNormalMap)
 		{
 			Worker.SetDefine("HAS_NORMAL_MAP");

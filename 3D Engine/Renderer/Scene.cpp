@@ -29,6 +29,11 @@ void Scene::Render()
 	drm::EndFrame();
 }
 
+void Scene::RenderVoxels(RenderCommandList& CmdList)
+{
+	PipelineStateInitializer PSOInit = {};
+}
+
 void Scene::RenderRayMarching(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
@@ -88,7 +93,7 @@ void Scene::RenderLightingPass(RenderCommandList& CmdList)
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
-	LightingPassDrawingPlans.Execute(CmdList, PSOInit, View);
+	LightingPass.Execute(CmdList, PSOInit, View);
 }
 
 void Scene::RenderEditorPrimitives(RenderCommandList& CmdList)

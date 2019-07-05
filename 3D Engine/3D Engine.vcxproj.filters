@@ -167,9 +167,6 @@
     <ClInclude Include="Engine\Input.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Screen.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\RayMarching.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -205,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="DRMPrivate.h">
       <Filter>Source\DRM</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\VoxelPass.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

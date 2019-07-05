@@ -101,7 +101,6 @@ enum class EUniformUpdate
 {
 	Infrequent,
 	Frequent,
-	SingleFrame
 };
 
 enum class EStencilOp

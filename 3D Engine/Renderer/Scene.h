@@ -7,7 +7,7 @@ class Scene
 public:
 	View View;
 
-	DrawingPlanList<LightingPassDrawingPlan> LightingPassDrawingPlans;
+	DrawingPlanList<LightingPassDrawingPlan> LightingPass;
 	DrawingPlanList<DepthPassDrawingPlan> Stencil;
 	DrawingPlanList<OutlineDrawingPlan> Outline;
 	DrawingPlanList<LineDrawingPlan> Lines;
@@ -27,6 +27,7 @@ private:
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;
 
+	void RenderVoxels(RenderCommandList& CmdList);
 	void RenderRayMarching(RenderCommandList& CmdList);
 	void RenderLightingPass(RenderCommandList& CmdList);
 	void RenderEditorPrimitives(RenderCommandList& CmdList);

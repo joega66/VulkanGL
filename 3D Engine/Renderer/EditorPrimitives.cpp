@@ -30,7 +30,7 @@ void OutlineDrawingPlan::Draw(RenderCommandList& CmdList) const
 	DepthPassDrawingPlan::Draw(CmdList);
 }
 
-LineDrawingPlan::LineDrawingPlan(const glm::vec3 & A, const glm::vec3 & B, const glm::vec4 & Color, float Width)
+LineDrawingPlan::LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width)
 	: LineWidth(Width)
 {
 	std::vector<glm::vec3> Positions =
@@ -39,7 +39,7 @@ LineDrawingPlan::LineDrawingPlan(const glm::vec3 & A, const glm::vec3 & B, const
 	};
 
 	PositionBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-	ColorUniform = drm::CreateUniformBuffer(Color, EUniformUpdate::SingleFrame);
+	ColorUniform = drm::CreateUniformBuffer(Color, EUniformUpdate::Infrequent);
 }
 
 void LineDrawingPlan::GetPipelineState(PipelineStateInitializer& PSOInit) const

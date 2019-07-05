@@ -44,7 +44,6 @@ public:
 		: drm::Shader(Resources)
 	{
 		Resources.Bind("Diffuse", Diffuse);
-		Resources.Bind("DiffuseUniform", DiffuseUniform);
 		Resources.Bind("Normal", Normal);
 	}
 
@@ -55,23 +54,21 @@ public:
 	}
 
 	uint32 Diffuse;
-	uint32 DiffuseUniform;
 	uint32 Normal;
 };
 
-template<bool bHasDiffuseMap, bool bHasNormalMap, EMeshType MeshType>
+template<bool bHasNormalMap, EMeshType MeshType>
 class LightingPassFS : public LightingPassBaseFS
 {
 public:
 	LightingPassFS(const ShaderResourceTable& Resources)
 		: LightingPassBaseFS(Resources)
 	{
-
 	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		MaterialFS<bHasDiffuseMap, bHasNormalMap, MeshType>::SetEnvironmentVariables(Worker);
+		MaterialFS<bHasNormalMap, MeshType>::SetEnvironmentVariables(Worker);
 	}
 };
 
