@@ -93,7 +93,7 @@ enum class EFilter
 struct SamplerState
 {
 	EFilter Filter = EFilter::Linear;
-	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToBorder;
+	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToEdge;
 	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
 };
 

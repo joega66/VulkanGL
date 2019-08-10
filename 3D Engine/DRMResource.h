@@ -166,8 +166,11 @@ namespace drm
 		}
 
 		bool IsColor();
-		bool IsDepthStencil();
 		bool IsStencil();
+
+		static bool IsDepthStencil(EImageFormat Format);
+		bool IsDepthStencil();
+
 		static bool IsDepth(EImageFormat Format);
 		bool IsDepth();
 	};

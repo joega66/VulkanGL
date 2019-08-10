@@ -25,6 +25,7 @@
     <ClCompile Include="ComponentSystems\LightSystem.cpp" />
     <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp" />
     <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp" />
+    <ClCompile Include="Components\CMaterial.cpp" />
     <ClCompile Include="Components\CStaticMesh.cpp" />
     <ClCompile Include="Components\CTransform.cpp" />
     <ClCompile Include="Components\Entity.cpp" />
@@ -98,7 +99,6 @@
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\Scene.h" />
-    <ClInclude Include="Renderer\VoxelPass.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="SPIRV-Cross\spirv.hpp" />
     <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp" />
@@ -188,8 +188,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes</IncludePath>
-    <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib</LibraryPath>
+    <IncludePath>C:\VulkanSDK\1.1.114.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes</IncludePath>
+    <LibraryPath>C:\VulkanSDK\1.1.114.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes</IncludePath>

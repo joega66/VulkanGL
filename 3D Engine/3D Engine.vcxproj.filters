@@ -203,9 +203,6 @@
     <ClInclude Include="DRMPrivate.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\VoxelPass.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -324,6 +321,9 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanPipeline.cpp">
       <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\CMaterial.cpp">
+      <Filter>Source\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

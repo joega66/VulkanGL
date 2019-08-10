@@ -27,7 +27,6 @@ private:
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;
 
-	void RenderVoxels(RenderCommandList& CmdList);
 	void RenderRayMarching(RenderCommandList& CmdList);
 	void RenderLightingPass(RenderCommandList& CmdList);
 	void RenderEditorPrimitives(RenderCommandList& CmdList);

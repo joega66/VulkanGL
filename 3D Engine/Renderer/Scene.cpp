@@ -29,11 +29,6 @@ void Scene::Render()
 	drm::EndFrame();
 }
 
-void Scene::RenderVoxels(RenderCommandList& CmdList)
-{
-	PipelineStateInitializer PSOInit = {};
-}
-
 void Scene::RenderRayMarching(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};

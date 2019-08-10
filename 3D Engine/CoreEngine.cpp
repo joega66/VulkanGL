@@ -15,6 +15,15 @@ class Screen Screen;
 
 void CoreEngine::Run()
 {
+	uint8 Red[] = { 255, 0, 0, 0 };
+	CMaterial::Red = drm::CreateImage(1, 1, EImageFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Red);
+
+	uint8 Green[] = { 0, 255, 0, 0 };
+	CMaterial::Green = drm::CreateImage(1, 1, EImageFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Green);
+
+	uint8 Blue[] = { 0, 0, 255, 0 };
+	CMaterial::Blue = drm::CreateImage(1, 1, EImageFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Blue);
+
 	std::array<std::string, 6> Cubemap = 
 	{
 		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
@@ -27,8 +36,6 @@ void CoreEngine::Run()
 	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
 	GAssetManager.LoadStaticMesh("Transform-Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
-
-	auto& Scene = Scene::Get();
 
 	// @todo Code generation. Or, for now, COMPONENT_SYSTEM() macro.
 
@@ -46,6 +53,8 @@ void CoreEngine::Run()
 
 	GameSystem GameSystem;
 	ComponentSystemManager.AddComponentSystem(GameSystem);
+
+	auto& Scene = Scene::Get();
 
 	// @todo ViewportChanged lambda callbacks
 	while (!GPlatform->WindowShouldClose())

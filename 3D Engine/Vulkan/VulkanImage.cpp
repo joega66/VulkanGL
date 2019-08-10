@@ -214,15 +214,28 @@ static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFo
 
 VkFormat VulkanDRM::FindSupportedDepthFormat(EImageFormat Format)
 {
-	const std::vector<VkFormat> Candidates =
+	const auto Candidates = [&]() -> std::vector<VkFormat>
 	{
-		VulkanImage::GetVulkanFormat(Format),
-		VK_FORMAT_D32_SFLOAT, 
-		VK_FORMAT_D32_SFLOAT_S8_UINT, 
-		VK_FORMAT_D24_UNORM_S8_UINT,
-		VK_FORMAT_D16_UNORM_S8_UINT,
-		VK_FORMAT_D16_UNORM
-	};
+		if (drm::Image::IsDepthStencil(Format))
+		{
+			return 
+			{ 
+				VulkanImage::GetVulkanFormat(Format), 
+				VK_FORMAT_D32_SFLOAT_S8_UINT, 
+				VK_FORMAT_D24_UNORM_S8_UINT, 
+				VK_FORMAT_D16_UNORM_S8_UINT 
+			};
+		}
+		else
+		{
+			return 
+			{ 
+				VulkanImage::GetVulkanFormat(Format),
+				VK_FORMAT_D32_SFLOAT,
+				VK_FORMAT_D16_UNORM 
+			};
+		}
+	}();
 
 	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
