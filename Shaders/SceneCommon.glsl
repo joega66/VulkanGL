@@ -1,5 +1,3 @@
-#include "Common.glsl"
-
 uniform ViewUniform
 {
 	mat4 WorldToView;
@@ -11,3 +9,16 @@ uniform ViewUniform
 	float FieldOfView;
 	vec2 MorePadding;
 } View;
+
+struct PointLight
+{
+	vec3 Position;
+	float Intensity;
+	vec3 Color;
+	float Range;
+};
+
+layout(std430) buffer PointLightBuffer
+{
+	PointLight PointLights[];
+};

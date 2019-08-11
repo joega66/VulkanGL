@@ -113,9 +113,16 @@ static std::vector<ResourceFormat> ParseSampledImages(const spirv_cross::Compile
 
 	for (auto& Resource : Resources.sampled_images)
 	{
+		uint32 Binding;
+		if (Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding); Binding == 0)
+		{
+			// Resource not used... continue.
+			continue;
+		}
+
 		ResourceFormat Image;
 		Image.Name = Resource.name;
-		Image.Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
+		Image.Binding = Binding;
 
 		Images.push_back(Image);
 	}
@@ -129,9 +136,16 @@ static std::vector<UniformBufferFormat> ParseUniformBuffers(const spirv_cross::C
 
 	for (auto& Resource : Resources.uniform_buffers)
 	{
+		uint32 Binding;
+		if (Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding); Binding == 0)
+		{
+			// Resource not used... continue.
+			continue;
+		}
+
 		UniformBufferFormat Uniform;
 		Uniform.Name = Resource.name;
-		Uniform.Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
+		Uniform.Binding = Binding;
 		Uniform.Size = (uint32)GLSL.get_declared_struct_size(GLSL.get_type(Resource.type_id));
 
 		check(Uniform.Size % 16 == 0, "std140 layout advises to manually pad structures/arrays to multiple of 16 bytes.");
@@ -148,9 +162,16 @@ static std::vector<ResourceFormat> ParseStorageBuffers(const spirv_cross::Compil
 
 	for (auto& Resource : Resources.storage_buffers)
 	{
+		uint32 Binding;
+		if (Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding); Binding == 0)
+		{
+			// Resource not used... continue.
+			continue;
+		}
+
 		ResourceFormat StorageBuffer;
 		StorageBuffer.Name = Resource.name;
-		StorageBuffer.Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
+		StorageBuffer.Binding = Binding;
 
 		StorageBuffers.push_back(StorageBuffer);
 	}
@@ -214,7 +235,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 		switch (Meta.Stage)
 		{
 		case EShaderStage::Vertex:
-			BaseBinding = "0";
+			BaseBinding = "1";
 			return "vert";
 		case EShaderStage::TessControl:
 			BaseBinding = "100";

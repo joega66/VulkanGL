@@ -1,14 +1,13 @@
 #pragma once
 #include <DRMShader.h>
+#include "SceneBindings.h"
 
 class RayMarchingFS : public drm::Shader
 {
 public:
 	RayMarchingFS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources) 
+		: drm::Shader(Resources), SceneBindings(Resources)
 	{
-		Resources.Bind("ViewUniform", View);
-		Resources.Bind("LightBuffer", LightBuffer);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -17,6 +16,5 @@ public:
 		return Base;
 	}
 
-	uint32 View;
-	uint32 LightBuffer;
+	SceneBindings SceneBindings;
 };

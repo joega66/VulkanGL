@@ -61,8 +61,7 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 
 	CmdList.BindPipeline(PSOInit);
 
-	CmdList.SetUniformBuffer(FragShader, FragShader->View, View.Uniform);
-	CmdList.SetStorageBuffer(FragShader, FragShader->LightBuffer, LightBuffer);
+	SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	CmdList.Draw(3, 1, 0, 0);
 }
@@ -204,4 +203,13 @@ Scene& Scene::Get()
 {
 	static Scene Scene;
 	return Scene;
+}
+
+void Scene::SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const SceneBindings& Bindings) const
+{
+	if (Bindings.ViewUniform)
+		CmdList.SetUniformBuffer(Shader, Bindings.ViewUniform, View.Uniform);
+
+	if (Bindings.PointLightBuffer)
+		CmdList.SetStorageBuffer(Shader, Bindings.PointLightBuffer, PointLightBuffer);
 }

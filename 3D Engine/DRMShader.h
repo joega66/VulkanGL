@@ -59,6 +59,21 @@ struct ShaderInfo
 	EShaderStage Stage;
 };
 
+struct ShaderBinding
+{
+	uint32 Location = -1;
+
+	operator uint32() const
+	{
+		return Location;
+	}
+
+	operator bool() const
+	{
+		return Location != -1;
+	}
+};
+
 class ShaderResourceTable
 {
 public:
@@ -71,15 +86,15 @@ public:
 	{
 	}
 
-	void Bind(const std::string& Name, uint32& Location) const
+	void Bind(const std::string& Name, ShaderBinding& Binding) const
 	{
 		if (Contains(UniformLocations, Name))
 		{
-			Location = GetValue(UniformLocations, Name);
+			Binding.Location = GetValue(UniformLocations, Name);
 		}
 		else
 		{
-			Location = -1;
+			Binding.Location = -1;
 		}
 	}
 

@@ -1,5 +1,3 @@
-#include "Common.glsl"
-
 struct MaterialParams
 {
 	vec3 Position;

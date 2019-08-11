@@ -2,7 +2,7 @@
 #include <Renderer/Scene.h>
 #include <DRM.h>
 
-LightingPassDrawingPlan::LightingPassDrawingPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
+LightingPassDrawingPlan::LightingPassDrawingPlan(const MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
 {
 	const bool bHasNormalMap = CMaterial.Normal != nullptr;
@@ -43,8 +43,8 @@ void LightingPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit
 
 void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
 {
-	CmdList.SetUniformBuffer(VertShader, VertShader->View, Scene.View.Uniform);
-	CmdList.SetStorageBuffer(FragShader, FragShader->LightBuffer, Scene.LightBuffer);
+	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
+	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	for (auto& Uniform : Uniforms)
 	{

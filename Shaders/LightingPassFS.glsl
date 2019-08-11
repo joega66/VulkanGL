@@ -1,8 +1,9 @@
+#include "SceneCommon.glsl"
+#include "MaterialCommon.glsl"
+#include "LightingCommon.glsl"
 #ifdef STATIC_MESH
 #include "StaticMeshFS.glsl"
 #endif
-#include "View.glsl"
-#include "LightingCommon.glsl"
 
 layout(location = 0) out vec4 OutColor;
 

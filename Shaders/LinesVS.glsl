@@ -1,4 +1,4 @@
-#include "View.glsl"
+#include "SceneCommon.glsl"
 
 layout(location = 0) in vec3 Position;
 

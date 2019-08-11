@@ -1,4 +1,4 @@
-#include "View.glsl"
+#include "SceneCommon.glsl"
 #ifdef STATIC_MESH
 #include "StaticMeshVS.glsl"
 #endif

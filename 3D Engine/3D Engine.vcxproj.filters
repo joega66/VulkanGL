@@ -203,6 +203,9 @@
     <ClInclude Include="DRMPrivate.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\SceneBindings.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -328,6 +331,9 @@
     <ClCompile Include="Engine\Screen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\SceneBindings.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -360,9 +366,6 @@
     <None Include="..\Shaders\SkyboxVS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\View.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\SkyboxFS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -385,6 +388,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\MaterialCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SceneCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

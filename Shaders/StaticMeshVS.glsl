@@ -1,5 +1,3 @@
-#include "Common.glsl"
-
 layout(location = 0) in vec3 Position;
 #ifndef DEPTH_ONLY
 layout(location = 1) in vec2 UV;

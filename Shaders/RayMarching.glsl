@@ -1,4 +1,4 @@
-#include "View.glsl"
+#include "SceneCommon.glsl"
 #include "MaterialCommon.glsl"
 #include "LightingCommon.glsl"
 #include "RayMarchingCommon.glsl"

@@ -32,8 +32,8 @@ public:
 	}
 
 private:
-	uint32 ViewLocation;
-	uint32 LocalToWorldLocation;
+	ShaderBinding ViewLocation;
+	ShaderBinding LocalToWorldLocation;
 };
 
 class DepthPassDrawingPlan

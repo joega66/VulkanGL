@@ -1,14 +1,14 @@
 #pragma once
 #include "MaterialShader.h"
+#include "SceneBindings.h"
 #include <Components/CStaticMesh.h>
 
 class LightingPassBaseVS : public drm::Shader
 {
 public:
 	LightingPassBaseVS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: drm::Shader(Resources), SceneBindings(Resources)
 	{
-		Resources.Bind("ViewUniform", View);
 		Resources.Bind("LocalToWorldUniform", LocalToWorld);
 	}
 
@@ -18,8 +18,8 @@ public:
 		return BaseInfo;
 	}
 
-	uint32 View;
-	uint32 LocalToWorld;
+	SceneBindings SceneBindings;
+	ShaderBinding LocalToWorld;
 };
 
 template<EMeshType MeshType>
@@ -41,11 +41,10 @@ class LightingPassBaseFS : public drm::Shader
 {
 public:
 	LightingPassBaseFS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: drm::Shader(Resources), SceneBindings(Resources)
 	{
 		Resources.Bind("Diffuse", Diffuse);
 		Resources.Bind("Normal", Normal);
-		Resources.Bind("LightBuffer", LightBuffer);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -54,9 +53,9 @@ public:
 		return BaseInfo;
 	}
 
-	uint32 Diffuse;
-	uint32 Normal;
-	uint32 LightBuffer;
+	SceneBindings SceneBindings;
+	ShaderBinding Diffuse;
+	ShaderBinding Normal;
 };
 
 template<bool bHasNormalMap, EMeshType MeshType>

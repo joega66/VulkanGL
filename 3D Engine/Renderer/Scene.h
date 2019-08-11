@@ -12,7 +12,7 @@ public:
 	DrawingPlanList<OutlineDrawingPlan> Outline;
 	DrawingPlanList<LineDrawingPlan> Lines;
 
-	drm::StorageBufferRef LightBuffer;
+	drm::StorageBufferRef PointLightBuffer;
 
 	drm::ImageRef Skybox;
 
@@ -22,6 +22,8 @@ public:
 
 	void Render();
 	static Scene& Get();
+
+	void SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const class SceneBindings& Bindings) const;
 
 private:
 	drm::ImageRef SceneDepth;

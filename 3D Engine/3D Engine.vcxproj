@@ -45,6 +45,7 @@
     <ClCompile Include="Renderer\EditorPrimitives.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\Scene.cpp" />
+    <ClCompile Include="Renderer\SceneBindings.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
@@ -95,6 +96,7 @@
     <ClInclude Include="Renderer\DrawingPlan.h" />
     <ClInclude Include="Renderer\EditorPrimitives.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
+    <ClInclude Include="Renderer\SceneBindings.h" />
     <ClInclude Include="Renderer\Light.h" />
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
@@ -131,11 +133,11 @@
     <None Include="..\Shaders\OutlineFS.glsl" />
     <None Include="..\Shaders\RayMarching.glsl" />
     <None Include="..\Shaders\RayMarchingCommon.glsl" />
+    <None Include="..\Shaders\SceneCommon.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
-    <None Include="..\Shaders\View.glsl" />
     <None Include="Components\ComponentArray.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

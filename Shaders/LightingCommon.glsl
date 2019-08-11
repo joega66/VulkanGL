@@ -1,19 +1,6 @@
 const float PI = 3.14159265;
 const float Ambient = 0.1f;
 
-struct PointLight
-{
-	vec3 Position;
-	float Intensity;
-	vec3 Color;
-	float Range;
-};
-
-layout(std430) buffer LightBuffer
-{
-	PointLight PointLights[];
-};
-
 vec3 PointLighting(in MaterialParams Material, vec3 V, vec3 R0)
 {
 	vec3 Lo = vec3(0.0);

@@ -2,7 +2,6 @@
 #include "Component.h"
 #include "DRMResource.h"
 
-// @todo Highly considering doing per-frame uniforms...
 class CTransform : public Component<CTransform>
 {
 public:

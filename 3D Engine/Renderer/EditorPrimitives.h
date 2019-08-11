@@ -43,7 +43,7 @@ public:
 		return Base;
 	}
 
-	uint32 View;
+	ShaderBinding View;
 };
 
 class SkyboxFS : public drm::Shader
@@ -61,7 +61,7 @@ public:
 		return Base;
 	}
 
-	uint32 Skybox;
+	ShaderBinding Skybox;
 };
 
 class LinesVS : public drm::Shader
@@ -85,7 +85,7 @@ public:
 	}
 
 private:
-	uint32 ViewLocation;
+	ShaderBinding ViewLocation;
 };
 
 class LinesFS : public drm::Shader
@@ -109,7 +109,7 @@ public:
 	}
 
 private:
-	uint32 Color;
+	ShaderBinding Color;
 };
 
 class LineDrawingPlan

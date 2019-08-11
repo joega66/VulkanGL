@@ -9,7 +9,7 @@ void LightSystem::Update()
 {
 	auto& Scene = Scene::Get();
 
-	std::vector<PointLightProxy> LightProxies;
+	std::vector<PointLightProxy> PointLightProxies;
 
 	for (auto Entity : GEntityManager.GetEntities<CLight>())
 	{
@@ -19,9 +19,9 @@ void LightSystem::Update()
 
 		if (Renderer.bVisible)
 		{
-			LightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), Light.Intensity, Light.Color, Light.Range });
+			PointLightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), Light.Intensity, Light.Color, Light.Range });
 		}
 	}
 	
-	Scene.LightBuffer = drm::CreateStorageBuffer(sizeof(PointLightProxy) * LightProxies.size(), LightProxies.data());
+	Scene.PointLightBuffer = drm::CreateStorageBuffer(sizeof(PointLightProxy) * PointLightProxies.size(), PointLightProxies.data());
 }
