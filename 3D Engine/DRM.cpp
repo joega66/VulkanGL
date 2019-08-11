@@ -55,7 +55,7 @@ namespace drm
 		return GDRM->CreateCubemap(Width, Height, Format, UsageFlags | EResourceUsage::Cubemap, CubemapCreateInfo);
 	}
 
-	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
 	{
 		return GDRM->CreateRenderTargetView(Image, LoadAction, StoreAction, ClearValue);
 	}
@@ -70,7 +70,7 @@ namespace drm
 		return GDRM->GetSurface();
 	}
 
-	RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+	RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
 	{
 		return GDRM->GetSurfaceView(LoadAction, StoreAction, ClearValue);
 	}

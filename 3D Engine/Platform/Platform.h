@@ -49,6 +49,14 @@ Ref<T> MakeRef(RefArgs&& ...Args)
 
 #define CAST(FromType, ToType) ToType ## Ref ResourceCast(FromType ## Ref From) { return std::static_pointer_cast<ToType>(From); }
 
+struct RID
+{
+	unsigned long  Data1;
+	unsigned short Data2;
+	unsigned short Data3;
+	unsigned char  Data4[8];
+};
+
 class IPlatform
 {
 public:	
@@ -75,6 +83,8 @@ public:
 
 	// Processes
 	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const = 0;
+
+	virtual RID CreateRID() = 0;
 
 	// Memory
 	void Memcpy(void* Dst, const void* Src, size_t Size);
@@ -159,43 +169,3 @@ inline bool Any(EnumClass EnumTrait)
 {
 	return EnumTrait != EnumClass::None;
 }
-
-template<typename T>
-class PendingBuffer
-{
-public:
-	PendingBuffer(std::function<void(T)>&& Deallocator)
-		: Deallocator(std::forward<std::function<void(T)>>(Deallocator))
-	{
-	}
-
-	~PendingBuffer()
-	{
-		Destroy();
-	}
-
-	void Push(const T& Resource)
-	{
-		Resources.push_back(Resource);
-	}
-
-	T& Get()
-	{
-		return Resources.back();
-	}
-
-	void Destroy()
-	{
-		std::for_each(Resources.begin(), Resources.end(), Deallocator);
-		Resources.clear();
-	}
-
-	uint32 Size()
-	{
-		return Resources.size();
-	}
-
-private:
-	const std::function<void(T)> Deallocator;
-	std::list<T> Resources;
-};

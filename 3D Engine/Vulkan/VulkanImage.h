@@ -35,7 +35,7 @@ public:
 
 	VkFormat GetVulkanFormat() const;
 
-	VkImageAspectFlags GetVulkanAspect();
+	VkImageAspectFlags GetVulkanAspect() const;
 
 private:
 	VulkanDevice& Device;

@@ -316,13 +316,13 @@ struct GraphicsPipelineState
 	}
 };
 
+enum
+{
+	MaxRenderTargets = 8
+};
+
 struct RenderPassInitializer
 {
-	enum
-	{
-		MaxRenderTargets = 8
-	};
-
 	uint32 NumRenderTargets = 0;
 	std::array<drm::RenderTargetViewRef, MaxRenderTargets> ColorTargets;
 	drm::RenderTargetViewRef DepthTarget;
@@ -372,13 +372,13 @@ struct PipelineStateInitializer
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::array<ColorBlendAttachmentState, RenderPassInitializer::MaxRenderTargets> ColorBlendAttachmentStates;
+	std::array<ColorBlendAttachmentState, MaxRenderTargets> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	GraphicsPipelineState GraphicsPipelineState;
 
 	friend bool operator==(const PipelineStateInitializer& L, const PipelineStateInitializer& R)
 	{
-		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < RenderPassInitializer::MaxRenderTargets; RenderTargetIndex++)
+		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < MaxRenderTargets; RenderTargetIndex++)
 		{
 			if (L.ColorBlendAttachmentStates[RenderTargetIndex] != R.ColorBlendAttachmentStates[RenderTargetIndex])
 			{
@@ -399,6 +399,7 @@ class RenderCommandList
 {
 public:
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
+	virtual void EndRenderPass() = 0;
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
 	virtual void BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;

@@ -158,7 +158,7 @@ VkFormat VulkanImage::GetVulkanFormat() const
 	return GetValue(VulkanFormat, Format);
 }
 
-VkImageAspectFlags VulkanImage::GetVulkanAspect()
+VkImageAspectFlags VulkanImage::GetVulkanAspect() const
 {
 	VkFlags Flags = 0;
 	if (IsDepthStencil())

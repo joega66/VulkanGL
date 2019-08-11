@@ -21,6 +21,7 @@ public:
 	Scene& operator=(const Scene&) = delete;
 
 	void Render();
+
 	static Scene& Get();
 
 	void SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const class SceneBindings& Bindings) const;
@@ -30,10 +31,12 @@ private:
 	drm::ImageRef OutlineDepthStencil;
 
 	void RenderRayMarching(RenderCommandList& CmdList);
+
 	void RenderLightingPass(RenderCommandList& CmdList);
-	void RenderEditorPrimitives(RenderCommandList& CmdList);
 
 	void RenderLines(RenderCommandList& CmdList);
+
 	void RenderSkybox(RenderCommandList& CmdList);
+
 	void RenderOutlines(RenderCommandList& CmdList);
 };

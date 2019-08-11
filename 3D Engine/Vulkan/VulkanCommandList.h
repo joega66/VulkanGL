@@ -5,19 +5,20 @@
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 #include "VulkanShader.h"
+#include <Engine/PendingBuffer.h>
 
 class VulkanCommandList final : public RenderCommandList
 {
 public:
 	const VkCommandBuffer CommandBuffer;
 	bool bTouchedSurface = false;
-	bool bInRenderPass = false;
 	bool bFinished = false;
 
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
 	~VulkanCommandList();
 
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit);
+	virtual void EndRenderPass();
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit);
 	virtual void BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer);
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer);
@@ -32,17 +33,15 @@ private:
 	VulkanAllocator& Allocator;
 	VulkanDescriptorPool& DescriptorPool;
 
-	bool bDirtyRenderPass = false;
-	bool bDirtyPipeline = false;
 	bool bDirtyDescriptorSets = false;
 	bool bDirtyVertexStreams = false;
 	
 	struct PendingState
 	{
-		RenderPassInitializer RPInit;
+		uint32 NumRenderTargets;
 		VkRenderPass RenderPass;
 		VkFramebuffer Framebuffer;
-		PipelineStateInitializer PSOInit;
+		GraphicsPipelineState GraphicsPipelineState;
 		VkDescriptorSetLayout DescriptorSetLayout;
 		VkPipelineLayout PipelineLayout;
 		VkPipeline Pipeline;

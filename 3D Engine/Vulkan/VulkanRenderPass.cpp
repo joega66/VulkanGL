@@ -23,6 +23,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderP
 	if (RenderPass == VK_NULL_HANDLE)
 	{
 		std::tie(RenderPass, Framebuffer) = CreateRenderPass(RPInit);
+
 		RenderPassCache.push_back({ RPInit, RenderPass, Framebuffer });
 	}
 
@@ -34,7 +35,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 	VkRenderPass RenderPass;
 
 	{
-		check(RPInit.NumRenderTargets < RenderPassInitializer::MaxRenderTargets, "Trying to set too many render targets.");
+		check(RPInit.NumRenderTargets < MaxRenderTargets, "Trying to set too many render targets.");
 
 		std::vector<VkAttachmentDescription> Descriptions;
 		std::vector<VkAttachmentReference> ColorRefs(RPInit.NumRenderTargets);
@@ -184,17 +185,14 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 	}
 
 	const uint32 NumRTs = RPInit.NumRenderTargets;
-	std::vector<VkClearValue> ClearValues;
 	std::vector<VkImageView> AttachmentViews;
 
 	if (RPInit.DepthTarget)
 	{
-		ClearValues.resize(NumRTs + 1);
 		AttachmentViews.resize(NumRTs + 1);
 	}
 	else
 	{
-		ClearValues.resize(NumRTs);
 		AttachmentViews.resize(NumRTs);
 	}
 
@@ -203,12 +201,6 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 		VulkanRenderTargetViewRef ColorTarget = ResourceCast(RPInit.ColorTargets[i]);
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
-		const auto& ClearValue = std::get<std::array<float, 4>>(ColorTarget->ClearValue);
-		ClearValues[i].color.float32[0] = ClearValue[0];
-		ClearValues[i].color.float32[1] = ClearValue[1];
-		ClearValues[i].color.float32[2] = ClearValue[2];
-		ClearValues[i].color.float32[3] = ClearValue[3];
-
 		AttachmentViews[i] = Image->ImageView;
 	}
 
@@ -216,18 +208,6 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 	{
 		VulkanRenderTargetViewRef DepthTarget = ResourceCast(RPInit.DepthTarget);
 		VulkanImageRef Image = ResourceCast(DepthTarget->Image);
-
-		ClearValues[NumRTs].depthStencil = { 0, 0 };
-
-		if (Image->IsDepth())
-		{
-			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(DepthTarget->ClearValue).DepthClear;
-		}
-
-		if (Image->IsStencil())
-		{
-			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(DepthTarget->ClearValue).StencilClear;
-		}
 
 		AttachmentViews[NumRTs] = Image->ImageView;
 	}

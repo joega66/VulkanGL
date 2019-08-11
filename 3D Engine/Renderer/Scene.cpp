@@ -23,8 +23,26 @@ void Scene::Render()
 	RenderCommandListRef CmdList = drm::CreateCommandList();
 
 	RenderRayMarching(*CmdList);
-	RenderLightingPass(*CmdList);
-	RenderEditorPrimitives(*CmdList);
+
+	{
+		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
+		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+
+		RenderPassInitializer RenderPassInit = { 1 };
+		RenderPassInit.ColorTargets[0] = SurfaceView;
+		RenderPassInit.DepthTarget = DepthView;
+		RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
+
+		CmdList->BeginRenderPass(RenderPassInit);
+
+		RenderLightingPass(*CmdList);
+		RenderLines(*CmdList);
+		RenderSkybox(*CmdList);
+
+		CmdList->EndRenderPass();
+	}
+
+	RenderOutlines(*CmdList);
 
 	CmdList->Finish();
 
@@ -40,7 +58,7 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	Ref<FullscreenVS> VertShader = *ShaderMapRef<FullscreenVS>();
 	Ref<RayMarchingFS> FragShader = *ShaderMapRef<RayMarchingFS>();
 
-	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
+	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 	RenderPassInitializer RenderPassInit = { 1 };
@@ -64,20 +82,12 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	CmdList.Draw(3, 1, 0, 0);
+
+	CmdList.EndRenderPass();
 }
 
 void Scene::RenderLightingPass(RenderCommandList& CmdList)
 {
-	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
-	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
-
-	RenderPassInitializer RenderPassInit = { 1 };
-	RenderPassInit.ColorTargets[0] = SurfaceView;
-	RenderPassInit.DepthTarget = DepthView;
-	RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
-
-	CmdList.BeginRenderPass(RenderPassInit);
-
 	PipelineStateInitializer PSOInit = {};
 
 	PSOInit.Viewport.Width = Screen.GetWidth();
@@ -88,13 +98,6 @@ void Scene::RenderLightingPass(RenderCommandList& CmdList)
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
 	LightingPass.Execute(CmdList, PSOInit, *this);
-}
-
-void Scene::RenderEditorPrimitives(RenderCommandList& CmdList)
-{
-	RenderLines(CmdList);
-	RenderSkybox(CmdList);
-	RenderOutlines(CmdList);
 }
 
 void Scene::RenderLines(RenderCommandList& CmdList)
@@ -171,6 +174,8 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
 		Stencil.Execute(CmdList, PSOInit, *this);
+
+		CmdList.EndRenderPass();
 	}
 	
 	{
@@ -196,6 +201,8 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
 		Outline.Execute(CmdList, PSOInit, *this);
+
+		CmdList.EndRenderPass();
 	}
 }
 
@@ -203,13 +210,4 @@ Scene& Scene::Get()
 {
 	static Scene Scene;
 	return Scene;
-}
-
-void Scene::SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const SceneBindings& Bindings) const
-{
-	if (Bindings.ViewUniform)
-		CmdList.SetUniformBuffer(Shader, Bindings.ViewUniform, View.Uniform);
-
-	if (Bindings.PointLightBuffer)
-		CmdList.SetStorageBuffer(Shader, Bindings.PointLightBuffer, PointLightBuffer);
 }

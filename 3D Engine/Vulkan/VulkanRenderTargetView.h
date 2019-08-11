@@ -10,7 +10,7 @@ public:
 		, drm::ImageRef Image
 		, ELoadAction LoadAction
 		, EStoreAction StoreAction
-		, const std::array<float, 4>& ClearValue) 
+		, const ClearColorValue& ClearValue)
 		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, ClearValue) 
 	{
 	}
@@ -25,6 +25,7 @@ public:
 	}
 
 	VkAttachmentLoadOp GetVulkanLoadOp() const;
+
 	VkAttachmentStoreOp GetVulkanStoreOp() const;
 
 private:

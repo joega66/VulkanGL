@@ -2,12 +2,12 @@
 
 namespace drm
 {
-	bool Image::IsColor()
+	bool Image::IsColor() const
 	{
 		return !(IsDepth() || IsStencil() || Format == EImageFormat::UNDEFINED);
 	}
 
-	bool Image::IsStencil()
+	bool Image::IsStencil() const
 	{
 		static const std::unordered_set<EImageFormat> StencilFormats =
 		{
@@ -25,7 +25,7 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
-	bool Image::IsDepthStencil()
+	bool Image::IsDepthStencil() const
 	{
 		return IsDepthStencil(Format);
 	}
@@ -39,12 +39,12 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
-	bool Image::IsDepth()
+	bool Image::IsDepth() const
 	{
 		return IsDepth(Format);
 	}
 
-	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue)
+	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)

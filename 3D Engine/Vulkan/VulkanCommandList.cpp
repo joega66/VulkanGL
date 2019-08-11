@@ -42,24 +42,95 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
 }
 
-void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RenderPassInit)
+void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 {
-	if (Pending.RPInit == RenderPassInit)
+	// Determine if this command list touched the surface.
+	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumRenderTargets; ColorTargetIndex++)
 	{
-		return;
-	}
-
-	Pending.RPInit = RenderPassInit;
-
-	bDirtyRenderPass = true;
-
-	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < Pending.RPInit.NumRenderTargets; ColorTargetIndex++)
-	{
-		if (Pending.RPInit.ColorTargets[ColorTargetIndex]->Image == drm::GetSurface())
+		if (RPInit.ColorTargets[ColorTargetIndex]->Image == drm::GetSurface())
 		{
 			bTouchedSurface = true;
 		}
 	}
+
+	std::tie(Pending.RenderPass, Pending.Framebuffer) = Device.GetRenderPass(RPInit);
+
+	VkRect2D RenderArea = {};
+
+	if (drm::ImageRef Image = RPInit.DepthTarget ? RPInit.DepthTarget->Image : RPInit.ColorTargets[0]->Image; Image)
+	{
+		RenderArea.extent = { Image->Width, Image->Height };
+	}
+
+	const uint32 NumRTs = RPInit.NumRenderTargets;
+	std::vector<VkClearValue> ClearValues;
+
+	if (RPInit.DepthTarget)
+	{
+		ClearValues.resize(NumRTs + 1);
+	}
+	else
+	{
+		ClearValues.resize(NumRTs);
+	}
+
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
+	{
+		const auto& ClearValue = std::get<ClearColorValue>(RPInit.ColorTargets[ColorTargetIndex]->ClearValue);
+		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
+		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
+		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
+	}
+
+	if (RPInit.DepthTarget)
+	{
+		VulkanRenderTargetViewRef DepthTarget = ResourceCast(RPInit.DepthTarget);
+		VulkanImageRef Image = ResourceCast(DepthTarget->Image);
+
+		ClearValues[NumRTs].depthStencil = { 0, 0 };
+
+		if (Image->IsDepth())
+		{
+			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(RPInit.DepthTarget->ClearValue).DepthClear;
+		}
+
+		if (Image->IsStencil())
+		{
+			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthTarget->ClearValue).StencilClear;
+		}
+	}
+
+	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+	BeginInfo.renderPass = Pending.RenderPass;
+	BeginInfo.framebuffer = Pending.Framebuffer;
+	BeginInfo.renderArea = RenderArea;
+	BeginInfo.pClearValues = ClearValues.data();
+	BeginInfo.clearValueCount = ClearValues.size();
+
+	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	Pending.NumRenderTargets = RPInit.NumRenderTargets;
+}
+
+void VulkanCommandList::EndRenderPass()
+{
+	vkCmdEndRenderPass(CommandBuffer);
+}
+
+void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
+{
+	if (Pending.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
+	{
+		// Clear descriptors and vertex streams.
+		DescriptorImages.clear();
+		DescriptorBuffers.clear();
+		std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
+		Pending.GraphicsPipelineState = PSOInit.GraphicsPipelineState;
+	}
+
+	std::tie(Pending.Pipeline, Pending.PipelineLayout, Pending.DescriptorSetLayout) = Device.GetPipeline(PSOInit, Pending.RenderPass, Pending.NumRenderTargets);
+
+	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pending.Pipeline);
 }
 
 void VulkanCommandList::BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer)
@@ -179,30 +250,8 @@ void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 Fi
 
 void VulkanCommandList::Finish()
 {
-	if (bInRenderPass)
-	{
-		vkCmdEndRenderPass(CommandBuffer);
-		bInRenderPass = false;
-	}
-
 	vulkan(vkEndCommandBuffer(CommandBuffer));
-
 	bFinished = true;
-}
-
-void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
-{
-	if (Pending.PSOInit.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
-	{
-		// Clear descriptors and vertex streams.
-		DescriptorImages.clear();
-		DescriptorBuffers.clear();
-		std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
-	}
-
-	Pending.PSOInit = PSOInit;
-
-	bDirtyPipeline = true;
 }
 
 void VulkanCommandList::CleanDescriptorSets()
@@ -280,86 +329,6 @@ void VulkanCommandList::CleanVertexStreams()
 
 void VulkanCommandList::PrepareForDraw()
 {
-	if (bDirtyRenderPass)
-	{
-		if (bInRenderPass)
-		{
-			vkCmdEndRenderPass(CommandBuffer);
-			bInRenderPass = false;
-		}
-
-		const RenderPassInitializer& RPInit = Pending.RPInit;
-
-		std::tie(Pending.RenderPass, Pending.Framebuffer) = Device.GetRenderPass(RPInit);
-
-		VkRect2D RenderArea = {};
-
-		if (drm::ImageRef Image = RPInit.DepthTarget ? RPInit.DepthTarget->Image : RPInit.ColorTargets[0]->Image; Image)
-		{
-			RenderArea.extent = { Image->Width, Image->Height };
-		}
-
-		const uint32 NumRTs = RPInit.NumRenderTargets;
-		std::vector<VkClearValue> ClearValues;
-
-		if (RPInit.DepthTarget)
-		{
-			ClearValues.resize(NumRTs + 1);
-		}
-		else
-		{
-			ClearValues.resize(NumRTs);
-		}
-
-		for (uint32 i = 0; i < NumRTs; i++)
-		{
-			const auto& ClearValue = std::get<std::array<float, 4>>(RPInit.ColorTargets[i]->ClearValue);
-			ClearValues[i].color.float32[0] = ClearValue[0];
-			ClearValues[i].color.float32[1] = ClearValue[1];
-			ClearValues[i].color.float32[2] = ClearValue[2];
-			ClearValues[i].color.float32[3] = ClearValue[3];
-		}
-
-		if (RPInit.DepthTarget)
-		{
-			VulkanRenderTargetViewRef DepthTarget = ResourceCast(RPInit.DepthTarget);
-			VulkanImageRef Image = ResourceCast(DepthTarget->Image);
-
-			ClearValues[NumRTs].depthStencil = { 0, 0 };
-
-			if (Image->IsDepth())
-			{
-				ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(DepthTarget->ClearValue).DepthClear;
-			}
-
-			if (Image->IsStencil())
-			{
-				ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(DepthTarget->ClearValue).StencilClear;
-			}
-		}
-
-		VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		BeginInfo.renderPass = Pending.RenderPass;
-		BeginInfo.framebuffer = Pending.Framebuffer;
-		BeginInfo.renderArea = RenderArea;
-		BeginInfo.pClearValues = ClearValues.data();
-		BeginInfo.clearValueCount = ClearValues.size();
-
-		vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		bDirtyRenderPass = false;
-		bDirtyPipeline = true;
-	}
-
-	if (bDirtyPipeline)
-	{
-		std::tie(Pending.Pipeline, Pending.PipelineLayout, Pending.DescriptorSetLayout) = Device.GetPipeline(Pending.PSOInit, Pending.RenderPass, Pending.RPInit.NumRenderTargets);
-
-		vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pending.Pipeline);
-
-		bDirtyPipeline = false;
-	}
-
 	if (bDirtyDescriptorSets)
 	{
 		CleanDescriptorSets();

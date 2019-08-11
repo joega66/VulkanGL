@@ -4,7 +4,6 @@
 #include <sstream>
 #include <iostream>
 
-// 
 class VulkanDevice
 {
 	template<typename DRMObject, typename ...VulkanObjects>
@@ -20,6 +19,7 @@ public:
 	HashTable<std::type_index, VulkanShader> ShaderCache;
 
 	VulkanDevice();
+
 	~VulkanDevice();
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassInitializer& RPInit);

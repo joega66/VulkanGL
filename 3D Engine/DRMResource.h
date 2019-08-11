@@ -82,8 +82,15 @@ enum class EStoreAction
 
 struct ClearDepthStencilValue
 {
-	float DepthClear;
-	uint32 StencilClear;
+	float	DepthClear;
+	uint32	StencilClear;
+};
+
+struct ClearColorValue
+{
+	float	Float32[4];
+	int32	Int32[4];
+	uint32	Uint32[4];
 };
 
 namespace drm
@@ -165,14 +172,14 @@ namespace drm
 		{
 		}
 
-		bool IsColor();
-		bool IsStencil();
+		bool IsColor() const;
+		bool IsStencil() const;
 
 		static bool IsDepthStencil(EImageFormat Format);
-		bool IsDepthStencil();
+		bool IsDepthStencil() const;
 
 		static bool IsDepth(EImageFormat Format);
-		bool IsDepth();
+		bool IsDepth() const;
 	};
 
 	CLASS(Image);
@@ -183,10 +190,9 @@ namespace drm
 		ImageRef Image;
 		ELoadAction LoadAction;
 		EStoreAction StoreAction;
+		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
 
-		std::variant<std::array<float, 4>, ClearDepthStencilValue> ClearValue;
-
-		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const std::array<float, 4>& ClearValue);
+		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue);
 		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
 
 		bool operator==(const RenderTargetView& Other);

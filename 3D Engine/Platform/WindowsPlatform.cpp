@@ -27,7 +27,7 @@ void WindowsPlatform::OpenWindow(int32 DesiredWidth, int32 DesiredHeight)
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	Window = glfwCreateWindow(DesiredWidth, DesiredHeight, "VulkanGL", nullptr, nullptr);
+	Window = glfwCreateWindow(DesiredWidth, DesiredHeight, "Vulkan Engine", nullptr, nullptr);
 
 	glfwSetFramebufferSizeCallback(Window, WindowResizeCallback);
 	glfwSetKeyCallback(Window, KeyboardCallback);
@@ -137,6 +137,14 @@ void WindowsPlatform::MouseState(class Cursor& Cursor)
 	}
 
 	glfwSetInputMode(Window, GLFW_CURSOR, InputMode);
+}
+
+RID WindowsPlatform::CreateRID()
+{
+	RID RID;
+	static_assert(sizeof(RID) == sizeof(UUID));
+	UuidCreate((UUID*)&RID);
+	return RID;
 }
 
 void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)

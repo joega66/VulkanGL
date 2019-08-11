@@ -206,6 +206,12 @@
     <ClInclude Include="Renderer\SceneBindings.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\PendingBuffer.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Screen.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -328,11 +334,11 @@
     <ClCompile Include="Components\CMaterial.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Screen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\SceneBindings.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Screen.cpp">
+      <Filter>Source\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

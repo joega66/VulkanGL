@@ -53,8 +53,6 @@ static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
 };
 
-
-
 std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> VulkanDevice::GetPipeline(
 	const PipelineStateInitializer& PSOInit, 
 	VkRenderPass RenderPass, 
@@ -141,7 +139,7 @@ VkPipeline VulkanDevice::CreatePipeline(
 		MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
 	}
 
-	std::array<VkPipelineColorBlendAttachmentState, RenderPassInitializer::MaxRenderTargets> ColorBlendAttachmentStates;
+	std::array<VkPipelineColorBlendAttachmentState, MaxRenderTargets> ColorBlendAttachmentStates;
 
 	{
 		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < NumRenderTargets; RenderTargetIndex++)
