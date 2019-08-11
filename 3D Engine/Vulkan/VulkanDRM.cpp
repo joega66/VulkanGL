@@ -275,11 +275,6 @@ void VulkanDRM::UnlockBuffer(drm::IndexBufferRef IndexBuffer)
 	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
-void VulkanDRM::ChangeResolution()
-{
-	// @todo-joe
-}
-
 void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
 	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);
