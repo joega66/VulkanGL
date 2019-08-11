@@ -40,14 +40,14 @@ class DepthPassDrawingPlan
 {
 public:
 	DepthPassDrawingPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
-	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
-	GraphicsPipelineState GetGraphicsPipeline() const;
-	void SetUniforms(RenderCommandList& CmdList, const View& View);
+	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
+	void SetUniforms(RenderCommandList& CmdList, const class Scene& Scene);
 	void Draw(RenderCommandList& CmdList) const;
+
+protected:
+	Ref<DepthPassVS<EMeshType::StaticMesh>> VertexShader;
 
 private:
 	const struct MeshElement& Element;
 	drm::UniformBufferRef LocalToWorldUniform;
-
-	Ref<DepthPassVS<EMeshType::StaticMesh>> VertexShader;
 };

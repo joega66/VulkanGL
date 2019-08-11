@@ -384,5 +384,8 @@
     <None Include="..\Shaders\RayMarchingCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Shaders\MaterialCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

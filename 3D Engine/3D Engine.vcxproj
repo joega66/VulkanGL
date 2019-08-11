@@ -127,6 +127,7 @@
     <None Include="..\Shaders\LightingPassVS.glsl" />
     <None Include="..\Shaders\LinesFS.glsl" />
     <None Include="..\Shaders\LinesVS.glsl" />
+    <None Include="..\Shaders\MaterialCommon.glsl" />
     <None Include="..\Shaders\OutlineFS.glsl" />
     <None Include="..\Shaders\RayMarching.glsl" />
     <None Include="..\Shaders\RayMarchingCommon.glsl" />

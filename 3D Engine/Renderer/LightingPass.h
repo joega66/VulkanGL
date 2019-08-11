@@ -45,6 +45,7 @@ public:
 	{
 		Resources.Bind("Diffuse", Diffuse);
 		Resources.Bind("Normal", Normal);
+		Resources.Bind("LightBuffer", LightBuffer);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -55,6 +56,7 @@ public:
 
 	uint32 Diffuse;
 	uint32 Normal;
+	uint32 LightBuffer;
 };
 
 template<bool bHasNormalMap, EMeshType MeshType>
@@ -77,9 +79,8 @@ class LightingPassDrawingPlan
 public:
 	LightingPassDrawingPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
 
-	void GetPipelineState(PipelineStateInitializer& PSOInit) const {};
-	GraphicsPipelineState GetGraphicsPipeline() const;
-	void SetUniforms(RenderCommandList& CmdList, const View& View);
+	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
+	void SetUniforms(RenderCommandList& CmdList, const class Scene& Scene);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:

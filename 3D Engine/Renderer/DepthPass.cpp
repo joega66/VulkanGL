@@ -1,5 +1,6 @@
 #include "DepthPass.h"
 #include <Engine/StaticMesh.h>
+#include "Scene.h"
 
 DepthPassDrawingPlan::DepthPassDrawingPlan(const MeshElement& Element, drm::UniformBufferRef InLocalToWorldUniform)
 	: Element(Element)
@@ -8,19 +9,21 @@ DepthPassDrawingPlan::DepthPassDrawingPlan(const MeshElement& Element, drm::Unif
 	VertexShader = *ShaderMapRef<DepthPassVS<EMeshType::StaticMesh>>();
 }
 
-GraphicsPipelineState DepthPassDrawingPlan::GetGraphicsPipeline() const
+void DepthPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
-	return GraphicsPipelineState{
-		VertexShader
-		, nullptr
-		, nullptr
-		, nullptr
-		, nullptr };
+	PSOInit.GraphicsPipelineState =
+	{
+		VertexShader,
+		nullptr,
+		nullptr,
+		nullptr,
+		nullptr
+	};
 }
 
-void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
+void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
 {
-	VertexShader->SetUniforms(CmdList, View.Uniform, LocalToWorldUniform);
+	VertexShader->SetUniforms(CmdList, Scene.View.Uniform, LocalToWorldUniform);
 }
 
 void DepthPassDrawingPlan::Draw(RenderCommandList& CmdList) const

@@ -1,5 +1,6 @@
 #include "EditorPrimitives.h"
 #include <Engine/StaticMesh.h>
+#include "Scene.h"
 
 OutlineDrawingPlan::OutlineDrawingPlan(const MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform)
 	: DepthPassDrawingPlan(Element, LocalToWorldUniform)
@@ -7,22 +8,21 @@ OutlineDrawingPlan::OutlineDrawingPlan(const MeshElement& Element, drm::UniformB
 	FragmentShader = *ShaderMapRef<OutlineFS>();
 }
 
-GraphicsPipelineState OutlineDrawingPlan::GetGraphicsPipeline() const
+void OutlineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
-	GraphicsPipelineState Pipeline = DepthPassDrawingPlan::GetGraphicsPipeline();
-
-	return GraphicsPipelineState{
-	Pipeline.Vertex
-	, nullptr
-	, nullptr
-	, nullptr
-	, FragmentShader
+	PSOInit.GraphicsPipelineState =
+	{
+		VertexShader,
+		nullptr,
+		nullptr,
+		nullptr,
+		FragmentShader
 	};
 }
 
-void OutlineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
+void OutlineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
 {
-	DepthPassDrawingPlan::SetUniforms(CmdList, View);
+	DepthPassDrawingPlan::SetUniforms(CmdList, Scene);
 }
 
 void OutlineDrawingPlan::Draw(RenderCommandList& CmdList) const
@@ -42,28 +42,26 @@ LineDrawingPlan::LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const g
 	ColorUniform = drm::CreateUniformBuffer(Color, EUniformUpdate::Infrequent);
 }
 
-void LineDrawingPlan::GetPipelineState(PipelineStateInitializer& PSOInit) const
+void LineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
-	PSOInit.RasterizationState.LineWidth = LineWidth;
-}
-
-GraphicsPipelineState LineDrawingPlan::GetGraphicsPipeline() const
-{
-	return GraphicsPipelineState{
+	PSOInit.GraphicsPipelineState =
+	{
 		*ShaderMapRef<LinesVS>(),
 		nullptr,
 		nullptr,
 		nullptr,
 		*ShaderMapRef<LinesFS>()
 	};
+
+	PSOInit.RasterizationState.LineWidth = LineWidth;
 }
 
-void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
+void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
 {
 	Ref<LinesVS> VertShader = *ShaderMapRef<LinesVS>();
 	Ref<LinesFS> FragShader = *ShaderMapRef<LinesFS>();
 
-	VertShader->SetUniforms(CmdList, View.Uniform);
+	VertShader->SetUniforms(CmdList, Scene.View.Uniform);
 	FragShader->SetUniforms(CmdList, ColorUniform);
 }
 

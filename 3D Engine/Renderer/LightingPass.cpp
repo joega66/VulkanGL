@@ -29,9 +29,10 @@ LightingPassDrawingPlan::LightingPassDrawingPlan(const struct MeshElement& Eleme
 	}
 }
 
-GraphicsPipelineState LightingPassDrawingPlan::GetGraphicsPipeline() const
+void LightingPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
-	return GraphicsPipelineState{
+	PSOInit.GraphicsPipelineState = 
+	{
 		VertShader,
 		nullptr,
 		nullptr,
@@ -40,9 +41,10 @@ GraphicsPipelineState LightingPassDrawingPlan::GetGraphicsPipeline() const
 	};
 }
 
-void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const View& View)
+void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
 {
-	CmdList.SetUniformBuffer(VertShader, VertShader->View, View.Uniform);
+	CmdList.SetUniformBuffer(VertShader, VertShader->View, Scene.View.Uniform);
+	CmdList.SetStorageBuffer(FragShader, FragShader->LightBuffer, Scene.LightBuffer);
 
 	for (auto& Uniform : Uniforms)
 	{
@@ -61,5 +63,6 @@ void LightingPassDrawingPlan::Draw(RenderCommandList& CmdList) const
 	CmdList.BindVertexBuffers(1, Element.TextureCoordinateBuffer);
 	CmdList.BindVertexBuffers(2, Element.NormalBuffer);
 	CmdList.BindVertexBuffers(3, Element.TangentBuffer);
+
 	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
 }

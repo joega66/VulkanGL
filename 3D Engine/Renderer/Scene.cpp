@@ -22,7 +22,7 @@ void Scene::Render()
 
 	RenderCommandListRef CmdList = drm::CreateCommandList();
 
-	//RenderRayMarching(*CmdList);
+	RenderRayMarching(*CmdList);
 	RenderLightingPass(*CmdList);
 	RenderEditorPrimitives(*CmdList);
 
@@ -88,7 +88,7 @@ void Scene::RenderLightingPass(RenderCommandList& CmdList)
 
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
-	LightingPass.Execute(CmdList, PSOInit, View);
+	LightingPass.Execute(CmdList, PSOInit, *this);
 }
 
 void Scene::RenderEditorPrimitives(RenderCommandList& CmdList)
@@ -110,7 +110,7 @@ void Scene::RenderLines(RenderCommandList& CmdList)
 	PSOInit.RasterizationState.CullMode = ECullMode::None;
 	PSOInit.RasterizationState.PolygonMode = EPolygonMode::Line;
 
-	Lines.Execute(CmdList, PSOInit, View);
+	Lines.Execute(CmdList, PSOInit, *this);
 }
 
 void Scene::RenderSkybox(RenderCommandList& CmdList)
@@ -171,7 +171,7 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.WriteMask = 0xff;
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
-		Stencil.Execute(CmdList, PSOInit, View);
+		Stencil.Execute(CmdList, PSOInit, *this);
 	}
 	
 	{
@@ -196,7 +196,7 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.WriteMask = 0;
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
-		Outline.Execute(CmdList, PSOInit, View);
+		Outline.Execute(CmdList, PSOInit, *this);
 	}
 }
 
