@@ -80,13 +80,6 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
 }
 
-VulkanImage::~VulkanImage()
-{
-	vkFreeMemory(Device, Memory, nullptr);
-	vkDestroyImageView(Device, ImageView, nullptr);
-	vkDestroyImage(Device, Image, nullptr);
-}
-
 VulkanImage::operator VkImage() { return Image; }
 
 VkFormat VulkanImage::GetVulkanFormat(EImageFormat Format)
@@ -158,11 +151,6 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
 
 	return Sampler;
-}
-
-bool VulkanImage::IsInDepthLayout()
-{
-	return IsDepthLayout(Layout);
 }
 
 VkFormat VulkanImage::GetVulkanFormat() const

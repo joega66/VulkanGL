@@ -9,11 +9,6 @@ VulkanSurface::VulkanSurface(VulkanDevice& Device)
 {
 }
 
-VulkanSurface::~VulkanSurface()
-{
-	vkDestroySwapchainKHR(Device, Swapchain, nullptr);
-}
-
 void VulkanSurface::Init()
 {
 	SwapchainSupportDetails SwapchainSupport = {};
@@ -85,6 +80,16 @@ void VulkanSurface::Init()
 	}
 }
 
+void VulkanSurface::Free()
+{
+	for (auto& Image : Images)
+	{
+		vkDestroyImage(Device, Image->Image, nullptr);
+		vkDestroyImageView(Device, Image->ImageView, nullptr);
+		vkFreeMemory(Device, Image->Memory, nullptr);
+	}
+}
+
 VkSurfaceFormatKHR VulkanSurface::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)
 {
 	if (AvailableFormats.size() == 1 && AvailableFormats[0].format == VK_FORMAT_UNDEFINED)
@@ -132,8 +137,8 @@ VkExtent2D VulkanSurface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& Capab
 	{
 		VkExtent2D ActualExtent = 
 		{
-			(uint32)Screen.Width,
-			(uint32)Screen.Height
+			(uint32)Screen.GetWidth(),
+			(uint32)Screen.GetHeight()
 		};
 
 		ActualExtent.width = std::max(Capabilities.minImageExtent.width, std::min(Capabilities.maxImageExtent.width, ActualExtent.width));

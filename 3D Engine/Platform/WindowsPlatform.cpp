@@ -35,10 +35,11 @@ void WindowsPlatform::OpenWindow(int32 DesiredWidth, int32 DesiredHeight)
 	glfwSetCursorPosCallback(Window, MouseCallback);
 	glfwSetMouseButtonCallback(Window, MouseButtonCallback);
 
-	int32 Width, Height;
-	glfwGetFramebufferSize(Window, &Width, &Height);
-	Screen.Width = (float)Width;
-	Screen.Height = (float)Height;
+	int32 ActualWidth, ActualHeight;
+	glfwGetFramebufferSize(Window, &ActualWidth, &ActualHeight);
+	Screen.Width = ActualWidth;
+	Screen.Height = ActualHeight;
+	Screen.CallScreenResChanged();
 }
 
 bool WindowsPlatform::WindowShouldClose()
@@ -57,8 +58,8 @@ void WindowsPlatform::PollEvents()
 	// Get this frame's screen dimensions.
 	int32 Width, Height;
 	glfwGetFramebufferSize(Window, &Width, &Height);
-	Screen.Width = (float)Width;
-	Screen.Height = (float)Height;
+	Screen.Width = Width;
+	Screen.Height = Height;
 }
 
 void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
@@ -140,8 +141,9 @@ void WindowsPlatform::MouseState(class Cursor& Cursor)
 
 void WindowsPlatform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
 {
-	Screen.Width = (float)X;
-	Screen.Height = (float)Y;
+	Screen.Width = X;
+	Screen.Height = Y;
+	Screen.CallScreenResChanged();
 }
 
 void WindowsPlatform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)

@@ -14,7 +14,7 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 
 Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
 { 
-	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)Screen.Width, ScreenPosition.y / (float)Screen.Height);
+	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)Screen.GetWidth(), ScreenPosition.y / (float)Screen.GetHeight());
 
 	const glm::vec2 ScreenSpace = glm::vec2((Normalized.x - 0.5f) * 2.0f, (Normalized.y - 0.5f) * 2.0f);
 	
@@ -52,7 +52,7 @@ bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& Sc
 
 		// Projective space to normalized [0, 1] space.
 		const glm::vec2 Normalized = glm::vec2((ClipSpace.x / 2.0f) + 0.5f, (ClipSpace.y / 2.0f) + 0.5f);
-		ScreenPosition = glm::vec2(Normalized.x * Screen.Width, Normalized.y * Screen.Height);
+		ScreenPosition = glm::vec2(Normalized.x * Screen.GetWidth(), Normalized.y * Screen.GetHeight());
 
 		return true;
 	}
@@ -80,7 +80,7 @@ void View::UpdateView()
 		WorldToClip,
 		Position,
 		0.0f,
-		(float)Screen.Width / Screen.Height,
+		(float)Screen.GetWidth() / Screen.GetHeight(),
 		FOV,
 	};
 
@@ -110,7 +110,7 @@ void View::Translate(const float DS)
 
 glm::mat4 View::GetViewToClip() const
 {
-	glm::mat4 Perspective = glm::perspective(glm::radians(FOV), (float)Screen.Width / Screen.Height, 0.1f, 100.0f);
+	glm::mat4 Perspective = glm::perspective(glm::radians(FOV), (float)Screen.GetWidth() / Screen.GetHeight(), 0.1f, 100.0f);
 	// @todo VK_KHR_maintenance1
 	Perspective[1][1] *= -1;
 	return Perspective;

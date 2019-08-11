@@ -3,6 +3,7 @@
 #include "VulkanCommands.h"
 #include "VulkanCommandList.h"
 #include <Engine/Timers.h>
+#include <Engine/Screen.h>
 
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Image, VulkanImage);
@@ -35,14 +36,18 @@ VulkanDRM::VulkanDRM()
 		HashTable<EImageFormat, uint32>Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
 		{
 			auto ImageFormat = VulkanImage::GetEngineFormat(Format); auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType); Result[ImageFormat] = GLSLSize;
-		}return Result;
+		} return Result;
 	}());
 }
 
 void VulkanDRM::Init()
 {
-	Swapchain.Init();
-
+	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
+	{
+		Swapchain.Free();
+		Swapchain.Init();
+	});
+	
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));

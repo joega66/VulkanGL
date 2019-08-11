@@ -325,6 +325,9 @@
     <ClCompile Include="Components\CMaterial.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Screen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">

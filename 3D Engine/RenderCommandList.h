@@ -124,12 +124,13 @@ enum class ECompareOp
 
 struct Viewport
 {
-	float X = 0.0f;
-	float Y = 0.0f;
-	float Width = 0.0f;
-	float Height = 0.0f;
+	int32 X = 0;
+	int32 Y = 0;
+	int32 Width = 0;
+	int32 Height = 0;
 	float MinDepth = 0.0f;
 	float MaxDepth = 1.0f;
+
 	friend bool operator==(const Viewport& L, const Viewport& R)
 	{
 		return L.X == R.X

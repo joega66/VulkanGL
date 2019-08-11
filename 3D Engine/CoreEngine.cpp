@@ -10,7 +10,6 @@
 
 class Cursor Cursor;
 class Input Input;
-// @todo Move this to View?
 class Screen Screen;
 
 void CoreEngine::Run()

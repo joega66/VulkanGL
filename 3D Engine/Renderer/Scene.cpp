@@ -7,8 +7,12 @@
 
 Scene::Scene()
 {
-	SceneDepth = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
-	OutlineDepthStencil = drm::CreateImage((uint32)Screen.Width, (uint32)Screen.Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
+	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
+	{
+		SceneDepth = drm::CreateImage(Width, Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
+		OutlineDepthStencil = drm::CreateImage(Width, Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
+	});
+	
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
 
@@ -46,10 +50,8 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 
 	CmdList.BeginRenderPass(RenderPassInit);
 
-	PSOInit.Viewport.X = 0.0f;
-	PSOInit.Viewport.Y = 0.0f;
-	PSOInit.Viewport.Width = Screen.Width;
-	PSOInit.Viewport.Height = Screen.Height;
+	PSOInit.Viewport.Width = Screen.GetWidth();
+	PSOInit.Viewport.Height = Screen.GetHeight();
 
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 
@@ -79,10 +81,8 @@ void Scene::RenderLightingPass(RenderCommandList& CmdList)
 
 	PipelineStateInitializer PSOInit = {};
 
-	PSOInit.Viewport.X = 0.0f;
-	PSOInit.Viewport.Y = 0.0f;
-	PSOInit.Viewport.Width = Screen.Width;
-	PSOInit.Viewport.Height = Screen.Height;
+	PSOInit.Viewport.Width = Screen.GetWidth();
+	PSOInit.Viewport.Height = Screen.GetHeight();
 
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 
@@ -102,10 +102,8 @@ void Scene::RenderLines(RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
-	PSOInit.Viewport.X = 0.0f;
-	PSOInit.Viewport.Y = 0.0f;
-	PSOInit.Viewport.Width = Screen.Width;
-	PSOInit.Viewport.Height = Screen.Height;
+	PSOInit.Viewport.Width = Screen.GetWidth();
+	PSOInit.Viewport.Height = Screen.GetHeight();
 
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 
@@ -124,10 +122,8 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 
 	PipelineStateInitializer PSOInit = {};
 
-	PSOInit.Viewport.X = 0.0f;
-	PSOInit.Viewport.Y = 0.0f;
-	PSOInit.Viewport.Width = Screen.Width;
-	PSOInit.Viewport.Height = Screen.Height;
+	PSOInit.Viewport.Width = Screen.GetWidth();
+	PSOInit.Viewport.Height = Screen.GetHeight();
 
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::LEqual;
@@ -161,10 +157,8 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 
 		CmdList.BeginRenderPass(RenderPassInit);
 
-		PSOInit.Viewport.X = 0.0f;
-		PSOInit.Viewport.Y = 0.0f;
-		PSOInit.Viewport.Width = Screen.Width;
-		PSOInit.Viewport.Height = Screen.Height;
+		PSOInit.Viewport.Width = Screen.GetWidth();
+		PSOInit.Viewport.Height = Screen.GetHeight();
 
 		PSOInit.DepthStencilState.DepthTestEnable = true;
 		PSOInit.DepthStencilState.StencilTestEnable = true;

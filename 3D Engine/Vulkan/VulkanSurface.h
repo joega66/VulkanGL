@@ -15,13 +15,14 @@ struct SwapchainSupportDetails
 class VulkanSurface
 {
 public:
-	VkSwapchainKHR Swapchain;
+	VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 	std::vector<VulkanImageRef> Images;
 
 	VulkanSurface(VulkanDevice& Device);
-	~VulkanSurface();
 
 	void Init();
+	void Free();
+
 	operator VkSwapchainKHR() { return Swapchain; }
 
 private:

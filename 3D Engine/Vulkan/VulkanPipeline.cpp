@@ -243,10 +243,10 @@ VkPipeline VulkanDevice::CreatePipeline(
 	VkViewport Viewport = {};
 	{
 		const auto& In = PSOInit.Viewport;
-		Viewport.x = In.X;
-		Viewport.y = In.Y;
-		Viewport.width = In.Width;
-		Viewport.height = In.Height;
+		Viewport.x = (float)In.X;
+		Viewport.y = (float)In.Y;
+		Viewport.width = (float)In.Width;
+		Viewport.height = (float)In.Height;
 		Viewport.minDepth = In.MinDepth;
 		Viewport.maxDepth = In.MaxDepth;
 	}
