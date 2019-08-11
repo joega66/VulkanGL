@@ -33,7 +33,19 @@ private:
 	VkDevice Device;
 	VkDebugReportCallbackEXT DebugReportCallback;
 
-	SlowCache<RenderPassInitializer, VkRenderPass, VkFramebuffer> RenderPassCache;
+	struct VulkanRenderPassCacheInfo
+	{
+		uint32 NumRenderTargets;
+		std::array<VkImage, MaxRenderTargets> ColorTargets;
+		VkImage DepthTarget;
+		EDepthStencilTransition DepthStencilTransition;
+
+		VulkanRenderPassCacheInfo(const RenderPassInitializer& RPInit);
+
+		bool operator==(const VulkanRenderPassCacheInfo& Other);
+	};
+
+	SlowCache<VulkanRenderPassCacheInfo, VkRenderPass, VkFramebuffer> RenderPassCache;
 	SlowCache<PipelineStateInitializer, VkPipeline> PipelineCache;
 	SlowCache<GraphicsPipelineState, VkPipelineLayout, VkDescriptorSetLayout> PipelineLayoutCache;
 

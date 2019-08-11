@@ -329,48 +329,11 @@ enum
 
 struct RenderPassInitializer
 {
-	uint32 NumRenderTargets = 0;
+	uint32 NumRenderTargets;
 	std::array<drm::RenderTargetViewRef, MaxRenderTargets> ColorTargets;
 	drm::RenderTargetViewRef DepthTarget;
 	EDepthStencilTransition DepthStencilTransition;
 	RenderArea RenderArea;
-
-	friend bool operator==(const RenderPassInitializer& L, const RenderPassInitializer& R)
-	{
-		// Compare depth attachments.
-		if (!L.DepthTarget && !R.DepthTarget)
-		{
-		}
-		else if (L.DepthTarget && R.DepthTarget)
-		{
-			if (!(*L.DepthTarget == *R.DepthTarget && L.DepthStencilTransition == R.DepthStencilTransition))
-			{
-				return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
-
-		// Compare color attachments.
-		if (L.NumRenderTargets == R.NumRenderTargets)
-		{
-			for (uint32 RenderTargetIndex = 0; RenderTargetIndex < L.NumRenderTargets; RenderTargetIndex++)
-			{
-				if (!(*L.ColorTargets[RenderTargetIndex] == *R.ColorTargets[RenderTargetIndex]))
-				{
-					return false;
-				}
-			}
-		}
-		else
-		{
-			return false;
-		}
-
-		return true;
-	}
 };
 
 struct PipelineStateInitializer

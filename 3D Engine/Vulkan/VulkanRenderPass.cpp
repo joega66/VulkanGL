@@ -4,15 +4,47 @@
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Image, VulkanImage);
 
+VulkanDevice::VulkanRenderPassCacheInfo::VulkanRenderPassCacheInfo(const RenderPassInitializer & RPInit)
+{
+	NumRenderTargets = RPInit.NumRenderTargets;
+
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRenderTargets; ColorTargetIndex++)
+	{
+		ColorTargets[ColorTargetIndex] = ResourceCast(RPInit.ColorTargets[ColorTargetIndex]->Image)->Image;
+	}
+
+	DepthTarget = ResourceCast(RPInit.DepthTarget->Image)->Image;
+	DepthStencilTransition = RPInit.DepthStencilTransition;
+}
+
+bool VulkanDevice::VulkanRenderPassCacheInfo::operator==(const VulkanRenderPassCacheInfo& Other)
+{
+	if (NumRenderTargets != Other.NumRenderTargets)
+	{
+		return false;
+	}
+
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRenderTargets; ColorTargetIndex++)
+	{
+		if (ColorTargets[ColorTargetIndex] != Other.ColorTargets[ColorTargetIndex])
+		{
+			return false;
+		}
+	}
+
+	return DepthTarget == Other.DepthTarget && DepthStencilTransition == Other.DepthStencilTransition;
+}
+
 std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderPassInitializer& RPInit)
 {
 	VkRenderPass RenderPass = VK_NULL_HANDLE;
 	VkFramebuffer Framebuffer;
+	VulkanRenderPassCacheInfo CacheInfo(RPInit);
 
 	// Find or create the render pass.
-	for (const auto&[CachedRPInit, CachedRenderPass, CachedFramebuffer] : RenderPassCache)
+	for (const auto&[OtherCacheInfo, CachedRenderPass, CachedFramebuffer] : RenderPassCache)
 	{
-		if (RPInit == CachedRPInit)
+		if (CacheInfo == OtherCacheInfo)
 		{
 			RenderPass = CachedRenderPass;
 			Framebuffer = CachedFramebuffer;
@@ -24,7 +56,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderP
 	{
 		std::tie(RenderPass, Framebuffer) = CreateRenderPass(RPInit);
 
-		RenderPassCache.push_back({ RPInit, RenderPass, Framebuffer });
+		RenderPassCache.push_back({ CacheInfo, RenderPass, Framebuffer });
 	}
 
 	return { RenderPass, Framebuffer };

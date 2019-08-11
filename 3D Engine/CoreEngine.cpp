@@ -36,8 +36,6 @@ void CoreEngine::Run()
 	GAssetManager.LoadStaticMesh("Transform-Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 
-	// @todo Code generation. Or, for now, COMPONENT_SYSTEM() macro.
-
 	EditorControllerSystem EditorControllerSystem;
 	ComponentSystemManager.AddComponentSystem(EditorControllerSystem);
 	
@@ -55,7 +53,6 @@ void CoreEngine::Run()
 
 	auto& Scene = Scene::Get();
 
-	// @todo ViewportChanged lambda callbacks
 	while (!GPlatform->WindowShouldClose())
 	{
 		GPlatform->PollEvents();
