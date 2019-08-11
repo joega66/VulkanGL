@@ -55,13 +55,6 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 
 	std::tie(Pending.RenderPass, Pending.Framebuffer) = Device.GetRenderPass(RPInit);
 
-	VkRect2D RenderArea = {};
-
-	if (drm::ImageRef Image = RPInit.DepthTarget ? RPInit.DepthTarget->Image : RPInit.ColorTargets[0]->Image; Image)
-	{
-		RenderArea.extent = { Image->Width, Image->Height };
-	}
-
 	const uint32 NumRTs = RPInit.NumRenderTargets;
 	std::vector<VkClearValue> ClearValues;
 
@@ -99,6 +92,12 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthTarget->ClearValue).StencilClear;
 		}
 	}
+
+	VkRect2D RenderArea;
+	RenderArea.offset.x = RPInit.RenderArea.Offset.x;
+	RenderArea.offset.y = RPInit.RenderArea.Offset.y;
+	RenderArea.extent.width = RPInit.RenderArea.Extent.x;
+	RenderArea.extent.height = RPInit.RenderArea.Extent.y;
 
 	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	BeginInfo.renderPass = Pending.RenderPass;

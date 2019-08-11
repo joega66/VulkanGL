@@ -316,6 +316,12 @@ struct GraphicsPipelineState
 	}
 };
 
+struct RenderArea
+{
+	glm::ivec2 Offset;
+	glm::uvec2 Extent;
+};
+
 enum
 {
 	MaxRenderTargets = 8
@@ -327,6 +333,7 @@ struct RenderPassInitializer
 	std::array<drm::RenderTargetViewRef, MaxRenderTargets> ColorTargets;
 	drm::RenderTargetViewRef DepthTarget;
 	EDepthStencilTransition DepthStencilTransition;
+	RenderArea RenderArea;
 
 	friend bool operator==(const RenderPassInitializer& L, const RenderPassInitializer& R)
 	{

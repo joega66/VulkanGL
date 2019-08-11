@@ -25,13 +25,14 @@ void Scene::Render()
 	RenderRayMarching(*CmdList);
 
 	{
-		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, { 0, 0, 0, 0 });
-		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, ClearColorValue{});
+		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;
 		RenderPassInit.DepthTarget = DepthView;
 		RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
+		RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
 		CmdList->BeginRenderPass(RenderPassInit);
 
@@ -65,6 +66,7 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	RenderPassInit.ColorTargets[0] = SurfaceView;
 	RenderPassInit.DepthTarget = DepthView;
 	RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
+	RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
 	CmdList.BeginRenderPass(RenderPassInit);
 
@@ -156,6 +158,7 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 		RenderPassInitializer RenderPassInit = {};
 		RenderPassInit.DepthTarget = StencilView;
 		RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
+		RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(OutlineDepthStencil->Width, OutlineDepthStencil->Height) };
 
 		CmdList.BeginRenderPass(RenderPassInit);
 
@@ -179,13 +182,14 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 	}
 	
 	{
-		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, { 0, 0, 0, 0 });
+		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, ClearColorValue{});
 		drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{ 1.0f, 0 });
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;
 		RenderPassInit.DepthTarget = OutlineView;
 		RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
+		RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(OutlineDepthStencil->Width, OutlineDepthStencil->Height) };
 
 		CmdList.BeginRenderPass(RenderPassInit);
 
