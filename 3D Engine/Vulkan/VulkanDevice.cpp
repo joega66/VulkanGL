@@ -4,6 +4,8 @@
 #include <Platform/Platform.h>
 #include <GLFW/glfw3.h>
 
+#define VULKAN_DEBUG
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT Flags, VkDebugReportObjectTypeEXT ObjType,
 	uint64 Obj, size_t Location, int32 Code, const char* LayerPrefix, const char* Msg, void* UserData)
 {
@@ -18,7 +20,7 @@ static std::vector<const char*> GetRequiredExtensions()
 	GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
 	std::vector<const char*> Extensions(GLFWExtensions, GLFWExtensions + GLFWExtensionCount);
 
-#ifdef DEBUG_BUILD
+#ifdef VULKAN_DEBUG
 	Extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
 
@@ -158,7 +160,7 @@ static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
 	CreateInfo.enabledExtensionCount = static_cast<uint32>(DeviceExtensions.size());
 	CreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
 
-#ifdef DEBUG_BUILD
+#ifdef VULKAN_DEBUG
 	CreateInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
 	CreateInfo.ppEnabledLayerNames = ValidationLayers.data();
 #else
@@ -204,7 +206,7 @@ VulkanDevice::VulkanDevice()
 		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
 	};
 
-#ifdef DEBUG_BUILD
+#ifdef VULKAN_DEBUG
 	if (!CheckValidationLayerSupport(ValidationLayers))
 	{
 		fail("Validation layers requested, but are unavailable.");
@@ -226,7 +228,7 @@ VulkanDevice::VulkanDevice()
 	InstanceInfo.enabledExtensionCount = static_cast<uint32>(Extensions.size());
 	InstanceInfo.ppEnabledExtensionNames = Extensions.data();
 
-#ifdef DEBUG_BUILD
+#ifdef VULKAN_DEBUG
 	InstanceInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
 	InstanceInfo.ppEnabledLayerNames = ValidationLayers.data();
 #else
@@ -235,7 +237,7 @@ VulkanDevice::VulkanDevice()
 
 	vulkan(vkCreateInstance(&InstanceInfo, nullptr, &Instance));
 
-#ifdef DEBUG_BUILD
+#ifdef VULKAN_DEBUG
 	// Create Vulkan debug callback
 	VkDebugReportCallbackCreateInfoEXT DebugCallbackInfo = { VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT };
 	DebugCallbackInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
@@ -287,7 +289,7 @@ VulkanDevice::~VulkanDevice()
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}
 
-	for (const auto&[RPInit, RenderPass, Framebuffer] : RenderPassCache)
+	for (const auto&[CacheInfo, RenderPass, Framebuffer] : RenderPassCache)
 	{
 		vkDestroyFramebuffer(Device, Framebuffer, nullptr);
 		vkDestroyRenderPass(Device, RenderPass, nullptr);

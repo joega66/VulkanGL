@@ -98,13 +98,16 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 
 	if (VulkanCmdList->bTouchedSurface)
 	{
+		const VkPipelineStageFlags WaitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
 		VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
 		SubmitInfo.waitSemaphoreCount = 1;
-		SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
+		SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
+		SubmitInfo.pWaitDstStageMask = &WaitDstStageMask;
 		SubmitInfo.commandBufferCount = 1;
-		SubmitInfo.pSignalSemaphores = &RenderEndSem;
+		SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
 		SubmitInfo.signalSemaphoreCount = 1;
+		SubmitInfo.pSignalSemaphores = &RenderEndSem;
 
 		vulkan(vkQueueSubmit(Device.GraphicsQueue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
@@ -124,6 +127,7 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 			vulkan(Result);
 		}
 
+		vkQueueWaitIdle(Device.GraphicsQueue);
 		vkQueueWaitIdle(Device.PresentQueue);
 	}
 	else

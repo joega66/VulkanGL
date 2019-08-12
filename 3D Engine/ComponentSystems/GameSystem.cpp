@@ -37,13 +37,12 @@ GameSystem::GameSystem()
 
 	auto LightEntity = GEntityManager.CreateFromPrefab("Cube");
 	auto& Light = LightEntity.AddComponent<CLight>();
+	auto& Material = LightEntity.AddComponent<CMaterial>();
+	Material.Diffuse = CMaterial::Blue;
 
 	auto& LightTransform = LightEntity.GetComponent<CTransform>();
 	LightTransform.Scale(glm::vec3(0.1f));
 	LightTransform.Translate(glm::vec3(1.0f));
-
-	//auto& Material = LightEntity.AddComponent<CMaterial>();
-	//Material.Diffuse = glm::vec4(Light.Color, 1.0f);
 }
 
 void GameSystem::Update()

@@ -23,6 +23,8 @@ public:
 		, EResourceUsage UsageFlags
 		, VkPipelineStageFlags Stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 	
+	~VulkanImage();
+
 	operator VkImage();
 
 	static VkFormat GetVulkanFormat(EImageFormat Format);

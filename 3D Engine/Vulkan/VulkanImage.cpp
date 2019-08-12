@@ -80,6 +80,11 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
 }
 
+VulkanImage::~VulkanImage()
+{
+	Device.FreeImage(*this);
+}
+
 VulkanImage::operator VkImage() { return Image; }
 
 VkFormat VulkanImage::GetVulkanFormat(EImageFormat Format)
@@ -226,4 +231,36 @@ VkFormat VulkanDRM::FindSupportedDepthFormat(EImageFormat Format)
 	}();
 
 	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+}
+
+void VulkanDevice::FreeImage(VulkanImage& Image)
+{
+	// The image is no longer being referenced; destroy vulkan objects and cached framebuffers.
+	if (Any(Image.Usage & EResourceUsage::RenderTargetable))
+	{
+		for (auto Iter = RenderPassCache.begin(); Iter != RenderPassCache.end();)
+		{
+			const auto&[CacheInfo, CachedRenderPass, CachedFramebuffer] = *Iter;
+
+			if (Image.Image == CacheInfo.DepthTarget ||
+				(Image.IsColor() && std::any_of(
+					CacheInfo.ColorTargets.begin(),
+					CacheInfo.ColorTargets.begin() + CacheInfo.NumRenderTargets,
+					[&](auto ColorTarget) { return Image.Image == ColorTarget; })))
+			{
+				Iter = RenderPassCache.erase(Iter);
+				vkDestroyFramebuffer(Device, CachedFramebuffer, nullptr);
+				vkDestroyRenderPass(Device, CachedRenderPass, nullptr);
+				continue;
+			}
+			else
+			{
+				Iter++;
+			}
+		}
+	}
+
+	vkDestroyImage(Device, Image.Image, nullptr);
+	vkDestroyImageView(Device, Image.ImageView, nullptr);
+	vkFreeMemory(Device, Image.Memory, nullptr);
 }

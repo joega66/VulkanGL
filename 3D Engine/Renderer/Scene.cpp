@@ -22,11 +22,9 @@ void Scene::Render()
 
 	RenderCommandListRef CmdList = drm::CreateCommandList();
 
-	RenderRayMarching(*CmdList);
-
 	{
-		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, ClearColorValue{});
-		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Load, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
+		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
+		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;
@@ -37,6 +35,7 @@ void Scene::Render()
 		CmdList->BeginRenderPass(RenderPassInit);
 
 		RenderLightingPass(*CmdList);
+		RenderRayMarching(*CmdList);
 		RenderLines(*CmdList);
 		RenderSkybox(*CmdList);
 
@@ -59,17 +58,6 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	Ref<FullscreenVS> VertShader = *ShaderMapRef<FullscreenVS>();
 	Ref<RayMarchingFS> FragShader = *ShaderMapRef<RayMarchingFS>();
 
-	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
-	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 });
-
-	RenderPassInitializer RenderPassInit = { 1 };
-	RenderPassInit.ColorTargets[0] = SurfaceView;
-	RenderPassInit.DepthTarget = DepthView;
-	RenderPassInit.DepthStencilTransition = EDepthStencilTransition::DepthWriteStencilWrite;
-	RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-
-	CmdList.BeginRenderPass(RenderPassInit);
-
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
 
@@ -84,8 +72,6 @@ void Scene::RenderRayMarching(RenderCommandList& CmdList)
 	SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	CmdList.Draw(3, 1, 0, 0);
-
-	CmdList.EndRenderPass();
 }
 
 void Scene::RenderLightingPass(RenderCommandList& CmdList)

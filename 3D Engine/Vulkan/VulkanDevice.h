@@ -1,8 +1,6 @@
 #pragma once
 #include <RenderCommandList.h>
 #include "VulkanShader.h"
-#include <sstream>
-#include <iostream>
 
 class VulkanDevice
 {
@@ -28,6 +26,8 @@ public:
 
 	operator VkDevice() { return Device; }
 
+	void FreeImage(class VulkanImage& Image);
+
 private:
 	VkInstance Instance;
 	VkDevice Device;
@@ -46,7 +46,9 @@ private:
 	};
 
 	SlowCache<VulkanRenderPassCacheInfo, VkRenderPass, VkFramebuffer> RenderPassCache;
+
 	SlowCache<PipelineStateInitializer, VkPipeline> PipelineCache;
+
 	SlowCache<GraphicsPipelineState, VkPipelineLayout, VkDescriptorSetLayout> PipelineLayoutCache;
 
 	std::pair<VkPipelineLayout, VkDescriptorSetLayout> GetPipelineLayout(const GraphicsPipelineState& GraphicsPipelineState);
@@ -72,15 +74,4 @@ struct QueueFamilyIndices
 };
 
 #define vulkan(Result) \
-		if (Result != VK_SUCCESS)	\
-		{							\
-			std::stringstream SS;	\
-			SS << "Vulkan call ";	\
-			SS << #Result;			\
-			SS << " in file ";		\
-			SS << __FILE__;			\
-			SS << " on line ";		\
-			SS << __LINE__;			\
-			SS << " failed.";		\
-			fail(SS.str());			\
-		}							
+	check(Result == VK_SUCCESS, "Vulkan call failed.");				

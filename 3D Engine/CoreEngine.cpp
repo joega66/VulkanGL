@@ -58,6 +58,6 @@ void CoreEngine::Run()
 		Platform.PollEvents();
 		ComponentSystemManager.Update();
 		Scene.Render();
-		Platform.EndFrame();
+		Platform.Finish();
 	}
 }

@@ -12,6 +12,7 @@ public:
 	void OpenWindow(int32 Width, int32 Height);
 	bool WindowShouldClose();
 	void PollEvents();
+	void Finish();
 
 	// File I/O
 	std::string FileRead(const std::string& Filename) const;
@@ -37,9 +38,6 @@ public:
 #undef LoadImage
 	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const;
 	void FreeImage(uint8* Pixels) const;
-
-	// Sets OS-controlled state.
-	void EndFrame();
 
 private:
 	void UpdateCursorState(class Cursor& Cursor);

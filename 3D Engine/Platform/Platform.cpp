@@ -231,8 +231,9 @@ void OS_Platform::FreeImage(uint8* Pixels) const
 	stbi_image_free(Pixels);
 }
 
-void OS_Platform::EndFrame()
+void OS_Platform::Finish()
 {
+	// Update the hardware state.
 	UpdateCursorState(Cursor);
 	UpdateInputState(Input);
 }

@@ -16,7 +16,6 @@ public:
 
 	drm::ImageRef Skybox;
 
-	Scene();
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
 
@@ -27,6 +26,8 @@ public:
 	void SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const class SceneBindings& Bindings) const;
 
 private:
+	Scene();
+
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;
 

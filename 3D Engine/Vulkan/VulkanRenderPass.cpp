@@ -4,7 +4,7 @@
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Image, VulkanImage);
 
-VulkanDevice::VulkanRenderPassCacheInfo::VulkanRenderPassCacheInfo(const RenderPassInitializer & RPInit)
+VulkanDevice::VulkanRenderPassCacheInfo::VulkanRenderPassCacheInfo(const RenderPassInitializer& RPInit)
 {
 	NumRenderTargets = RPInit.NumRenderTargets;
 
@@ -55,7 +55,6 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderP
 	if (RenderPass == VK_NULL_HANDLE)
 	{
 		std::tie(RenderPass, Framebuffer) = CreateRenderPass(RPInit);
-
 		RenderPassCache.push_back({ CacheInfo, RenderPass, Framebuffer });
 	}
 

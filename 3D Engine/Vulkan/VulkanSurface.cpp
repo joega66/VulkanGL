@@ -82,12 +82,7 @@ void VulkanSurface::Init()
 
 void VulkanSurface::Free()
 {
-	for (auto& Image : Images)
-	{
-		vkDestroyImage(Device, Image->Image, nullptr);
-		vkDestroyImageView(Device, Image->ImageView, nullptr);
-		vkFreeMemory(Device, Image->Memory, nullptr);
-	}
+	//vkDestroySwapchainKHR(Device, Swapchain, nullptr);
 }
 
 VkSurfaceFormatKHR VulkanSurface::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)
