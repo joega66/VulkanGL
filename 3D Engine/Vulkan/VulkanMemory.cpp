@@ -287,6 +287,8 @@ void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
 	std::unique_ptr<VulkanBuffer> StagingBuffer = std::move(LockedStagingImages[Image->Image]);
 	LockedStagingImages.erase(Image->Image);
 
+	vkUnmapMemory(Device, StagingBuffer->Memory);
+
 	vkCmdCopyBufferToImage(CommandBuffer, StagingBuffer->Buffer, Image->Image, Image->Layout, Regions.size(), Regions.data());
 
 	FreeStagingBuffers.push_back(std::move(StagingBuffer));
