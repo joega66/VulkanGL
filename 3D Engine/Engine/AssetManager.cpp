@@ -18,9 +18,9 @@ StaticMeshRef AssetManager::GetStaticMesh(const std::string & Name)
 void AssetManager::LoadImage(const std::string& Name, const std::string& File, EImageFormat Format)
 {
 	int32 Width, Height, Channels;
-	uint8* Pixels = GPlatform->LoadImage(File, Width, Height, Channels);
+	uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
 	Images[Name] = drm::CreateImage(Width, Height, Format, EResourceUsage::ShaderResource, Pixels);
-	GPlatform->FreeImage(Pixels);
+	Platform.FreeImage(Pixels);
 }
 
 drm::ImageRef AssetManager::GetImage(const std::string& Name)
@@ -37,7 +37,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 		auto& File = Files[i];
 		auto& Face = CubemapCreateInfo.CubeFaces[i];
 		int32 Width, Height, Channels;
-		uint8* Pixels = GPlatform->LoadImage(File, Width, Height, Channels);
+		uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
 		Face = { Width, Height, Pixels };
 	}
 
@@ -58,7 +58,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 	std::for_each(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(), [&](const auto& Other)
 	{
-		GPlatform->FreeImage(Other.Data);
+		Platform.FreeImage(Other.Data);
 	});
 }
 

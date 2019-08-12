@@ -1,5 +1,5 @@
 #include <DRMPrivate.h>
-#include <Platform/WindowsPlatform.h>
+#include <Platform/Platform.h>
 #include <Vulkan/VulkanDRM.h>
 #include "CoreEngine.h"
 #include <cxxopts.hpp>
@@ -18,11 +18,7 @@ int main(int argc, char* argv[])
 	int32 WinX = Result["width"].as<int32>();
 	int32 WinY = Result["height"].as<int32>();
 
-#ifdef _WIN32
-	GPlatform = MakeRef<WindowsPlatform>();
-#endif
-
-	GPlatform->OpenWindow(WinX, WinY);
+	Platform.OpenWindow(WinX, WinY);
 
 	if (Result.count("vulkan"))
 	{

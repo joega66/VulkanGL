@@ -53,11 +53,11 @@ void CoreEngine::Run()
 
 	auto& Scene = Scene::Get();
 
-	while (!GPlatform->WindowShouldClose())
+	while (!Platform.WindowShouldClose())
 	{
-		GPlatform->PollEvents();
+		Platform.PollEvents();
 		ComponentSystemManager.Update();
 		Scene.Render();
-		GPlatform->EndFrame();
+		Platform.EndFrame();
 	}
 }

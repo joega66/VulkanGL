@@ -18,8 +18,7 @@ enum class EKeyCode
 
 class Input
 {
-	friend class IPlatform;
-	friend class WindowsPlatform;
+	friend class OS_Platform;
 public:
 	static constexpr size_t NUM_KEYS = 1024;
 

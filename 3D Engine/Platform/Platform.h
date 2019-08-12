@@ -1,72 +1,17 @@
 #pragma once
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <string>
-#include <memory>
-#include <functional>
-#include <map>
-#include <unordered_map>
-#include <unordered_set>
-#include <array>
-#include <vector>
-#include <mutex>
-#include <future>
-#include <tuple>
-#include <algorithm>
-#include <variant>
+#include <Engine/Types.h>
 
-#define ENTRY(Key, Value) { Key, Value },
+struct GLFWwindow;
 
-using uint8 = uint8_t;
-using uint16 = uint16_t;
-using int32 = int32_t;
-using uint32 = uint32_t;
-using int64 = int64_t;
-using uint64 = uint64_t;
-
-template<typename T>
-using UniqueRef = std::unique_ptr<T>;
-
-template<typename T>
-using Ref = std::shared_ptr<T>;
-
-template<typename T, typename ...RefArgs>
-UniqueRef<T> MakeUniqueRef(RefArgs& ...Args)
+class OS_Platform
 {
-	return std::make_unique<T>(Args...);
-}
-
-template<typename T, typename ...RefArgs>
-Ref<T> MakeRef(RefArgs&& ...Args)
-{
-	return std::make_shared<T>(Args...);
-}
-
-#define CLASS(Class) \
-	using Class ## Ref = Ref<Class>;
-
-#define CAST(FromType, ToType) ToType ## Ref ResourceCast(FromType ## Ref From) { return std::static_pointer_cast<ToType>(From); }
-
-struct RID
-{
-	unsigned long  Data1;
-	unsigned short Data2;
-	unsigned short Data3;
-	unsigned char  Data4[8];
-};
-
-class IPlatform
-{
-public:	
-	virtual std::string GetPlatformName() = 0;
+public:
+	GLFWwindow* Window;
 
 	// Window
-	virtual void OpenWindow(int32 Width, int32 Height) = 0;
-	virtual bool WindowShouldClose() = 0;
-	virtual void PollEvents() = 0;
-	virtual void MouseState(class Cursor& Cursor) = 0;
+	void OpenWindow(int32 Width, int32 Height);
+	bool WindowShouldClose();
+	void PollEvents();
 
 	// File I/O
 	std::string FileRead(const std::string& Filename) const;
@@ -78,94 +23,53 @@ public:
 	void WriteLog(const std::string& Log);
 	void WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& Log);
 	void WriteLog(const std::string& Expression, const std::string& File, const std::string& Func, int32 Line, const std::string& Log);
-	static std::string SanitizeFile(const std::string& file);
 	static std::string FormatString(std::string format, ...);
 
 	// Processes
-	virtual void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const = 0;
+	void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const;
 
-	virtual RID CreateRID() = 0;
+	RID CreateRID() const;
 
 	// Memory
-	void Memcpy(void* Dst, const void* Src, size_t Size);
+	void Memcpy(void* Dst, const void* Src, size_t Size) const;
 
 	// Loading
-	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels);
-	void FreeImage(uint8* Pixels);
+#undef LoadImage
+	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const;
+	void FreeImage(uint8* Pixels) const;
 
 	// Sets OS-controlled state.
 	void EndFrame();
+
+private:
+	void UpdateCursorState(class Cursor& Cursor);
+	void UpdateInputState(class Input& Input);
+
+	static void WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y);
+	static void KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
+	static void ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset);
+	static void MouseCallback(GLFWwindow* Window, double X, double Y);
+	static void MouseButtonCallback(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods);
+
+	static std::string SanitizeFile(const std::string& file);
 };
 
-CLASS(IPlatform);
-
-extern IPlatformRef GPlatform;
+extern OS_Platform Platform;
 
 // Print.
 #define print(Fmt, ...) \
-	GPlatform->WriteLog(IPlatform::FormatString(Fmt, __VA_ARGS__)); \
+	Platform.WriteLog(OS_Platform::FormatString(Fmt, __VA_ARGS__)); \
 
 // Print and crash if expression fails.
 #define check(Expression, Fmt, ...) \
-	((Expression))? ((void)0) : [&] () { GPlatform->WriteLog(#Expression, __FILE__, __func__, __LINE__, IPlatform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }();
+	((Expression))? ((void)0) : [&] () { Platform.WriteLog(#Expression, __FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }();
 
 // Print error and crash.
 #define fail(Fmt, ...) \
 	if (true) \
 	{ \
-		GPlatform->WriteLog(__FILE__, __func__, __LINE__, IPlatform::FormatString(Fmt, __VA_ARGS__)); \
+		Platform.WriteLog(__FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); \
 		throw std::runtime_error(""); \
 	} \
 
 #define signal_unimplemented() fail("UNIMPLEMENTED") \
-
-template<typename K, typename V>
-using HashTable = std::unordered_map<K, V>;
-
-template<typename K, typename V>
-const K& GetKey(const HashTable<K, V>& HashTable, const V& Value)
-{
-	auto Iter = HashTable.begin();
-	while (Iter != HashTable.end())
-	{
-		if (Iter->second == Value)
-		{
-			return Iter->first;
-		}
-		Iter++;
-	}
-
-	fail("Key not found.");
-}
-
-template<typename K, typename V>
-inline const V& GetValue(const HashTable<K, V>& HashTable, const K& Key)
-{
-	return HashTable.at(Key);
-}
-
-template<typename ContainerType, typename ElementType>
-inline bool Contains(const ContainerType& Container, const ElementType& Element)
-{
-	return Container.count(Element) != 0;
-}
-
-template<typename T, std::size_t N>
-constexpr std::size_t ArrayLength(T(&)[N])
-{
-	return N;
-}
-
-template<class T> inline constexpr T operator~ (T a) { return (T)~(int)a; }
-template<class T> inline constexpr T operator| (T a, T b) { return (T)((int)a | (int)b); }
-template<class T> inline constexpr T operator& (T a, T b) { return (T)((int)a & (int)b); }
-template<class T> inline constexpr T operator^ (T a, T b) { return (T)((int)a ^ (int)b); }
-template<class T> inline constexpr T& operator|= (T& a, T b) { return (T&)((int&)a |= (int)b); }
-template<class T> inline constexpr T& operator&= (T& a, T b) { return (T&)((int&)a &= (int)b); }
-template<class T> inline constexpr T& operator^= (T& a, T b) { return (T&)((int&)a ^= (int)b); }
-
-template<typename EnumClass>
-inline bool Any(EnumClass EnumTrait)
-{
-	return EnumTrait != EnumClass::None;
-}

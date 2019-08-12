@@ -24,7 +24,7 @@ drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial
 			}
 
 			int32 Width, Height, NumChannels;
-			uint8* Pixels = GPlatform->LoadImage(Directory + "/" + TexturePath, Width, Height, NumChannels);
+			uint8* Pixels = Platform.LoadImage(Directory + "/" + TexturePath, Width, Height, NumChannels);
 			drm::ImageRef Material;
 
 			if (Pixels)
@@ -32,7 +32,7 @@ drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial
 				Material = drm::CreateImage(Width, Height, EImageFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Pixels);
 			}
 
-			GPlatform->FreeImage(Pixels);
+			Platform.FreeImage(Pixels);
 
 			TextureCache[TexturePath] = Material;
 

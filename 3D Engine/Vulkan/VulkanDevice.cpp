@@ -1,7 +1,7 @@
 #include "VulkanDevice.h"
 #include "VulkanSurface.h"
 #include "VulkanDRM.h"
-#include <Platform/WindowsPlatform.h> // Yuck
+#include <Platform/Platform.h>
 #include <GLFW/glfw3.h>
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT Flags, VkDebugReportObjectTypeEXT ObjType,
@@ -258,12 +258,7 @@ VulkanDevice::VulkanDevice()
 	vulkan(CreateDebugReportCallbackEXT(Instance, &DebugCallbackInfo, nullptr, &DebugReportCallback));
 #endif
 
-#ifdef _WIN32
-	WindowsPlatformRef Windows = std::static_pointer_cast<WindowsPlatform>(GPlatform);
-	vulkan(glfwCreateWindowSurface(Instance, Windows->Window, nullptr, &Surface));
-#elif
-	signal_unimplemented();
-#endif
+	vulkan(glfwCreateWindowSurface(Instance, Platform.Window, nullptr, &Surface));
 
 	// Select Vulkan-capable physical device
 	PhysicalDevice = SelectPhysicalDevice(Instance, Surface, DeviceExtensions);

@@ -40,7 +40,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
-    <ClCompile Include="Platform\WindowsPlatform.cpp" />
     <ClCompile Include="Renderer\DepthPass.cpp" />
     <ClCompile Include="Renderer\EditorPrimitives.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
@@ -86,13 +85,13 @@
     <ClInclude Include="Engine\Screen.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\Timers.h" />
+    <ClInclude Include="Engine\Types.h" />
     <ClInclude Include="Engine\View.h" />
     <ClInclude Include="DRM.h" />
     <ClInclude Include="DRMResource.h" />
     <ClInclude Include="DRMShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
-    <ClInclude Include="Platform\WindowsPlatform.h" />
     <ClInclude Include="RenderCommandList.h" />
     <ClInclude Include="Renderer\DepthPass.h" />
     <ClInclude Include="Renderer\DrawingPlan.h" />

@@ -276,13 +276,13 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	SS << " -fubo-binding-base " + ShaderExt + " " + BaseBinding;
 	SS << " -fssbo-binding-base " + ShaderExt + " " + BaseBinding;
 
-	GPlatform->ForkProcess(ShaderCompilerPath, SS.str());
+	Platform.ForkProcess(ShaderCompilerPath, SS.str());
 
 	// Hack until ForkProcess can return STDOUT of child process.
-	check(GPlatform->FileExists(Meta.Filename + SPIRVExt),
+	check(Platform.FileExists(Meta.Filename + SPIRVExt),
 		"Shader failed to compile.\nFilename: %s", Meta.Filename.c_str());
-	const std::string SPIRV = GPlatform->FileRead(Meta.Filename + SPIRVExt);
-	GPlatform->FileDelete(Meta.Filename + SPIRVExt);
+	const std::string SPIRV = Platform.FileRead(Meta.Filename + SPIRVExt);
+	Platform.FileDelete(Meta.Filename + SPIRVExt);
 
 	VkShaderModuleCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 	CreateInfo.codeSize = SPIRV.size();

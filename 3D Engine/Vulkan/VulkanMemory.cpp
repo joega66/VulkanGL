@@ -74,7 +74,7 @@ uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemor
 void VulkanAllocator::UploadBufferData(const SharedVulkanBuffer& Buffer, const void* Data)
 {
 	void* MemMapped = LockBuffer(Buffer);
-	GPlatform->Memcpy(MemMapped, Data, (size_t)Buffer.Size);
+	Platform.Memcpy(MemMapped, Data, (size_t)Buffer.Size);
 	UnlockBuffer(Buffer);
 }
 
@@ -207,7 +207,7 @@ void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* P
 	{
 		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
 	});
-	GPlatform->Memcpy(MemMapped, Pixels, (size_t)Size);
+	Platform.Memcpy(MemMapped, Pixels, (size_t)Size);
 	UnlockImage(Image, Size);
 }
 
@@ -227,7 +227,7 @@ void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const Cubema
 
 		if (Face.Data)
 		{
-			GPlatform->Memcpy((uint8*)MemMapped + FaceIndex * Size / 6, Face.Data, (size_t)Size / 6);
+			Platform.Memcpy((uint8*)MemMapped + FaceIndex * Size / 6, Face.Data, (size_t)Size / 6);
 		}
 	}
 

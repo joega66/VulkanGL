@@ -86,9 +86,6 @@
     <ClInclude Include="Platform\Platform.h">
       <Filter>Source\Platforms</Filter>
     </ClInclude>
-    <ClInclude Include="Platform\WindowsPlatform.h">
-      <Filter>Source\Platforms</Filter>
-    </ClInclude>
     <ClInclude Include="Components\Component.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
@@ -212,6 +209,9 @@
     <ClInclude Include="Engine\Screen.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Types.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -251,9 +251,6 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Platform\Platform.cpp">
-      <Filter>Source\Platforms</Filter>
-    </ClCompile>
-    <ClCompile Include="Platform\WindowsPlatform.cpp">
       <Filter>Source\Platforms</Filter>
     </ClCompile>
     <ClCompile Include="Components\CStaticMesh.cpp">

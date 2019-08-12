@@ -5,7 +5,7 @@ using ScreenResChangedCallback = std::function<void(int32 Width, int32 Height)>;
 
 class Screen
 {
-	friend class WindowsPlatform;
+	friend class OS_Platform;
 
 public:
 	int32 GetWidth() const { return Width; }
