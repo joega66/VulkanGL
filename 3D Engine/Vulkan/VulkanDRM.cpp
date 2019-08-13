@@ -279,6 +279,18 @@ void VulkanDRM::UnlockBuffer(drm::IndexBufferRef IndexBuffer)
 	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
 }
 
+void* VulkanDRM::LockBuffer(drm::StorageBufferRef StorageBuffer)
+{
+	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
+	return Allocator.LockBuffer(*VulkanStorageBuffer->Buffer);
+}
+
+void VulkanDRM::UnlockBuffer(drm::StorageBufferRef StorageBuffer)
+{
+	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
+	Allocator.UnlockBuffer(*VulkanStorageBuffer->Buffer);
+}
+
 void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
 	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);

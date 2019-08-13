@@ -22,6 +22,14 @@ void LightSystem::Update()
 			PointLightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), Light.Intensity, Light.Color, Light.Range });
 		}
 	}
+
+	glm::uvec4 NumPointLights;
+	NumPointLights.x = PointLightProxies.size();
+
+	Scene.PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size(), nullptr);
 	
-	Scene.PointLightBuffer = drm::CreateStorageBuffer(sizeof(PointLightProxy) * PointLightProxies.size(), PointLightProxies.data());
+	void* Data = drm::LockBuffer(Scene.PointLightBuffer);
+	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
+	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
+	drm::UnlockBuffer(Scene.PointLightBuffer);
 }

@@ -5,7 +5,7 @@ vec3 PointLighting(in MaterialParams Material, vec3 V, vec3 R0)
 {
 	vec3 Lo = vec3(0.0);
 
-	for (int i = 0; i < PointLights.length(); i++)
+	for (int i = 0; i < NumPointLights.x; i++)
 	{
 		vec3 FragToLight = PointLights[i].Position - Material.Position;
 		vec3 L = normalize(FragToLight);

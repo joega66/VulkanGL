@@ -92,7 +92,17 @@ namespace drm
 
 	void UnlockBuffer(IndexBufferRef IndexBuffer)
 	{
-		return GDRM->UnlockBuffer(IndexBuffer);
+		GDRM->UnlockBuffer(IndexBuffer);
+	}
+
+	void* LockBuffer(drm::StorageBufferRef StorageBuffer)
+	{
+		return GDRM->LockBuffer(StorageBuffer);
+	}
+
+	void UnlockBuffer(drm::StorageBufferRef StorageBuffer)
+	{
+		GDRM->UnlockBuffer(StorageBuffer);
 	}
 
 	std::string GetDeviceName()

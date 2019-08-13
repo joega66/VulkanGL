@@ -250,7 +250,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 			BaseBinding = "400";
 			return "frag";
 		default: // Compute
-			BaseBinding = "0";
+			BaseBinding = "1";
 			return "comp";
 		}
 	}();

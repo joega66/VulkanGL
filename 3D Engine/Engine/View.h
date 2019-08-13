@@ -11,10 +11,10 @@ public:
 		glm::mat4 ViewToClip;
 		glm::mat4 WorldToClip;
 		glm::vec3 Position;
-		float Padding;
+		float _Pad0;
 		float AspectRatio;
 		float FOV;
-		glm::vec2 MorePadding;
+		glm::vec2 _Pad1;
 	};
 	
 	drm::UniformBufferRef Uniform;

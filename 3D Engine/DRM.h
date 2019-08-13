@@ -40,6 +40,8 @@ public:
 	virtual void UnlockBuffer(drm::VertexBufferRef VertexBuffer) = 0;
 	virtual void* LockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
+	virtual void* LockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
+	virtual void UnlockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
 	virtual std::string GetDRMName() = 0;
 	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
 
@@ -75,6 +77,8 @@ namespace drm
 	void UnlockBuffer(VertexBufferRef VertexBuffer);
 	void* LockBuffer(IndexBufferRef IndexBuffer);
 	void UnlockBuffer(IndexBufferRef IndexBuffer);
+	void* LockBuffer(drm::StorageBufferRef StorageBuffer);
+	void UnlockBuffer(drm::StorageBufferRef StorageBuffer);
 	std::string GetDeviceName();
 
 	template<typename UniformBufferType>
