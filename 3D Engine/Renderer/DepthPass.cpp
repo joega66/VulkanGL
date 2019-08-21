@@ -28,6 +28,6 @@ void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& 
 
 void DepthPassDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	CmdList.BindVertexBuffers(0, Element.PositionBuffer);
+	CmdList.BindVertexBuffers(1, &Element.GetPositionBuffer());
 	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
 }

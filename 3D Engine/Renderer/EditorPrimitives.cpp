@@ -67,6 +67,6 @@ void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene
 
 void LineDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	CmdList.BindVertexBuffers(0, PositionBuffer);
+	CmdList.BindVertexBuffers(1, &PositionBuffer);
 	CmdList.Draw(3, 1, 0, 0);
 }

@@ -59,10 +59,6 @@ void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scen
 
 void LightingPassDrawingPlan::Draw(RenderCommandList& CmdList) const
 {
-	CmdList.BindVertexBuffers(0, Element.PositionBuffer);
-	CmdList.BindVertexBuffers(1, Element.TextureCoordinateBuffer);
-	CmdList.BindVertexBuffers(2, Element.NormalBuffer);
-	CmdList.BindVertexBuffers(3, Element.TangentBuffer);
-
+	CmdList.BindVertexBuffers(Element.VertexBuffers.size(), Element.VertexBuffers.data());
 	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
 }

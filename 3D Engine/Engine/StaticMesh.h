@@ -4,16 +4,22 @@
 
 struct MeshElement
 {
+private:
+	// Must match StaticMeshVS.glsl
+	enum VertexBufferLocation : uint32
+	{
+		Positions,
+		TextureCoordinates,
+		Normals,
+		Tangents,
+		End
+	};
+public:
 	const uint32 IndexCount;
 	drm::IndexBufferRef IndexBuffer;
-
-	drm::VertexBufferRef PositionBuffer;
-	drm::VertexBufferRef TextureCoordinateBuffer;
-	drm::VertexBufferRef NormalBuffer;
-	drm::VertexBufferRef TangentBuffer;
-
+	std::array<drm::VertexBufferRef, End> VertexBuffers;
 	CMaterial Material;
-	
+
 	MeshElement(
 		uint32 IndexCount
 		, drm::IndexBufferRef IndexBuffer
@@ -24,13 +30,15 @@ struct MeshElement
 		, const CMaterial& Material)
 		: IndexCount(IndexCount)
 		, IndexBuffer(IndexBuffer)
-		, PositionBuffer(PositionBuffer)
-		, TextureCoordinateBuffer(TextureCoordinateBuffer)
-		, NormalBuffer(NormalBuffer)
-		, TangentBuffer(TangentBuffer)
 		, Material(Material)
 	{
+		VertexBuffers[Positions] = PositionBuffer;
+		VertexBuffers[TextureCoordinates] = TextureCoordinateBuffer;
+		VertexBuffers[Normals] = NormalBuffer;
+		VertexBuffers[Tangents] = TangentBuffer;
 	}
+
+	drm::VertexBufferRef GetPositionBuffer() const { return VertexBuffers[Positions]; }
 };
 
 struct MeshBatch

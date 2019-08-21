@@ -51,33 +51,6 @@ bool Physics::Raycast(const Ray& Ray, Entity Entity)
 {
 	float T;
 	return Raycast(Ray, Entity, T);
-
-	/*glm::vec3 Diagonal = glm::vec3(Max - Min);
-	Diagonal /= 2;
-
-	glm::vec3 C = glm::vec3(Min) + Diagonal;
-	float R = glm::length(Diagonal);
-	float R_2 = R * R;
-	glm::vec3 L = C - Ray.Origin;
-	float S = glm::dot(L, Ray.Direction);
-	float L_2 = glm::dot(L, L);
-
-	if (S < 0 && L_2 > R_2)
-	{
-		return false;
-	}
-
-	float M_2 = L_2 - S * S;
-
-	if (M_2 > R_2)
-	{
-		return false;
-	}
-
-	float Q = std::sqrt(R_2 - M_2);
-	float T = L_2 > R_2 ? S - Q : S + Q;
-
-	return true;*/
 }
 
 bool Physics::Raycast(const Ray& Ray, const Plane& Plane, float& T)

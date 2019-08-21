@@ -32,7 +32,6 @@ VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allo
 	return CommandBuffer;
 }())
 {
-	Pending.VertexStreams.resize(Device.Properties.limits.maxVertexInputBindings, VulkanVertexBufferRef());
 }
 
 VulkanCommandList::~VulkanCommandList()
@@ -123,7 +122,6 @@ void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 		// Clear descriptors and vertex streams.
 		DescriptorImages.clear();
 		DescriptorBuffers.clear();
-		std::fill(Pending.VertexStreams.begin(), Pending.VertexStreams.end(), VulkanVertexBufferRef());
 		Pending.GraphicsPipelineState = PSOInit.GraphicsPipelineState;
 	}
 
@@ -132,15 +130,22 @@ void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pending.Pipeline);
 }
 
-void VulkanCommandList::BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer)
+void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers)
 {
-	check(Location < Device.Properties.limits.maxVertexInputBindings, "Invalid location.");
+	check(NumVertexBuffers < Device.Properties.limits.maxVertexInputBindings, "maxVertexInputBindings exceeded.");
 
-	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
+	std::vector<VkDeviceSize> Offsets(NumVertexBuffers);
+	std::vector<VkBuffer> Buffers(NumVertexBuffers);
 
-	Pending.VertexStreams[Location] = VulkanVertexBuffer;
+	for (uint32 Location = 0; Location < NumVertexBuffers; Location++)
+	{
+		check(VertexBuffers, "Null vertex buffer found.");
+		VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
+		Offsets[Location] = VulkanVertexBuffer->Buffer->Offset;
+		Buffers[Location] = VulkanVertexBuffer->Buffer->GetVulkanHandle();
+	}
 
-	bDirtyVertexStreams = true;
+	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
 }
 
 void VulkanCommandList::SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer)
@@ -302,37 +307,11 @@ void VulkanCommandList::CleanDescriptorSets()
 	bDirtyDescriptorSets = false;
 }
 
-void VulkanCommandList::CleanVertexStreams()
-{
-	const std::vector<VulkanVertexBufferRef>& VertexStreams = Pending.VertexStreams;
-	std::vector<VkDeviceSize> Offsets;
-	std::vector<VkBuffer> Buffers;
-
-	for (uint32 Location = 0; Location < VertexStreams.size(); Location++)
-	{
-		if (VertexStreams[Location])
-		{
-			VkDeviceSize Offset = VertexStreams[Location]->Buffer->Offset;
-			VkBuffer Buffer = VertexStreams[Location]->Buffer->GetVulkanHandle();
-			Offsets.push_back(Offset);
-			Buffers.push_back(Buffer);
-		}
-	}
-
-	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
-
-	bDirtyVertexStreams = false;
-}
 
 void VulkanCommandList::PrepareForDraw()
 {
 	if (bDirtyDescriptorSets)
 	{
 		CleanDescriptorSets();
-	}
-
-	if (bDirtyVertexStreams)
-	{
-		CleanVertexStreams();
 	}
 }

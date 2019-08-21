@@ -20,7 +20,7 @@ public:
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit);
 	virtual void EndRenderPass();
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit);
-	virtual void BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer);
+	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers);
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer);
 	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler);
 	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer);
@@ -34,7 +34,6 @@ private:
 	VulkanDescriptorPool& DescriptorPool;
 
 	bool bDirtyDescriptorSets = false;
-	bool bDirtyVertexStreams = false;
 	
 	struct PendingState
 	{
@@ -45,7 +44,6 @@ private:
 		VkDescriptorSetLayout DescriptorSetLayout;
 		VkPipelineLayout PipelineLayout;
 		VkPipeline Pipeline;
-		std::vector<VulkanVertexBufferRef> VertexStreams;
 	} Pending;
 
 	PendingBuffer<VkSampler> Samplers;
@@ -57,7 +55,6 @@ private:
 
 	void PrepareForDraw();
 	void CleanDescriptorSets();
-	void CleanVertexStreams();
 };
 
 CLASS(VulkanCommandList);

@@ -357,7 +357,7 @@ public:
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
 	virtual void EndRenderPass() = 0;
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
-	virtual void BindVertexBuffers(uint32 Location, drm::VertexBufferRef VertexBuffer) = 0;
+	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers) = 0;
 	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;
 	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler) = 0;
 	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer) = 0;

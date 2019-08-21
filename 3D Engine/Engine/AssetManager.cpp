@@ -10,7 +10,7 @@ StaticMeshRef AssetManager::LoadStaticMesh(const std::string& Name, const std::s
 	return Static;
 }
 
-StaticMeshRef AssetManager::GetStaticMesh(const std::string & Name)
+StaticMeshRef AssetManager::GetStaticMesh(const std::string& Name)
 {
 	return GetValue(StaticMeshes, Name);
 }

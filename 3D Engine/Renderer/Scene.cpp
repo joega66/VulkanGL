@@ -128,7 +128,7 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 
 	for (const auto& Element : Cube->Batch.Elements)
 	{
-		CmdList.BindVertexBuffers(0, Element.PositionBuffer);
+		CmdList.BindVertexBuffers(1, &Element.GetPositionBuffer());
 		CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
 	}
 }

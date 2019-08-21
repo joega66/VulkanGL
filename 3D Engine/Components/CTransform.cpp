@@ -14,7 +14,7 @@ CTransform::CTransform(const glm::vec3& Position, const glm::vec3& Rotation, flo
 	Scale(InScale);
 }
 
-const glm::mat4& CTransform::GetLocalToWorld()
+const glm::mat4& CTransform::GetLocalToWorld() const
 {
 	return LocalToWorld;
 }
