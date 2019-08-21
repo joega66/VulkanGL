@@ -167,24 +167,26 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat F
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
-	VkImageLayout Layout;
+	EImageLayout Layout;
 
 	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, Data);
 
 	VulkanImageRef DRMImage = MakeRef<VulkanImage>(Device
 		, Image
 		, Memory
-		, Layout
 		, Format
+		, Layout
 		, Width
 		, Height
 		, UsageFlags);
 
 	if (Data)
 	{
-		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		check(!Any(UsageFlags & EResourceUsage::RenderTargetable), "Not supported yet.");
+
+		TransitionImageLayout(DRMImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, EImageLayout::TransferDstOptimal, VK_PIPELINE_STAGE_TRANSFER_BIT);
 		Allocator.UploadImageData(DRMImage, Data);
-		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		TransitionImageLayout(DRMImage, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, EImageLayout::ShaderReadOnlyOptimal, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
 	return DRMImage;
@@ -195,7 +197,7 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;
 	VkDeviceMemory Memory;
-	VkImageLayout Layout;
+	EImageLayout Layout;
 
 	bool bHasData = std::find_if(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(),
 		[] (const auto& TextureInfo) { return TextureInfo.Data; }) != CubemapCreateInfo.CubeFaces.end();
@@ -205,23 +207,23 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat
 	VulkanImageRef DRMImage = MakeRef<VulkanImage>(Device
 		, Image
 		, Memory
-		, Layout
 		, Format
+		, Layout
 		, Width
 		, Height
 		, UsageFlags);
 
 	if (bHasData)
 	{
-		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		TransitionImageLayout(DRMImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, EImageLayout::TransferDstOptimal, VK_PIPELINE_STAGE_TRANSFER_BIT);
 		Allocator.UploadCubemapData(DRMImage, CubemapCreateInfo);
-		TransitionImageLayout(DRMImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		TransitionImageLayout(DRMImage, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, EImageLayout::ShaderReadOnlyOptimal, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
 	return DRMImage;
 }
 
-drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
+drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -229,11 +231,12 @@ drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, 
 		VulkanImage,
 		LoadAction,
 		StoreAction,
-		ClearValue);
+		ClearValue,
+		FinalLayout);
 	return RTView;
 }
 
-drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
+drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
 {
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
@@ -241,7 +244,8 @@ drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, 
 		VulkanImage,
 		LoadAction,
 		StoreAction,
-		DepthStencil);
+		DepthStencil,
+		FinalLayout);
 	return RTView;
 }
 
@@ -252,7 +256,7 @@ drm::ImageRef VulkanDRM::GetSurface()
 
 drm::RenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
 {
-	return MakeRef<VulkanRenderTargetView>(Device, GetSurface(), LoadAction, StoreAction, ClearValue);
+	return MakeRef<VulkanRenderTargetView>(Device, GetSurface(), LoadAction, StoreAction, ClearValue, EImageLayout::Present);
 }
 
 void* VulkanDRM::LockBuffer(drm::VertexBufferRef VertexBuffer)
@@ -291,13 +295,13 @@ void VulkanDRM::UnlockBuffer(drm::StorageBufferRef StorageBuffer)
 	Allocator.UnlockBuffer(*VulkanStorageBuffer->Buffer);
 }
 
-void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
+void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAccessMask, VkAccessFlags DstAccessMask, EImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
 	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);
 
 	VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-	Barrier.oldLayout = Image->Layout;
-	Barrier.newLayout = NewLayout;
+	Barrier.oldLayout = Image->GetVulkanLayout();
+	Barrier.newLayout = VulkanImage::GetVulkanLayout(NewLayout);
 	Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	Barrier.image = Image->Image;
@@ -306,23 +310,6 @@ void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLay
 	Barrier.subresourceRange.levelCount = 1;
 	Barrier.subresourceRange.baseArrayLayer = 0;
 	Barrier.subresourceRange.layerCount = Any(Image->Usage & EResourceUsage::Cubemap) ? 6 : 1;
-
-	if (Image->Layout == VK_IMAGE_LAYOUT_UNDEFINED && NewLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
-		check(Image->Stage == VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "Pipeline stage is invalid for this transition.");
-		Barrier.srcAccessMask = 0;
-		Barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-	}
-	else if (Image->Layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && NewLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	{
-		check(Image->Stage == VK_PIPELINE_STAGE_TRANSFER_BIT, "Pipeline stage is invalid for this transition.");
-		Barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		Barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	}
-	else
-	{
-		fail("Unsupported layout transition.");
-	}
 
 	vkCmdPipelineBarrier(
 		ScopedCommandBuffer,
@@ -337,10 +324,10 @@ void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkImageLayout NewLay
 	Image->Stage = DestinationStage;
 }
 
-void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayout& Layout
+void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout
 	, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit)
 {
-	Layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	Layout = EImageLayout::Undefined;
 
 	if (drm::Image::IsDepth(Format))
 	{
@@ -356,7 +343,7 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, VkImageLayou
 	Info.arrayLayers = Any(UsageFlags & EResourceUsage::Cubemap) ? 6 : 1;
 	Info.format = VulkanImage::GetVulkanFormat(Format);
 	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	Info.initialLayout = Layout;
+	Info.initialLayout = VulkanImage::GetVulkanLayout(Layout);
 	Info.usage = [&] ()
 	{
 		VkFlags Usage = 0;

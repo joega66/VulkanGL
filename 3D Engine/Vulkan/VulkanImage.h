@@ -10,14 +10,13 @@ public:
 	VkImage Image;
 	VkImageView ImageView;
 	VkDeviceMemory Memory;
-	VkImageLayout Layout;
 	VkPipelineStageFlags Stage;
 
 	VulkanImage(VulkanDevice& Device 
 		, VkImage Image
 		, VkDeviceMemory Memory
-		, VkImageLayout Layout
 		, EImageFormat Format
+		, EImageLayout Layout
 		, uint32 Width
 		, uint32 Height
 		, EResourceUsage UsageFlags
@@ -31,11 +30,15 @@ public:
 
 	static EImageFormat GetEngineFormat(VkFormat Format);
 
+	static VkImageLayout GetVulkanLayout(EImageLayout Layout);
+
 	static bool IsDepthLayout(VkImageLayout Layout);
 
 	static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
 
 	VkFormat GetVulkanFormat() const;
+
+	VkImageLayout GetVulkanLayout() const;
 
 	VkImageAspectFlags GetVulkanAspect() const;
 

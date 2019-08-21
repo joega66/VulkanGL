@@ -58,13 +58,28 @@ const HashTable<EImageFormat, VkFormat> VulkanFormat =
 	ENTRY(EImageFormat::BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
 
-VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, VkImageLayout Layout, EImageFormat Format, uint32 Width, uint32 Height, EResourceUsage UsageFlags, VkPipelineStageFlags Stage)
+const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
+{
+	ENTRY(EImageLayout::Undefined, VK_IMAGE_LAYOUT_UNDEFINED)
+	ENTRY(EImageLayout::General, VK_IMAGE_LAYOUT_GENERAL)
+	ENTRY(EImageLayout::ColorAttachmentOptimal, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+	ENTRY(EImageLayout::DepthWriteStencilWrite, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	ENTRY(EImageLayout::DepthReadStencilRead, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
+	ENTRY(EImageLayout::ShaderReadOnlyOptimal, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	ENTRY(EImageLayout::TransferSrcOptimal, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+	ENTRY(EImageLayout::TransferDstOptimal, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	ENTRY(EImageLayout::Preinitialized, VK_IMAGE_LAYOUT_PREINITIALIZED)
+	ENTRY(EImageLayout::DepthReadStencilWrite, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL)
+	ENTRY(EImageLayout::DepthWriteStencilRead, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+	ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+};
+
+VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, EImageFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EResourceUsage UsageFlags, VkPipelineStageFlags Stage)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
-	, Layout(Layout)
 	, Stage(Stage)
-	, drm::Image(Format, Width, Height, UsageFlags)
+	, drm::Image(Format, Layout, Width, Height, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
@@ -95,6 +110,11 @@ VkFormat VulkanImage::GetVulkanFormat(EImageFormat Format)
 EImageFormat VulkanImage::GetEngineFormat(VkFormat Format)
 {
 	return GetKey(VulkanFormat, Format);
+}
+
+VkImageLayout VulkanImage::GetVulkanLayout(EImageLayout Layout)
+{
+	return GetValue(VulkanLayout, Layout);
 }
 
 bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
@@ -161,6 +181,11 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 VkFormat VulkanImage::GetVulkanFormat() const
 {
 	return GetValue(VulkanFormat, Format);
+}
+
+VkImageLayout VulkanImage::GetVulkanLayout() const
+{
+	return GetValue(VulkanLayout, Layout);
 }
 
 VkImageAspectFlags VulkanImage::GetVulkanAspect() const
@@ -235,23 +260,22 @@ VkFormat VulkanDRM::FindSupportedDepthFormat(EImageFormat Format)
 
 void VulkanDevice::FreeImage(VulkanImage& Image)
 {
-	// The image is no longer being referenced; destroy vulkan objects and cached framebuffers.
+	// The image is no longer being referenced; destroy vulkan objects.
 	if (Any(Image.Usage & EResourceUsage::RenderTargetable))
 	{
 		for (auto Iter = RenderPassCache.begin(); Iter != RenderPassCache.end();)
 		{
 			const auto&[CacheInfo, CachedRenderPass, CachedFramebuffer] = *Iter;
 
-			if (Image.Image == CacheInfo.DepthTarget ||
+			if (Image.Image == CacheInfo.DepthTarget.Image ||
 				(Image.IsColor() && std::any_of(
 					CacheInfo.ColorTargets.begin(),
-					CacheInfo.ColorTargets.begin() + CacheInfo.NumRenderTargets,
-					[&](auto ColorTarget) { return Image.Image == ColorTarget; })))
+					CacheInfo.ColorTargets.end(),
+					[&](auto ColorTarget) { return Image.Image == ColorTarget.Image; })))
 			{
-				Iter = RenderPassCache.erase(Iter);
 				vkDestroyFramebuffer(Device, CachedFramebuffer, nullptr);
 				vkDestroyRenderPass(Device, CachedRenderPass, nullptr);
-				continue;
+				Iter = RenderPassCache.erase(Iter);
 			}
 			else
 			{

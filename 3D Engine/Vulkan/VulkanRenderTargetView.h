@@ -10,8 +10,9 @@ public:
 		, drm::ImageRef Image
 		, ELoadAction LoadAction
 		, EStoreAction StoreAction
-		, const ClearColorValue& ClearValue)
-		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, ClearValue) 
+		, const ClearColorValue& ClearValue
+		, EImageLayout FinalLayout)
+		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, ClearValue, FinalLayout)
 	{
 	}
 
@@ -19,8 +20,9 @@ public:
 		, drm::ImageRef Image
 		, ELoadAction LoadAction
 		, EStoreAction StoreAction
-		, const ClearDepthStencilValue& DepthStencil)
-		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, DepthStencil)
+		, const ClearDepthStencilValue& DepthStencil
+		, EImageLayout FinalLayout)
+		: Device(Device), drm::RenderTargetView(Image, LoadAction, StoreAction, DepthStencil, FinalLayout)
 	{
 	}
 

@@ -44,25 +44,21 @@ namespace drm
 		return IsDepth(Format);
 	}
 
-	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
+	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)
 		, ClearValue(ClearValue)
+		, FinalLayout(FinalLayout)
 	{
 	}
 
-	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil)
+	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)
 		, ClearValue(DepthStencil)
+		, FinalLayout(FinalLayout)
 	{
-	}
-
-	bool RenderTargetView::operator==(const RenderTargetView& Other)
-	{
-		// Don't compare clear value since it's not part of the render pass.
-		return Image == Other.Image && LoadAction == Other.LoadAction && StoreAction == Other.StoreAction;
 	}
 }

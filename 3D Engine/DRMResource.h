@@ -93,6 +93,22 @@ struct ClearColorValue
 	uint32	Uint32[4];
 };
 
+enum class EImageLayout
+{
+	Undefined,
+	General,
+	ColorAttachmentOptimal,
+	DepthWriteStencilWrite,
+	DepthReadStencilRead,
+	ShaderReadOnlyOptimal,
+	TransferSrcOptimal,
+	TransferDstOptimal,
+	Preinitialized,
+	DepthReadStencilWrite,
+	DepthWriteStencilRead,
+	Present
+};
+
 namespace drm
 {
 	class VertexBuffer
@@ -166,9 +182,10 @@ namespace drm
 		uint32 Width;
 		uint32 Height;
 		EResourceUsage Usage;
+		EImageLayout Layout;
 
-		Image(EImageFormat Format, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
-			: Format(Format), Width(Width), Height(Height), Usage(UsageFlags)
+		Image(EImageFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
+			: Format(Format), Layout(Layout), Width(Width), Height(Height), Usage(UsageFlags)
 		{
 		}
 
@@ -191,11 +208,10 @@ namespace drm
 		ELoadAction LoadAction;
 		EStoreAction StoreAction;
 		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
+		EImageLayout FinalLayout;
 
-		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue);
-		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil);
-
-		bool operator==(const RenderTargetView& Other);
+		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
+		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
 	};
 
 	CLASS(RenderTargetView);

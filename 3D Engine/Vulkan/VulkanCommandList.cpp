@@ -181,8 +181,6 @@ void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, d
 	VulkanImageRef VulkanImage = ResourceCast(Image);
 	auto& Bindings = VulkanShader.Bindings;
 
-	check(VulkanImage->Layout != VK_IMAGE_LAYOUT_UNDEFINED, "Invalid Vulkan image layout for shader read.");
-
 	for (const auto& Binding : Bindings)
 	{
 		if (Binding.binding == Location)
@@ -192,7 +190,7 @@ void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, d
 			VkSampler VulkanSampler = VulkanImage::CreateSampler(Device, Sampler);
 			Samplers.Push(VulkanSampler);
 
-			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->Layout };
+			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
 			DescriptorImages[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
 			bDirtyDescriptorSets = true;
 

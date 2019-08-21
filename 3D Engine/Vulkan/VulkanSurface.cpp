@@ -71,8 +71,8 @@ void VulkanSurface::Init()
 		Images[i] = MakeRef<VulkanImage>(Device
 			, VkImages[i]
 			, VkDeviceMemory()
-			, VK_IMAGE_LAYOUT_UNDEFINED
 			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
+			, EImageLayout::Undefined
 			, Extent.width
 			, Extent.height
 			, EResourceUsage::RenderTargetable

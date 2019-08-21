@@ -2,19 +2,6 @@
 #include "DRMShader.h"
 #include "DRMResource.h"
 
-enum class EDepthStencilTransition
-{
-	None,
-	// No transition.
-	DepthWriteStencilWrite,
-	// Transitions depth to shader read for the depth aspect.
-	DepthReadStencilWrite,
-	// Transitions depth to shader read for the stencil aspect.
-	DepthWriteStencilRead,
-	// Transitions depth to shader read for depth/stencil aspect.
-	DepthReadStencilRead,
-};
-
 enum class EDepthCompareTest
 {
 	Never,
@@ -332,7 +319,6 @@ struct RenderPassInitializer
 	uint32 NumRenderTargets;
 	std::array<drm::RenderTargetViewRef, MaxRenderTargets> ColorTargets;
 	drm::RenderTargetViewRef DepthTarget;
-	EDepthStencilTransition DepthStencilTransition;
 	RenderArea RenderArea;
 };
 
