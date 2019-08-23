@@ -234,6 +234,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	{
 		switch (Meta.Stage)
 		{
+			// Start base binding at 0 because spirv_cross uses this for unused resources in shaders.
 		case EShaderStage::Vertex:
 			BaseBinding = "1";
 			return "vert";

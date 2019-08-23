@@ -54,8 +54,8 @@ static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 };
 
 std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> VulkanDevice::GetPipeline(
-	const PipelineStateInitializer& PSOInit, 
-	VkRenderPass RenderPass, 
+	const PipelineStateInitializer& PSOInit,
+	VkRenderPass RenderPass,
 	uint32 NumRenderTargets)
 {
 	// Find or create the layouts for the bound shaders. (@todo Do this at shader load time?)

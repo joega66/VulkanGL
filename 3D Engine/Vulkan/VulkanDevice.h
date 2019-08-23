@@ -24,6 +24,8 @@ public:
 
 	std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> GetPipeline(const PipelineStateInitializer& PSOInit, VkRenderPass RenderPass, uint32 NumRenderTargets);
 
+	VkSampler GetSampler(const SamplerState& Sampler);
+
 	operator VkDevice() { return Device; }
 
 	void FreeImage(class VulkanImage& Image);
@@ -68,6 +70,8 @@ private:
 		VkPipelineLayout PipelineLayout,
 		VkRenderPass RenderPass,
 		uint32 NumRenderTargets);
+
+	std::unordered_map<SamplerState, VkSampler, SamplerState::Hash> SamplerCache;
 };
 
 CLASS(VulkanDevice);

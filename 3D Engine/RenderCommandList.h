@@ -82,6 +82,19 @@ struct SamplerState
 	EFilter Filter = EFilter::Linear;
 	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToEdge;
 	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
+
+	bool operator==(const SamplerState& Other) const
+	{
+		return Filter == Other.Filter && SAM == Other.SAM && SMM == Other.SMM;
+	}
+
+	struct Hash
+	{
+		size_t operator()(const SamplerState& SamplerState) const
+		{
+			return ((uint32)SamplerState.Filter * 31) + ((uint32)SamplerState.SAM * 37) + ((uint32)SamplerState.SMM * 41);
+		}
+	};
 };
 
 enum class EUniformUpdate

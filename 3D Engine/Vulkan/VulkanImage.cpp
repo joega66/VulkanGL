@@ -130,6 +130,20 @@ bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
 	return Contains(VulkanDepthLayouts, Layout);
 }
 
+VkSampler VulkanDevice::GetSampler(const SamplerState& SamplerState)
+{
+	if (auto SamplerIter = SamplerCache.find(SamplerState); SamplerIter != SamplerCache.end())
+	{
+		return SamplerIter->second;
+	}
+	else
+	{
+		VkSampler Sampler = VulkanImage::CreateSampler(*this, SamplerState);
+		SamplerCache.emplace(SamplerState, Sampler);
+		return Sampler;
+	}
+}
+
 VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& SamplerState)
 {
 	static const VkFilter VulkanFilters[] =

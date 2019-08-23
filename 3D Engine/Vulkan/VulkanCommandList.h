@@ -5,7 +5,6 @@
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 #include "VulkanShader.h"
-#include <Engine/PendingBuffer.h>
 
 class VulkanCommandList final : public RenderCommandList
 {
@@ -39,14 +38,10 @@ private:
 	{
 		uint32 NumRenderTargets;
 		VkRenderPass RenderPass;
-		VkFramebuffer Framebuffer;
 		GraphicsPipelineState GraphicsPipelineState;
 		VkDescriptorSetLayout DescriptorSetLayout;
 		VkPipelineLayout PipelineLayout;
-		VkPipeline Pipeline;
 	} Pending;
-
-	PendingBuffer<VkSampler> Samplers;
 
 	template<typename VulkanDescriptorType>
 	using DescriptorMap = HashTable<EShaderStage, HashTable<uint32, std::unique_ptr<VulkanDescriptorType>>>;

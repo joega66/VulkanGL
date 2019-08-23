@@ -34,7 +34,7 @@ public:
 
 	static bool IsDepthLayout(VkImageLayout Layout);
 
-	static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
+	[[nodiscard]] static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
 
 	VkFormat GetVulkanFormat() const;
 

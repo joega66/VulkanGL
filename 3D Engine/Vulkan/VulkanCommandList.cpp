@@ -13,7 +13,6 @@ VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allo
 	: Device(Device)
 	, DescriptorPool(DescriptorPool)
 	, Allocator(Allocator)
-	, Samplers([&] (VkSampler Sampler) { vkDestroySampler(Device, Sampler, nullptr); })
 	, CommandBuffer([&] ()
 {
 	VkCommandBufferAllocateInfo CommandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -36,8 +35,6 @@ VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allo
 
 VulkanCommandList::~VulkanCommandList()
 {
-	Samplers.Destroy();
-
 	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
 }
 
@@ -52,7 +49,8 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 		}
 	}
 
-	std::tie(Pending.RenderPass, Pending.Framebuffer) = Device.GetRenderPass(RPInit);
+	VkFramebuffer Framebuffer;
+	std::tie(Pending.RenderPass, Framebuffer) = Device.GetRenderPass(RPInit);
 
 	const uint32 NumRTs = RPInit.NumRenderTargets;
 	std::vector<VkClearValue> ClearValues;
@@ -100,7 +98,7 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 
 	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	BeginInfo.renderPass = Pending.RenderPass;
-	BeginInfo.framebuffer = Pending.Framebuffer;
+	BeginInfo.framebuffer = Framebuffer;
 	BeginInfo.renderArea = RenderArea;
 	BeginInfo.pClearValues = ClearValues.data();
 	BeginInfo.clearValueCount = ClearValues.size();
@@ -119,15 +117,16 @@ void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 {
 	if (Pending.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
 	{
-		// Clear descriptors and vertex streams.
+		// Clear descriptors.
 		DescriptorImages.clear();
 		DescriptorBuffers.clear();
 		Pending.GraphicsPipelineState = PSOInit.GraphicsPipelineState;
 	}
 
-	std::tie(Pending.Pipeline, Pending.PipelineLayout, Pending.DescriptorSetLayout) = Device.GetPipeline(PSOInit, Pending.RenderPass, Pending.NumRenderTargets);
+	VkPipeline Pipeline;
+	std::tie(Pipeline, Pending.PipelineLayout, Pending.DescriptorSetLayout) = Device.GetPipeline(PSOInit, Pending.RenderPass, Pending.NumRenderTargets);
 
-	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pending.Pipeline);
+	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
 }
 
 void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers)
@@ -192,8 +191,7 @@ void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, d
 		{
 			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, "Shader resource at this location isn't a combined image sampler.");
 
-			VkSampler VulkanSampler = VulkanImage::CreateSampler(Device, Sampler);
-			Samplers.Push(VulkanSampler);
+			VkSampler VulkanSampler = Device.GetSampler(Sampler);
 
 			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
 			DescriptorImages[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
