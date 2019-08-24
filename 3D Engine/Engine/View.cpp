@@ -7,9 +7,8 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 	, Yaw(Yaw)
 	, Pitch(Pitch)
 	, FOV(FOV)
-	, Uniform(drm::CreateUniformBuffer<ViewUniform>(EUniformUpdate::Frequent))
 {
-	UpdateView();
+	Axis({ 0.0f, 0.0f });
 }
 
 Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
@@ -47,7 +46,7 @@ bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& Sc
 	const glm::vec4 ProjectiveSpace = GetViewToClip() * GetWorldToView() * glm::vec4(WorldPosition, 1.0f);
 	if (ProjectiveSpace.w > 0.0f)
 	{
-		const float WInv = 1 / ProjectiveSpace.w;
+		const float WInv = 1.0f / ProjectiveSpace.w;
 		const glm::vec4 ClipSpace = glm::vec4(ProjectiveSpace.x * WInv, ProjectiveSpace.y * WInv, ProjectiveSpace.z * WInv, ProjectiveSpace.w);
 
 		// Projective space to normalized [0, 1] space.
@@ -58,33 +57,6 @@ bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& Sc
 	}
 
 	return false;
-}
-
-void View::UpdateView()
-{
-	Front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	Front.y = sin(glm::radians(Pitch));
-	Front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	Front = glm::normalize(Front);
-	Right = glm::normalize(glm::cross(Front, WorldUp));
-	Up = glm::normalize(glm::cross(Right, Front));
-
-	const glm::mat4 WorldToView = GetWorldToView();
-	const glm::mat4 ViewToClip = GetViewToClip();
-	const glm::mat4 WorldToClip = ViewToClip * WorldToView;
-
-	const ViewUniform View =
-	{
-		WorldToView,
-		ViewToClip,
-		WorldToClip,
-		Position,
-		0.0f,
-		(float)Screen.GetWidth() / Screen.GetHeight(),
-		FOV,
-	};
-
-	Uniform->Set(View);
 }
 
 glm::mat4 View::GetWorldToView() const
@@ -98,14 +70,17 @@ void View::Axis(const glm::vec2& Offset)
 	Pitch += Offset.y;
 	Pitch = std::clamp(Pitch, -89.0f, 89.0f);
 
-	UpdateView();
+	Front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+	Front.y = sin(glm::radians(Pitch));
+	Front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+	Front = glm::normalize(Front);
+	Right = glm::normalize(glm::cross(Front, WorldUp));
+	Up = glm::normalize(glm::cross(Right, Front));
 }
 
 void View::Translate(const float DS)
 {
 	Position += Front * DS;
-
-	UpdateView();
 }
 
 glm::mat4 View::GetViewToClip() const

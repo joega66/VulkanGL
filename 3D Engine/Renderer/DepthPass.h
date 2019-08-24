@@ -1,5 +1,6 @@
 #pragma once
 #include "MaterialShader.h"
+#include "SceneBindings.h"
 #include <DRM.h>
 
 template<EMeshType MeshType>
@@ -7,16 +8,9 @@ class DepthPassVS : public MaterialVS<MeshType>
 {
 public:
 	DepthPassVS(const ShaderResourceTable& Resources)
-		: MaterialVS<MeshType>(Resources)
+		: SceneBindings(Resources), MaterialVS<MeshType>(Resources)
 	{
-		Resources.Bind("ViewUniform", ViewLocation);
-		Resources.Bind("LocalToWorldUniform", LocalToWorldLocation);
-	}
-
-	void SetUniforms(RenderCommandList& CmdList, drm::UniformBufferRef ViewUniform, drm::UniformBufferRef LocalToWorldUniform)
-	{
-		CmdList.SetUniformBuffer(drm::Shader::GetShader(), ViewLocation, ViewUniform);
-		CmdList.SetUniformBuffer(drm::Shader::GetShader(), LocalToWorldLocation, LocalToWorldUniform);
+		Resources.Bind("LocalToWorldUniform", LocalToWorld);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -31,9 +25,8 @@ public:
 		Worker.SetDefine("DEPTH_ONLY");
 	}
 
-private:
-	ShaderBinding ViewLocation;
-	ShaderBinding LocalToWorldLocation;
+	SceneBindings SceneBindings;
+	ShaderBinding LocalToWorld;
 };
 
 class DepthPassDrawingPlan

@@ -23,7 +23,8 @@ void DepthPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) c
 
 void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
 {
-	VertexShader->SetUniforms(CmdList, Scene.View.Uniform, LocalToWorldUniform);
+	Scene.SetResources(CmdList, VertexShader, VertexShader->SceneBindings);
+	CmdList.SetUniformBuffer(VertexShader, VertexShader->LocalToWorld, LocalToWorldUniform);
 }
 
 void DepthPassDrawingPlan::Draw(RenderCommandList& CmdList) const

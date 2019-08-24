@@ -82,18 +82,6 @@ namespace drm
 	void UnlockBuffer(drm::StorageBufferRef StorageBuffer);
 	std::string GetDeviceName();
 
-	template<typename UniformBufferType>
-	inline UniformBufferRef CreateUniformBuffer(EUniformUpdate Usage = EUniformUpdate::Infrequent)
-	{
-		return CreateUniformBuffer(sizeof(UniformBufferType), nullptr, Usage);
-	}
-
-	template<typename UniformBufferType>
-	inline UniformBufferRef CreateUniformBuffer(const UniformBufferType& Data, EUniformUpdate Usage = EUniformUpdate::Infrequent)
-	{
-		return CreateUniformBuffer(sizeof(UniformBufferType), &Data, Usage);
-	}
-
 	ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
 }
 

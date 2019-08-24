@@ -39,7 +39,7 @@ LineDrawingPlan::LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const g
 	};
 
 	PositionBuffer = drm::CreateVertexBuffer(EImageFormat::R32G32B32_SFLOAT, Positions.size(), EResourceUsage::None, Positions.data());
-	ColorUniform = drm::CreateUniformBuffer(Color, EUniformUpdate::Infrequent);
+	ColorUniform = drm::CreateUniformBuffer(sizeof(Color), &Color, EUniformUpdate::SingleFrame);
 }
 
 void LineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
@@ -61,7 +61,7 @@ void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene
 	Ref<LinesVS> VertShader = *ShaderMapRef<LinesVS>();
 	Ref<LinesFS> FragShader = *ShaderMapRef<LinesFS>();
 
-	VertShader->SetUniforms(CmdList, Scene.View.Uniform);
+	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
 	FragShader->SetUniforms(CmdList, ColorUniform);
 }
 

@@ -16,9 +16,6 @@ public:
 
 	drm::ImageRef Skybox;
 
-	Scene(const Scene&) = delete;
-	Scene& operator=(const Scene&) = delete;
-
 	void Render();
 
 	static Scene& Get();
@@ -26,10 +23,16 @@ public:
 	void SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const class SceneBindings& Bindings) const;
 
 private:
+	Scene(const Scene&) = delete;
+	Scene& operator=(const Scene&) = delete;
 	Scene();
+
+	drm::UniformBufferRef ViewUniform;
 
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;
+
+	void InitView();
 
 	void RenderRayMarching(RenderCommandList& CmdList);
 

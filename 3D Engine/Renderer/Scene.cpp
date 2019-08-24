@@ -12,12 +12,14 @@ Scene::Scene()
 		SceneDepth = drm::CreateImage(Width, Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
 		OutlineDepthStencil = drm::CreateImage(Width, Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
 	});
-	
+
 	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
 }
 
 void Scene::Render()
 {
+	InitView();
+
 	drm::BeginFrame();
 
 	RenderCommandListRef CmdList = drm::CreateCommandList();
@@ -48,6 +50,38 @@ void Scene::Render()
 	drm::SubmitCommands(CmdList);
 
 	drm::EndFrame();
+}
+
+void Scene::InitView()
+{
+	const glm::mat4 WorldToView = View.GetWorldToView();
+	const glm::mat4 ViewToClip = View.GetViewToClip();
+	const glm::mat4 WorldToClip = ViewToClip * WorldToView;
+
+	struct ViewUniformData
+	{
+		glm::mat4 WorldToView;
+		glm::mat4 ViewToClip;
+		glm::mat4 WorldToClip;
+		glm::vec3 Position;
+		float _Pad0;
+		float AspectRatio;
+		float FOV;
+		glm::vec2 _Pad1;
+	};
+
+	const ViewUniformData ViewUniformData =
+	{
+		WorldToView,
+		ViewToClip,
+		WorldToClip,
+		View.GetPosition(),
+		0.0f,
+		(float)Screen.GetWidth() / Screen.GetHeight(),
+		View.GetFOV()
+	};
+
+	ViewUniform = drm::CreateUniformBuffer(sizeof(ViewUniformData), &ViewUniformData, EUniformUpdate::SingleFrame);
 }
 
 void Scene::RenderRayMarching(RenderCommandList& CmdList)
@@ -123,7 +157,7 @@ void Scene::RenderSkybox(RenderCommandList& CmdList)
 
 	CmdList.BindPipeline(PSOInit);
 
-	CmdList.SetUniformBuffer(VertShader, VertShader->View, View.Uniform);
+	CmdList.SetUniformBuffer(VertShader, VertShader->View, ViewUniform);
 	CmdList.SetShaderImage(FragShader, FragShader->Skybox, Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	for (const auto& Element : Cube->Batch.Elements)
@@ -164,7 +198,7 @@ void Scene::RenderOutlines(RenderCommandList& CmdList)
 
 		CmdList.EndRenderPass();
 	}
-	
+
 	{
 		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, ClearColorValue{});
 		drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{ 1.0f, 0 }, EImageLayout::DepthWriteStencilWrite);

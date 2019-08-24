@@ -68,14 +68,8 @@ class LinesVS : public drm::Shader
 {
 public:
 	LinesVS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: SceneBindings(Resources), drm::Shader(Resources)
 	{
-		Resources.Bind("ViewUniform", ViewLocation);
-	}
-
-	void SetUniforms(RenderCommandList& CmdList, drm::UniformBufferRef ViewUniform)
-	{
-		CmdList.SetUniformBuffer(drm::Shader::GetShader(), ViewLocation, ViewUniform);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -84,8 +78,7 @@ public:
 		return Base;
 	}
 
-private:
-	ShaderBinding ViewLocation;
+	SceneBindings SceneBindings;
 };
 
 class LinesFS : public drm::Shader

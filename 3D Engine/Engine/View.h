@@ -5,20 +5,6 @@
 class View
 {
 public:
-	struct ViewUniform
-	{
-		glm::mat4 WorldToView;
-		glm::mat4 ViewToClip;
-		glm::mat4 WorldToClip;
-		glm::vec3 Position;
-		float _Pad0;
-		float AspectRatio;
-		float FOV;
-		glm::vec2 _Pad1;
-	};
-	
-	drm::UniformBufferRef Uniform;
-
 	View(const glm::vec3 &Position = glm::vec3(0.0f, 0.0f, 0.0f),
 		const glm::vec3 &Up = glm::vec3(0.0f, 1.0f, 0.0f),
 		float Yaw = -90.0f, float Pitch = 0.0f,
@@ -38,6 +24,8 @@ public:
 	glm::mat4 GetViewToClip() const;
 	// Get the view position.
 	const glm::vec3& GetPosition() const { return Position; }
+	// Get the FOV.
+	float GetFOV() const { return FOV; }
 
 	// Freeze/Unfreeze the view.
 	bool bFreeze = false;
@@ -53,6 +41,4 @@ private:
 	float Yaw;
 	float Pitch;
 	float FOV;
-
-	void UpdateView();
 };

@@ -26,6 +26,8 @@ public:
 
 	operator VkImage();
 
+	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EImageFormat Format);
+
 	static VkFormat GetVulkanFormat(EImageFormat Format);
 
 	static EImageFormat GetEngineFormat(VkFormat Format);

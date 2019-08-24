@@ -99,7 +99,7 @@ struct SamplerState
 
 enum class EUniformUpdate
 {
-	Infrequent,
+	SingleFrame,
 	Frequent,
 };
 

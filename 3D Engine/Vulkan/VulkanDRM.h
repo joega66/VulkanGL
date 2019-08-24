@@ -49,9 +49,7 @@ private:
 	VkSemaphore RenderEndSem;
 
 	void TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAccessMask, VkAccessFlags DstAccessMask, EImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
-	VkFormat FindSupportedDepthFormat(EImageFormat Format);
 	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout, uint32 Width, uint32 Height, EImageFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit);
-	VkSampler CreateSampler(const SamplerState& Sampler);
 };
 
 CLASS(VulkanDRM);
