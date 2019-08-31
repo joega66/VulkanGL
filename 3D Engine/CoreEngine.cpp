@@ -1,5 +1,6 @@
 #include "CoreEngine.h"
 #include <Renderer/Scene.h>
+#include <Renderer/SceneRenderer.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 #include <Engine/Cursor.h>
@@ -53,15 +54,16 @@ void CoreEngine::Run()
 	TransformGizmoSystem TransformGizmoSystem;
 	SystemsHerder.Register(TransformGizmoSystem);
 
-	auto& Scene = Scene::Get();
+	Scene Scene;
+	SceneRenderer SceneRenderer;
 
 	SystemsHerder.StartSystems();
 
 	while (!Platform.WindowShouldClose())
 	{
 		Platform.PollEvents();
-		SystemsHerder.UpdateSystems();
-		Scene.Render();
+		SystemsHerder.UpdateSystems(Scene);
+		SceneRenderer.Render(Scene);
 		Platform.Finish();
 	}
 }

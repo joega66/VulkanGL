@@ -1,13 +1,11 @@
 #include "StaticMeshSystem.h"
-#include <Components/Entity.h>
+#include <ECS/EntityManager.h>
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
 #include <Renderer/Scene.h>
 
-void StaticMeshSystem::Update()
+void StaticMeshSystem::Update(Scene& Scene)
 {
-	auto& Scene = Scene::Get();
-	
 	for (auto Entity : GEntityManager.GetEntities<CStaticMesh>())
 	{
 		if (!Entity.GetComponent<CRenderer>().bVisible)

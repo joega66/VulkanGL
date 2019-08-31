@@ -1,5 +1,5 @@
 #include "GameSystem.h"
-#include <Components/Entity.h>
+#include <ECS/EntityManager.h>
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
 #include <Components/CLight.h>
@@ -45,6 +45,6 @@ void GameSystem::Start()
 	LightTransform.Translate(glm::vec3(1.0f));
 }
 
-void GameSystem::Update()
+void GameSystem::Update(Scene& Scene)
 {
 }

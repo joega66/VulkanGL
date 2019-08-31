@@ -86,9 +86,6 @@
     <ClInclude Include="Platform\Platform.h">
       <Filter>Source\Platforms</Filter>
     </ClInclude>
-    <ClInclude Include="Components\Component.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Components\CStaticMesh.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
@@ -118,12 +115,6 @@
     </ClInclude>
     <ClInclude Include="Renderer\Scene.h">
       <Filter>Source\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\Entity.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\ComponentArray.h">
-      <Filter>Source\Components</Filter>
     </ClInclude>
     <ClInclude Include="Physics\Physics.h">
       <Filter>Source\Physics</Filter>
@@ -212,6 +203,21 @@
     <ClInclude Include="ECS\TransformGizmoSystem.h">
       <Filter>Source\ECS</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\SceneRenderer.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\EntityManager.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\Entity.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\Component.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\ComponentArray.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -267,12 +273,6 @@
     </ClCompile>
     <ClCompile Include="Renderer\LightingPass.cpp">
       <Filter>Source\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\Scene.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\Entity.cpp">
-      <Filter>Source\Components</Filter>
     </ClCompile>
     <ClCompile Include="Physics\Physics.cpp">
       <Filter>Source\Physics</Filter>
@@ -337,6 +337,18 @@
     <ClCompile Include="ECS\TransformGizmoSystem.cpp">
       <Filter>Source\ECS</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\SceneRenderer.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\Entity.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\EntityManager.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Scene.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -378,9 +390,6 @@
     <None Include="..\Shaders\LinesFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Components\ComponentArray.inl">
-      <Filter>Source\Components</Filter>
-    </None>
     <None Include="..\Shaders\RayMarching.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -395,6 +404,9 @@
     </None>
     <None Include="..\Shaders\SceneCommon.glsl">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="ECS\ComponentArray.inl">
+      <Filter>Source\ECS</Filter>
     </None>
   </ItemGroup>
 </Project>

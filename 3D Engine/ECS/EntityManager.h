@@ -1,5 +1,5 @@
 #pragma once
-#include "ComponentArray.h"
+#include "Entity.h"
 
 class EntityManager
 {

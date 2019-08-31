@@ -1,6 +1,6 @@
 #pragma once
-#include "Component.h"
-#include "../DRMResource.h"
+#include <ECS/Component.h>
+#include "DRMResource.h"
 
 struct CMaterial : Component<CMaterial>
 {

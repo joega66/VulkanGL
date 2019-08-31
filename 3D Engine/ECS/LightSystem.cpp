@@ -4,12 +4,11 @@
 #include <Components/CLight.h>
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
+#include <ECS/EntityManager.h>
 
-void LightSystem::Update()
+void LightSystem::Update(Scene& Scene)
 {
-	auto& Scene = Scene::Get();
-
-	std::vector<PointLightProxy> PointLightProxies;
+	Scene.PointLightProxies.clear();
 
 	for (auto Entity : GEntityManager.GetEntities<CLight>())
 	{
@@ -19,17 +18,7 @@ void LightSystem::Update()
 
 		if (Renderer.bVisible)
 		{
-			PointLightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), Light.Intensity, Light.Color, Light.Range });
+			Scene.PointLightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), Light.Intensity, Light.Color, Light.Range });
 		}
 	}
-
-	glm::uvec4 NumPointLights;
-	NumPointLights.x = PointLightProxies.size();
-
-	Scene.PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size(), nullptr);
-	
-	void* Data = drm::LockBuffer(Scene.PointLightBuffer);
-	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
-	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	drm::UnlockBuffer(Scene.PointLightBuffer);
 }

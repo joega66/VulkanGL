@@ -1,6 +1,5 @@
 #pragma once
 #include "ComponentArray.h"
-#include "Entity.h"
 
 template<typename TComponent>
 template<typename ...Args>

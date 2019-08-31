@@ -1,5 +1,5 @@
 #pragma once
-#include "../DRMShader.h"
+#include "DRMShader.h"
 
 class FullscreenVS : public drm::Shader
 {

@@ -5,5 +5,5 @@ class LightSystem : public ISystem
 {
 	SYSTEM(LightSystem);
 public:
-	virtual void Update() final;
+	virtual void Update(class Scene& Scene) final;
 };

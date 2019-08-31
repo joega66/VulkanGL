@@ -1,6 +1,6 @@
 #pragma once
-#include <Engine/View.h>
 #include <DRM.h>
+#include <ECS/Entity.h>
 
 struct StreamSource
 {
@@ -40,14 +40,14 @@ public:
 		DrawingPlans.clear();
 	}
 	
-	void Execute(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const class Scene& Scene);
+	void Execute(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const class SceneRenderer& SceneRenderer);
 
 private:
 	std::multimap<uint64, DrawingPlanType> DrawingPlans;
 };
 
 template<typename DrawingPlanType>
-inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const class Scene& Scene)
+inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const class SceneRenderer& SceneRenderer)
 {
 	if (DrawingPlans.empty())
 	{
@@ -61,7 +61,7 @@ inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList
 
 		CmdList.BindPipeline(PSOInit);
 
-		DrawingPlan.SetUniforms(CmdList, Scene);
+		DrawingPlan.SetUniforms(CmdList, SceneRenderer);
 
 		DrawingPlan.Draw(CmdList);
 	}

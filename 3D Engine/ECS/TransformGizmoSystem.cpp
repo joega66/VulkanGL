@@ -1,10 +1,11 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
 #include <Components/CRenderer.h>
+#include <ECS/EntityManager.h>
 
 void TransformGizmoSystem::Start()
 {
-	State = std::bind(&TransformGizmoSystem::Null, this);
+	State = std::bind(&TransformGizmoSystem::Null, this, std::placeholders::_1);
 
 	TranslateAxis =
 	{
@@ -46,28 +47,26 @@ void TransformGizmoSystem::Start()
 	TranslateAxis.Z.GetComponent<CRenderer>().bVisible = false;
 }
 
-void TransformGizmoSystem::Update()
+void TransformGizmoSystem::Update(Scene& Scene)
 {
-	State();
+	State(Scene);
 
 	if (SelectedEntity)
 	{
-		DrawOutline(SelectedEntity);
+		DrawOutline(Scene, SelectedEntity);
 	}
 }
 
-void TransformGizmoSystem::Null()
+void TransformGizmoSystem::Null(Scene&)
 {
 	if (Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
-		State = std::bind(&TransformGizmoSystem::Selection, this);
+		State = std::bind(&TransformGizmoSystem::Selection, this, std::placeholders::_1);
 	}
 }
 
-void TransformGizmoSystem::Selection()
+void TransformGizmoSystem::Selection(Scene& Scene)
 {
-	auto& Scene = Scene::Get();
-
 	// Select on key up.
 	if (Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
@@ -77,11 +76,11 @@ void TransformGizmoSystem::Selection()
 			if (SelectedEntity)
 			{
 				// If an entity is currently selected, go back to the translate tool.
-				State = std::bind(&TransformGizmoSystem::TranslateTool, this);
+				State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);
 			}
 			else
 			{
-				State = std::bind(&TransformGizmoSystem::Null, this);
+				State = std::bind(&TransformGizmoSystem::Null, this, std::placeholders::_1);
 			}
 			return;
 		}
@@ -115,7 +114,7 @@ void TransformGizmoSystem::Selection()
 
 			SelectedEntity = Hits.front();
 
-			State = std::bind(&TransformGizmoSystem::TranslateTool, this);
+			State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);
 		}
 		else
 		{
@@ -125,17 +124,15 @@ void TransformGizmoSystem::Selection()
 
 			SelectedEntity = Entity();
 
-			State = std::bind(&TransformGizmoSystem::Null, this);
+			State = std::bind(&TransformGizmoSystem::Null, this, std::placeholders::_1);
 		}
 	}
 }
 
-void TransformGizmoSystem::TranslateTool()
+void TransformGizmoSystem::TranslateTool(Scene& Scene)
 {
 	if (Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
-		auto& Scene = Scene::Get();
-
 		// Check if we're grabbing an axis.
 		std::vector<Entity> Gizmo = { TranslateAxis.X, TranslateAxis.Y, TranslateAxis.Z };
 		Entity ClosestHit;
@@ -156,27 +153,26 @@ void TransformGizmoSystem::TranslateTool()
 		
 		if (ClosestHit == TranslateAxis.X)
 		{
-			State = std::bind(&TransformGizmoSystem::Translate<EAxis::X>, this);
+			State = std::bind(&TransformGizmoSystem::Translate<EAxis::X>, this, std::placeholders::_1);
 		}
 		else if (ClosestHit == TranslateAxis.Y)
 		{
-			State = std::bind(&TransformGizmoSystem::Translate<EAxis::Y>, this);
+			State = std::bind(&TransformGizmoSystem::Translate<EAxis::Y>, this, std::placeholders::_1);
 		}
 		else if (ClosestHit == TranslateAxis.Z)
 		{
-			State = std::bind(&TransformGizmoSystem::Translate<EAxis::Z>, this);
+			State = std::bind(&TransformGizmoSystem::Translate<EAxis::Z>, this, std::placeholders::_1);
 		}
 		else
 		{
 			// No axis hit... go back to selection.
-			State = std::bind(&TransformGizmoSystem::Selection, this);
+			State = std::bind(&TransformGizmoSystem::Selection, this, std::placeholders::_1);
 		}
 	}
 }
 
-void TransformGizmoSystem::DrawOutline(Entity Entity)
+void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity Entity)
 {
-	auto& Scene = Scene::Get();
 	auto& StaticMesh = Entity.GetComponent<CStaticMesh>();
 	auto& Transform = Entity.GetComponent<CTransform>();
 

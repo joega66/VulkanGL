@@ -22,9 +22,10 @@
     <ClCompile Include="Components\CMaterial.cpp" />
     <ClCompile Include="Components\CStaticMesh.cpp" />
     <ClCompile Include="Components\CTransform.cpp" />
-    <ClCompile Include="Components\Entity.cpp" />
     <ClCompile Include="CoreEngine.cpp" />
     <ClCompile Include="ECS\EditorControllerSystem.cpp" />
+    <ClCompile Include="ECS\Entity.cpp" />
+    <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="ECS\GameSystem.cpp" />
     <ClCompile Include="ECS\LightSystem.cpp" />
     <ClCompile Include="ECS\StaticMeshSystem.cpp" />
@@ -45,6 +46,7 @@
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\Scene.cpp" />
     <ClCompile Include="Renderer\SceneBindings.cpp" />
+    <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
@@ -63,16 +65,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Components\CLight.h" />
-    <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\CMaterial.h" />
-    <ClInclude Include="Components\ComponentArray.h" />
     <ClInclude Include="Components\CRenderer.h" />
     <ClInclude Include="Components\CStaticMesh.h" />
     <ClInclude Include="Components\CTransform.h" />
-    <ClInclude Include="Components\Entity.h" />
     <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="DRMPrivate.h" />
+    <ClInclude Include="ECS\Component.h" />
+    <ClInclude Include="ECS\ComponentArray.h" />
     <ClInclude Include="ECS\EditorControllerSystem.h" />
+    <ClInclude Include="ECS\Entity.h" />
+    <ClInclude Include="ECS\EntityManager.h" />
     <ClInclude Include="ECS\GameSystem.h" />
     <ClInclude Include="ECS\LightSystem.h" />
     <ClInclude Include="ECS\StaticMeshSystem.h" />
@@ -103,6 +106,7 @@
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\Scene.h" />
+    <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="SPIRV-Cross\spirv.hpp" />
     <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp" />
@@ -139,7 +143,7 @@
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
-    <None Include="Components\ComponentArray.inl" />
+    <None Include="ECS\ComponentArray.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -1,6 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
-#include <Components/Entity.h>
+#include <ECS/Entity.h>
 
 struct BoundingBox
 {

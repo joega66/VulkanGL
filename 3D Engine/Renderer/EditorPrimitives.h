@@ -21,7 +21,7 @@ class OutlineDrawingPlan : public DepthPassDrawingPlan
 public:
 	OutlineDrawingPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
-	void SetUniforms(RenderCommandList& CmdList, const class Scene& Scene);
+	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
@@ -110,7 +110,7 @@ class LineDrawingPlan
 public:
 	LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width = 1.0f);
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
-	void SetUniforms(RenderCommandList& CmdList, const class Scene& Scene);
+	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:

@@ -1,34 +1,8 @@
-#include "Entity.h"
-#include <ECS/System.h>
-#include "CTransform.h"
-#include "CRenderer.h"
+#include "EntityManager.h"
+#include <Components/CTransform.h>
+#include <Components/CRenderer.h>
 
 EntityManager GEntityManager;
-
-Entity::Entity()
-	: EntityID(InvalidID)
-{
-}
-
-Entity::Entity(uint64 EntityID)
-	: EntityID(EntityID)
-{
-}
-
-void Entity::DestroyEntity()
-{
-	GEntityManager.DestroyEntity(*this);
-}
-
-uint64 Entity::GetEntityID() const
-{
-	return EntityID;
-}
-
-Entity::operator bool() const
-{
-	return EntityID != InvalidID;
-}
 
 EntityManager::EntityManager()
 {

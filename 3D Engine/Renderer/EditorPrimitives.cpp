@@ -1,6 +1,6 @@
 #include "EditorPrimitives.h"
 #include <Engine/StaticMesh.h>
-#include "Scene.h"
+#include "SceneRenderer.h"
 
 OutlineDrawingPlan::OutlineDrawingPlan(const MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform)
 	: DepthPassDrawingPlan(Element, LocalToWorldUniform)
@@ -20,9 +20,9 @@ void OutlineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) con
 	};
 }
 
-void OutlineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
+void OutlineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
-	DepthPassDrawingPlan::SetUniforms(CmdList, Scene);
+	DepthPassDrawingPlan::SetUniforms(CmdList, SceneRenderer);
 }
 
 void OutlineDrawingPlan::Draw(RenderCommandList& CmdList) const
@@ -56,12 +56,12 @@ void LineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 	PSOInit.RasterizationState.LineWidth = LineWidth;
 }
 
-void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
+void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
 	Ref<LinesVS> VertShader = *ShaderMapRef<LinesVS>();
 	Ref<LinesFS> FragShader = *ShaderMapRef<LinesFS>();
 
-	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
+	SceneRenderer.SetResources(CmdList, VertShader, VertShader->SceneBindings);
 	FragShader->SetUniforms(CmdList, ColorUniform);
 }
 

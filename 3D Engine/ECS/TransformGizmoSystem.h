@@ -1,6 +1,6 @@
 #pragma once
 #include "System.h"
-#include <Components/Entity.h>
+#include <ECS/Entity.h>
 #include <Components/CTransform.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
@@ -11,7 +11,7 @@ class TransformGizmoSystem : public ISystem
 	SYSTEM(TransformGizmoSystem);
 public:
 	virtual void Start() final;
-	virtual void Update() final;
+	virtual void Update(Scene& Scene) final;
 	
 private:
 	// X,Y,Z axes of the translate gizmo. 
@@ -24,12 +24,12 @@ private:
 	Entity SelectedEntity;
 
 	// The current state of the gizmo system.
-	std::function<void()> State;
+	std::function<void(Scene& Scene)> State;
 
 	// States.
-	void Null();
-	void Selection();
-	void TranslateTool();
+	void Null(Scene& Scene);
+	void Selection(Scene& Scene);
+	void TranslateTool(Scene& Scene);
 
 	enum class EAxis
 	{
@@ -39,10 +39,8 @@ private:
 	};
 
 	template<EAxis Axis>
-	void Translate()
+	void Translate(Scene& Scene)
 	{
-		auto& Scene = Scene::Get();
-
 		if (Input.GetKeyDown(EKeyCode::MouseLeft))
 		{
 			Cursor.Mode = ECursorMode::Normal;
@@ -79,11 +77,10 @@ private:
 		}
 		else if (Input.GetKeyUp(EKeyCode::MouseLeft))
 		{
-			State = std::bind(&TransformGizmoSystem::TranslateTool, this);
+			State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);
 			Scene.View.bFreeze = false;
 		}
-
 	}
 
-	void DrawOutline(Entity Entity);
+	void DrawOutline(Scene& Scene, Entity Entity);
 };

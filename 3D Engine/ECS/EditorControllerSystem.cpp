@@ -3,9 +3,9 @@
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 
-void EditorControllerSystem::Update()
+void EditorControllerSystem::Update(Scene& Scene)
 {
-	auto& View = Scene::Get().View;
+	View& View = Scene.View;
 
 	// Translate the view.
 	const float DS = Cursor.MouseScrollSpeed * Cursor.MouseScrollDelta.y;

@@ -1,6 +1,6 @@
 #include "DepthPass.h"
 #include <Engine/StaticMesh.h>
-#include "Scene.h"
+#include "SceneRenderer.h"
 
 DepthPassDrawingPlan::DepthPassDrawingPlan(const MeshElement& Element, drm::UniformBufferRef InLocalToWorldUniform)
 	: Element(Element)
@@ -21,9 +21,9 @@ void DepthPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) c
 	};
 }
 
-void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
+void DepthPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
-	Scene.SetResources(CmdList, VertexShader, VertexShader->SceneBindings);
+	SceneRenderer.SetResources(CmdList, VertexShader, VertexShader->SceneBindings);
 	CmdList.SetUniformBuffer(VertexShader, VertexShader->LocalToWorld, LocalToWorldUniform);
 }
 

@@ -14,7 +14,7 @@ class ISystem
 public:
 	virtual void Start() {}
 
-	virtual void Update() {}
+	virtual void Update(class Scene& Scene) {}
 
 	virtual void OnRemove(std::type_index Type, Entity& Entity) {}
 
@@ -46,12 +46,11 @@ private:
 
 	void StartSystems();
 
-	void UpdateSystems();
+	void UpdateSystems(class Scene& Scene);
 };
 
 extern class SystemsHerder SystemsHerder;
 
-// @todo-joe Hide access of RegisterSystem()
 #define SYSTEM(SystemName) \
 	public: \
 	friend class ComponentSystemManager; \

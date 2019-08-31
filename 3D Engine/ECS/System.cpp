@@ -1,7 +1,6 @@
 #include "System.h"
-#include <Components/ComponentArray.h>
-#include <Components/Entity.h>
-#include <Renderer/Scene.h>
+#include "Entity.h"
+//#include <Renderer/Scene.h>
 
 class SystemsHerder SystemsHerder;
 
@@ -23,11 +22,11 @@ void SystemsHerder::StartSystems()
 	}
 }
 
-void SystemsHerder::UpdateSystems()
+void SystemsHerder::UpdateSystems(Scene& Scene)
 {
 	for (auto& System : Systems)
 	{
-		System.get().Update();
+		System.get().Update(Scene);
 	}
 }
 

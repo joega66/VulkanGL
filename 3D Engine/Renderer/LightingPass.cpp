@@ -1,6 +1,5 @@
 #include "LightingPass.h"
-#include <Renderer/Scene.h>
-#include <DRM.h>
+#include "SceneRenderer.h"
 
 LightingPassDrawingPlan::LightingPassDrawingPlan(const MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
@@ -41,10 +40,10 @@ void LightingPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit
 	};
 }
 
-void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scene& Scene)
+void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
-	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
-	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
+	SceneRenderer.SetResources(CmdList, VertShader, VertShader->SceneBindings);
+	SceneRenderer.SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	for (auto& Uniform : Uniforms)
 	{

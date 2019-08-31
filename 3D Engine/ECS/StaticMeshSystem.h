@@ -5,5 +5,5 @@ class StaticMeshSystem : public ISystem
 {
 	SYSTEM(StaticMeshSystem);
 public:
-	virtual void Update() override;
+	virtual void Update(class Scene& Scene) override;
 };
