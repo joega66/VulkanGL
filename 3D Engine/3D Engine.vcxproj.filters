@@ -27,9 +27,6 @@
     <Filter Include="Source\Engine">
       <UniqueIdentifier>{79239352-4301-4ef0-bb1c-a94a04cd2310}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\ComponentSystems">
-      <UniqueIdentifier>{fd042fa3-58d0-4e00-8180-0946d3cf194e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Physics">
       <UniqueIdentifier>{2ea3e4fb-8478-4ac6-8aec-7816e70b388b}</UniqueIdentifier>
     </Filter>
@@ -38,6 +35,9 @@
     </Filter>
     <Filter Include="Source\DRM">
       <UniqueIdentifier>{6feafe98-9750-45ea-bfeb-487c5349b673}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\ECS">
+      <UniqueIdentifier>{fd042fa3-58d0-4e00-8180-0946d3cf194e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -125,17 +125,8 @@
     <ClInclude Include="Components\ComponentArray.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
-    <ClInclude Include="ComponentSystems\ComponentSystem.h">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentSystems\StaticMeshSystem.h">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClInclude>
     <ClInclude Include="Physics\Physics.h">
       <Filter>Source\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentSystems\TransformGizmoSystem.h">
-      <Filter>Source\ComponentSystems</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\EditorPrimitives.h">
       <Filter>Source\Renderer</Filter>
@@ -143,14 +134,8 @@
     <ClInclude Include="Renderer\DepthPass.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="ComponentSystems\EditorControllerSystem.h">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClInclude>
     <ClInclude Include="CoreEngine.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentSystems\GameSystem.h">
-      <Filter>Source\ComponentSystems</Filter>
     </ClInclude>
     <ClInclude Include="Components\CRenderer.h">
       <Filter>Source\Components</Filter>
@@ -169,9 +154,6 @@
     </ClInclude>
     <ClInclude Include="Components\CLight.h">
       <Filter>Source\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentSystems\LightSystem.h">
-      <Filter>Source\ComponentSystems</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\Light.h">
       <Filter>Source\Renderer</Filter>
@@ -211,6 +193,24 @@
     </ClInclude>
     <ClInclude Include="Engine\Types.h">
       <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\EditorControllerSystem.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\GameSystem.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\LightSystem.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\StaticMeshSystem.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\System.h">
+      <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="ECS\TransformGizmoSystem.h">
+      <Filter>Source\ECS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -274,15 +274,6 @@
     <ClCompile Include="Components\Entity.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
-    <ClCompile Include="ComponentSystems\ComponentSystem.cpp">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClCompile>
-    <ClCompile Include="ComponentSystems\StaticMeshSystem.cpp">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClCompile>
-    <ClCompile Include="ComponentSystems\TransformGizmoSystem.cpp">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClCompile>
     <ClCompile Include="Physics\Physics.cpp">
       <Filter>Source\Physics</Filter>
     </ClCompile>
@@ -292,20 +283,11 @@
     <ClCompile Include="Renderer\DepthPass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="ComponentSystems\EditorControllerSystem.cpp">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClCompile>
     <ClCompile Include="CoreEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ComponentSystems\GameSystem.cpp">
-      <Filter>Source\ComponentSystems</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\AssetManager.cpp">
       <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="ComponentSystems\LightSystem.cpp">
-      <Filter>Source\ComponentSystems</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Timers.cpp">
       <Filter>Source\Engine</Filter>
@@ -336,6 +318,24 @@
     </ClCompile>
     <ClCompile Include="Engine\Screen.cpp">
       <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\EditorControllerSystem.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\GameSystem.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\LightSystem.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\StaticMeshSystem.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\System.cpp">
+      <Filter>Source\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="ECS\TransformGizmoSystem.cpp">
+      <Filter>Source\ECS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

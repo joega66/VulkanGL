@@ -1,5 +1,5 @@
 #include "Entity.h"
-#include <ComponentSystems/ComponentSystem.h>
+#include <ECS/System.h>
 #include "CTransform.h"
 #include "CRenderer.h"
 
@@ -60,7 +60,7 @@ Entity EntityManager::CreateEntity()
 Entity EntityManager::CreateFromPrefab(Entity Prefab)
 {
 	Entity Entity = CreateEntity();
-	auto& ComponentArrays = ComponentSystemManager.ComponentArrays;
+	auto& ComponentArrays = SystemsHerder.ComponentArrays;
 
 	for (auto& ComponentArray : ComponentArrays)
 	{
@@ -82,7 +82,7 @@ Entity EntityManager::CreateFromPrefab(const std::string& Name)
 
 void EntityManager::DestroyEntity(Entity& Entity)
 {
-	ComponentSystemManager.DestroyEntity(Entity);
+	SystemsHerder.DestroyEntity(Entity);
 
 	Entities.erase(std::remove_if(Entities.begin(), Entities.end(), [&] (auto& Other)
 	{

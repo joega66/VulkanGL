@@ -2,9 +2,10 @@
 #include <Engine/AssetManager.h>
 #include <Components/CRenderer.h>
 
-TransformGizmoSystem::TransformGizmoSystem()
-	: State(std::bind(&TransformGizmoSystem::Null, this))
+void TransformGizmoSystem::Start()
 {
+	State = std::bind(&TransformGizmoSystem::Null, this);
+
 	TranslateAxis =
 	{
 		GEntityManager.CreateEntity(),

@@ -36,7 +36,7 @@ void Scene::Render()
 		CmdList->BeginRenderPass(RenderPassInit);
 
 		RenderLightingPass(*CmdList);
-		RenderRayMarching(*CmdList);
+		//RenderRayMarching(*CmdList);
 		RenderLines(*CmdList);
 		RenderSkybox(*CmdList);
 

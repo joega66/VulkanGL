@@ -2,11 +2,13 @@
 #include <Renderer/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
-#include <ComponentSystems/StaticMeshSystem.h>
-#include <ComponentSystems/TransformGizmoSystem.h>
-#include <ComponentSystems/EditorControllerSystem.h>
-#include <ComponentSystems/GameSystem.h>
-#include <ComponentSystems/LightSystem.h>
+#include <Engine/Cursor.h>
+#include <Engine/Input.h>
+#include <ECS/EditorControllerSystem.h>
+#include <ECS/GameSystem.h>
+#include <ECS/LightSystem.h>
+#include <ECS/StaticMeshSystem.h>
+#include <ECS/TransformGizmoSystem.h>
 
 class Cursor Cursor;
 class Input Input;
@@ -37,26 +39,28 @@ void CoreEngine::Run()
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 
 	EditorControllerSystem EditorControllerSystem;
-	ComponentSystemManager.AddComponentSystem(EditorControllerSystem);
-	
-	StaticMeshSystem StaticMeshSystem;
-	ComponentSystemManager.AddComponentSystem(StaticMeshSystem);
-
-	TransformGizmoSystem TransformGizmoSystem;
-	ComponentSystemManager.AddComponentSystem(TransformGizmoSystem);
-
-	LightSystem LightSystem;
-	ComponentSystemManager.AddComponentSystem(LightSystem);
+	SystemsHerder.Register(EditorControllerSystem);
 
 	GameSystem GameSystem;
-	ComponentSystemManager.AddComponentSystem(GameSystem);
+	SystemsHerder.Register(GameSystem);
+
+	LightSystem LightSystem;
+	SystemsHerder.Register(LightSystem);
+
+	StaticMeshSystem StaticMeshSystem;
+	SystemsHerder.Register(StaticMeshSystem);
+
+	TransformGizmoSystem TransformGizmoSystem;
+	SystemsHerder.Register(TransformGizmoSystem);
 
 	auto& Scene = Scene::Get();
+
+	SystemsHerder.StartSystems();
 
 	while (!Platform.WindowShouldClose())
 	{
 		Platform.PollEvents();
-		ComponentSystemManager.Update();
+		SystemsHerder.UpdateSystems();
 		Scene.Render();
 		Platform.Finish();
 	}

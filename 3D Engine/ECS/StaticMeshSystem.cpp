@@ -4,10 +4,6 @@
 #include <Components/CRenderer.h>
 #include <Renderer/Scene.h>
 
-StaticMeshSystem::StaticMeshSystem()
-{
-}
-
 void StaticMeshSystem::Update()
 {
 	auto& Scene = Scene::Get();

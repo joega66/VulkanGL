@@ -5,7 +5,7 @@
 #include <Components/CLight.h>
 #include <Engine/AssetManager.h>
 
-GameSystem::GameSystem()
+void GameSystem::Start()
 {
 	GAssetManager.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
 

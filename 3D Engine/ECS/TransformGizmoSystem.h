@@ -1,15 +1,16 @@
 #pragma once
-#include "ComponentSystem.h"
+#include "System.h"
 #include <Components/Entity.h>
 #include <Components/CTransform.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 #include <Renderer/Scene.h>
 
-class TransformGizmoSystem : public ComponentSystem
+class TransformGizmoSystem : public ISystem
 {
+	SYSTEM(TransformGizmoSystem);
 public:
-	TransformGizmoSystem();
+	virtual void Start() final;
 	virtual void Update() final;
 	
 private:

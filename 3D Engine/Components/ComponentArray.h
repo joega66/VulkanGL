@@ -1,5 +1,5 @@
 #pragma once
-#include <ComponentSystems/ComponentSystem.h>
+#include <ECS/System.h>
 
 class Entity;
 
@@ -24,13 +24,13 @@ public:
 	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) final;
 	virtual bool HasComponent(Entity& Entity) final;
 	virtual void RemoveComponent(Entity& Entity) final;
-	void OnRemoveListener(ComponentSystem& ComponentSystem);
+	void OnRemoveListener(ISystem& ISystem);
 	static ComponentArray<TComponent>& Get();
 
 private:
 	// @todo Object pool for components
 	HashTable<uint64, TComponent> Components;
-	std::vector<std::reference_wrapper<ComponentSystem>> OnRemoveListeners;
+	std::vector<std::reference_wrapper<ISystem>> OnRemoveListeners;
 };
 
 class Entity

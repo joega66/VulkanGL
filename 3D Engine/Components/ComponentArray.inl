@@ -13,7 +13,7 @@ inline TComponent & ComponentArray<TComponent>::AddComponent(Entity & Entity, Ar
 template<typename TComponent>
 inline ComponentArray<TComponent>::ComponentArray()
 {
-	ComponentSystemManager.AddComponentArray(*this);
+	SystemsHerder.AddComponentArray(*this);
 }
 
 template<typename TComponent>
@@ -44,16 +44,16 @@ template<typename TComponent>
 inline void ComponentArray<TComponent>::RemoveComponent(Entity & Entity)
 {
 	Components.erase(Entity.GetEntityID());
-	for (auto& ComponentSystem : OnRemoveListeners)
+	for (auto& ISystem : OnRemoveListeners)
 	{
-		ComponentSystem.get().OnRemove(std::type_index(typeid(TComponent)), Entity);
+		ISystem.get().OnRemove(std::type_index(typeid(TComponent)), Entity);
 	}
 }
 
 template<typename TComponent>
-inline void ComponentArray<TComponent>::OnRemoveListener(ComponentSystem & ComponentSystem)
+inline void ComponentArray<TComponent>::OnRemoveListener(ISystem & ISystem)
 {
-	OnRemoveListeners.push_back(ComponentSystem);
+	OnRemoveListeners.push_back(ISystem);
 }
 
 template<typename TComponent>
