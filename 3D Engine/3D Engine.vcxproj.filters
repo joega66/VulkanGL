@@ -39,6 +39,9 @@
     <Filter Include="Source\ECS">
       <UniqueIdentifier>{fd042fa3-58d0-4e00-8180-0946d3cf194e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Systems">
+      <UniqueIdentifier>{ef760974-075e-4afe-acb4-6cb2fb80696d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h">
@@ -185,22 +188,7 @@
     <ClInclude Include="Engine\Types.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="ECS\EditorControllerSystem.h">
-      <Filter>Source\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="ECS\GameSystem.h">
-      <Filter>Source\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="ECS\LightSystem.h">
-      <Filter>Source\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="ECS\StaticMeshSystem.h">
-      <Filter>Source\ECS</Filter>
-    </ClInclude>
     <ClInclude Include="ECS\System.h">
-      <Filter>Source\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="ECS\TransformGizmoSystem.h">
       <Filter>Source\ECS</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\SceneRenderer.h">
@@ -217,6 +205,21 @@
     </ClInclude>
     <ClInclude Include="ECS\ComponentArray.h">
       <Filter>Source\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\TransformGizmoSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\EditorControllerSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\GameSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\LightSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\StaticMeshSystem.h">
+      <Filter>Source\Systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -319,22 +322,7 @@
     <ClCompile Include="Engine\Screen.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="ECS\EditorControllerSystem.cpp">
-      <Filter>Source\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="ECS\GameSystem.cpp">
-      <Filter>Source\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="ECS\LightSystem.cpp">
-      <Filter>Source\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="ECS\StaticMeshSystem.cpp">
-      <Filter>Source\ECS</Filter>
-    </ClCompile>
     <ClCompile Include="ECS\System.cpp">
-      <Filter>Source\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="ECS\TransformGizmoSystem.cpp">
       <Filter>Source\ECS</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\SceneRenderer.cpp">
@@ -348,6 +336,21 @@
     </ClCompile>
     <ClCompile Include="Renderer\Scene.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\EditorControllerSystem.cpp">
+      <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\GameSystem.cpp">
+      <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\LightSystem.cpp">
+      <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\StaticMeshSystem.cpp">
+      <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\TransformGizmoSystem.cpp">
+      <Filter>Source\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

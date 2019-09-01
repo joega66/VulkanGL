@@ -1,5 +1,5 @@
 #pragma once
-#include "System.h"
+#include <ECS/System.h>
 #include <ECS/Entity.h>
 #include <Components/CTransform.h>
 #include <Engine/Cursor.h>

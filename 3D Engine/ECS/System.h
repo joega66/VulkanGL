@@ -56,4 +56,4 @@ extern class SystemsHerder SystemsHerder;
 	friend class ComponentSystemManager; \
 	SystemName& operator=(const SystemName&) = delete; \
 	SystemName(const SystemName&) = delete; \
-	SystemName() {} \
+	SystemName() = default \

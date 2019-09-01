@@ -5,11 +5,11 @@
 #include <Engine/Screen.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
-#include <ECS/EditorControllerSystem.h>
-#include <ECS/GameSystem.h>
-#include <ECS/LightSystem.h>
-#include <ECS/StaticMeshSystem.h>
-#include <ECS/TransformGizmoSystem.h>
+#include <Systems/EditorControllerSystem.h>
+#include <Systems/GameSystem.h>
+#include <Systems/LightSystem.h>
+#include <Systems/StaticMeshSystem.h>
+#include <Systems/TransformGizmoSystem.h>
 
 class Cursor Cursor;
 class Input Input;
