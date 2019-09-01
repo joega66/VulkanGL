@@ -34,8 +34,7 @@ Entity EntityManager::CreateEntity()
 Entity EntityManager::CreateFromPrefab(Entity Prefab)
 {
 	Entity Entity = CreateEntity();
-	auto& ComponentArrays = SystemsHerder.ComponentArrays;
-
+	
 	for (auto& ComponentArray : ComponentArrays)
 	{
 		if (ComponentArray.get().HasComponent(Prefab))
@@ -56,10 +55,18 @@ Entity EntityManager::CreateFromPrefab(const std::string& Name)
 
 void EntityManager::DestroyEntity(Entity& Entity)
 {
-	SystemsHerder.DestroyEntity(Entity);
+	for (auto& ComponentArray : ComponentArrays)
+	{
+		ComponentArray.get().RemoveComponent(Entity);
+	}
 
 	Entities.erase(std::remove_if(Entities.begin(), Entities.end(), [&] (auto& Other)
 	{
 		return Entity == Other;
 	}));
+}
+
+void EntityManager::AddComponentArray(IComponentArray& ComponentArray)
+{
+	ComponentArrays.push_back(ComponentArray);
 }

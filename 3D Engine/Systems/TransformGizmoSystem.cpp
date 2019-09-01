@@ -27,7 +27,7 @@ void TransformGizmoSystem::Start()
 	ZAxis.Translate(glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
-	auto TransformGizmo = GAssetManager.GetStaticMesh("Transform-Gizmo");
+	auto TransformGizmo = GAssetManager.GetStaticMesh("TransformGizmo");
 
 	TranslateAxis.X.AddComponent<CStaticMesh>(TransformGizmo);
 	TranslateAxis.Y.AddComponent<CStaticMesh>(TransformGizmo);

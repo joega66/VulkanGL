@@ -3,7 +3,6 @@
 
 class Entity
 {
-	friend class EntityManager;
 public:
 	static constexpr uint64 InvalidID = std::numeric_limits<uint64>::max();
 
@@ -44,13 +43,13 @@ public:
 	}
 
 	void DestroyEntity();
+
 	uint64 GetEntityID() const;
+
 	explicit operator bool() const;
 
 private:
+	friend class EntityManager; // So that only the entity manager can assign entity ids.
 	uint64 EntityID;
-
 	Entity(uint64 EntityID);
 };
-
-#include "ComponentArray.inl"

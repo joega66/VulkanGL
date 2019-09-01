@@ -6,10 +6,10 @@ class Entity;
 class IComponentArray
 {
 public:
-	virtual void RemoveComponent(Entity& Entity) {};
-	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) { return nullptr; };
-	virtual void AddComponent(Entity& Entity, std::shared_ptr<void> Data) {};
-	virtual bool HasComponent(Entity& Entity) { return false; };
+	virtual void RemoveComponent(Entity& Entity) = 0;
+	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) = 0;
+	virtual void AddComponent(Entity& Entity, std::shared_ptr<void> Data) = 0;
+	virtual bool HasComponent(Entity& Entity) = 0;
 };
 
 template<typename TComponent>
@@ -24,11 +24,9 @@ public:
 	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) final;
 	virtual bool HasComponent(Entity& Entity) final;
 	virtual void RemoveComponent(Entity& Entity) final;
-	void OnRemoveListener(ISystem& ISystem);
 	static ComponentArray<TComponent>& Get();
 
 private:
 	// @todo Object pool for components
 	HashTable<uint64, TComponent> Components;
-	std::vector<std::reference_wrapper<ISystem>> OnRemoveListeners;
 };

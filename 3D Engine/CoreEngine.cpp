@@ -36,8 +36,10 @@ void CoreEngine::Run()
 	// Engine primitives/default assets
 	GAssetManager.LoadCubemap("Engine-Cubemap-Default", Cubemap);
 	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
-	GAssetManager.LoadStaticMesh("Transform-Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
+	GAssetManager.LoadStaticMesh("TransformGizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
+
+	SystemsHerder SystemsHerder;
 
 	EditorControllerSystem EditorControllerSystem;
 	SystemsHerder.Register(EditorControllerSystem);
@@ -54,10 +56,10 @@ void CoreEngine::Run()
 	TransformGizmoSystem TransformGizmoSystem;
 	SystemsHerder.Register(TransformGizmoSystem);
 
+	SystemsHerder.StartSystems();
+
 	Scene Scene;
 	SceneRenderer SceneRenderer;
-
-	SystemsHerder.StartSystems();
 
 	while (!Platform.WindowShouldClose())
 	{

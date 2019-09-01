@@ -18,7 +18,7 @@ struct Ray
 	{
 	}
 
-	glm::vec3 Intersection(float T)
+	glm::vec3 Intersect(float T) const
 	{
 		return Origin + Direction * T;
 	}

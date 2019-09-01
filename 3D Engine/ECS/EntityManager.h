@@ -3,7 +3,6 @@
 
 class EntityManager
 {
-	friend class Entity;
 public:
 	EntityManager();
 
@@ -14,7 +13,6 @@ public:
 
 	void DestroyEntity(Entity& Entity);
 
-	// @todo Iterator
 	template<typename ...TComponents>
 	std::vector<Entity> GetEntities()
 	{
@@ -32,6 +30,16 @@ public:
 	}
 
 private:
+	uint64 NextEntityID = 0;
+	HashTable<std::string, Entity> Prefabs;
+	HashTable<uint64, std::string> PrefabNames;
+	std::vector<Entity> Entities;
+	std::vector<std::reference_wrapper<IComponentArray>> ComponentArrays;
+
+	template<typename TComponent>
+	friend class ComponentArray;
+	void AddComponentArray(IComponentArray& ComponentArray);
+
 	template<typename T>
 	static bool EntityHasComponents(Entity Entity)
 	{
@@ -43,11 +51,8 @@ private:
 	{
 		return EntityHasComponents<T1>(Entity) && EntityHasComponents<T2, More...>(Entity);
 	}
-
-	uint64 NextEntityID = 0;
-	HashTable<std::string, Entity> Prefabs;
-	HashTable<uint64, std::string> PrefabNames;
-	std::vector<Entity> Entities;
 };
 
 extern EntityManager GEntityManager;
+
+#include "ComponentArray.inl"

@@ -54,21 +54,21 @@ private:
 			{
 				if (float T0, T1; Physics::Raycast(Ray0, TranslateAxis.X, T0) && Physics::Raycast(Ray1, TranslateAxis.X, T1))
 				{
-					Position.x += Ray1.Intersection(T1).x - Ray0.Intersection(T0).x;
+					Position.x += Ray1.Intersect(T1).x - Ray0.Intersect(T0).x;
 				}
 			}
 			else if constexpr (Axis == EAxis::Y)
 			{
 				if (float T0, T1; Physics::Raycast(Ray0, TranslateAxis.Y, T0) && Physics::Raycast(Ray1, TranslateAxis.Y, T1))
 				{
-					Position.y += Ray1.Intersection(T1).y - Ray0.Intersection(T0).y;
+					Position.y += Ray1.Intersect(T1).y - Ray0.Intersect(T0).y;
 				}
 			}
 			else if constexpr (Axis == EAxis::Z)
 			{
 				if (float T0, T1; Physics::Raycast(Ray0, TranslateAxis.Z, T0) && Physics::Raycast(Ray1, TranslateAxis.Z, T1))
 				{
-					Position.z += Ray1.Intersection(T1).z - Ray0.Intersection(T0).z;
+					Position.z += Ray1.Intersect(T1).z - Ray0.Intersect(T0).z;
 				}
 			}
 
