@@ -21,49 +21,49 @@ struct UniformSource
 	uint32 Location;
 };
 
-template<typename DrawingPlanType>
-class DrawingPlanList
+template<typename DrawPlanType>
+class DrawList
 {
 public:
-	inline void Add(Entity Entity, DrawingPlanType&& DrawingPlan)
+	inline void Add(Entity Entity, DrawPlanType&& DrawPlan)
 	{
-		DrawingPlans.emplace(Entity.GetEntityID(), std::forward<DrawingPlanType>(DrawingPlan));
+		List.emplace(Entity.GetEntityID(), std::forward<DrawPlanType>(DrawPlan));
 	}
 
 	inline void Remove(Entity Entity)
 	{
-		DrawingPlans.erase(Entity.GetEntityID());
+		List.erase(Entity.GetEntityID());
 	}
 
 	inline void Clear()
 	{
-		DrawingPlans.clear();
+		List.clear();
 	}
 	
-	void Execute(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const class SceneRenderer& SceneRenderer);
+	void Draw(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const class SceneRenderer& SceneRenderer);
 
 private:
-	std::multimap<uint64, DrawingPlanType> DrawingPlans;
+	std::multimap<uint64, DrawPlanType> List;
 };
 
-template<typename DrawingPlanType>
-inline void DrawingPlanList<DrawingPlanType>::Execute(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const class SceneRenderer& SceneRenderer)
+template<typename DrawPlanType>
+inline void DrawList<DrawPlanType>::Draw(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const class SceneRenderer& SceneRenderer)
 {
-	if (DrawingPlans.empty())
+	if (List.empty())
 	{
 		return;
 	}
 
-	for (auto& [EntityID, DrawingPlan] : DrawingPlans)
+	for (auto& [EntityID, DrawPlan] : List)
 	{
 		PipelineStateInitializer PSOInit = ParentPSOInit;
-		DrawingPlan.SetPipelineState(PSOInit);
+		DrawPlan.SetPipelineState(PSOInit);
 
 		CmdList.BindPipeline(PSOInit);
 
-		DrawingPlan.SetUniforms(CmdList, SceneRenderer);
+		DrawPlan.SetUniforms(CmdList, SceneRenderer);
 
-		DrawingPlan.Draw(CmdList);
+		DrawPlan.Draw(CmdList);
 	}
 
 	Clear();

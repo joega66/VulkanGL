@@ -22,7 +22,7 @@ void StaticMeshSystem::Update(Scene& Scene)
 			auto& Elements = Batch.Elements;
 			for (auto& Element : Elements)
 			{
-				Scene.LightingPass.Add(Entity, LightingPassDrawingPlan(Element, Material, Transform.LocalToWorldUniform));
+				Scene.LightingPass.Add(Entity, LightingPassDrawPlan(Element, Material, Transform.LocalToWorldUniform));
 			}
 		}
 		else
@@ -32,7 +32,7 @@ void StaticMeshSystem::Update(Scene& Scene)
 			auto& Elements = Batch.Elements;
 			for (auto& Element : Elements)
 			{
-				Scene.LightingPass.Add(Entity, LightingPassDrawingPlan(Element, Element.Material, Transform.LocalToWorldUniform));
+				Scene.LightingPass.Add(Entity, LightingPassDrawPlan(Element, Element.Material, Transform.LocalToWorldUniform));
 			}
 		}
 	}

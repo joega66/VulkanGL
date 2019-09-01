@@ -181,8 +181,8 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity Entity)
 
 	for (auto& Element : StaticMesh.StaticMesh->Batch.Elements)
 	{
-		Scene.Stencil.Add(Entity, DepthPassDrawingPlan(Element, Transform.LocalToWorldUniform));
-		Scene.Outline.Add(Entity, OutlineDrawingPlan(Element, ScaledUpTransform.LocalToWorldUniform));
+		Scene.Stencil.Add(Entity, DepthPassDrawPlan(Element, Transform.LocalToWorldUniform));
+		Scene.Outline.Add(Entity, OutlineDrawPlan(Element, ScaledUpTransform.LocalToWorldUniform));
 	}
 
 	TranslateAxis.X.GetComponent<CRenderer>().bVisible = true;

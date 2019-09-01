@@ -82,8 +82,8 @@ enum class EStoreAction
 
 struct ClearDepthStencilValue
 {
-	float	DepthClear;
-	uint32	StencilClear;
+	float	DepthClear = 1.0f;
+	uint32	StencilClear = 0;
 };
 
 struct ClearColorValue

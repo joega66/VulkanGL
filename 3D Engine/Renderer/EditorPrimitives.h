@@ -16,10 +16,10 @@ public:
 	}
 };
 
-class OutlineDrawingPlan : public DepthPassDrawingPlan
+class OutlineDrawPlan : public DepthPassDrawPlan
 {
 public:
-	OutlineDrawingPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
+	OutlineDrawPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
 	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);
 	void Draw(RenderCommandList& CmdList) const;
@@ -92,7 +92,7 @@ public:
 
 	void SetUniforms(RenderCommandList& CmdList, drm::UniformBufferRef ColorUniform)
 	{
-		CmdList.SetUniformBuffer(drm::Shader::GetShader(), Color, ColorUniform);
+		CmdList.SetUniformBuffer(GetShader(), Color, ColorUniform);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -105,10 +105,10 @@ private:
 	ShaderBinding Color;
 };
 
-class LineDrawingPlan
+class LineDrawPlan
 {
 public:
-	LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width = 1.0f);
+	LineDrawPlan(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width = 1.0f);
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
 	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);
 	void Draw(RenderCommandList& CmdList) const;

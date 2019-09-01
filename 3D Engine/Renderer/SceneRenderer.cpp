@@ -25,7 +25,7 @@ void SceneRenderer::Render(Scene& Scene)
 
 	{
 		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
-		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 }, EImageLayout::DepthWriteStencilWrite);
+		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;
@@ -107,10 +107,6 @@ void SceneRenderer::RenderRayMarching(Scene& Scene, RenderCommandList& CmdList)
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
 
-	PSOInit.DepthStencilState.DepthTestEnable = true;
-
-	PSOInit.RasterizationState.CullMode = ECullMode::None;
-
 	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
 	CmdList.BindPipeline(PSOInit);
@@ -127,11 +123,7 @@ void SceneRenderer::RenderLightingPass(Scene& Scene, RenderCommandList& CmdList)
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
 
-	PSOInit.DepthStencilState.DepthTestEnable = true;
-
-	PSOInit.RasterizationState.CullMode = ECullMode::None;
-
-	Scene.LightingPass.Execute(CmdList, PSOInit, *this);
+	Scene.LightingPass.Draw(CmdList, PSOInit, *this);
 }
 
 void SceneRenderer::RenderLines(Scene& Scene, RenderCommandList& CmdList)
@@ -141,12 +133,9 @@ void SceneRenderer::RenderLines(Scene& Scene, RenderCommandList& CmdList)
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
 
-	PSOInit.DepthStencilState.DepthTestEnable = true;
-
-	PSOInit.RasterizationState.CullMode = ECullMode::None;
 	PSOInit.RasterizationState.PolygonMode = EPolygonMode::Line;
 
-	Scene.Lines.Execute(CmdList, PSOInit, *this);
+	Scene.Lines.Draw(CmdList, PSOInit, *this);
 }
 
 void SceneRenderer::RenderSkybox(Scene& Scene, RenderCommandList& CmdList)
@@ -160,11 +149,6 @@ void SceneRenderer::RenderSkybox(Scene& Scene, RenderCommandList& CmdList)
 
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
-
-	PSOInit.DepthStencilState.DepthTestEnable = true;
-	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::LEqual;
-
-	PSOInit.RasterizationState.CullMode = ECullMode::None;
 
 	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
@@ -185,7 +169,7 @@ void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
 	PipelineStateInitializer PSOInit = {};
 
 	{
-		drm::RenderTargetViewRef StencilView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{ 1.0f, 0 }, EImageLayout::DepthWriteStencilWrite);
+		drm::RenderTargetViewRef StencilView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 
 		RenderPassInitializer RenderPassInit = {};
 		RenderPassInit.DepthTarget = StencilView;
@@ -196,7 +180,6 @@ void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
 		PSOInit.Viewport.Width = Screen.GetWidth();
 		PSOInit.Viewport.Height = Screen.GetHeight();
 
-		PSOInit.DepthStencilState.DepthTestEnable = true;
 		PSOInit.DepthStencilState.StencilTestEnable = true;
 
 		PSOInit.DepthStencilState.Back.CompareOp = ECompareOp::Always;
@@ -207,14 +190,14 @@ void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.WriteMask = 0xff;
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
-		Scene.Stencil.Execute(CmdList, PSOInit, *this);
+		Scene.Stencil.Draw(CmdList, PSOInit, *this);
 
 		CmdList.EndRenderPass();
 	}
 
 	{
 		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Load, EStoreAction::Store, ClearColorValue{});
-		drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{ 1.0f, 0 }, EImageLayout::DepthWriteStencilWrite);
+		drm::RenderTargetViewRef OutlineView = drm::CreateRenderTargetView(OutlineDepthStencil, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;
@@ -234,7 +217,7 @@ void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.WriteMask = 0;
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
-		Scene.Outline.Execute(CmdList, PSOInit, *this);
+		Scene.Outline.Draw(CmdList, PSOInit, *this);
 
 		CmdList.EndRenderPass();
 	}

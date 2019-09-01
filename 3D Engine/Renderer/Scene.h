@@ -10,13 +10,13 @@ public:
 	Scene();
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
-
+	
 	View View;
 
-	DrawingPlanList<LightingPassDrawingPlan> LightingPass;
-	DrawingPlanList<DepthPassDrawingPlan> Stencil;
-	DrawingPlanList<OutlineDrawingPlan> Outline;
-	DrawingPlanList<LineDrawingPlan> Lines;
+	DrawList<LightingPassDrawPlan> LightingPass;
+	DrawList<DepthPassDrawPlan> Stencil;
+	DrawList<OutlineDrawPlan> Outline;
+	DrawList<LineDrawPlan> Lines;
 
 	std::vector<PointLightProxy> PointLightProxies;
 

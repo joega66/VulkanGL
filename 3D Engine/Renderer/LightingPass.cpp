@@ -1,7 +1,7 @@
 #include "LightingPass.h"
 #include "SceneRenderer.h"
 
-LightingPassDrawingPlan::LightingPassDrawingPlan(const MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
+LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
 {
 	const bool bHasNormalMap = CMaterial.Normal != nullptr;
@@ -28,7 +28,7 @@ LightingPassDrawingPlan::LightingPassDrawingPlan(const MeshElement& Element, CMa
 	}
 }
 
-void LightingPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
+void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
 	PSOInit.GraphicsPipelineState = 
 	{
@@ -40,7 +40,7 @@ void LightingPassDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit
 	};
 }
 
-void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
+void LightingPassDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
 	SceneRenderer.SetResources(CmdList, VertShader, VertShader->SceneBindings);
 	SceneRenderer.SetResources(CmdList, FragShader, FragShader->SceneBindings);
@@ -56,7 +56,7 @@ void LightingPassDrawingPlan::SetUniforms(RenderCommandList& CmdList, const Scen
 	}
 }
 
-void LightingPassDrawingPlan::Draw(RenderCommandList& CmdList) const
+void LightingPassDrawPlan::Draw(RenderCommandList& CmdList) const
 {
 	CmdList.BindVertexBuffers(Element.VertexBuffers.size(), Element.VertexBuffers.data());
 	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);

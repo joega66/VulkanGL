@@ -29,10 +29,10 @@ public:
 	ShaderBinding LocalToWorld;
 };
 
-class DepthPassDrawingPlan
+class DepthPassDrawPlan
 {
 public:
-	DepthPassDrawingPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
+	DepthPassDrawPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
 	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);
 	void Draw(RenderCommandList& CmdList) const;

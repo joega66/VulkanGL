@@ -73,10 +73,10 @@ public:
 	}
 };
 
-class LightingPassDrawingPlan
+class LightingPassDrawPlan
 {
 public:
-	LightingPassDrawingPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
+	LightingPassDrawPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
 
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
 	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);

@@ -2,13 +2,13 @@
 #include <Engine/StaticMesh.h>
 #include "SceneRenderer.h"
 
-OutlineDrawingPlan::OutlineDrawingPlan(const MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform)
-	: DepthPassDrawingPlan(Element, LocalToWorldUniform)
+OutlineDrawPlan::OutlineDrawPlan(const MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform)
+	: DepthPassDrawPlan(Element, LocalToWorldUniform)
 {
 	FragmentShader = *ShaderMapRef<OutlineFS>();
 }
 
-void OutlineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
+void OutlineDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
 	PSOInit.GraphicsPipelineState =
 	{
@@ -20,17 +20,17 @@ void OutlineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) con
 	};
 }
 
-void OutlineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
+void OutlineDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
-	DepthPassDrawingPlan::SetUniforms(CmdList, SceneRenderer);
+	DepthPassDrawPlan::SetUniforms(CmdList, SceneRenderer);
 }
 
-void OutlineDrawingPlan::Draw(RenderCommandList& CmdList) const
+void OutlineDrawPlan::Draw(RenderCommandList& CmdList) const
 {
-	DepthPassDrawingPlan::Draw(CmdList);
+	DepthPassDrawPlan::Draw(CmdList);
 }
 
-LineDrawingPlan::LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width)
+LineDrawPlan::LineDrawPlan(const glm::vec3& A, const glm::vec3& B, const glm::vec4& Color, float Width)
 	: LineWidth(Width)
 {
 	std::vector<glm::vec3> Positions =
@@ -42,7 +42,7 @@ LineDrawingPlan::LineDrawingPlan(const glm::vec3& A, const glm::vec3& B, const g
 	ColorUniform = drm::CreateUniformBuffer(sizeof(Color), &Color, EUniformUpdate::SingleFrame);
 }
 
-void LineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
+void LineDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
 	PSOInit.GraphicsPipelineState =
 	{
@@ -56,7 +56,7 @@ void LineDrawingPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 	PSOInit.RasterizationState.LineWidth = LineWidth;
 }
 
-void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
+void LineDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
 {
 	Ref<LinesVS> VertShader = *ShaderMapRef<LinesVS>();
 	Ref<LinesFS> FragShader = *ShaderMapRef<LinesFS>();
@@ -65,7 +65,7 @@ void LineDrawingPlan::SetUniforms(RenderCommandList& CmdList, const SceneRendere
 	FragShader->SetUniforms(CmdList, ColorUniform);
 }
 
-void LineDrawingPlan::Draw(RenderCommandList& CmdList) const
+void LineDrawPlan::Draw(RenderCommandList& CmdList) const
 {
 	CmdList.BindVertexBuffers(1, &PositionBuffer);
 	CmdList.Draw(3, 1, 0, 0);
