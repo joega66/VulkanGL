@@ -4,54 +4,54 @@
 class EntityManager
 {
 public:
-	EntityManager();
+	EntityManager() = default;
 
 	Entity CreatePrefab(const std::string& Name);
 
 	Entity CreateEntity();
 
-	Entity Clone(Entity& Prefab);
+	Entity Clone(Entity& Other);
 
 	Entity CreateFromPrefab(const std::string& Name);
 
 	void Destroy(Entity& Entity);
 
-	template<typename TComponent, typename ...Args>
-	TComponent& AddComponent(Entity& Entity, Args&& ...InArgs)
+	template<typename ComponentType, typename ...Args>
+	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs)
 	{
-		auto Array = GetComponentArray<TComponent>();
+		auto Array = GetComponentArray<ComponentType>();
 		return Array->AddComponent(Entity, std::forward<Args>(InArgs)...);
 	}
 
-	template<typename TComponent>
-	TComponent& GetComponent(Entity& Entity)
+	template<typename ComponentType>
+	ComponentType& GetComponent(Entity& Entity)
 	{
-		auto Array = GetComponentArray<TComponent>();
+		auto Array = GetComponentArray<ComponentType>();
 		return Array->GetComponent(Entity);
 	}
 
-	template<typename TComponent>
+	template<typename ComponentType>
 	bool HasComponent(Entity& Entity)
 	{
-		auto Array = GetComponentArray<TComponent>();
+		auto Array = GetComponentArray<ComponentType>();
 		return Array->HasComponent(Entity);
 	}
 
-	template<typename TComponent>
+	template<typename ComponentType>
 	void RemoveComponent(Entity& Entity)
 	{
-		auto Array = GetComponentArray<TComponent>();
+		auto Array = GetComponentArray<ComponentType>();
 		return Array->RemoveComponent(Entity);
 	}
 
-	template<typename ...TComponents>
+	template<typename ...ComponentTypes>
 	std::vector<Entity> GetEntities()
 	{
 		std::vector<Entity> EntitiesWithComponents;
 
 		for (auto Entity : Entities)
 		{
-			if (EntityHasComponents<TComponents...>(Entity))
+			if (EntityHasComponents<ComponentTypes...>(Entity))
 			{
 				EntitiesWithComponents.push_back(Entity);
 			}
@@ -82,17 +82,19 @@ private:
 		}
 	}
 
-	template<typename T>
+	template<typename ComponentType>
 	bool EntityHasComponents(Entity& Entity)
 	{
-		return HasComponent<T>(Entity);
+		return HasComponent<ComponentType>(Entity);
 	}
 
-	template<typename T1, typename T2, typename ...More>
+	template<typename ComponentType1, typename ComponentType2, typename ...More>
 	bool EntityHasComponents(Entity& Entity)
 	{
-		return EntityHasComponents<T1>(Entity) && EntityHasComponents<T2, More...>(Entity);
+		return EntityHasComponents<ComponentType1>(Entity) && EntityHasComponents<ComponentType2, More...>(Entity);
 	}
+
+	void InitDefaultComponents(Entity& Entity);
 };
 
 extern EntityManager GEntityManager;

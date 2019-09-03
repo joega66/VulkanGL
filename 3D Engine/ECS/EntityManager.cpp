@@ -4,39 +4,33 @@
 
 EntityManager GEntityManager;
 
-EntityManager::EntityManager()
-{
-}
-
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
 	check(!Contains(Prefabs, Name), "Prefab %s already exists.", Name.c_str());
 	Prefabs.emplace(Name, Entity{ NextEntityID++ });
 	Entity Prefab = GetValue(Prefabs, Name);
 	PrefabNames.emplace(Prefab.GetEntityID(), Name);
-	AddComponent<CTransform>(Prefab);
-	AddComponent<CRenderer>(Prefab);
+	InitDefaultComponents(Prefab);
 	return Prefab;
 }
 
 Entity EntityManager::CreateEntity()
 {
 	Entity NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });
-	AddComponent<CTransform>(NewEntity);
-	AddComponent<CRenderer>(NewEntity);
+	InitDefaultComponents(NewEntity);
 	return NewEntity;
 }
 
-Entity EntityManager::Clone(Entity& Prefab)
+Entity EntityManager::Clone(Entity& Other)
 {
 	Entity Entity = CreateEntity();
 	
 	for (auto& ComponentArrayEntry : ComponentArrays)
 	{
 		auto ComponentArray = ComponentArrayEntry.second.get();
-		if (ComponentArray->HasComponent(Prefab))
+		if (ComponentArray->HasComponent(Other))
 		{
-			auto Component = ComponentArray->CopyComponent(Prefab);
+			auto Component = ComponentArray->CopyComponent(Other);
 			ComponentArray->AddComponent(Entity, std::move(Component));
 		}
 	}
@@ -61,4 +55,10 @@ void EntityManager::Destroy(Entity& Entity)
 	{
 		return Entity == Other;
 	}));
+}
+
+void EntityManager::InitDefaultComponents(Entity& Entity)
+{
+	AddComponent<CTransform>(Entity);
+	AddComponent<CRenderer>(Entity);
 }

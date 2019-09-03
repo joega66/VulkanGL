@@ -8,12 +8,12 @@ public:
 
 	Entity();
 
-	bool operator==(const Entity& Entity)
+	bool operator==(const Entity& Entity) const
 	{
 		return EntityID == Entity.GetEntityID();
 	}
 
-	bool operator!=(const Entity& Entity)
+	bool operator!=(const Entity& Entity) const
 	{
 		return EntityID != Entity.GetEntityID();
 	}
