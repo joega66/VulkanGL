@@ -12,9 +12,9 @@ void LightSystem::Update(Scene& Scene)
 
 	for (auto Entity : GEntityManager.GetEntities<CLight>())
 	{
-		auto& Light = Entity.GetComponent<CLight>();
-		auto& Transform = Entity.GetComponent<CTransform>();
-		auto& Renderer = Entity.GetComponent<CRenderer>();
+		auto& Light = GEntityManager.GetComponent<CLight>(Entity);
+		auto& Transform = GEntityManager.GetComponent<CTransform>(Entity);
+		auto& Renderer = GEntityManager.GetComponent<CRenderer>(Entity);
 
 		if (Renderer.bVisible)
 		{

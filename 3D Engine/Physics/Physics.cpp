@@ -1,6 +1,7 @@
 #include "Physics.h"
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
+#include <ECS/EntityManager.h>
 
 const Plane Plane::XY = Plane{ glm::vec3(0.0f, 0.0f, 1.0f), 0.0f };
 const Plane Plane::YZ = Plane{ glm::vec3(1.0f, 0.0f, 0.0f), 0.0f };
@@ -8,8 +9,8 @@ const Plane Plane::XZ = Plane{ glm::vec3(0.0f, 1.0f, 0.0f), 0.0f };
 
 bool Physics::Raycast(const Ray& Ray, Entity Entity, float& T)
 {
-	CStaticMesh& Mesh = Entity.GetComponent<CStaticMesh>();
-	CTransform& Transform = Entity.GetComponent<CTransform>();
+	CStaticMesh& Mesh = GEntityManager.GetComponent<CStaticMesh>(Entity);
+	CTransform& Transform = GEntityManager.GetComponent<CTransform>(Entity);
 	BoundingBox& Bounds = Mesh.StaticMesh->Bounds;
 
 	glm::vec4 Min = Transform.GetLocalToWorld() * glm::vec4(Bounds.Min, 1.0f);

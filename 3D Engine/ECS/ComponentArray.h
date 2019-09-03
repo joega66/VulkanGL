@@ -16,7 +16,7 @@ template<typename TComponent>
 class ComponentArray : public IComponentArray
 {
 public:
-	ComponentArray();
+	ComponentArray() = default;
 	TComponent& GetComponent(Entity& Entity);
 	template<typename ...Args>
 	TComponent& AddComponent(Entity& Entity, Args&& ...InArgs);
@@ -24,7 +24,6 @@ public:
 	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) final;
 	virtual bool HasComponent(Entity& Entity) final;
 	virtual void RemoveComponent(Entity& Entity) final;
-	static ComponentArray<TComponent>& Get();
 
 private:
 	// @todo Object pool for components

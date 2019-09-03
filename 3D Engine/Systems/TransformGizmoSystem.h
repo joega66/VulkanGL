@@ -1,6 +1,6 @@
 #pragma once
 #include <ECS/System.h>
-#include <ECS/Entity.h>
+#include <ECS/EntityManager.h>
 #include <Components/CTransform.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
@@ -45,7 +45,7 @@ private:
 		{
 			Cursor.Mode = ECursorMode::Normal;
 
-			CTransform& Transform = SelectedEntity.GetComponent<CTransform>();
+			CTransform& Transform = GEntityManager.GetComponent<CTransform>(SelectedEntity);
 			glm::vec3 Position = Transform.GetPosition();
 			Ray Ray0 = Scene.View.ScreenPointToRay(Cursor.Last);
 			Ray Ray1 = Scene.View.ScreenPointToRay(Cursor.Position);
@@ -82,5 +82,5 @@ private:
 		}
 	}
 
-	void DrawOutline(Scene& Scene, Entity Entity);
+	void DrawOutline(Scene& Scene, Entity& Entity);
 };

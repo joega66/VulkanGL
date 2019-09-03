@@ -11,11 +11,6 @@ Entity::Entity(uint64 EntityID)
 {
 }
 
-void Entity::DestroyEntity()
-{
-	GEntityManager.DestroyEntity(*this);
-}
-
 uint64 Entity::GetEntityID() const
 {
 	return EntityID;

@@ -10,23 +10,23 @@ void GameSystem::Start()
 	GAssetManager.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
 
 	Entity Cube = GEntityManager.CreatePrefab("Cube");
-	Cube.AddComponent<CStaticMesh>(GAssetManager.GetStaticMesh("Cube"));
+	GEntityManager.AddComponent<CStaticMesh>(Cube, GAssetManager.GetStaticMesh("Cube"));
 
 	auto Cube1 = GEntityManager.CreateFromPrefab("Cube");
 	auto Cube2 = GEntityManager.CreateFromPrefab("Cube");
 	auto Cube3 = GEntityManager.CreateFromPrefab("Cube");
 	auto Cube4 = GEntityManager.CreateFromPrefab("Cube");
 
-	auto& Transform1 = Cube1.GetComponent<CTransform>();
+	auto& Transform1 = GEntityManager.GetComponent<CTransform>(Cube1);
 	Transform1.Translate(glm::vec3(-10.0f, 0.0f, 0.0f));
 
-	auto& Transform2 = Cube2.GetComponent<CTransform>();
+	auto& Transform2 = GEntityManager.GetComponent<CTransform>(Cube2);
 	Transform2.Translate(glm::vec3(10.0f, 0.0f, 0.0f));
 
-	auto& Transform3 = Cube3.GetComponent<CTransform>();
+	auto& Transform3 = GEntityManager.GetComponent<CTransform>(Cube3);
 	Transform3.Translate(glm::vec3(0.0f, 0.0f, -10.0f));
 
-	auto& Transform4 = Cube4.GetComponent<CTransform>();
+	auto& Transform4 = GEntityManager.GetComponent<CTransform>(Cube4);
 	Transform4.Translate(glm::vec3(0.0f, 0.0f, 10.0f));
 
 	/*auto Ivysaur = GEntityManager.CreateEntity();
@@ -36,11 +36,11 @@ void GameSystem::Start()
 	IvysaurTransform.Translate(glm::vec3(10.0f, 0.0f, 10.0f));*/
 
 	auto LightEntity = GEntityManager.CreateFromPrefab("Cube");
-	auto& Light = LightEntity.AddComponent<CLight>();
-	auto& Material = LightEntity.AddComponent<CMaterial>();
+	auto& Light = GEntityManager.AddComponent<CLight>(LightEntity);
+	auto& Material = GEntityManager.AddComponent<CMaterial>(LightEntity);
 	Material.Diffuse = CMaterial::Blue;
 
-	auto& LightTransform = LightEntity.GetComponent<CTransform>();
+	auto& LightTransform = GEntityManager.GetComponent<CTransform>(LightEntity);
 	LightTransform.Scale(glm::vec3(0.1f));
 	LightTransform.Translate(glm::vec3(1.0f));
 }

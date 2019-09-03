@@ -8,39 +8,36 @@ EntityManager::EntityManager()
 {
 }
 
-static void Templatize(Entity Entity)
-{
-	Entity.AddComponent<CTransform>();
-	Entity.AddComponent<CRenderer>();
-}
-
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
 	check(!Contains(Prefabs, Name), "Prefab %s already exists.", Name.c_str());
 	Prefabs.emplace(Name, Entity{ NextEntityID++ });
 	Entity Prefab = GetValue(Prefabs, Name);
 	PrefabNames.emplace(Prefab.GetEntityID(), Name);
-	Templatize(Prefab);
+	AddComponent<CTransform>(Prefab);
+	AddComponent<CRenderer>(Prefab);
 	return Prefab;
 }
 
 Entity EntityManager::CreateEntity()
 {
 	Entity NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });
-	Templatize(NewEntity);
+	AddComponent<CTransform>(NewEntity);
+	AddComponent<CRenderer>(NewEntity);
 	return NewEntity;
 }
 
-Entity EntityManager::CreateFromPrefab(Entity Prefab)
+Entity EntityManager::Clone(Entity& Prefab)
 {
 	Entity Entity = CreateEntity();
 	
-	for (auto& ComponentArray : ComponentArrays)
+	for (auto& ComponentArrayEntry : ComponentArrays)
 	{
-		if (ComponentArray.get().HasComponent(Prefab))
+		auto ComponentArray = ComponentArrayEntry.second.get();
+		if (ComponentArray->HasComponent(Prefab))
 		{
-			auto Component = ComponentArray.get().CopyComponent(Prefab);
-			ComponentArray.get().AddComponent(Entity, std::move(Component));
+			auto Component = ComponentArray->CopyComponent(Prefab);
+			ComponentArray->AddComponent(Entity, std::move(Component));
 		}
 	}
 
@@ -50,23 +47,18 @@ Entity EntityManager::CreateFromPrefab(Entity Prefab)
 Entity EntityManager::CreateFromPrefab(const std::string& Name)
 {
 	check(Contains(Prefabs, Name), "No Prefab named %s", Name.c_str());
-	return CreateFromPrefab(GetValue(Prefabs, Name));
+	return Clone(Prefabs[Name]);
 }
 
-void EntityManager::DestroyEntity(Entity& Entity)
+void EntityManager::Destroy(Entity& Entity)
 {
 	for (auto& ComponentArray : ComponentArrays)
 	{
-		ComponentArray.get().RemoveComponent(Entity);
+		ComponentArray.second.get()->RemoveComponent(Entity);
 	}
 
 	Entities.erase(std::remove_if(Entities.begin(), Entities.end(), [&] (auto& Other)
 	{
 		return Entity == Other;
 	}));
-}
-
-void EntityManager::AddComponentArray(IComponentArray& ComponentArray)
-{
-	ComponentArrays.push_back(ComponentArray);
 }

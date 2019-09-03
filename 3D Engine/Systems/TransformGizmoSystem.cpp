@@ -1,7 +1,6 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
 #include <Components/CRenderer.h>
-#include <ECS/EntityManager.h>
 
 void TransformGizmoSystem::Start()
 {
@@ -14,37 +13,37 @@ void TransformGizmoSystem::Start()
 		GEntityManager.CreateEntity()
 	};
 
-	auto& XAxis = TranslateAxis.X.GetComponent<CTransform>();
+	auto& XAxis = GEntityManager.GetComponent<CTransform>(TranslateAxis.X);
 	XAxis.Scale(glm::vec3(0.5f));
 	XAxis.Translate(glm::vec3(1.0f, -1.0f, 0.0f));
 	XAxis.Rotate(glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
 
-	auto& YAxis = TranslateAxis.Y.GetComponent<CTransform>();
+	auto& YAxis = GEntityManager.GetComponent<CTransform>(TranslateAxis.Y);
 	YAxis.Scale(glm::vec3(0.5f));
 
-	auto& ZAxis = TranslateAxis.Z.GetComponent<CTransform>();
+	auto& ZAxis = GEntityManager.GetComponent<CTransform>(TranslateAxis.Z);
 	ZAxis.Scale(glm::vec3(0.5f));
 	ZAxis.Translate(glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
 	auto TransformGizmo = GAssetManager.GetStaticMesh("TransformGizmo");
 
-	TranslateAxis.X.AddComponent<CStaticMesh>(TransformGizmo);
-	TranslateAxis.Y.AddComponent<CStaticMesh>(TransformGizmo);
-	TranslateAxis.Z.AddComponent<CStaticMesh>(TransformGizmo);
-
-	auto& MatX = TranslateAxis.X.AddComponent<CMaterial>();
+	GEntityManager.AddComponent<CStaticMesh>(TranslateAxis.X, TransformGizmo);
+	GEntityManager.AddComponent<CStaticMesh>(TranslateAxis.Y, TransformGizmo);
+	GEntityManager.AddComponent<CStaticMesh>(TranslateAxis.Z, TransformGizmo);
+	
+	auto& MatX = GEntityManager.AddComponent<CMaterial>(TranslateAxis.X);
 	MatX.Diffuse = CMaterial::Green;
 
-	auto& MatY = TranslateAxis.Y.AddComponent<CMaterial>();
+	auto& MatY = GEntityManager.AddComponent<CMaterial>(TranslateAxis.Y);
 	MatY.Diffuse = CMaterial::Blue;
 
-	auto& MatZ = TranslateAxis.Z.AddComponent<CMaterial>();
+	auto& MatZ = GEntityManager.AddComponent<CMaterial>(TranslateAxis.Z);
 	MatZ.Diffuse = CMaterial::Red;
 
-	TranslateAxis.X.GetComponent<CRenderer>().bVisible = false;
-	TranslateAxis.Y.GetComponent<CRenderer>().bVisible = false;
-	TranslateAxis.Z.GetComponent<CRenderer>().bVisible = false;
+	GEntityManager.GetComponent<CRenderer>(TranslateAxis.X).bVisible = false;
+	GEntityManager.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = false;
+	GEntityManager.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = false;
 }
 
 void TransformGizmoSystem::Update(Scene& Scene)
@@ -106,8 +105,8 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		{
 			std::sort(Hits.begin(), Hits.end(), [&](auto& A, auto& B)
 			{
-				CTransform& TransformA = A.GetComponent<CTransform>();
-				CTransform& TransformB = B.GetComponent<CTransform>();
+				CTransform& TransformA = GEntityManager.GetComponent<CTransform>(A);
+				CTransform& TransformB = GEntityManager.GetComponent<CTransform>(B);
 				return glm::distance(TransformA.GetPosition(), Scene.View.GetPosition()) <
 					glm::distance(TransformB.GetPosition(), Scene.View.GetPosition());
 			});
@@ -118,9 +117,9 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		}
 		else
 		{
-			TranslateAxis.X.GetComponent<CRenderer>().bVisible = false;
-			TranslateAxis.Y.GetComponent<CRenderer>().bVisible = false;
-			TranslateAxis.Z.GetComponent<CRenderer>().bVisible = false;
+			GEntityManager.GetComponent<CRenderer>(TranslateAxis.X).bVisible = false;
+			GEntityManager.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = false;
+			GEntityManager.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = false;
 
 			SelectedEntity = Entity();
 
@@ -142,7 +141,7 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 		{
 			if (Physics::Raycast(Scene.View.ScreenPointToRay(Cursor.Position), Entity))
 			{
-				CTransform& Transform = Entity.GetComponent<CTransform>();
+				CTransform& Transform = GEntityManager.GetComponent<CTransform>(Entity);
 				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.GetPosition()); NewDist < Dist)
 				{
 					ClosestHit = Entity;
@@ -171,10 +170,10 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 	}
 }
 
-void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity Entity)
+void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
 {
-	auto& StaticMesh = Entity.GetComponent<CStaticMesh>();
-	auto& Transform = Entity.GetComponent<CTransform>();
+	auto& StaticMesh = GEntityManager.GetComponent<CStaticMesh>(Entity);
+	auto& Transform = GEntityManager.GetComponent<CTransform>(Entity);
 
 	auto ScaledUpTransform = Transform;
 	ScaledUpTransform.Scale(ScaledUpTransform.GetScale() * glm::vec3(1.05f));
@@ -185,11 +184,11 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity Entity)
 		Scene.Outline.Add(Entity, OutlineDrawPlan(Element, ScaledUpTransform.LocalToWorldUniform));
 	}
 
-	TranslateAxis.X.GetComponent<CRenderer>().bVisible = true;
-	TranslateAxis.Y.GetComponent<CRenderer>().bVisible = true;
-	TranslateAxis.Z.GetComponent<CRenderer>().bVisible = true;
+	GEntityManager.GetComponent<CRenderer>(TranslateAxis.X).bVisible = true;
+	GEntityManager.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = true;
+	GEntityManager.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = true;
 
-	TranslateAxis.X.GetComponent<CTransform>().SetParent(&Transform);
-	TranslateAxis.Y.GetComponent<CTransform>().SetParent(&Transform);
-	TranslateAxis.Z.GetComponent<CTransform>().SetParent(&Transform);
+	GEntityManager.GetComponent<CTransform>(TranslateAxis.X).SetParent(&Transform);
+	GEntityManager.GetComponent<CTransform>(TranslateAxis.Y).SetParent(&Transform);
+	GEntityManager.GetComponent<CTransform>(TranslateAxis.Z).SetParent(&Transform);
 }

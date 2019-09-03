@@ -10,12 +10,6 @@ inline TComponent & ComponentArray<TComponent>::AddComponent(Entity & Entity, Ar
 }
 
 template<typename TComponent>
-inline ComponentArray<TComponent>::ComponentArray()
-{
-	GEntityManager.AddComponentArray(*this);
-}
-
-template<typename TComponent>
 inline void ComponentArray<TComponent>::AddComponent(Entity & Entity, std::shared_ptr<void> Data)
 {
 	Components.emplace(Entity.GetEntityID(), *std::static_pointer_cast<TComponent>(Data));
@@ -43,11 +37,4 @@ template<typename TComponent>
 inline void ComponentArray<TComponent>::RemoveComponent(Entity & Entity)
 {
 	Components.erase(Entity.GetEntityID());
-}
-
-template<typename TComponent>
-inline ComponentArray<TComponent>& ComponentArray<TComponent>::Get()
-{
-	static ComponentArray<TComponent> ComponentArray;
-	return ComponentArray;
 }
