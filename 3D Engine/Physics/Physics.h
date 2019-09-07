@@ -34,10 +34,12 @@ struct Plane
 	static const Plane YZ;
 };
 
+class Scene;
+
 class Physics
 {
 public:
-	static bool Raycast(const Ray& Ray, Entity Entity, float& T);
-	static bool Raycast(const Ray& Ray, Entity Entity);
-	static bool Raycast(const Ray& Ray, const Plane& Plane, float& T);
+	static bool Raycast(Scene& Scene, const Ray& Ray, Entity Entity, float& T);
+	static bool Raycast(Scene& Scene, const Ray& Ray, Entity Entity);
+	static bool Raycast(Scene& Scene, const Ray& Ray, const Plane& Plane, float& T);
 };

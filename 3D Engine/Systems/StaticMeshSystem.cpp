@@ -6,18 +6,20 @@
 
 void StaticMeshSystem::Update(Scene& Scene)
 {
-	for (auto Entity : GEntityManager.GetEntities<CStaticMesh>())
+	auto& ECS = Scene.ECS;
+
+	for (auto Entity : ECS.GetEntities<CStaticMesh>())
 	{
-		if (!GEntityManager.GetComponent<CRenderer>(Entity).bVisible)
+		if (!ECS.GetComponent<CRenderer>(Entity).bVisible)
 			continue;
 
-		auto& StaticMesh = GEntityManager.GetComponent<CStaticMesh>(Entity);
-		auto& Transform = GEntityManager.GetComponent<CTransform>(Entity);
+		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
+		auto& Transform = ECS.GetComponent<CTransform>(Entity);
 
-		if (GEntityManager.HasComponent<CMaterial>(Entity))
+		if (ECS.HasComponent<CMaterial>(Entity))
 		{
 			// The entity has a Material -- render using it.
-			auto& Material = GEntityManager.GetComponent<CMaterial>(Entity);
+			auto& Material = ECS.GetComponent<CMaterial>(Entity);
 			auto& Batch = StaticMesh.StaticMesh->Batch;
 			auto& Elements = Batch.Elements;
 			for (auto& Element : Elements)

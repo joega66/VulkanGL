@@ -3,8 +3,12 @@
 
 class EntityManager
 {
-public:
+	friend class Scene;
 	EntityManager() = default;
+
+public:
+	EntityManager(const EntityManager&) = delete;
+	EntityManager& operator=(const EntityManager&) = delete;
 
 	Entity CreatePrefab(const std::string& Name);
 
@@ -96,7 +100,5 @@ private:
 
 	void InitDefaultComponents(Entity& Entity);
 };
-
-extern EntityManager GEntityManager;
 
 #include "ComponentArray.inl"

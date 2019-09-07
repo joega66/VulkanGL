@@ -15,9 +15,7 @@ public:
 
 private:
 	drm::UniformBufferRef ViewUniform;
-
 	drm::StorageBufferRef PointLightBuffer;
-
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;
 

@@ -39,32 +39,32 @@ void CoreEngine::Run()
 	GAssetManager.LoadStaticMesh("TransformGizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 
-	SystemsHerder SystemsHerder;
+	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;
-	SystemsHerder.Register(EditorControllerSystem);
+	SystemsManager.Register(EditorControllerSystem);
 
 	GameSystem GameSystem;
-	SystemsHerder.Register(GameSystem);
+	SystemsManager.Register(GameSystem);
 
 	LightSystem LightSystem;
-	SystemsHerder.Register(LightSystem);
+	SystemsManager.Register(LightSystem);
 
 	StaticMeshSystem StaticMeshSystem;
-	SystemsHerder.Register(StaticMeshSystem);
+	SystemsManager.Register(StaticMeshSystem);
 
 	TransformGizmoSystem TransformGizmoSystem;
-	SystemsHerder.Register(TransformGizmoSystem);
-
-	SystemsHerder.StartSystems();
+	SystemsManager.Register(TransformGizmoSystem);
 
 	Scene Scene;
 	SceneRenderer SceneRenderer;
 
+	SystemsManager.StartSystems(Scene);
+
 	while (!Platform.WindowShouldClose())
 	{
 		Platform.PollEvents();
-		SystemsHerder.UpdateSystems(Scene);
+		SystemsManager.UpdateSystems(Scene);
 		SceneRenderer.Render(Scene);
 		Platform.Finish();
 	}

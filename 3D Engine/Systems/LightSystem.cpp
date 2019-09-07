@@ -8,13 +8,15 @@
 
 void LightSystem::Update(Scene& Scene)
 {
+	auto& ECS = Scene.ECS;
+
 	Scene.PointLightProxies.clear();
 
-	for (auto Entity : GEntityManager.GetEntities<CLight>())
+	for (auto Entity : ECS.GetEntities<CLight>())
 	{
-		auto& Light = GEntityManager.GetComponent<CLight>(Entity);
-		auto& Transform = GEntityManager.GetComponent<CTransform>(Entity);
-		auto& Renderer = GEntityManager.GetComponent<CRenderer>(Entity);
+		auto& Light = ECS.GetComponent<CLight>(Entity);
+		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+		auto& Renderer = ECS.GetComponent<CRenderer>(Entity);
 
 		if (Renderer.bVisible)
 		{

@@ -5,17 +5,16 @@
 class ISystem
 {
 public:
-	virtual void Start() {}
-
+	virtual void Start(class Scene& Scene) {}
 	virtual void Update(class Scene& Scene) {}
 };
 
-class SystemsHerder
+class SystemsManager
 {
 public:
-	SystemsHerder() = default;
+	SystemsManager() = default;
 	void Register(ISystem& ISystem);
-	void StartSystems();
+	void StartSystems(class Scene& Scene);
 	void UpdateSystems(class Scene& Scene);
 
 private:

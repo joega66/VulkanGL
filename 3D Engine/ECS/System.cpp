@@ -1,19 +1,19 @@
 #include "System.h"
 
-void SystemsHerder::Register(ISystem& System)
+void SystemsManager::Register(ISystem& System)
 {
 	Systems.push_back(System);
 }
 
-void SystemsHerder::StartSystems()
+void SystemsManager::StartSystems(Scene& Scene)
 {
 	for (auto& System : Systems)
 	{
-		System.get().Start();
+		System.get().Start(Scene);
 	}
 }
 
-void SystemsHerder::UpdateSystems(Scene& Scene)
+void SystemsManager::UpdateSystems(Scene& Scene)
 {
 	for (auto& System : Systems)
 	{

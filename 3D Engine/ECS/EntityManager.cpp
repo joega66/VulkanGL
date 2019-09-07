@@ -2,8 +2,6 @@
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
 
-EntityManager GEntityManager;
-
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
 	check(!Contains(Prefabs, Name), "Prefab %s already exists.", Name.c_str());

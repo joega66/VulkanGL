@@ -1,16 +1,18 @@
 #include "Physics.h"
+#include <Renderer/Scene.h>
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
-#include <ECS/EntityManager.h>
 
 const Plane Plane::XY = Plane{ glm::vec3(0.0f, 0.0f, 1.0f), 0.0f };
 const Plane Plane::YZ = Plane{ glm::vec3(1.0f, 0.0f, 0.0f), 0.0f };
 const Plane Plane::XZ = Plane{ glm::vec3(0.0f, 1.0f, 0.0f), 0.0f };
 
-bool Physics::Raycast(const Ray& Ray, Entity Entity, float& T)
+bool Physics::Raycast(Scene& Scene, const Ray& Ray, Entity Entity, float& T)
 {
-	CStaticMesh& Mesh = GEntityManager.GetComponent<CStaticMesh>(Entity);
-	CTransform& Transform = GEntityManager.GetComponent<CTransform>(Entity);
+	auto& ECS = Scene.ECS;
+
+	CStaticMesh& Mesh = ECS.GetComponent<CStaticMesh>(Entity);
+	CTransform& Transform = ECS.GetComponent<CTransform>(Entity);
 	BoundingBox& Bounds = Mesh.StaticMesh->Bounds;
 
 	glm::vec4 Min = Transform.GetLocalToWorld() * glm::vec4(Bounds.Min, 1.0f);
@@ -48,13 +50,13 @@ bool Physics::Raycast(const Ray& Ray, Entity Entity, float& T)
 	return true;
 }
 
-bool Physics::Raycast(const Ray& Ray, Entity Entity)
+bool Physics::Raycast(Scene& Scene, const Ray& Ray, Entity Entity)
 {
 	float T;
-	return Raycast(Ray, Entity, T);
+	return Raycast(Scene, Ray, Entity, T);
 }
 
-bool Physics::Raycast(const Ray& Ray, const Plane& Plane, float& T)
+bool Physics::Raycast(Scene& Scene, const Ray& Ray, const Plane& Plane, float& T)
 {
 	check(Plane.Normal != glm::vec3(0.0f), "Plane should have non-zero normal.");
 
