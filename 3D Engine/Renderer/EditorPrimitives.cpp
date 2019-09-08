@@ -20,9 +20,9 @@ void OutlineDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 	};
 }
 
-void OutlineDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
+void OutlineDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneProxy& Scene)
 {
-	DepthPassDrawPlan::SetUniforms(CmdList, SceneRenderer);
+	DepthPassDrawPlan::SetUniforms(CmdList, Scene);
 }
 
 void OutlineDrawPlan::Draw(RenderCommandList& CmdList) const
@@ -56,12 +56,12 @@ void LineDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 	PSOInit.RasterizationState.LineWidth = LineWidth;
 }
 
-void LineDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
+void LineDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneProxy& Scene)
 {
 	Ref<LinesVS> VertShader = *ShaderMapRef<LinesVS>();
 	Ref<LinesFS> FragShader = *ShaderMapRef<LinesFS>();
 
-	SceneRenderer.SetResources(CmdList, VertShader, VertShader->SceneBindings);
+	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
 	FragShader->SetUniforms(CmdList, ColorUniform);
 }
 

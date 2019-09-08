@@ -1,5 +1,5 @@
 #include "SceneBindings.h"
-#include "SceneRenderer.h"
+#include "SceneProxy.h"
 
 SceneBindings::SceneBindings(const ShaderResourceTable& Resources)
 {
@@ -7,7 +7,7 @@ SceneBindings::SceneBindings(const ShaderResourceTable& Resources)
 	Resources.Bind("PointLightBuffer", PointLightBuffer);
 }
 
-void SceneRenderer::SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const SceneBindings& Bindings) const
+void SceneProxy::SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const SceneBindings& Bindings) const
 {
 	if (Bindings.ViewUniform)
 		CmdList.SetUniformBuffer(Shader, Bindings.ViewUniform, ViewUniform);

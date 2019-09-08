@@ -40,14 +40,14 @@ public:
 		List.clear();
 	}
 	
-	void Draw(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const class SceneRenderer& SceneRenderer);
+	void Draw(RenderCommandList& CmdList, const PipelineStateInitializer& PSOInit, const class SceneProxy& Scene);
 
 private:
 	std::multimap<uint64, DrawPlanType> List;
 };
 
 template<typename DrawPlanType>
-inline void DrawList<DrawPlanType>::Draw(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const class SceneRenderer& SceneRenderer)
+inline void DrawList<DrawPlanType>::Draw(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const class SceneProxy& Scene)
 {
 	if (List.empty())
 	{
@@ -61,10 +61,8 @@ inline void DrawList<DrawPlanType>::Draw(RenderCommandList& CmdList, const Pipel
 
 		CmdList.BindPipeline(PSOInit);
 
-		DrawPlan.SetUniforms(CmdList, SceneRenderer);
+		DrawPlan.SetUniforms(CmdList, Scene);
 
 		DrawPlan.Draw(CmdList);
 	}
-
-	Clear();
 }

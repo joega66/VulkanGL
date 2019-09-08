@@ -215,11 +215,11 @@
     <ClInclude Include="Systems\GameSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Systems\LightSystem.h">
-      <Filter>Source\Systems</Filter>
+    <ClInclude Include="Renderer\SceneProxy.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Systems\StaticMeshSystem.h">
-      <Filter>Source\Systems</Filter>
+    <ClInclude Include="Components\COutline.h">
+      <Filter>Source\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -343,14 +343,11 @@
     <ClCompile Include="Systems\GameSystem.cpp">
       <Filter>Source\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="Systems\LightSystem.cpp">
-      <Filter>Source\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="Systems\StaticMeshSystem.cpp">
-      <Filter>Source\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="Systems\TransformGizmoSystem.cpp">
       <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\SceneProxy.cpp">
+      <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

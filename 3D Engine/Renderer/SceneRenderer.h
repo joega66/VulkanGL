@@ -1,5 +1,6 @@
 #pragma once
 #include <DRM.h>
+#include <Renderer/SceneProxy.h>
 
 class Scene;
 class RenderCommandList;
@@ -9,25 +10,20 @@ class SceneRenderer
 public:
 	SceneRenderer();
 
-	void Render(Scene& Scene);
-
-	void SetResources(RenderCommandList& CmdList, const drm::ShaderRef& Shader, const class SceneBindings& Bindings) const;
+	void Render(SceneProxy& Scene);
 
 private:
-	drm::UniformBufferRef ViewUniform;
-	drm::StorageBufferRef PointLightBuffer;
+	// Scene render targets.
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;
 
-	void InitView(Scene& Scene);
+	void RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdList);
 
-	void RenderRayMarching(Scene& Scene, RenderCommandList& CmdList);
+	void RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList);
 
-	void RenderLightingPass(Scene& Scene, RenderCommandList& CmdList);
+	void RenderLines(SceneProxy& Scene, RenderCommandList& CmdList);
 
-	void RenderLines(Scene& Scene, RenderCommandList& CmdList);
+	void RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList);
 
-	void RenderSkybox(Scene& Scene, RenderCommandList& CmdList);
-
-	void RenderOutlines(Scene& Scene, RenderCommandList& CmdList);
+	void RenderOutlines(SceneProxy& Scene, RenderCommandList& CmdList);
 };

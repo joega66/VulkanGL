@@ -20,3 +20,11 @@ void SystemsManager::UpdateSystems(Scene& Scene)
 		System.get().Update(Scene);
 	}
 }
+
+void SystemsManager::UpdateRenderSystems(SceneProxy& Scene)
+{
+	for (auto& RenderSystem : RenderSystems)
+	{
+		RenderSystem.get().Update(Scene);
+	}
+}

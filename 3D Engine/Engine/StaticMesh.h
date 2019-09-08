@@ -12,12 +12,12 @@ private:
 		TextureCoordinates,
 		Normals,
 		Tangents,
-		End
+		NumLocations
 	};
 public:
 	const uint32 IndexCount;
 	drm::IndexBufferRef IndexBuffer;
-	std::array<drm::VertexBufferRef, End> VertexBuffers;
+	std::array<drm::VertexBufferRef, NumLocations> VertexBuffers;
 	CMaterial Material;
 
 	MeshElement(

@@ -8,20 +8,19 @@
 
 SceneRenderer::SceneRenderer()
 {
-	Screen.RegisterScreenResChangedCallback([&] (int32 Width, int32 Height)
+	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
 		SceneDepth = drm::CreateImage(Width, Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
 		OutlineDepthStencil = drm::CreateImage(Width, Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
 	});
 }
 
-void SceneRenderer::Render(Scene& Scene)
+void SceneRenderer::Render(SceneProxy& Scene)
 {
-	InitView(Scene);
-
 	drm::BeginFrame();
 
-	RenderCommandListRef CmdList = drm::CreateCommandList();
+	RenderCommandListRef CommandList = drm::CreateCommandList();
+	RenderCommandList& CmdList = *CommandList;
 
 	{
 		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
@@ -32,72 +31,26 @@ void SceneRenderer::Render(Scene& Scene)
 		RenderPassInit.DepthTarget = DepthView;
 		RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
-		CmdList->BeginRenderPass(RenderPassInit);
+		CmdList.BeginRenderPass(RenderPassInit);
 
-		RenderLightingPass(Scene, *CmdList);
+		RenderLightingPass(Scene, CmdList);
 		//RenderRayMarching(*CmdList);
-		RenderLines(Scene, *CmdList);
-		RenderSkybox(Scene, *CmdList);
+		RenderLines(Scene, CmdList);
+		RenderSkybox(Scene, CmdList);
 
-		CmdList->EndRenderPass();
+		CmdList.EndRenderPass();
 	}
 
-	RenderOutlines(Scene, *CmdList);
+	RenderOutlines(Scene, CmdList);
 
-	CmdList->Finish();
+	CmdList.Finish();
 
-	drm::SubmitCommands(CmdList);
+	drm::SubmitCommands(CommandList);
 
 	drm::EndFrame();
 }
 
-void SceneRenderer::InitView(Scene& Scene)
-{
-	// Initialize view uniform.
-	View& View = Scene.View;
-
-	const glm::mat4 WorldToView = View.GetWorldToView();
-	const glm::mat4 ViewToClip = View.GetViewToClip();
-	const glm::mat4 WorldToClip = ViewToClip * WorldToView;
-
-	struct ViewUniformData
-	{
-		glm::mat4 WorldToView;
-		glm::mat4 ViewToClip;
-		glm::mat4 WorldToClip;
-		glm::vec3 Position;
-		float _Pad0;
-		float AspectRatio;
-		float FOV;
-		glm::vec2 _Pad1;
-	};
-
-	const ViewUniformData ViewUniformData =
-	{
-		WorldToView,
-		ViewToClip,
-		WorldToClip,
-		View.GetPosition(),
-		0.0f,
-		(float)Screen.GetWidth() / Screen.GetHeight(),
-		View.GetFOV()
-	};
-
-	ViewUniform = drm::CreateUniformBuffer(sizeof(ViewUniformData), &ViewUniformData, EUniformUpdate::SingleFrame);
-
-	// Initialize light buffer.
-	glm::uvec4 NumPointLights;
-	NumPointLights.x = Scene.PointLightProxies.size();
-
-	PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * Scene.PointLightProxies.size(), nullptr);
-
-	void* Data = drm::LockBuffer(PointLightBuffer);
-	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
-	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), Scene.PointLightProxies.data(), sizeof(PointLightProxy) * Scene.PointLightProxies.size());
-	drm::UnlockBuffer(PointLightBuffer);
-}
-
-void SceneRenderer::RenderRayMarching(Scene& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
@@ -111,22 +64,22 @@ void SceneRenderer::RenderRayMarching(Scene& Scene, RenderCommandList& CmdList)
 
 	CmdList.BindPipeline(PSOInit);
 
-	SetResources(CmdList, FragShader, FragShader->SceneBindings);
+	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	CmdList.Draw(3, 1, 0, 0);
 }
 
-void SceneRenderer::RenderLightingPass(Scene& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
 
-	Scene.LightingPass.Draw(CmdList, PSOInit, *this);
+	Scene.LightingPass.Draw(CmdList, PSOInit, Scene);
 }
 
-void SceneRenderer::RenderLines(Scene& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderLines(SceneProxy& Scene, RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
@@ -135,10 +88,10 @@ void SceneRenderer::RenderLines(Scene& Scene, RenderCommandList& CmdList)
 
 	PSOInit.RasterizationState.PolygonMode = EPolygonMode::Line;
 
-	Scene.Lines.Draw(CmdList, PSOInit, *this);
+	Scene.Lines.Draw(CmdList, PSOInit, Scene);
 }
 
-void SceneRenderer::RenderSkybox(Scene& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)
 {
 	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
 
@@ -154,7 +107,7 @@ void SceneRenderer::RenderSkybox(Scene& Scene, RenderCommandList& CmdList)
 
 	CmdList.BindPipeline(PSOInit);
 
-	CmdList.SetUniformBuffer(VertShader, VertShader->View, ViewUniform);
+	CmdList.SetUniformBuffer(VertShader, VertShader->View, Scene.ViewUniform);
 	CmdList.SetShaderImage(FragShader, FragShader->Skybox, Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	for (const auto& Element : Cube->Batch.Elements)
@@ -164,7 +117,7 @@ void SceneRenderer::RenderSkybox(Scene& Scene, RenderCommandList& CmdList)
 	}
 }
 
-void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderOutlines(SceneProxy& Scene, RenderCommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 
@@ -190,7 +143,7 @@ void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.WriteMask = 0xff;
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
-		Scene.Stencil.Draw(CmdList, PSOInit, *this);
+		Scene.Stencil.Draw(CmdList, PSOInit, Scene);
 
 		CmdList.EndRenderPass();
 	}
@@ -217,7 +170,7 @@ void SceneRenderer::RenderOutlines(Scene& Scene, RenderCommandList& CmdList)
 		PSOInit.DepthStencilState.Back.WriteMask = 0;
 		PSOInit.DepthStencilState.Back.Reference = 1;
 
-		Scene.Outline.Draw(CmdList, PSOInit, *this);
+		Scene.Outline.Draw(CmdList, PSOInit, Scene);
 
 		CmdList.EndRenderPass();
 	}

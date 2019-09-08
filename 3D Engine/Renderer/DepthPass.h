@@ -34,7 +34,7 @@ class DepthPassDrawPlan
 public:
 	DepthPassDrawPlan(const struct MeshElement& Element, drm::UniformBufferRef LocalToWorldUniform);
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
-	void SetUniforms(RenderCommandList& CmdList, const class SceneRenderer& SceneRenderer);
+	void SetUniforms(RenderCommandList& CmdList, const class SceneProxy& Scene);
 	void Draw(RenderCommandList& CmdList) const;
 
 protected:

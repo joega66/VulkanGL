@@ -7,5 +7,3 @@ struct CStaticMesh : public Component<CStaticMesh>
 	CStaticMesh(StaticMeshRef StaticMesh);
 	StaticMeshRef StaticMesh;
 };
-
-CLASS(CStaticMesh);

@@ -9,6 +9,12 @@ public:
 	virtual void Update(class Scene& Scene) {}
 };
 
+class IRenderSystem
+{
+public:
+	virtual void Update(class SceneProxy& Scene) {}
+};
+
 class SystemsManager
 {
 public:
@@ -16,9 +22,11 @@ public:
 	void Register(ISystem& ISystem);
 	void StartSystems(class Scene& Scene);
 	void UpdateSystems(class Scene& Scene);
+	void UpdateRenderSystems(class SceneProxy& Scene);
 
 private:
 	std::vector<std::reference_wrapper<ISystem>> Systems;
+	std::vector<std::reference_wrapper<IRenderSystem>> RenderSystems;
 };
 
 #define SYSTEM(SystemName) \

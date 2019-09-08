@@ -40,10 +40,10 @@ void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) c
 	};
 }
 
-void LightingPassDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneRenderer& SceneRenderer)
+void LightingPassDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneProxy& Scene)
 {
-	SceneRenderer.SetResources(CmdList, VertShader, VertShader->SceneBindings);
-	SceneRenderer.SetResources(CmdList, FragShader, FragShader->SceneBindings);
+	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
+	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	for (auto& Uniform : Uniforms)
 	{

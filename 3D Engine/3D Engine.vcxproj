@@ -41,14 +41,13 @@
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\Scene.cpp" />
     <ClCompile Include="Renderer\SceneBindings.cpp" />
+    <ClCompile Include="Renderer\SceneProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\GameSystem.cpp" />
-    <ClCompile Include="Systems\LightSystem.cpp" />
-    <ClCompile Include="Systems\StaticMeshSystem.cpp" />
     <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
     <ClCompile Include="Vulkan\VulkanCommands.cpp" />
@@ -66,6 +65,7 @@
   <ItemGroup>
     <ClInclude Include="Components\CLight.h" />
     <ClInclude Include="Components\CMaterial.h" />
+    <ClInclude Include="Components\COutline.h" />
     <ClInclude Include="Components\CRenderer.h" />
     <ClInclude Include="Components\CStaticMesh.h" />
     <ClInclude Include="Components\CTransform.h" />
@@ -101,6 +101,7 @@
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\Scene.h" />
+    <ClInclude Include="Renderer\SceneProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="SPIRV-Cross\spirv.hpp" />
@@ -110,8 +111,6 @@
     <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
     <ClInclude Include="Systems\GameSystem.h" />
-    <ClInclude Include="Systems\LightSystem.h" />
-    <ClInclude Include="Systems\StaticMeshSystem.h" />
     <ClInclude Include="Systems\TransformGizmoSystem.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
     <ClInclude Include="Vulkan\VulkanCommands.h" />

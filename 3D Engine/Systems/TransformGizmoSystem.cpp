@@ -1,6 +1,8 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
 #include <Components/CRenderer.h>
+#include <Components/CStaticMesh.h>
+#include <Components/COutline.h>
 
 void TransformGizmoSystem::Start(Scene& Scene)
 {
@@ -106,6 +108,9 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 			}
 		}
 
+		// Remove the old outline.
+		ECS.RemoveComponent<COutline>(SelectedEntity);
+
 		if (!Hits.empty())
 		{
 			std::sort(Hits.begin(), Hits.end(), [&](auto& A, auto& B)
@@ -181,23 +186,18 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
 {
 	auto& ECS = Scene.ECS;
 
-	auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
-	auto& Transform = ECS.GetComponent<CTransform>(Entity);
-
-	auto ScaledUpTransform = Transform;
-	ScaledUpTransform.Scale(ScaledUpTransform.GetScale() * glm::vec3(1.05f));
-
-	for (auto& Element : StaticMesh.StaticMesh->Batch.Elements)
+	if (!ECS.HasComponent<COutline>(Entity))
 	{
-		Scene.Stencil.Add(Entity, DepthPassDrawPlan(Element, Transform.LocalToWorldUniform));
-		Scene.Outline.Add(Entity, OutlineDrawPlan(Element, ScaledUpTransform.LocalToWorldUniform));
+		ECS.AddComponent<COutline>(Entity);
+
+		ECS.GetComponent<CRenderer>(TranslateAxis.X).bVisible = true;
+		ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = true;
+		ECS.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = true;
+
+		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+
+		ECS.GetComponent<CTransform>(TranslateAxis.X).SetParent(&Transform);
+		ECS.GetComponent<CTransform>(TranslateAxis.Y).SetParent(&Transform);
+		ECS.GetComponent<CTransform>(TranslateAxis.Z).SetParent(&Transform);
 	}
-
-	ECS.GetComponent<CRenderer>(TranslateAxis.X).bVisible = true;
-	ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = true;
-	ECS.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = true;
-
-	ECS.GetComponent<CTransform>(TranslateAxis.X).SetParent(&Transform);
-	ECS.GetComponent<CTransform>(TranslateAxis.Y).SetParent(&Transform);
-	ECS.GetComponent<CTransform>(TranslateAxis.Z).SetParent(&Transform);
 }

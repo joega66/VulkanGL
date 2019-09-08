@@ -1,14 +1,13 @@
 #include "CoreEngine.h"
 #include <Renderer/Scene.h>
 #include <Renderer/SceneRenderer.h>
+#include <Renderer/SceneProxy.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/GameSystem.h>
-#include <Systems/LightSystem.h>
-#include <Systems/StaticMeshSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 
 class Cursor Cursor;
@@ -47,12 +46,6 @@ void CoreEngine::Run()
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
-	LightSystem LightSystem;
-	SystemsManager.Register(LightSystem);
-
-	StaticMeshSystem StaticMeshSystem;
-	SystemsManager.Register(StaticMeshSystem);
-
 	TransformGizmoSystem TransformGizmoSystem;
 	SystemsManager.Register(TransformGizmoSystem);
 
@@ -64,8 +57,13 @@ void CoreEngine::Run()
 	while (!Platform.WindowShouldClose())
 	{
 		Platform.PollEvents();
+
 		SystemsManager.UpdateSystems(Scene);
-		SceneRenderer.Render(Scene);
+		
+		SceneProxy SceneProxy(Scene);
+
+		SceneRenderer.Render(SceneProxy);
+
 		Platform.Finish();
 	}
 }
