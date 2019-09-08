@@ -1,8 +1,8 @@
 #include "GameSystem.h"
-#include <Renderer/Scene.h>
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
 #include <Components/CLight.h>
+#include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 
 void GameSystem::Start(Scene& Scene)

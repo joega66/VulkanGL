@@ -4,7 +4,7 @@
 #include <Components/CTransform.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
-#include <Renderer/Scene.h>
+#include <Engine/Scene.h>
 
 class TransformGizmoSystem : public ISystem
 {

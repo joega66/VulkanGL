@@ -1,7 +1,7 @@
 #include "CoreEngine.h"
-#include <Renderer/Scene.h>
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/SceneProxy.h>
+#include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 #include <Engine/Cursor.h>

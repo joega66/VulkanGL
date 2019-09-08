@@ -1,5 +1,5 @@
 #include "SceneProxy.h"
-#include "Scene.h"
+#include <Engine/Scene.h>
 #include <Engine/Screen.h>
 #include <Components/CLight.h>
 #include <Components/CMaterial.h>

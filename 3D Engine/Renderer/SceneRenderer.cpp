@@ -1,8 +1,8 @@
 #include "SceneRenderer.h"
-#include "Scene.h"
 #include "FullscreenQuad.h"
 #include "RayMarching.h"
 #include "Light.h"
+#include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 

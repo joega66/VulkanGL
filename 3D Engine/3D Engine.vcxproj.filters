@@ -116,9 +116,6 @@
     <ClInclude Include="Renderer\MaterialShader.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\Scene.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Physics\Physics.h">
       <Filter>Source\Physics</Filter>
     </ClInclude>
@@ -220,6 +217,9 @@
     </ClInclude>
     <ClInclude Include="Components\COutline.h">
       <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Scene.h">
+      <Filter>Source\Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -334,9 +334,6 @@
     <ClCompile Include="ECS\EntityManager.cpp">
       <Filter>Source\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\Scene.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Systems\EditorControllerSystem.cpp">
       <Filter>Source\Systems</Filter>
     </ClCompile>
@@ -348,6 +345,9 @@
     </ClCompile>
     <ClCompile Include="Renderer\SceneProxy.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Scene.cpp">
+      <Filter>Source\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -27,6 +27,7 @@
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="ECS\System.cpp" />
     <ClCompile Include="Engine\AssetManager.cpp" />
+    <ClCompile Include="Engine\Scene.cpp" />
     <ClCompile Include="Engine\Screen.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\Timers.cpp" />
@@ -39,7 +40,6 @@
     <ClCompile Include="Renderer\DepthPass.cpp" />
     <ClCompile Include="Renderer\EditorPrimitives.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
-    <ClCompile Include="Renderer\Scene.cpp" />
     <ClCompile Include="Renderer\SceneBindings.cpp" />
     <ClCompile Include="Renderer\SceneProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
@@ -80,6 +80,7 @@
     <ClInclude Include="Engine\Cursor.h" />
     <ClInclude Include="Engine\Input.h" />
     <ClInclude Include="Engine\PendingBuffer.h" />
+    <ClInclude Include="Engine\Scene.h" />
     <ClInclude Include="Engine\Screen.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\Timers.h" />
@@ -100,7 +101,6 @@
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\RayMarching.h" />
-    <ClInclude Include="Renderer\Scene.h" />
     <ClInclude Include="Renderer\SceneProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
