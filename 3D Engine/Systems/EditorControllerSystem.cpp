@@ -1,5 +1,5 @@
 #include "EditorControllerSystem.h"
-#include <Renderer/Scene.h>
+#include <Engine/Scene.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 
@@ -30,5 +30,10 @@ void EditorControllerSystem::Update(Scene& Scene)
 	else if (Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
 		Cursor.Mode = ECursorMode::Normal;
+	}
+
+	if (Input.GetShortcutUp("Recompile Shaders"))
+	{
+		// @todo
 	}
 }

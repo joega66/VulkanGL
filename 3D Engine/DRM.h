@@ -42,7 +42,6 @@ public:
 	virtual void UnlockBuffer(drm::IndexBufferRef IndexBuffer) = 0;
 	virtual void* LockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
 	virtual void UnlockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
-	//virtual void TransitionImage(drm::ImageRef Image, EImageLayout NewLayout) = 0;
 	virtual std::string GetDRMName() = 0;
 	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
 

@@ -36,7 +36,6 @@ public:
 	virtual void* LockBuffer(drm::StorageBufferRef StorageBuffer);
 	virtual void UnlockBuffer(drm::StorageBufferRef StorageBuffer);
 	virtual std::string GetDRMName() { return "Vulkan"; }
-
 	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
 
 private:

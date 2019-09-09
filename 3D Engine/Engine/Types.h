@@ -77,6 +77,20 @@ const K& GetKey(const HashTable<K, V>& HashTable, const V& Value)
 }
 
 template<typename K, typename V>
+bool HasValue(const HashTable<K, V>& HashTable, const V& Value)
+{
+	for (const auto&[Key, OtherValue] : HashTable)
+	{
+		if (Value == OtherValue)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+template<typename K, typename V>
 inline const V& GetValue(const HashTable<K, V>& HashTable, const K& Key)
 {
 	return HashTable.at(Key);

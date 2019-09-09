@@ -38,6 +38,9 @@ void CoreEngine::Run()
 	GAssetManager.LoadStaticMesh("TransformGizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 
+	// Shortcuts
+	Input.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
+
 	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;

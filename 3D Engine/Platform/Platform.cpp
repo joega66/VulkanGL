@@ -30,6 +30,9 @@ static HashTable<int32, EKeyCode> KeyCodes =
 	ENTRY(GLFW_KEY_7, EKeyCode::Keypad7)
 	ENTRY(GLFW_KEY_8, EKeyCode::Keypad8)
 	ENTRY(GLFW_KEY_9, EKeyCode::Keypad9)
+	ENTRY(GLFW_KEY_LEFT_SHIFT, EKeyCode::LeftShift)
+	ENTRY(GLFW_KEY_LEFT_CONTROL, EKeyCode::LeftControl)
+	ENTRY(GLFW_KEY_PERIOD, EKeyCode::Period)
 };
 
 void OS_Platform::OpenWindow(int32 Width, int32 Height)
