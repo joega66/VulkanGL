@@ -21,8 +21,7 @@ const glm::mat4& CTransform::GetLocalToWorld() const
 
 glm::mat4 CTransform::GetLocalToParent()
 {
-	glm::mat4 LocalToParent = glm::mat4();
-	LocalToParent = glm::translate(LocalToParent, Position);
+	glm::mat4 LocalToParent = glm::translate(glm::mat4(), Position);
 	LocalToParent = glm::rotate(LocalToParent, glm::radians(Angle), Rotation);
 	LocalToParent = glm::scale(LocalToParent, ScaleBy);
 

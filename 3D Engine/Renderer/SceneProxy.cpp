@@ -71,7 +71,6 @@ void SceneProxy::InitLights(Scene& Scene)
 	NumPointLights.x = PointLightProxies.size();
 
 	PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size(), nullptr);
-
 	void* Data = drm::LockBuffer(PointLightBuffer);
 	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());

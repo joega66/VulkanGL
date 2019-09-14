@@ -312,7 +312,7 @@ std::pair<VkPipelineLayout, VkDescriptorSetLayout> VulkanDevice::GetPipelineLayo
 	{
 		std::vector<VkDescriptorSetLayoutBinding> AllBindings;
 
-		auto AddBindings = [&] (const drm::ShaderRef Shader)
+		auto AddBindings = [&] (const drm::ShaderRef& Shader)
 		{
 			if (Shader)
 			{

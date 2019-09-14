@@ -143,21 +143,25 @@ namespace drm
 	class UniformBuffer
 	{
 	public:
-		bool bDirty = false;
+		UniformBuffer(uint32 Size)
+		{
+			Data.resize(Size);
+		}
 
 		template<typename UniformType>
 		void Set(const UniformType& UniformData)
 		{
-			check(GetSize() == sizeof(UniformType), "Size mismatch.");
-			Data = std::make_shared<UniformType>(UniformData);
-			bDirty = true;
+			check(sizeof(UniformType) == Data.size(), "Size mismatch.");
+			Platform.Memcpy(Data.data(), &UniformData, sizeof(UniformType));
+			Set();
 		}
 
-		const void* GetData() { return Data.get(); }
-		virtual uint32 GetSize() = 0;
+		const void* GetData() const { return Data.data(); }
 
 	private:
-		std::shared_ptr<void> Data;
+		std::vector<std::byte> Data;
+		// Allows implementations to do their own thing when data is set.
+		virtual void Set() {}
 	};
 
 	CLASS(UniformBuffer);

@@ -80,7 +80,6 @@ namespace drm
 	void* LockBuffer(drm::StorageBufferRef StorageBuffer);
 	void UnlockBuffer(drm::StorageBufferRef StorageBuffer);
 	std::string GetDeviceName();
-
 	ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
 }
 
@@ -101,7 +100,7 @@ public:
 			ShaderCompilerWorker Worker;
 			ShaderType::SetEnvironmentVariables(Worker);
 			const auto&[Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
-			ShaderMetadata Meta(Filename, EntryPoint, Stage, Type);
+			const ShaderMetadata Meta(Filename, EntryPoint, Stage, Type);
 			const ShaderResourceTable ResourceTable = drm::CompileShader(Worker, Meta);
 			Shader = MakeRef<ShaderType>(ResourceTable);
 			DRM::CacheShader(Shader);

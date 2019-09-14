@@ -107,13 +107,18 @@ class VulkanUniformBuffer : public drm::UniformBuffer
 {
 public:
 	SharedVulkanBufferRef Buffer;
+	bool bDirty = false;
 
 	VulkanUniformBuffer(SharedVulkanBufferRef Buffer)
-		: Buffer(Buffer)
+		: Buffer(Buffer), drm::UniformBuffer((uint32)Buffer->Size)
 	{
 	}
 
-	virtual uint32 GetSize() final { return (uint32)Buffer->Size; }
+private:
+	virtual void Set() final 
+	{ 
+		bDirty = true; 
+	}
 };
 
 CLASS(VulkanUniformBuffer);
