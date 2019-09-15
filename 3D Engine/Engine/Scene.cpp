@@ -3,5 +3,5 @@
 
 Scene::Scene()
 {
-	Skybox = GAssetManager.GetCubemap("Engine-Cubemap-Default");
+	Skybox = Assets.GetCubemap("Engine_Cubemap_Default");
 }

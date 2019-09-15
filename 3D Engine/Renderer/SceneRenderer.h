@@ -8,11 +8,13 @@ class RenderCommandList;
 class SceneRenderer
 {
 public:
-	SceneRenderer();
+	SceneRenderer(const class Scene& Scene);
 
 	void Render(SceneProxy& Scene);
 
 private:
+	StaticMeshRef Cube;
+
 	// Scene render targets.
 	drm::ImageRef SceneDepth;
 	drm::ImageRef OutlineDepthStencil;

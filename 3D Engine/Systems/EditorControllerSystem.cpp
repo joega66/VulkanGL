@@ -3,6 +3,11 @@
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 
+void EditorControllerSystem::Start(Scene& Scene)
+{
+	Input.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
+}
+
 void EditorControllerSystem::Update(Scene& Scene)
 {
 	View& View = Scene.View;

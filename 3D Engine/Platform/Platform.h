@@ -1,12 +1,10 @@
 #pragma once
 #include <Engine/Types.h>
 
-struct GLFWwindow;
-
 class OS_Platform
 {
 public:
-	GLFWwindow* Window;
+	struct GLFWwindow* Window;
 
 	// Window
 	void OpenWindow(int32 Width, int32 Height);
@@ -54,20 +52,13 @@ private:
 
 extern OS_Platform Platform;
 
-// Print.
-#define print(Fmt, ...) \
-	Platform.WriteLog(OS_Platform::FormatString(Fmt, __VA_ARGS__)); \
+// Log.
+#define LOG(Fmt, ...) { Platform.WriteLog(OS_Platform::FormatString(Fmt, __VA_ARGS__)); }
 
-// Print and crash if expression fails.
-#define check(Expression, Fmt, ...) \
-	((Expression))? ((void)0) : [&] () { Platform.WriteLog(#Expression, __FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }();
+// Log and crash if expression fails.
+#define check(Expression, Fmt, ...) { ((Expression))? ((void)0) : [&] () { Platform.WriteLog(#Expression, __FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }(); }
 
-// Print error and crash.
-#define fail(Fmt, ...) \
-	if (true) \
-	{ \
-		Platform.WriteLog(__FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); \
-		throw std::runtime_error(""); \
-	} \
+// Log error and crash.
+#define fail(Fmt, ...) { Platform.WriteLog(__FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }
 
-#define signal_unimplemented() fail("UNIMPLEMENTED") \
+#define signal_unimplemented() { fail("UNIMPLEMENTED"); }

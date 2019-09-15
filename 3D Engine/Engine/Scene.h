@@ -1,6 +1,7 @@
 #pragma once
-#include <Engine/View.h>
 #include <ECS/EntityManager.h>
+#include <Engine/View.h>
+#include <Engine/AssetManager.h>
 
 class Scene
 {
@@ -10,6 +11,8 @@ class Scene
 public:
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
+
+	AssetManager Assets;
 
 	EntityManager ECS;
 

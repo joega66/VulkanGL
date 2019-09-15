@@ -9,10 +9,10 @@ void GameSystem::Start(Scene& Scene)
 {
 	auto& ECS = Scene.ECS;
 
-	GAssetManager.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
+	Scene.Assets.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
 
 	Entity Cube = ECS.CreatePrefab("Cube");
-	ECS.AddComponent<CStaticMesh>(Cube, GAssetManager.GetStaticMesh("Cube"));
+	ECS.AddComponent<CStaticMesh>(Cube, Scene.Assets.GetStaticMesh("Cube"));
 
 	auto Cube1 = ECS.CreateFromPrefab("Cube");
 	auto Cube2 = ECS.CreateFromPrefab("Cube");

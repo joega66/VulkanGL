@@ -12,7 +12,7 @@ void TimeKeeper::AddTime(float Time)
 
 void TimeKeeper::Finish()
 {
-	print("%s took %.3f seconds", Event.c_str(), TotalTime);
+	LOG("%s took %.3f seconds", Event.c_str(), TotalTime);
 	TotalTime = 0.0f;
 }
 
@@ -38,6 +38,6 @@ ScopedTimer::~ScopedTimer()
 	}
 	else
 	{
-		print("Elapsed time: %.3f", bFrequency ? 1 / Duration.count() : Duration.count());
+		LOG("Elapsed time: %.3f", bFrequency ? 1 / Duration.count() : Duration.count());
 	}
 }

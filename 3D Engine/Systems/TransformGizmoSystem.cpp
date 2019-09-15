@@ -30,7 +30,7 @@ void TransformGizmoSystem::Start(Scene& Scene)
 	ZAxis.Translate(glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
-	auto TransformGizmo = GAssetManager.GetStaticMesh("TransformGizmo");
+	auto TransformGizmo = Scene.Assets.GetStaticMesh("Transform_Gizmo");
 
 	ECS.AddComponent<CStaticMesh>(TranslateAxis.X, TransformGizmo);
 	ECS.AddComponent<CStaticMesh>(TranslateAxis.Y, TransformGizmo);

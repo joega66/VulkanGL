@@ -51,11 +51,7 @@ CMaterial ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, Textu
 	{
 		Material.Diffuse = DiffuseMap;
 	}
-	else
-	{
-		Material.Diffuse = GAssetManager.GetImage("Engine-Diffuse-Default");
-	}
-
+	
 	if (drm::ImageRef NormalMap = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_NORMALS, TextureCache); NormalMap)
 	{
 		Material.Normal = NormalMap;

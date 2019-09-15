@@ -6,13 +6,15 @@
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 
-SceneRenderer::SceneRenderer()
+SceneRenderer::SceneRenderer(const Scene& Scene)
 {
 	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
 		SceneDepth = drm::CreateImage(Width, Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
 		OutlineDepthStencil = drm::CreateImage(Width, Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
 	});
+
+	Cube = Scene.Assets.GetStaticMesh("Cube");
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)
@@ -93,8 +95,6 @@ void SceneRenderer::RenderLines(SceneProxy& Scene, RenderCommandList& CmdList)
 
 void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	StaticMeshRef Cube = GAssetManager.GetStaticMesh("Cube");
-
 	Ref<SkyboxVS> VertShader = *ShaderMapRef<SkyboxVS>();
 	Ref<SkyboxFS> FragShader = *ShaderMapRef<SkyboxFS>();
 

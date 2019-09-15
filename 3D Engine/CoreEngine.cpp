@@ -25,22 +25,8 @@ void CoreEngine::Run()
 	uint8 Blue[] = { 0, 0, 255, 0 };
 	CMaterial::Blue = drm::CreateImage(1, 1, EImageFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Blue);
 
-	std::array<std::string, 6> Cubemap = 
-	{
-		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
-		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
-		"../Images/Cubemaps/DownUnder/down-under_bk.tga", "../Images/Cubemaps/DownUnder/down-under_ft.tga",
-	};
-
-	// Engine primitives/default assets
-	GAssetManager.LoadCubemap("Engine-Cubemap-Default", Cubemap);
-	GAssetManager.LoadImage("Engine-Diffuse-Default", "../Images/Frozen-Ice-Texture.jpg");
-	GAssetManager.LoadStaticMesh("TransformGizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
-	GAssetManager.LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
-
-	// Shortcuts
-	Input.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
-
+	Scene Scene;
+	SceneRenderer SceneRenderer(Scene);
 	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;
@@ -51,9 +37,6 @@ void CoreEngine::Run()
 
 	TransformGizmoSystem TransformGizmoSystem;
 	SystemsManager.Register(TransformGizmoSystem);
-
-	Scene Scene;
-	SceneRenderer SceneRenderer;
 
 	SystemsManager.StartSystems(Scene);
 
