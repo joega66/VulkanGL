@@ -52,7 +52,7 @@ void LightingPassDrawPlan::SetUniforms(RenderCommandList& CmdList, const ScenePr
 
 	for (auto& Material : Materials)
 	{
-		CmdList.SetShaderImage(FragShader, Material.Location, Material.Image, SamplerState{});
+		CmdList.SetShaderImage(FragShader, Material.Location, Material.Image, SamplerState{ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 	}
 }
 

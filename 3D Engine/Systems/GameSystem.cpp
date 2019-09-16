@@ -9,27 +9,12 @@ void GameSystem::Start(Scene& Scene)
 {
 	auto& ECS = Scene.ECS;
 
-	Scene.Assets.LoadStaticMesh("Ivysaur", "../Meshes/Ivysaur/Pokemon.obj");
+	auto Sponza = ECS.CreateEntity();
+	auto SponzaMesh = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/sponza.obj");
+	ECS.AddComponent<CStaticMesh>(Sponza, SponzaMesh);
 
-	Entity Cube = ECS.CreatePrefab("Cube");
+	auto Cube = ECS.CreatePrefab("Cube");
 	ECS.AddComponent<CStaticMesh>(Cube, Scene.Assets.GetStaticMesh("Cube"));
-
-	auto Cube1 = ECS.CreateFromPrefab("Cube");
-	auto Cube2 = ECS.CreateFromPrefab("Cube");
-	auto Cube3 = ECS.CreateFromPrefab("Cube");
-	auto Cube4 = ECS.CreateFromPrefab("Cube");
-
-	auto& Transform1 = ECS.GetComponent<CTransform>(Cube1);
-	Transform1.Translate(glm::vec3(-10.0f, 0.0f, 0.0f));
-
-	auto& Transform2 = ECS.GetComponent<CTransform>(Cube2);
-	Transform2.Translate(glm::vec3(10.0f, 0.0f, 0.0f));
-
-	auto& Transform3 = ECS.GetComponent<CTransform>(Cube3);
-	Transform3.Translate(glm::vec3(0.0f, 0.0f, -10.0f));
-
-	auto& Transform4 = ECS.GetComponent<CTransform>(Cube4);
-	Transform4.Translate(glm::vec3(0.0f, 0.0f, 10.0f));
 
 	auto LightEntity = ECS.CreateFromPrefab("Cube");
 	auto& Light = ECS.AddComponent<CLight>(LightEntity);

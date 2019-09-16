@@ -209,13 +209,6 @@ void OS_Platform::ForkProcess(const std::string& ExePath, const std::string& Cmd
 	}
 }
 
-RID OS_Platform::CreateRID() const
-{
-	RID RID;
-	static_assert(sizeof(RID) == sizeof(UUID));
-	UuidCreate((UUID*)&RID);
-	return RID;
-}
 
 void OS_Platform::Memcpy(void* Dst, const void* Src, size_t Size) const
 {

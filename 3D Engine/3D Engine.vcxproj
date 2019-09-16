@@ -148,19 +148,19 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3251e0ea-e82a-4fe7-a893-499a35dca794}</ProjectGuid>
     <RootNamespace>_3D_Engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -196,12 +196,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.114.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include</IncludePath>
-    <LibraryPath>C:\VulkanSDK\1.1.114.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib;C:\VulkanSDK\1.1.73.0\Lib;C:\VulkanSDK\1.1.73.0\Lib32</LibraryPath>
+    <IncludePath>C:\VulkanSDK\1.1.114.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes</IncludePath>
+    <LibraryPath>C:\VulkanSDK\1.1.114.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib;C:\VulkanSDK\1.1.73.0\Lib;C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include</IncludePath>
-    <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib;C:\VulkanSDK\1.1.73.0\Lib;C:\VulkanSDK\1.1.73.0\Lib32</LibraryPath>
+    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes</IncludePath>
+    <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib;C:\VulkanSDK\1.1.73.0\Lib;C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

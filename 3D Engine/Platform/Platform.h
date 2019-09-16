@@ -27,8 +27,6 @@ public:
 	// Processes
 	void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const;
 
-	RID CreateRID() const;
-
 	// Memory
 	void Memcpy(void* Dst, const void* Src, size_t Size) const;
 

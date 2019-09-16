@@ -35,8 +35,8 @@ void CoreEngine::Run()
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
-	TransformGizmoSystem TransformGizmoSystem;
-	SystemsManager.Register(TransformGizmoSystem);
+	//TransformGizmoSystem TransformGizmoSystem;
+	//SystemsManager.Register(TransformGizmoSystem);
 
 	SystemsManager.StartSystems(Scene);
 

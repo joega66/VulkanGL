@@ -14,7 +14,6 @@ vec3 PointLighting(in MaterialParams Material, vec3 V, vec3 R0)
 		float Distance = length(FragToLight);
 		float Attenuation = 1.0 / (Distance * Distance);
 		float Specular = pow(max(dot(Material.Normal, H), 0.0), Material.Metallic);
-		// Radiance factor as derived in Real-Time Rendering, 3rd Edition, Section 5.5.1
 		float Radiance = ((1 / PI) + ((Material.Metallic + 8) * (Specular)) / (8 * PI)) * Diffuse;
 		Lo += (Ambient + Radiance) * PointLights[i].Color * Material.Albedo * Attenuation;
 	}
