@@ -85,8 +85,7 @@ void View::Translate(const float DS)
 
 glm::mat4 View::GetViewToClip() const
 {
-	// @todo Infinite Projection Matrix
-	glm::mat4 Perspective = glm::perspective(glm::radians(FOV), (float)Screen.GetWidth() / Screen.GetHeight(), 0.1f, 10000.0f);
+	glm::mat4 Perspective = glm::tweakedInfinitePerspective(glm::radians(FOV), (float)Screen.GetWidth() / Screen.GetHeight(), 0.1f);
 	// @todo VK_KHR_maintenance1
 	Perspective[1][1] *= -1;
 	return Perspective;

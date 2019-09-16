@@ -79,7 +79,6 @@
     <ClInclude Include="Engine\AssetManager.h" />
     <ClInclude Include="Engine\Cursor.h" />
     <ClInclude Include="Engine\Input.h" />
-    <ClInclude Include="Engine\PendingBuffer.h" />
     <ClInclude Include="Engine\Scene.h" />
     <ClInclude Include="Engine\Screen.h" />
     <ClInclude Include="Engine\StaticMesh.h" />

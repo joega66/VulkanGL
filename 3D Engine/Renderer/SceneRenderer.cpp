@@ -10,7 +10,7 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 {
 	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
-		SceneDepth = drm::CreateImage(Width, Height, EImageFormat::D16_UNORM, EResourceUsage::RenderTargetable);
+		SceneDepth = drm::CreateImage(Width, Height, EImageFormat::D32_SFLOAT, EResourceUsage::RenderTargetable);
 		OutlineDepthStencil = drm::CreateImage(Width, Height, EImageFormat::D24_UNORM_S8_UINT, EResourceUsage::RenderTargetable);
 	});
 
