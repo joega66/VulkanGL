@@ -80,7 +80,6 @@ void SceneProxy::InitLights(Scene& Scene)
 void SceneProxy::InitDrawLists(Scene& Scene)
 {
 	InitLightingPassDrawList(Scene);
-	InitOutlineDrawList(Scene);
 }
 
 void SceneProxy::InitLightingPassDrawList(Scene& Scene)
@@ -115,25 +114,6 @@ void SceneProxy::InitLightingPassDrawList(Scene& Scene)
 			{
 				LightingPass.Add(Entity, LightingPassDrawPlan(Element, Element.Material, Transform.LocalToWorldUniform));
 			}
-		}
-	}
-}
-
-void SceneProxy::InitOutlineDrawList(Scene& Scene)
-{
-	auto& ECS = Scene.ECS;
-
-	for (auto Entity : ECS.GetEntities<COutline>())
-	{
-		auto& Transform = ECS.GetComponent<CTransform>(Entity);
-		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
-		auto ScaledUpTransform = Transform;
-		ScaledUpTransform.Scale(ScaledUpTransform.GetScale() * glm::vec3(1.05f));
-
-		for (auto& Element : StaticMesh.StaticMesh->Batch.Elements)
-		{
-			Stencil.Add(Entity, DepthPassDrawPlan(Element, Transform.LocalToWorldUniform));
-			Outline.Add(Entity, OutlineDrawPlan(Element, ScaledUpTransform.LocalToWorldUniform));
 		}
 	}
 }

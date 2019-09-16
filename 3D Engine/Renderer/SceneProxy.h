@@ -16,12 +16,6 @@ public:
 
 	DrawList<LightingPassDrawPlan> LightingPass;
 
-	DrawList<DepthPassDrawPlan> Stencil;
-
-	DrawList<OutlineDrawPlan> Outline;
-
-	DrawList<LineDrawPlan> Lines;
-
 	std::vector<PointLightProxy> PointLightProxies;
 
 	drm::UniformBufferRef ViewUniform;
@@ -36,5 +30,4 @@ private:
 	void InitLights(Scene& Scene);
 	void InitDrawLists(Scene& Scene);
 	void InitLightingPassDrawList(Scene& Scene);
-	void InitOutlineDrawList(Scene& Scene);
 };

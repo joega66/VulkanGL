@@ -39,7 +39,7 @@ StaticMeshRef AssetManager::GetStaticMesh(const std::string& Name) const
 	return GetValue(StaticMeshes, Name);
 }
 
-void AssetManager::LoadImage(const std::string& Name, const std::string& File, EImageFormat Format)
+void AssetManager::LoadImage(const std::string& Name, const std::string& File, EFormat Format)
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
@@ -52,7 +52,7 @@ drm::ImageRef AssetManager::GetImage(const std::string& Name) const
 	return GetValue(Images, Name);
 }
 
-void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EImageFormat Format)
+void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format)
 {
 	CubemapCreateInfo CubemapCreateInfo;
 

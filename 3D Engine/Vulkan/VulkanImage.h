@@ -15,7 +15,7 @@ public:
 	VulkanImage(VulkanDevice& Device 
 		, VkImage Image
 		, VkDeviceMemory Memory
-		, EImageFormat Format
+		, EFormat Format
 		, EImageLayout Layout
 		, uint32 Width
 		, uint32 Height
@@ -26,11 +26,11 @@ public:
 
 	operator VkImage();
 
-	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EImageFormat Format);
+	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);
 
-	static VkFormat GetVulkanFormat(EImageFormat Format);
+	static VkFormat GetVulkanFormat(EFormat Format);
 
-	static EImageFormat GetEngineFormat(VkFormat Format);
+	static EFormat GetEngineFormat(VkFormat Format);
 
 	static VkImageLayout GetVulkanLayout(EImageLayout Layout);
 

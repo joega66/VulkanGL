@@ -188,7 +188,7 @@ static VkDeviceSize GetNumBytes(const VulkanImageRef Image)
 
 	switch (Image->Format)
 	{
-	case EImageFormat::R8G8B8A8_UNORM:
+	case EFormat::R8G8B8A8_UNORM:
 		Bytes = 4;
 		break;
 	default:

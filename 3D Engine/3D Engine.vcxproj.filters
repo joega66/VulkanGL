@@ -119,12 +119,6 @@
     <ClInclude Include="Physics\Physics.h">
       <Filter>Source\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\EditorPrimitives.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\DepthPass.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="CoreEngine.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -218,6 +212,9 @@
     <ClInclude Include="Engine\Scene.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\EditorPrimitives.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -276,12 +273,6 @@
     </ClCompile>
     <ClCompile Include="Physics\Physics.cpp">
       <Filter>Source\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\EditorPrimitives.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\DepthPass.cpp">
-      <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="CoreEngine.cpp">
       <Filter>Source Files</Filter>

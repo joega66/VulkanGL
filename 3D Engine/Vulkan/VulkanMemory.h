@@ -82,7 +82,7 @@ class VulkanVertexBuffer : public drm::VertexBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EImageFormat Format, EResourceUsage Usage)
+	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EFormat Format, EResourceUsage Usage)
 		: Buffer(Buffer), drm::VertexBuffer(Format, Usage)
 	{
 	}
@@ -95,7 +95,7 @@ class VulkanIndexBuffer : public drm::IndexBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
+	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EFormat Format, EResourceUsage Usage)
 		: Buffer(Buffer), drm::IndexBuffer(IndexStride, Format, Usage)
 	{
 	}

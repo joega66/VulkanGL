@@ -15,7 +15,7 @@ static CAST(RenderCommandList, VulkanCommandList);
 
 /** Engine conversions */
 HashTable<VkFormat, uint32> SizeOfVulkanFormat;
-HashTable<EImageFormat, uint32> ImageFormatToGLSLSize;
+HashTable<EFormat, uint32> ImageFormatToGLSLSize;
 
 VulkanDRM::VulkanDRM()
 	: Swapchain(Device)
@@ -33,7 +33,7 @@ VulkanDRM::VulkanDRM()
 
 	ImageFormatToGLSLSize = ([&] ()
 	{
-		HashTable<EImageFormat, uint32>Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+		HashTable<EFormat, uint32>Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
 		{
 			auto ImageFormat = VulkanImage::GetEngineFormat(Format); auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType); Result[ImageFormat] = GLSLSize;
 		} return Result;
@@ -83,7 +83,7 @@ void VulkanDRM::EndFrame()
 	DescriptorPool.Reset();
 }
 
-drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EImageFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
+drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
@@ -141,9 +141,9 @@ RenderCommandListRef VulkanDRM::CreateCommandList()
 	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool);
 }
 
-drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
+drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
 {
-	check(Format == EImageFormat::R16_UINT || Format == EImageFormat::R32_UINT, "Format must be single-channel unsigned type.");
+	check(Format == EFormat::R16_UINT || Format == EFormat::R32_UINT, "Format must be single-channel unsigned type.");
 
 	uint32 IndexBufferStride = GetValue(ImageFormatToGLSLSize, Format);
 	auto Buffer = Allocator.CreateBuffer(IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
@@ -163,7 +163,7 @@ drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void* Da
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
-drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
+drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
@@ -192,7 +192,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EImageFormat F
 	return DRMImage;
 }
 
-drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;

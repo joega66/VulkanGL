@@ -25,12 +25,12 @@ namespace drm
 		return GDRM->CreateCommandList();
 	}
 
-	IndexBufferRef CreateIndexBuffer(EImageFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data)
+	IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data)
 	{
 		return GDRM->CreateIndexBuffer(Format, NumIndices, Usage, Data);
 	}
 
-	VertexBufferRef CreateVertexBuffer(EImageFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data)
+	VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data)
 	{
 		return GDRM->CreateVertexBuffer(Format, NumElements, Usage, Data);
 	}
@@ -45,12 +45,12 @@ namespace drm
 		return GDRM->CreateStorageBuffer(Size, Data, Usage);
 	}
 
-	ImageRef CreateImage(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const uint8* Data)
+	ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const uint8* Data)
 	{
 		return GDRM->CreateImage(Width, Height, Format, UsageFlags, Data);
 	}
 
-	ImageRef CreateCubemap(uint32 Width, uint32 Height, EImageFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+	ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 	{
 		return GDRM->CreateCubemap(Width, Height, Format, UsageFlags | EResourceUsage::Cubemap, CubemapCreateInfo);
 	}

@@ -1,7 +1,7 @@
 #pragma once
 #include <Platform/Platform.h>
 
-enum class EImageFormat
+enum class EFormat
 {
 	UNDEFINED,
 	R8_UINT,
@@ -114,10 +114,10 @@ namespace drm
 	class VertexBuffer
 	{
 	public:
-		EImageFormat Format;
+		EFormat Format;
 		EResourceUsage Usage;
 
-		VertexBuffer(EImageFormat Format, EResourceUsage Usage)
+		VertexBuffer(EFormat Format, EResourceUsage Usage)
 			: Format(Format), Usage(Usage)
 		{
 		}
@@ -128,11 +128,11 @@ namespace drm
 	class IndexBuffer
 	{
 	public:
-		EImageFormat Format;
+		EFormat Format;
 		EResourceUsage Usage;
 		uint32 IndexStride;
 
-		IndexBuffer(uint32 IndexStride, EImageFormat Format, EResourceUsage Usage)
+		IndexBuffer(uint32 IndexStride, EFormat Format, EResourceUsage Usage)
 			: IndexStride(IndexStride), Format(Format), Usage(Usage)
 		{
 		}
@@ -182,13 +182,13 @@ namespace drm
 	class Image
 	{
 	public:
-		EImageFormat Format;
+		EFormat Format;
 		uint32 Width;
 		uint32 Height;
 		EResourceUsage Usage;
 		EImageLayout Layout;
 
-		Image(EImageFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
+		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
 			: Format(Format), Layout(Layout), Width(Width), Height(Height), Usage(UsageFlags)
 		{
 		}
@@ -196,10 +196,10 @@ namespace drm
 		bool IsColor() const;
 		bool IsStencil() const;
 
-		static bool IsDepthStencil(EImageFormat Format);
+		static bool IsDepthStencil(EFormat Format);
 		bool IsDepthStencil() const;
 
-		static bool IsDepth(EImageFormat Format);
+		static bool IsDepth(EFormat Format);
 		bool IsDepth() const;
 	};
 
