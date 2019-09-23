@@ -215,6 +215,9 @@
     <ClInclude Include="Renderer\EditorPrimitives.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanQueues.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -336,6 +339,9 @@
     </ClCompile>
     <ClCompile Include="Engine\Scene.cpp">
       <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanQueues.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -56,6 +56,7 @@ enum class EFormat
 	BC2_UNORM_BLOCK,
 };
 
+// @todo Split this up into EImageUsage and EBufferUsage...
 enum class EResourceUsage
 {
 	None,

@@ -1,20 +1,22 @@
 #include "VulkanCommands.h"
 #include "VulkanDevice.h"
 
-VulkanScopedCommandBuffer::VulkanScopedCommandBuffer(VulkanDevice & Device) 
-	: Device(Device) 
+VulkanScopedCommandBuffer::VulkanScopedCommandBuffer(VulkanDevice& Device, VkQueueFlags QueueFlags)
+	: Device(Device)
+	, Queue(Device.Queues.GetQueue(QueueFlags))
+	, CommandPool(Device.Queues.GetCommandPool(QueueFlags))
 {
 	VkCommandBufferAllocateInfo Info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	Info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	Info.commandPool = Device.CommandPool;
+	Info.commandPool = CommandPool;
 	Info.commandBufferCount = 1;
 
-	vkAllocateCommandBuffers(Device, &Info, &CommandBuffer);
+	vulkan(vkAllocateCommandBuffers(Device, &Info, &CommandBuffer));
 
 	VkCommandBufferBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	vkBeginCommandBuffer(CommandBuffer, &BeginInfo);
+	vulkan(vkBeginCommandBuffer(CommandBuffer, &BeginInfo));
 }
 
 VulkanScopedCommandBuffer::~VulkanScopedCommandBuffer()
@@ -25,7 +27,7 @@ VulkanScopedCommandBuffer::~VulkanScopedCommandBuffer()
 	SubmitInfo.commandBufferCount = 1;
 	SubmitInfo.pCommandBuffers = &CommandBuffer;
 
-	vkQueueSubmit(Device.GraphicsQueue, 1, &SubmitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(Device.GraphicsQueue);
-	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
+	vulkan(vkQueueSubmit(Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
+	vulkan(vkQueueWaitIdle(Queue));
+	vkFreeCommandBuffers(Device, CommandPool, 1, &CommandBuffer);
 }

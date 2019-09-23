@@ -9,11 +9,18 @@
 class VulkanCommandList final : public RenderCommandList
 {
 public:
-	const VkCommandBuffer CommandBuffer;
+	VkQueue Queue;
+
+	VkCommandPool CommandPool;
+
+	VkCommandBuffer CommandBuffer;
+
 	bool bTouchedSurface = false;
+
 	bool bFinished = false;
 
-	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool);
+	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool, VkQueueFlagBits QueueFlags);
+
 	~VulkanCommandList();
 
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit);
@@ -29,7 +36,9 @@ public:
 
 private:
 	VulkanDevice& Device;
+
 	VulkanAllocator& Allocator;
+
 	VulkanDescriptorPool& DescriptorPool;
 
 	bool bDirtyDescriptorSets = false;
@@ -45,10 +54,13 @@ private:
 
 	template<typename VulkanDescriptorType>
 	using DescriptorMap = HashTable<EShaderStage, HashTable<uint32, std::unique_ptr<VulkanDescriptorType>>>;
+
 	DescriptorMap<VulkanWriteDescriptorImage> DescriptorImages;
+
 	DescriptorMap<VulkanWriteDescriptorBuffer> DescriptorBuffers;
 
 	void PrepareForDraw();
+
 	void CleanDescriptorSets();
 };
 

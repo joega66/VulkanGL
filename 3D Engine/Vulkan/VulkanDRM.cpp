@@ -13,9 +13,9 @@ static CAST(drm::StorageBuffer, VulkanStorageBuffer);
 static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 
-/** Engine conversions */
 HashTable<VkFormat, uint32> SizeOfVulkanFormat;
-HashTable<EFormat, uint32> ImageFormatToGLSLSize;
+
+static HashTable<EFormat, uint32> ImageFormatToGLSLSize;
 
 VulkanDRM::VulkanDRM()
 	: Swapchain(Device)
@@ -109,7 +109,7 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 		SubmitInfo.signalSemaphoreCount = 1;
 		SubmitInfo.pSignalSemaphores = &RenderEndSem;
 
-		vulkan(vkQueueSubmit(Device.GraphicsQueue, 1, &SubmitInfo, VK_NULL_HANDLE));
+		vulkan(vkQueueSubmit(VulkanCmdList->Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
 		VkPresentInfoKHR PresentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		PresentInfo.pWaitSemaphores = &RenderEndSem;
@@ -118,7 +118,7 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 		PresentInfo.swapchainCount = 1;
 		PresentInfo.pImageIndices = &SwapchainIndex;
 
-		if (VkResult Result = vkQueuePresentKHR(Device.PresentQueue, &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
+		if (VkResult Result = vkQueuePresentKHR(Device.Queues.GetPresentQueue(), &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
 		{
 			signal_unimplemented();
 		}
@@ -127,8 +127,7 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 			vulkan(Result);
 		}
 
-		vkQueueWaitIdle(Device.GraphicsQueue);
-		vkQueueWaitIdle(Device.PresentQueue);
+		vulkan(vkQueueWaitIdle(Device.Queues.GetPresentQueue()));
 	}
 	else
 	{
@@ -138,7 +137,7 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 
 RenderCommandListRef VulkanDRM::CreateCommandList()
 {
-	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool);
+	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
 drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
@@ -297,7 +296,7 @@ void VulkanDRM::UnlockBuffer(drm::StorageBufferRef StorageBuffer)
 
 void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAccessMask, VkAccessFlags DstAccessMask, EImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
-	VulkanScopedCommandBuffer ScopedCommandBuffer(Device);
+	VulkanScopedCommandBuffer ScopedCommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
 
 	VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	Barrier.oldLayout = Image->GetVulkanLayout();

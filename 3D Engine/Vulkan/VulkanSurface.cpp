@@ -35,12 +35,9 @@ void VulkanSurface::Init()
 	SwapchainInfo.imageArrayLayers = 1;
 	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	QueueFamilyIndices Indices = {};
-	Indices.FindQueueFamilies(Device.PhysicalDevice, Device.Surface);
+	const uint32 QueueFamilyIndices[] = { static_cast<uint32>(Device.Queues.GetGraphicsIndex()), static_cast<uint32>(Device.Queues.GetPresentIndex()) };
 
-	uint32 QueueFamilyIndices[] = { static_cast<uint32>(Indices.GraphicsFamily), static_cast<uint32>(Indices.PresentFamily) };
-
-	if (Indices.GraphicsFamily != Indices.PresentFamily)
+	if (QueueFamilyIndices[0] != QueueFamilyIndices[1])
 	{
 		SwapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		SwapchainInfo.queueFamilyIndexCount = 2;

@@ -165,7 +165,7 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 
 		vkUnmapMemory(Device, StagingBuffer->Memory);
 
-		VulkanScopedCommandBuffer CommandBuffer(Device);
+		VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
 
 		VkBufferCopy Copy = {};
 		Copy.size = Buffer.Size;
@@ -236,7 +236,7 @@ void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const Cubema
 
 void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
 {
-	VulkanScopedCommandBuffer CommandBuffer(Device);
+	VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
 	std::vector<VkBufferImageCopy> Regions;
 
 	if (Any(Image->Usage & EResourceUsage::Cubemap))

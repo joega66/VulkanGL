@@ -9,33 +9,29 @@ static CAST(drm::StorageBuffer, VulkanStorageBuffer);
 static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool)
+VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool, VkQueueFlagBits QueueFlags)
 	: Device(Device)
 	, DescriptorPool(DescriptorPool)
 	, Allocator(Allocator)
-	, CommandBuffer([&] ()
+	, Queue(Device.Queues.GetQueue(QueueFlags))
+	, CommandPool(Device.Queues.GetCommandPool(QueueFlags))
 {
 	VkCommandBufferAllocateInfo CommandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	CommandBufferInfo.commandPool = Device.CommandPool;
+	CommandBufferInfo.commandPool = CommandPool;
 	CommandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	CommandBufferInfo.commandBufferCount = 1;
 
-	VkCommandBuffer CommandBuffer;
-	vkAllocateCommandBuffers(Device, &CommandBufferInfo, &CommandBuffer);
+	vulkan(vkAllocateCommandBuffers(Device, &CommandBufferInfo, &CommandBuffer));
 
 	VkCommandBufferBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
 	vulkan(vkBeginCommandBuffer(CommandBuffer, &BeginInfo));
-
-	return CommandBuffer;
-}())
-{
 }
 
 VulkanCommandList::~VulkanCommandList()
 {
-	vkFreeCommandBuffers(Device, Device.CommandPool, 1, &CommandBuffer);
+	vkFreeCommandBuffers(Device, CommandPool, 1, &CommandBuffer);
 }
 
 void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)

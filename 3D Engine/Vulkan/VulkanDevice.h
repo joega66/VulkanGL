@@ -1,6 +1,7 @@
 #pragma once
 #include <RenderCommandList.h>
 #include "VulkanShader.h"
+#include "VulkanQueues.h"
 
 class VulkanDevice
 {
@@ -8,12 +9,15 @@ class VulkanDevice
 	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
 public:
 	VkPhysicalDevice PhysicalDevice;
+
 	VkSurfaceKHR Surface;
-	VkQueue GraphicsQueue;
-	VkQueue PresentQueue;
-	VkCommandPool CommandPool;
+
+	VulkanQueues Queues;
+
 	VkPhysicalDeviceProperties Properties;
+
 	VkPhysicalDeviceFeatures Features;
+
 	HashTable<std::type_index, VulkanShader> ShaderCache;
 
 	VulkanDevice();
@@ -32,7 +36,9 @@ public:
 
 private:
 	VkInstance Instance;
+
 	VkDevice Device;
+
 	VkDebugReportCallbackEXT DebugReportCallback;
 
 	struct VulkanRenderPassHash
@@ -47,7 +53,9 @@ private:
 			MinRenderTargetView(const class VulkanRenderTargetView& RTView);
 			bool operator==(const MinRenderTargetView& Other);
 		};
+
 		std::vector<MinRenderTargetView> ColorTargets;
+
 		MinRenderTargetView DepthTarget;
 
 		VulkanRenderPassHash(const RenderPassInitializer& RPInit);
@@ -75,15 +83,6 @@ private:
 };
 
 CLASS(VulkanDevice);
-
-struct QueueFamilyIndices
-{
-	int GraphicsFamily = -1;
-	int PresentFamily = -1;
-
-	bool IsComplete() const;
-	void FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface);
-};
 
 #define vulkan(Result) \
 	check(Result == VK_SUCCESS, "Vulkan call failed.");				
