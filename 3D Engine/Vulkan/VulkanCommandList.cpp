@@ -301,7 +301,6 @@ void VulkanCommandList::CleanDescriptorSets()
 	bDirtyDescriptorSets = false;
 }
 
-
 void VulkanCommandList::PrepareForDraw()
 {
 	if (bDirtyDescriptorSets)

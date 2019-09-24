@@ -86,7 +86,7 @@ void VulkanDRM::EndFrame()
 drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
-	auto Buffer = Allocator.CreateBuffer(NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
+	auto Buffer = Allocator.CreateBuffer((VkDeviceSize)NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
 }
 
@@ -145,7 +145,7 @@ drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndic
 	check(Format == EFormat::R16_UINT || Format == EFormat::R32_UINT, "Format must be single-channel unsigned type.");
 
 	uint32 IndexBufferStride = GetValue(ImageFormatToGLSLSize, Format);
-	auto Buffer = Allocator.CreateBuffer(IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
+	auto Buffer = Allocator.CreateBuffer((VkDeviceSize)IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
 }
 
@@ -296,7 +296,7 @@ void VulkanDRM::UnlockBuffer(drm::StorageBufferRef StorageBuffer)
 
 void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAccessMask, VkAccessFlags DstAccessMask, EImageLayout NewLayout, VkPipelineStageFlags DestinationStage)
 {
-	VulkanScopedCommandBuffer ScopedCommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
+	VulkanScopedCommandBuffer ScopedCommandBuffer(Device, VK_QUEUE_GRAPHICS_BIT);
 
 	VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 	Barrier.oldLayout = Image->GetVulkanLayout();

@@ -25,14 +25,11 @@ public:
 
 private:
 	int32 GraphicsIndex = -1;
-	int32 ComputeIndex = -1;
 	int32 TransferIndex = -1;
 	int32 PresentIndex = -1;
 
 	VkQueue GraphicsQueue;
 	VkCommandPool GraphicsPool;
-	VkQueue ComputeQueue;
-	VkCommandPool ComputePool;
 	VkQueue TransferQueue;
 	VkCommandPool TransferPool;
 	VkQueue PresentQueue;
