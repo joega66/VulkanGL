@@ -83,7 +83,7 @@ void VulkanDRM::EndFrame()
 	DescriptorPool.Reset();
 }
 
-drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EFormat EngineFormat, uint32 NumElements, EResourceUsage Usage, const void* Data)
+drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EFormat EngineFormat, uint32 NumElements, EBufferUsage Usage, const void* Data)
 {
 	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
 	auto Buffer = Allocator.CreateBuffer((VkDeviceSize)NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
@@ -140,7 +140,7 @@ RenderCommandListRef VulkanDRM::CreateCommandList()
 	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
-drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndices, EResourceUsage Usage, const void * Data)
+drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void * Data)
 {
 	check(Format == EFormat::R16_UINT || Format == EFormat::R32_UINT, "Format must be single-channel unsigned type.");
 
@@ -151,18 +151,18 @@ drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndic
 
 drm::UniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
 {
-	EResourceUsage Usage = UniformUsage == EUniformUpdate::Frequent ? EResourceUsage::KeepCPUAccessible : EResourceUsage::None;
+	EBufferUsage Usage = UniformUsage == EUniformUpdate::Frequent ? EBufferUsage::KeepCPUAccessible : EBufferUsage::None;
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanUniformBuffer>(Buffer);
 }
 
-drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage)
+drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void* Data, EBufferUsage Usage)
 {
 	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
-drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr)
+drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
@@ -181,7 +181,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format
 
 	if (Data)
 	{
-		check(!Any(UsageFlags & EResourceUsage::RenderTargetable), "Not supported yet.");
+		check(!Any(UsageFlags & EImageUsage::RenderTargetable), "Not supported yet.");
 
 		TransitionImageLayout(DRMImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, EImageLayout::TransferDstOptimal, VK_PIPELINE_STAGE_TRANSFER_BIT);
 		Allocator.UploadImageData(DRMImage, Data);
@@ -191,7 +191,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format
 	return DRMImage;
 }
 
-drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
+drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	// This path will be supported, but should really prefer to use a compressed format.
 	VkImage Image;
@@ -308,7 +308,7 @@ void VulkanDRM::TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAcc
 	Barrier.subresourceRange.baseMipLevel = 0;
 	Barrier.subresourceRange.levelCount = 1;
 	Barrier.subresourceRange.baseArrayLayer = 0;
-	Barrier.subresourceRange.layerCount = Any(Image->Usage & EResourceUsage::Cubemap) ? 6 : 1;
+	Barrier.subresourceRange.layerCount = Any(Image->Usage & EImageUsage::Cubemap) ? 6 : 1;
 
 	vkCmdPipelineBarrier(
 		ScopedCommandBuffer,

@@ -9,13 +9,13 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 {
 }
 
-SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EResourceUsage Usage, const void* Data)
+SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
 {
-	VulkanUsage |= Any(Usage & EResourceUsage::UnorderedAccess) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
-	VulkanUsage |= Any(Usage & EResourceUsage::IndirectBuffer) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
-	VulkanUsage |= !Any(Usage & EResourceUsage::KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::UnorderedAccess) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::IndirectBuffer) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
+	VulkanUsage |= !Any(Usage & EBufferUsage::KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
 	
-	VkMemoryPropertyFlags Properties = Any(Usage & EResourceUsage::KeepCPUAccessible) ? 
+	VkMemoryPropertyFlags Properties = Any(Usage & EBufferUsage::KeepCPUAccessible) ?
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 	for (auto& Buffer : Buffers)
@@ -239,7 +239,7 @@ void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
 	VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
 	std::vector<VkBufferImageCopy> Regions;
 
-	if (Any(Image->Usage & EResourceUsage::Cubemap))
+	if (Any(Image->Usage & EImageUsage::Cubemap))
 	{
 		Size /= 6;
 		Regions.resize(6, {});

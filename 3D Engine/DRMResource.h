@@ -56,16 +56,21 @@ enum class EFormat
 	BC2_UNORM_BLOCK,
 };
 
-// @todo Split this up into EImageUsage and EBufferUsage...
-enum class EResourceUsage
+enum class EBufferUsage
+{
+	None,
+	IndirectBuffer = 1 << 0,
+	KeepCPUAccessible = 1 << 1,
+	UnorderedAccess = 1 << 3,
+};
+
+enum class EImageUsage
 {
 	None,
 	RenderTargetable = 1 << 0,
 	ShaderResource = 1 << 1,
-	UnorderedAccess = 1 << 2,
-	IndirectBuffer = 1 << 3,
-	KeepCPUAccessible = 1 << 4,
-	Cubemap = 1 << 5
+	Cubemap = 1 << 2,
+	UnorderedAccess = 1 << 3,
 };
 
 enum class ELoadAction
@@ -116,9 +121,9 @@ namespace drm
 	{
 	public:
 		EFormat Format;
-		EResourceUsage Usage;
+		EBufferUsage Usage;
 
-		VertexBuffer(EFormat Format, EResourceUsage Usage)
+		VertexBuffer(EFormat Format, EBufferUsage Usage)
 			: Format(Format), Usage(Usage)
 		{
 		}
@@ -130,10 +135,10 @@ namespace drm
 	{
 	public:
 		EFormat Format;
-		EResourceUsage Usage;
+		EBufferUsage Usage;
 		uint32 IndexStride;
 
-		IndexBuffer(uint32 IndexStride, EFormat Format, EResourceUsage Usage)
+		IndexBuffer(uint32 IndexStride, EFormat Format, EBufferUsage Usage)
 			: IndexStride(IndexStride), Format(Format), Usage(Usage)
 		{
 		}
@@ -170,9 +175,9 @@ namespace drm
 	class StorageBuffer
 	{
 	public:
-		const EResourceUsage Usage;
+		const EBufferUsage Usage;
 
-		StorageBuffer(EResourceUsage Usage)
+		StorageBuffer(EBufferUsage Usage)
 			: Usage(Usage)
 		{
 		}
@@ -186,10 +191,10 @@ namespace drm
 		EFormat Format;
 		uint32 Width;
 		uint32 Height;
-		EResourceUsage Usage;
+		EImageUsage Usage;
 		EImageLayout Layout;
 
-		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EResourceUsage UsageFlags)
+		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EImageUsage UsageFlags)
 			: Format(Format), Layout(Layout), Width(Width), Height(Height), Usage(UsageFlags)
 		{
 		}

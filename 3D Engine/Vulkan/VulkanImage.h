@@ -19,7 +19,7 @@ public:
 		, EImageLayout Layout
 		, uint32 Width
 		, uint32 Height
-		, EResourceUsage UsageFlags
+		, EImageUsage UsageFlags
 		, VkPipelineStageFlags Stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 	
 	~VulkanImage();

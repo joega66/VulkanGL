@@ -61,7 +61,7 @@ public:
 	SharedVulkanBufferRef CreateBuffer(
 		VkDeviceSize Size, 
 		VkBufferUsageFlags VulkanUsage, 
-		EResourceUsage Usage, 
+		EBufferUsage Usage,
 		const void* Data = nullptr);
 
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
@@ -102,7 +102,7 @@ class VulkanVertexBuffer : public drm::VertexBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EFormat Format, EResourceUsage Usage)
+	VulkanVertexBuffer(SharedVulkanBufferRef Buffer, EFormat Format, EBufferUsage Usage)
 		: Buffer(Buffer), drm::VertexBuffer(Format, Usage)
 	{
 	}
@@ -115,7 +115,7 @@ class VulkanIndexBuffer : public drm::IndexBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EFormat Format, EResourceUsage Usage)
+	VulkanIndexBuffer(SharedVulkanBufferRef Buffer, uint32 IndexStride, EFormat Format, EBufferUsage Usage)
 		: Buffer(Buffer), drm::IndexBuffer(IndexStride, Format, Usage)
 	{
 	}
@@ -148,7 +148,7 @@ class VulkanStorageBuffer : public drm::StorageBuffer
 public:
 	SharedVulkanBufferRef Buffer;
 
-	VulkanStorageBuffer(SharedVulkanBufferRef Buffer, EResourceUsage Usage)
+	VulkanStorageBuffer(SharedVulkanBufferRef Buffer, EBufferUsage Usage)
 		: Buffer(Buffer), drm::StorageBuffer(Usage)
 	{
 	}

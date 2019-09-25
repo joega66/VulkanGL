@@ -74,7 +74,7 @@ const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
 	ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 };
 
-VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EResourceUsage UsageFlags, VkPipelineStageFlags Stage)
+VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EImageUsage UsageFlags, VkPipelineStageFlags Stage)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
@@ -83,13 +83,13 @@ VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Mem
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
-	ViewInfo.viewType = Any(Usage & EResourceUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+	ViewInfo.viewType = Any(Usage & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
 	ViewInfo.format = GetVulkanFormat();
 	ViewInfo.subresourceRange.aspectMask = GetVulkanAspect();
 	ViewInfo.subresourceRange.baseMipLevel = 0;
 	ViewInfo.subresourceRange.levelCount = 1;
 	ViewInfo.subresourceRange.baseArrayLayer = 0;
-	ViewInfo.subresourceRange.layerCount = Any(Usage & EResourceUsage::Cubemap) ? 6 : 1;
+	ViewInfo.subresourceRange.layerCount = Any(Usage & EImageUsage::Cubemap) ? 6 : 1;
 	ViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
@@ -103,7 +103,7 @@ VulkanImage::~VulkanImage()
 VulkanImage::operator VkImage() { return Image; }
 
 void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout,
-	uint32 Width, uint32 Height, EFormat& Format, EResourceUsage UsageFlags, bool bTransferDstBit)
+	uint32 Width, uint32 Height, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit)
 {
 	Layout = EImageLayout::Undefined;
 
@@ -118,7 +118,7 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 	Info.extent.height = Height;
 	Info.extent.depth = 1;
 	Info.mipLevels = 1;
-	Info.arrayLayers = Any(UsageFlags & EResourceUsage::Cubemap) ? 6 : 1;
+	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
 	Info.format = VulkanImage::GetVulkanFormat(Format);
 	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
 	Info.initialLayout = VulkanImage::GetVulkanLayout(Layout);
@@ -126,18 +126,18 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 	{
 		VkFlags Usage = 0;
 
-		if (Any(UsageFlags & EResourceUsage::RenderTargetable))
+		if (Any(UsageFlags & EImageUsage::RenderTargetable))
 		{
 			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
 		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
-		Usage |= Any(UsageFlags & EResourceUsage::ShaderResource) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
-		Usage |= Any(UsageFlags & EResourceUsage::UnorderedAccess) ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
+		Usage |= Any(UsageFlags & EImageUsage::ShaderResource) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
+		Usage |= Any(UsageFlags & EImageUsage::UnorderedAccess) ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 
 		return Usage;
 	}();
-	Info.flags = Any(UsageFlags & EResourceUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
+	Info.flags = Any(UsageFlags & EImageUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
 	Info.samples = VK_SAMPLE_COUNT_1_BIT;
 	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -327,7 +327,7 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 void VulkanDevice::FreeImage(VulkanImage& Image)
 {
 	// The image is no longer being referenced; destroy vulkan objects.
-	if (Any(Image.Usage & EResourceUsage::RenderTargetable))
+	if (Any(Image.Usage & EImageUsage::RenderTargetable))
 	{
 		for (auto Iter = RenderPassCache.begin(); Iter != RenderPassCache.end();)
 		{

@@ -17,13 +17,13 @@ class Screen Screen;
 void CoreEngine::Run()
 {
 	uint8 Red[] = { 255, 0, 0, 0 };
-	CMaterial::Red = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Red);
+	CMaterial::Red = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Red);
 
 	uint8 Green[] = { 0, 255, 0, 0 };
-	CMaterial::Green = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Green);
+	CMaterial::Green = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Green);
 
 	uint8 Blue[] = { 0, 0, 255, 0 };
-	CMaterial::Blue = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EResourceUsage::ShaderResource, Blue);
+	CMaterial::Blue = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Blue);
 
 	Scene Scene;
 	SceneRenderer SceneRenderer(Scene);

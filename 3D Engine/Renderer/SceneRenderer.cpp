@@ -10,7 +10,7 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 {
 	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
-		SceneDepth = drm::CreateImage(Width, Height, EFormat::D32_SFLOAT, EResourceUsage::RenderTargetable);
+		SceneDepth = drm::CreateImage(Width, Height, EFormat::D32_SFLOAT, EImageUsage::RenderTargetable);
 	});
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");

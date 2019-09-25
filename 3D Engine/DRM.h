@@ -26,12 +26,12 @@ public:
 	
 	virtual void SubmitCommands(RenderCommandListRef CmdList) = 0;
 	virtual RenderCommandListRef CreateCommandList() = 0;
-	virtual drm::IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr) = 0;
-	virtual drm::VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr) = 0;
+	virtual drm::IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void* Data = nullptr) = 0;
+	virtual drm::VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EBufferUsage Usage, const void* Data = nullptr) = 0;
 	virtual drm::UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage) = 0;
-	virtual drm::StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage) = 0;
-	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr) = 0;
-	virtual drm::ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
+	virtual drm::StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EBufferUsage Usage) = 0;
+	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr) = 0;
+	virtual drm::ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
 	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout) = 0;
 	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout) = 0;
 	virtual drm::ImageRef GetSurface() = 0;
@@ -63,12 +63,12 @@ namespace drm
 	void EndFrame();
 	void SubmitCommands(RenderCommandListRef CmdList);
 	RenderCommandListRef CreateCommandList();
-	IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EResourceUsage Usage, const void* Data = nullptr);
-	VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EResourceUsage Usage, const void* Data = nullptr);
+	IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void* Data = nullptr);
+	VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EBufferUsage Usage, const void* Data = nullptr);
 	UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage);
-	StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EResourceUsage Usage = EResourceUsage::None);
-	ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const uint8* Data = nullptr);
-	ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EResourceUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
+	StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EBufferUsage Usage = EBufferUsage::None);
+	ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr);
+	ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
 	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
 	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
 	ImageRef GetSurface();

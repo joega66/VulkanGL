@@ -102,7 +102,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			VulkanRenderTargetViewRef ColorTarget = ResourceCast(RPInit.ColorTargets[i]);
 			VulkanImageRef Image = ResourceCast(ColorTarget->Image);
 
-			check(Image && Any(Image->Usage & EResourceUsage::RenderTargetable), "Color target is invalid.");
+			check(Image && Any(Image->Usage & EImageUsage::RenderTargetable), "Color target is invalid.");
 			check(Image->IsColor(), "Color target was not created in color format.");
 
 			VkAttachmentDescription ColorDescription = {};
@@ -130,7 +130,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			check(DepthTarget, "Depth target is invalid.");
 
 			VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
-			check(DepthImage && Any(DepthImage->Usage & EResourceUsage::RenderTargetable), "Depth target is invalid.");
+			check(DepthImage && Any(DepthImage->Usage & EImageUsage::RenderTargetable), "Depth target is invalid.");
 			check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
 			VkAttachmentLoadOp LoadOp = DepthTarget->GetVulkanLoadOp();
