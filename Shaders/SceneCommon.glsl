@@ -1,3 +1,4 @@
+
 uniform ViewUniform
 {
 	mat4 WorldToView;
@@ -9,6 +10,20 @@ uniform ViewUniform
 	float FieldOfView;
 	vec2 _Pad1;
 } View;
+
+struct DirectionalLight
+{
+	vec3 Color;
+	float Intensity;
+	vec3 Direction;
+	int _Pad1;
+};
+
+layout(std430) readonly buffer DirectionalLightBuffer
+{
+	uvec4 NumDirectionalLights;
+	DirectionalLight DirectionalLights[];
+};
 
 struct PointLight
 {

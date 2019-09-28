@@ -35,7 +35,6 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		CmdList.BeginRenderPass(RenderPassInit);
 
 		RenderLightingPass(Scene, CmdList);
-		//RenderRayMarching(*CmdList);
 		RenderSkybox(Scene, CmdList);
 
 		CmdList.EndRenderPass();

@@ -1,6 +1,12 @@
 #pragma once
 #include <Platform/Platform.h>
 
+template<typename T>
+inline constexpr void CheckStd140Layout()
+{
+	static_assert(sizeof(T) % 16 == 0);
+}
+
 enum class EFormat
 {
 	UNDEFINED,

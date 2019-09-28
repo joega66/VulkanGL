@@ -53,28 +53,60 @@ void SceneProxy::InitView(Scene& Scene)
 
 void SceneProxy::InitLights(Scene& Scene)
 {
+	CheckStd140Layout<DirectionalLightProxy>();
+	CheckStd140Layout<PointLightProxy>();
+
 	auto& ECS = Scene.ECS;
 
-	for (auto Entity : ECS.GetEntities<CLight>())
 	{
-		auto& Light = ECS.GetComponent<CLight>(Entity);
-		auto& Transform = ECS.GetComponent<CTransform>(Entity);
-		auto& Renderer = ECS.GetComponent<CRenderer>(Entity);
-
-		if (Renderer.bVisible)
+		for (auto Entity : ECS.GetEntities<CDirectionalLight>())
 		{
-			PointLightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), Light.Intensity, Light.Color, Light.Range });
+			auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
+			auto& Renderer = ECS.GetComponent<CRenderer>(Entity);
+
+			if (Renderer.bVisible)
+			{
+				DirectionalLightProxy DirectionalLightProxy;
+				DirectionalLightProxy.Intensity = DirectionalLight.Intensity;
+				DirectionalLightProxy.Color = DirectionalLight.Color;
+				DirectionalLightProxy.Direction = glm::normalize(DirectionalLight.Direction);
+
+				DirectionalLightProxies.emplace_back(DirectionalLightProxy);
+			}
 		}
+
+		glm::uvec4 NumDirectionalLights;
+		NumDirectionalLights.x = DirectionalLightProxies.size();
+
+		DirectionalLightBuffer = drm::CreateStorageBuffer(sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size(), nullptr);
+		void* Data = drm::LockBuffer(DirectionalLightBuffer);
+		Platform.Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
+		Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+		drm::UnlockBuffer(DirectionalLightBuffer);
 	}
+	
+	{
+		for (auto Entity : ECS.GetEntities<CPointLight>())
+		{
+			auto& PointLight = ECS.GetComponent<CPointLight>(Entity);
+			auto& Transform = ECS.GetComponent<CTransform>(Entity);
+			auto& Renderer = ECS.GetComponent<CRenderer>(Entity);
 
-	glm::uvec4 NumPointLights;
-	NumPointLights.x = PointLightProxies.size();
+			if (Renderer.bVisible)
+			{
+				PointLightProxies.emplace_back(PointLightProxy{ Transform.GetPosition(), PointLight.Intensity, PointLight.Color, PointLight.Range });
+			}
+		}
 
-	PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size(), nullptr);
-	void* Data = drm::LockBuffer(PointLightBuffer);
-	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
-	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	drm::UnlockBuffer(PointLightBuffer);
+		glm::uvec4 NumPointLights;
+		NumPointLights.x = PointLightProxies.size();
+
+		PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size(), nullptr);
+		void* Data = drm::LockBuffer(PointLightBuffer);
+		Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
+		Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
+		drm::UnlockBuffer(PointLightBuffer);
+	}
 }
 
 void SceneProxy::InitDrawLists(Scene& Scene)

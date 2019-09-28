@@ -25,6 +25,9 @@ void CoreEngine::Run()
 	uint8 Blue[] = { 0, 0, 255, 0 };
 	CMaterial::Blue = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Blue);
 
+	uint8 White[] = { 255, 255, 255, 0 };
+	CMaterial::White = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, White);
+
 	Scene Scene;
 	SceneRenderer SceneRenderer(Scene);
 	SystemsManager SystemsManager;

@@ -16,9 +16,13 @@ public:
 
 	DrawList<LightingPassDrawPlan> LightingPass;
 
+	std::vector<DirectionalLightProxy> DirectionalLightProxies;
+
 	std::vector<PointLightProxy> PointLightProxies;
 
 	drm::UniformBufferRef ViewUniform;
+
+	drm::StorageBufferRef DirectionalLightBuffer;
 
 	drm::StorageBufferRef PointLightBuffer;
 

@@ -11,6 +11,5 @@ void main()
 {
 	MaterialParams Material = GetMaterial();
 
-	OutColor = vec4(Material.Albedo, 1.0f);
-	//OutColor = Shade(View.Position, Material);
+	OutColor = Shade(Material);
 }

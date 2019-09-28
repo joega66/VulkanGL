@@ -1,35 +1,53 @@
 const float PI = 3.14159265;
-const float Ambient = 0.1f;
+const float Ambient = 0.01f;
 
-vec3 PointLighting(in MaterialParams Material, vec3 V, vec3 R0)
+struct LightParams
 {
-	vec3 Lo = vec3(0.0);
+	vec3 L;
+	float Intensity;
+	vec3 Color;
+};
 
-	for (int i = 0; i < NumPointLights.x; i++)
-	{
-		vec3 FragToLight = PointLights[i].Position - Material.Position;
-		vec3 L = normalize(FragToLight);
-		vec3 H = normalize(L + V);
-		float Diffuse = max(dot(Material.Normal, L), 0.0);
-		float Distance = length(FragToLight);
-		float Attenuation = 1.0 / (Distance * Distance);
-		float Specular = pow(max(dot(Material.Normal, H), 0.0), Material.Metallic);
-		float Radiance = ((1 / PI) + ((Material.Metallic + 8) * (Specular)) / (8 * PI)) * Diffuse;
-		Lo += (Ambient + Radiance) * PointLights[i].Color * Material.Albedo * Attenuation;
-	}
-
+vec3 DirectLighting(in vec3 V, in LightParams Light, in MaterialParams Material)
+{
+	vec3 H = normalize(Light.L + V);
+	float Diffuse = max(dot(Material.Normal, Light.L), 0.0);
+	float Specular = pow(max(dot(Material.Normal, H), 0.0), Material.Metallic);
+	float Radiance = ((1 / PI) + ((Material.Metallic + 8) * (Specular)) / (8 * PI)) * Diffuse;
+	vec3 Lo = (Ambient + Radiance) * Light.Intensity * Light.Color * Material.Albedo;
 	return Lo;
 }
 
-vec4 Shade(vec3 ViewPosition, in MaterialParams Material)
+vec4 Shade(in MaterialParams Material)
 {
 	vec3 Lo = vec3(0.0);
-	vec3 R0 = vec3(0.04);
-	vec3 V = normalize(ViewPosition - Material.Position);
+	vec3 V = normalize(View.Position - Material.Position);
 
-	R0 = mix(R0, Material.Albedo, Material.Metallic);
+	// Directional lights
+	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
+	{
+		LightParams Light;
+		Light.L = DirectionalLights[LightIndex].Direction;
+		Light.Intensity = DirectionalLights[LightIndex].Intensity;
+		Light.Color = DirectionalLights[LightIndex].Color;
 
-	Lo += PointLighting(Material, V, R0);
+		Lo += DirectLighting(V, Light, Material);
+	}
+
+	// Point lights
+	for (int LightIndex = 0; LightIndex < NumPointLights.x; LightIndex++)
+	{
+		vec3 FragToLight = PointLights[LightIndex].Position - Material.Position;
+		float Distance = length(FragToLight);
+		float Attenuation = 1.0 / (Distance * Distance);
+
+		LightParams Light;
+		Light.L = normalize(FragToLight);
+		Light.Intensity = PointLights[LightIndex].Intensity;
+		Light.Color = PointLights[LightIndex].Color;
+
+		Lo += DirectLighting(V, Light, Material) * Attenuation;
+	}
 
 	// Gamma
 	Lo = Lo / (Lo + vec3(1.0));

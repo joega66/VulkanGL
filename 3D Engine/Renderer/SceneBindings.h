@@ -7,5 +7,6 @@ public:
 	SceneBindings(const ShaderResourceTable& Resources);
 
 	ShaderBinding ViewUniform;
+	ShaderBinding DirectionalLightBuffer;
 	ShaderBinding PointLightBuffer;
 };

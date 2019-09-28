@@ -10,4 +10,5 @@ struct CMaterial : Component<CMaterial>
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;
 	static drm::ImageRef Blue;
+	static drm::ImageRef White;
 };
