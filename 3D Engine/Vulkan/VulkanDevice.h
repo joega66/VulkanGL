@@ -26,9 +26,17 @@ public:
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassInitializer& RPInit);
 
-	std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> GetPipeline(const PipelineStateInitializer& PSOInit, VkRenderPass RenderPass, uint32 NumRenderTargets);
+	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts);
+
+	VkPipeline GetPipeline(
+		const PipelineStateInitializer& PSOInit, 
+		VkPipelineLayout PipelineLayout, 
+		VkRenderPass RenderPass, 
+		uint32 NumRenderTargets);
 
 	VkSampler GetSampler(const SamplerState& Sampler);
+
+	VkDescriptorSetLayout GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings);
 
 	operator VkDevice() { return Device; }
 
@@ -65,11 +73,11 @@ private:
 
 	SlowCache<VulkanRenderPassHash, VkRenderPass, VkFramebuffer> RenderPassCache;
 
-	SlowCache<PipelineStateInitializer, VkPipeline> PipelineCache;
+	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 
-	SlowCache<GraphicsPipelineState, VkPipelineLayout, VkDescriptorSetLayout> PipelineLayoutCache;
+	SlowCache<PipelineStateInitializer, VkPipelineLayout, VkRenderPass, uint32, VkPipeline> PipelineCache;
 
-	std::pair<VkPipelineLayout, VkDescriptorSetLayout> GetPipelineLayout(const GraphicsPipelineState& GraphicsPipelineState);
+	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout> DescriptorSetLayoutCache;
 
 	[[nodiscard]] std::pair<VkRenderPass, VkFramebuffer> CreateRenderPass(const RenderPassInitializer& RPInit);
 

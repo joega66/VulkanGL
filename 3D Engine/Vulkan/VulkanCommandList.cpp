@@ -8,10 +8,10 @@ static CAST(drm::UniformBuffer, VulkanUniformBuffer);
 static CAST(drm::StorageBuffer, VulkanStorageBuffer);
 static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
+static CAST(drm::DescriptorSet, VulkanDescriptorSet);
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VulkanDescriptorPool& DescriptorPool, VkQueueFlagBits QueueFlags)
+VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VkQueueFlagBits QueueFlags)
 	: Device(Device)
-	, DescriptorPool(DescriptorPool)
 	, Allocator(Allocator)
 	, Queue(Device.Queues.GetQueue(QueueFlags))
 	, CommandPool(Device.Queues.GetCommandPool(QueueFlags))
@@ -111,18 +111,33 @@ void VulkanCommandList::EndRenderPass()
 
 void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 {
-	if (Pending.GraphicsPipelineState != PSOInit.GraphicsPipelineState)
+	VkPipeline Pipeline = Device.GetPipeline(PSOInit, Pending.PipelineLayout, Pending.RenderPass, Pending.NumRenderTargets);
+	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
+}
+
+void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets)
+{
+	std::vector<VkDescriptorSet> VulkanDescriptorSets;
+	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
+
+	for (uint32 SetIndex = 0; SetIndex < NumDescriptorSets; SetIndex++)
 	{
-		// Clear descriptors.
-		DescriptorImages.clear();
-		DescriptorBuffers.clear();
-		Pending.GraphicsPipelineState = PSOInit.GraphicsPipelineState;
+		VulkanDescriptorSetRef VulkanDescriptorSet = ResourceCast(DescriptorSets[SetIndex]);
+		VulkanDescriptorSets.push_back(VulkanDescriptorSet->DescriptorSet);
+		DescriptorSetLayouts.push_back(VulkanDescriptorSet->DescriptorSetLayout);
 	}
 
-	VkPipeline Pipeline;
-	std::tie(Pipeline, Pending.PipelineLayout, Pending.DescriptorSetLayout) = Device.GetPipeline(PSOInit, Pending.RenderPass, Pending.NumRenderTargets);
+	Pending.PipelineLayout = Device.GetPipelineLayout(DescriptorSetLayouts);
 
-	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
+	vkCmdBindDescriptorSets(
+		CommandBuffer,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		Pending.PipelineLayout,
+		0,
+		VulkanDescriptorSets.size(),
+		VulkanDescriptorSets.data(),
+		0,
+		nullptr);
 }
 
 void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers)
@@ -143,93 +158,8 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Ve
 	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
 }
 
-void VulkanCommandList::SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer)
-{
-	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
-	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
-	auto& Bindings = VulkanShader.Bindings;
-	auto SharedBuffer = VulkanUniformBuffer->Buffer;
-
-	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "Invalid buffer type.");
-
-	if (VulkanUniformBuffer->bDirty)
-	{
-		Allocator.UploadBufferData(*VulkanUniformBuffer->Buffer, VulkanUniformBuffer->GetData());
-		VulkanUniformBuffer->bDirty = false;
-	}
-
-	for (const auto& Binding : Bindings)
-	{
-		if (Binding.binding == Location)
-		{
-			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, "Shader resource at this location isn't a uniform buffer.");
-
-			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
-			DescriptorBuffers[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
-			bDirtyDescriptorSets = true;
-
-			return;
-		}
-	}
-
-	fail("A shader resource doesn't exist at this location.\nLocation: %d", Location);
-}
-
-void VulkanCommandList::SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler)
-{
-	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
-	VulkanImageRef VulkanImage = ResourceCast(Image);
-	auto& Bindings = VulkanShader.Bindings;
-
-	for (const auto& Binding : Bindings)
-	{
-		if (Binding.binding == Location)
-		{
-			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, "Shader resource at this location isn't a combined image sampler.");
-
-			VkSampler VulkanSampler = Device.GetSampler(Sampler);
-
-			VkDescriptorImageInfo DescriptorImageInfo = { VulkanSampler, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
-			DescriptorImages[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorImage>(Binding, DescriptorImageInfo);
-			bDirtyDescriptorSets = true;
-
-			return;
-		}
-	}
-
-	fail("A shader resource doesn't exist at this location.\nLocation: %d", Location);
-}
-
-void VulkanCommandList::SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer)
-{
-	const auto& VulkanShader = Device.ShaderCache[Shader->Type];
-	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
-	const auto& Bindings = VulkanShader.Bindings;
-	auto SharedBuffer = VulkanStorageBuffer->Buffer;
-
-	check(SharedBuffer->Shared->Usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, "Invalid buffer type.");
-
-	for (const auto& Binding : Bindings)
-	{
-		if (Binding.binding == Location)
-		{
-			check(Binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, "Shader resource at this location isn't a storage buffer.");
-
-			VkDescriptorBufferInfo BufferInfo = { SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
-			DescriptorBuffers[Shader->Stage][Location] = std::make_unique<VulkanWriteDescriptorBuffer>(Binding, BufferInfo);
-			bDirtyDescriptorSets = true;
-
-			return;
-		}
-	}
-
-	fail("A shader resource doesn't exist at this location.\nLocation: %d", Location);
-}
-
 void VulkanCommandList::DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
-	PrepareForDraw();
-
 	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
 	const VkIndexType IndexType = VulkanIndexBuffer->IndexStride == sizeof(uint32) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 
@@ -239,8 +169,6 @@ void VulkanCommandList::DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 Inde
 
 void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
 {
-	PrepareForDraw();
-
 	vkCmdDraw(CommandBuffer, VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
@@ -248,63 +176,4 @@ void VulkanCommandList::Finish()
 {
 	vulkan(vkEndCommandBuffer(CommandBuffer));
 	bFinished = true;
-}
-
-void VulkanCommandList::CleanDescriptorSets()
-{
-	VkDescriptorSet DescriptorSet = DescriptorPool.Spawn(Pending.DescriptorSetLayout);
-	std::vector<VkWriteDescriptorSet> WriteDescriptors;
-
-	for (auto& DescriptorImagesInShaderStage : DescriptorImages)
-	{
-		auto& ImageDescriptors = DescriptorImagesInShaderStage.second;
-		for (auto& Descriptors : ImageDescriptors)
-		{
-			const auto& WriteDescriptorImage = Descriptors.second;
-			const auto& Binding = WriteDescriptorImage->Binding;
-
-			VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-			WriteDescriptor.dstSet = DescriptorSet;
-			WriteDescriptor.dstBinding = Binding.binding;
-			WriteDescriptor.dstArrayElement = 0;
-			WriteDescriptor.descriptorType = Binding.descriptorType;
-			WriteDescriptor.descriptorCount = 1;
-			WriteDescriptor.pImageInfo = &WriteDescriptorImage->DescriptorImage;
-
-			WriteDescriptors.push_back(WriteDescriptor);
-		}
-	}
-
-	for (auto& DescriptorBuffersInShaderStage : DescriptorBuffers)
-	{
-		auto& BufferDescriptors = DescriptorBuffersInShaderStage.second;
-		for (auto& Descriptors : BufferDescriptors)
-		{
-			const auto& WriteDescriptorBuffer = Descriptors.second;
-			const auto& Binding = WriteDescriptorBuffer->Binding;
-
-			VkWriteDescriptorSet WriteDescriptor = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-			WriteDescriptor.dstSet = DescriptorSet;
-			WriteDescriptor.dstBinding = Binding.binding;
-			WriteDescriptor.dstArrayElement = 0;
-			WriteDescriptor.descriptorType = Binding.descriptorType;
-			WriteDescriptor.descriptorCount = 1;
-			WriteDescriptor.pBufferInfo = &WriteDescriptorBuffer->DescriptorBuffer;
-
-			WriteDescriptors.push_back(WriteDescriptor);
-		}
-	}
-
-	vkUpdateDescriptorSets(Device, WriteDescriptors.size(), WriteDescriptors.data(), 0, nullptr);
-	vkCmdBindDescriptorSets(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pending.PipelineLayout, 0, 1, &DescriptorSet, 0, nullptr);
-
-	bDirtyDescriptorSets = false;
-}
-
-void VulkanCommandList::PrepareForDraw()
-{
-	if (bDirtyDescriptorSets)
-	{
-		CleanDescriptorSets();
-	}
 }

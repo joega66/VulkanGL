@@ -4,25 +4,26 @@
 
 enum class EShaderStage
 {
-	Vertex,
-	TessControl,
-	TessEvaluation,
-	Geometry,
-	Fragment,
-	Compute
+	Vertex = 1 << 0,
+	TessControl = 1 << 1,
+	TessEvaluation = 1 << 2,
+	Geometry = 1 << 3,
+	Fragment = 1 << 4,
+	Compute = 1 << 5,
+	All = Vertex | TessControl | TessEvaluation | Geometry | Fragment | Compute
 };
 
 class ShaderCompilerWorker
 {
 public:
-	using ShaderDefines = std::list<std::pair<std::string, std::string>>;
+	using ShaderDefines = std::vector<std::pair<std::string, std::string>>;
 
 	ShaderCompilerWorker() = default;
 
 	template<typename T>
 	void SetDefine(const std::string& Define, const T& Value)
 	{
-		Defines.push_back(std::make_pair(Define, std::string(Value)));
+		Defines.push_back(std::make_pair(Define, std::to_string(Value)));
 	}
 
 	void SetDefine(const std::string& Define)
@@ -59,19 +60,31 @@ struct ShaderInfo
 	EShaderStage Stage;
 };
 
-struct ShaderBinding
+class ShaderBinding
 {
-	uint32 Location = -1;
+public:
+	ShaderBinding() = default;
+
+	ShaderBinding(uint32 Binding)
+		: Binding(Binding)
+	{
+	}
+
+	inline uint32 GetBinding() const { return Binding; }
 
 	operator uint32() const
 	{
-		return Location;
+		return Binding;
 	}
 
 	operator bool() const
 	{
-		return Location != -1;
+		return Binding != -1;
 	}
+
+private:
+	uint32 Binding = -1;
+	EShaderStage StageFlags = EShaderStage::All;
 };
 
 class ShaderResourceTable
@@ -81,25 +94,25 @@ public:
 	const EShaderStage Stage;
 	const std::string Entrypoint;
 
-	ShaderResourceTable(std::type_index Type, EShaderStage Stage, const std::string& Entrypoint, const HashTable<std::string, uint32>& UniformLocations)
-		: Type(Type), Stage(Stage), Entrypoint(Entrypoint), UniformLocations(UniformLocations)
+	ShaderResourceTable(
+		std::type_index Type, 
+		EShaderStage Stage, 
+		const std::string& Entrypoint, 
+		const HashTable<std::string, ShaderBinding>& Bindings)
+		: Type(Type), Stage(Stage), Entrypoint(Entrypoint), Bindings(Bindings)
 	{
 	}
 
 	void Bind(const std::string& Name, ShaderBinding& Binding) const
 	{
-		if (Contains(UniformLocations, Name))
+		if (auto Iter = Bindings.find(Name); Iter != Bindings.end())
 		{
-			Binding.Location = GetValue(UniformLocations, Name);
-		}
-		else
-		{
-			Binding.Location = -1;
+			Binding = Iter->second;
 		}
 	}
 
 private:
-	HashTable<std::string, uint32> UniformLocations;
+	HashTable<std::string, ShaderBinding> Bindings;
 };
 
 namespace drm
@@ -107,12 +120,10 @@ namespace drm
 	class Shader : public std::enable_shared_from_this<Shader>
 	{
 	public:
-		const std::type_index Type;
-		const EShaderStage Stage;
-		const std::string Entrypoint;
+		const ShaderResourceTable ResourceTable;
 
 		Shader(const ShaderResourceTable& ResourceTable)
-			: Type(ResourceTable.Type), Stage(ResourceTable.Stage), Entrypoint(ResourceTable.Entrypoint)
+			: ResourceTable(ResourceTable)
 		{
 		}
 

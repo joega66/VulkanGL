@@ -38,7 +38,7 @@
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
-    <ClCompile Include="Renderer\SceneBindings.cpp" />
+    <ClCompile Include="Renderer\MaterialShader.cpp" />
     <ClCompile Include="Renderer\SceneProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
@@ -93,7 +93,6 @@
     <ClInclude Include="Renderer\DrawingPlan.h" />
     <ClInclude Include="Renderer\EditorPrimitives.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
-    <ClInclude Include="Renderer\SceneBindings.h" />
     <ClInclude Include="Renderer\Light.h" />
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
@@ -130,7 +129,6 @@
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
-    <None Include="..\Shaders\OutlineFS.glsl" />
     <None Include="..\Shaders\RayMarching.glsl" />
     <None Include="..\Shaders\RayMarchingCommon.glsl" />
     <None Include="..\Shaders\SceneCommon.glsl" />

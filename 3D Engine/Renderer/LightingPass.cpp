@@ -1,36 +1,46 @@
 #include "LightingPass.h"
-#include "SceneRenderer.h"
+#include "SceneProxy.h"
 
-LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform)
+LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
 {
-	const bool bHasNormalMap = CMaterial.Normal != nullptr;
-
 	VertShader = *ShaderMapRef<LightingPassVS<EMeshType::StaticMesh>>();
 
-	// @todo Shader permutations? Or bypass the shader cache?
+	const bool bHasNormalMap = false;
+
+	// @todo Pass in the material to ShaderMapRef to do conditional compilations.
+
 	if (bHasNormalMap)
 	{
 		FragShader = *ShaderMapRef<LightingPassFS<true, EMeshType::StaticMesh>>();
 	}
-	else 
+	else
 	{
 		FragShader = *ShaderMapRef<LightingPassFS<false, EMeshType::StaticMesh>>();
 	}
 
-	Uniforms.push_back({ VertShader, LocalToWorldUniform, VertShader->LocalToWorld });
+	const SamplerState Sampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 
-	Materials.push_back({ CMaterial.Diffuse, FragShader->Diffuse });
+	DescriptorSet = drm::CreateDescriptorSet();
+	DescriptorSet->Write(LocalToWorldUniform, VertShader->LocalToWorld);
+	DescriptorSet->Write(Material.Diffuse, Sampler, FragShader->Diffuse);
+	DescriptorSet->Update();
+}
 
-	if (bHasNormalMap)
+void LightingPassDrawPlan::BindDescriptorSets(RenderCommandList& CmdList, const SceneProxy& Scene) const
+{
+	const std::array<drm::DescriptorSetRef, 2> DescriptorSets =
 	{
-		Materials.push_back({ CMaterial.Normal, FragShader->Normal });
-	}
+		Scene.DescriptorSet,
+		DescriptorSet
+	};
+
+	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 }
 
 void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
-	PSOInit.GraphicsPipelineState = 
+	PSOInit.GraphicsPipelineState =
 	{
 		VertShader,
 		nullptr,
@@ -38,22 +48,6 @@ void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) c
 		nullptr,
 		FragShader
 	};
-}
-
-void LightingPassDrawPlan::SetUniforms(RenderCommandList& CmdList, const SceneProxy& Scene)
-{
-	Scene.SetResources(CmdList, VertShader, VertShader->SceneBindings);
-	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
-
-	for (auto& Uniform : Uniforms)
-	{
-		CmdList.SetUniformBuffer(Uniform.Shader, Uniform.Location, Uniform.UniformBuffer);
-	}
-
-	for (auto& Material : Materials)
-	{
-		CmdList.SetShaderImage(FragShader, Material.Location, Material.Image, SamplerState{ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
-	}
 }
 
 void LightingPassDrawPlan::Draw(RenderCommandList& CmdList) const

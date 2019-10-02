@@ -2,25 +2,6 @@
 #include <DRM.h>
 #include <ECS/Entity.h>
 
-struct StreamSource
-{
-	drm::VertexBufferRef VertexBuffer;
-	uint32 Location;
-};
-
-struct MaterialSource
-{
-	drm::ImageRef Image;
-	uint32 Location;
-};
-
-struct UniformSource
-{
-	drm::ShaderRef Shader;
-	drm::UniformBufferRef UniformBuffer;
-	uint32 Location;
-};
-
 template<typename DrawPlanType>
 class DrawList
 {
@@ -57,12 +38,9 @@ inline void DrawList<DrawPlanType>::Draw(RenderCommandList& CmdList, const Pipel
 	for (auto& [EntityID, DrawPlan] : List)
 	{
 		PipelineStateInitializer PSOInit = ParentPSOInit;
+		DrawPlan.BindDescriptorSets(CmdList, Scene);
 		DrawPlan.SetPipelineState(PSOInit);
-
 		CmdList.BindPipeline(PSOInit);
-
-		DrawPlan.SetUniforms(CmdList, Scene);
-
 		DrawPlan.Draw(CmdList);
 	}
 }

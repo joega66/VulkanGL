@@ -1,3 +1,5 @@
+#include "MaterialCommon.glsl"
+
 layout(location = 0) in vec3 Position;
 #ifndef DEPTH_ONLY
 layout(location = 1) in vec2 UV;
@@ -5,7 +7,7 @@ layout(location = 2) in vec3 Normal;
 layout(location = 3) in vec3 Tangent;
 #endif
 
-uniform LocalToWorldUniform
+layout(binding = LOCAL_TO_WORLD_BINDING, set = MATERIAL_SET) uniform LocalToWorldUniform
 {
 	mat4 Transform;
 } LocalToWorld;

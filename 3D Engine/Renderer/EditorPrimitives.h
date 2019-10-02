@@ -1,13 +1,12 @@
 #pragma once
-#include <DRMShader.h>
+#include "MaterialShader.h"
 
-class SkyboxVS : public drm::Shader
+class SkyboxVS : public MaterialShader
 {
 public:
 	SkyboxVS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: MaterialShader(Resources)
 	{
-		Resources.Bind("ViewUniform", View);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -15,15 +14,13 @@ public:
 		static ShaderInfo Base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
 		return Base;
 	}
-
-	ShaderBinding View;
 };
 
-class SkyboxFS : public drm::Shader
+class SkyboxFS : public MaterialShader
 {
 public:
 	SkyboxFS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: MaterialShader(Resources)
 	{
 		Resources.Bind("Skybox", Skybox);
 	}

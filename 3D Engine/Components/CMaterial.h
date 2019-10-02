@@ -1,6 +1,8 @@
 #pragma once
 #include <ECS/Component.h>
-#include "DRMResource.h"
+#include <DRMResource.h>
+
+// @todo Make these pipeline constants set by the material.
 
 struct CMaterial : Component<CMaterial>
 {

@@ -137,7 +137,12 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 
 RenderCommandListRef VulkanDRM::CreateCommandList()
 {
-	return MakeRef<VulkanCommandList>(Device, Allocator, DescriptorPool, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	return MakeRef<VulkanCommandList>(Device, Allocator, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+}
+
+drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()
+{
+	return MakeRef<VulkanDescriptorSet>(Device, DescriptorPool, Allocator);
 }
 
 drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void * Data)

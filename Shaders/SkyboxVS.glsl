@@ -1,4 +1,5 @@
 #include "SceneCommon.glsl"
+
 layout(location = 0) in vec3 Position;
 layout(location = 0) out vec3 OutTexCoord;
 

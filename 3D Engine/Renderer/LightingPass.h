@@ -1,13 +1,13 @@
 #pragma once
 #include "MaterialShader.h"
-#include "SceneBindings.h"
 #include <Components/CStaticMesh.h>
+#include <DRM.h>
 
-class LightingPassBaseVS : public drm::Shader
+class LightingPassBaseVS : public MaterialShader
 {
 public:
 	LightingPassBaseVS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources), SceneBindings(Resources)
+		: MaterialShader(Resources)
 	{
 		Resources.Bind("LocalToWorldUniform", LocalToWorld);
 	}
@@ -18,7 +18,6 @@ public:
 		return BaseInfo;
 	}
 
-	SceneBindings SceneBindings;
 	ShaderBinding LocalToWorld;
 };
 
@@ -37,11 +36,11 @@ public:
 	}
 };
 
-class LightingPassBaseFS : public drm::Shader
+class LightingPassBaseFS : public MaterialShader
 {
 public:
 	LightingPassBaseFS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources), SceneBindings(Resources)
+		: MaterialShader(Resources)
 	{
 		Resources.Bind("Diffuse", Diffuse);
 		Resources.Bind("Normal", Normal);
@@ -53,7 +52,6 @@ public:
 		return BaseInfo;
 	}
 
-	SceneBindings SceneBindings;
 	ShaderBinding Diffuse;
 	ShaderBinding Normal;
 };
@@ -76,17 +74,15 @@ public:
 class LightingPassDrawPlan
 {
 public:
-	LightingPassDrawPlan(const struct MeshElement& Element, CMaterial& CMaterial, drm::UniformBufferRef LocalToWorldUniform);
+	LightingPassDrawPlan(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform);
 
+	void BindDescriptorSets(RenderCommandList& CmdList, const class SceneProxy& Scene) const;
 	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
-	void SetUniforms(RenderCommandList& CmdList, const class SceneProxy& Scene);
 	void Draw(RenderCommandList& CmdList) const;
 
 private:
 	Ref<LightingPassBaseVS> VertShader;
 	Ref<LightingPassBaseFS> FragShader;
-
-	std::vector<MaterialSource> Materials;
-	std::vector<UniformSource> Uniforms;
-	const struct MeshElement& Element;
+	drm::DescriptorSetRef DescriptorSet;
+	const MeshElement& Element;
 };

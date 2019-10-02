@@ -6,7 +6,6 @@
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
-#include <Components/COutline.h>
 
 SceneProxy::SceneProxy(Scene& Scene)
 	: Skybox(Scene.Skybox)
@@ -14,6 +13,12 @@ SceneProxy::SceneProxy(Scene& Scene)
 	InitView(Scene);
 	InitLights(Scene);
 	InitDrawLists(Scene);
+
+	DescriptorSet = drm::CreateDescriptorSet();
+	DescriptorSet->Write(ViewUniform, ShaderBinding(VIEW_BINDING));
+	DescriptorSet->Write(DirectionalLightBuffer, ShaderBinding(DIRECTIONAL_LIGHT_BINDING));
+	DescriptorSet->Write(PointLightBuffer, ShaderBinding(POINT_LIGHT_BINDING));
+	DescriptorSet->Update();
 }
 
 void SceneProxy::InitView(Scene& Scene)

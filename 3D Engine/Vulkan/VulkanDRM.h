@@ -19,6 +19,7 @@ public:
 
 	virtual void SubmitCommands(RenderCommandListRef CmdList);
 	virtual RenderCommandListRef CreateCommandList();
+	virtual drm::DescriptorSetRef CreateDescriptorSet();
 	virtual drm::IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void* Data = nullptr);
 	virtual drm::VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EBufferUsage Usage, const void* Data = nullptr);
 	virtual drm::UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage);

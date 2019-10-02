@@ -35,6 +35,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		CmdList.BeginRenderPass(RenderPassInit);
 
 		RenderLightingPass(Scene, CmdList);
+
 		RenderSkybox(Scene, CmdList);
 
 		CmdList.EndRenderPass();
@@ -49,7 +50,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 void SceneRenderer::RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	PipelineStateInitializer PSOInit = {};
+	/*PipelineStateInitializer PSOInit = {};
 
 	Ref<FullscreenVS> VertShader = *ShaderMapRef<FullscreenVS>();
 	Ref<RayMarchingFS> FragShader = *ShaderMapRef<RayMarchingFS>();
@@ -63,7 +64,7 @@ void SceneRenderer::RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdL
 
 	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
-	CmdList.Draw(3, 1, 0, 0);
+	CmdList.Draw(3, 1, 0, 0);*/
 }
 
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList)
@@ -81,17 +82,25 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)
 	Ref<SkyboxVS> VertShader = *ShaderMapRef<SkyboxVS>();
 	Ref<SkyboxFS> FragShader = *ShaderMapRef<SkyboxFS>();
 
-	PipelineStateInitializer PSOInit = {};
+	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
 
+	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, FragShader->Skybox);
+	DescriptorSet->Update();
+
+	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
+	{
+		Scene.DescriptorSet,
+		DescriptorSet
+	};
+
+	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
+
+	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
-
 	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
 	CmdList.BindPipeline(PSOInit);
-
-	CmdList.SetUniformBuffer(VertShader, VertShader->View, Scene.ViewUniform);
-	CmdList.SetShaderImage(FragShader, FragShader->Skybox, Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	for (const auto& Element : Cube->Batch.Elements)
 	{

@@ -10,19 +10,19 @@ VulkanShader::VulkanShader(
 {
 }
 
-static const VkShaderStageFlagBits VulkanStages[] =
+static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
 {
-	VK_SHADER_STAGE_VERTEX_BIT,
-	VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
-	VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
-	VK_SHADER_STAGE_GEOMETRY_BIT,
-	VK_SHADER_STAGE_FRAGMENT_BIT,
-	VK_SHADER_STAGE_COMPUTE_BIT
+	ENTRY(EShaderStage::Vertex, VK_SHADER_STAGE_VERTEX_BIT)
+	ENTRY(EShaderStage::TessControl, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
+	ENTRY(EShaderStage::TessEvaluation, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+	ENTRY(EShaderStage::Geometry, VK_SHADER_STAGE_GEOMETRY_BIT)
+	ENTRY(EShaderStage::Fragment, VK_SHADER_STAGE_FRAGMENT_BIT)
+	ENTRY(EShaderStage::Compute, VK_SHADER_STAGE_COMPUTE_BIT)
 };
 
 VkShaderStageFlagBits VulkanShader::GetVulkanStage(EShaderStage Stage)
 {
-	return VulkanStages[(int32)Stage];
+	return VulkanStages.at(Stage);
 }
 
 struct VertexStreamFormat
@@ -32,17 +32,11 @@ struct VertexStreamFormat
 	VkFormat Format;
 };
 
-struct UniformBufferFormat
-{
-	std::string Name;
-	int32 Binding = -1;
-	uint32 Size = 0;
-};
-
 struct ResourceFormat
 {
 	std::string Name;
 	int32 Binding = -1;
+	int32 Set = -1;
 };
 
 static std::vector<VertexStreamFormat> ParseStageInputs(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
@@ -113,12 +107,7 @@ static std::vector<ResourceFormat> ParseSampledImages(const spirv_cross::Compile
 
 	for (auto& Resource : Resources.sampled_images)
 	{
-		uint32 Binding;
-		if (Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding); Binding == 0)
-		{
-			// Resource not used... continue.
-			continue;
-		}
+		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
 
 		ResourceFormat Image;
 		Image.Name = Resource.name;
@@ -130,25 +119,21 @@ static std::vector<ResourceFormat> ParseSampledImages(const spirv_cross::Compile
 	return Images;
 }
 
-static std::vector<UniformBufferFormat> ParseUniformBuffers(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+static std::vector<ResourceFormat> ParseUniformBuffers(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
 {
-	std::vector<UniformBufferFormat> Uniforms;
+	std::vector<ResourceFormat> Uniforms;
 
 	for (auto& Resource : Resources.uniform_buffers)
 	{
-		uint32 Binding;
-		if (Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding); Binding == 0)
-		{
-			// Resource not used... continue.
-			continue;
-		}
+		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
 
-		UniformBufferFormat Uniform;
+		ResourceFormat Uniform;
 		Uniform.Name = Resource.name;
 		Uniform.Binding = Binding;
-		Uniform.Size = (uint32)GLSL.get_declared_struct_size(GLSL.get_type(Resource.type_id));
+		Uniform.Set = GLSL.get_decoration(Resource.id, spv::DecorationDescriptorSet);
 
-		check(Uniform.Size % 16 == 0, "std140 layout advises to manually pad structures/arrays to multiple of 16 bytes.");
+		size_t Size = (uint32)GLSL.get_declared_struct_size(GLSL.get_type(Resource.type_id));
+		check(Size % 16 == 0, "std140 layout advises to manually pad structures/arrays to multiple of 16 bytes.");
 
 		Uniforms.push_back(Uniform);
 	}
@@ -162,16 +147,12 @@ static std::vector<ResourceFormat> ParseStorageBuffers(const spirv_cross::Compil
 
 	for (auto& Resource : Resources.storage_buffers)
 	{
-		uint32 Binding;
-		if (Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding); Binding == 0)
-		{
-			// Resource not used... continue.
-			continue;
-		}
+		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
 
 		ResourceFormat StorageBuffer;
 		StorageBuffer.Name = Resource.name;
 		StorageBuffer.Binding = Binding;
+		StorageBuffer.Set = GLSL.get_decoration(Resource.id, spv::DecorationDescriptorSet);
 
 		StorageBuffers.push_back(StorageBuffer);
 	}
@@ -227,31 +208,23 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 {
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
-	std::string BaseBinding;
 
 	// Not a great approach. 
 	const std::string ShaderExt = [&] ()
 	{
 		switch (Meta.Stage)
 		{
-			// Start base binding at 0 because spirv_cross uses this for unused resources in shaders.
 		case EShaderStage::Vertex:
-			BaseBinding = "1";
 			return "vert";
 		case EShaderStage::TessControl:
-			BaseBinding = "100";
 			return "tesc";
 		case EShaderStage::TessEvaluation:
-			BaseBinding = "200";
 			return "tese";
 		case EShaderStage::Geometry:
-			BaseBinding = "300";
 			return "geom";
 		case EShaderStage::Fragment:
-			BaseBinding = "400";
 			return "frag";
 		default: // Compute
-			BaseBinding = "1";
 			return "comp";
 		}
 	}();
@@ -261,7 +234,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	std::for_each(Worker.GetDefines().begin(), Worker.GetDefines().end(), [&] (const std::pair<std::string, std::string>& Defines)
 	{
 		const auto& [Define, Value] = Defines;
-		SS << " -D" + Define + "[=[" + Value + "]]";
+		SS << " -D" + Define + "=" + Value;
 	});
 	
 	SS << " -std=450";
@@ -270,18 +243,12 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	SS << " -o ";
 	SS << Meta.Filename + SPIRVExt;
 	SS << " " + Meta.Filename;
-	SS << " -fauto-bind-uniforms";
-	SS << " -fimage-binding-base " + ShaderExt + " " + BaseBinding;
-	SS << " -fsampler-binding-base " + ShaderExt + " " + BaseBinding;
-	SS << " -ftexture-binding-base " + ShaderExt + " " + BaseBinding;
-	SS << " -fubo-binding-base " + ShaderExt + " " + BaseBinding;
-	SS << " -fssbo-binding-base " + ShaderExt + " " + BaseBinding;
 
 	Platform.ForkProcess(ShaderCompilerPath, SS.str());
 
 	// Hack until ForkProcess can return STDOUT of child process.
 	check(Platform.FileExists(Meta.Filename + SPIRVExt),
-		"Shader failed to compile.\nFilename: %s", Meta.Filename.c_str());
+		"Shader failed to compile. Filename: %s", Meta.Filename.c_str());
 	const std::string SPIRV = Platform.FileRead(Meta.Filename + SPIRVExt);
 	Platform.FileDelete(Meta.Filename + SPIRVExt);
 
@@ -296,13 +263,13 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
 
 	std::vector<VertexStreamFormat> VertexStreams = ParseStageInputs(GLSL, Resources);
-	std::vector<UniformBufferFormat> Uniforms = ParseUniformBuffers(GLSL, Resources);
+	std::vector<ResourceFormat> Uniforms = ParseUniformBuffers(GLSL, Resources);
 	std::vector<ResourceFormat> Images = ParseSampledImages(GLSL, Resources);
 	std::vector<ResourceFormat> StorageBuffers = ParseStorageBuffers(GLSL, Resources);
 
 	std::vector<VkVertexInputAttributeDescription> Attributes = CreateVertexInputAttributeDescriptions(VertexStreams);
 	std::vector<VkDescriptorSetLayoutBinding> Bindings;
-	VkShaderStageFlags Stage = VulkanStages[(int32)Meta.Stage];
+	VkShaderStageFlags Stage = VulkanStages.at(Meta.Stage);
 
 	CreateDescriptorSetLayoutBindings(Uniforms, Bindings, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Stage);
 	CreateDescriptorSetLayoutBindings(Images, Bindings, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Stage);
@@ -314,34 +281,24 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 		return LHS.binding < RHS.binding;
 	});
 
-	HashTable<std::string, uint32> AttributeLocations;
+	HashTable<std::string, ShaderBinding> ShaderBindings;
 
-	if (Meta.Stage == EShaderStage::Vertex)
+	std::for_each(Uniforms.begin(), Uniforms.end(), [&] (const ResourceFormat& Uniform)
 	{
-		std::for_each(VertexStreams.begin(), VertexStreams.end(), [&] (const VertexStreamFormat& Stream)
-		{
-			AttributeLocations[Stream.Name] = Stream.Location;
-		});
-	}
-
-	HashTable<std::string, uint32> UniformLocations;
-
-	std::for_each(Uniforms.begin(), Uniforms.end(), [&] (const UniformBufferFormat& Uniform)
-	{
-		UniformLocations[Uniform.Name] = Uniform.Binding;
+		ShaderBindings[Uniform.Name] = ShaderBinding(Uniform.Binding);
 	});
 
 	std::for_each(Images.begin(), Images.end(), [&] (const ResourceFormat& Image)
 	{
-		UniformLocations[Image.Name] = Image.Binding;
+		ShaderBindings[Image.Name] = ShaderBinding(Image.Binding);
 	});
 
 	std::for_each(StorageBuffers.begin(), StorageBuffers.end(), [&](const ResourceFormat& StorageBuffer)
 	{
-		UniformLocations[StorageBuffer.Name] = StorageBuffer.Binding;
+		ShaderBindings[StorageBuffer.Name] = ShaderBinding(StorageBuffer.Binding);
 	});
 	
 	Device.ShaderCache.emplace(Meta.Type, VulkanShader{ ShaderModule, Attributes, Bindings });
 
-	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, UniformLocations);
+	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, ShaderBindings);
 }

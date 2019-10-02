@@ -1,5 +1,7 @@
+#ifndef SCENE_COMMON
+#define SCENE_COMMON
 
-uniform ViewUniform
+layout(binding = VIEW_BINDING, set = SCENE_SET) uniform ViewUniform
 {
 	mat4 WorldToView;
 	mat4 ViewToClip;
@@ -19,7 +21,7 @@ struct DirectionalLight
 	int _Pad1;
 };
 
-layout(std430) readonly buffer DirectionalLightBuffer
+layout(std430, binding = DIRECTIONAL_LIGHT_BINDING, set = SCENE_SET) readonly buffer DirectionalLightBuffer
 {
 	uvec4 NumDirectionalLights;
 	DirectionalLight DirectionalLights[];
@@ -33,8 +35,10 @@ struct PointLight
 	float Range;
 };
 
-layout(std430) readonly buffer PointLightBuffer
+layout(std430, binding = POINT_LIGHT_BINDING, set = SCENE_SET) readonly buffer PointLightBuffer
 {
 	uvec4 NumPointLights;
 	PointLight PointLights[];
 };
+
+#endif

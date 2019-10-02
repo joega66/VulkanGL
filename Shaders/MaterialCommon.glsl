@@ -1,3 +1,8 @@
+#ifndef MATERIAL_COMMON
+#define MATERIAL_COMMON
+
+layout(binding = DIFFUSE_BINDING, set = MATERIAL_SET) uniform sampler2D Diffuse;
+
 struct MaterialParams
 {
 	vec3 Position;
@@ -5,3 +10,5 @@ struct MaterialParams
 	vec3 Albedo;
 	float Metallic;
 };
+
+#endif

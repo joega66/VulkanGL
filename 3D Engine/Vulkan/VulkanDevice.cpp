@@ -256,13 +256,12 @@ VulkanDevice::VulkanDevice()
 
 VulkanDevice::~VulkanDevice()
 {
-	for (const auto&[GraphicsPipelineState, PipelineLayout, DescriptorSetLayout] : PipelineLayoutCache)
+	for (const auto&[DescriptorSetLayouts, PipelineLayout] : PipelineLayoutCache)
 	{
-		vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr);
 		vkDestroyPipelineLayout(Device, PipelineLayout, nullptr);
 	}
 
-	for (const auto&[PSOInit, Pipeline] : PipelineCache)
+	for (const auto&[PSOInit, PipelineLayout, RenderPass, NumRenderTargets, Pipeline] : PipelineCache)
 	{
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}

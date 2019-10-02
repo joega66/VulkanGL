@@ -53,33 +53,27 @@ static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
 };
 
-std::tuple<VkPipeline, VkPipelineLayout, VkDescriptorSetLayout> VulkanDevice::GetPipeline(
+VkPipeline VulkanDevice::GetPipeline(
 	const PipelineStateInitializer& PSOInit,
+	VkPipelineLayout PipelineLayout,
 	VkRenderPass RenderPass,
 	uint32 NumRenderTargets)
 {
-	// Find or create the layouts for the bound shaders. (@todo Do this at shader load time?)
-	auto[PipelineLayout, DescriptorSetLayout] = GetPipelineLayout(PSOInit.GraphicsPipelineState);
-
 	// Find or create the pipeline.
-	VkPipeline Pipeline = VK_NULL_HANDLE;
-
-	for (const auto&[CachedPSO, CachedPipeline] : PipelineCache)
+	for (const auto&[CachedPSO, CachedPipelineLayout, CachedRenderPass, CachedNumRenderTargets, CachedPipeline] : PipelineCache)
 	{
-		if (PSOInit == CachedPSO)
+		if (PSOInit == CachedPSO && 
+			PipelineLayout == CachedPipelineLayout &&
+			RenderPass == CachedRenderPass &&
+			NumRenderTargets == CachedNumRenderTargets)
 		{
-			Pipeline = CachedPipeline;
-			break;
+			return CachedPipeline;
 		}
 	}
 
-	if (Pipeline == VK_NULL_HANDLE)
-	{
-		Pipeline = CreatePipeline(PSOInit, PipelineLayout, RenderPass, NumRenderTargets);
-		PipelineCache.push_back({ PSOInit, Pipeline });
-	}
-
-	return { Pipeline, PipelineLayout, DescriptorSetLayout };
+	VkPipeline Pipeline = CreatePipeline(PSOInit, PipelineLayout, RenderPass, NumRenderTargets);
+	PipelineCache.push_back({ PSOInit, PipelineLayout, RenderPass, NumRenderTargets, Pipeline });
+	return Pipeline;
 }
 
 VkPipeline VulkanDevice::CreatePipeline(
@@ -196,15 +190,15 @@ VkPipeline VulkanDevice::CreatePipeline(
 	for (uint32 i = 0; i < ShaderStages.size(); i++)
 	{
 		drm::ShaderRef Shader = Shaders[i];
-		const VulkanShader& VulkanShader = ShaderCache[Shader->Type];
+		const VulkanShader& VulkanShader = ShaderCache[Shader->ResourceTable.Type];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[i];
-		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->Stage);
+		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->ResourceTable.Stage);
 		ShaderStage.module = VulkanShader.ShaderModule;
-		ShaderStage.pName = Shader->Entrypoint.data();
+		ShaderStage.pName = Shader->ResourceTable.Entrypoint.data();
 	}
 
 	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = ShaderCache[GraphicsPipeline.Vertex->Type].Attributes;
+	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = ShaderCache[GraphicsPipeline.Vertex->ResourceTable.Type].Attributes;
 	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
 
 	for (uint32 i = 0; i < Bindings.size(); i++)
@@ -293,60 +287,27 @@ VkPipeline VulkanDevice::CreatePipeline(
 	return Pipeline;
 }
 
-std::pair<VkPipelineLayout, VkDescriptorSetLayout> VulkanDevice::GetPipelineLayout(const GraphicsPipelineState& GraphicsPipelineState)
+VkPipelineLayout VulkanDevice::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts)
 {
-	VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
-	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
-
-	for (const auto&[CachedGraphicsPipelineState, CachedPipelineLayout, CachedDescriptorSetLayout] : PipelineLayoutCache)
+	for (const auto&[CachedDescriptorSetLayouts, CachedPipelineLayout] : PipelineLayoutCache)
 	{
-		if (GraphicsPipelineState == CachedGraphicsPipelineState)
+		if (std::equal(
+			CachedDescriptorSetLayouts.begin(), CachedDescriptorSetLayouts.end(), 
+			DescriptorSetLayouts.begin(), DescriptorSetLayouts.end())
+			)
 		{
-			PipelineLayout = CachedPipelineLayout;
-			DescriptorSetLayout = CachedDescriptorSetLayout;
-			break;
+			return CachedPipelineLayout;
 		}
 	}
 
-	if (PipelineLayout == VK_NULL_HANDLE)
-	{
-		std::vector<VkDescriptorSetLayoutBinding> AllBindings;
+	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+	PipelineLayoutInfo.setLayoutCount = DescriptorSetLayouts.size();
+	PipelineLayoutInfo.pSetLayouts = DescriptorSetLayouts.data();
 
-		auto AddBindings = [&] (const drm::ShaderRef& Shader)
-		{
-			if (Shader)
-			{
-				const auto& VulkanShader = ShaderCache[Shader->Type];
-				const auto& Bindings = VulkanShader.Bindings;
-				if (Bindings.size() > 0)
-				{
-					AllBindings.insert(AllBindings.end(), Bindings.begin(), Bindings.end());
-				}
-			}
-		};
+	VkPipelineLayout PipelineLayout;
+	vulkan(vkCreatePipelineLayout(Device, &PipelineLayoutInfo, nullptr, &PipelineLayout));
 
-		{
-			AddBindings(GraphicsPipelineState.Vertex);
-			AddBindings(GraphicsPipelineState.TessControl);
-			AddBindings(GraphicsPipelineState.TessEval);
-			AddBindings(GraphicsPipelineState.Geometry);
-			AddBindings(GraphicsPipelineState.Fragment);
-		}
+	PipelineLayoutCache.push_back({ DescriptorSetLayouts, PipelineLayout });
 
-		VkDescriptorSetLayoutCreateInfo DescriptorSetLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-		DescriptorSetLayoutInfo.bindingCount = static_cast<uint32>(AllBindings.size());
-		DescriptorSetLayoutInfo.pBindings = AllBindings.data();
-
-		vulkan(vkCreateDescriptorSetLayout(Device, &DescriptorSetLayoutInfo, nullptr, &DescriptorSetLayout));
-
-		VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-		PipelineLayoutInfo.setLayoutCount = 1;
-		PipelineLayoutInfo.pSetLayouts = &DescriptorSetLayout;
-
-		vulkan(vkCreatePipelineLayout(Device, &PipelineLayoutInfo, nullptr, &PipelineLayout));
-
-		PipelineLayoutCache.push_back({ GraphicsPipelineState, PipelineLayout, DescriptorSetLayout });
-	}
-
-	return { PipelineLayout, DescriptorSetLayout };
+	return PipelineLayout;
 }

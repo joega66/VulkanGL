@@ -1,24 +1,35 @@
 #pragma once
 #include <DRMShader.h>
-#include "DrawingPlan.h"
-#include <Components/CMaterial.h>
 
 enum class EMeshType
 {
 	StaticMesh
 };
 
+class MaterialShader : public drm::Shader
+{
+public:
+	MaterialShader(const ShaderResourceTable& Resources)
+		: drm::Shader(Resources)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker);
+};
+
 template<EMeshType MeshType>
-class MaterialVS : public drm::Shader
+class MaterialVS : public MaterialShader
 {
 public:
 	MaterialVS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: MaterialShader(Resources)
 	{
 	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
+		MaterialShader::SetEnvironmentVariables(Worker);
+
 		if constexpr (MeshType == EMeshType::StaticMesh)
 		{
 			Worker.SetDefine("STATIC_MESH");
@@ -27,16 +38,18 @@ public:
 };
 
 template<bool bHasNormalMap, EMeshType MeshType>
-class MaterialFS : public drm::Shader
+class MaterialFS : public MaterialShader
 {
 public:
 	MaterialFS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+		: MaterialShader(Resources)
 	{
 	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
+		MaterialShader::SetEnvironmentVariables(Worker);
+
 		if constexpr (bHasNormalMap)
 		{
 			Worker.SetDefine("HAS_NORMAL_MAP");

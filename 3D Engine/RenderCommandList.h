@@ -2,126 +2,6 @@
 #include "DRMShader.h"
 #include "DRMResource.h"
 
-enum class EDepthCompareTest
-{
-	Never,
-	Less,
-	Equal,
-	LEqual,
-	Greater,
-	NEqual,
-	GEqual,
-	Always
-};
-
-enum class EPolygonMode
-{
-	Fill,
-	Line,
-	Point
-};
-
-enum class EFrontFace
-{
-	CCW,
-	CW
-};
-
-enum class ECullMode
-{
-	None,
-	Front,
-	Back,
-	FrontAndBack
-};
-
-enum class EColorChannel
-{
-	None,
-	R = 0x01,
-	G = 0x02,
-	B = 0x04,
-	A = 0x08,
-	RGBA = R | G | B | A
-};
-
-enum class EPrimitiveTopology
-{
-	PointList,
-	LineList,
-	LineStrip,
-	TriangleList,
-	TriangleStrip,
-	TriangleFan
-};
-
-enum class ESamplerAddressMode
-{
-	Repeat,
-	MirroredRepeat,
-	ClampToEdge,
-	ClampToBorder,
-	MirrorClampToEdge
-};
-
-enum class ESamplerMipmapMode
-{
-	Nearest,
-	Linear
-};
-
-enum class EFilter
-{
-	Nearest,
-	Linear,
-	Cubic
-};
-
-struct SamplerState
-{
-	EFilter Filter = EFilter::Linear;
-	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToEdge;
-	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
-
-	bool operator==(const SamplerState& Other) const
-	{
-		return Filter == Other.Filter && SAM == Other.SAM && SMM == Other.SMM;
-	}
-
-	struct Hash
-	{
-		size_t operator()(const SamplerState& SamplerState) const
-		{
-			return ((uint32)SamplerState.Filter * 31) + ((uint32)SamplerState.SAM * 37) + ((uint32)SamplerState.SMM * 41);
-		}
-	};
-};
-
-enum class EUniformUpdate
-{
-	SingleFrame,
-	Frequent,
-};
-
-enum class EStencilOp
-{
-	Keep,
-	Zero,
-	Replace,
-};
-
-enum class ECompareOp
-{
-	Never,
-	Less,
-	Equal,
-	LessOrEqual,
-	Greater,
-	NotEqual,
-	GreaterOrEqual,
-	Always
-};
-
 struct Viewport
 {
 	int32 X = 0;
@@ -370,10 +250,8 @@ public:
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
 	virtual void EndRenderPass() = 0;
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
+	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) = 0;
 	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers) = 0;
-	virtual void SetUniformBuffer(drm::ShaderRef Shader, uint32 Location, drm::UniformBufferRef UniformBuffer) = 0;
-	virtual void SetShaderImage(drm::ShaderRef Shader, uint32 Location, drm::ImageRef Image, const SamplerState& Sampler) = 0;
-	virtual void SetStorageBuffer(drm::ShaderRef Shader, uint32 Location, drm::StorageBufferRef StorageBuffer) = 0;
 	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 	virtual void Finish() = 0;

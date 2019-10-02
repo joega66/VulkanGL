@@ -1,6 +1,7 @@
 #pragma once
 #include <DRM.h>
 #include <Renderer/SceneProxy.h>
+#include <Components/CStaticMesh.h>
 
 class Scene;
 class RenderCommandList;

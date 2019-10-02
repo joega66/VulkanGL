@@ -167,9 +167,6 @@
     <ClInclude Include="DRMPrivate.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\SceneBindings.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Screen.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -206,9 +203,6 @@
     <ClInclude Include="Renderer\SceneProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Components\COutline.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Scene.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -217,6 +211,9 @@
     </ClInclude>
     <ClInclude Include="Vulkan\VulkanQueues.h">
       <Filter>Source\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\COutline.h">
+      <Filter>Source\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -307,9 +304,6 @@
     <ClCompile Include="Components\CMaterial.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\SceneBindings.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Screen.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
@@ -343,6 +337,9 @@
     <ClCompile Include="Vulkan\VulkanQueues.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\MaterialShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -367,9 +364,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\DepthPassVS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\OutlineFS.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SkyboxVS.glsl">

@@ -25,6 +25,11 @@ namespace drm
 		return GDRM->CreateCommandList();
 	}
 
+	drm::DescriptorSetRef CreateDescriptorSet()
+	{
+		return GDRM->CreateDescriptorSet();
+	}
+
 	IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void* Data)
 	{
 		return GDRM->CreateIndexBuffer(Format, NumIndices, Usage, Data);
@@ -118,7 +123,7 @@ namespace drm
 
 void DRM::CacheShader(drm::ShaderRef Shader)
 {
-	GDRM->Shaders[Shader->Type] = Shader;
+	GDRM->Shaders[Shader->ResourceTable.Type] = Shader;
 }
 
 drm::ShaderRef DRM::FindShader(std::type_index Type)
