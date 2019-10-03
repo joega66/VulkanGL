@@ -70,14 +70,17 @@ void VulkanQueues::FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surfa
 		}
 	}
 
-	// Check if a separate transfer queue is available.
-	for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)
+	if (const bool UseTransferQueue = Platform.GetBool("Engine.ini", "Renderer", "UseTransferQueue", false); UseTransferQueue)
 	{
-		const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
-		if (QueueFamilyIndex != GraphicsIndex && HasQueue(QueueFamily, VK_QUEUE_TRANSFER_BIT))
+		// Check if a separate transfer queue is available.
+		for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)
 		{
-			TransferIndex = QueueFamilyIndex;
-			break;
+			const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
+			if (QueueFamilyIndex != GraphicsIndex && HasQueue(QueueFamily, VK_QUEUE_TRANSFER_BIT))
+			{
+				TransferIndex = QueueFamilyIndex;
+				break;
+			}
 		}
 	}
 

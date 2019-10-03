@@ -12,10 +12,7 @@ public:
 	VkShaderModule ShaderModule;
 
 	VulkanShader() = default;
-	VulkanShader(
-		VkShaderModule ShaderModule
-		, const std::vector<VkVertexInputAttributeDescription>& Attributes
-		, const std::vector<VkDescriptorSetLayoutBinding>& Bindings);
+	VulkanShader(VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes);
 
 	static VkShaderStageFlagBits GetVulkanStage(EShaderStage Stage);
 };

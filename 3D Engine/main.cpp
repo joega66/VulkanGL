@@ -2,23 +2,13 @@
 #include <Platform/Platform.h>
 #include <Vulkan/VulkanDRM.h>
 #include "CoreEngine.h"
-#include <cxxopts.hpp>
 
 int main(int argc, char* argv[])
 {
-	/*cxxopts::Options Options("VulkanGL", "A Vulkan-based framework for graphics demos :)");
-	Options.add_options()
-		("vulkan", "Enable Vulkan graphics library")
-		("w,width", "Window width", cxxopts::value<int32>())
-		("h,height", "Window height", cxxopts::value<int32>());
-	cxxopts::ParseResult Result = Options.parse(argc, argv);*/
-	/*int32 WinX = Result["width"].as<int32>();
-	int32 WinY = Result["height"].as<int32>();*/
+	const int32 WindowResolutionX = Platform.GetInt("Engine.ini", "Renderer", "WindowResolutionX", 720);
+	const int32 WindowResolutionY = Platform.GetInt("Engine.ini", "Renderer", "WindowResolutionY", 720);
 
-	int32 WinX = 1080;
-	int32 WinY = 1080;
-
-	Platform.OpenWindow(WinX, WinY);
+	Platform.OpenWindow(WindowResolutionX, WindowResolutionY);
 
 	GDRM = MakeRef<VulkanDRM>();
 

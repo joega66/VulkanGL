@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
+#include <cctype>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -225,6 +226,37 @@ uint8* OS_Platform::LoadImage(const std::string& Filename, int32& Width, int32& 
 void OS_Platform::FreeImage(uint8* Pixels) const
 {
 	stbi_image_free(Pixels);
+}
+
+static const std::string ConfigPath = "../Config/";
+
+bool OS_Platform::GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default) const
+{
+	const std::string DefaultString = Default ? "true" : "false";
+	
+	std::string ReturnedString = GetString(Filename, Section, Key, DefaultString);
+
+	std::transform(ReturnedString.begin(), ReturnedString.end(), ReturnedString.begin(), [] (char& c) { return std::tolower(c); });
+
+	return ReturnedString == "true" ? true : false;
+}
+
+int32 OS_Platform::GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default) const
+{
+	const std::string Path = ConfigPath + Filename;
+
+	return GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, Path.c_str());
+}
+
+std::string OS_Platform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const
+{
+	const std::string Path = ConfigPath + Filename;
+
+	std::array<char, 256> ReturnedString;
+
+	GetPrivateProfileStringA(Section.c_str(), Key.c_str(), Default.c_str(), ReturnedString.data(), ReturnedString.size(), Path.c_str());
+
+	return std::string(ReturnedString.data());
 }
 
 void OS_Platform::Finish()

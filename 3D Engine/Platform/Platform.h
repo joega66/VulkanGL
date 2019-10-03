@@ -35,6 +35,11 @@ public:
 	uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const;
 	void FreeImage(uint8* Pixels) const;
 
+	// .ini
+	bool GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default) const;
+	int32 GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default) const;
+	std::string GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const;
+
 private:
 	void UpdateCursorState(class Cursor& Cursor);
 	void UpdateInputState(class Input& Input);

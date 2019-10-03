@@ -2,11 +2,8 @@
 #include "VulkanDRM.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 
-VulkanShader::VulkanShader(
-	VkShaderModule ShaderModule
-	, const std::vector<VkVertexInputAttributeDescription>& Attributes
-	, const std::vector<VkDescriptorSetLayoutBinding>& Bindings)
-	: ShaderModule(ShaderModule), Attributes(Attributes), Bindings(Bindings)
+VulkanShader::VulkanShader(VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes)
+	: ShaderModule(ShaderModule), Attributes(Attributes)
 {
 }
 
@@ -185,25 +182,6 @@ static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttribute
 	return Descriptions;
 }
 
-template<typename DescriptorType>
-static void CreateDescriptorSetLayoutBindings(
-	const std::vector<DescriptorType>& Descriptors
-	, std::vector<VkDescriptorSetLayoutBinding>& Bindings
-	, VkDescriptorType Type
-	, VkShaderStageFlags Stage)
-{
-	for (const auto& Descriptor : Descriptors)
-	{
-		VkDescriptorSetLayoutBinding Binding = {};
-		Binding.binding = Descriptor.Binding;
-		Binding.descriptorCount = 1;
-		Binding.descriptorType = Type;
-		Binding.stageFlags = Stage;
-
-		Bindings.push_back(Binding);
-	}
-}
-
 ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
@@ -268,18 +246,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	std::vector<ResourceFormat> StorageBuffers = ParseStorageBuffers(GLSL, Resources);
 
 	std::vector<VkVertexInputAttributeDescription> Attributes = CreateVertexInputAttributeDescriptions(VertexStreams);
-	std::vector<VkDescriptorSetLayoutBinding> Bindings;
 	VkShaderStageFlags Stage = VulkanStages.at(Meta.Stage);
-
-	CreateDescriptorSetLayoutBindings(Uniforms, Bindings, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Stage);
-	CreateDescriptorSetLayoutBindings(Images, Bindings, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, Stage);
-	CreateDescriptorSetLayoutBindings(StorageBuffers, Bindings, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, Stage);
-
-	std::sort(Bindings.begin(), Bindings.end(),
-		[] (const VkDescriptorSetLayoutBinding& LHS, const VkDescriptorSetLayoutBinding& RHS)
-	{
-		return LHS.binding < RHS.binding;
-	});
 
 	HashTable<std::string, ShaderBinding> ShaderBindings;
 
@@ -298,7 +265,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 		ShaderBindings[StorageBuffer.Name] = ShaderBinding(StorageBuffer.Binding);
 	});
 	
-	Device.ShaderCache.emplace(Meta.Type, VulkanShader{ ShaderModule, Attributes, Bindings });
+	Device.ShaderCache.emplace(Meta.Type, VulkanShader{ ShaderModule, Attributes });
 
 	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, ShaderBindings);
 }
