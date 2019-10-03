@@ -4,8 +4,7 @@
 
 VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device)
 	: Device(Device)
-	, MaxDescriptorSetCount(4096)
-	, DescriptorSetCount(0)
+	, PendingFreeDescriptorSets({ VK_NULL_HANDLE })
 {
 	std::array<VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE> PoolSizes;
 
@@ -21,6 +20,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device)
 	PoolInfo.pPoolSizes = PoolSizes.data();
 	PoolInfo.poolSizeCount = PoolSizes.size();
 	PoolInfo.maxSets = MaxDescriptorSetCount;
+	PoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
 	vulkan(vkCreateDescriptorPool(Device, &PoolInfo, nullptr, &DescriptorPool));
 }
@@ -41,10 +41,18 @@ VkDescriptorSet VulkanDescriptorPool::Spawn(const VkDescriptorSetLayout& Descrip
 	return DescriptorSet;
 }
 
-void VulkanDescriptorPool::Reset()
+void VulkanDescriptorPool::Free(VkDescriptorSet DescriptorSet)
 {
-	vulkan(vkResetDescriptorPool(Device, DescriptorPool, 0));
-	DescriptorSetCount = 0;
+	PendingFreeDescriptorSets[PendingFreeCount++] = DescriptorSet;
+}
+
+void VulkanDescriptorPool::EndFrame()
+{
+	vkFreeDescriptorSets(Device, DescriptorPool, PendingFreeCount, PendingFreeDescriptorSets.data());
+
+	DescriptorSetCount -= PendingFreeCount;
+
+	PendingFreeCount = 0;
 }
 
 VkDescriptorSetLayout VulkanDevice::GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings)
@@ -99,6 +107,8 @@ VulkanDescriptorSet::~VulkanDescriptorSet()
 			delete Write.pImageInfo;
 		}
 	});
+
+	DescriptorPool.Free(DescriptorSet);
 }
 
 void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding)
@@ -166,11 +176,11 @@ void VulkanDescriptorSet::Write(drm::StorageBufferRef StorageBuffer, const Shade
 
 void VulkanDescriptorSet::Update()
 {
-	if (DescriptorSet == VK_NULL_HANDLE)
+	std::call_once(SpawnDescriptorSetOnceFlag, [&] ()
 	{
 		DescriptorSetLayout = Device.GetDescriptorSetLayout(VulkanBindings);
 		DescriptorSet = DescriptorPool.Spawn(DescriptorSetLayout);
-	}
+	});
 
 	std::for_each(PendingWrites.begin(), PendingWrites.end(), 
 		[&] (auto& Write)
@@ -198,15 +208,14 @@ void VulkanDescriptorSet::Update()
 
 void VulkanDescriptorSet::MaybeAddBinding(const ShaderBinding& Binding, VkDescriptorType DescriptorType)
 {
-	const bool NoneOf = std::none_of(VulkanBindings.begin(), VulkanBindings.end(),
-		[&] (const auto& VulkanBinding)
+	if (DescriptorSetLayout == VK_NULL_HANDLE)
 	{
-		return VulkanBinding.binding == Binding.GetBinding();
-	});
+		check(std::none_of(VulkanBindings.begin(), VulkanBindings.end(),
+			[&] (const auto& VulkanBinding)
+		{
+			return VulkanBinding.binding == Binding.GetBinding();
+		}), "This binding has already been seen before.");
 
-	if (NoneOf)
-	{
-		// This is a binding we haven't seen yet. Add it to the list of bindings for this descriptor set.
 		VkDescriptorSetLayoutBinding VulkanBinding;
 		VulkanBinding.binding = Binding.GetBinding();
 		VulkanBinding.descriptorCount = 1;

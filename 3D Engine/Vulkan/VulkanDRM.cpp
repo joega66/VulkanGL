@@ -80,7 +80,7 @@ void VulkanDRM::BeginFrame()
 
 void VulkanDRM::EndFrame()
 {
-	DescriptorPool.Reset();
+	DescriptorPool.EndFrame();
 }
 
 drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EFormat EngineFormat, uint32 NumElements, EBufferUsage Usage, const void* Data)

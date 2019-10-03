@@ -5,44 +5,32 @@
 
 class VulkanDevice;
 
-struct VulkanWriteDescriptorImage
-{
-	const VkDescriptorSetLayoutBinding& Binding;
-	VkDescriptorImageInfo DescriptorImage = {};
-
-	VulkanWriteDescriptorImage(const VkDescriptorSetLayoutBinding& Binding, const VkDescriptorImageInfo& DescriptorImage)
-		: Binding(Binding), DescriptorImage(DescriptorImage)
-	{
-	}
-};
-
-struct VulkanWriteDescriptorBuffer
-{
-	const VkDescriptorSetLayoutBinding& Binding;
-	VkDescriptorBufferInfo DescriptorBuffer = {};
-
-	VulkanWriteDescriptorBuffer(const VkDescriptorSetLayoutBinding& Binding, const VkDescriptorBufferInfo& DescriptorBuffer)
-		: Binding(Binding), DescriptorBuffer(DescriptorBuffer)
-	{
-	}
-};
-
 /** Spawns descriptor sets and zerglings */
 class VulkanDescriptorPool
 {
 public:
 	VulkanDescriptorPool(VulkanDevice& Device);
+
 	[[nodiscard]] VkDescriptorSet Spawn(const VkDescriptorSetLayout& DescriptorSetLayout);
-	void Reset();
+
+	void Free(VkDescriptorSet DescriptorSet);
+
+	void EndFrame();
 
 private:
-	uint32 DescriptorSetCount;
-	const uint32 MaxDescriptorSetCount;
-	VkDescriptorPool DescriptorPool;
+	static constexpr uint32 MaxDescriptorSetCount = 4096;
+
 	VulkanDevice& Device;
+
+	uint32 DescriptorSetCount = 0;
+
+	VkDescriptorPool DescriptorPool;
+
+	uint32 PendingFreeCount = 0;
+
+	std::array<VkDescriptorSet, MaxDescriptorSetCount> PendingFreeDescriptorSets;
 };
 
-class VulkanDescriptorPool;
 class VulkanAllocator;
 
 class VulkanDescriptorSet : public drm::DescriptorSet
@@ -60,6 +48,8 @@ public:
 	virtual void Update() override;
 
 private:
+	std::once_flag SpawnDescriptorSetOnceFlag;
+
 	VulkanDevice& Device;
 	VulkanDescriptorPool& DescriptorPool;
 	VulkanAllocator& Allocator;
