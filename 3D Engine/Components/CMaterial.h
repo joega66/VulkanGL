@@ -7,7 +7,8 @@
 struct CMaterial : Component<CMaterial>
 {
 	drm::ImageRef Diffuse;
-	drm::ImageRef Normal;
+	drm::ImageRef Specular;
+	drm::ImageRef Opacity;
 
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;

@@ -10,7 +10,8 @@ MaterialParams GetMaterial()
 	Material.Position = InPosition;
 	Material.Normal = InNormal;
 	Material.Albedo = texture(Diffuse, InUV).rgb;
-	Material.Metallic = 1.0f;
+	Material.Roughness = 0.25f;
+	Material.Shininess = 0.0f;
 
 	return Material;
 }
