@@ -10,6 +10,8 @@ struct CMaterial : Component<CMaterial>
 	drm::ImageRef Specular;
 	drm::ImageRef Opacity;
 
+	inline bool IsMasked() { return Opacity != nullptr; }
+
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;
 	static drm::ImageRef Blue;

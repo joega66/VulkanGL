@@ -4,6 +4,16 @@
 #include "EditorPrimitives.h"
 #include "DrawingPlan.h"
 
+namespace EStaticDrawListType
+{
+	enum EStaticDrawListType
+	{
+		Opaque,
+		Masked,
+		Max
+	};
+};
+
 class SceneProxy
 {
 	friend class CoreEngine;
@@ -19,7 +29,7 @@ public:
 
 	const drm::ImageRef Skybox;
 
-	DrawList<LightingPassDrawPlan> LightingPass;
+	std::array<DrawList<LightingPassDrawPlan>, EStaticDrawListType::Max> LightingPass;
 
 	std::vector<DirectionalLightProxy> DirectionalLightProxies;
 

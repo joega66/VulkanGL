@@ -74,7 +74,18 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	PSOInit.Viewport.Width = Screen.GetWidth();
 	PSOInit.Viewport.Height = Screen.GetHeight();
 
-	Scene.LightingPass.Draw(CmdList, PSOInit, Scene);
+	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Scene);
+
+	ColorBlendAttachmentState& BlendState = PSOInit.ColorBlendAttachmentStates[0];
+	BlendState.BlendEnable = true;
+	BlendState.SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
+	BlendState.DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	BlendState.ColorBlendOp = EBlendOp::ADD;
+	BlendState.SrcAlphaBlendFactor = EBlendFactor::SRC_ALPHA;
+	BlendState.DstAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	BlendState.AlphaBlendOp = EBlendOp::ADD;
+
+	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Scene);
 }
 
 void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)

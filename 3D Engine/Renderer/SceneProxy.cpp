@@ -135,11 +135,14 @@ void SceneProxy::InitLightingPassDrawList(Scene& Scene)
 		{
 			// The entity has a Material -- render using it.
 			auto& Material = ECS.GetComponent<CMaterial>(Entity);
+			EStaticDrawListType::EStaticDrawListType StaticDrawListType = 
+				Material.IsMasked() ? 
+				EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
 			auto& Batch = StaticMesh.StaticMesh->Batch;
 			auto& Elements = Batch.Elements;
 			for (auto& Element : Elements)
 			{
-				LightingPass.Add(Entity, LightingPassDrawPlan(Element, Material, Transform.LocalToWorldUniform));
+				LightingPass[StaticDrawListType].Add(Entity, LightingPassDrawPlan(Element, Material, Transform.LocalToWorldUniform));
 			}
 		}
 		else
@@ -149,7 +152,10 @@ void SceneProxy::InitLightingPassDrawList(Scene& Scene)
 			auto& Elements = Batch.Elements;
 			for (auto& Element : Elements)
 			{
-				LightingPass.Add(Entity, LightingPassDrawPlan(Element, Element.Material, Transform.LocalToWorldUniform));
+				EStaticDrawListType::EStaticDrawListType StaticDrawListType = 
+					Element.Material.IsMasked() ?
+					EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
+				LightingPass[StaticDrawListType].Add(Entity, LightingPassDrawPlan(Element, Element.Material, Transform.LocalToWorldUniform));
 			}
 		}
 	}

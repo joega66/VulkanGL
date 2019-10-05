@@ -120,5 +120,5 @@ vec4 Shade(in MaterialParams Material)
 	Lo = Lo / (Lo + vec3(1.0));
 	Lo = pow(Lo, vec3(1.0 / 2.2));
 
-	return vec4(Lo, 1.0);
+	return vec4(Lo, Material.Alpha);
 }

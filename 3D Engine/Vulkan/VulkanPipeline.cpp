@@ -145,13 +145,48 @@ VkPipeline VulkanDevice::CreatePipeline(
 
 			Out.blendEnable = In.BlendEnable;
 
-			// @todo-joe Blend factors
-			/*Out.srcColorBlendFactor = In.SrcColorBlendFactor;
-			Out.dstColorBlendFactor = In.DstColorBlendFactor;
-			Out.colorBlendOp = In.ColorBlendOp;
-			Out.srcAlphaBlendFactor = In.SrcAlphaBlendFactor;
-			Out.dstAlphaBlendFactor = In.DstAlphaBlendFactor;
-			Out.alphaBlendOp = In.AlphaBlendOp;*/
+			static const HashTable<EBlendOp, VkBlendOp> VulkanBlendOp =
+			{
+				ENTRY(EBlendOp::ADD, VK_BLEND_OP_ADD)
+				ENTRY(EBlendOp::SUBTRACT, VK_BLEND_OP_SUBTRACT)
+				ENTRY(EBlendOp::REVERSE_SUBTRACT, VK_BLEND_OP_REVERSE_SUBTRACT)
+				ENTRY(EBlendOp::MIN, VK_BLEND_OP_MIN)
+				ENTRY(EBlendOp::MAX,VK_BLEND_OP_MAX)
+			};
+
+			static const auto EngineToVulkanBlendOp = [&] (EBlendOp BlendOp) { return VulkanBlendOp.at(BlendOp); };
+
+			static const HashTable<EBlendFactor, VkBlendFactor> VulkanBlendFactor = 
+			{
+				ENTRY(EBlendFactor::ZERO, VK_BLEND_FACTOR_ZERO)
+				ENTRY(EBlendFactor::ONE, VK_BLEND_FACTOR_ONE)
+				ENTRY(EBlendFactor::SRC_COLOR, VK_BLEND_FACTOR_SRC_COLOR)
+				ENTRY(EBlendFactor::ONE_MINUS_SRC_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR)
+				ENTRY(EBlendFactor::DST_COLOR, VK_BLEND_FACTOR_DST_COLOR)
+				ENTRY(EBlendFactor::ONE_MINUS_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR)
+				ENTRY(EBlendFactor::SRC_ALPHA, VK_BLEND_FACTOR_SRC_ALPHA)
+				ENTRY(EBlendFactor::ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
+				ENTRY(EBlendFactor::DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA)
+				ENTRY(EBlendFactor::ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA)
+				ENTRY(EBlendFactor::CONSTANT_COLOR, VK_BLEND_FACTOR_CONSTANT_COLOR)
+				ENTRY(EBlendFactor::ONE_MINUS_CONSTANT_COLOR, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR)
+				ENTRY(EBlendFactor::CONSTANT_ALPHA, VK_BLEND_FACTOR_CONSTANT_ALPHA)
+				ENTRY(EBlendFactor::ONE_MINUS_CONSTANT_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA)
+				ENTRY(EBlendFactor::SRC_ALPHA_SATURATE, VK_BLEND_FACTOR_SRC_ALPHA_SATURATE)
+				ENTRY(EBlendFactor::SRC1_COLOR, VK_BLEND_FACTOR_SRC1_COLOR)
+				ENTRY(EBlendFactor::ONE_MINUS_SRC1_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR)
+				ENTRY(EBlendFactor::SRC1_ALPHA, VK_BLEND_FACTOR_SRC1_ALPHA)
+				ENTRY(EBlendFactor::ONE_MINUS_SRC1_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA)
+			};
+
+			static const auto EngineToVulkanBlendFactor = [&] (EBlendFactor BlendFactor) { return VulkanBlendFactor.at(BlendFactor); };
+
+			Out.srcColorBlendFactor = EngineToVulkanBlendFactor(In.SrcColorBlendFactor);
+			Out.dstColorBlendFactor = EngineToVulkanBlendFactor(In.DstColorBlendFactor);
+			Out.colorBlendOp = EngineToVulkanBlendOp(In.ColorBlendOp);
+			Out.srcAlphaBlendFactor = EngineToVulkanBlendFactor(In.SrcAlphaBlendFactor);
+			Out.dstAlphaBlendFactor = EngineToVulkanBlendFactor(In.DstAlphaBlendFactor);
+			Out.alphaBlendOp = EngineToVulkanBlendOp(In.AlphaBlendOp);
 
 			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
 			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;

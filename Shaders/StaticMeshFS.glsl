@@ -13,5 +13,11 @@ MaterialParams GetMaterial()
 	Material.Roughness = 0.25f;
 	Material.Shininess = 0.0f;
 
+#ifdef HAS_OPACITY_MAP
+	Material.Alpha = texture(Opacity, InUV).r;
+#else
+	Material.Alpha = 1.0f;
+#endif
+
 	return Material;
 }

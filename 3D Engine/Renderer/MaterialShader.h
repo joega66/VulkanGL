@@ -37,7 +37,7 @@ public:
 	}
 };
 
-template<bool bHasNormalMap, EMeshType MeshType>
+template<bool bHasOpacityMap, EMeshType MeshType>
 class MaterialFS : public MaterialShader
 {
 public:
@@ -50,9 +50,9 @@ public:
 	{
 		MaterialShader::SetEnvironmentVariables(Worker);
 
-		if constexpr (bHasNormalMap)
+		if constexpr (bHasOpacityMap)
 		{
-			Worker.SetDefine("HAS_NORMAL_MAP");
+			Worker.SetDefine("HAS_OPACITY_MAP");
 		}
 
 		// REFLECTION WHEN FFS???

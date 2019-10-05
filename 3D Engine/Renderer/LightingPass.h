@@ -43,7 +43,7 @@ public:
 		: MaterialShader(Resources)
 	{
 		Resources.Bind("Diffuse", Diffuse);
-		Resources.Bind("Normal", Normal);
+		Resources.Bind("Opacity", Opacity);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -53,10 +53,10 @@ public:
 	}
 
 	ShaderBinding Diffuse;
-	ShaderBinding Normal;
+	ShaderBinding Opacity;
 };
 
-template<bool bHasNormalMap, EMeshType MeshType>
+template<bool bHasOpacityMap, EMeshType MeshType>
 class LightingPassFS : public LightingPassBaseFS
 {
 public:
@@ -67,7 +67,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		MaterialFS<bHasNormalMap, MeshType>::SetEnvironmentVariables(Worker);
+		MaterialFS<bHasOpacityMap, MeshType>::SetEnvironmentVariables(Worker);
 	}
 };
 
