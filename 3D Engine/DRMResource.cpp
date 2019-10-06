@@ -2,6 +2,21 @@
 
 namespace drm
 {
+	static HashTable<EFormat, uint32> EngineFormatStrides =
+	{
+		ENTRY(EFormat::R8_UNORM, 1)
+		ENTRY(EFormat::R8G8B8A8_UNORM, 4)
+	};
+
+	// @todo Move me to a Resource base class, allowing all drm resources to get its stride
+	uint32 GetStrideInBytes(EFormat Format)
+	{
+		return EngineFormatStrides[Format];
+	}
+}
+
+namespace drm
+{
 	bool Image::IsColor() const
 	{
 		return !(IsDepth() || IsStencil() || Format == EFormat::UNDEFINED);

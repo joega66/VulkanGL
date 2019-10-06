@@ -9,7 +9,7 @@ drm::ImageRef CMaterial::White;
 static drm::ImageRef GetDummy()
 {
 	static drm::ImageRef Dummy = nullptr;
-	if (!Dummy)
+	if (Dummy == nullptr)
 	{
 		uint8 DummyColor[] = { 234, 115, 79, 0 };
 		Dummy = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, DummyColor);
@@ -22,6 +22,11 @@ CMaterial::CMaterial()
 	, Specular(GetDummy())
 	, Opacity(GetDummy())
 {
+}
+
+bool CMaterial::HasSpecularMap() const
+{
+	return Specular != GetDummy();
 }
 
 bool CMaterial::IsMasked() const

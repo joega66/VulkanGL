@@ -72,6 +72,7 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in MaterialParams Material,
 	vec3 Nom = NDF * G * Fresnel;
 	float Denom = 4.0 * NdotV * NdotL;
 	vec3 Specular = Nom / max(Denom, 0.001);
+	Specular *= Material.Specular;
 
 	vec3 Kd = vec3(1.0) - Fresnel;
 	Kd *= 1.0 - Material.Shininess;

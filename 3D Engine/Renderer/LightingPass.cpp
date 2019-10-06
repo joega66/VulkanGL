@@ -9,6 +9,7 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 	VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
 	FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
 
+	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
 	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
 
 	const SamplerState Sampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
@@ -17,6 +18,7 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 
 	DescriptorSet->Write(LocalToWorldUniform, VertShader->LocalToWorld);
 	DescriptorSet->Write(Material.Diffuse, Sampler, FragShader->Diffuse);
+	DescriptorSet->Write(Material.Specular, Sampler, FragShader->Specular);
 	DescriptorSet->Write(Material.Opacity, Sampler, FragShader->Opacity);
 
 	DescriptorSet->Update();

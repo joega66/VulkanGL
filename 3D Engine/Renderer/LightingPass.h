@@ -43,8 +43,10 @@ public:
 		: MaterialShader(Resources)
 	{
 		Resources.Bind("Diffuse", Diffuse);
+		Resources.Bind("Specular", Specular);
 		Resources.Bind("Opacity", Opacity);
 		Resources.Bind("HasOpacityMap", HasOpacityMap);
+		Resources.Bind("HasSpecularMap", HasSpecularMap);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -54,7 +56,9 @@ public:
 	}
 
 	ShaderBinding Diffuse;
+	ShaderBinding Specular;
 	ShaderBinding Opacity;
+	SpecConstant HasSpecularMap;
 	SpecConstant HasOpacityMap;
 };
 

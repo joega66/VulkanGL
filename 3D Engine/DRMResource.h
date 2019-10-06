@@ -11,11 +11,12 @@ inline constexpr void CheckStd140Layout()
 enum class EFormat
 {
 	UNDEFINED,
+	R8_UNORM,
 	R8_UINT,
 	R8_SINT,
+	R8_SRGB,
 	R8G8_UINT,
 	R8G8_SINT,
-	R8_SRGB,
 	R8G8_SRGB,
 	R8G8B8_UINT,
 	R8G8B8_SINT,
@@ -34,6 +35,7 @@ enum class EFormat
 	R16_UINT,
 	R16_SINT,
 	R16_SFLOAT,
+	R16_UNORM,
 	R16G16_UINT,
 	R16G16_SINT,
 	R16G16_SFLOAT,
@@ -46,6 +48,7 @@ enum class EFormat
 	R32_UINT,
 	R32_SINT,
 	R32_SFLOAT,
+	R32_UNORM,
 	R32G32_UINT,
 	R32G32_SINT,
 	R32G32_SFLOAT,
@@ -62,6 +65,11 @@ enum class EFormat
 	D24_UNORM_S8_UINT,
 	BC2_UNORM_BLOCK,
 };
+
+namespace drm
+{
+	uint32 GetStrideInBytes(EFormat Format);
+}
 
 enum class EBufferUsage
 {
