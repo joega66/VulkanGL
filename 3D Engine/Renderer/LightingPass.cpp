@@ -4,30 +4,20 @@
 LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
 {
-	VertShader = *ShaderMapRef<LightingPassVS<EMeshType::StaticMesh>>();
+	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	const bool bHasOpacityMap = Material.IsMasked();
+	VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
+	FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
 
-	// @todo Pass in the material to ShaderMapRef to do conditional compilations.
+	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
 
 	const SamplerState Sampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 
 	DescriptorSet = drm::CreateDescriptorSet();
 
-	if (bHasOpacityMap)
-	{
-		FragShader = *ShaderMapRef<LightingPassFS<true, EMeshType::StaticMesh>>();
-		DescriptorSet->Write(Material.Opacity, Sampler, FragShader->Opacity);
-	}
-	else
-	{
-		FragShader = *ShaderMapRef<LightingPassFS<false, EMeshType::StaticMesh>>();
-	}
-
-	SpecInfo.Add(FragShader->HasOpacityMap, bHasOpacityMap);
-
 	DescriptorSet->Write(LocalToWorldUniform, VertShader->LocalToWorld);
 	DescriptorSet->Write(Material.Diffuse, Sampler, FragShader->Diffuse);
+	DescriptorSet->Write(Material.Opacity, Sampler, FragShader->Opacity);
 
 	DescriptorSet->Update();
 }

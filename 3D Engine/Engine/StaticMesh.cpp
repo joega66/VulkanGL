@@ -46,9 +46,21 @@ drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial
 CMaterial ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
 {
 	CMaterial Material;
-	Material.Diffuse = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache);
-	Material.Specular = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_SPECULAR, TextureCache);
-	Material.Opacity = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_OPACITY, TextureCache);
+
+	if (drm::ImageRef Diffuse = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); Diffuse)
+	{
+		Material.Diffuse = Diffuse;
+	}
+
+	if (drm::ImageRef Specular = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_SPECULAR, TextureCache); Specular)
+	{
+		Material.Specular = Specular;
+	}
+
+	if (drm::ImageRef Opacity = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_OPACITY, TextureCache); Opacity)
+	{
+		Material.Opacity = Opacity;
+	}
 
 	return Material;
 }

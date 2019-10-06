@@ -2,15 +2,15 @@
 #include <ECS/Component.h>
 #include <DRMResource.h>
 
-// @todo Make these pipeline constants set by the material.
-
 struct CMaterial : Component<CMaterial>
 {
+	CMaterial();
+
 	drm::ImageRef Diffuse;
 	drm::ImageRef Specular;
 	drm::ImageRef Opacity;
 
-	inline bool IsMasked() { return Opacity != nullptr; }
+	bool IsMasked() const;
 
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;

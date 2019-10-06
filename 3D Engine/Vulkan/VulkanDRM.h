@@ -55,3 +55,4 @@ private:
 CLASS(VulkanDRM);
 
 extern HashTable<VkFormat, uint32> SizeOfVulkanFormat;
+extern HashTable<EFormat, uint32> ImageFormatToGLSLSize;

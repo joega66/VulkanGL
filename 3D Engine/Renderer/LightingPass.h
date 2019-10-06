@@ -58,7 +58,7 @@ public:
 	SpecConstant HasOpacityMap;
 };
 
-template<bool bHasOpacityMap, EMeshType MeshType>
+template<EMeshType MeshType>
 class LightingPassFS : public LightingPassBaseFS
 {
 public:
@@ -69,7 +69,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		MaterialFS<bHasOpacityMap, MeshType>::SetEnvironmentVariables(Worker);
+		MaterialFS<MeshType>::SetEnvironmentVariables(Worker);
 	}
 };
 

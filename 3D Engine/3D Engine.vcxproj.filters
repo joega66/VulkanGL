@@ -338,7 +338,7 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\MaterialShader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -37,7 +37,7 @@ public:
 	}
 };
 
-template<bool bHasOpacityMap, EMeshType MeshType>
+template<EMeshType MeshType>
 class MaterialFS : public MaterialShader
 {
 public:
@@ -49,11 +49,6 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		MaterialShader::SetEnvironmentVariables(Worker);
-
-		if constexpr (bHasOpacityMap)
-		{
-			Worker.SetDefine("HAS_OPACITY_MAP");
-		}
 
 		// REFLECTION WHEN FFS???
 		if constexpr (MeshType == EMeshType::StaticMesh)

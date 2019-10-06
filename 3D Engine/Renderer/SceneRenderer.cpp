@@ -82,7 +82,7 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	BlendState.DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
 	BlendState.ColorBlendOp = EBlendOp::ADD;
 	BlendState.SrcAlphaBlendFactor = EBlendFactor::SRC_ALPHA;
-	BlendState.DstAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	BlendState.DstAlphaBlendFactor = EBlendFactor::ZERO;
 	BlendState.AlphaBlendOp = EBlendOp::ADD;
 
 	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Scene);

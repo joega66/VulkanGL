@@ -14,8 +14,7 @@ static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 
 HashTable<VkFormat, uint32> SizeOfVulkanFormat;
-
-static HashTable<EFormat, uint32> ImageFormatToGLSLSize;
+HashTable<EFormat, uint32> ImageFormatToGLSLSize;
 
 VulkanDRM::VulkanDRM()
 	: Swapchain(Device)
@@ -24,19 +23,25 @@ VulkanDRM::VulkanDRM()
 {
 	SizeOfVulkanFormat = ([&] ()
 	{
-		HashTable<VkFormat, uint32> Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+		HashTable<VkFormat, uint32> Result; 
+		for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
 		{
 			auto SizeOf = GetValue(GLSLTypeSizes, GLSLType);
 			Result[Format] = SizeOf;
-		} return Result;
+		} 
+		return Result;
 	}());
 
 	ImageFormatToGLSLSize = ([&] ()
 	{
-		HashTable<EFormat, uint32>Result; for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
+		HashTable<EFormat, uint32> Result; 
+		for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
 		{
-			auto ImageFormat = VulkanImage::GetEngineFormat(Format); auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType); Result[ImageFormat] = GLSLSize;
-		} return Result;
+			auto ImageFormat = VulkanImage::GetEngineFormat(Format); 
+			auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType); 
+			Result[ImageFormat] = GLSLSize;
+		} 
+		return Result;
 	}());
 }
 
