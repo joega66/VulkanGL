@@ -248,6 +248,7 @@ struct PipelineStateInitializer
 	std::array<ColorBlendAttachmentState, MaxRenderTargets> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	GraphicsPipelineState GraphicsPipelineState;
+	std::array<SpecializationInfo, NumGraphicsStages> SpecializationInfos;
 
 	friend bool operator==(const PipelineStateInitializer& L, const PipelineStateInitializer& R)
 	{
@@ -264,7 +265,8 @@ struct PipelineStateInitializer
 			&& L.RasterizationState == R.RasterizationState
 			&& L.MultisampleState == R.MultisampleState
 			&& L.InputAssemblyState == R.InputAssemblyState
-			&& L.GraphicsPipelineState == R.GraphicsPipelineState;
+			&& L.GraphicsPipelineState == R.GraphicsPipelineState
+			&& L.SpecializationInfos == R.SpecializationInfos;
 	}
 };
 

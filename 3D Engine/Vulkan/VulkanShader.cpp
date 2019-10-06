@@ -36,61 +36,61 @@ struct ResourceFormat
 	int32 Set = -1;
 };
 
+static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
+{
+	switch (Type.basetype)
+	{
+	case spirv_cross::SPIRType::BaseType::Int:
+		switch (Type.width)
+		{
+		case 1:
+			return VK_FORMAT_R32_SINT;
+		case 2:
+			return VK_FORMAT_R32G32_SINT;
+		case 3:
+			return VK_FORMAT_R32G32B32_SINT;
+		case 4:
+			return VK_FORMAT_R32G32B32A32_SINT;
+		}
+	case spirv_cross::SPIRType::BaseType::UInt:
+		switch (Type.width)
+		{
+		case 1:
+			return VK_FORMAT_R32_UINT;
+		case 2:
+			return VK_FORMAT_R32G32_UINT;
+		case 3:
+			return VK_FORMAT_R32G32B32_UINT;
+		case 4:
+			return VK_FORMAT_R32G32B32A32_UINT;
+		}
+	case spirv_cross::SPIRType::BaseType::Float:
+		switch (Type.vecsize)
+		{
+		case 1:
+			return VK_FORMAT_R32_SFLOAT;
+		case 2:
+			return VK_FORMAT_R32G32_SFLOAT;
+		case 3:
+			return VK_FORMAT_R32G32B32_SFLOAT;
+		case 4:
+			return VK_FORMAT_R32G32B32A32_SFLOAT;
+		}
+	default:
+		signal_unimplemented();
+	}
+}
+
 static std::vector<VertexStreamFormat> ParseStageInputs(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
 {
 	std::vector<VertexStreamFormat> VertexStreams;
 
 	for (auto& Resource : Resources.stage_inputs)
 	{
-		const auto& Type = GLSL.get_type(Resource.type_id);
-
 		VertexStreamFormat VertexStream;
 		VertexStream.Name = Resource.name;
 		VertexStream.Location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
-		VertexStream.Format = [&] ()
-		{
-			switch (Type.basetype)
-			{
-			case spirv_cross::SPIRType::BaseType::Int:
-				switch (Type.width)
-				{
-				case 1:
-					return VK_FORMAT_R32_SINT;
-				case 2:
-					return VK_FORMAT_R32G32_SINT;
-				case 3:
-					return VK_FORMAT_R32G32B32_SINT;
-				case 4:
-					return VK_FORMAT_R32G32B32A32_SINT;
-				}
-			case spirv_cross::SPIRType::BaseType::UInt:
-				switch (Type.width)
-				{
-				case 1:
-					return VK_FORMAT_R32_UINT;
-				case 2:
-					return VK_FORMAT_R32G32_UINT;
-				case 3:
-					return VK_FORMAT_R32G32B32_UINT;
-				case 4:
-					return VK_FORMAT_R32G32B32A32_UINT;
-				}
-			case spirv_cross::SPIRType::BaseType::Float:
-				switch (Type.vecsize)
-				{
-				case 1:
-					return VK_FORMAT_R32_SFLOAT;
-				case 2:
-					return VK_FORMAT_R32G32_SFLOAT;
-				case 3:
-					return VK_FORMAT_R32G32B32_SFLOAT;
-				case 4:
-					return VK_FORMAT_R32G32B32A32_SFLOAT;
-				}
-			default:
-				signal_unimplemented();
-			}
-		}();
+		VertexStream.Format = GetFormatFromBaseType(GLSL.get_type(Resource.type_id));
 
 		VertexStreams.push_back(VertexStream);
 	}
@@ -109,6 +109,7 @@ static std::vector<ResourceFormat> ParseSampledImages(const spirv_cross::Compile
 		ResourceFormat Image;
 		Image.Name = Resource.name;
 		Image.Binding = Binding;
+		Image.Set = GLSL.get_decoration(Resource.id, spv::DecorationDescriptorSet);
 
 		Images.push_back(Image);
 	}
@@ -182,6 +183,20 @@ static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttribute
 	return Descriptions;
 }
 
+static HashTable<std::string, SpecConstant> ParseSpecializationConstants(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+{
+	HashTable<std::string, SpecConstant> SpecConstants;
+	std::vector<spirv_cross::SpecializationConstant> SPIRVSpecializationConstants = GLSL.get_specialization_constants();
+
+	for (auto& SPIRSpecConstant : SPIRVSpecializationConstants)
+	{
+		const std::string Name = GLSL.get_name(SPIRSpecConstant.id);
+		SpecConstants[Name] = SpecConstant(SPIRSpecConstant.constant_id);
+	}
+
+	return SpecConstants;
+}
+
 ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
 	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
@@ -244,6 +259,7 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	std::vector<ResourceFormat> Uniforms = ParseUniformBuffers(GLSL, Resources);
 	std::vector<ResourceFormat> Images = ParseSampledImages(GLSL, Resources);
 	std::vector<ResourceFormat> StorageBuffers = ParseStorageBuffers(GLSL, Resources);
+	HashTable<std::string, SpecConstant> SpecConstants = ParseSpecializationConstants(GLSL, Resources);
 
 	std::vector<VkVertexInputAttributeDescription> Attributes = CreateVertexInputAttributeDescriptions(VertexStreams);
 	VkShaderStageFlags Stage = VulkanStages.at(Meta.Stage);
@@ -267,5 +283,5 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	
 	Device.ShaderCache.emplace(Meta.Type, VulkanShader{ ShaderModule, Attributes });
 
-	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, ShaderBindings);
+	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, ShaderBindings, SpecConstants);
 }

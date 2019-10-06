@@ -38,7 +38,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 		RenderSkybox(Scene, CmdList);
 
-		CmdList.EndRenderPass();
+		CmdList.EndRenderPass();	
 	}
 
 	CmdList.Finish();

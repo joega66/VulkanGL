@@ -221,15 +221,35 @@ VkPipeline VulkanDevice::CreatePipeline(
 	}
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStages(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
+	std::vector<VkSpecializationInfo> VulkanSpecInfos(Shaders.size());
 
-	for (uint32 i = 0; i < ShaderStages.size(); i++)
+	for (uint32 StageIndex = 0; StageIndex < ShaderStages.size(); StageIndex++)
 	{
-		drm::ShaderRef Shader = Shaders[i];
+		const drm::ShaderRef& Shader = Shaders[StageIndex];
 		const VulkanShader& VulkanShader = ShaderCache[Shader->ResourceTable.Type];
-		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[i];
+
+		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[StageIndex];
 		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->ResourceTable.Stage);
 		ShaderStage.module = VulkanShader.ShaderModule;
 		ShaderStage.pName = Shader->ResourceTable.Entrypoint.data();
+
+		const SpecializationInfo& SpecInfo = PSOInit.SpecializationInfos[(int32)Shader->ResourceTable.Stage];
+		const std::vector<SpecializationInfo::SpecMapEntry>& Entries = SpecInfo.GetEntries();
+
+		if (Entries.size() > 0)
+		{
+			const std::vector<uint8>& Data = SpecInfo.GetData();
+
+			// @todo Stupid, but works until drm::CreateSpecializationInfo
+			VkSpecializationInfo& VulkanSpecInfo = VulkanSpecInfos[StageIndex];
+			VulkanSpecInfo.mapEntryCount = Entries.size();
+			static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecMapEntry));
+			VulkanSpecInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(Entries.data());
+			VulkanSpecInfo.dataSize = Data.size();
+			VulkanSpecInfo.pData = Data.data();
+
+			ShaderStage.pSpecializationInfo = &VulkanSpecInfo;
+		}
 	}
 
 	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };

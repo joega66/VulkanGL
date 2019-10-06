@@ -24,6 +24,8 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 		FragShader = *ShaderMapRef<LightingPassFS<false, EMeshType::StaticMesh>>();
 	}
 
+	SpecInfo.Add(FragShader->HasOpacityMap, bHasOpacityMap);
+
 	DescriptorSet->Write(LocalToWorldUniform, VertShader->LocalToWorld);
 	DescriptorSet->Write(Material.Diffuse, Sampler, FragShader->Diffuse);
 
@@ -43,6 +45,8 @@ void LightingPassDrawPlan::BindDescriptorSets(RenderCommandList& CmdList, const 
 
 void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
 {
+	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = SpecInfo;
+
 	PSOInit.GraphicsPipelineState =
 	{
 		VertShader,

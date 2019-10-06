@@ -44,6 +44,7 @@ public:
 	{
 		Resources.Bind("Diffuse", Diffuse);
 		Resources.Bind("Opacity", Opacity);
+		Resources.Bind("HasOpacityMap", HasOpacityMap);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -54,6 +55,7 @@ public:
 
 	ShaderBinding Diffuse;
 	ShaderBinding Opacity;
+	SpecConstant HasOpacityMap;
 };
 
 template<bool bHasOpacityMap, EMeshType MeshType>
@@ -84,5 +86,6 @@ private:
 	Ref<LightingPassBaseVS> VertShader;
 	Ref<LightingPassBaseFS> FragShader;
 	drm::DescriptorSetRef DescriptorSet;
+	SpecializationInfo SpecInfo;
 	const MeshElement& Element;
 };

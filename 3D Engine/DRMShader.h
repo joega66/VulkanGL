@@ -4,13 +4,18 @@
 
 enum class EShaderStage
 {
-	Vertex = 1 << 0,
-	TessControl = 1 << 1,
-	TessEvaluation = 1 << 2,
-	Geometry = 1 << 3,
-	Fragment = 1 << 4,
-	Compute = 1 << 5,
-	All = Vertex | TessControl | TessEvaluation | Geometry | Fragment | Compute
+	Vertex,
+	TessControl,
+	TessEvaluation,
+	Geometry,
+	Fragment,
+	Compute,
+	//All = Vertex | TessControl | TessEvaluation | Geometry | Fragment | Compute
+};
+
+enum
+{
+	NumGraphicsStages = (int32)EShaderStage::Fragment + 1
 };
 
 class ShaderCompilerWorker
@@ -84,7 +89,70 @@ public:
 
 private:
 	uint32 Binding = -1;
-	EShaderStage StageFlags = EShaderStage::All;
+	//EShaderStage StageFlags = EShaderStage::All;
+};
+
+class SpecConstant
+{
+public:
+	SpecConstant() = default;
+
+	SpecConstant(uint32 ConstantID)
+		: ConstantID(ConstantID)
+	{
+	}
+
+	operator uint32() const
+	{
+		return ConstantID;
+	}
+
+private:
+	uint32 ConstantID = -1;
+};
+
+class SpecializationInfo
+{
+public:
+	struct SpecMapEntry
+	{
+		uint32 ConstantID;
+		uint32 Offset;
+		size_t Size;
+
+		bool operator==(const SpecMapEntry& Other) const
+		{
+			return ConstantID == Other.ConstantID
+				&& Offset == Other.Offset
+				&& Size == Other.Size;
+		}
+	};
+
+	SpecializationInfo() = default;
+		
+	template<typename SpecConstantType>
+	void Add(const SpecConstant& SpecConstant, const SpecConstantType& Constant)
+	{
+		const uint32 Offset = Data.size();
+		Data.resize(Offset + sizeof(Constant));
+		memcpy(Data.data() + Offset, &Constant, sizeof(Constant));
+		const SpecMapEntry Entry = { SpecConstant, Offset, sizeof(Constant) };
+		Entries.push_back(std::move(Entry));
+	}
+
+	bool operator==(const SpecializationInfo& Other) const
+	{
+		return Entries == Other.Entries
+			&& Data == Other.Data;
+	}
+
+	const std::vector<SpecMapEntry>& GetEntries() const { return Entries; }
+
+	const std::vector<uint8>& GetData() const { return Data; }
+
+private:
+	std::vector<SpecMapEntry> Entries;
+	std::vector<uint8> Data;
 };
 
 class ShaderResourceTable
@@ -98,8 +166,9 @@ public:
 		std::type_index Type, 
 		EShaderStage Stage, 
 		const std::string& Entrypoint, 
-		const HashTable<std::string, ShaderBinding>& Bindings)
-		: Type(Type), Stage(Stage), Entrypoint(Entrypoint), Bindings(Bindings)
+		const HashTable<std::string, ShaderBinding>& Bindings,
+		const HashTable<std::string, SpecConstant>& SpecConstants)
+		: Type(Type), Stage(Stage), Entrypoint(Entrypoint), Bindings(Bindings), SpecConstants(SpecConstants)
 	{
 	}
 
@@ -111,8 +180,17 @@ public:
 		}
 	}
 
+	void Bind(const std::string& Name, SpecConstant& SpecConstant) const
+	{
+		if (auto Iter = SpecConstants.find(Name); Iter != SpecConstants.end())
+		{
+			SpecConstant = Iter->second;
+		}
+	}
+
 private:
 	HashTable<std::string, ShaderBinding> Bindings;
+	HashTable<std::string, SpecConstant> SpecConstants;
 };
 
 namespace drm
