@@ -178,6 +178,10 @@ public:
 		{
 			Binding = Iter->second;
 		}
+		else
+		{
+			LOG("Shader %s does not have binding %s", Type.name(), Name.c_str());
+		}
 	}
 
 	void Bind(const std::string& Name, SpecConstant& SpecConstant) const
@@ -185,6 +189,10 @@ public:
 		if (auto Iter = SpecConstants.find(Name); Iter != SpecConstants.end())
 		{
 			SpecConstant = Iter->second;
+		}
+		else
+		{
+			LOG("Shader %s does not have spec constant %s", Type.name(), Name.c_str());
 		}
 	}
 

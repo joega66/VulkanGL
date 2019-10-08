@@ -21,6 +21,7 @@ CMaterial::CMaterial()
 	: Diffuse(GetDummy())
 	, Specular(GetDummy())
 	, Opacity(GetDummy())
+	, Bump(GetDummy())
 {
 }
 
@@ -32,4 +33,9 @@ bool CMaterial::HasSpecularMap() const
 bool CMaterial::IsMasked() const
 { 
 	return Opacity != GetDummy(); 
+}
+
+bool CMaterial::HasBumpMap() const
+{
+	return Bump != GetDummy();
 }

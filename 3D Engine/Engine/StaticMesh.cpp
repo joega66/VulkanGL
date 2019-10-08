@@ -62,6 +62,11 @@ CMaterial ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, Textu
 		Material.Opacity = Opacity;
 	}
 
+	if (drm::ImageRef Bump = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_HEIGHT, TextureCache); Bump)
+	{
+		Material.Bump = Bump;
+	}
+
 	return Material;
 }
 
@@ -154,7 +159,8 @@ void StaticMesh::LoadStaticMesh()
 {
 	uint32 AssimpLoadFlags = 0;
 
-	AssimpLoadFlags |= aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
+	AssimpLoadFlags |= aiProcess_Triangulate 
+		| aiProcess_JoinIdenticalVertices
 		| aiProcess_OptimizeMeshes
 		| aiProcess_OptimizeGraph
 		| aiProcess_FlipUVs

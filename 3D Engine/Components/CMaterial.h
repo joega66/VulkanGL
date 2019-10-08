@@ -9,9 +9,11 @@ struct CMaterial : Component<CMaterial>
 	drm::ImageRef Diffuse;
 	drm::ImageRef Specular;
 	drm::ImageRef Opacity;
+	drm::ImageRef Bump;
 
 	bool HasSpecularMap() const;
 	bool IsMasked() const;
+	bool HasBumpMap() const;
 
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;

@@ -1,5 +1,6 @@
 #include "LightingPass.h"
 #include "SceneProxy.h"
+#include <Engine/Input.h>
 
 LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
@@ -12,14 +13,21 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
 	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
 
-	const SamplerState Sampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	if (!Input.GetKeyDown(EKeyCode::Keypad0))
+	{
+		SpecInfo.Add(FragShader->HasBumpMap, Material.HasBumpMap());
+	}
+	
+	const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear};
 
 	DescriptorSet = drm::CreateDescriptorSet();
 
 	DescriptorSet->Write(LocalToWorldUniform, VertShader->LocalToWorld);
-	DescriptorSet->Write(Material.Diffuse, Sampler, FragShader->Diffuse);
-	DescriptorSet->Write(Material.Specular, Sampler, FragShader->Specular);
-	DescriptorSet->Write(Material.Opacity, Sampler, FragShader->Opacity);
+	DescriptorSet->Write(Material.Diffuse, LinearSampler, FragShader->Diffuse);
+	DescriptorSet->Write(Material.Specular, LinearSampler, FragShader->Specular);
+	DescriptorSet->Write(Material.Opacity, LinearSampler, FragShader->Opacity);
+	DescriptorSet->Write(Material.Bump, BumpSampler, FragShader->Bump);
 
 	DescriptorSet->Update();
 }

@@ -45,8 +45,10 @@ public:
 		Resources.Bind("Diffuse", Diffuse);
 		Resources.Bind("Specular", Specular);
 		Resources.Bind("Opacity", Opacity);
+		Resources.Bind("Bump", Bump);
 		Resources.Bind("HasOpacityMap", HasOpacityMap);
 		Resources.Bind("HasSpecularMap", HasSpecularMap);
+		Resources.Bind("HasBumpMap", HasBumpMap);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -58,8 +60,10 @@ public:
 	ShaderBinding Diffuse;
 	ShaderBinding Specular;
 	ShaderBinding Opacity;
+	ShaderBinding Bump;
 	SpecConstant HasSpecularMap;
 	SpecConstant HasOpacityMap;
+	SpecConstant HasBumpMap;
 };
 
 template<EMeshType MeshType>
