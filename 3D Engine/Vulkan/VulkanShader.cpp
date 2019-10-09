@@ -237,11 +237,27 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	SS << Meta.Filename + SPIRVExt;
 	SS << " " + Meta.Filename;
 
-	Platform.ForkProcess(ShaderCompilerPath, SS.str());
+	while (true)
+	{
+		Platform.ForkProcess(ShaderCompilerPath, SS.str());
 
-	// Hack until ForkProcess can return STDOUT of child process.
-	check(Platform.FileExists(Meta.Filename + SPIRVExt),
-		"Shader failed to compile. Filename: %s", Meta.Filename.c_str());
+		// Hack until ForkProcess can return STDOUT of child process.
+		if (Platform.FileExists(Meta.Filename + SPIRVExt))
+		{
+			break;
+		}
+
+		const EMBReturn Ret = Platform.DisplayMessageBox(EMBType::RETRYCANCEL, EMBIcon::WARNING, "Shader failed to compile. Filename: " + Meta.Filename, "Shader Compiler Error");
+
+		switch (Ret)
+		{
+		case EMBReturn::CANCEL:
+			Platform.Exit();
+		case EMBReturn::RETRY:
+			LOG("Recompiling shader %s", Meta.Filename.c_str());
+		}
+	}
+
 	const std::string SPIRV = Platform.FileRead(Meta.Filename + SPIRVExt);
 	Platform.FileDelete(Meta.Filename + SPIRVExt);
 

@@ -27,6 +27,8 @@
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="ECS\System.cpp" />
     <ClCompile Include="Engine\AssetManager.cpp" />
+    <ClCompile Include="Engine\Cursor.cpp" />
+    <ClCompile Include="Engine\Input.cpp" />
     <ClCompile Include="Engine\Scene.cpp" />
     <ClCompile Include="Engine\Screen.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />

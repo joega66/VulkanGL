@@ -15,7 +15,7 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 
 	if (!Input.GetKeyDown(EKeyCode::Keypad0))
 	{
-		SpecInfo.Add(FragShader->HasBumpMap, Material.HasBumpMap());
+		SpecInfo.Add(FragShader->HasBumpMap, false/*Material.HasBumpMap()*/);
 	}
 	
 	const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };

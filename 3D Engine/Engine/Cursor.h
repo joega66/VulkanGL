@@ -27,6 +27,8 @@ public:
 	Cursor() = default;
 	Cursor(const Cursor&) = delete;
 	Cursor& operator=(const Cursor&) = delete;
+
+	void Update();
 };
 
 extern class Cursor Cursor;

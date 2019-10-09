@@ -50,6 +50,7 @@ void CoreEngine::Run()
 
 		SceneRenderer.Render(SceneProxy);
 
-		Platform.Finish();
+		Cursor.Update();
+		Input.Update();
 	}
 }

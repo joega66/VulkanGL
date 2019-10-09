@@ -1,6 +1,50 @@
 #pragma once
 #include <Engine/Types.h>
 
+enum class EMBType
+{
+	ABORTRETRYIGNORE,
+	CANCELTRYCONTINUE,
+	HELP,
+	OK,
+	OKCANCEL,
+	RETRYCANCEL,
+	YESNO,
+	YESNOCANCEL
+};
+
+enum class EMBIcon
+{
+	EXCLAMATION,
+	WARNING,
+	INFORMATION,
+	ASTERISK,
+	QUESTION,
+	STOP,
+	FEL, // ERROR
+	HAND,
+};
+
+enum class EMBReturn
+{
+	ABORT,
+	CANCEL,
+	CONTINUE,
+	IGNORERA,
+	NO,
+	OK,
+	RETRY,
+	TRYAGAIN,
+	YES
+};
+
+enum class EMBModality
+{
+	APPLMODAL,
+	SYSTEMMODAL,
+	TASKMODAL,
+};
+
 class OS_Platform
 {
 public:
@@ -10,7 +54,8 @@ public:
 	void OpenWindow(int32 Width, int32 Height);
 	bool WindowShouldClose();
 	void PollEvents();
-	void Finish();
+	void Exit();
+	EMBReturn DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality = EMBModality::TASKMODAL);
 
 	// File I/O
 	std::string FileRead(const std::string& Filename) const;
@@ -41,9 +86,6 @@ public:
 	std::string GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const;
 
 private:
-	void UpdateCursorState(class Cursor& Cursor);
-	void UpdateInputState(class Input& Input);
-
 	static void WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y);
 	static void KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
 	static void ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset);

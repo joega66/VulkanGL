@@ -45,6 +45,7 @@ public:
 	virtual void UnlockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
 	virtual std::string GetDRMName() = 0;
 	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
+	//virtual void RecompileShaders() = 0;
 
 private:
 	template<typename ShaderType>

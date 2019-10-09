@@ -259,39 +259,68 @@ std::string OS_Platform::GetString(const std::string& Filename, const std::strin
 	return std::string(ReturnedString.data());
 }
 
-void OS_Platform::Finish()
+void OS_Platform::Exit()
 {
-	// Update the hardware state.
-	UpdateCursorState(Cursor);
-	UpdateInputState(Input);
+	exit(-1);
 }
 
-void OS_Platform::UpdateCursorState(class Cursor& Cursor)
+EMBReturn OS_Platform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality)
 {
-	uint32 InputMode;
-
-	switch (Cursor.Mode)
+	static const HashTable<EMBType, UINT> WindowsMBType =
 	{
-	case ECursorMode::Normal:
-		InputMode = GLFW_CURSOR_NORMAL;
-		break;
-	case ECursorMode::Hidden:
-		InputMode = GLFW_CURSOR_HIDDEN;
-		break;
-	case ECursorMode::Disabled:
-		InputMode = GLFW_CURSOR_DISABLED;
-		break;
-	}
+		ENTRY(EMBType::ABORTRETRYIGNORE, MB_ABORTRETRYIGNORE)
+		ENTRY(EMBType::CANCELTRYCONTINUE, MB_CANCELTRYCONTINUE)
+		ENTRY(EMBType::HELP, MB_HELP)
+		ENTRY(EMBType::OK, MB_OK)
+		ENTRY(EMBType::OKCANCEL, MB_OKCANCEL)
+		ENTRY(EMBType::RETRYCANCEL, MB_RETRYCANCEL)
+		ENTRY(EMBType::RETRYCANCEL, MB_RETRYCANCEL)
+		ENTRY(EMBType::YESNO, MB_YESNO)
+		ENTRY(EMBType::YESNOCANCEL, MB_YESNOCANCEL)
+	};
 
-	glfwSetInputMode(Window, GLFW_CURSOR, InputMode);
+	static const HashTable<EMBIcon, UINT> WindowsMBIcon =
+	{
+		ENTRY(EMBIcon::EXCLAMATION, MB_ICONEXCLAMATION)
+		ENTRY(EMBIcon::WARNING, MB_ICONWARNING)
+		ENTRY(EMBIcon::INFORMATION, MB_ICONINFORMATION)
+		ENTRY(EMBIcon::ASTERISK, MB_ICONASTERISK)
+		ENTRY(EMBIcon::QUESTION, MB_ICONQUESTION)
+		ENTRY(EMBIcon::STOP, MB_ICONSTOP)
+		ENTRY(EMBIcon::FEL, MB_ICONERROR)
+		ENTRY(EMBIcon::HAND, MB_ICONHAND)
+	};
 
-	Cursor.MouseScrollDelta = {};
-	Cursor.Last = Cursor.Position;
-}
+	static const HashTable<EMBModality, UINT> WindowsMBModality =
+	{
+		ENTRY(EMBModality::APPLMODAL, MB_APPLMODAL)
+		ENTRY(EMBModality::SYSTEMMODAL, MB_SYSTEMMODAL)
+		ENTRY(EMBModality::TASKMODAL, MB_TASKMODAL)
+	};
 
-void OS_Platform::UpdateInputState(class Input& Input)
-{
-	std::fill(Input.KeysPressed.begin(), Input.KeysPressed.end(), false);
+	static const HashTable<int32, EMBReturn> WindowsMBReturn =
+	{
+		ENTRY(IDABORT, EMBReturn::ABORT)
+		ENTRY(IDCANCEL, EMBReturn::CANCEL)
+		ENTRY(IDCONTINUE, EMBReturn::CONTINUE)
+		ENTRY(IDIGNORE, EMBReturn::IGNORERA)
+		ENTRY(IDNO, EMBReturn::NO)
+		ENTRY(IDOK, EMBReturn::OK)
+		ENTRY(IDRETRY, EMBReturn::RETRY)
+		ENTRY(IDTRYAGAIN, EMBReturn::TRYAGAIN)
+		ENTRY(IDYES, EMBReturn::YES)
+	};
+
+	const UINT WindowsMessageBox = WindowsMBType.at(Type) | WindowsMBIcon.at(Icon) | WindowsMBModality.at(Modality);
+
+	const int32 MessageBoxID = MessageBoxA(
+		nullptr,
+		Text.c_str(),
+		Caption.c_str(),
+		WindowsMessageBox
+	);
+
+	return WindowsMBReturn.at(MessageBoxID);
 }
 
 void OS_Platform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
