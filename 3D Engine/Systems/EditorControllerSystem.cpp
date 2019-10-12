@@ -35,6 +35,6 @@ void EditorControllerSystem::Update(Scene& Scene)
 
 	if (Input.GetShortcutUp("Recompile Shaders"))
 	{
-		// @todo
+		drm::RecompileShaders();
 	}
 }

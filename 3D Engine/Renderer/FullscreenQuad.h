@@ -4,8 +4,8 @@
 class FullscreenVS : public drm::Shader
 {
 public:
-	FullscreenVS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+	FullscreenVS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
 	{
 	}
 
@@ -26,8 +26,8 @@ template<EVisualize Visualize = EVisualize::Default>
 class FullscreenFS : public drm::Shader
 {
 public:
-	FullscreenFS(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+	FullscreenFS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
 	{
 	}
 

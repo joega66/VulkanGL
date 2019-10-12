@@ -155,20 +155,33 @@ private:
 	std::vector<uint8> Data;
 };
 
-class ShaderResourceTable
+class ShaderCompilationInfo
 {
 public:
-	const std::type_index Type;
-	const EShaderStage Stage;
-	const std::string Entrypoint;
+	std::type_index Type;
+	EShaderStage Stage;
+	std::string Entrypoint;
+	std::string Filename;
+	uint64 LastWriteTime;
+	ShaderCompilerWorker Worker;
 
-	ShaderResourceTable(
+	ShaderCompilationInfo(
 		std::type_index Type, 
 		EShaderStage Stage, 
-		const std::string& Entrypoint, 
+		const std::string& Entrypoint,
+		const std::string& Filename,
 		const HashTable<std::string, ShaderBinding>& Bindings,
-		const HashTable<std::string, SpecConstant>& SpecConstants)
-		: Type(Type), Stage(Stage), Entrypoint(Entrypoint), Bindings(Bindings), SpecConstants(SpecConstants)
+		const HashTable<std::string, SpecConstant>& SpecConstants,
+		uint64 LastWriteTime,
+		const ShaderCompilerWorker& Worker)
+		: Type(Type)
+		, Stage(Stage)
+		, Entrypoint(Entrypoint)
+		, Filename(Filename)
+		, Bindings(Bindings)
+		, SpecConstants(SpecConstants)
+		, LastWriteTime(LastWriteTime)
+		, Worker(Worker)
 	{
 	}
 
@@ -203,23 +216,18 @@ private:
 
 namespace drm
 {
-	class Shader : public std::enable_shared_from_this<Shader>
+	class Shader
 	{
 	public:
-		const ShaderResourceTable ResourceTable;
+		ShaderCompilationInfo CompilationInfo;
 
-		Shader(const ShaderResourceTable& ResourceTable)
-			: ResourceTable(ResourceTable)
+		Shader(const ShaderCompilationInfo& CompilationInfo)
+			: CompilationInfo(CompilationInfo)
 		{
 		}
 
 		static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 		{
-		}
-
-		std::shared_ptr<Shader> GetShader()
-		{
-			return shared_from_this();
 		}
 	};
 

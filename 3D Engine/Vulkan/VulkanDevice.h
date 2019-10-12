@@ -18,7 +18,7 @@ public:
 
 	VkPhysicalDeviceFeatures Features;
 
-	HashTable<std::type_index, VulkanShader> ShaderCache;
+	HashTable<std::type_index, std::unique_ptr<VulkanShader>> ShaderCache;
 
 	VulkanDevice();
 
@@ -38,9 +38,11 @@ public:
 
 	VkDescriptorSetLayout GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings);
 
-	operator VkDevice() { return Device; }
+	operator VkDevice() const { return Device; }
 
 	void FreeImage(class VulkanImage& Image);
+
+	void DestroyPipelinesWithShader(const drm::ShaderRef& Shader);
 
 private:
 	VkInstance Instance;
@@ -63,11 +65,9 @@ private:
 		};
 
 		std::vector<MinRenderTargetView> ColorTargets;
-
 		MinRenderTargetView DepthTarget;
 
 		VulkanRenderPassHash(const RenderPassInitializer& RPInit);
-
 		bool operator==(const VulkanRenderPassHash& Other);
 	};
 
@@ -75,7 +75,19 @@ private:
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 
-	SlowCache<PipelineStateInitializer, VkPipelineLayout, VkRenderPass, uint32, VkPipeline> PipelineCache;
+	struct VulkanPipelineHash
+	{
+		PipelineStateInitializer PSOInit;
+		VkPipelineLayout PipelineLayout;
+		VkRenderPass RenderPass;
+		uint32 NumRenderTargets;
+
+		VulkanPipelineHash(const PipelineStateInitializer& PSOInit, VkPipelineLayout PipelineLayout, VkRenderPass RenderPass, uint32 NumRenderTargets);
+		bool operator==(const VulkanPipelineHash& Other) const;
+		bool HasShader(const drm::ShaderRef& Shader) const;
+	};
+
+	SlowCache<VulkanPipelineHash, VkPipeline> PipelineCache;
 
 	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout> DescriptorSetLayoutCache;
 

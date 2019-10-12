@@ -4,8 +4,8 @@
 class SkyboxVS : public MaterialShader
 {
 public:
-	SkyboxVS(const ShaderResourceTable& Resources)
-		: MaterialShader(Resources)
+	SkyboxVS(const ShaderCompilationInfo& CompilationInfo)
+		: MaterialShader(CompilationInfo)
 	{
 	}
 
@@ -19,10 +19,10 @@ public:
 class SkyboxFS : public MaterialShader
 {
 public:
-	SkyboxFS(const ShaderResourceTable& Resources)
-		: MaterialShader(Resources)
+	SkyboxFS(const ShaderCompilationInfo& CompilationInfo)
+		: MaterialShader(CompilationInfo)
 	{
-		Resources.Bind("Skybox", Skybox);
+		CompilationInfo.Bind("Skybox", Skybox);
 	}
 
 	static const ShaderInfo& GetShaderInfo()

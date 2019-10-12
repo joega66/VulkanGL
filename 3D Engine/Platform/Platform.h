@@ -55,13 +55,14 @@ public:
 	bool WindowShouldClose();
 	void PollEvents();
 	void Exit();
-	EMBReturn DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality = EMBModality::TASKMODAL);
+	EMBReturn DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality = EMBModality::TASKMODAL) const;
 
 	// File I/O
 	std::string FileRead(const std::string& Filename) const;
 	void FileDelete(const std::string& Filename) const;
 	void FileRename(const std::string& Old, const std::string& New) const;
 	bool FileExists(const std::string& Filename) const;
+	uint64 GetLastWriteTime(const std::string& Filename) const;
 
 	// Logging
 	void WriteLog(const std::string& Log);

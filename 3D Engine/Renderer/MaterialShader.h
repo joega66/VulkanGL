@@ -9,8 +9,8 @@ enum class EMeshType
 class MaterialShader : public drm::Shader
 {
 public:
-	MaterialShader(const ShaderResourceTable& Resources)
-		: drm::Shader(Resources)
+	MaterialShader(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
 	{
 	}
 
@@ -21,8 +21,8 @@ template<EMeshType MeshType>
 class MaterialVS : public MaterialShader
 {
 public:
-	MaterialVS(const ShaderResourceTable& Resources)
-		: MaterialShader(Resources)
+	MaterialVS(const ShaderCompilationInfo& CompilationInfo)
+		: MaterialShader(CompilationInfo)
 	{
 	}
 
@@ -41,8 +41,8 @@ template<EMeshType MeshType>
 class MaterialFS : public MaterialShader
 {
 public:
-	MaterialFS(const ShaderResourceTable& Resources)
-		: MaterialShader(Resources)
+	MaterialFS(const ShaderCompilationInfo& CompilationInfo)
+		: MaterialShader(CompilationInfo)
 	{
 	}
 

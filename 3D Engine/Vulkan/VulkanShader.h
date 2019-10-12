@@ -8,13 +8,19 @@ class VulkanShader
 {
 public:
 	std::vector<VkVertexInputAttributeDescription> Attributes;
-	std::vector<VkDescriptorSetLayoutBinding> Bindings;
-	VkShaderModule ShaderModule;
+	VkShaderModule ShaderModule = VK_NULL_HANDLE;
 
 	VulkanShader() = default;
-	VulkanShader(VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes);
+
+	VulkanShader(const VulkanDevice* Device, VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes);
+
+	~VulkanShader();
 
 	static VkShaderStageFlagBits GetVulkanStage(EShaderStage Stage);
+
+private:
+	const VulkanDevice* Device = nullptr;
+
 };
 
 const HashTable<std::string, VkFormat> GLSLTypeToVulkanFormat =

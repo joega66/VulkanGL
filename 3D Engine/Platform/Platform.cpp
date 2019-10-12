@@ -101,6 +101,12 @@ bool OS_Platform::FileExists(const std::string& Filename) const
 	return std::filesystem::is_regular_file(Filename);
 }
 
+uint64 OS_Platform::GetLastWriteTime(const std::string& Filename) const
+{
+	const uint64 LastWriteTime = std::filesystem::last_write_time(Filename).time_since_epoch().count();
+	return LastWriteTime;
+}
+
 void OS_Platform::WriteLog(const std::string& InLog)
 {
 	std::string Recent = InLog + '\n';
@@ -264,7 +270,7 @@ void OS_Platform::Exit()
 	exit(-1);
 }
 
-EMBReturn OS_Platform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality)
+EMBReturn OS_Platform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality) const
 {
 	static const HashTable<EMBType, UINT> WindowsMBType =
 	{

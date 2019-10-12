@@ -115,15 +115,20 @@ namespace drm
 		return GDRM->GetDRMName();
 	}
 
-	ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
+	ShaderCompilationInfo CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 	{
 		return GDRM->CompileShader(Worker, Meta);
+	}
+
+	void RecompileShaders()
+	{
+		GDRM->RecompileShaders();
 	}
 }
 
 void DRM::CacheShader(drm::ShaderRef Shader)
 {
-	GDRM->Shaders[Shader->ResourceTable.Type] = Shader;
+	GDRM->Shaders[Shader->CompilationInfo.Type] = Shader;
 }
 
 drm::ShaderRef DRM::FindShader(std::type_index Type)

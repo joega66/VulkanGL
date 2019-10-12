@@ -44,14 +44,15 @@ public:
 	virtual void* LockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
 	virtual void UnlockBuffer(drm::StorageBufferRef StorageBuffer) = 0;
 	virtual std::string GetDRMName() = 0;
-	virtual ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
-	//virtual void RecompileShaders() = 0;
+	virtual ShaderCompilationInfo CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta) = 0;
+	virtual void RecompileShaders() = 0;
+
+protected:
+	HashTable<std::type_index, drm::ShaderRef> Shaders;
 
 private:
 	template<typename ShaderType>
 	friend class ShaderMapRef;
-
-	HashTable<std::type_index, drm::ShaderRef> Shaders;
 
 	static void CacheShader(drm::ShaderRef Shader);
 	static drm::ShaderRef FindShader(std::type_index Type);
@@ -83,7 +84,8 @@ namespace drm
 	void* LockBuffer(drm::StorageBufferRef StorageBuffer);
 	void UnlockBuffer(drm::StorageBufferRef StorageBuffer);
 	std::string GetDeviceName();
-	ShaderResourceTable CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
+	ShaderCompilationInfo CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
+	void RecompileShaders();
 }
 
 template<typename ShaderType>
@@ -104,8 +106,8 @@ public:
 			ShaderType::SetEnvironmentVariables(Worker);
 			const auto&[Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
 			const ShaderMetadata Meta(Filename, EntryPoint, Stage, Type);
-			const ShaderResourceTable ResourceTable = drm::CompileShader(Worker, Meta);
-			Shader = MakeRef<ShaderType>(ResourceTable);
+			const ShaderCompilationInfo CompilationInfo = drm::CompileShader(Worker, Meta);
+			Shader = MakeRef<ShaderType>(CompilationInfo);
 			DRM::CacheShader(Shader);
 		}
 	}

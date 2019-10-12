@@ -6,10 +6,10 @@
 class LightingPassBaseVS : public MaterialShader
 {
 public:
-	LightingPassBaseVS(const ShaderResourceTable& Resources)
-		: MaterialShader(Resources)
+	LightingPassBaseVS(const ShaderCompilationInfo& CompilationInfo)
+		: MaterialShader(CompilationInfo)
 	{
-		Resources.Bind("LocalToWorldUniform", LocalToWorld);
+		CompilationInfo.Bind("LocalToWorldUniform", LocalToWorld);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -25,7 +25,7 @@ template<EMeshType MeshType>
 class LightingPassVS : public LightingPassBaseVS
 {
 public:
-	LightingPassVS(const ShaderResourceTable& Resources)
+	LightingPassVS(const ShaderCompilationInfo& Resources)
 		: LightingPassBaseVS(Resources)
 	{
 	}
@@ -39,16 +39,16 @@ public:
 class LightingPassBaseFS : public MaterialShader
 {
 public:
-	LightingPassBaseFS(const ShaderResourceTable& Resources)
-		: MaterialShader(Resources)
+	LightingPassBaseFS(const ShaderCompilationInfo& CompilationInfo)
+		: MaterialShader(CompilationInfo)
 	{
-		Resources.Bind("Diffuse", Diffuse);
-		Resources.Bind("Specular", Specular);
-		Resources.Bind("Opacity", Opacity);
-		Resources.Bind("Bump", Bump);
-		Resources.Bind("HasOpacityMap", HasOpacityMap);
-		Resources.Bind("HasSpecularMap", HasSpecularMap);
-		Resources.Bind("HasBumpMap", HasBumpMap);
+		CompilationInfo.Bind("Diffuse", Diffuse);
+		CompilationInfo.Bind("Specular", Specular);
+		CompilationInfo.Bind("Opacity", Opacity);
+		CompilationInfo.Bind("Bump", Bump);
+		CompilationInfo.Bind("HasOpacityMap", HasOpacityMap);
+		CompilationInfo.Bind("HasSpecularMap", HasSpecularMap);
+		CompilationInfo.Bind("HasBumpMap", HasBumpMap);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -70,8 +70,8 @@ template<EMeshType MeshType>
 class LightingPassFS : public LightingPassBaseFS
 {
 public:
-	LightingPassFS(const ShaderResourceTable& Resources)
-		: LightingPassBaseFS(Resources)
+	LightingPassFS(const ShaderCompilationInfo& CompilationInfo)
+		: LightingPassBaseFS(CompilationInfo)
 	{
 	}
 

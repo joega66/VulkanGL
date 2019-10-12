@@ -53,26 +53,66 @@ static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
 };
 
+VulkanDevice::VulkanPipelineHash::VulkanPipelineHash(
+	const PipelineStateInitializer& PSOInit, 
+	VkPipelineLayout PipelineLayout, 
+	VkRenderPass RenderPass, 
+	uint32 NumRenderTargets) : 
+	PSOInit(PSOInit), 
+	PipelineLayout(PipelineLayout), 
+	RenderPass(RenderPass), 
+	NumRenderTargets(NumRenderTargets)
+{
+}
+
+bool VulkanDevice::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other) const
+{
+	return PSOInit == Other.PSOInit
+		&& PipelineLayout == Other.PipelineLayout
+		&& RenderPass == Other.RenderPass
+		&& NumRenderTargets == Other.NumRenderTargets;
+}
+
+bool VulkanDevice::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
+{
+	const GraphicsPipelineState& GfxPipelineState = PSOInit.GraphicsPipelineState;
+
+	switch (Shader->CompilationInfo.Stage)
+	{
+	case EShaderStage::Vertex:
+		return GfxPipelineState.Vertex == Shader;
+	case EShaderStage::TessControl:
+		return GfxPipelineState.TessControl == Shader;
+	case EShaderStage::TessEvaluation:
+		return GfxPipelineState.TessEval == Shader;
+	case EShaderStage::Geometry:
+		return GfxPipelineState.Geometry == Shader;
+	case EShaderStage::Fragment:
+		return GfxPipelineState.Fragment == Shader;
+	default:
+		fail("Shader stage %u not implemented.", (uint32)Shader->CompilationInfo.Stage);
+	}
+}
+
 VkPipeline VulkanDevice::GetPipeline(
 	const PipelineStateInitializer& PSOInit,
 	VkPipelineLayout PipelineLayout,
 	VkRenderPass RenderPass,
 	uint32 NumRenderTargets)
 {
+	VulkanPipelineHash PipelineHash(PSOInit, PipelineLayout, RenderPass, NumRenderTargets);
+
 	// Find or create the pipeline.
-	for (const auto&[CachedPSO, CachedPipelineLayout, CachedRenderPass, CachedNumRenderTargets, CachedPipeline] : PipelineCache)
+	for (const auto& [OtherPipelineHash, CachedPipeline] : PipelineCache)
 	{
-		if (PSOInit == CachedPSO && 
-			PipelineLayout == CachedPipelineLayout &&
-			RenderPass == CachedRenderPass &&
-			NumRenderTargets == CachedNumRenderTargets)
+		if (PipelineHash == OtherPipelineHash)
 		{
 			return CachedPipeline;
 		}
 	}
 
 	VkPipeline Pipeline = CreatePipeline(PSOInit, PipelineLayout, RenderPass, NumRenderTargets);
-	PipelineCache.push_back({ PSOInit, PipelineLayout, RenderPass, NumRenderTargets, Pipeline });
+	PipelineCache.push_back({ std::move(PipelineHash), Pipeline });
 	return Pipeline;
 }
 
@@ -226,14 +266,14 @@ VkPipeline VulkanDevice::CreatePipeline(
 	for (uint32 StageIndex = 0; StageIndex < ShaderStages.size(); StageIndex++)
 	{
 		const drm::ShaderRef& Shader = Shaders[StageIndex];
-		const VulkanShader& VulkanShader = ShaderCache[Shader->ResourceTable.Type];
+		const VulkanShader& VulkanShader = *ShaderCache[Shader->CompilationInfo.Type];
 
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[StageIndex];
-		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->ResourceTable.Stage);
+		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->CompilationInfo.Stage);
 		ShaderStage.module = VulkanShader.ShaderModule;
-		ShaderStage.pName = Shader->ResourceTable.Entrypoint.data();
+		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
 
-		const SpecializationInfo& SpecInfo = PSOInit.SpecializationInfos[(int32)Shader->ResourceTable.Stage];
+		const SpecializationInfo& SpecInfo = PSOInit.SpecializationInfos[(int32)Shader->CompilationInfo.Stage];
 		const std::vector<SpecializationInfo::SpecMapEntry>& Entries = SpecInfo.GetEntries();
 
 		if (Entries.size() > 0)
@@ -253,7 +293,7 @@ VkPipeline VulkanDevice::CreatePipeline(
 	}
 
 	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = ShaderCache[GraphicsPipeline.Vertex->ResourceTable.Type].Attributes;
+	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = ShaderCache[GraphicsPipeline.Vertex->CompilationInfo.Type]->Attributes;
 	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
 
 	for (uint32 i = 0; i < Bindings.size(); i++)
@@ -365,4 +405,22 @@ VkPipelineLayout VulkanDevice::GetPipelineLayout(const std::vector<VkDescriptorS
 	PipelineLayoutCache.push_back({ DescriptorSetLayouts, PipelineLayout });
 
 	return PipelineLayout;
+}
+
+void VulkanDevice::DestroyPipelinesWithShader(const drm::ShaderRef& Shader)
+{
+	PipelineCache.erase(std::remove_if(
+		PipelineCache.begin(),
+		PipelineCache.end(),
+		[&] (const auto& Iter)
+	{
+		const auto& [PipelineHash, Pipeline] = Iter;
+		if (PipelineHash.HasShader(Shader))
+		{
+			// @todo I should just use RAII when evicting *any* of the hashes.
+			vkDestroyPipeline(Device, Pipeline, nullptr);
+			return true;
+		}
+		return false;
+	}), PipelineCache.end());
 }

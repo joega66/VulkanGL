@@ -2,9 +2,16 @@
 #include "VulkanDRM.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 
-VulkanShader::VulkanShader(VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes)
-	: ShaderModule(ShaderModule), Attributes(Attributes)
+#include <filesystem>
+
+VulkanShader::VulkanShader(const VulkanDevice* Device, VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes)
+	: Device(Device), ShaderModule(ShaderModule), Attributes(Attributes)
 {
+}
+
+VulkanShader::~VulkanShader()
+{
+	vkDestroyShaderModule(*Device, ShaderModule, nullptr);
 }
 
 static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
@@ -21,20 +28,6 @@ VkShaderStageFlagBits VulkanShader::GetVulkanStage(EShaderStage Stage)
 {
 	return VulkanStages.at(Stage);
 }
-
-struct VertexStreamFormat
-{
-	std::string Name;
-	int32 Location = -1;
-	VkFormat Format;
-};
-
-struct ResourceFormat
-{
-	std::string Name;
-	int32 Binding = -1;
-	int32 Set = -1;
-};
 
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 {
@@ -81,104 +74,38 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 	}
 }
 
-static std::vector<VertexStreamFormat> ParseStageInputs(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+static void ParseBindings(HashTable<std::string, ShaderBinding>& ShaderBindings, const spirv_cross::CompilerGLSL& GLSL, const std::vector<spirv_cross::Resource>& Resources)
 {
-	std::vector<VertexStreamFormat> VertexStreams;
+	for (auto& Resource : Resources)
+	{
+		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
+		ShaderBindings[Resource.name] = ShaderBinding(Binding);
+	}
+}
+
+static std::vector<VkVertexInputAttributeDescription> ParseVertexInputAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+{
+	std::vector<VkVertexInputAttributeDescription> Descriptions;
 
 	for (auto& Resource : Resources.stage_inputs)
 	{
-		VertexStreamFormat VertexStream;
-		VertexStream.Name = Resource.name;
-		VertexStream.Location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
-		VertexStream.Format = GetFormatFromBaseType(GLSL.get_type(Resource.type_id));
+		VkVertexInputAttributeDescription Description = {};
 
-		VertexStreams.push_back(VertexStream);
+		Description.binding = Descriptions.size();
+		Description.location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
+		Description.format = GetFormatFromBaseType(GLSL.get_type(Resource.type_id));
+		Description.offset = 0;
+
+		Descriptions.push_back(Description);
 	}
 
-	return VertexStreams;
-}
-
-static std::vector<ResourceFormat> ParseSampledImages(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
-{
-	std::vector<ResourceFormat> Images;
-
-	for (auto& Resource : Resources.sampled_images)
-	{
-		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
-
-		ResourceFormat Image;
-		Image.Name = Resource.name;
-		Image.Binding = Binding;
-		Image.Set = GLSL.get_decoration(Resource.id, spv::DecorationDescriptorSet);
-
-		Images.push_back(Image);
-	}
-
-	return Images;
-}
-
-static std::vector<ResourceFormat> ParseUniformBuffers(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
-{
-	std::vector<ResourceFormat> Uniforms;
-
-	for (auto& Resource : Resources.uniform_buffers)
-	{
-		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
-
-		ResourceFormat Uniform;
-		Uniform.Name = Resource.name;
-		Uniform.Binding = Binding;
-		Uniform.Set = GLSL.get_decoration(Resource.id, spv::DecorationDescriptorSet);
-
-		size_t Size = (uint32)GLSL.get_declared_struct_size(GLSL.get_type(Resource.type_id));
-		check(Size % 16 == 0, "std140 layout advises to manually pad structures/arrays to multiple of 16 bytes.");
-
-		Uniforms.push_back(Uniform);
-	}
-
-	return Uniforms;
-}
-
-static std::vector<ResourceFormat> ParseStorageBuffers(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
-{
-	std::vector<ResourceFormat> StorageBuffers;
-
-	for (auto& Resource : Resources.storage_buffers)
-	{
-		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
-
-		ResourceFormat StorageBuffer;
-		StorageBuffer.Name = Resource.name;
-		StorageBuffer.Binding = Binding;
-		StorageBuffer.Set = GLSL.get_decoration(Resource.id, spv::DecorationDescriptorSet);
-
-		StorageBuffers.push_back(StorageBuffer);
-	}
-
-	return StorageBuffers;
-}
-
-static std::vector<VkVertexInputAttributeDescription> CreateVertexInputAttributeDescriptions(std::vector<VertexStreamFormat>& Streams)
-{
 	// This sorting saves from having to figure out
 	// a mapping between layout(location = ...) and buffer binding point
-	std::sort(Streams.begin(), Streams.end(),
-		[] (const VertexStreamFormat& LHS, const VertexStreamFormat& RHS)
+	std::sort(Descriptions.begin(), Descriptions.end(),
+		[] (const VkVertexInputAttributeDescription& LHS, const VkVertexInputAttributeDescription& RHS)
 	{
-		return LHS.Location < RHS.Location;
+		return LHS.location < RHS.location;
 	});
-
-	std::vector<VkVertexInputAttributeDescription> Descriptions(Streams.size());
-
-	for (uint32 Binding = 0; Binding < Streams.size(); Binding++)
-	{
-		VkVertexInputAttributeDescription Description = {};
-		Description.binding = Binding;
-		Description.location = Streams[Binding].Location;
-		Description.format = Streams[Binding].Format;
-		Description.offset = 0;
-		Descriptions[Binding] = Description;
-	}
 
 	return Descriptions;
 }
@@ -197,12 +124,11 @@ static HashTable<std::string, SpecConstant> ParseSpecializationConstants(const s
 	return SpecConstants;
 }
 
-ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
+ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
-	static const std::string ShaderCompilerPath = "C:/VulkanSDK/1.1.73.0/Bin32/glslc.exe";
+	static const std::string ShaderCompilerPath = "../Shaders/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
 
-	// Not a great approach. 
 	const std::string ShaderExt = [&] ()
 	{
 		switch (Meta.Stage)
@@ -258,6 +184,8 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 		}
 	}
 
+	const uint64 LastWriteTime = Platform.GetLastWriteTime(Meta.Filename);
+
 	const std::string SPIRV = Platform.FileRead(Meta.Filename + SPIRVExt);
 	Platform.FileDelete(Meta.Filename + SPIRVExt);
 
@@ -271,33 +199,41 @@ ShaderResourceTable VulkanDRM::CompileShader(ShaderCompilerWorker& Worker, const
 	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
 
-	std::vector<VertexStreamFormat> VertexStreams = ParseStageInputs(GLSL, Resources);
-	std::vector<ResourceFormat> Uniforms = ParseUniformBuffers(GLSL, Resources);
-	std::vector<ResourceFormat> Images = ParseSampledImages(GLSL, Resources);
-	std::vector<ResourceFormat> StorageBuffers = ParseStorageBuffers(GLSL, Resources);
-	HashTable<std::string, SpecConstant> SpecConstants = ParseSpecializationConstants(GLSL, Resources);
-
-	std::vector<VkVertexInputAttributeDescription> Attributes = CreateVertexInputAttributeDescriptions(VertexStreams);
-	VkShaderStageFlags Stage = VulkanStages.at(Meta.Stage);
-
 	HashTable<std::string, ShaderBinding> ShaderBindings;
+	ParseBindings(ShaderBindings, GLSL, Resources.uniform_buffers);
+	ParseBindings(ShaderBindings, GLSL, Resources.sampled_images);
+	ParseBindings(ShaderBindings, GLSL, Resources.storage_buffers);
 
-	std::for_each(Uniforms.begin(), Uniforms.end(), [&] (const ResourceFormat& Uniform)
-	{
-		ShaderBindings[Uniform.Name] = ShaderBinding(Uniform.Binding);
-	});
+	const HashTable<std::string, SpecConstant> SpecConstants = ParseSpecializationConstants(GLSL, Resources);
 
-	std::for_each(Images.begin(), Images.end(), [&] (const ResourceFormat& Image)
-	{
-		ShaderBindings[Image.Name] = ShaderBinding(Image.Binding);
-	});
+	const std::vector<VkVertexInputAttributeDescription> Attributes = ParseVertexInputAttributeDescriptions(GLSL, Resources);
 
-	std::for_each(StorageBuffers.begin(), StorageBuffers.end(), [&](const ResourceFormat& StorageBuffer)
-	{
-		ShaderBindings[StorageBuffer.Name] = ShaderBinding(StorageBuffer.Binding);
-	});
+	Device.ShaderCache[Meta.Type] = std::make_unique<VulkanShader>(&Device, ShaderModule, Attributes);
 	
-	Device.ShaderCache.emplace(Meta.Type, VulkanShader{ ShaderModule, Attributes });
+	return ShaderCompilationInfo(Meta.Type, Meta.Stage, Meta.EntryPoint, Meta.Filename, ShaderBindings, SpecConstants, LastWriteTime, Worker);
+}
 
-	return ShaderResourceTable(Meta.Type, Meta.Stage, Meta.EntryPoint, ShaderBindings, SpecConstants);
+void VulkanDRM::RecompileShaders()
+{
+	for (const auto& [ShaderType, Shader] : Shaders)
+	{
+		const ShaderCompilationInfo& CompileInfo = Shader->CompilationInfo;
+
+		const uint64 LastWriteTime = Platform.GetLastWriteTime(CompileInfo.Filename);
+
+		if (LastWriteTime > CompileInfo.LastWriteTime)
+		{
+			LOG("Recompiling shader %s", CompileInfo.Filename.c_str());
+
+			// The old VkShaderModule will be cleaned up in CompileShader by RAII.
+			ShaderMetadata Meta(CompileInfo.Filename, CompileInfo.Entrypoint, CompileInfo.Stage, CompileInfo.Type);
+
+			const ShaderCompilationInfo NewCompilationInfo = CompileShader(CompileInfo.Worker, Meta);
+
+			Shader->CompilationInfo = NewCompilationInfo;
+
+			// Destroy cached pipelines with this shader.
+			Device.DestroyPipelinesWithShader(Shader);
+		}
+	}
 }

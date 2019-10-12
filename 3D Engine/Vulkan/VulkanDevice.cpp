@@ -268,7 +268,7 @@ VulkanDevice::~VulkanDevice()
 		vkDestroyPipelineLayout(Device, PipelineLayout, nullptr);
 	}
 
-	for (const auto&[PSOInit, PipelineLayout, RenderPass, NumRenderTargets, Pipeline] : PipelineCache)
+	for (const auto&[PipelineHash, Pipeline] : PipelineCache)
 	{
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}
