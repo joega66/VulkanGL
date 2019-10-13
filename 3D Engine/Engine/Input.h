@@ -1,5 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
+#include <future>
 
 enum class EKeyCode : int32
 {
@@ -16,14 +17,21 @@ enum class EKeyCode : int32
 	Keypad0,
 	LeftShift,
 	LeftControl,
-	Period
+	Period,
+	W,
+	A,
+	S,
+	D,
 };
 
 class Input
 {
-	friend class OS_Platform;
 public:
-	static constexpr size_t NUM_KEYS = 1024;
+	Input() = default;
+	Input(const Input&) = delete;
+	Input& operator=(const Input&) = delete;
+
+	void Init() const;
 
 	bool GetKeyDown(EKeyCode KeyCode) const;
 
@@ -40,9 +48,13 @@ public:
 	void Update();
 
 private:
+	static constexpr size_t NUM_KEYS = 1024;
 	std::array<bool, NUM_KEYS> Keys;
 	std::array<bool, NUM_KEYS> KeysPressed;
 	HashTable<std::string, std::vector<EKeyCode>> Shortcuts;
+
+	static void KeyboardCallback(struct GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
+	static void MouseButtonCallback(struct GLFWwindow* Window, int32 Button, int32 Action, int32 Mods);
 };
 
-extern class Input Input;
+extern Input gInput;

@@ -28,7 +28,13 @@ public:
 	Cursor(const Cursor&) = delete;
 	Cursor& operator=(const Cursor&) = delete;
 
+	void Init() const;
+
 	void Update();
+
+private:
+	static void ScrollCallback(struct GLFWwindow* Window, double XOffset, double YOffset);
+	static void MouseCallback(struct GLFWwindow* Window, double X, double Y);
 };
 
-extern class Cursor Cursor;
+extern Cursor gCursor;

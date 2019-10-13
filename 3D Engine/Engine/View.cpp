@@ -13,7 +13,7 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 
 Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
 { 
-	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)Screen.GetWidth(), ScreenPosition.y / (float)Screen.GetHeight());
+	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)gScreen.GetWidth(), ScreenPosition.y / (float)gScreen.GetHeight());
 
 	const glm::vec2 ScreenSpace = glm::vec2((Normalized.x - 0.5f) * 2.0f, (Normalized.y - 0.5f) * 2.0f);
 	
@@ -51,7 +51,7 @@ bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& Sc
 
 		// Projective space to normalized [0, 1] space.
 		const glm::vec2 Normalized = glm::vec2((ClipSpace.x / 2.0f) + 0.5f, (ClipSpace.y / 2.0f) + 0.5f);
-		ScreenPosition = glm::vec2(Normalized.x * Screen.GetWidth(), Normalized.y * Screen.GetHeight());
+		ScreenPosition = glm::vec2(Normalized.x * gScreen.GetWidth(), Normalized.y * gScreen.GetHeight());
 
 		return true;
 	}
@@ -85,7 +85,7 @@ void View::Translate(const float DS)
 
 glm::mat4 View::GetViewToClip() const
 {
-	glm::mat4 Perspective = glm::tweakedInfinitePerspective(glm::radians(FOV), (float)Screen.GetWidth() / Screen.GetHeight(), 0.1f);
+	glm::mat4 Perspective = glm::tweakedInfinitePerspective(glm::radians(FOV), (float)gScreen.GetWidth() / gScreen.GetHeight(), 0.1f);
 	// @todo VK_KHR_maintenance1
 	Perspective[1][1] *= -1;
 	return Perspective;

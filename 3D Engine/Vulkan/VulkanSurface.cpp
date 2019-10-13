@@ -129,8 +129,8 @@ VkExtent2D VulkanSurface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& Capab
 	{
 		VkExtent2D ActualExtent = 
 		{
-			(uint32)Screen.GetWidth(),
-			(uint32)Screen.GetHeight()
+			(uint32)gScreen.GetWidth(),
+			(uint32)gScreen.GetHeight()
 		};
 
 		ActualExtent.width = std::max(Capabilities.minImageExtent.width, std::min(Capabilities.maxImageExtent.width, ActualExtent.width));

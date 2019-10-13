@@ -49,7 +49,7 @@ void SceneProxy::InitView(Scene& Scene)
 		WorldToClip,
 		View.GetPosition(),
 		0.0f,
-		(float)Screen.GetWidth() / Screen.GetHeight(),
+		gScreen.GetAspectRatio(),
 		View.GetFOV()
 	};
 

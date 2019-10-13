@@ -43,14 +43,14 @@ private:
 	{
 		auto& ECS = Scene.ECS;
 
-		if (Input.GetKeyDown(EKeyCode::MouseLeft))
+		if (gInput.GetKeyDown(EKeyCode::MouseLeft))
 		{
-			Cursor.Mode = ECursorMode::Normal;
+			gCursor.Mode = ECursorMode::Normal;
 
 			CTransform& Transform = ECS.GetComponent<CTransform>(SelectedEntity);
 			glm::vec3 Position = Transform.GetPosition();
-			Ray Ray0 = Scene.View.ScreenPointToRay(Cursor.Last);
-			Ray Ray1 = Scene.View.ScreenPointToRay(Cursor.Position);
+			Ray Ray0 = Scene.View.ScreenPointToRay(gCursor.Last);
+			Ray Ray1 = Scene.View.ScreenPointToRay(gCursor.Position);
 
 			if constexpr (Axis == EAxis::X)
 			{
@@ -77,7 +77,7 @@ private:
 			Transform.Translate(Position);
 			Scene.View.bFreeze = true;
 		}
-		else if (Input.GetKeyUp(EKeyCode::MouseLeft))
+		else if (gInput.GetKeyUp(EKeyCode::MouseLeft))
 		{
 			State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);
 			Scene.View.bFreeze = false;

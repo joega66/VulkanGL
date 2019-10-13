@@ -48,7 +48,7 @@ enum class EMBModality
 class OS_Platform
 {
 public:
-	struct GLFWwindow* Window;
+	struct GLFWwindow* Window = nullptr;
 
 	// Window
 	void OpenWindow(int32 Width, int32 Height);
@@ -87,13 +87,8 @@ public:
 	std::string GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const;
 
 private:
-	static void WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y);
-	static void KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
-	static void ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset);
-	static void MouseCallback(GLFWwindow* Window, double X, double Y);
-	static void MouseButtonCallback(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods);
+	static std::string SanitizeFile(const std::string& File);
 
-	static std::string SanitizeFile(const std::string& file);
 };
 
 extern OS_Platform Platform;

@@ -13,7 +13,7 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
 	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
 
-	if (!Input.GetKeyDown(EKeyCode::Keypad0))
+	if (!gInput.GetKeyDown(EKeyCode::Keypad0))
 	{
 		SpecInfo.Add(FragShader->HasBumpMap, false/*Material.HasBumpMap()*/);
 	}

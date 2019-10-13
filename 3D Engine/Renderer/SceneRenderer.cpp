@@ -8,7 +8,7 @@
 
 SceneRenderer::SceneRenderer(const Scene& Scene)
 {
-	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
+	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
 		SceneDepth = drm::CreateImage(Width, Height, EFormat::D32_SFLOAT, EImageUsage::RenderTargetable);
 	});
@@ -71,8 +71,8 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 {
 	PipelineStateInitializer PSOInit = {};
 
-	PSOInit.Viewport.Width = Screen.GetWidth();
-	PSOInit.Viewport.Height = Screen.GetHeight();
+	PSOInit.Viewport.Width = gScreen.GetWidth();
+	PSOInit.Viewport.Height = gScreen.GetHeight();
 
 	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Scene);
 
@@ -107,8 +107,8 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
 	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = Screen.GetWidth();
-	PSOInit.Viewport.Height = Screen.GetHeight();
+	PSOInit.Viewport.Width = gScreen.GetWidth();
+	PSOInit.Viewport.Height = gScreen.GetHeight();
 	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
 	CmdList.BindPipeline(PSOInit);

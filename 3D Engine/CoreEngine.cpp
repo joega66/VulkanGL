@@ -10,12 +10,12 @@
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 
-class Cursor Cursor;
-class Input Input;
-class Screen Screen;
-
 void CoreEngine::Run()
 {
+	gCursor.Init();
+	gInput.Init();
+	gScreen.Init();
+
 	uint8 Red[] = { 255, 0, 0, 0 };
 	CMaterial::Red = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Red);
 
@@ -50,7 +50,7 @@ void CoreEngine::Run()
 
 		SceneRenderer.Render(SceneProxy);
 
-		Cursor.Update();
-		Input.Update();
+		gCursor.Update();
+		gInput.Update();
 	}
 }

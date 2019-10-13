@@ -1,3 +1,5 @@
+#include "Platform.h"
+
 #include <fstream>
 #include <cstdarg>
 #include <iostream>
@@ -12,29 +14,7 @@
 #include <Windows.h>
 #include <GLFW/glfw3.h>
 
-#include <Engine/Screen.h>
-#include <Engine/Cursor.h>
-#include <Engine/Input.h>
-
 OS_Platform Platform;
-
-static HashTable<int32, EKeyCode> KeyCodes =
-{
-	ENTRY(GLFW_MOUSE_BUTTON_LEFT, EKeyCode::MouseLeft)
-	ENTRY(GLFW_KEY_0, EKeyCode::Keypad0)
-	ENTRY(GLFW_KEY_1, EKeyCode::Keypad1)
-	ENTRY(GLFW_KEY_2, EKeyCode::Keypad2)
-	ENTRY(GLFW_KEY_3, EKeyCode::Keypad3)
-	ENTRY(GLFW_KEY_4, EKeyCode::Keypad4)
-	ENTRY(GLFW_KEY_5, EKeyCode::Keypad5)
-	ENTRY(GLFW_KEY_6, EKeyCode::Keypad6)
-	ENTRY(GLFW_KEY_7, EKeyCode::Keypad7)
-	ENTRY(GLFW_KEY_8, EKeyCode::Keypad8)
-	ENTRY(GLFW_KEY_9, EKeyCode::Keypad9)
-	ENTRY(GLFW_KEY_LEFT_SHIFT, EKeyCode::LeftShift)
-	ENTRY(GLFW_KEY_LEFT_CONTROL, EKeyCode::LeftControl)
-	ENTRY(GLFW_KEY_PERIOD, EKeyCode::Period)
-};
 
 void OS_Platform::OpenWindow(int32 Width, int32 Height)
 {
@@ -43,18 +23,6 @@ void OS_Platform::OpenWindow(int32 Width, int32 Height)
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 	Window = glfwCreateWindow(Width, Height, "Vulkan Engine", nullptr, nullptr);
-
-	glfwSetFramebufferSizeCallback(Window, WindowResizeCallback);
-	glfwSetKeyCallback(Window, KeyboardCallback);
-	glfwSetScrollCallback(Window, ScrollCallback);
-	glfwSetCursorPosCallback(Window, MouseCallback);
-	glfwSetMouseButtonCallback(Window, MouseButtonCallback);
-
-	int32 ActualWidth, ActualHeight;
-	glfwGetFramebufferSize(Window, &ActualWidth, &ActualHeight);
-	Screen.Width = ActualWidth;
-	Screen.Height = ActualHeight;
-	Screen.CallScreenResChanged();
 }
 
 bool OS_Platform::WindowShouldClose()
@@ -216,12 +184,12 @@ void OS_Platform::ForkProcess(const std::string& ExePath, const std::string& Cmd
 	}
 }
 
-
 void OS_Platform::Memcpy(void* Dst, const void* Src, size_t Size) const
 {
 	memcpy(Dst, Src, Size);
 }
 
+#undef LoadImage
 uint8* OS_Platform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const
 {
 	uint8* Image = stbi_load(Filename.c_str(), &Width, &Height, &NumChannels, STBI_rgb_alpha);
@@ -327,60 +295,4 @@ EMBReturn OS_Platform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::
 	);
 
 	return WindowsMBReturn.at(MessageBoxID);
-}
-
-void OS_Platform::WindowResizeCallback(GLFWwindow* Window, int32 X, int32 Y)
-{
-	Screen.Width = X;
-	Screen.Height = Y;
-	Screen.CallScreenResChanged();
-}
-
-void OS_Platform::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
-{
-	if (Key >= 0 && Key <= Input::NUM_KEYS)
-	{
-		if (Contains(KeyCodes, Key))
-		{
-			EKeyCode KeyCode = GetValue(KeyCodes, Key);
-
-			if (Action == GLFW_PRESS)
-			{
-				Input.Keys[(size_t)KeyCode] = true;
-			}
-			else if (Action == GLFW_RELEASE)
-			{
-				Input.Keys[(size_t)KeyCode] = false;
-				Input.KeysPressed[(size_t)KeyCode] = true;
-			}
-		}
-	}
-}
-
-void OS_Platform::ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset)
-{
-	Cursor.MouseScrollDelta = glm::vec2(XOffset, YOffset);
-}
-
-void OS_Platform::MouseCallback(GLFWwindow* Window, double X, double Y)
-{
-	Cursor.Position = glm::vec2(X, Y);
-}
-
-void OS_Platform::MouseButtonCallback(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods)
-{
-	if (Contains(KeyCodes, Button))
-	{
-		EKeyCode KeyCode = GetValue(KeyCodes, Button);
-
-		if (Action == GLFW_PRESS)
-		{
-			Input.Keys[(size_t)KeyCode] = true;
-		}
-		else if (Action == GLFW_RELEASE)
-		{
-			Input.Keys[(size_t)KeyCode] = false;
-			Input.KeysPressed[(size_t)KeyCode] = true;
-		}
-	}
 }

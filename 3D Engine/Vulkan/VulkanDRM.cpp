@@ -47,7 +47,7 @@ VulkanDRM::VulkanDRM()
 
 void VulkanDRM::Init()
 {
-	Screen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
+	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
 		Swapchain.Free();
 		Swapchain.Init();
