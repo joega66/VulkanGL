@@ -1,9 +1,7 @@
-#include "MaterialCommon.glsl"
-
 layout(location = 0) out vec4 OutColor;
 layout(location = 0) in vec3 InPosition;
 
-layout(set = MATERIAL_SET, binding = DIFFUSE_BINDING) uniform samplerCube Skybox;
+layout(set = 1, binding = 0) uniform samplerCube Skybox;
 
 void main()
 {

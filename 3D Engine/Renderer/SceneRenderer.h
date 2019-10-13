@@ -19,6 +19,8 @@ private:
 	// Scene render targets.
 	drm::ImageRef SceneDepth;
 
+	void RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList);
+
 	void RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdList);
 
 	void RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList);

@@ -237,8 +237,6 @@ VkPipeline VulkanDevice::CreatePipeline(
 
 	const auto& GraphicsPipeline = PSOInit.GraphicsPipelineState;
 
-	check(GraphicsPipeline.Vertex, "No vertex shader bound...");
-
 	std::vector<drm::ShaderRef> Shaders;
 
 	Shaders.push_back(GraphicsPipeline.Vertex);

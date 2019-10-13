@@ -87,35 +87,3 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 
 	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Scene);
 }
-
-void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)
-{
-	Ref<SkyboxVS> VertShader = *ShaderMapRef<SkyboxVS>();
-	Ref<SkyboxFS> FragShader = *ShaderMapRef<SkyboxFS>();
-
-	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
-
-	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, FragShader->Skybox);
-	DescriptorSet->Update();
-
-	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
-	{
-		Scene.DescriptorSet,
-		DescriptorSet
-	};
-
-	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = gScreen.GetWidth();
-	PSOInit.Viewport.Height = gScreen.GetHeight();
-	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
-
-	CmdList.BindPipeline(PSOInit);
-
-	for (const auto& Element : Cube->Batch.Elements)
-	{
-		CmdList.BindVertexBuffers(1, &Element.GetPositionBuffer());
-		CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
-	}
-}

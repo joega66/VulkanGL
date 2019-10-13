@@ -206,14 +206,14 @@
     <ClInclude Include="Engine\Scene.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\EditorPrimitives.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanQueues.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Components\COutline.h">
       <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Voxels.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -337,14 +337,17 @@
     <ClCompile Include="Vulkan\VulkanQueues.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\MaterialShader.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Cursor.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Input.cpp">
       <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Voxels.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Skybox.cpp">
+      <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

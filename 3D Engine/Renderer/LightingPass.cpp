@@ -1,14 +1,60 @@
 #include "LightingPass.h"
+#include "MaterialShader.h"
 #include "SceneProxy.h"
 #include <Engine/Input.h>
+
+template<EMeshType MeshType>
+class LightingPassVS : public MaterialShader<MeshType>
+{
+	using Base = MaterialShader<MeshType>;
+public:
+	LightingPassVS(const ShaderCompilationInfo& CompilationInfo)
+		: Base(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Base::SetEnvironmentVariables(Worker);
+		SceneProxy::SetEnvironmentVariables(Worker);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/LightingPassVS.glsl", "main", EShaderStage::Vertex };
+		return BaseInfo;
+	}
+};
+
+template<EMeshType MeshType>
+class LightingPassFS : public MaterialShader<MeshType>
+{
+	using Base = MaterialShader<MeshType>;
+public:
+	LightingPassFS(const ShaderCompilationInfo& CompilationInfo)
+		: Base(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Base::SetEnvironmentVariables(Worker);
+		SceneProxy::SetEnvironmentVariables(Worker);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/LightingPassFS.glsl", "main", EShaderStage::Fragment };
+		return BaseInfo;
+	}
+};
 
 LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform)
 	: Element(Element)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
-
-	VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
-	FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
+	auto VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
+	auto FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
 
 	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
 	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
@@ -30,6 +76,9 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 	DescriptorSet->Write(Material.Bump, BumpSampler, FragShader->Bump);
 
 	DescriptorSet->Update();
+
+	this->VertShader = VertShader;
+	this->FragShader = FragShader;
 }
 
 void LightingPassDrawPlan::BindDescriptorSets(RenderCommandList& CmdList, const SceneProxy& Scene) const

@@ -1,7 +1,6 @@
 #pragma once
 #include "Light.h"
 #include "LightingPass.h"
-#include "EditorPrimitives.h"
 #include "DrawingPlan.h"
 
 namespace EStaticDrawListType
