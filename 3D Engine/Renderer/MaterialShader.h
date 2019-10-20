@@ -23,19 +23,3 @@ public:
 		}
 	}
 };
-
-template<EMeshType MeshType>
-class MaterialShader : public MeshShader<MeshType>
-{
-	using Base = MeshShader<MeshType>;
-public:
-	MaterialShader(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
-	{
-	}
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
-	{
-		Base::SetEnvironmentVariables(Worker);
-	}
-};

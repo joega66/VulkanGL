@@ -6,9 +6,9 @@
 const glm::uvec2 gVoxelGridSize = { 128, 128 };
 
 template<EMeshType MeshType>
-class VoxelsVS : public MaterialShader<MeshType>
+class VoxelsVS : public MeshShader<MeshType>
 {
-	using Base = MaterialShader<MeshType>;
+	using Base = MeshShader<MeshType>;
 public:
 	VoxelsVS(const ShaderCompilationInfo& CompilationInfo)
 		: Base(CompilationInfo)
@@ -28,9 +28,9 @@ public:
 };
 
 template<EMeshType MeshType>
-class VoxelsGS : public MaterialShader<MeshType>
+class VoxelsGS : public MeshShader<MeshType>
 {
-	using Base = MaterialShader<MeshType>;
+	using Base = MeshShader<MeshType>;
 public:
 	VoxelsGS(const ShaderCompilationInfo& CompilationInfo)
 		: Base(CompilationInfo)
@@ -50,9 +50,9 @@ public:
 };
 
 template<EMeshType MeshType>
-class VoxelsFS : public MaterialShader<MeshType>
+class VoxelsFS : public MeshShader<MeshType>
 {
-	using Base = MaterialShader<MeshType>;
+	using Base = MeshShader<MeshType>;
 public:
 	VoxelsFS(const ShaderCompilationInfo& CompilationInfo)
 		: Base(CompilationInfo)

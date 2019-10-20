@@ -125,14 +125,14 @@ void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 
 void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets)
 {
-	std::vector<VkDescriptorSet> VulkanDescriptorSets;
-	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
+	std::vector<VkDescriptorSet> VulkanDescriptorSets(NumDescriptorSets);
+	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts(NumDescriptorSets);
 
 	for (uint32 SetIndex = 0; SetIndex < NumDescriptorSets; SetIndex++)
 	{
 		VulkanDescriptorSetRef VulkanDescriptorSet = ResourceCast(DescriptorSets[SetIndex]);
-		VulkanDescriptorSets.push_back(VulkanDescriptorSet->DescriptorSet);
-		DescriptorSetLayouts.push_back(VulkanDescriptorSet->DescriptorSetLayout);
+		VulkanDescriptorSets[SetIndex] = VulkanDescriptorSet->DescriptorSet;
+		DescriptorSetLayouts[SetIndex] = VulkanDescriptorSet->DescriptorSetLayout;
 	}
 
 	Pending.PipelineLayout = Device.GetPipelineLayout(DescriptorSetLayouts);

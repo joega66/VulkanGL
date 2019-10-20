@@ -1,8 +1,6 @@
 #include "SceneCommon.glsl"
+#include "MeshCommon.glsl"
 #include "VoxelsCommon.glsl"
-#ifdef STATIC_MESH
-#include "StaticMeshFS.glsl"
-#endif
 
 layout(location = 4) flat in int InAxis;
 

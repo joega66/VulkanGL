@@ -1,7 +1,5 @@
 #include "SceneCommon.glsl"
-#ifdef STATIC_MESH
-#include "StaticMeshVS.glsl"
-#endif
+#include "MeshCommon.glsl"
 
 void main()
 {

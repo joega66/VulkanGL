@@ -26,14 +26,14 @@ public:
 	ShaderCompilerWorker() = default;
 
 	template<typename T>
-	void SetDefine(const std::string& Define, const T& Value)
+	void SetDefine(std::string&& Define, const T& Value)
 	{
-		Defines.push_back(std::make_pair(Define, std::to_string(Value)));
+		Defines.push_back(std::make_pair(std::move(Define), std::to_string(Value)));
 	}
 
-	void SetDefine(const std::string& Define)
+	void SetDefine(std::string&& Define)
 	{
-		Defines.push_back(std::make_pair(Define, "1"));
+		Defines.push_back(std::make_pair(std::move(Define), "1"));
 	}
 
 	const ShaderDefines& GetDefines() const

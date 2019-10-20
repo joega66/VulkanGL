@@ -3,9 +3,9 @@
 #include "SceneProxy.h"
 
 template<EMeshType MeshType>
-class LightingPassVS : public MaterialShader<MeshType>
+class LightingPassVS : public MeshShader<MeshType>
 {
-	using Base = MaterialShader<MeshType>;
+	using Base = MeshShader<MeshType>;
 public:
 	LightingPassVS(const ShaderCompilationInfo& CompilationInfo)
 		: Base(CompilationInfo)
@@ -25,9 +25,9 @@ public:
 };
 
 template<EMeshType MeshType>
-class LightingPassFS : public MaterialShader<MeshType>
+class LightingPassFS : public MeshShader<MeshType>
 {
-	using Base = MaterialShader<MeshType>;
+	using Base = MeshShader<MeshType>;
 public:
 	LightingPassFS(const ShaderCompilationInfo& CompilationInfo)
 		: Base(CompilationInfo)

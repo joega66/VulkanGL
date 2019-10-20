@@ -135,13 +135,13 @@
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
+    <None Include="..\Shaders\MeshCommon.glsl" />
     <None Include="..\Shaders\RayMarching.glsl" />
     <None Include="..\Shaders\RayMarchingCommon.glsl" />
     <None Include="..\Shaders\SceneCommon.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
-    <None Include="..\Shaders\StaticMeshFS.glsl" />
-    <None Include="..\Shaders\StaticMeshVS.glsl" />
+    <None Include="..\Shaders\StaticMeshCommon.glsl" />
     <None Include="..\Shaders\VoxelsCommon.glsl" />
     <None Include="..\Shaders\VoxelsFS.glsl" />
     <None Include="..\Shaders\VoxelsGS.glsl" />

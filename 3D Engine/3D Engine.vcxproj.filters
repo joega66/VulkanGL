@@ -375,12 +375,6 @@
     <None Include="..\Shaders\LightingPassFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\StaticMeshVS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\StaticMeshFS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -422,6 +416,12 @@
     </None>
     <None Include="..\Config\Engine.ini">
       <Filter>Config</Filter>
+    </None>
+    <None Include="..\Shaders\StaticMeshCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\MeshCommon.glsl">
+      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

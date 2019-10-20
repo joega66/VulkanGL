@@ -184,7 +184,7 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 
 void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* Pixels)
 {
-	VkDeviceSize Size = Image->Width * Image->Height * Image->Depth * drm::GetStrideInBytes(Image->Format);
+	VkDeviceSize Size = (VkDeviceSize)Image->Width * Image->Height * Image->Depth * drm::GetStrideInBytes(Image->Format);
 
 	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
 		[&] (auto StagingBuffer)
@@ -197,7 +197,7 @@ void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* P
 
 void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo)
 {
-	VkDeviceSize Size = Image->Width * Image->Height * 6 * drm::GetStrideInBytes(Image->Format);
+	VkDeviceSize Size = (VkDeviceSize)Image->Width * Image->Height * 6 * drm::GetStrideInBytes(Image->Format);
 
 	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
 		[&](auto StagingBuffer)

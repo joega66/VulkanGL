@@ -126,29 +126,29 @@ static HashTable<std::string, SpecConstant> ParseSpecializationConstants(const s
 
 ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
-	ShaderCompilerWorker PrivateWorker;
-
-	if (Meta.Stage == EShaderStage::Geometry)
-	{
-		PrivateWorker.SetDefine("GEOMETRY_SHADER");
-	}
-
 	static const std::string ShaderCompilerPath = "../Shaders/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
+
+	ShaderCompilerWorker PrivateWorker;
 
 	const std::string ShaderExt = [&] ()
 	{
 		switch (Meta.Stage)
 		{
 		case EShaderStage::Vertex:
+			PrivateWorker.SetDefine("VERTEX_SHADER");
 			return "vert";
 		case EShaderStage::TessControl:
+			PrivateWorker.SetDefine("TESSCONTROL_SHADER");
 			return "tesc";
 		case EShaderStage::TessEvaluation:
+			PrivateWorker.SetDefine("TESSEVAL_SHADER");
 			return "tese";
 		case EShaderStage::Geometry:
+			PrivateWorker.SetDefine("GEOMETRY_SHADER");
 			return "geom";
 		case EShaderStage::Fragment:
+			PrivateWorker.SetDefine("FRAGMENT_SHADER");
 			return "frag";
 		default: // Compute
 			return "comp";
@@ -157,17 +157,16 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 
 	std::stringstream SS;
 
-	std::for_each(Worker.GetDefines().begin(), Worker.GetDefines().end(), [&] (const std::pair<std::string, std::string>& Defines)
+	const auto SetDefines = [&](const std::pair<std::string, std::string>& Defines)
 	{
 		const auto& [Define, Value] = Defines;
 		SS << " -D" + Define + "=" + Value;
-	});
+	};
 
-	std::for_each(PrivateWorker.GetDefines().begin(), PrivateWorker.GetDefines().end(), [&] (const std::pair<std::string, std::string>& Defines)
-	{
-		const auto& [Define, Value] = Defines;
-		SS << " -D" + Define + "=" + Value;
-	});
+	std::for_each(Worker.GetDefines().begin(), Worker.GetDefines().end(), SetDefines);
+	
+	std::for_each(PrivateWorker.GetDefines().begin(), PrivateWorker.GetDefines().end(), SetDefines);
+
 	
 	SS << " -std=450";
 	SS << " -fshader-stage=" + ShaderExt;
