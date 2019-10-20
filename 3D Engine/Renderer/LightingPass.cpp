@@ -1,8 +1,6 @@
 #include "LightingPass.h"
 #include "MaterialShader.h"
 #include "SceneProxy.h"
-#include <Engine/Input.h>
-#include <Engine/StaticMesh.h>
 
 template<EMeshType MeshType>
 class LightingPassVS : public MaterialShader<MeshType>
@@ -48,47 +46,28 @@ public:
 	}
 };
 
-LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform)
-	: Element(Element)
+LightingPass::LightingPass(const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
-	auto VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
-	auto FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
 
-	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
-	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
-
-	const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear};
-
-	DescriptorSet = drm::CreateDescriptorSet();
-
-	DescriptorSet->Write(LocalToWorldUniform, VertShader->LocalToWorld);
-	DescriptorSet->Write(Material.Diffuse, LinearSampler, FragShader->Diffuse);
-	DescriptorSet->Write(Material.Specular, LinearSampler, FragShader->Specular);
-	DescriptorSet->Write(Material.Opacity, LinearSampler, FragShader->Opacity);
-	DescriptorSet->Write(Material.Bump, BumpSampler, FragShader->Bump);
-
-	DescriptorSet->Update();
-
-	this->VertShader = VertShader;
-	this->FragShader = FragShader;
+	VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
+	FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
 }
 
-void LightingPassDrawPlan::BindDescriptorSets(RenderCommandList& CmdList, const SceneProxy& Scene) const
+void LightingPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
 	const std::array<drm::DescriptorSetRef, 2> DescriptorSets =
 	{
-		Scene.DescriptorSet,
-		DescriptorSet
+		Pass.SceneSet,
+		MeshProxy.MaterialSet
 	};
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 }
 
-void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) const
+void LightingPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = SpecInfo;
+	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{
@@ -100,8 +79,8 @@ void LightingPassDrawPlan::SetPipelineState(PipelineStateInitializer& PSOInit) c
 	};
 }
 
-void LightingPassDrawPlan::Draw(RenderCommandList& CmdList) const
+void LightingPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshElement) const
 {
-	CmdList.BindVertexBuffers(Element.VertexBuffers.size(), Element.VertexBuffers.data());
-	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
+	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
+	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
 }

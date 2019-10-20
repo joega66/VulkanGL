@@ -1,8 +1,7 @@
 #include "Voxels.h"
 #include "SceneRenderer.h"
 #include "MaterialShader.h"
-#include "SceneProxy.h"
-#include <Components/CMaterial.h>
+#include "MeshProxy.h"
 
 const glm::uvec2 gVoxelGridSize = { 128, 128 };
 
@@ -72,51 +71,30 @@ public:
 	}
 };
 
-VoxelizationPass::VoxelizationPass(const MeshElement& Element, CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform)
-	: Element(Element)
+VoxelizationPass::VoxelizationPass(const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	auto VertShader = *ShaderMapRef<VoxelsVS<MeshType>>();
-	auto GeomShader = *ShaderMapRef<VoxelsGS<MeshType>>();
-	auto FragShader = *ShaderMapRef<VoxelsFS<MeshType>>();
-
-	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
-	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
-
-	const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-
-	DescriptorSet = drm::CreateDescriptorSet();
-
-	DescriptorSet->Write(LocalToWorldUniform, GeomShader->LocalToWorld);
-	DescriptorSet->Write(Material.Diffuse, LinearSampler, FragShader->Diffuse);
-	DescriptorSet->Write(Material.Specular, LinearSampler, FragShader->Specular);
-	DescriptorSet->Write(Material.Opacity, LinearSampler, FragShader->Opacity);
-	DescriptorSet->Write(Material.Bump, BumpSampler, FragShader->Bump);
-
-	DescriptorSet->Update();
-
-	this->VertShader = VertShader;
-	this->GeomShader = GeomShader;
-	this->FragShader = FragShader;
+	VertShader = *ShaderMapRef<VoxelsVS<MeshType>>();
+	GeomShader = *ShaderMapRef<VoxelsGS<MeshType>>();
+	FragShader = *ShaderMapRef<VoxelsFS<MeshType>>();
 }
 
-void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const SceneProxy& Scene) const
+void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
 	const std::array<drm::DescriptorSetRef, 3> DescriptorSets = 
 	{
-		Scene.DescriptorSet,
-		DescriptorSet,
-		Scene.VoxelsDescriptorSet
+		Pass.Scene,
+		MeshProxy.MaterialSet,
+		Pass.Voxels
 	};
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 }
 
-void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit) const
+void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = SpecInfo;
+	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{
@@ -128,14 +106,16 @@ void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit) const
 	};
 }
 
-void VoxelizationPass::Draw(RenderCommandList& CmdList) const
+void VoxelizationPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshElement) const
 {
-	CmdList.BindVertexBuffers(Element.VertexBuffers.size(), Element.VertexBuffers.data());
-	CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
+	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
+	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
 }
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 {
+	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, VoxelsDescriptorSet };
+
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
 	RPInit.RenderArea.Extent = gVoxelGridSize;
 
@@ -147,7 +127,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 	PSOInit.Viewport.Width = gVoxelGridSize.x;
 	PSOInit.Viewport.Height = gVoxelGridSize.y;
 
-	Scene.VoxelsPass.Draw(CmdList, PSOInit, Scene);
+	Scene.VoxelsPass.Draw(CmdList, PSOInit, Descriptors);
 
 	CmdList.EndRenderPass();
 }

@@ -39,3 +39,26 @@ bool CMaterial::HasBumpMap() const
 {
 	return Bump != GetDummy();
 }
+
+drm::DescriptorSetRef CMaterial::CreateDescriptorSet() const
+{
+	static const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	static const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+
+	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
+
+	DescriptorSet->Write(Diffuse, LinearSampler, ShaderBinding(1));
+	DescriptorSet->Write(Specular, LinearSampler, ShaderBinding(2));
+	DescriptorSet->Write(Opacity, LinearSampler, ShaderBinding(3));
+	DescriptorSet->Write(Bump, BumpSampler, ShaderBinding(4));
+
+	return DescriptorSet;
+}
+
+SpecializationInfo CMaterial::CreateSpecializationInfo() const
+{
+	SpecializationInfo SpecInfo;
+	SpecInfo.Add(0, HasSpecularMap());
+	SpecInfo.Add(1, IsMasked());
+	return SpecInfo;
+}

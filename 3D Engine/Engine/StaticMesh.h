@@ -18,7 +18,6 @@ public:
 	const uint32 IndexCount;
 	drm::IndexBufferRef IndexBuffer;
 	std::array<drm::VertexBufferRef, NumLocations> VertexBuffers;
-	CMaterial Material;
 
 	MeshElement(
 		uint32 IndexCount
@@ -26,11 +25,9 @@ public:
 		, drm::VertexBufferRef PositionBuffer
 		, drm::VertexBufferRef TextureCoordinateBuffer
 		, drm::VertexBufferRef NormalBuffer
-		, drm::VertexBufferRef TangentBuffer
-		, const CMaterial& Material)
+		, drm::VertexBufferRef TangentBuffer)
 		: IndexCount(IndexCount)
 		, IndexBuffer(IndexBuffer)
-		, Material(Material)
 	{
 		VertexBuffers[Positions] = PositionBuffer;
 		VertexBuffers[TextureCoordinates] = TextureCoordinateBuffer;
@@ -44,6 +41,7 @@ public:
 struct MeshBatch
 {
 	std::vector<MeshElement> Elements;
+	std::vector<CMaterial> Materials;
 };
 
 class StaticMesh

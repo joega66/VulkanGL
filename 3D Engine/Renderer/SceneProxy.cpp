@@ -6,6 +6,7 @@
 #include <Components/CStaticMesh.h>
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
+#include "MeshProxy.h"
 
 SceneProxy::SceneProxy(Scene& Scene)
 	: Skybox(Scene.Skybox)
@@ -114,35 +115,22 @@ void SceneProxy::InitLights(Scene& Scene)
 	}
 }
 
-void SceneProxy::InitDrawLists(Scene& Scene)
+static void AddToDrawLists(SceneProxy& Scene, const MeshProxyRef& MeshProxy)
 {
-	InitLightingPassDrawList(Scene);
-}
+	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
+		MeshProxy->Material.IsMasked() ?
+		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
 
-static void AddToDrawLists(SceneProxy& Scene, const Entity& Entity, CTransform& Transform, CStaticMesh& StaticMesh, CMaterial* OverrideMaterial)
-{
-	MeshBatch& Batch = StaticMesh.StaticMesh->Batch;
-	std::vector<MeshElement>& Elements = Batch.Elements;
+	Scene.LightingPass[StaticDrawListType].Add(MeshProxy, LightingPass(*MeshProxy));
 
-	for (MeshElement& Element : Elements)
+	// Only voxelize opaque meshes (for now).
+	if (StaticDrawListType == EStaticDrawListType::Opaque)
 	{
-		CMaterial& Material = OverrideMaterial != nullptr ? *OverrideMaterial : Element.Material;
-
-		const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
-			Material.IsMasked() ?
-			EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
-
-		Scene.LightingPass[StaticDrawListType].Add(Entity, LightingPassDrawPlan(Element, Material, Transform.LocalToWorldUniform));
-
-		// Only voxelize opaque meshes (for now).
-		if (StaticDrawListType == EStaticDrawListType::Opaque)
-		{
-			Scene.VoxelsPass.Add(Entity, VoxelizationPass(Element, Material, Transform.LocalToWorldUniform));
-		}
+		Scene.VoxelsPass.Add(MeshProxy, VoxelizationPass(*MeshProxy));
 	}
 }
 
-void SceneProxy::InitLightingPassDrawList(Scene& Scene)
+void SceneProxy::InitDrawLists(Scene& Scene)
 {
 	auto& ECS = Scene.ECS;
 
@@ -152,11 +140,39 @@ void SceneProxy::InitLightingPassDrawList(Scene& Scene)
 			continue;
 
 		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
-
 		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+		const auto& MeshBatch = StaticMesh.StaticMesh->Batch;
+		const auto& MeshElements = MeshBatch.Elements;
 
-		CMaterial* Material = ECS.HasComponent<CMaterial>(Entity) ? &ECS.GetComponent<CMaterial>(Entity) : nullptr;
+		if (ECS.HasComponent<CMaterial>(Entity))
+		{
+			const CMaterial& Material = ECS.GetComponent<CMaterial>(Entity);
 
-		AddToDrawLists(*this, Entity, Transform, StaticMesh, Material);
+			MeshProxyRef MeshProxy = MakeRef<class MeshProxy>(
+				Material, 
+				MeshElements,
+				Transform.LocalToWorldUniform
+			);
+
+			AddToDrawLists(*this, MeshProxy);
+		}
+		else
+		{
+			const std::vector<CMaterial>& Materials = MeshBatch.Materials;
+
+			for (uint32 ElementIndex = 0; ElementIndex < MeshElements.size(); ElementIndex++)
+			{
+				const CMaterial& Material = Materials[ElementIndex];
+				const std::vector<MeshElement> MeshElement = { MeshElements[ElementIndex] };
+
+				MeshProxyRef MeshProxy = MakeRef<class MeshProxy>(
+					Material,
+					MeshElement,
+					Transform.LocalToWorldUniform
+				);
+
+				AddToDrawLists(*this, MeshProxy);
+			}
+		}
 	}
 }

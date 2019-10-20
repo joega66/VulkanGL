@@ -131,8 +131,8 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 		, PositionBuffer
 		, TextureCoordinateBuffer
 		, NormalBuffer
-		, TangentBuffer
-		, Materials));
+		, TangentBuffer));
+	StaticMesh->Batch.Materials.emplace_back(Materials);
 }
 
 void ProcessNode(StaticMesh* StaticMesh, const aiNode* AiNode, const aiScene* AiScene, TextureCache& TextureCache)

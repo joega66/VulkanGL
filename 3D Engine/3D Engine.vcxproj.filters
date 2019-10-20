@@ -107,9 +107,6 @@
     <ClInclude Include="Engine\View.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\DrawingPlan.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\FullscreenQuad.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -216,6 +213,12 @@
       <Filter>Source\Components</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\Voxels.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\MeshProxy.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\MeshDrawInterface.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
@@ -350,6 +353,9 @@
       <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\Voxels.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\MeshProxy.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

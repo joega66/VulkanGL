@@ -1,19 +1,20 @@
 #pragma once
 #include <DRM.h>
 
-class LightingPassDrawPlan
+class LightingPass
 {
 public:
-	LightingPassDrawPlan(const struct MeshElement& Element, struct CMaterial& Material, drm::UniformBufferRef LocalToWorldUniform);
+	struct PassDescriptors
+	{
+		drm::DescriptorSetRef SceneSet;
+	};
 
-	void BindDescriptorSets(RenderCommandList& CmdList, const class SceneProxy& Scene) const;
-	void SetPipelineState(PipelineStateInitializer& PSOInit) const;
-	void Draw(RenderCommandList& CmdList) const;
+	LightingPass(const class MeshProxy& MeshProxy);
+	void BindDescriptorSets(RenderCommandList& CmdList, const class MeshProxy& MeshProxy, const PassDescriptors& Pass) const;
+	void SetPipelineState(PipelineStateInitializer& PSOInit, const class MeshProxy& MeshProxy) const;
+	void Draw(RenderCommandList& CmdList, const struct MeshElement& MeshElement) const;
 
 private:
 	drm::ShaderRef VertShader;
 	drm::ShaderRef FragShader;
-	drm::DescriptorSetRef DescriptorSet;
-	SpecializationInfo SpecInfo;
-	const struct MeshElement& Element;
 };

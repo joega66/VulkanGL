@@ -18,20 +18,20 @@ AssetManager::AssetManager()
 
 StaticMeshRef AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File)
 {
-	StaticMeshRef Static = MakeRef<StaticMesh>(File);
+	StaticMeshRef Mesh = MakeRef<StaticMesh>(File);
 
 	// Add default engine materials if missing.
-	for (auto& Element : Static->Batch.Elements)
+	for (uint32 ElementIndex = 0; ElementIndex < Mesh->Batch.Elements.size(); ElementIndex++)
 	{
-		if (!Element.Material.Diffuse)
+		if (!Mesh->Batch.Materials[ElementIndex].Diffuse)
 		{
-			Element.Material.Diffuse = GetImage("Engine_Diffuse_Default");
+			Mesh->Batch.Materials[ElementIndex].Diffuse = GetImage("Engine_Diffuse_Default");
 		}
 	}
 
-	StaticMeshes[Name] = Static;
+	StaticMeshes[Name] = Mesh;
 
-	return Static;
+	return Mesh;
 }
 
 StaticMeshRef AssetManager::GetStaticMesh(const std::string& Name) const

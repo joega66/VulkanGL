@@ -40,6 +40,7 @@
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
+    <ClCompile Include="Renderer\MeshProxy.cpp" />
     <ClCompile Include="Renderer\SceneProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\Skybox.cpp" />
@@ -93,11 +94,12 @@
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="RenderCommandList.h" />
-    <ClInclude Include="Renderer\DrawingPlan.h" />
+    <ClInclude Include="Renderer\MeshDrawInterface.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\Light.h" />
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
+    <ClInclude Include="Renderer\MeshProxy.h" />
     <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\SceneProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />

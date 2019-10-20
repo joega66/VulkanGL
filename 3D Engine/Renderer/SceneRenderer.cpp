@@ -40,8 +40,6 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	RenderCommandList& CmdList = *CommandList;
 
 	{
-		Scene.VoxelsDescriptorSet = VoxelsDescriptorSet;
-
 		if (Platform.GetBool("Engine.ini", "Renderer", "RenderVoxels", false))
 		{
 			RenderVoxels(Scene, CmdList);
@@ -97,7 +95,9 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	PSOInit.Viewport.Width = gScreen.GetWidth();
 	PSOInit.Viewport.Height = gScreen.GetHeight();
 
-	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Scene);
+	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet };
+
+	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Descriptors);
 
 	ColorBlendAttachmentState& BlendState = PSOInit.ColorBlendAttachmentStates[0];
 	BlendState.BlendEnable = true;
@@ -108,5 +108,5 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	BlendState.DstAlphaBlendFactor = EBlendFactor::ZERO;
 	BlendState.AlphaBlendOp = EBlendOp::ADD;
 
-	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Scene);
+	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Descriptors);
 }

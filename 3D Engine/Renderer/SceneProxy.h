@@ -3,7 +3,7 @@
 #include "Light.h"
 #include "LightingPass.h"
 #include "Voxels.h"
-#include "DrawingPlan.h"
+#include "MeshDrawInterface.h"
 
 namespace EStaticDrawListType
 {
@@ -26,9 +26,9 @@ public:
 
 	const drm::ImageRef Skybox;
 
-	std::array<DrawList<LightingPassDrawPlan>, EStaticDrawListType::Max> LightingPass;
+	std::array<MeshDrawInterface<LightingPass>, EStaticDrawListType::Max> LightingPass;
 
-	DrawList<VoxelizationPass> VoxelsPass;
+	MeshDrawInterface<VoxelizationPass> VoxelsPass;
 
 	std::vector<DirectionalLightProxy> DirectionalLightProxies;
 
@@ -42,11 +42,8 @@ public:
 
 	drm::DescriptorSetRef DescriptorSet;
 
-	drm::DescriptorSetRef VoxelsDescriptorSet;
-
 private:
 	void InitView(Scene& Scene);
 	void InitLights(Scene& Scene);
 	void InitDrawLists(Scene& Scene);
-	void InitLightingPassDrawList(Scene& Scene);
 };
