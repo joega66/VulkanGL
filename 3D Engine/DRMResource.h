@@ -284,25 +284,7 @@ namespace drm
 	class UniformBuffer
 	{
 	public:
-		UniformBuffer(uint32 Size)
-		{
-			Data.resize(Size);
-		}
-
-		template<typename UniformType>
-		void Set(const UniformType& UniformData)
-		{
-			check(sizeof(UniformType) == Data.size(), "Size mismatch.");
-			Platform.Memcpy(Data.data(), &UniformData, sizeof(UniformType));
-			Set();
-		}
-
-		const void* GetData() const { return Data.data(); }
-
-	private:
-		std::vector<std::byte> Data;
-		// Allows implementations to do their own thing when data is set.
-		virtual void Set() {}
+		UniformBuffer() = default;
 	};
 
 	CLASS(UniformBuffer);

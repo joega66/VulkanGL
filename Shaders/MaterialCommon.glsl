@@ -6,6 +6,7 @@
 layout(binding = 0, set = MATERIAL_SET) uniform LocalToWorldUniform
 {
 	mat4 Transform;
+	mat4 Inverse;
 } LocalToWorld;
 
 layout(binding = 1, set = MATERIAL_SET) uniform sampler2D Diffuse;

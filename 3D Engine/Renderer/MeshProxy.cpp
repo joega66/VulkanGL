@@ -5,10 +5,11 @@ MeshProxy::MeshProxy(
 	const std::vector<MeshElement>& Elements,
 	const drm::UniformBufferRef& LocalToWorldUniform)
 	: Material(Material)
+	, LocalToWorldUniform(LocalToWorldUniform)
 	, Elements(Elements)
 {
 	MaterialSet = Material.CreateDescriptorSet();
-	MaterialSet->Write(LocalToWorldUniform, ShaderBinding(0));	// Temp: LocalToWorld goes in the material set
+	MaterialSet->Write(LocalToWorldUniform, ShaderBinding(0)); // Temp: LocalToWorld goes in the material set
 	MaterialSet->Update();
 
 	SpecInfo = Material.CreateSpecializationInfo();

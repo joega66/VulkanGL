@@ -33,7 +33,7 @@ void SetVSInterpolants(in vec4 WorldPosition)
 {
 	OutPosition = WorldPosition.xyz;
 	OutUV = InUV;
-	OutNormal = mat3(transpose(inverse(LocalToWorld.Transform))) * InNormal;
+	OutNormal = mat3(transpose(LocalToWorld.Inverse)) * InNormal;
 	OutTangent = InTangent;
 }
 

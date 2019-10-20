@@ -25,7 +25,7 @@ SceneProxy::SceneProxy(Scene& Scene)
 void SceneProxy::InitView(Scene& Scene)
 {
 	// Initialize view uniform.
-	View& View = Scene.View;
+	const View& View = Scene.View;
 
 	const glm::mat4 WorldToView = View.GetWorldToView();
 	const glm::mat4 ViewToClip = View.GetViewToClip();
@@ -139,8 +139,17 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 		if (!ECS.GetComponent<CRenderer>(Entity).bVisible)
 			continue;
 
-		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
 		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+
+		struct LocalToWorldUniformData
+		{
+			glm::mat4 Transform;
+			glm::mat4 Inverse;
+		} LocalToWorldUniformData = { Transform.GetLocalToWorld(), glm::inverse(Transform.GetLocalToWorld()) };
+
+		drm::UniformBufferRef LocalToWorldUniform = drm::CreateUniformBuffer(sizeof(LocalToWorldUniformData), &LocalToWorldUniformData, EUniformUpdate::SingleFrame);
+	
+		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
 		const auto& MeshBatch = StaticMesh.StaticMesh->Batch;
 		const auto& MeshElements = MeshBatch.Elements;
 
@@ -151,7 +160,7 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 			MeshProxyRef MeshProxy = MakeRef<class MeshProxy>(
 				Material, 
 				MeshElements,
-				Transform.LocalToWorldUniform
+				LocalToWorldUniform
 			);
 
 			AddToDrawLists(*this, MeshProxy);
@@ -163,12 +172,13 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 			for (uint32 ElementIndex = 0; ElementIndex < MeshElements.size(); ElementIndex++)
 			{
 				const CMaterial& Material = Materials[ElementIndex];
+
 				const std::vector<MeshElement> MeshElement = { MeshElements[ElementIndex] };
 
 				MeshProxyRef MeshProxy = MakeRef<class MeshProxy>(
 					Material,
 					MeshElement,
-					Transform.LocalToWorldUniform
+					LocalToWorldUniform
 				);
 
 				AddToDrawLists(*this, MeshProxy);

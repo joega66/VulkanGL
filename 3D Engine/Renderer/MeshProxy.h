@@ -7,11 +7,13 @@ class MeshProxy
 public:
 	const CMaterial& Material;
 
-	std::vector<MeshElement> Elements;
-
 	drm::DescriptorSetRef MaterialSet;
 
 	SpecializationInfo SpecInfo;
+
+	drm::UniformBufferRef LocalToWorldUniform;
+
+	std::vector<MeshElement> Elements;
 
 	MeshProxy(
 		const CMaterial& Material, 

@@ -8,7 +8,6 @@ CTransform::CTransform(const CTransform& Other)
 
 CTransform::CTransform(const glm::vec3& Position, const glm::vec3& Rotation, float Angle, const glm::vec3& InScale)
 {
-	LocalToWorldUniform = drm::CreateUniformBuffer(sizeof(glm::mat4), nullptr, EUniformUpdate::Frequent);
 	Translate(Position);
 	Rotate(Rotation, Angle);
 	Scale(InScale);
@@ -92,8 +91,6 @@ void CTransform::Clean()
 	{
 		LocalToWorld = Parent->GetLocalToWorld() * LocalToWorld;
 	}
-
-	LocalToWorldUniform->Set(LocalToWorld);
 
 	std::for_each(Children.begin(), Children.end(), [&] (CTransform* Child) { Child->Clean(); });
 }

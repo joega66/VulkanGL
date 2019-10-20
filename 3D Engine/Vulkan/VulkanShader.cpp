@@ -167,7 +167,6 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 	
 	std::for_each(PrivateWorker.GetDefines().begin(), PrivateWorker.GetDefines().end(), SetDefines);
 
-	
 	SS << " -std=450";
 	SS << " -fshader-stage=" + ShaderExt;
 	SS << " -fentry-point=" + Meta.EntryPoint;

@@ -157,12 +157,6 @@ void VulkanDescriptorSet::Write(drm::UniformBufferRef UniformBuffer, const Shade
 
 	MaybeAddBinding(Binding, DescriptorType);
 
-	if (VulkanUniformBuffer->bDirty)
-	{
-		Allocator.UploadBufferData(*VulkanUniformBuffer->Buffer, VulkanUniformBuffer->GetData());
-		VulkanUniformBuffer->bDirty = false;
-	}
-
 	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 	Write.dstBinding = Binding.GetBinding();
 	Write.dstArrayElement = 0;
