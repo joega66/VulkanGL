@@ -43,6 +43,7 @@ public:
 	~VulkanDescriptorSet();
 
 	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) override;
+	virtual void Write(drm::ImageRef StorageImage, const ShaderBinding& Binding) override;
 	virtual void Write(drm::UniformBufferRef UniformBuffer, const ShaderBinding& Binding) override;
 	virtual void Write(drm::StorageBufferRef StorageBuffer, const ShaderBinding& Binding) override;
 	virtual void Update() override;

@@ -35,12 +35,12 @@ inline void DrawList<DrawPlanType>::Draw(RenderCommandList& CmdList, const Pipel
 		return;
 	}
 
-	for (auto& [EntityID, DrawPlan] : List)
+	for (auto& [EntityID, DrawType] : List)
 	{
 		PipelineStateInitializer PSOInit = ParentPSOInit;
-		DrawPlan.BindDescriptorSets(CmdList, Scene);
-		DrawPlan.SetPipelineState(PSOInit);
+		DrawType.BindDescriptorSets(CmdList, Scene);
+		DrawType.SetPipelineState(PSOInit);
 		CmdList.BindPipeline(PSOInit);
-		DrawPlan.Draw(CmdList);
+		DrawType.Draw(CmdList);
 	}
 }

@@ -10,10 +10,26 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 {
 	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
-		SceneDepth = drm::CreateImage(Width, Height, EFormat::D32_SFLOAT, EImageUsage::RenderTargetable);
+		SceneDepth = drm::CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::RenderTargetable);
 	});
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");
+
+	const glm::mat4 OrthoProj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 3.0f);
+
+	std::array<glm::mat4, 3> VoxelOrthoProj;
+	VoxelOrthoProj[0] = OrthoProj * glm::lookAt(glm::vec3(2, 0, 0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	VoxelOrthoProj[1] = OrthoProj * glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
+	VoxelOrthoProj[2] = OrthoProj * glm::lookAt(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+	VoxelOrthoProjBuffer = drm::CreateUniformBuffer(VoxelOrthoProj.size() * sizeof(glm::mat4), VoxelOrthoProj.data(), EUniformUpdate::SingleFrame);
+
+	Voxels = drm::CreateImage(gVoxelGridSize.x, gVoxelGridSize.y, gVoxelGridSize.x, EFormat::R8G8B8A8_UNORM, EImageUsage::UnorderedAccess);
+
+	VoxelsDescriptorSet = drm::CreateDescriptorSet();
+	VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+	VoxelsDescriptorSet->Write(Voxels, ShaderBinding(1));
+	VoxelsDescriptorSet->Update();
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)
@@ -24,6 +40,13 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	RenderCommandList& CmdList = *CommandList;
 
 	{
+		Scene.VoxelsDescriptorSet = VoxelsDescriptorSet;
+
+		if (Platform.GetBool("Engine.ini", "Renderer", "RenderVoxels", false))
+		{
+			RenderVoxels(Scene, CmdList);
+		}
+		
 		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
 		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 

@@ -24,7 +24,7 @@ public:
 	virtual drm::VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EBufferUsage Usage, const void* Data = nullptr);
 	virtual drm::UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate Usage);
 	virtual drm::StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EBufferUsage Usage);
-	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const uint8* Data);
+	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data);
 	virtual drm::ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
 	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
 	virtual drm::RenderTargetViewRef CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
@@ -50,7 +50,7 @@ private:
 	VkSemaphore RenderEndSem = VK_NULL_HANDLE;
 
 	void TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAccessMask, VkAccessFlags DstAccessMask, EImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
-	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout, uint32 Width, uint32 Height, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit);
+	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout, uint32 Width, uint32 Height, uint32 Depth, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit);
 };
 
 CLASS(VulkanDRM);

@@ -12,7 +12,7 @@ static drm::ImageRef GetDummy()
 	if (Dummy == nullptr)
 	{
 		uint8 DummyColor[] = { 234, 115, 79, 0 };
-		Dummy = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, DummyColor);
+		Dummy = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, DummyColor);
 	}
 	return Dummy;
 }

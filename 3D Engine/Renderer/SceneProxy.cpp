@@ -15,9 +15,9 @@ SceneProxy::SceneProxy(Scene& Scene)
 	InitDrawLists(Scene);
 
 	DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(ViewUniform, ShaderBinding(VIEW_BINDING));
-	DescriptorSet->Write(DirectionalLightBuffer, ShaderBinding(DIRECTIONAL_LIGHT_BINDING));
-	DescriptorSet->Write(PointLightBuffer, ShaderBinding(POINT_LIGHT_BINDING));
+	DescriptorSet->Write(ViewUniform, ShaderBinding(0));
+	DescriptorSet->Write(DirectionalLightBuffer, ShaderBinding(1));
+	DescriptorSet->Write(PointLightBuffer, ShaderBinding(2));
 	DescriptorSet->Update();
 }
 
@@ -119,6 +119,29 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 	InitLightingPassDrawList(Scene);
 }
 
+static void AddToDrawLists(SceneProxy& Scene, const Entity& Entity, CTransform& Transform, CStaticMesh& StaticMesh, CMaterial* OverrideMaterial)
+{
+	MeshBatch& Batch = StaticMesh.StaticMesh->Batch;
+	std::vector<MeshElement>& Elements = Batch.Elements;
+
+	for (MeshElement& Element : Elements)
+	{
+		CMaterial& Material = OverrideMaterial != nullptr ? *OverrideMaterial : Element.Material;
+
+		const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
+			Material.IsMasked() ?
+			EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
+
+		Scene.LightingPass[StaticDrawListType].Add(Entity, LightingPassDrawPlan(Element, Material, Transform.LocalToWorldUniform));
+
+		// Only voxelize opaque meshes (for now).
+		if (StaticDrawListType == EStaticDrawListType::Opaque)
+		{
+			Scene.VoxelsPass.Add(Entity, VoxelizationPass(Element, Material, Transform.LocalToWorldUniform));
+		}
+	}
+}
+
 void SceneProxy::InitLightingPassDrawList(Scene& Scene)
 {
 	auto& ECS = Scene.ECS;
@@ -129,34 +152,11 @@ void SceneProxy::InitLightingPassDrawList(Scene& Scene)
 			continue;
 
 		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
+
 		auto& Transform = ECS.GetComponent<CTransform>(Entity);
 
-		if (ECS.HasComponent<CMaterial>(Entity))
-		{
-			// The entity has a Material -- render using it.
-			auto& Material = ECS.GetComponent<CMaterial>(Entity);
-			EStaticDrawListType::EStaticDrawListType StaticDrawListType = 
-				Material.IsMasked() ? 
-				EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
-			auto& Batch = StaticMesh.StaticMesh->Batch;
-			auto& Elements = Batch.Elements;
-			for (auto& Element : Elements)
-			{
-				LightingPass[StaticDrawListType].Add(Entity, LightingPassDrawPlan(Element, Material, Transform.LocalToWorldUniform));
-			}
-		}
-		else
-		{
-			// Use the materials that came with the static mesh.
-			auto& Batch = StaticMesh.StaticMesh->Batch;
-			auto& Elements = Batch.Elements;
-			for (auto& Element : Elements)
-			{
-				EStaticDrawListType::EStaticDrawListType StaticDrawListType = 
-					Element.Material.IsMasked() ?
-					EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
-				LightingPass[StaticDrawListType].Add(Entity, LightingPassDrawPlan(Element, Element.Material, Transform.LocalToWorldUniform));
-			}
-		}
+		CMaterial* Material = ECS.HasComponent<CMaterial>(Entity) ? &ECS.GetComponent<CMaterial>(Entity) : nullptr;
+
+		AddToDrawLists(*this, Entity, Transform, StaticMesh, Material);
 	}
 }

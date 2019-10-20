@@ -1,6 +1,8 @@
 #pragma once
+#include <Engine/Scene.h>
 #include "Light.h"
 #include "LightingPass.h"
+#include "Voxels.h"
 #include "DrawingPlan.h"
 
 namespace EStaticDrawListType
@@ -18,10 +20,6 @@ class SceneProxy
 	friend class CoreEngine;
 	SceneProxy(Scene& Scene);
 
-	static constexpr uint32 VIEW_BINDING = 0;
-	static constexpr uint32 DIRECTIONAL_LIGHT_BINDING = 1;
-	static constexpr uint32 POINT_LIGHT_BINDING = 2;
-
 public:
 	SceneProxy(const SceneProxy&) = delete;
 	SceneProxy& operator=(const SceneProxy&) = delete;
@@ -29,6 +27,8 @@ public:
 	const drm::ImageRef Skybox;
 
 	std::array<DrawList<LightingPassDrawPlan>, EStaticDrawListType::Max> LightingPass;
+
+	DrawList<VoxelizationPass> VoxelsPass;
 
 	std::vector<DirectionalLightProxy> DirectionalLightProxies;
 
@@ -42,13 +42,7 @@ public:
 
 	drm::DescriptorSetRef DescriptorSet;
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
-	{
-		Worker.SetDefine("SCENE_SET", 0);
-		Worker.SetDefine("VIEW_BINDING", VIEW_BINDING);
-		Worker.SetDefine("DIRECTIONAL_LIGHT_BINDING", DIRECTIONAL_LIGHT_BINDING);
-		Worker.SetDefine("POINT_LIGHT_BINDING", POINT_LIGHT_BINDING);
-	}
+	drm::DescriptorSetRef VoxelsDescriptorSet;
 
 private:
 	void InitView(Scene& Scene);

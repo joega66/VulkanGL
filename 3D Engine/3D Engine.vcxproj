@@ -124,6 +124,7 @@
     <ClInclude Include="Vulkan\VulkanSurface.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Config\Engine.ini" />
     <None Include="..\Shaders\Common.glsl" />
     <None Include="..\Shaders\DepthPassVS.glsl" />
     <None Include="..\Shaders\FullscreenFS.glsl" />
@@ -139,6 +140,10 @@
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshFS.glsl" />
     <None Include="..\Shaders\StaticMeshVS.glsl" />
+    <None Include="..\Shaders\VoxelsCommon.glsl" />
+    <None Include="..\Shaders\VoxelsFS.glsl" />
+    <None Include="..\Shaders\VoxelsGS.glsl" />
+    <None Include="..\Shaders\VoxelsVS.glsl" />
     <None Include="ECS\ComponentArray.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

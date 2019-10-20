@@ -1,3 +1,6 @@
+#ifndef LIGHTING_COMMON
+#define LIGHTING_COMMON
+
 const float PI = 3.14159265;
 const float AMBIENT = 0.01f;
 
@@ -123,3 +126,5 @@ vec4 Shade(in MaterialParams Material)
 
 	return vec4(Lo, Material.Alpha);
 }
+
+#endif

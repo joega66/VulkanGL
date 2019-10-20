@@ -2,6 +2,7 @@
 #include "MaterialShader.h"
 #include "SceneProxy.h"
 #include <Engine/Input.h>
+#include <Engine/StaticMesh.h>
 
 template<EMeshType MeshType>
 class LightingPassVS : public MaterialShader<MeshType>
@@ -16,7 +17,6 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		SceneProxy::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -39,7 +39,6 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		SceneProxy::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -59,11 +58,6 @@ LightingPassDrawPlan::LightingPassDrawPlan(const MeshElement& Element, CMaterial
 	SpecInfo.Add(FragShader->HasSpecularMap, Material.HasSpecularMap());
 	SpecInfo.Add(FragShader->HasOpacityMap, Material.IsMasked());
 
-	if (!gInput.GetKeyDown(EKeyCode::Keypad0))
-	{
-		SpecInfo.Add(FragShader->HasBumpMap, false/*Material.HasBumpMap()*/);
-	}
-	
 	const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear};
 

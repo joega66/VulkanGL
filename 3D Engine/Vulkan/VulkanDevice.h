@@ -55,11 +55,12 @@ private:
 	{
 		struct MinRenderTargetView
 		{
-			VkImage Image;
-			ELoadAction LoadAction;
-			EStoreAction StoreAction;
-			EImageLayout InitialLayout;
-			EImageLayout FinalLayout;
+			VkImage Image = VK_NULL_HANDLE;
+			ELoadAction LoadAction = ELoadAction::DontCare;
+			EStoreAction StoreAction = EStoreAction::DontCare;
+			EImageLayout InitialLayout = EImageLayout::Undefined;
+			EImageLayout FinalLayout = EImageLayout::Undefined;
+			MinRenderTargetView() = default;
 			MinRenderTargetView(const class VulkanRenderTargetView& RTView);
 			bool operator==(const MinRenderTargetView& Other);
 		};

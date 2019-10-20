@@ -17,16 +17,16 @@ void CoreEngine::Run()
 	gScreen.Init();
 
 	uint8 Red[] = { 255, 0, 0, 0 };
-	CMaterial::Red = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Red);
+	CMaterial::Red = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Red);
 
 	uint8 Green[] = { 0, 255, 0, 0 };
-	CMaterial::Green = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Green);
+	CMaterial::Green = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Green);
 
 	uint8 Blue[] = { 0, 0, 255, 0 };
-	CMaterial::Blue = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Blue);
+	CMaterial::Blue = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Blue);
 
 	uint8 White[] = { 255, 255, 255, 0 };
-	CMaterial::White = drm::CreateImage(1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, White);
+	CMaterial::White = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, White);
 
 	Scene Scene;
 	SceneRenderer SceneRenderer(Scene);

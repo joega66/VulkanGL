@@ -126,6 +126,13 @@ static HashTable<std::string, SpecConstant> ParseSpecializationConstants(const s
 
 ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
+	ShaderCompilerWorker PrivateWorker;
+
+	if (Meta.Stage == EShaderStage::Geometry)
+	{
+		PrivateWorker.SetDefine("GEOMETRY_SHADER");
+	}
+
 	static const std::string ShaderCompilerPath = "../Shaders/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
 
@@ -151,6 +158,12 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 	std::stringstream SS;
 
 	std::for_each(Worker.GetDefines().begin(), Worker.GetDefines().end(), [&] (const std::pair<std::string, std::string>& Defines)
+	{
+		const auto& [Define, Value] = Defines;
+		SS << " -D" + Define + "=" + Value;
+	});
+
+	std::for_each(PrivateWorker.GetDefines().begin(), PrivateWorker.GetDefines().end(), [&] (const std::pair<std::string, std::string>& Defines)
 	{
 		const auto& [Define, Value] = Defines;
 		SS << " -D" + Define + "=" + Value;

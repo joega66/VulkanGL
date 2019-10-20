@@ -11,7 +11,6 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		SceneProxy::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -32,7 +31,6 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		SceneProxy::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()

@@ -72,6 +72,7 @@ void VulkanSurface::Init()
 			, EImageLayout::Undefined
 			, Extent.width
 			, Extent.height
+			, 1
 			, EImageUsage::RenderTargetable
 			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 	}

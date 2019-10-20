@@ -147,6 +147,8 @@ static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
 
 	VkPhysicalDeviceFeatures DeviceFeatures = {};
 	DeviceFeatures.samplerAnisotropy = VK_TRUE;
+	DeviceFeatures.geometryShader = VK_TRUE;
+	DeviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
 
 	VkDeviceCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 	CreateInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());

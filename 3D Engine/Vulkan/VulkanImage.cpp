@@ -74,16 +74,25 @@ const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
 	ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 };
 
-VulkanImage::VulkanImage(VulkanDevice& Device, VkImage Image, VkDeviceMemory Memory, EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EImageUsage UsageFlags, VkPipelineStageFlags Stage)
+VulkanImage::VulkanImage(VulkanDevice& Device
+	, VkImage Image
+	, VkDeviceMemory Memory
+	, EFormat Format
+	, EImageLayout Layout
+	, uint32 Width
+	, uint32 Height
+	, uint32 Depth
+	, EImageUsage UsageFlags
+	, VkPipelineStageFlags Stage)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
 	, Stage(Stage)
-	, drm::Image(Format, Layout, Width, Height, UsageFlags)
+	, drm::Image(Format, Layout, Width, Height, Depth, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
-	ViewInfo.viewType = Any(Usage & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+	ViewInfo.viewType = Any(Usage & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : (Depth > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D);
 	ViewInfo.format = GetVulkanFormat();
 	ViewInfo.subresourceRange.aspectMask = GetVulkanAspect();
 	ViewInfo.subresourceRange.baseMipLevel = 0;
@@ -103,7 +112,7 @@ VulkanImage::~VulkanImage()
 VulkanImage::operator VkImage() { return Image; }
 
 void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout,
-	uint32 Width, uint32 Height, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit)
+	uint32 Width, uint32 Height, uint32 Depth, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit)
 {
 	Layout = EImageLayout::Undefined;
 
@@ -113,10 +122,10 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 	}
 
 	VkImageCreateInfo Info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	Info.imageType = VK_IMAGE_TYPE_2D;
+	Info.imageType = Depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
 	Info.extent.width = Width;
 	Info.extent.height = Height;
-	Info.extent.depth = 1;
+	Info.extent.depth = Depth;
 	Info.mipLevels = 1;
 	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
 	Info.format = VulkanImage::GetVulkanFormat(Format);
@@ -132,7 +141,7 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 		}
 
 		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
-		Usage |= Any(UsageFlags & EImageUsage::ShaderResource) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
+		Usage |= Any(UsageFlags & EImageUsage::Sampled) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
 		Usage |= Any(UsageFlags & EImageUsage::UnorderedAccess) ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
 
 		return Usage;

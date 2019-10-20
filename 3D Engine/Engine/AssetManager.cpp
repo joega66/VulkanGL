@@ -43,7 +43,7 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
-	Images[Name] = drm::CreateImage(Width, Height, Format, EImageUsage::ShaderResource, Pixels);
+	Images[Name] = drm::CreateImage(Width, Height, 1, Format, EImageUsage::Sampled, Pixels);
 	Platform.FreeImage(Pixels);
 }
 
@@ -77,7 +77,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 		Face.Width
 		, Face.Height
 		, Format
-		, EImageUsage::ShaderResource
+		, EImageUsage::Sampled
 		, CubemapCreateInfo);
 
 	std::for_each(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(), [&](const auto& Other)

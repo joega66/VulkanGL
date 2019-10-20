@@ -172,13 +172,13 @@ drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void* Da
 	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
 }
 
-drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr)
+drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr)
 {
 	VkImage Image;
 	VkDeviceMemory Memory;
 	EImageLayout Layout;
 
-	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, Data);
+	CreateImage(Image, Memory, Layout, Width, Height, Depth, Format, UsageFlags, Data);
 
 	VulkanImageRef DRMImage = MakeRef<VulkanImage>(Device
 		, Image
@@ -187,6 +187,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format
 		, Layout
 		, Width
 		, Height
+		, Depth
 		, UsageFlags);
 
 	if (Data)
@@ -196,6 +197,11 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, EFormat Format
 		TransitionImageLayout(DRMImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, EImageLayout::TransferDstOptimal, VK_PIPELINE_STAGE_TRANSFER_BIT);
 		Allocator.UploadImageData(DRMImage, Data);
 		TransitionImageLayout(DRMImage, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, EImageLayout::ShaderReadOnlyOptimal, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	}
+
+	if (UsageFlags == EImageUsage::UnorderedAccess)
+	{
+		TransitionImageLayout(DRMImage, 0, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, EImageLayout::General, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	}
 
 	return DRMImage;
@@ -211,7 +217,9 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Form
 	bool bHasData = std::find_if(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(),
 		[] (const auto& TextureInfo) { return TextureInfo.Data; }) != CubemapCreateInfo.CubeFaces.end();
 
-	CreateImage(Image, Memory, Layout, Width, Height, Format, UsageFlags, bHasData);
+	const uint32 Depth = 1;
+
+	CreateImage(Image, Memory, Layout, Width, Height, Depth, Format, UsageFlags, bHasData);
 
 	VulkanImageRef DRMImage = MakeRef<VulkanImage>(Device
 		, Image
@@ -220,6 +228,7 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Form
 		, Layout
 		, Width
 		, Height
+		, Depth
 		, UsageFlags);
 
 	if (bHasData)

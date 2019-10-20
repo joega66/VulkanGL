@@ -115,8 +115,26 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler
 {
 	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	const VkSampler VulkanSampler = Device.GetSampler(Sampler);
-	VulkanImageRef VulkanImage = ResourceCast(Image);
+	const VulkanImageRef& VulkanImage = ResourceCast(Image);
 	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VulkanSampler, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
+
+	MaybeAddBinding(Binding, DescriptorType);
+
+	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+	Write.dstBinding = Binding.GetBinding();
+	Write.dstArrayElement = 0;
+	Write.descriptorType = DescriptorType;
+	Write.descriptorCount = 1;
+	Write.pImageInfo = ImageInfo;
+
+	PendingWrites.push_back(Write);
+}
+
+void VulkanDescriptorSet::Write(drm::ImageRef StorageImage, const ShaderBinding& Binding)
+{
+	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	const VulkanImageRef& VulkanImage = ResourceCast(StorageImage);
+	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VK_NULL_HANDLE, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
 
 	MaybeAddBinding(Binding, DescriptorType);
 

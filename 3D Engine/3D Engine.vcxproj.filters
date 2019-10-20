@@ -42,6 +42,9 @@
     <Filter Include="Source\Systems">
       <UniqueIdentifier>{ef760974-075e-4afe-acb4-6cb2fb80696d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Config">
+      <UniqueIdentifier>{485e3718-7358-4f14-8ac4-3aec2255e1e7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h">
@@ -343,10 +346,10 @@
     <ClCompile Include="Engine\Input.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\Voxels.cpp">
+    <ClCompile Include="Renderer\Skybox.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\Skybox.cpp">
+    <ClCompile Include="Renderer\Voxels.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -398,6 +401,21 @@
     </None>
     <None Include="ECS\ComponentArray.inl">
       <Filter>Source\ECS</Filter>
+    </None>
+    <None Include="..\Shaders\VoxelsVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\VoxelsGS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\VoxelsFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\VoxelsCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Config\Engine.ini">
+      <Filter>Config</Filter>
     </None>
   </ItemGroup>
 </Project>

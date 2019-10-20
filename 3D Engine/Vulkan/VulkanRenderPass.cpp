@@ -6,7 +6,8 @@ static CAST(drm::Image, VulkanImage);
 
 VulkanDevice::VulkanRenderPassHash::MinRenderTargetView::MinRenderTargetView(const VulkanRenderTargetView& RTView)
 {
-	Image = ResourceCast(RTView.Image)->Image;
+	const VulkanImageRef& VulkanImage = ResourceCast(RTView.Image);
+	Image = VulkanImage->Image;
 	LoadAction = RTView.LoadAction;
 	StoreAction = RTView.StoreAction;
 	InitialLayout = RTView.Image->Layout;
@@ -23,8 +24,12 @@ bool VulkanDevice::VulkanRenderPassHash::MinRenderTargetView::operator==(const M
 }
 
 VulkanDevice::VulkanRenderPassHash::VulkanRenderPassHash(const RenderPassInitializer& RPInit)
-	: DepthTarget(*ResourceCast(RPInit.DepthTarget))
 {
+	if (RPInit.DepthTarget)
+	{
+		DepthTarget = MinRenderTargetView(*ResourceCast(RPInit.DepthTarget));
+	}
+
 	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumRenderTargets; ColorTargetIndex++)
 	{
 		ColorTargets.push_back(*ResourceCast(RPInit.ColorTargets[ColorTargetIndex]));
@@ -188,19 +193,18 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 		vulkan(vkCreateRenderPass(Device, &RenderPassInfo, nullptr, &RenderPass));
 	}
 
-	const uint32 NumRTs = RPInit.NumRenderTargets;
 	std::vector<VkImageView> AttachmentViews;
 
 	if (RPInit.DepthTarget)
 	{
-		AttachmentViews.resize(NumRTs + 1);
+		AttachmentViews.resize(RPInit.NumRenderTargets + 1);
 	}
 	else
 	{
-		AttachmentViews.resize(NumRTs);
+		AttachmentViews.resize(RPInit.NumRenderTargets);
 	}
 
-	for (uint32 i = 0; i < NumRTs; i++)
+	for (uint32 i = 0; i < RPInit.NumRenderTargets; i++)
 	{
 		VulkanRenderTargetViewRef ColorTarget = ResourceCast(RPInit.ColorTargets[i]);
 		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
@@ -213,20 +217,21 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 		VulkanRenderTargetViewRef DepthTarget = ResourceCast(RPInit.DepthTarget);
 		VulkanImageRef Image = ResourceCast(DepthTarget->Image);
 
-		AttachmentViews[NumRTs] = Image->ImageView;
+		AttachmentViews[RPInit.NumRenderTargets] = Image->ImageView;
 	}
 
-	drm::ImageRef Image = RPInit.DepthTarget ? RPInit.DepthTarget->Image : RPInit.ColorTargets[0]->Image;
+	VkFramebuffer Framebuffer = VK_NULL_HANDLE;
+
+	const drm::RenderTargetViewRef& RTView = RPInit.DepthTarget ? RPInit.DepthTarget : RPInit.ColorTargets[0];
 
 	VkFramebufferCreateInfo FramebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 	FramebufferInfo.renderPass = RenderPass;
 	FramebufferInfo.pAttachments = AttachmentViews.data();
 	FramebufferInfo.attachmentCount = AttachmentViews.size();
-	FramebufferInfo.width = Image->Width;
-	FramebufferInfo.height = Image->Height;
+	FramebufferInfo.width = RPInit.RenderArea.Extent.x;
+	FramebufferInfo.height = RPInit.RenderArea.Extent.y;
 	FramebufferInfo.layers = 1;
 
-	VkFramebuffer Framebuffer;
 	vulkan(vkCreateFramebuffer(Device, &FramebufferInfo, nullptr, &Framebuffer));
 
 	return { RenderPass, Framebuffer };

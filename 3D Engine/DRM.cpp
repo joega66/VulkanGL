@@ -50,9 +50,9 @@ namespace drm
 		return GDRM->CreateStorageBuffer(Size, Data, Usage);
 	}
 
-	ImageRef CreateImage(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const uint8* Data)
+	ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data)
 	{
-		return GDRM->CreateImage(Width, Height, Format, UsageFlags, Data);
+		return GDRM->CreateImage(Width, Height, Depth, Format, UsageFlags, Data);
 	}
 
 	ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)

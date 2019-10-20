@@ -29,7 +29,7 @@ drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial
 
 			if (Pixels)
 			{
-				Material = drm::CreateImage(Width, Height, EFormat::R8G8B8A8_UNORM, EImageUsage::ShaderResource, Pixels);
+				Material = drm::CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Pixels);
 			}
 
 			Platform.FreeImage(Pixels);

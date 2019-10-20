@@ -83,7 +83,7 @@ enum class EImageUsage
 {
 	None,
 	RenderTargetable = 1 << 0,
-	ShaderResource = 1 << 1,
+	Sampled = 1 << 1,
 	Cubemap = 1 << 2,
 	UnorderedAccess = 1 << 3,
 };
@@ -326,11 +326,12 @@ namespace drm
 		EFormat Format;
 		uint32 Width;
 		uint32 Height;
+		uint32 Depth;
 		EImageUsage Usage;
 		EImageLayout Layout;
 
-		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, EImageUsage UsageFlags)
-			: Format(Format), Layout(Layout), Width(Width), Height(Height), Usage(UsageFlags)
+		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
+			: Format(Format), Layout(Layout), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
 		{
 		}
 
@@ -365,6 +366,7 @@ namespace drm
 	{
 	public:
 		virtual void Write(ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) = 0;
+		virtual void Write(ImageRef StorageImage, const ShaderBinding& Binding) = 0;
 		virtual void Write(UniformBufferRef UniformBuffer, const ShaderBinding& Binding) = 0;
 		virtual void Write(StorageBufferRef StorageBuffer, const ShaderBinding& Binding) = 0;
 		virtual void Update() = 0;
