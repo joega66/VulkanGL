@@ -1,5 +1,3 @@
-#include "Common.glsl"
-
 layout(location = 0) out vec2 OutUV;
 
 void main()

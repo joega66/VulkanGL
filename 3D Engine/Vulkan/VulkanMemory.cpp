@@ -11,7 +11,7 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 
 SharedVulkanBufferRef VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
 {
-	VulkanUsage |= Any(Usage & EBufferUsage::UnorderedAccess) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::IndirectBuffer) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
 	VulkanUsage |= !Any(Usage & EBufferUsage::KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
 	
@@ -182,7 +182,7 @@ void VulkanAllocator::UnlockBuffer(const SharedVulkanBuffer& Buffer)
 	}
 }
 
-void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* Pixels)
+void VulkanAllocator::UploadImageData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const uint8* Pixels)
 {
 	VkDeviceSize Size = (VkDeviceSize)Image->Width * Image->Height * Image->Depth * drm::GetStrideInBytes(Image->Format);
 
@@ -192,10 +192,10 @@ void VulkanAllocator::UploadImageData(const VulkanImageRef Image, const uint8* P
 		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
 	});
 	Platform.Memcpy(MemMapped, Pixels, (size_t)Size);
-	UnlockImage(Image, Size);
+	UnlockImage(CommandBuffer, Image, Size);
 }
 
-void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo)
+void VulkanAllocator::UploadCubemapData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo)
 {
 	VkDeviceSize Size = (VkDeviceSize)Image->Width * Image->Height * 6 * drm::GetStrideInBytes(Image->Format);
 
@@ -215,12 +215,11 @@ void VulkanAllocator::UploadCubemapData(const VulkanImageRef Image, const Cubema
 		}
 	}
 
-	UnlockImage(Image, Size);
+	UnlockImage(CommandBuffer, Image, Size);
 }
 
-void VulkanAllocator::UnlockImage(const VulkanImageRef Image, VkDeviceSize Size)
+void VulkanAllocator::UnlockImage(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, VkDeviceSize Size)
 {
-	VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
 	std::vector<VkBufferImageCopy> Regions;
 
 	if (Any(Image->Usage & EImageUsage::Cubemap))

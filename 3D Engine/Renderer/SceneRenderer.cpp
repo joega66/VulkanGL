@@ -15,21 +15,11 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");
 
-	const glm::mat4 OrthoProj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 3.0f);
+	gVoxelGridSize = Platform.GetInt("Engine.ini", "Renderer", "VoxelGridSize", 256);
 
-	std::array<glm::mat4, 3> VoxelOrthoProj;
-	VoxelOrthoProj[0] = OrthoProj * glm::lookAt(glm::vec3(2, 0, 0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	VoxelOrthoProj[1] = OrthoProj * glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
-	VoxelOrthoProj[2] = OrthoProj * glm::lookAt(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-	VoxelOrthoProjBuffer = drm::CreateUniformBuffer(VoxelOrthoProj.size() * sizeof(glm::mat4), VoxelOrthoProj.data(), EUniformUpdate::SingleFrame);
-
-	Voxels = drm::CreateImage(gVoxelGridSize.x, gVoxelGridSize.y, gVoxelGridSize.x, EFormat::R8G8B8A8_UNORM, EImageUsage::UnorderedAccess);
-
+	VoxelImage3d = drm::CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
 	VoxelsDescriptorSet = drm::CreateDescriptorSet();
-	VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
-	VoxelsDescriptorSet->Write(Voxels, ShaderBinding(1));
-	VoxelsDescriptorSet->Update();
+	VoxelsDescriptorSet->Write(VoxelImage3d, ShaderBinding(1));
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)
@@ -39,12 +29,19 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	RenderCommandListRef CommandList = drm::CreateCommandList();
 	RenderCommandList& CmdList = *CommandList;
 
+	if (Platform.GetBool("Engine.ini", "Renderer", "RenderVoxels", false))
 	{
-		if (Platform.GetBool("Engine.ini", "Renderer", "RenderVoxels", false))
-		{
-			RenderVoxels(Scene, CmdList);
-		}
-		
+		glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
+		OrthoProj[1][1] *= -1;
+
+		VoxelOrthoProjBuffer = drm::CreateUniformBuffer(sizeof(glm::mat4), &OrthoProj, EUniformUpdate::SingleFrame);
+		VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+		VoxelsDescriptorSet->Update();
+
+		RenderVoxels(Scene, CmdList);
+	}
+	else
+	{
 		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
 		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 
@@ -59,7 +56,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 		RenderSkybox(Scene, CmdList);
 
-		CmdList.EndRenderPass();	
+		CmdList.EndRenderPass();
 	}
 
 	CmdList.Finish();

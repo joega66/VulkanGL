@@ -82,12 +82,10 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, uint32 Width
 	, uint32 Height
 	, uint32 Depth
-	, EImageUsage UsageFlags
-	, VkPipelineStageFlags Stage)
+	, EImageUsage UsageFlags)
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
-	, Stage(Stage)
 	, drm::Image(Format, Layout, Width, Height, Depth, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
@@ -142,7 +140,8 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 
 		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 		Usage |= Any(UsageFlags & EImageUsage::Sampled) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
-		Usage |= Any(UsageFlags & EImageUsage::UnorderedAccess) ? VK_IMAGE_USAGE_STORAGE_BIT : 0;
+		// Add transfer dst bit to storage images so they can be cleared via ClearColorImage.
+		Usage |= Any(UsageFlags & EImageUsage::Storage) ? VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 
 		return Usage;
 	}();
@@ -166,6 +165,16 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 VkFormat VulkanImage::GetVulkanFormat(EFormat Format)
 {
 	return GetValue(VulkanFormat, Format);
+}
+
+VkAccessFlags VulkanImage::GetVulkanAccess(EAccess Access)
+{
+	return VkAccessFlags(Access);
+}
+
+VkPipelineStageFlags VulkanImage::GetVulkanPipelineStage(EPipelineStage PipelineStage)
+{
+	return VkPipelineStageFlags(PipelineStage);
 }
 
 EFormat VulkanImage::GetEngineFormat(VkFormat Format)
@@ -283,6 +292,16 @@ VkImageAspectFlags VulkanImage::GetVulkanAspect() const
 		Flags = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 	return Flags;
+}
+
+VkAccessFlags VulkanImage::GetVulkanAccess() const
+{
+	return GetVulkanAccess(Access);
+}
+
+VkPipelineStageFlags VulkanImage::GetVulkanPipelineStage() const
+{
+	return GetVulkanPipelineStage(PipelineStage);
 }
 
 static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)

@@ -31,6 +31,8 @@ public:
 	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
 	virtual void Finish();
+	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color);
+	virtual void PipelineBarrier(drm::ImageRef Image, EImageLayout NewLayout, EAccess DstAccessMask, EPipelineStage DstStageMask);
 
 private:
 	VulkanDevice& Device;

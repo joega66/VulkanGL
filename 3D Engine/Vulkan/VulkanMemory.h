@@ -72,9 +72,9 @@ public:
 
 	void UnlockBuffer(const SharedVulkanBuffer& Buffer);
 
-	void UploadImageData(const VulkanImageRef Image, const uint8* Pixels);
+	void UploadImageData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const uint8* Pixels);
 
-	void UploadCubemapData(const VulkanImageRef Image, const struct CubemapCreateInfo& CubemapCreateInfo);
+	void UploadCubemapData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const struct CubemapCreateInfo& CubemapCreateInfo);
 
 private:
 	VulkanDevice& Device;
@@ -94,7 +94,7 @@ private:
 	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size,
 		std::function<void(std::unique_ptr<VulkanBuffer> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanBuffer* Buffer = nullptr);
 
-	void UnlockImage(const VulkanImageRef Image, VkDeviceSize Size);
+	void UnlockImage(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, VkDeviceSize Size);
 };
 
 class VulkanVertexBuffer : public drm::VertexBuffer

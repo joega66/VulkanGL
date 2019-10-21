@@ -9,7 +9,8 @@
 #include "MeshProxy.h"
 
 SceneProxy::SceneProxy(Scene& Scene)
-	: Skybox(Scene.Skybox)
+	: View(Scene.View)
+	, Skybox(Scene.Skybox)
 {
 	InitView(Scene);
 	InitLights(Scene);
@@ -25,7 +26,6 @@ SceneProxy::SceneProxy(Scene& Scene)
 void SceneProxy::InitView(Scene& Scene)
 {
 	// Initialize view uniform.
-	const View& View = Scene.View;
 
 	const glm::mat4 WorldToView = View.GetWorldToView();
 	const glm::mat4 ViewToClip = View.GetViewToClip();

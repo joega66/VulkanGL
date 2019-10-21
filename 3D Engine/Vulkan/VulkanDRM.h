@@ -49,7 +49,6 @@ private:
 	VkSemaphore ImageAvailableSem = VK_NULL_HANDLE;
 	VkSemaphore RenderEndSem = VK_NULL_HANDLE;
 
-	void TransitionImageLayout(VulkanImageRef Image, VkAccessFlags SrcAccessMask, VkAccessFlags DstAccessMask, EImageLayout NewLayout, VkPipelineStageFlags DestinationStage);
 	void CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout, uint32 Width, uint32 Height, uint32 Depth, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit);
 };
 

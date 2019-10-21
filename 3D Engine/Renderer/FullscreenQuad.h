@@ -18,11 +18,10 @@ public:
 
 enum class EVisualize
 {
-	Depth,
-	Default,
+	Voxels,
 };
 
-template<EVisualize Visualize = EVisualize::Default>
+template<EVisualize Visualize>
 class FullscreenFS : public drm::Shader
 {
 public:
@@ -39,9 +38,9 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		if constexpr (Visualize == EVisualize::Depth)
+		if constexpr (Visualize == EVisualize::Voxels)
 		{
-			Worker.SetDefine("DEPTH");
+			Worker.SetDefine("VOXELS");
 		}
 	}
 };

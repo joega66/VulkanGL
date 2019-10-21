@@ -22,4 +22,4 @@ private:
 	drm::ShaderRef FragShader;
 };
 
-extern const glm::uvec2 gVoxelGridSize;
+extern uint32 gVoxelGridSize;

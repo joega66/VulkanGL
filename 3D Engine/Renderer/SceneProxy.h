@@ -21,6 +21,8 @@ class SceneProxy
 	SceneProxy(Scene& Scene);
 
 public:
+	const View& View;
+
 	SceneProxy(const SceneProxy&) = delete;
 	SceneProxy& operator=(const SceneProxy&) = delete;
 

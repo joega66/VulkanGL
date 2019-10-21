@@ -19,13 +19,17 @@ private:
 	// Scene render targets.
 	drm::ImageRef SceneDepth;
 
+	drm::ImageRef VoxelImage3d;
+
 	drm::UniformBufferRef VoxelOrthoProjBuffer;
 
 	drm::DescriptorSetRef VoxelsDescriptorSet;
 
-	drm::ImageRef Voxels;
-
 	void RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList);
+
+	void RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList);
+
+	void RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList);
 
 	void RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdList);
 

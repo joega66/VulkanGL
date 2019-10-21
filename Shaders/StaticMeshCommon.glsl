@@ -4,19 +4,24 @@
 #include "MaterialCommon.glsl"
 
 #if GEOMETRY_SHADER
-layout(location = 0) in vec3 InPosition[];
+layout(location = 0) in vec4 InPosition[];
 layout(location = 1) in vec2 InUV[];
 layout(location = 2) in vec3 InNormal[];
 layout(location = 3) in vec3 InTangent[];
-#else
+#elif VERTEX_SHADER
 layout(location = 0) in vec3 InPosition;
+layout(location = 1) in vec2 InUV;
+layout(location = 2) in vec3 InNormal;
+layout(location = 3) in vec3 InTangent;
+#else
+layout(location = 0) in vec4 InPosition;
 layout(location = 1) in vec2 InUV;
 layout(location = 2) in vec3 InNormal;
 layout(location = 3) in vec3 InTangent;
 #endif
 
 #if !FRAGMENT_SHADER
-layout(location = 0) out vec3 OutPosition;
+layout(location = 0) out vec4 OutPosition;
 layout(location = 1) out vec2 OutUV;
 layout(location = 2) out vec3 OutNormal;
 layout(location = 3) out vec3 OutTangent;
@@ -31,7 +36,7 @@ vec4 GetWorldPosition()
 
 void SetVSInterpolants(in vec4 WorldPosition)
 {
-	OutPosition = WorldPosition.xyz;
+	OutPosition = WorldPosition;
 	OutUV = InUV;
 	OutNormal = mat3(transpose(LocalToWorld.Inverse)) * InNormal;
 	OutTangent = InTangent;
@@ -54,7 +59,7 @@ void SetGSInterpolants(in uint VertexIndex)
 MaterialParams GetMaterial()
 {
 	MaterialParams Material;
-	Material.Position = InPosition;
+	Material.Position = InPosition.xyz;
 	Material.Normal = normalize(InNormal);
 	Material.Albedo = texture(Diffuse, InUV).rgb;
 	Material.Roughness = 0.25f;

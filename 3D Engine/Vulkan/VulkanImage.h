@@ -10,7 +10,6 @@ public:
 	VkImage Image;
 	VkImageView ImageView;
 	VkDeviceMemory Memory;
-	VkPipelineStageFlags Stage;
 
 	VulkanImage(VulkanDevice& Device 
 		, VkImage Image
@@ -20,8 +19,7 @@ public:
 		, uint32 Width
 		, uint32 Height
 		, uint32 Depth
-		, EImageUsage UsageFlags
-		, VkPipelineStageFlags Stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+		, EImageUsage UsageFlags);
 	
 	~VulkanImage();
 
@@ -30,6 +28,10 @@ public:
 	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);
 
 	static VkFormat GetVulkanFormat(EFormat Format);
+
+	static VkAccessFlags GetVulkanAccess(EAccess Access);
+
+	static VkPipelineStageFlags GetVulkanPipelineStage(EPipelineStage PipelineStage);
 
 	static EFormat GetEngineFormat(VkFormat Format);
 
@@ -44,6 +46,10 @@ public:
 	VkImageLayout GetVulkanLayout() const;
 
 	VkImageAspectFlags GetVulkanAspect() const;
+
+	VkAccessFlags GetVulkanAccess() const;
+
+	VkPipelineStageFlags GetVulkanPipelineStage() const;
 
 private:
 	VulkanDevice& Device;

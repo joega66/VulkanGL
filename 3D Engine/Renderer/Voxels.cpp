@@ -2,8 +2,10 @@
 #include "SceneRenderer.h"
 #include "MaterialShader.h"
 #include "MeshProxy.h"
+#include "FullscreenQuad.h"
+#include <Engine/Screen.h>
 
-const glm::uvec2 gVoxelGridSize = { 128, 128 };
+uint32 gVoxelGridSize;
 
 template<EMeshType MeshType>
 class VoxelsVS : public MeshShader<MeshType>
@@ -40,6 +42,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
+		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -62,6 +65,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
+		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -114,20 +118,65 @@ void VoxelizationPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshE
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 {
+	RenderVoxelization(Scene, CmdList);
+
+	RenderVoxelVisualization(Scene, CmdList);
+}
+
+void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList)
+{
+	CmdList.PipelineBarrier(VoxelImage3d, EImageLayout::TransferDstOptimal, EAccess::TRANSFER_WRITE, EPipelineStage::TRANSFER);
+
+	CmdList.ClearColorImage(VoxelImage3d, ClearColorValue{});
+
+	CmdList.PipelineBarrier(VoxelImage3d, EImageLayout::General, EAccess::SHADER_WRITE, EPipelineStage::FRAGMENT_SHADER);
+
 	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, VoxelsDescriptorSet };
 
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
-	RPInit.RenderArea.Extent = gVoxelGridSize;
+	RPInit.RenderArea.Extent = glm::uvec2(gVoxelGridSize);
 
 	CmdList.BeginRenderPass(RPInit);
 
 	PipelineStateInitializer PSOInit;
 	PSOInit.DepthStencilState.DepthTestEnable = false;
-	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-	PSOInit.Viewport.Width = gVoxelGridSize.x;
-	PSOInit.Viewport.Height = gVoxelGridSize.y;
+	PSOInit.DepthStencilState.DepthWriteEnable = false;
+	PSOInit.Viewport.Width = gVoxelGridSize;
+	PSOInit.Viewport.Height = gVoxelGridSize;
 
 	Scene.VoxelsPass.Draw(CmdList, PSOInit, Descriptors);
+
+	CmdList.EndRenderPass();
+}
+
+void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList)
+{
+	CmdList.PipelineBarrier(VoxelImage3d, VoxelImage3d->Layout, EAccess::SHADER_READ, EPipelineStage::FRAGMENT_SHADER);
+
+	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
+	RenderPassInitializer RPInit = { 1 };
+	RPInit.ColorTargets[0] = SurfaceView;
+	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
+
+	CmdList.BeginRenderPass(RPInit);
+
+	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
+	DescriptorSet->Write(VoxelImage3d, ShaderBinding(0));
+	DescriptorSet->Update();
+
+	CmdList.BindDescriptorSets(1, &DescriptorSet);
+
+	PipelineStateInitializer PSOInit = {};
+	PSOInit.Viewport.Width = gScreen.GetWidth();
+	PSOInit.Viewport.Height = gScreen.GetHeight();
+	PSOInit.DepthStencilState.DepthTestEnable = false;
+	PSOInit.DepthStencilState.DepthWriteEnable = false;
+	PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<FullscreenVS>();
+	PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<FullscreenFS<EVisualize::Voxels>>();
+
+	CmdList.BindPipeline(PSOInit);
+
+	CmdList.Draw(3, 1, 0, 0);
 
 	CmdList.EndRenderPass();
 }

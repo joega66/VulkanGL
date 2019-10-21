@@ -1,33 +1,17 @@
+#include "Common.glsl"
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
+#include "LightingCommon.glsl"
 #include "VoxelsCommon.glsl"
-
-layout(location = 4) flat in int InAxis;
 
 void main()
 {
 	MaterialParams Material = GetMaterial();
 
-	const ivec3 Temp = ivec3(gl_FragCoord.x, gl_FragCoord.y, VOXEL_GRID_SIZE * gl_FragCoord.z);
+	vec4 Color = Shade(Material);
 
-	ivec3 TexCoord;
+	ivec3 VoxelTexCoord = ivec3(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z);
 
-	if (InAxis == 1)
-	{
-		TexCoord.x = VOXEL_GRID_SIZE - Temp.z;
-		TexCoord.z = Temp.x;
-		TexCoord.y = Temp.y;
-	}
-	else if (InAxis == 2)
-	{
-		TexCoord.z = Temp.y;
-		TexCoord.y = VOXEL_GRID_SIZE - Temp.z;
-		TexCoord.x = Temp.x;
-	}
-	else
-	{
-		TexCoord = Temp;
-	}
-
-	imageStore(VoxelImage3d, TexCoord, vec4(Material.Albedo, 1.0));
+	//imageStore(VoxelImage3d, VoxelTexCoord, vec4(Color.xyz, 1.0));
+	imageStore(VoxelImage3d, VoxelTexCoord, vec4(Material.Albedo, 1.0));
 }

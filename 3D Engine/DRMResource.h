@@ -71,12 +71,56 @@ namespace drm
 	uint32 GetStrideInBytes(EFormat Format);
 }
 
+enum class EAccess
+{
+	NONE = 0,
+	INDIRECT_COMMAND_READ = 0x00000001,
+	INDEX_READ = 0x00000002,
+	VERTEX_ATTRIBUTE_READ = 0x00000004,
+	UNIFORM_READ = 0x00000008,
+	INPUT_ATTACHMENT_READ = 0x00000010,
+	SHADER_READ = 0x00000020,
+	SHADER_WRITE = 0x00000040,
+	COLOR_ATTACHMENT_READ = 0x00000080,
+	COLOR_ATTACHMENT_WRITE = 0x00000100,
+	DEPTH_STENCIL_ATTACHMENT_READ = 0x00000200,
+	DEPTH_STENCIL_ATTACHMENT_WRITE = 0x00000400,
+	TRANSFER_READ = 0x00000800,
+	TRANSFER_WRITE = 0x00001000,
+	HOST_READ = 0x00002000,
+	HOST_WRITE = 0x00004000,
+	MEMORY_READ = 0x00008000,
+	MEMORY_WRITE = 0x00010000,
+};
+
+enum class EPipelineStage
+{
+	NONE = 0,
+	TOP_OF_PIPE = 0x00000001,
+	DRAW_INDIRECT = 0x00000002,
+	VERTEX_INPUT = 0x00000004,
+	VERTEX_SHADER = 0x00000008,
+	TESSELLATION_CONTROL_SHADER = 0x00000010,
+	TESSELLATION_EVALUATION_SHADER = 0x00000020,
+	GEOMETRY_SHADER = 0x00000040,
+	FRAGMENT_SHADER = 0x00000080,
+	EARLY_FRAGMENT_TESTS = 0x00000100,
+	LATE_FRAGMENT_TESTS = 0x00000200,
+	COLOR_ATTACHMENT_OUTPUT = 0x00000400,
+	COMPUTE_SHADER = 0x00000800,
+	TRANSFER = 0x00001000,
+	BOTTOM_OF_PIPE = 0x00002000,
+	HOST = 0x00004000,
+	ALL_GRAPHICS = 0x00008000,
+	ALL_COMMANDS = 0x00010000,
+};
+
 enum class EBufferUsage
 {
 	None,
 	IndirectBuffer = 1 << 0,
 	KeepCPUAccessible = 1 << 1,
-	UnorderedAccess = 1 << 3,
+	Storage = 1 << 3,
 };
 
 enum class EImageUsage
@@ -85,7 +129,7 @@ enum class EImageUsage
 	RenderTargetable = 1 << 0,
 	Sampled = 1 << 1,
 	Cubemap = 1 << 2,
-	UnorderedAccess = 1 << 3,
+	Storage = 1 << 3,
 };
 
 enum class ELoadAction
@@ -311,6 +355,8 @@ namespace drm
 		uint32 Depth;
 		EImageUsage Usage;
 		EImageLayout Layout;
+		EAccess Access = EAccess::NONE;
+		EPipelineStage PipelineStage = EPipelineStage::TOP_OF_PIPE;
 
 		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
 			: Format(Format), Layout(Layout), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)

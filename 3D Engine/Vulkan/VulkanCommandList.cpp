@@ -185,3 +185,50 @@ void VulkanCommandList::Finish()
 	vulkan(vkEndCommandBuffer(CommandBuffer));
 	bFinished = true;
 }
+
+void VulkanCommandList::ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color)
+{
+	const VulkanImageRef& VulkanImage = ResourceCast(Image);
+
+	VkImageSubresourceRange Range = {};
+	Range.aspectMask = VulkanImage->GetVulkanAspect();
+	Range.baseArrayLayer = 0;
+	Range.baseMipLevel = 0;
+	Range.layerCount = 1;
+	Range.levelCount = 1;
+
+	vkCmdClearColorImage(CommandBuffer, VulkanImage->Image, VulkanImage->GetVulkanLayout(), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
+}
+
+void VulkanCommandList::PipelineBarrier(drm::ImageRef Image, EImageLayout NewLayout, EAccess DstAccessMask, EPipelineStage DstStageMask)
+{
+	const VulkanImageRef& VulkanImage = ResourceCast(Image);
+
+	VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+	Barrier.srcAccessMask = VulkanImage->GetVulkanAccess();
+	Barrier.dstAccessMask = VulkanImage::GetVulkanAccess(DstAccessMask);
+	Barrier.oldLayout = VulkanImage->GetVulkanLayout();
+	Barrier.newLayout = VulkanImage::GetVulkanLayout(NewLayout);
+	Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	Barrier.image = VulkanImage->Image;
+	Barrier.subresourceRange.aspectMask = VulkanImage->GetVulkanAspect();
+	Barrier.subresourceRange.baseMipLevel = 0;
+	Barrier.subresourceRange.levelCount = 1;
+	Barrier.subresourceRange.baseArrayLayer = 0;
+	Barrier.subresourceRange.layerCount = Any(Image->Usage & EImageUsage::Cubemap) ? 6 : 1;
+
+	vkCmdPipelineBarrier(
+		CommandBuffer,
+		VulkanImage->GetVulkanPipelineStage(), 
+		VulkanImage::GetVulkanPipelineStage(DstStageMask),
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &Barrier
+	);
+
+	Image->Layout = NewLayout;
+	Image->Access = DstAccessMask;
+	Image->PipelineStage = DstStageMask;
+}

@@ -73,8 +73,8 @@ void VulkanSurface::Init()
 			, Extent.width
 			, Extent.height
 			, 1
-			, EImageUsage::RenderTargetable
-			, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+			, EImageUsage::RenderTargetable);
+		Images[i]->PipelineStage = EPipelineStage::COLOR_ATTACHMENT_OUTPUT;
 	}
 }
 
