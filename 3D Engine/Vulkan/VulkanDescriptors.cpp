@@ -84,9 +84,8 @@ VkDescriptorSetLayout VulkanDevice::GetDescriptorSetLayout(const std::vector<VkD
 	return DescriptorSetLayout;
 }
 
+static CAST(drm::Buffer, VulkanBuffer);
 static CAST(drm::Image, VulkanImage);
-static CAST(drm::UniformBuffer, VulkanUniformBuffer);
-static CAST(drm::StorageBuffer, VulkanStorageBuffer);
 
 VulkanDescriptorSet::VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool, VulkanAllocator& Allocator)
 	: Device(Device), DescriptorPool(DescriptorPool), Allocator(Allocator)
@@ -130,10 +129,10 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler
 	PendingWrites.push_back(Write);
 }
 
-void VulkanDescriptorSet::Write(drm::ImageRef StorageImage, const ShaderBinding& Binding)
+void VulkanDescriptorSet::Write(drm::ImageRef Image, const ShaderBinding& Binding)
 {
 	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-	const VulkanImageRef& VulkanImage = ResourceCast(StorageImage);
+	const VulkanImageRef& VulkanImage = ResourceCast(Image);
 	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VK_NULL_HANDLE, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
 
 	MaybeAddBinding(Binding, DescriptorType);
@@ -148,30 +147,11 @@ void VulkanDescriptorSet::Write(drm::ImageRef StorageImage, const ShaderBinding&
 	PendingWrites.push_back(Write);
 }
 
-void VulkanDescriptorSet::Write(drm::UniformBufferRef UniformBuffer, const ShaderBinding& Binding)
+void VulkanDescriptorSet::Write(drm::BufferRef Buffer, const ShaderBinding& Binding)
 {
-	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	VulkanUniformBufferRef VulkanUniformBuffer = ResourceCast(UniformBuffer);
-	const SharedVulkanBufferRef& SharedBuffer = VulkanUniformBuffer->Buffer;
-	const VkDescriptorBufferInfo* BufferInfo = new VkDescriptorBufferInfo{ SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
-
-	MaybeAddBinding(Binding, DescriptorType);
-
-	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding.GetBinding();
-	Write.dstArrayElement = 0;
-	Write.descriptorType = DescriptorType;
-	Write.descriptorCount = 1;
-	Write.pBufferInfo = BufferInfo;
-
-	PendingWrites.push_back(Write);
-}
-
-void VulkanDescriptorSet::Write(drm::StorageBufferRef StorageBuffer, const ShaderBinding& Binding)
-{
-	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
-	const SharedVulkanBufferRef& SharedBuffer = VulkanStorageBuffer->Buffer;
+	const VkDescriptorType DescriptorType = Buffer->Usage == EBufferUsage::Uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
+	const SharedVulkanBufferMemoryRef& SharedBuffer = VulkanBuffer->Buffer;
 	const VkDescriptorBufferInfo* BufferInfo = new VkDescriptorBufferInfo{ SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
 
 	MaybeAddBinding(Binding, DescriptorType);

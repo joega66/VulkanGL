@@ -36,11 +36,11 @@ public:
 
 	std::vector<PointLightProxy> PointLightProxies;
 
-	drm::UniformBufferRef ViewUniform;
+	drm::BufferRef ViewUniform;
 
-	drm::StorageBufferRef DirectionalLightBuffer;
+	drm::BufferRef DirectionalLightBuffer;
 
-	drm::StorageBufferRef PointLightBuffer;
+	drm::BufferRef PointLightBuffer;
 
 	drm::DescriptorSetRef DescriptorSet;
 

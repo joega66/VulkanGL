@@ -19,3 +19,14 @@ vec3 CreateCube(in uint VertexID)
 	uint B = 1 << VertexID;
 	return vec3((0x287a & B) != 0, (0x02af & B) != 0, (0x31e3 & B) != 0);
 }
+
+vec4 IntToColor(in uint Int)
+{
+	return vec4((Int >> 24) & 255, (Int >> 16) & 255, (Int >> 8) & 255, (Int >> 0) & 255);
+}
+
+uint ColorToInt(in vec4 Color)
+{
+	ivec4 Bytes = ivec4(Color * 255);
+	return (Bytes.r << 24) | (Bytes.g << 16) | (Bytes.b << 8) | (Bytes.a << 0);
+}

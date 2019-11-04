@@ -27,8 +27,8 @@ public:
 	virtual void EndRenderPass();
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit);
 	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets);
-	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers);
-	virtual void DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
+	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers);
+	virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
 	virtual void Finish();
 	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color);

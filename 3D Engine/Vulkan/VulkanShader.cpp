@@ -169,7 +169,6 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 
 	SS << " -std=450";
 	SS << " -fshader-stage=" + ShaderExt;
-	SS << " -fentry-point=" + Meta.EntryPoint;
 	SS << " -o ";
 	SS << Meta.Filename + SPIRVExt;
 	SS << " " + Meta.Filename;

@@ -9,4 +9,15 @@ layout(binding = 0, set = 2) uniform VoxelOrthoProjBuffer
 	mat4 Transform;
 } VoxelOrthoProj;
 
-layout(binding = 1, set = 2, rgba8) writeonly uniform image3D VoxelImage3d;
+//layout(binding = 1, set = 2, rgba8) writeonly uniform image3D VoxelColor;
+
+layout(binding = 1, set = 2, std430) writeonly buffer VoxelColorBuffer
+{
+	uint NumVoxels;
+	uint Data[];
+} VoxelColors;
+
+layout(binding = 2, set = 2, std430) writeonly buffer VoxelPositionBuffer
+{
+	vec3 Data[];
+} VoxelPositions;

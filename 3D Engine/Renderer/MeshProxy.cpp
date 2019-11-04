@@ -3,7 +3,7 @@
 MeshProxy::MeshProxy(
 	const CMaterial& Material,
 	const std::vector<MeshElement>& Elements,
-	const drm::UniformBufferRef& LocalToWorldUniform)
+	const drm::BufferRef& LocalToWorldUniform)
 	: Material(Material)
 	, LocalToWorldUniform(LocalToWorldUniform)
 	, Elements(Elements)

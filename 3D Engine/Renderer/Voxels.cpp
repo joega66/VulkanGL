@@ -125,11 +125,11 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 
 void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	CmdList.PipelineBarrier(VoxelImage3d, EImageLayout::TransferDstOptimal, EAccess::TRANSFER_WRITE, EPipelineStage::TRANSFER);
+	//CmdList.PipelineBarrier(VoxelColor, EImageLayout::TransferDstOptimal, EAccess::TRANSFER_WRITE, EPipelineStage::TRANSFER);
 
-	CmdList.ClearColorImage(VoxelImage3d, ClearColorValue{});
+	//CmdList.ClearColorImage(VoxelColor, ClearColorValue{});
 
-	CmdList.PipelineBarrier(VoxelImage3d, EImageLayout::General, EAccess::SHADER_WRITE, EPipelineStage::FRAGMENT_SHADER);
+	//CmdList.PipelineBarrier(VoxelColor, EImageLayout::General, EAccess::SHADER_WRITE, EPipelineStage::FRAGMENT_SHADER);
 
 	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, VoxelsDescriptorSet };
 
@@ -149,34 +149,113 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& Cmd
 	CmdList.EndRenderPass();
 }
 
+class DrawVoxelsVS : public drm::Shader
+{
+public:
+	DrawVoxelsVS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/DrawVoxels.glsl", "main", EShaderStage::Vertex };
+		return BaseInfo;
+	}
+};
+
+class DrawVoxelsGS : public drm::Shader
+{
+public:
+	DrawVoxelsGS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/DrawVoxels.glsl", "main", EShaderStage::Geometry };
+		return BaseInfo;
+	}
+};
+
+class DrawVoxelsFS : public drm::Shader
+{
+public:
+	DrawVoxelsFS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/DrawVoxels.glsl", "main", EShaderStage::Fragment };
+		return BaseInfo;
+	}
+};
+
 void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	CmdList.PipelineBarrier(VoxelImage3d, VoxelImage3d->Layout, EAccess::SHADER_READ, EPipelineStage::FRAGMENT_SHADER);
+	//CmdList.PipelineBarrier(VoxelColor, EImageLayout::General, EAccess::SHADER_READ, EPipelineStage::VERTEX_SHADER);
+	//CmdList.PipelineBarrier(VoxelPosition, EImageLayout::General, EAccess::SHADER_READ, EPipelineStage::VERTEX_SHADER);
 
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
+	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(
+		SceneDepth,
+		ELoadAction::Clear,
+		EStoreAction::Store,
+		ClearDepthStencilValue{},
+		EImageLayout::DepthWriteStencilWrite);
+
 	RenderPassInitializer RPInit = { 1 };
 	RPInit.ColorTargets[0] = SurfaceView;
+	RPInit.DepthTarget = DepthView;
 	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
 	CmdList.BeginRenderPass(RPInit);
 
 	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(VoxelImage3d, ShaderBinding(0));
+	DescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+	DescriptorSet->Write(VoxelColors, ShaderBinding(1));
+	DescriptorSet->Write(VoxelPositions, ShaderBinding(2));
 	DescriptorSet->Update();
 
-	CmdList.BindDescriptorSets(1, &DescriptorSet);
+	const std::vector<drm::DescriptorSetRef> DescriptorSets =
+	{
+		Scene.DescriptorSet,
+		DescriptorSet
+	};
+
+	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = gScreen.GetWidth();
 	PSOInit.Viewport.Height = gScreen.GetHeight();
-	PSOInit.DepthStencilState.DepthTestEnable = false;
-	PSOInit.DepthStencilState.DepthWriteEnable = false;
-	PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<FullscreenVS>();
-	PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<FullscreenFS<EVisualize::Voxels>>();
+	PSOInit.DepthStencilState.DepthTestEnable = true;
+	PSOInit.DepthStencilState.DepthWriteEnable = true;
+	PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<DrawVoxelsVS>();
+	PSOInit.GraphicsPipelineState.Geometry = *ShaderMapRef<DrawVoxelsGS>();
+	PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<DrawVoxelsFS>();
+	PSOInit.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 
 	CmdList.BindPipeline(PSOInit);
 
-	CmdList.Draw(3, 1, 0, 0);
+	CmdList.Draw(gVoxelGridSize * gVoxelGridSize * gVoxelGridSize, 1, 0, 0);
 
 	CmdList.EndRenderPass();
 }

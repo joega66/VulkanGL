@@ -54,7 +54,7 @@ void SceneProxy::InitView(Scene& Scene)
 		View.GetFOV()
 	};
 
-	ViewUniform = drm::CreateUniformBuffer(sizeof(ViewUniformData), &ViewUniformData, EUniformUpdate::SingleFrame);
+	ViewUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformData), &ViewUniformData);
 }
 
 void SceneProxy::InitLights(Scene& Scene)
@@ -84,7 +84,7 @@ void SceneProxy::InitLights(Scene& Scene)
 		glm::uvec4 NumDirectionalLights;
 		NumDirectionalLights.x = DirectionalLightProxies.size();
 
-		DirectionalLightBuffer = drm::CreateStorageBuffer(sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size(), nullptr);
+		DirectionalLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 		void* Data = drm::LockBuffer(DirectionalLightBuffer);
 		Platform.Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 		Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
@@ -107,7 +107,7 @@ void SceneProxy::InitLights(Scene& Scene)
 		glm::uvec4 NumPointLights;
 		NumPointLights.x = PointLightProxies.size();
 
-		PointLightBuffer = drm::CreateStorageBuffer(sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size(), nullptr);
+		PointLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
 		void* Data = drm::LockBuffer(PointLightBuffer);
 		Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 		Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
@@ -147,7 +147,7 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 			glm::mat4 Inverse;
 		} LocalToWorldUniformData = { Transform.GetLocalToWorld(), glm::inverse(Transform.GetLocalToWorld()) };
 
-		drm::UniformBufferRef LocalToWorldUniform = drm::CreateUniformBuffer(sizeof(LocalToWorldUniformData), &LocalToWorldUniformData, EUniformUpdate::SingleFrame);
+		drm::BufferRef LocalToWorldUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(LocalToWorldUniformData), &LocalToWorldUniformData);
 	
 		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
 		const auto& MeshBatch = StaticMesh.StaticMesh->Batch;

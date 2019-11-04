@@ -119,11 +119,11 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 
 	CMaterial Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
-	drm::IndexBufferRef IndexBuffer = drm::CreateIndexBuffer(EFormat::R32_UINT, Indices.size(), EBufferUsage::None, Indices.data());
-	drm::VertexBufferRef PositionBuffer = drm::CreateVertexBuffer(EFormat::R32G32B32_SFLOAT, Positions.size(), EBufferUsage::None, Positions.data());
-	drm::VertexBufferRef TextureCoordinateBuffer = drm::CreateVertexBuffer(EFormat::R32G32_SFLOAT, TextureCoordinates.size(), EBufferUsage::None, TextureCoordinates.data());
-	drm::VertexBufferRef NormalBuffer = drm::CreateVertexBuffer(EFormat::R32G32B32_SFLOAT, Normals.size(), EBufferUsage::None, Normals.data());
-	drm::VertexBufferRef TangentBuffer = drm::CreateVertexBuffer(EFormat::R32G32B32_SFLOAT, Tangents.size(), EBufferUsage::None, Tangents.data());
+	drm::BufferRef IndexBuffer = drm::CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32), Indices.data());
+	drm::BufferRef PositionBuffer = drm::CreateBuffer(EBufferUsage::Vertex, Positions.size() * sizeof(glm::vec3), Positions.data());
+	drm::BufferRef TextureCoordinateBuffer = drm::CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2), TextureCoordinates.data());
+	drm::BufferRef NormalBuffer = drm::CreateBuffer(EBufferUsage::Vertex, Normals.size() * sizeof(glm::vec3), Normals.data());
+	drm::BufferRef TangentBuffer = drm::CreateBuffer(EBufferUsage::Vertex, Tangents.size() * sizeof(glm::vec3), Tangents.data());
 
 	StaticMesh->Batch.Elements.emplace_back(MeshElement(
 		Indices.size()

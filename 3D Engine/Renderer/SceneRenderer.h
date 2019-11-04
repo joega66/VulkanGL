@@ -19,9 +19,13 @@ private:
 	// Scene render targets.
 	drm::ImageRef SceneDepth;
 
-	drm::ImageRef VoxelImage3d;
+	//drm::ImageRef VoxelColor;
 
-	drm::UniformBufferRef VoxelOrthoProjBuffer;
+	drm::BufferRef VoxelColors;
+
+	drm::BufferRef VoxelPositions;
+
+	drm::BufferRef VoxelOrthoProjBuffer;
 
 	drm::DescriptorSetRef VoxelsDescriptorSet;
 

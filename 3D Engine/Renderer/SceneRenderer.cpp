@@ -17,9 +17,13 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 
 	gVoxelGridSize = Platform.GetInt("Engine.ini", "Renderer", "VoxelGridSize", 256);
 
-	VoxelImage3d = drm::CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	//VoxelColor = drm::CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	VoxelColors = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(uint32) + sizeof(uint32));
+	VoxelPositions = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::vec3));
+
 	VoxelsDescriptorSet = drm::CreateDescriptorSet();
-	VoxelsDescriptorSet->Write(VoxelImage3d, ShaderBinding(1));
+	VoxelsDescriptorSet->Write(VoxelColors, ShaderBinding(1));
+	VoxelsDescriptorSet->Write(VoxelPositions, ShaderBinding(2));
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)
@@ -34,7 +38,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
 		OrthoProj[1][1] *= -1;
 
-		VoxelOrthoProjBuffer = drm::CreateUniformBuffer(sizeof(glm::mat4), &OrthoProj, EUniformUpdate::SingleFrame);
+		VoxelOrthoProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &OrthoProj);
 		VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
 		VoxelsDescriptorSet->Update();
 

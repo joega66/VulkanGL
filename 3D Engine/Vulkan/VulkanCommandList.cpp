@@ -2,11 +2,8 @@
 #include "VulkanDRM.h"
 
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
+static CAST(drm::Buffer, VulkanBuffer);
 static CAST(drm::Image, VulkanImage);
-static CAST(drm::VertexBuffer, VulkanVertexBuffer);
-static CAST(drm::UniformBuffer, VulkanUniformBuffer);
-static CAST(drm::StorageBuffer, VulkanStorageBuffer);
-static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 static CAST(drm::DescriptorSet, VulkanDescriptorSet);
 
@@ -148,7 +145,7 @@ void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::
 		nullptr);
 }
 
-void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::VertexBufferRef* VertexBuffers)
+void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers)
 {
 	check(NumVertexBuffers < Device.Properties.limits.maxVertexInputBindings, "maxVertexInputBindings exceeded.");
 
@@ -158,7 +155,7 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Ve
 	for (uint32 Location = 0; Location < NumVertexBuffers; Location++)
 	{
 		check(VertexBuffers, "Null vertex buffer found.");
-		VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
+		VulkanBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
 		Offsets[Location] = VulkanVertexBuffer->Buffer->Offset;
 		Buffers[Location] = VulkanVertexBuffer->Buffer->GetVulkanHandle();
 	}
@@ -166,12 +163,10 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Ve
 	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
 }
 
-void VulkanCommandList::DrawIndexed(drm::IndexBufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
+void VulkanCommandList::DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
-	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	const VkIndexType IndexType = VulkanIndexBuffer->IndexStride == sizeof(uint32) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
-
-	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->Buffer->GetVulkanHandle(), VulkanIndexBuffer->Buffer->Offset, IndexType);
+	VulkanBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
+	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->Buffer->GetVulkanHandle(), VulkanIndexBuffer->Buffer->Offset, VK_INDEX_TYPE_UINT32);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 

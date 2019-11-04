@@ -44,6 +44,8 @@ public:
 
 	void DestroyPipelinesWithShader(const drm::ShaderRef& Shader);
 
+	static const char* GetVulkanErrorString(VkResult Result);
+
 private:
 	VkInstance Instance;
 
@@ -106,4 +108,4 @@ private:
 CLASS(VulkanDevice);
 
 #define vulkan(Result) \
-	check(Result == VK_SUCCESS, "Vulkan call failed.");				
+	check(Result == VK_SUCCESS, "Vulkan call failed. Error: %s.", VulkanDevice::GetVulkanErrorString(Result));

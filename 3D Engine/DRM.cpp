@@ -30,24 +30,9 @@ namespace drm
 		return GDRM->CreateDescriptorSet();
 	}
 
-	IndexBufferRef CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void* Data)
+	drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
 	{
-		return GDRM->CreateIndexBuffer(Format, NumIndices, Usage, Data);
-	}
-
-	VertexBufferRef CreateVertexBuffer(EFormat Format, uint32 NumElements, EBufferUsage Usage, const void* Data)
-	{
-		return GDRM->CreateVertexBuffer(Format, NumElements, Usage, Data);
-	}
-
-	UniformBufferRef CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
-	{
-		return GDRM->CreateUniformBuffer(Size, Data, UniformUsage);
-	}
-
-	StorageBufferRef CreateStorageBuffer(uint32 Size, const void* Data, EBufferUsage Usage)
-	{
-		return GDRM->CreateStorageBuffer(Size, Data, Usage);
+		return GDRM->CreateBuffer(Usage, Size, Data);
 	}
 
 	ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data)
@@ -80,34 +65,14 @@ namespace drm
 		return GDRM->GetSurfaceView(LoadAction, StoreAction, ClearValue);
 	}
 
-	void* LockBuffer(VertexBufferRef VertexBuffer)
+	void* LockBuffer(drm::BufferRef Buffer)
 	{
-		return GDRM->LockBuffer(VertexBuffer);
+		return GDRM->LockBuffer(Buffer);
 	}
 
-	void UnlockBuffer(VertexBufferRef VertexBuffer)
+	void UnlockBuffer(drm::BufferRef Buffer)
 	{
-		GDRM->UnlockBuffer(VertexBuffer);
-	}
-
-	void* LockBuffer(IndexBufferRef IndexBuffer)
-	{
-		return GDRM->LockBuffer(IndexBuffer);
-	}
-
-	void UnlockBuffer(IndexBufferRef IndexBuffer)
-	{
-		GDRM->UnlockBuffer(IndexBuffer);
-	}
-
-	void* LockBuffer(drm::StorageBufferRef StorageBuffer)
-	{
-		return GDRM->LockBuffer(StorageBuffer);
-	}
-
-	void UnlockBuffer(drm::StorageBufferRef StorageBuffer)
-	{
-		GDRM->UnlockBuffer(StorageBuffer);
+		GDRM->UnlockBuffer(Buffer);
 	}
 
 	std::string GetDeviceName()

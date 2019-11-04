@@ -11,14 +11,14 @@ public:
 
 	SpecializationInfo SpecInfo;
 
-	drm::UniformBufferRef LocalToWorldUniform;
+	drm::BufferRef LocalToWorldUniform;
 
 	std::vector<MeshElement> Elements;
 
 	MeshProxy(
 		const CMaterial& Material, 
 		const std::vector<MeshElement>& Elements,
-		const drm::UniformBufferRef& LocalToWorldUniform
+		const drm::BufferRef& LocalToWorldUniform
 	);
 };
 

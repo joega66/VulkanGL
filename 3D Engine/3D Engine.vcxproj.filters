@@ -423,5 +423,8 @@
     <None Include="..\Shaders\MeshCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Shaders\DrawVoxels.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

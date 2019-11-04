@@ -16,16 +16,16 @@ private:
 	};
 public:
 	const uint32 IndexCount;
-	drm::IndexBufferRef IndexBuffer;
-	std::array<drm::VertexBufferRef, NumLocations> VertexBuffers;
+	drm::BufferRef IndexBuffer;
+	std::array<drm::BufferRef, NumLocations> VertexBuffers;
 
 	MeshElement(
 		uint32 IndexCount
-		, drm::IndexBufferRef IndexBuffer
-		, drm::VertexBufferRef PositionBuffer
-		, drm::VertexBufferRef TextureCoordinateBuffer
-		, drm::VertexBufferRef NormalBuffer
-		, drm::VertexBufferRef TangentBuffer)
+		, drm::BufferRef IndexBuffer
+		, drm::BufferRef PositionBuffer
+		, drm::BufferRef TextureCoordinateBuffer
+		, drm::BufferRef NormalBuffer
+		, drm::BufferRef TangentBuffer)
 		: IndexCount(IndexCount)
 		, IndexBuffer(IndexBuffer)
 	{
@@ -35,7 +35,7 @@ public:
 		VertexBuffers[Tangents] = TangentBuffer;
 	}
 
-	drm::VertexBufferRef GetPositionBuffer() const { return VertexBuffers[Positions]; }
+	drm::BufferRef GetPositionBuffer() const { return VertexBuffers[Positions]; }
 };
 
 struct MeshBatch

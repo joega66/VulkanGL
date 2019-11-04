@@ -14,7 +14,7 @@ void main()
 
 	for (uint i = 0; i < 3; i++)
 	{
-		gl_Position = VoxelOrthoProj.Transform * InPosition[i];
+		gl_Position = VoxelOrthoProj.Transform * vec4(InPosition[i].xyz, 1);
 		SetGSInterpolants(i);
 		EmitVertex();
 	}

@@ -8,10 +8,12 @@ void main()
 {
 	MaterialParams Material = GetMaterial();
 
-	vec4 Color = Shade(Material);
+	//vec4 Color = Shade(Material);
 
-	ivec3 VoxelTexCoord = ivec3(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z);
+	uint VoxelIndex = atomicAdd(VoxelColors.NumVoxels, 1);
+	VoxelColors.Data[VoxelIndex] = ColorToInt(vec4(Material.Albedo, 1.0));
+	VoxelPositions.Data[VoxelIndex] = Material.Position;
 
+	//ivec3 VoxelTexCoord = ivec3(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z * VOXEL_GRID_SIZE);
 	//imageStore(VoxelImage3d, VoxelTexCoord, vec4(Color.xyz, 1.0));
-	imageStore(VoxelImage3d, VoxelTexCoord, vec4(Material.Albedo, 1.0));
 }

@@ -118,9 +118,12 @@ enum class EPipelineStage
 enum class EBufferUsage
 {
 	None,
-	IndirectBuffer = 1 << 0,
+	Indirect = 1 << 0,
 	KeepCPUAccessible = 1 << 1,
+	Vertex = 1 << 2,
 	Storage = 1 << 3,
+	Index = 1 << 4,
+	Uniform = 1 << 5,
 };
 
 enum class EImageUsage
@@ -296,55 +299,18 @@ struct SamplerState
 
 namespace drm
 {
-	class VertexBuffer
+	class Buffer
 	{
 	public:
-		EFormat Format;
 		EBufferUsage Usage;
 
-		VertexBuffer(EFormat Format, EBufferUsage Usage)
-			: Format(Format), Usage(Usage)
-		{
-		}
-	};
-
-	CLASS(VertexBuffer);
-
-	class IndexBuffer
-	{
-	public:
-		EFormat Format;
-		EBufferUsage Usage;
-		uint32 IndexStride;
-
-		IndexBuffer(uint32 IndexStride, EFormat Format, EBufferUsage Usage)
-			: IndexStride(IndexStride), Format(Format), Usage(Usage)
-		{
-		}
-	};
-
-	CLASS(IndexBuffer);
-
-	class UniformBuffer
-	{
-	public:
-		UniformBuffer() = default;
-	};
-
-	CLASS(UniformBuffer);
-
-	class StorageBuffer
-	{
-	public:
-		const EBufferUsage Usage;
-
-		StorageBuffer(EBufferUsage Usage)
+		Buffer(EBufferUsage Usage)
 			: Usage(Usage)
 		{
 		}
 	};
 
-	CLASS(StorageBuffer);
+	CLASS(Buffer);
 
 	class Image
 	{
@@ -394,9 +360,8 @@ namespace drm
 	{
 	public:
 		virtual void Write(ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) = 0;
-		virtual void Write(ImageRef StorageImage, const ShaderBinding& Binding) = 0;
-		virtual void Write(UniformBufferRef UniformBuffer, const ShaderBinding& Binding) = 0;
-		virtual void Write(StorageBufferRef StorageBuffer, const ShaderBinding& Binding) = 0;
+		virtual void Write(ImageRef Image, const ShaderBinding& Binding) = 0;
+		virtual void Write(BufferRef Buffer, const ShaderBinding& Binding) = 0;
 		virtual void Update() = 0;
 	};
 

@@ -6,11 +6,8 @@
 #include <Engine/Screen.h>
 
 static CAST(drm::RenderTargetView, VulkanRenderTargetView);
+static CAST(drm::Buffer, VulkanBuffer);
 static CAST(drm::Image, VulkanImage);
-static CAST(drm::VertexBuffer, VulkanVertexBuffer);
-static CAST(drm::UniformBuffer, VulkanUniformBuffer);
-static CAST(drm::StorageBuffer, VulkanStorageBuffer);
-static CAST(drm::IndexBuffer, VulkanIndexBuffer);
 static CAST(RenderCommandList, VulkanCommandList);
 
 HashTable<VkFormat, uint32> SizeOfVulkanFormat;
@@ -88,13 +85,6 @@ void VulkanDRM::EndFrame()
 	DescriptorPool.EndFrame();
 }
 
-drm::VertexBufferRef VulkanDRM::CreateVertexBuffer(EFormat EngineFormat, uint32 NumElements, EBufferUsage Usage, const void* Data)
-{
-	uint32 GLSLSize = GetValue(ImageFormatToGLSLSize, EngineFormat);
-	auto Buffer = Allocator.CreateBuffer((VkDeviceSize)NumElements * GLSLSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, Usage, Data);
-	return MakeRef<VulkanVertexBuffer>(Buffer, EngineFormat, Usage);
-}
-
 void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 { 
 	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
@@ -156,26 +146,19 @@ drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()
 	return MakeRef<VulkanDescriptorSet>(Device, DescriptorPool, Allocator);
 }
 
-drm::IndexBufferRef VulkanDRM::CreateIndexBuffer(EFormat Format, uint32 NumIndices, EBufferUsage Usage, const void * Data)
+drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
 {
-	check(Format == EFormat::R16_UINT || Format == EFormat::R32_UINT, "Format must be single-channel unsigned type.");
+	VkBufferUsageFlags VulkanUsage = 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::Uniform) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::Index) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::Vertex) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
+	VulkanUsage |= Any(Usage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
+	VulkanUsage |= !Any(Usage & EBufferUsage::KeepCPUAccessible) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
 
-	uint32 IndexBufferStride = GetValue(ImageFormatToGLSLSize, Format);
-	auto Buffer = Allocator.CreateBuffer((VkDeviceSize)IndexBufferStride * NumIndices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, Usage, Data);
-	return MakeRef<VulkanIndexBuffer>(Buffer, IndexBufferStride, Format, Usage);
-}
+	SharedVulkanBufferMemoryRef Memory = Allocator.CreateBuffer(Size, VulkanUsage, Usage, Data);
 
-drm::UniformBufferRef VulkanDRM::CreateUniformBuffer(uint32 Size, const void* Data, EUniformUpdate UniformUsage)
-{
-	EBufferUsage Usage = UniformUsage == EUniformUpdate::Frequent ? EBufferUsage::KeepCPUAccessible : EBufferUsage::None;
-	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Usage, Data);
-	return MakeRef<VulkanUniformBuffer>(Buffer);
-}
-
-drm::StorageBufferRef VulkanDRM::CreateStorageBuffer(uint32 Size, const void* Data, EBufferUsage Usage)
-{
-	auto Buffer = Allocator.CreateBuffer(Size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Usage, Data);
-	return MakeRef<VulkanStorageBuffer>(Buffer, Usage);
+	return MakeRef<VulkanBuffer>(Memory, Usage);
 }
 
 drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr)
@@ -292,38 +275,14 @@ drm::RenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStor
 	return MakeRef<VulkanRenderTargetView>(Device, GetSurface(), LoadAction, StoreAction, ClearValue, EImageLayout::Present);
 }
 
-void* VulkanDRM::LockBuffer(drm::VertexBufferRef VertexBuffer)
+void* VulkanDRM::LockBuffer(drm::BufferRef Buffer)
 {
-	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
-	return Allocator.LockBuffer(*VulkanVertexBuffer->Buffer);
+	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
+	return Allocator.LockBuffer(*VulkanBuffer->Buffer);
 }
 
-void VulkanDRM::UnlockBuffer(drm::VertexBufferRef VertexBuffer)
+void VulkanDRM::UnlockBuffer(drm::BufferRef Buffer)
 {
-	VulkanVertexBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffer);
-	Allocator.UnlockBuffer(*VulkanVertexBuffer->Buffer);
-}
-
-void* VulkanDRM::LockBuffer(drm::IndexBufferRef IndexBuffer)
-{
-	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	return Allocator.LockBuffer(*VulkanIndexBuffer->Buffer);
-}
-
-void VulkanDRM::UnlockBuffer(drm::IndexBufferRef IndexBuffer)
-{
-	VulkanIndexBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	Allocator.UnlockBuffer(*VulkanIndexBuffer->Buffer);
-}
-
-void* VulkanDRM::LockBuffer(drm::StorageBufferRef StorageBuffer)
-{
-	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
-	return Allocator.LockBuffer(*VulkanStorageBuffer->Buffer);
-}
-
-void VulkanDRM::UnlockBuffer(drm::StorageBufferRef StorageBuffer)
-{
-	VulkanStorageBufferRef VulkanStorageBuffer = ResourceCast(StorageBuffer);
-	Allocator.UnlockBuffer(*VulkanStorageBuffer->Buffer);
+	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
+	Allocator.UnlockBuffer(*VulkanBuffer->Buffer);
 }
