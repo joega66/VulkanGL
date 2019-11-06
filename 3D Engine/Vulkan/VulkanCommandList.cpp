@@ -156,8 +156,8 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Bu
 	{
 		check(VertexBuffers, "Null vertex buffer found.");
 		VulkanBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
-		Offsets[Location] = VulkanVertexBuffer->Buffer->Offset;
-		Buffers[Location] = VulkanVertexBuffer->Buffer->GetVulkanHandle();
+		Offsets[Location] = VulkanVertexBuffer->Memory->Offset;
+		Buffers[Location] = VulkanVertexBuffer->Memory->GetVulkanHandle();
 	}
 
 	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
@@ -166,7 +166,7 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Bu
 void VulkanCommandList::DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
 	VulkanBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->Buffer->GetVulkanHandle(), VulkanIndexBuffer->Buffer->Offset, VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->Memory->GetVulkanHandle(), VulkanIndexBuffer->Memory->Offset, VK_INDEX_TYPE_UINT32);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
@@ -195,35 +195,78 @@ void VulkanCommandList::ClearColorImage(drm::ImageRef Image, const ClearColorVal
 	vkCmdClearColorImage(CommandBuffer, VulkanImage->Image, VulkanImage->GetVulkanLayout(), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
 }
 
-void VulkanCommandList::PipelineBarrier(drm::ImageRef Image, EImageLayout NewLayout, EAccess DstAccessMask, EPipelineStage DstStageMask)
+static inline VkAccessFlags GetVulkanAccessFlags(EAccess Access)
 {
-	const VulkanImageRef& VulkanImage = ResourceCast(Image);
+	return VkAccessFlags(Access);
+}
 
-	VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-	Barrier.srcAccessMask = VulkanImage->GetVulkanAccess();
-	Barrier.dstAccessMask = VulkanImage::GetVulkanAccess(DstAccessMask);
-	Barrier.oldLayout = VulkanImage->GetVulkanLayout();
-	Barrier.newLayout = VulkanImage::GetVulkanLayout(NewLayout);
-	Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	Barrier.image = VulkanImage->Image;
-	Barrier.subresourceRange.aspectMask = VulkanImage->GetVulkanAspect();
-	Barrier.subresourceRange.baseMipLevel = 0;
-	Barrier.subresourceRange.levelCount = 1;
-	Barrier.subresourceRange.baseArrayLayer = 0;
-	Barrier.subresourceRange.layerCount = Any(Image->Usage & EImageUsage::Cubemap) ? 6 : 1;
+static inline VkPipelineStageFlags GetVulkanPipelineStageFlags(EPipelineStage PipelineStage)
+{
+	return VkPipelineStageFlags(PipelineStage);
+}
+
+void VulkanCommandList::PipelineBarrier(
+	EPipelineStage SrcStageMask,
+	EPipelineStage DstStageMask,
+	uint32 NumBufferBarriers,
+	BufferMemoryBarrier* BufferBarriers,
+	uint32 NumImageBarriers,
+	ImageMemoryBarrier* ImageBarriers)
+{
+	std::vector<VkBufferMemoryBarrier> VulkanBufferBarriers;
+	VulkanBufferBarriers.reserve(NumBufferBarriers);
+
+	for (uint32 BarrierIndex = 0; BarrierIndex < NumBufferBarriers; BarrierIndex++)
+	{
+		const BufferMemoryBarrier& BufferBarrier = BufferBarriers[BarrierIndex];
+		const VulkanBufferRef& VulkanBuffer = ResourceCast(BufferBarrier.Buffer);
+
+		VkBufferMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+		Barrier.srcAccessMask = GetVulkanAccessFlags(BufferBarrier.SrcAccessMask);
+		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.DstAccessMask);
+		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		Barrier.buffer = VulkanBuffer->Memory->GetVulkanHandle();
+		Barrier.offset = VulkanBuffer->Memory->Offset;
+		Barrier.size = VulkanBuffer->Memory->Size;
+
+		VulkanBufferBarriers.push_back(Barrier);
+	}
+	
+	std::vector<VkImageMemoryBarrier> VulkanImageBarriers;
+	VulkanImageBarriers.reserve(NumImageBarriers);
+
+	for (uint32 BarrierIndex = 0; BarrierIndex < NumImageBarriers; BarrierIndex++)
+	{
+		const ImageMemoryBarrier& ImageBarrier = ImageBarriers[BarrierIndex];
+		const VulkanImageRef& VulkanImage = ResourceCast(ImageBarrier.Image);
+
+		VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.SrcAccessMask);
+		Barrier.dstAccessMask = GetVulkanAccessFlags(ImageBarrier.DstAccessMask);
+		Barrier.oldLayout = VulkanImage->GetVulkanLayout();
+		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.NewLayout);
+		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		Barrier.image = VulkanImage->Image;
+		Barrier.subresourceRange.aspectMask = VulkanImage->GetVulkanAspect();
+		Barrier.subresourceRange.baseMipLevel = 0;
+		Barrier.subresourceRange.levelCount = 1;
+		Barrier.subresourceRange.baseArrayLayer = 0;
+		Barrier.subresourceRange.layerCount = Any(VulkanImage->Usage & EImageUsage::Cubemap) ? 6 : 1;
+
+		VulkanImageBarriers.push_back(Barrier);
+
+		VulkanImage->Layout = ImageBarrier.NewLayout;
+	}
 
 	vkCmdPipelineBarrier(
 		CommandBuffer,
-		VulkanImage->GetVulkanPipelineStage(), 
-		VulkanImage::GetVulkanPipelineStage(DstStageMask),
+		GetVulkanPipelineStageFlags(SrcStageMask),
+		GetVulkanPipelineStageFlags(DstStageMask),
 		0,
 		0, nullptr,
-		0, nullptr,
-		1, &Barrier
+		VulkanBufferBarriers.size(), VulkanBufferBarriers.data(),
+		VulkanImageBarriers.size(), VulkanImageBarriers.data()
 	);
-
-	Image->Layout = NewLayout;
-	Image->Access = DstAccessMask;
-	Image->PipelineStage = DstStageMask;
 }

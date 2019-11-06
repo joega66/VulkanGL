@@ -151,8 +151,8 @@ void VulkanDescriptorSet::Write(drm::BufferRef Buffer, const ShaderBinding& Bind
 {
 	const VkDescriptorType DescriptorType = Buffer->Usage == EBufferUsage::Uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
-	const SharedVulkanBufferMemoryRef& SharedBuffer = VulkanBuffer->Buffer;
-	const VkDescriptorBufferInfo* BufferInfo = new VkDescriptorBufferInfo{ SharedBuffer->GetVulkanHandle(), SharedBuffer->Offset, SharedBuffer->Size };
+	const SharedVulkanMemoryRef& Memory = VulkanBuffer->Memory;
+	const VkDescriptorBufferInfo* BufferInfo = new VkDescriptorBufferInfo{ Memory->GetVulkanHandle(), Memory->Offset, Memory->Size };
 
 	MaybeAddBinding(Binding, DescriptorType);
 

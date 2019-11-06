@@ -211,8 +211,13 @@ public:
 
 void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	//CmdList.PipelineBarrier(VoxelColor, EImageLayout::General, EAccess::SHADER_READ, EPipelineStage::VERTEX_SHADER);
-	//CmdList.PipelineBarrier(VoxelPosition, EImageLayout::General, EAccess::SHADER_READ, EPipelineStage::VERTEX_SHADER);
+	BufferMemoryBarrier BufferBarriers[] =
+	{
+		{ VoxelColors, EAccess::SHADER_WRITE, EAccess::SHADER_READ },
+		{ VoxelPositions, EAccess::SHADER_WRITE, EAccess::SHADER_READ }
+	};
+
+	CmdList.PipelineBarrier(EPipelineStage::FRAGMENT_SHADER, EPipelineStage::VERTEX_SHADER, ARRAY_SIZE(BufferBarriers), BufferBarriers, 0, nullptr);
 
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(

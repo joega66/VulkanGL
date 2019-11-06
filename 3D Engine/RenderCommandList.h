@@ -270,6 +270,31 @@ struct PipelineStateInitializer
 	}
 };
 
+struct BufferMemoryBarrier
+{
+	drm::BufferRef Buffer;
+	EAccess SrcAccessMask;
+	EAccess DstAccessMask;
+
+	BufferMemoryBarrier(drm::BufferRef Buffer, EAccess SrcAccessMask, EAccess DstAccessMask)
+		: Buffer(Buffer), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask)
+	{
+	}
+};
+
+struct ImageMemoryBarrier
+{
+	drm::ImageRef Image;
+	EAccess SrcAccessMask;
+	EAccess DstAccessMask;
+	EImageLayout NewLayout;
+
+	ImageMemoryBarrier(drm::ImageRef Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout NewLayout)
+		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), NewLayout(NewLayout)
+	{
+	}
+};
+
 class RenderCommandList
 {
 public:
@@ -282,7 +307,14 @@ public:
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 	virtual void Finish() = 0;
 	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) = 0;
-	virtual void PipelineBarrier(drm::ImageRef Image, EImageLayout NewLayout, EAccess DstAccessMask, EPipelineStage DstStageMask) = 0;
+	virtual void PipelineBarrier(
+		EPipelineStage SrcStageMask,
+		EPipelineStage DstStageMask,
+		uint32 NumBufferBarriers,
+		BufferMemoryBarrier* BufferBarriers,
+		uint32 NumImageBarriers,
+		ImageMemoryBarrier* ImageBarriers
+	) = 0;
 };
 
 CLASS(RenderCommandList);

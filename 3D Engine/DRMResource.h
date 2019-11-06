@@ -309,7 +309,7 @@ namespace drm
 		{
 		}
 	};
-
+	
 	CLASS(Buffer);
 
 	class Image
@@ -321,8 +321,6 @@ namespace drm
 		uint32 Depth;
 		EImageUsage Usage;
 		EImageLayout Layout;
-		EAccess Access = EAccess::NONE;
-		EPipelineStage PipelineStage = EPipelineStage::TOP_OF_PIPE;
 
 		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
 			: Format(Format), Layout(Layout), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)

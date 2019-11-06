@@ -74,7 +74,6 @@ void VulkanSurface::Init()
 			, Extent.height
 			, 1
 			, EImageUsage::RenderTargetable);
-		Images[i]->PipelineStage = EPipelineStage::COLOR_ATTACHMENT_OUTPUT;
 	}
 }
 

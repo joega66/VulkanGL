@@ -103,7 +103,7 @@ inline bool Contains(const ContainerType& Container, const ElementType& Element)
 }
 
 template<typename T, std::size_t N>
-constexpr std::size_t ArrayLength(T(&)[N])
+constexpr std::size_t ARRAY_SIZE(T(&)[N])
 {
 	return N;
 }

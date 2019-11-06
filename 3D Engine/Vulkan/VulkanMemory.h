@@ -4,9 +4,9 @@
 
 class VulkanDevice;
 
-struct VulkanBufferMemory
+struct VulkanMemory
 {
-	friend struct SharedVulkanBufferMemory;
+	friend struct SharedVulkanMemory;
 public:
 	VkBuffer Buffer;
 
@@ -20,11 +20,11 @@ public:
 
 	VkDeviceSize Used;
 
-	VulkanBufferMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
+	VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
 
 	VkDeviceSize SizeRemaining() const;
 
-	static std::shared_ptr<struct SharedVulkanBufferMemory> Allocate(std::shared_ptr<VulkanBufferMemory> Buffer, VkDeviceSize Size);
+	static std::shared_ptr<struct SharedVulkanMemory> Allocate(std::shared_ptr<VulkanMemory> Buffer, VkDeviceSize Size);
 
 private:
 	struct Slot
@@ -35,30 +35,30 @@ private:
 
 	std::list<Slot> FreeList;
 
-	void Free(const struct SharedVulkanBufferMemory& SharedBuffer);
+	void Free(const struct SharedVulkanMemory& SharedBuffer);
 };
 
-CLASS(VulkanBufferMemory);
+CLASS(VulkanMemory);
 
-struct SharedVulkanBufferMemory
+struct SharedVulkanMemory
 {
-	VulkanBufferMemoryRef Shared;
+	VulkanMemoryRef Shared;
 	VkDeviceSize Size;
 	VkDeviceSize Offset;
 	
-	SharedVulkanBufferMemory(VulkanBufferMemoryRef Buffer, VkDeviceSize Size, VkDeviceSize Offset);
+	SharedVulkanMemory(VulkanMemoryRef Buffer, VkDeviceSize Size, VkDeviceSize Offset);
 	VkBuffer& GetVulkanHandle() const;
-	~SharedVulkanBufferMemory();
+	~SharedVulkanMemory();
 };
 
-CLASS(SharedVulkanBufferMemory);
+CLASS(SharedVulkanMemory);
 
 class VulkanAllocator
 {
 public:
 	VulkanAllocator(VulkanDevice& Device);
 
-	SharedVulkanBufferMemoryRef CreateBuffer(
+	SharedVulkanMemoryRef Allocate(
 		VkDeviceSize Size, 
 		VkBufferUsageFlags VulkanUsage, 
 		EBufferUsage Usage,
@@ -66,11 +66,11 @@ public:
 
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
 
-	void UploadBufferData(const SharedVulkanBufferMemory& Buffer, const void* Data);
+	void UploadBufferData(const SharedVulkanMemory& Buffer, const void* Data);
 
-	void* LockBuffer(const SharedVulkanBufferMemory& Buffer);
+	void* LockBuffer(const SharedVulkanMemory& Buffer);
 
-	void UnlockBuffer(const SharedVulkanBufferMemory& Buffer);
+	void UnlockBuffer(const SharedVulkanMemory& Buffer);
 
 	void UploadImageData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const uint8* Pixels);
 
@@ -81,18 +81,18 @@ private:
 
 	const VkDeviceSize BufferAllocationSize;
 
-	std::map<VkImage, std::unique_ptr<VulkanBufferMemory>> LockedStagingImages;
+	std::map<VkImage, std::unique_ptr<VulkanMemory>> LockedStagingImages;
 
-	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanBufferMemory>> LockedStagingBuffers;
+	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanMemory>> LockedStagingBuffers;
 
-	std::list<std::unique_ptr<VulkanBufferMemory>> FreeStagingBuffers;
+	std::list<std::unique_ptr<VulkanMemory>> FreeStagingBuffers;
 
-	std::list<VulkanBufferMemoryRef> Buffers;
+	std::list<VulkanMemoryRef> Buffers;
 
-	[[nodiscard]] VulkanBufferMemory CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
+	[[nodiscard]] VulkanMemory CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
 
 	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size,
-		std::function<void(std::unique_ptr<VulkanBufferMemory> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanBufferMemory* Buffer = nullptr);
+		std::function<void(std::unique_ptr<VulkanMemory> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanMemory* Buffer = nullptr);
 
 	void UnlockImage(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, VkDeviceSize Size);
 };
@@ -100,10 +100,10 @@ private:
 class VulkanBuffer : public drm::Buffer
 {
 public:
-	SharedVulkanBufferMemoryRef Buffer;
+	SharedVulkanMemoryRef Memory;
 
-	VulkanBuffer(SharedVulkanBufferMemoryRef Buffer, EBufferUsage Usage)
-		: Buffer(Buffer), drm::Buffer(Usage)
+	VulkanBuffer(SharedVulkanMemoryRef Memory, EBufferUsage Usage)
+		: Memory(Memory), drm::Buffer(Usage)
 	{
 	}
 };

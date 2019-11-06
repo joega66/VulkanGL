@@ -29,10 +29,6 @@ public:
 
 	static VkFormat GetVulkanFormat(EFormat Format);
 
-	static VkAccessFlags GetVulkanAccess(EAccess Access);
-
-	static VkPipelineStageFlags GetVulkanPipelineStage(EPipelineStage PipelineStage);
-
 	static EFormat GetEngineFormat(VkFormat Format);
 
 	static VkImageLayout GetVulkanLayout(EImageLayout Layout);
@@ -46,10 +42,6 @@ public:
 	VkImageLayout GetVulkanLayout() const;
 
 	VkImageAspectFlags GetVulkanAspect() const;
-
-	VkAccessFlags GetVulkanAccess() const;
-
-	VkPipelineStageFlags GetVulkanPipelineStage() const;
 
 private:
 	VulkanDevice& Device;

@@ -23,16 +23,32 @@ public:
 
 	~VulkanCommandList();
 
-	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit);
-	virtual void EndRenderPass();
-	virtual void BindPipeline(const PipelineStateInitializer& PSOInit);
-	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets);
-	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers);
-	virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance);
-	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
-	virtual void Finish();
-	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color);
-	virtual void PipelineBarrier(drm::ImageRef Image, EImageLayout NewLayout, EAccess DstAccessMask, EPipelineStage DstStageMask);
+	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) override;
+
+	virtual void EndRenderPass() override;
+
+	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) override;
+
+	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) override;
+
+	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) override;
+
+	virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) override;
+
+	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) override;
+
+	virtual void Finish() override;
+
+	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) override;
+
+	virtual void PipelineBarrier(
+		EPipelineStage SrcStageMask,
+		EPipelineStage DstStageMask,
+		uint32 NumBufferBarriers,
+		BufferMemoryBarrier* BufferBarriers,
+		uint32 NumImageBarriers,
+		ImageMemoryBarrier* ImageBarriers
+	) override;
 
 private:
 	VulkanDevice& Device;

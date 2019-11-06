@@ -167,16 +167,6 @@ VkFormat VulkanImage::GetVulkanFormat(EFormat Format)
 	return GetValue(VulkanFormat, Format);
 }
 
-VkAccessFlags VulkanImage::GetVulkanAccess(EAccess Access)
-{
-	return VkAccessFlags(Access);
-}
-
-VkPipelineStageFlags VulkanImage::GetVulkanPipelineStage(EPipelineStage PipelineStage)
-{
-	return VkPipelineStageFlags(PipelineStage);
-}
-
 EFormat VulkanImage::GetEngineFormat(VkFormat Format)
 {
 	return GetKey(VulkanFormat, Format);
@@ -292,16 +282,6 @@ VkImageAspectFlags VulkanImage::GetVulkanAspect() const
 		Flags = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 	return Flags;
-}
-
-VkAccessFlags VulkanImage::GetVulkanAccess() const
-{
-	return GetVulkanAccess(Access);
-}
-
-VkPipelineStageFlags VulkanImage::GetVulkanPipelineStage() const
-{
-	return GetVulkanPipelineStage(PipelineStage);
 }
 
 static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
