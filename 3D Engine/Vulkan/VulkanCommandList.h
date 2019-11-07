@@ -45,9 +45,9 @@ public:
 		EPipelineStage SrcStageMask,
 		EPipelineStage DstStageMask,
 		uint32 NumBufferBarriers,
-		BufferMemoryBarrier* BufferBarriers,
+		const BufferMemoryBarrier* BufferBarriers,
 		uint32 NumImageBarriers,
-		ImageMemoryBarrier* ImageBarriers
+		const ImageMemoryBarrier* ImageBarriers
 	) override;
 
 private:

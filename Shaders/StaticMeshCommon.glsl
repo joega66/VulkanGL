@@ -65,6 +65,19 @@ MaterialParams GetMaterial()
 	Material.Roughness = 0.25f;
 	Material.Shininess = 0.0f;
 
+	if (HasOpacityMap)
+	{
+		Material.Alpha = texture(Opacity, InUV).r;
+		if (Material.Alpha <= 0)
+		{
+			discard;
+		}
+	}
+	else
+	{
+		Material.Alpha = 1.0f;
+	}
+
 	if (HasSpecularMap)
 	{
 		Material.Specular = texture(Specular, InUV).rgb;
@@ -72,15 +85,6 @@ MaterialParams GetMaterial()
 	else
 	{
 		Material.Specular = vec3(1.0f);
-	}
-
-	if (HasOpacityMap)
-	{
-		Material.Alpha = texture(Opacity, InUV).r;
-	}
-	else
-	{
-		Material.Alpha = 1.0f;
 	}
 
 	return Material;

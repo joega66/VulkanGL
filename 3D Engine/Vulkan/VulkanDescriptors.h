@@ -28,7 +28,7 @@ private:
 
 	uint32 PendingFreeCount = 0;
 
-	std::array<VkDescriptorSet, MaxDescriptorSetCount> PendingFreeDescriptorSets;
+	std::vector<VkDescriptorSet> PendingFreeDescriptorSets;
 };
 
 class VulkanAllocator;

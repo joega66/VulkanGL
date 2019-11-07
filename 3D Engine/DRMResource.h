@@ -335,6 +335,8 @@ namespace drm
 
 		static bool IsDepth(EFormat Format);
 		bool IsDepth() const;
+
+		uint32 GetStrideInBytes() const;
 	};
 
 	CLASS(Image);

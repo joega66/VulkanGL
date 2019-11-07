@@ -118,6 +118,13 @@ void VoxelizationPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshE
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 {
+	glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
+	OrthoProj[1][1] *= -1;
+	VoxelOrthoProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &OrthoProj);
+
+	VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+	VoxelsDescriptorSet->Update();
+
 	RenderVoxelization(Scene, CmdList);
 
 	RenderVoxelVisualization(Scene, CmdList);

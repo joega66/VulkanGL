@@ -35,13 +35,6 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 	if (Platform.GetBool("Engine.ini", "Renderer", "RenderVoxels", false))
 	{
-		glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
-		OrthoProj[1][1] *= -1;
-
-		VoxelOrthoProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &OrthoProj);
-		VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
-		VoxelsDescriptorSet->Update();
-
 		RenderVoxels(Scene, CmdList);
 	}
 	else
@@ -99,15 +92,5 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet };
 
 	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Descriptors);
-
-	ColorBlendAttachmentState& BlendState = PSOInit.ColorBlendAttachmentStates[0];
-	BlendState.BlendEnable = true;
-	BlendState.SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
-	BlendState.DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	BlendState.ColorBlendOp = EBlendOp::ADD;
-	BlendState.SrcAlphaBlendFactor = EBlendFactor::SRC_ALPHA;
-	BlendState.DstAlphaBlendFactor = EBlendFactor::ZERO;
-	BlendState.AlphaBlendOp = EBlendOp::ADD;
-
 	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Descriptors);
 }

@@ -4,8 +4,9 @@
 
 VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device)
 	: Device(Device)
-	, PendingFreeDescriptorSets({ VK_NULL_HANDLE })
 {
+	PendingFreeDescriptorSets.resize(MaxDescriptorSetCount);
+
 	std::array<VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE> PoolSizes;
 
 	for (VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_BEGIN_RANGE; DescriptorType < VK_DESCRIPTOR_TYPE_RANGE_SIZE;)
