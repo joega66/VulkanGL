@@ -182,18 +182,18 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 	if (Data)
 	{
 		VulkanCommandListRef CmdList = ResourceCast(drm::CreateCommandList());
-		ImageMemoryBarrier Barrier(VulkanImage, EAccess::NONE, EAccess::TRANSFER_WRITE, EImageLayout::TransferDstOptimal);
+		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
-		CmdList->PipelineBarrier(EPipelineStage::TOP_OF_PIPE, EPipelineStage::TRANSFER, 0, nullptr, 1, &Barrier);
+		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
 		// @todo CopyBufferToImage
 		Allocator.UploadImageData(CmdList->CommandBuffer, VulkanImage, Data);
 
-		Barrier.SrcAccessMask = EAccess::TRANSFER_WRITE;
-		Barrier.DstAccessMask = EAccess::SHADER_READ;
+		Barrier.SrcAccessMask = EAccess::TransferWrite;
+		Barrier.DstAccessMask = EAccess::ShaderRead;
 		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
 
-		CmdList->PipelineBarrier(EPipelineStage::TRANSFER, EPipelineStage::FRAGMENT_SHADER, 0, nullptr, 1, &Barrier);
+		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
 
 		CmdList->Finish();
 
@@ -203,8 +203,8 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 	if (UsageFlags == EImageUsage::Storage)
 	{
 		RenderCommandListRef CmdList = drm::CreateCommandList();
-		ImageMemoryBarrier Barrier(VulkanImage, EAccess::NONE, EAccess::SHADER_READ | EAccess::SHADER_WRITE, EImageLayout::General);
-		CmdList->PipelineBarrier(EPipelineStage::TOP_OF_PIPE, EPipelineStage::FRAGMENT_SHADER, 0, nullptr, 1, &Barrier);
+		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::ShaderRead | EAccess::ShaderWrite, EImageLayout::General);
+		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
 		CmdList->Finish();
 		SubmitCommands(CmdList);
 	}
@@ -239,18 +239,18 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Form
 	if (bHasData)
 	{
 		VulkanCommandListRef CmdList = ResourceCast(drm::CreateCommandList());
-		ImageMemoryBarrier Barrier(VulkanImage, EAccess::NONE, EAccess::TRANSFER_WRITE, EImageLayout::TransferDstOptimal);
+		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
-		CmdList->PipelineBarrier(EPipelineStage::TOP_OF_PIPE, EPipelineStage::TRANSFER, 0, nullptr, 1, &Barrier);
+		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
 		// @todo CopyBufferToImage
 		Allocator.UploadCubemapData(CmdList->CommandBuffer, VulkanImage, CubemapCreateInfo);
 
-		Barrier.SrcAccessMask = EAccess::TRANSFER_WRITE;
-		Barrier.DstAccessMask = EAccess::SHADER_READ;
+		Barrier.SrcAccessMask = EAccess::TransferWrite;
+		Barrier.DstAccessMask = EAccess::ShaderRead;
 		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
 
-		CmdList->PipelineBarrier(EPipelineStage::TRANSFER, EPipelineStage::FRAGMENT_SHADER, 0, nullptr, 1, &Barrier);
+		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
 
 		CmdList->Finish();
 

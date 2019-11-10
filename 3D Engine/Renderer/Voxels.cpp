@@ -223,19 +223,19 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 {
 	BufferMemoryBarrier BufferBarriers[] =
 	{
-		{ VoxelColors, EAccess::SHADER_WRITE, EAccess::SHADER_READ },
-		{ VoxelPositions, EAccess::SHADER_WRITE, EAccess::SHADER_READ }
+		{ VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead },
+		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead }
 	};
 
-	CmdList.PipelineBarrier(EPipelineStage::FRAGMENT_SHADER, EPipelineStage::VERTEX_SHADER, ARRAY_SIZE(BufferBarriers), BufferBarriers, 0, nullptr);
+	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::VertexShader, ARRAY_SIZE(BufferBarriers), BufferBarriers, 0, nullptr);
 
 	BufferMemoryBarrier VoxelIndirectBarrier(
 		VoxelIndirectBuffer,
-		EAccess::SHADER_WRITE,
-		EAccess::INDIRECT_COMMAND_READ
+		EAccess::ShaderWrite,
+		EAccess::IndirectCommandRead
 	);
 
-	CmdList.PipelineBarrier(EPipelineStage::FRAGMENT_SHADER, EPipelineStage::DRAW_INDIRECT, 1, &VoxelIndirectBarrier, 0, nullptr);
+	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
 
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(
