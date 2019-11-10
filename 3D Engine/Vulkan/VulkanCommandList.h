@@ -37,6 +37,8 @@ public:
 
 	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) override;
 
+	virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) override;
+
 	virtual void Finish() override;
 
 	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) override;

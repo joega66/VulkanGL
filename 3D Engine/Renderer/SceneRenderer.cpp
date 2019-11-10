@@ -17,8 +17,7 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 
 	gVoxelGridSize = Platform.GetInt("Engine.ini", "Renderer", "VoxelGridSize", 256);
 
-	//VoxelColor = drm::CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelColors = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(uint32) + sizeof(uint32));
+	VoxelColors = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(uint32));
 	VoxelPositions = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::vec3));
 
 	VoxelsDescriptorSet = drm::CreateDescriptorSet();

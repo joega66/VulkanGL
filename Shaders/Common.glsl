@@ -1,4 +1,14 @@
+#ifndef COMMON
+#define COMMON
 #extension GL_ARB_separate_shader_objects : enable
+
+struct DrawIndirectCommand
+{
+	uint VertexCount;
+	uint InstanceCount;
+	uint FirstVertex;
+	uint FirstInstance;
+};
 
 float LinearizeDepth(float D, float zNear, float zFar)
 {
@@ -22,7 +32,7 @@ vec3 CreateCube(in uint VertexID)
 
 vec4 IntToColor(in uint Int)
 {
-	return vec4((Int >> 24) & 255, (Int >> 16) & 255, (Int >> 8) & 255, (Int >> 0) & 255);
+	return vec4((Int >> 24) & 255, (Int >> 16) & 255, (Int >> 8) & 255, (Int >> 0) & 255) / 255.0f;
 }
 
 uint ColorToInt(in vec4 Color)
@@ -30,3 +40,5 @@ uint ColorToInt(in vec4 Color)
 	ivec4 Bytes = ivec4(Color * 255);
 	return (Bytes.r << 24) | (Bytes.g << 16) | (Bytes.b << 8) | (Bytes.a << 0);
 }
+
+#endif

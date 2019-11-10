@@ -108,4 +108,4 @@ private:
 CLASS(VulkanDevice);
 
 #define vulkan(Result) \
-	check(Result == VK_SUCCESS, "Vulkan call failed. Error: %s.", VulkanDevice::GetVulkanErrorString(Result));
+	check(Result == VK_SUCCESS, "%s", VulkanDevice::GetVulkanErrorString(Result));

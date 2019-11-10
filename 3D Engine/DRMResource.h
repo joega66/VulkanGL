@@ -66,10 +66,13 @@ enum class EFormat
 	BC2_UNORM_BLOCK,
 };
 
-namespace drm
+struct DrawIndirectCommand
 {
-	uint32 GetStrideInBytes(EFormat Format);
-}
+	uint32 VertexCount;
+	uint32 InstanceCount;
+	uint32 FirstVertex;
+	uint32 FirstInstance;
+};
 
 enum class EAccess
 {

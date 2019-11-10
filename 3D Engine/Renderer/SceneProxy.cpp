@@ -115,21 +115,6 @@ void SceneProxy::InitLights(Scene& Scene)
 	}
 }
 
-static void AddToDrawLists(SceneProxy& Scene, const MeshProxyRef& MeshProxy)
-{
-	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
-		MeshProxy->Material.IsMasked() ?
-		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
-
-	Scene.LightingPass[StaticDrawListType].Add(MeshProxy, LightingPass(*MeshProxy));
-
-	// Only voxelize opaque meshes (for now).
-	if (StaticDrawListType == EStaticDrawListType::Opaque)
-	{
-		Scene.VoxelsPass.Add(MeshProxy, VoxelizationPass(*MeshProxy));
-	}
-}
-
 void SceneProxy::InitDrawLists(Scene& Scene)
 {
 	auto& ECS = Scene.ECS;
@@ -185,4 +170,15 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 			}
 		}
 	}
+}
+
+void SceneProxy::AddToDrawLists(SceneProxy& Scene, const MeshProxyRef& MeshProxy)
+{
+	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
+		MeshProxy->Material.IsMasked() ?
+		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
+
+	Scene.LightingPass[StaticDrawListType].Add(MeshProxy, class LightingPass(*MeshProxy));
+
+	Scene.VoxelsPass.Add(MeshProxy, VoxelizationPass(*MeshProxy));
 }

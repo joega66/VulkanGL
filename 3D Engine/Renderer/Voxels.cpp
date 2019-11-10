@@ -122,7 +122,16 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 	OrthoProj[1][1] *= -1;
 	VoxelOrthoProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &OrthoProj);
 
+	DrawIndirectCommand DrawIndirectCommand;
+	DrawIndirectCommand.VertexCount = 0;
+	DrawIndirectCommand.InstanceCount = 1;
+	DrawIndirectCommand.FirstVertex = 0;
+	DrawIndirectCommand.FirstInstance = 0;
+
+	VoxelIndirectBuffer = drm::CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
+
 	VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+	VoxelsDescriptorSet->Write(VoxelIndirectBuffer, ShaderBinding(3));
 	VoxelsDescriptorSet->Update();
 
 	RenderVoxelization(Scene, CmdList);
@@ -132,12 +141,6 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 
 void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	//CmdList.PipelineBarrier(VoxelColor, EImageLayout::TransferDstOptimal, EAccess::TRANSFER_WRITE, EPipelineStage::TRANSFER);
-
-	//CmdList.ClearColorImage(VoxelColor, ClearColorValue{});
-
-	//CmdList.PipelineBarrier(VoxelColor, EImageLayout::General, EAccess::SHADER_WRITE, EPipelineStage::FRAGMENT_SHADER);
-
 	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, VoxelsDescriptorSet };
 
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
@@ -226,13 +229,22 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 
 	CmdList.PipelineBarrier(EPipelineStage::FRAGMENT_SHADER, EPipelineStage::VERTEX_SHADER, ARRAY_SIZE(BufferBarriers), BufferBarriers, 0, nullptr);
 
+	BufferMemoryBarrier VoxelIndirectBarrier(
+		VoxelIndirectBuffer,
+		EAccess::SHADER_WRITE,
+		EAccess::INDIRECT_COMMAND_READ
+	);
+
+	CmdList.PipelineBarrier(EPipelineStage::FRAGMENT_SHADER, EPipelineStage::DRAW_INDIRECT, 1, &VoxelIndirectBarrier, 0, nullptr);
+
 	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
 	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(
 		SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
-		EImageLayout::DepthWriteStencilWrite);
+		EImageLayout::DepthWriteStencilWrite
+	);
 
 	RenderPassInitializer RPInit = { 1 };
 	RPInit.ColorTargets[0] = SurfaceView;
@@ -267,7 +279,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 
 	CmdList.BindPipeline(PSOInit);
 
-	CmdList.Draw(gVoxelGridSize * gVoxelGridSize * gVoxelGridSize, 1, 0, 0);
+	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 
 	CmdList.EndRenderPass();
 }

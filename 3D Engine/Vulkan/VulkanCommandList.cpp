@@ -175,6 +175,17 @@ void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 Fi
 	vkCmdDraw(CommandBuffer, VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
+void VulkanCommandList::DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount)
+{
+	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
+	vkCmdDrawIndirect(
+		CommandBuffer, 
+		VulkanBuffer->Memory->GetVulkanHandle(), 
+		VulkanBuffer->Memory->Offset + Offset, 
+		DrawCount, 
+		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
+}
+
 void VulkanCommandList::Finish()
 {
 	vulkan(vkEndCommandBuffer(CommandBuffer));

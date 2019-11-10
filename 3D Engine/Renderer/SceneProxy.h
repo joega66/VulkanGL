@@ -48,4 +48,5 @@ private:
 	void InitView(Scene& Scene);
 	void InitLights(Scene& Scene);
 	void InitDrawLists(Scene& Scene);
+	static void AddToDrawLists(SceneProxy& Scene, const MeshProxyRef& MeshProxy);
 };
