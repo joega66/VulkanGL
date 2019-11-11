@@ -9,8 +9,9 @@ void main()
 	MaterialParams Material = GetMaterial();
 
 	//vec4 Color = Shade(Material);
+	vec4 Color = vec4(Material.Albedo, 1);
 
 	uint VoxelIndex = atomicAdd(VoxelDrawIndirect.VertexCount, 1);
-	VoxelColors[VoxelIndex] = ColorToInt(vec4(Material.Albedo, 1.0));
+	VoxelColors[VoxelIndex] = ColorToInt(Color);
 	VoxelPositions[VoxelIndex] = Material.Position;
 }

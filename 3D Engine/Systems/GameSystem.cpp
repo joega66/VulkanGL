@@ -21,6 +21,8 @@ void GameSystem::Start(Scene& Scene)
 		auto SponzaMesh = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/sponza.obj");
 
 		ECS.AddComponent<CStaticMesh>(Sponza, SponzaMesh);
+		auto& Transform = ECS.GetComponent<CTransform>(Sponza);
+		Transform.Scale(glm::vec3(0.25f));
 	}
 
 	{
