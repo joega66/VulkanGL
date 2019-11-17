@@ -23,11 +23,11 @@ private:
 
 	drm::BufferRef VoxelIndirectBuffer;
 
-	drm::BufferRef VoxelColors;
+	drm::ImageRef VoxelColors;
 
 	drm::BufferRef VoxelPositions;
 
-	drm::BufferRef VoxelOrthoProjBuffer;
+	drm::BufferRef WorldToVoxelBuffer;
 
 	void RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList);
 

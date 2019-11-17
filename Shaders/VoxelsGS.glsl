@@ -16,10 +16,10 @@ void main()
 	Axis = FaceNormal.z > FaceNormal[Axis] ? 2 : Axis;
 
 	vec4 Positions[3];
-
+	
 	for (uint i = 0; i < 3; i++)
 	{
-		Positions[i] = VoxelOrthoProj * vec4(InPosition[i].xyz - vec3(VoxelProbeCenter), 1);
+		Positions[i] = WorldToVoxel * vec4(InPosition[i].xyz - vec3(VoxelProbeCenter), 1);
 
 		if (Axis == 0)
 		{

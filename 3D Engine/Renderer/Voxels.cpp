@@ -118,9 +118,12 @@ void VoxelizationPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshE
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
-	OrthoProj[1][1] *= -1;
-	VoxelOrthoProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &OrthoProj);
+	std::array<glm::mat4, 2> WorldToVoxel;
+	WorldToVoxel[0] = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
+	WorldToVoxel[0][1][1] *= -1;
+	WorldToVoxel[1] = glm::inverse(WorldToVoxel[0]);
+
+	WorldToVoxelBuffer = drm::CreateBuffer(EBufferUsage::Uniform, WorldToVoxel.size() * sizeof(WorldToVoxel[0]), WorldToVoxel.data());
 
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;
@@ -130,7 +133,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 
 	VoxelIndirectBuffer = drm::CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
 
-	VoxelsDescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+	VoxelsDescriptorSet->Write(WorldToVoxelBuffer, ShaderBinding(0));
 	VoxelsDescriptorSet->Write(VoxelIndirectBuffer, ShaderBinding(3));
 	VoxelsDescriptorSet->Update();
 
@@ -141,6 +144,18 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 
 void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList)
 {
+	ImageMemoryBarrier ImageMemoryBarrier(VoxelColors, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
+
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageMemoryBarrier);
+
+	CmdList.ClearColorImage(VoxelColors, ClearColorValue{});
+
+	ImageMemoryBarrier.SrcAccessMask = EAccess::TransferWrite;
+	ImageMemoryBarrier.DstAccessMask = EAccess::ShaderWrite;
+	ImageMemoryBarrier.NewLayout = EImageLayout::General;
+
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageMemoryBarrier);
+
 	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, VoxelsDescriptorSet };
 
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
@@ -221,13 +236,10 @@ public:
 
 void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	BufferMemoryBarrier BufferBarriers[] =
-	{
-		{ VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead },
-		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead }
-	};
+	BufferMemoryBarrier BufferBarrier(VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead);
+	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General);
 
-	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::VertexShader, ARRAY_SIZE(BufferBarriers), BufferBarriers, 0, nullptr);
+	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::VertexShader, 1, &BufferBarrier, 1, &ImageBarrier);
 
 	BufferMemoryBarrier VoxelIndirectBarrier(
 		VoxelIndirectBuffer,
@@ -254,7 +266,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 	CmdList.BeginRenderPass(RPInit);
 
 	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(VoxelOrthoProjBuffer, ShaderBinding(0));
+	DescriptorSet->Write(WorldToVoxelBuffer, ShaderBinding(0));
 	DescriptorSet->Write(VoxelColors, ShaderBinding(1));
 	DescriptorSet->Write(VoxelPositions, ShaderBinding(2));
 	DescriptorSet->Update();
