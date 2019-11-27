@@ -1,22 +1,11 @@
 #include "Common.glsl"
 #include "SceneCommon.glsl"
+#define VOXEL_SET 1
+#include "VoxelsCommon.glsl"
 
 #ifndef VOXEL_GRID_SIZE
-#define VOXEL_GRID_SIZE 256
+#define VOXEL_GRID_SIZE 512
 #endif
-
-layout(binding = 0, set = 1) uniform WorldToVoxelBuffer
-{
-	mat4 WorldToVoxel;
-	mat4 WorldToVoxelInv;
-};
-
-layout(binding = 1, set = 1, rgba8) readonly uniform image3D VoxelDiffuseGI;
-
-layout(binding = 2, set = 1, std430) readonly buffer VoxelPositionBuffer
-{
-	ivec3 VoxelPositions[];
-};
 
 #ifdef VERTEX_SHADER
 
@@ -25,12 +14,7 @@ layout(location = 1) out vec4 OutVoxelColor;
 
 void main()
 {
-	OutPosition = VoxelPositions[gl_VertexIndex];
-	OutPosition /= VOXEL_GRID_SIZE;
-	OutPosition.xy = (OutPosition.xy - 0.5) * 2;
-	OutPosition *= 5;
-	OutPosition = vec3(WorldToVoxelInv * vec4(OutPosition, 1));
-	OutPosition += vec3(-700, 500, 750);
+	OutPosition = TransformVoxelToWorld(VoxelPositions[gl_VertexIndex]);
 
 	OutVoxelColor = imageLoad(VoxelDiffuseGI, VoxelPositions[gl_VertexIndex]);
 
@@ -57,10 +41,11 @@ void main()
 	{
 		for (uint i = 0; i < 14; i++)
 		{
-			vec3 Pos = InVoxelPosition[0];
-			Pos += CreateCube(i) * CubeScale;
+			vec3 VoxelPosition = InVoxelPosition[0];
+			vec3 CubePosition = CreateCube(i) * CubeScale;
+			VoxelPosition += vec3(CubePosition.x, -CubePosition.y, -CubePosition.z);
 			OutVoxelColor = InVoxelColor[0];
-			gl_Position = View.WorldToClip * vec4(Pos.xyz, 1);
+			gl_Position = View.WorldToClip * vec4(VoxelPosition.xyz, 1);
 			EmitVertex();
 		}
 		EndPrimitive();

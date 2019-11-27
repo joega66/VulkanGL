@@ -3,10 +3,8 @@ layout(triangle_strip, max_vertices = 3) out;
 
 #include "MeshCommon.glsl"
 #include "SceneCommon.glsl"
+#define VOXEL_SET 2
 #include "VoxelsCommon.glsl"
-
-const vec3 VoxelProbeCenter = vec3(-700, 500, 750);
-const float VoxelSize = 4;
 
 void main()
 {
@@ -15,11 +13,11 @@ void main()
 	uint Axis = FaceNormal.y > FaceNormal.x ? 1 : 0;
 	Axis = FaceNormal.z > FaceNormal[Axis] ? 2 : Axis;
 
-	vec4 Positions[3];
+	vec3 Positions[3];
 	
 	for (uint i = 0; i < 3; i++)
 	{
-		Positions[i] = WorldToVoxel * vec4(InPosition[i].xyz - vec3(VoxelProbeCenter), 1);
+		Positions[i] = TransformWorldToVoxel(InPosition[i].xyz);
 
 		if (Axis == 0)
 		{
@@ -33,8 +31,8 @@ void main()
 
 	for (uint i = 0; i < 3; i++)
 	{
-		gl_Position = Positions[i];
-		gl_Position.w += VoxelSize;
+		gl_Position.xyz = Positions[i];
+		gl_Position.w = 1;
 		SetGSInterpolants(i);
 		EmitVertex();
 	}

@@ -118,12 +118,22 @@ void VoxelizationPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshE
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	std::array<glm::mat4, 2> WorldToVoxel;
-	WorldToVoxel[0] = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
-	WorldToVoxel[0][1][1] *= -1;
-	WorldToVoxel[1] = glm::inverse(WorldToVoxel[0]);
+	glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
+	OrthoProj[1][1] *= -1;
 
-	WorldToVoxelBuffer = drm::CreateBuffer(EBufferUsage::Uniform, WorldToVoxel.size() * sizeof(WorldToVoxel[0]), WorldToVoxel.data());
+	struct WorldToVoxelUniform
+	{
+		glm::mat4 WorldToVoxel;
+		glm::mat4 WorldToVoxelInv;
+	} WorldToVoxelUniform;
+
+	const glm::vec3 VoxelProbeCenter(-700, 500, 750);
+	const float VoxelSize = 5.0f;
+
+	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
+	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
+
+	WorldToVoxelBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
 
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;

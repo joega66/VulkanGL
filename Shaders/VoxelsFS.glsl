@@ -2,6 +2,7 @@
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
 #include "LightingCommon.glsl"
+#define VOXEL_SET 2
 #include "VoxelsCommon.glsl"
 
 void main()
@@ -9,10 +10,8 @@ void main()
 	MaterialParams Material = GetMaterial();
 
 	vec4 Color = Shade(Material);
-	//vec4 Color = vec4(Material.Albedo, 1);
 
-	vec3 VoxelTexCoord = vec3(WorldToVoxel * vec4(Material.Position - vec3(-700, 500, 750), 1));
-	VoxelTexCoord /= 5;
+	vec3 VoxelTexCoord = TransformWorldToVoxel(Material.Position);
 	VoxelTexCoord.xy = VoxelTexCoord.xy / 2 + 0.5;
 	VoxelTexCoord *= VOXEL_GRID_SIZE;
 
