@@ -181,12 +181,6 @@ VulkanDevice::VulkanDevice()
 		"VK_LAYER_LUNARG_standard_validation"
 	};
 
-	const std::vector<const char*> DeviceExtensions =
-	{
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-	};
-
 	const bool bUseValidationLayers = Platform.GetBool("Engine.ini", "Renderer", "UseValidationLayers", false);
 
 	if (bUseValidationLayers && !CheckValidationLayerSupport(ValidationLayers))
@@ -246,6 +240,12 @@ VulkanDevice::VulkanDevice()
 	}
 
 	vulkan(glfwCreateWindowSurface(Instance, Platform.Window, nullptr, &Surface));
+
+	const std::vector<const char*> DeviceExtensions =
+	{
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+	};
 
 	// Select Vulkan-capable physical device
 	PhysicalDevice = SelectPhysicalDevice(Instance, Surface, DeviceExtensions);

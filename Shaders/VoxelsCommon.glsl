@@ -4,6 +4,9 @@
 #define VOXEL_GRID_SIZE 512
 #endif
 
+const float VOXEL_GRID_SIZE_INV = 1.0f / float(VOXEL_GRID_SIZE);
+const vec2 HALF_VOXEL_SIZE = vec2(VOXEL_GRID_SIZE_INV / 2.0f);
+
 layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 {
 	mat4 WorldToVoxel;

@@ -41,4 +41,10 @@ uint ColorToInt(in vec4 Color)
 	return (Bytes.r << 24) | (Bytes.g << 16) | (Bytes.b << 8) | (Bytes.a << 0);
 }
 
+vec2 CalcLineNormal(in vec2 Line)
+{
+	// Rotate the line 90 degrees.
+	return normalize(vec2(-Line.y, Line.x));
+}
+
 #endif
