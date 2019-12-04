@@ -298,6 +298,7 @@ struct ImageMemoryBarrier
 class RenderCommandList
 {
 public:
+	virtual ~RenderCommandList() {}
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
 	virtual void EndRenderPass() = 0;
 	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;

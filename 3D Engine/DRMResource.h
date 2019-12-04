@@ -311,6 +311,8 @@ namespace drm
 			: Usage(Usage)
 		{
 		}
+
+		virtual ~Buffer() {}
 	};
 	
 	CLASS(Buffer);
@@ -329,6 +331,8 @@ namespace drm
 			: Format(Format), Layout(Layout), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
 		{
 		}
+
+		virtual ~Image() {}
 
 		bool IsColor() const;
 		bool IsStencil() const;
@@ -362,6 +366,7 @@ namespace drm
 	class DescriptorSet
 	{
 	public:
+		virtual ~DescriptorSet() {}
 		virtual void Write(ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) = 0;
 		virtual void Write(ImageRef Image, const ShaderBinding& Binding) = 0;
 		virtual void Write(BufferRef Buffer, const ShaderBinding& Binding) = 0;

@@ -173,7 +173,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& Cmd
 
 	CmdList.BeginRenderPass(RPInit);
 
-	PipelineStateInitializer PSOInit;
+	PipelineStateInitializer PSOInit = {};
 	PSOInit.DepthStencilState.DepthTestEnable = false;
 	PSOInit.DepthStencilState.DepthWriteEnable = false;
 	PSOInit.Viewport.Width = gVoxelGridSize;

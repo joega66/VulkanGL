@@ -21,7 +21,7 @@ public:
 		, uint32 Depth
 		, EImageUsage UsageFlags);
 	
-	~VulkanImage();
+	virtual ~VulkanImage() override;
 
 	operator VkImage();
 

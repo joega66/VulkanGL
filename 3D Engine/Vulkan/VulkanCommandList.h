@@ -21,7 +21,7 @@ public:
 
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VkQueueFlagBits QueueFlags);
 
-	~VulkanCommandList();
+	virtual ~VulkanCommandList() override;
 
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) override;
 

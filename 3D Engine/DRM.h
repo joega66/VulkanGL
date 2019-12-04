@@ -18,6 +18,8 @@ struct CubemapCreateInfo
 class DRM
 {
 public:
+	virtual ~DRM() {}
+
 	virtual void Init() = 0;
 	virtual void Release() = 0;
 

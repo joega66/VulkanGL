@@ -40,7 +40,7 @@ public:
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 
 	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool, VulkanAllocator& Allocator);
-	~VulkanDescriptorSet();
+	virtual ~VulkanDescriptorSet() override;
 
 	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) override;
 	virtual void Write(drm::ImageRef Image, const ShaderBinding& Binding) override;
