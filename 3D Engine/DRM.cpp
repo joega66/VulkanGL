@@ -45,24 +45,9 @@ namespace drm
 		return GDRM->CreateCubemap(Width, Height, Format, UsageFlags | EImageUsage::Cubemap, CubemapCreateInfo);
 	}
 
-	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
-	{
-		return GDRM->CreateRenderTargetView(Image, LoadAction, StoreAction, ClearValue, FinalLayout);
-	}
-
-	RenderTargetViewRef CreateRenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
-	{
-		return GDRM->CreateRenderTargetView(Image, LoadAction, StoreAction, DepthStencil, FinalLayout);
-	}
-
 	ImageRef GetSurface()
 	{
 		return GDRM->GetSurface();
-	}
-
-	RenderTargetViewRef GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
-	{
-		return GDRM->GetSurfaceView(LoadAction, StoreAction, ClearValue);
 	}
 
 	void* LockBuffer(drm::BufferRef Buffer)

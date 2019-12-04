@@ -1,5 +1,5 @@
 #pragma once
-#include "VulkanRenderTargetView.h"
+#include "VulkanImage.h"
 
 class VulkanDevice;
 

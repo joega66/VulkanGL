@@ -234,8 +234,8 @@ enum
 struct RenderPassInitializer
 {
 	uint32 NumRenderTargets;
-	std::array<drm::RenderTargetViewRef, MaxRenderTargets> ColorTargets;
-	drm::RenderTargetViewRef DepthTarget;
+	std::array<drm::RenderTargetView, MaxRenderTargets> ColorTargets;
+	drm::RenderTargetView DepthTarget;
 	RenderArea RenderArea;
 };
 

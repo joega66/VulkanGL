@@ -80,9 +80,6 @@
     <ClInclude Include="Vulkan\VulkanMemory.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanRenderTargetView.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanShader.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -248,9 +245,6 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanMemory.cpp">
-      <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanRenderTargetView.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanShader.cpp">

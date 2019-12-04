@@ -38,8 +38,8 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	}
 	else
 	{
-		drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
-		drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
+		drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+		drm::RenderTargetView DepthView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;

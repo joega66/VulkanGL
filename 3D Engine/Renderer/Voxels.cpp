@@ -259,8 +259,8 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 
 	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
 
-	drm::RenderTargetViewRef SurfaceView = drm::GetSurfaceView(ELoadAction::Clear, EStoreAction::Store, ClearColorValue{});
-	drm::RenderTargetViewRef DepthView = drm::CreateRenderTargetView(
+	drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::RenderTargetView DepthView(
 		SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,

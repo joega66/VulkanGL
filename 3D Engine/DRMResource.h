@@ -351,17 +351,16 @@ namespace drm
 	class RenderTargetView
 	{
 	public:
-		ImageRef Image;
-		ELoadAction LoadAction;
-		EStoreAction StoreAction;
+		ImageRef Image = nullptr;
+		ELoadAction LoadAction = ELoadAction::DontCare;
+		EStoreAction StoreAction = EStoreAction::DontCare;
 		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
-		EImageLayout FinalLayout;
+		EImageLayout FinalLayout = EImageLayout::Undefined;
 
+		RenderTargetView() = default;
 		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
 		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
 	};
-
-	CLASS(RenderTargetView);
 
 	class DescriptorSet
 	{

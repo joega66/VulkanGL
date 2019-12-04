@@ -1,10 +1,9 @@
 #include "VulkanDevice.h"
 #include "VulkanDRM.h"
 
-static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Image, VulkanImage);
 
-VulkanDevice::VulkanRenderPassHash::MinRenderTargetView::MinRenderTargetView(const VulkanRenderTargetView& RTView)
+VulkanDevice::VulkanRenderPassHash::MinRenderTargetView::MinRenderTargetView(const drm::RenderTargetView& RTView)
 {
 	const VulkanImageRef& VulkanImage = ResourceCast(RTView.Image);
 	Image = VulkanImage->Image;
@@ -25,14 +24,14 @@ bool VulkanDevice::VulkanRenderPassHash::MinRenderTargetView::operator==(const M
 
 VulkanDevice::VulkanRenderPassHash::VulkanRenderPassHash(const RenderPassInitializer& RPInit)
 {
-	if (RPInit.DepthTarget)
+	if (RPInit.DepthTarget.Image)
 	{
-		DepthTarget = MinRenderTargetView(*ResourceCast(RPInit.DepthTarget));
+		DepthTarget = MinRenderTargetView(RPInit.DepthTarget);
 	}
 
 	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumRenderTargets; ColorTargetIndex++)
 	{
-		ColorTargets.push_back(*ResourceCast(RPInit.ColorTargets[ColorTargetIndex]));
+		ColorTargets.push_back(RPInit.ColorTargets[ColorTargetIndex]);
 	}
 }
 
@@ -80,6 +79,34 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderP
 	return { RenderPass, Framebuffer };
 }
 
+static VkAttachmentLoadOp GetVulkanLoadOp(ELoadAction LoadAction)
+{
+	if (LoadAction == ELoadAction::Clear)
+	{
+		return VK_ATTACHMENT_LOAD_OP_CLEAR;
+	}
+	else if (LoadAction == ELoadAction::Load)
+	{
+		return VK_ATTACHMENT_LOAD_OP_LOAD;
+	}
+	else // ELoadAction::DontCare
+	{
+		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	}
+}
+
+static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction StoreAction)
+{
+	if (StoreAction == EStoreAction::Store)
+	{
+		return VK_ATTACHMENT_STORE_OP_STORE;
+	}
+	else // EStoreAction::DontCare
+	{
+		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	}
+}
+
 std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const RenderPassInitializer& RPInit)
 {
 	VkRenderPass RenderPass;
@@ -91,7 +118,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 		std::vector<VkAttachmentReference> ColorRefs(RPInit.NumRenderTargets);
 		VkAttachmentReference DepthRef = {};
 
-		if (RPInit.DepthTarget)
+		if (RPInit.DepthTarget.Image)
 		{
 			Descriptions.resize(RPInit.NumRenderTargets + 1);
 		}
@@ -102,10 +129,9 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 
 		for (uint32 i = 0; i < RPInit.NumRenderTargets; i++)
 		{
-			check(RPInit.ColorTargets[i], "Color target is null.");
+			const drm::RenderTargetView& ColorTarget = RPInit.ColorTargets[i];
 
-			VulkanRenderTargetViewRef ColorTarget = ResourceCast(RPInit.ColorTargets[i]);
-			VulkanImageRef Image = ResourceCast(ColorTarget->Image);
+			VulkanImageRef Image = ResourceCast(ColorTarget.Image);
 
 			check(Image && Any(Image->Usage & EImageUsage::RenderTargetable), "Color target is invalid.");
 			check(Image->IsColor(), "Color target was not created in color format.");
@@ -113,33 +139,30 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			VkAttachmentDescription ColorDescription = {};
 			ColorDescription.format = Image->GetVulkanFormat();
 			ColorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-			ColorDescription.loadOp = ColorTarget->GetVulkanLoadOp();
-			ColorDescription.storeOp = ColorTarget->GetVulkanStoreOp();
+			ColorDescription.loadOp = GetVulkanLoadOp(ColorTarget.LoadAction);
+			ColorDescription.storeOp = GetVulkanStoreOp(ColorTarget.StoreAction);
 			ColorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			ColorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			ColorDescription.initialLayout = Image->GetVulkanLayout();
-			ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorTarget->FinalLayout);
+			ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorTarget.FinalLayout);
 			Descriptions[i] = ColorDescription;
 
 			VkAttachmentReference ColorRef = {};
 			ColorRef.attachment = i;
-			ColorRef.layout = ColorTarget->FinalLayout == EImageLayout::Present ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : ColorDescription.finalLayout;
+			ColorRef.layout = ColorTarget.FinalLayout == EImageLayout::Present ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : ColorDescription.finalLayout;
 			ColorRefs[i] = ColorRef;
 
-			Image->Layout = ColorTarget->FinalLayout;
+			Image->Layout = ColorTarget.FinalLayout;
 		}
 
-		if (RPInit.DepthTarget)
+		if (RPInit.DepthTarget.Image)
 		{
-			VulkanRenderTargetViewRef DepthTarget = ResourceCast(RPInit.DepthTarget);
-			check(DepthTarget, "Depth target is invalid.");
-
-			VulkanImageRef DepthImage = ResourceCast(DepthTarget->Image);
+			VulkanImageRef DepthImage = ResourceCast(RPInit.DepthTarget.Image);
 			check(DepthImage && Any(DepthImage->Usage & EImageUsage::RenderTargetable), "Depth target is invalid.");
 			check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
-			VkAttachmentLoadOp LoadOp = DepthTarget->GetVulkanLoadOp();
-			VkAttachmentStoreOp StoreOp = DepthTarget->GetVulkanStoreOp();
+			VkAttachmentLoadOp LoadOp = GetVulkanLoadOp(RPInit.DepthTarget.LoadAction);
+			VkAttachmentStoreOp StoreOp = GetVulkanStoreOp(RPInit.DepthTarget.StoreAction);
 
 			VkAttachmentDescription DepthDescription = {};
 			DepthDescription.format = DepthImage->GetVulkanFormat();
@@ -149,20 +172,20 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			DepthDescription.initialLayout = DepthImage->GetVulkanLayout();
-			DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(DepthTarget->FinalLayout);
+			DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPInit.DepthTarget.FinalLayout);
 			Descriptions[RPInit.NumRenderTargets] = DepthDescription;
 
 			DepthRef.attachment = RPInit.NumRenderTargets;
 			DepthRef.layout = DepthDescription.finalLayout;
 
-			DepthImage->Layout = DepthTarget->FinalLayout;
+			DepthImage->Layout = RPInit.DepthTarget.FinalLayout;
 		}
 
 		VkSubpassDescription Subpass = {};
 		Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		Subpass.pColorAttachments = ColorRefs.data();
 		Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-		Subpass.pDepthStencilAttachment = !RPInit.DepthTarget ? nullptr : &DepthRef;
+		Subpass.pDepthStencilAttachment = !RPInit.DepthTarget.Image ? nullptr : &DepthRef;
 
 		std::array<VkSubpassDependency, 2> Dependencies;
 
@@ -195,7 +218,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 
 	std::vector<VkImageView> AttachmentViews;
 
-	if (RPInit.DepthTarget)
+	if (RPInit.DepthTarget.Image)
 	{
 		AttachmentViews.resize(RPInit.NumRenderTargets + 1);
 	}
@@ -204,25 +227,21 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 		AttachmentViews.resize(RPInit.NumRenderTargets);
 	}
 
-	for (uint32 i = 0; i < RPInit.NumRenderTargets; i++)
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumRenderTargets; ColorTargetIndex++)
 	{
-		VulkanRenderTargetViewRef ColorTarget = ResourceCast(RPInit.ColorTargets[i]);
-		VulkanImageRef Image = ResourceCast(ColorTarget->Image);
-
-		AttachmentViews[i] = Image->ImageView;
+		VulkanImageRef Image = ResourceCast(RPInit.ColorTargets[ColorTargetIndex].Image);
+		AttachmentViews[ColorTargetIndex] = Image->ImageView;
 	}
 
-	if (RPInit.DepthTarget)
+	if (RPInit.DepthTarget.Image)
 	{
-		VulkanRenderTargetViewRef DepthTarget = ResourceCast(RPInit.DepthTarget);
-		VulkanImageRef Image = ResourceCast(DepthTarget->Image);
-
+		VulkanImageRef Image = ResourceCast(RPInit.DepthTarget.Image);
 		AttachmentViews[RPInit.NumRenderTargets] = Image->ImageView;
 	}
 
 	VkFramebuffer Framebuffer = VK_NULL_HANDLE;
 
-	const drm::RenderTargetViewRef& RTView = RPInit.DepthTarget ? RPInit.DepthTarget : RPInit.ColorTargets[0];
+	const drm::RenderTargetView& RTView = RPInit.DepthTarget.Image ? RPInit.DepthTarget : RPInit.ColorTargets[0];
 
 	VkFramebufferCreateInfo FramebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 	FramebufferInfo.renderPass = RenderPass;

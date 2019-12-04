@@ -1,11 +1,9 @@
 #include "VulkanDRM.h"
-#include "VulkanRenderTargetView.h"
 #include "VulkanCommands.h"
 #include "VulkanCommandList.h"
 #include <Engine/Timers.h>
 #include <Engine/Screen.h>
 
-static CAST(drm::RenderTargetView, VulkanRenderTargetView);
 static CAST(drm::Buffer, VulkanBuffer);
 static CAST(drm::Image, VulkanImage);
 static CAST(RenderCommandList, VulkanCommandList);
@@ -260,40 +258,9 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Form
 	return VulkanImage;
 }
 
-drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
-{
-	VulkanImageRef VulkanImage = ResourceCast(Image);
-	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
-		Device,
-		VulkanImage,
-		LoadAction,
-		StoreAction,
-		ClearValue,
-		FinalLayout);
-	return RTView;
-}
-
-drm::RenderTargetViewRef VulkanDRM::CreateRenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
-{
-	VulkanImageRef VulkanImage = ResourceCast(Image);
-	VulkanRenderTargetViewRef RTView = MakeRef<VulkanRenderTargetView>(
-		Device,
-		VulkanImage,
-		LoadAction,
-		StoreAction,
-		DepthStencil,
-		FinalLayout);
-	return RTView;
-}
-
 drm::ImageRef VulkanDRM::GetSurface()
 {
 	return Swapchain.Images[SwapchainIndex];
-}
-
-drm::RenderTargetViewRef VulkanDRM::GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue)
-{
-	return MakeRef<VulkanRenderTargetView>(Device, GetSurface(), LoadAction, StoreAction, ClearValue, EImageLayout::Present);
 }
 
 void* VulkanDRM::LockBuffer(drm::BufferRef Buffer)

@@ -63,7 +63,7 @@ private:
 			EImageLayout InitialLayout = EImageLayout::Undefined;
 			EImageLayout FinalLayout = EImageLayout::Undefined;
 			MinRenderTargetView() = default;
-			MinRenderTargetView(const class VulkanRenderTargetView& RTView);
+			MinRenderTargetView(const drm::RenderTargetView& RTView);
 			bool operator==(const MinRenderTargetView& Other);
 		};
 
