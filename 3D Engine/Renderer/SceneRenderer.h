@@ -29,6 +29,8 @@ private:
 
 	drm::BufferRef WorldToVoxelBuffer;
 
+	void RenderDepthPrepass(SceneProxy& Scene, RenderCommandList& CmdList);
+
 	void RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList);
 
 	void RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList);

@@ -1,6 +1,7 @@
 #pragma once
 #include <Engine/Scene.h>
 #include "Light.h"
+#include "DepthPrepass.h"
 #include "LightingPass.h"
 #include "Voxels.h"
 #include "MeshDrawInterface.h"
@@ -27,6 +28,8 @@ public:
 	SceneProxy& operator=(const SceneProxy&) = delete;
 
 	const drm::ImageRef Skybox;
+
+	MeshDrawInterface<DepthPrepass> DepthPrepass;
 
 	std::array<MeshDrawInterface<LightingPass>, EStaticDrawListType::Max> LightingPass;
 

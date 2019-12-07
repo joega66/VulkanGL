@@ -39,6 +39,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
+    <ClCompile Include="Renderer\DepthPrepass.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\MeshProxy.cpp" />
     <ClCompile Include="Renderer\SceneProxy.cpp" />
@@ -93,6 +94,7 @@
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="RenderCommandList.h" />
+    <ClInclude Include="Renderer\DepthPrepass.h" />
     <ClInclude Include="Renderer\MeshDrawInterface.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\Light.h" />
@@ -127,6 +129,7 @@
     <None Include="..\Config\Engine.ini" />
     <None Include="..\Shaders\Common.glsl" />
     <None Include="..\Shaders\DepthPassVS.glsl" />
+    <None Include="..\Shaders\DepthPrepass.glsl" />
     <None Include="..\Shaders\DrawVoxels.glsl" />
     <None Include="..\Shaders\FullscreenFS.glsl" />
     <None Include="..\Shaders\FullscreenVS.glsl" />
@@ -151,19 +154,19 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3251e0ea-e82a-4fe7-a893-499a35dca794}</ProjectGuid>
     <RootNamespace>_3D_Engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>

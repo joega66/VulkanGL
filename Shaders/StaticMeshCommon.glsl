@@ -56,6 +56,16 @@ void SetGSInterpolants(in uint VertexIndex)
 
 #if FRAGMENT_SHADER
 
+// For discarding masked pixels in the depth prepass.
+void DiscardMaskedPixel()
+{
+	float Alpha = texture(Opacity, InUV).r;
+	if (Alpha <= 0)
+	{
+		discard;
+	}
+}
+
 MaterialParams GetMaterial()
 {
 	MaterialParams Material;

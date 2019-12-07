@@ -174,6 +174,8 @@ void SceneProxy::InitDrawLists(Scene& Scene)
 
 void SceneProxy::AddToDrawLists(SceneProxy& Scene, const MeshProxyRef& MeshProxy)
 {
+	Scene.DepthPrepass.Add(MeshProxy, class DepthPrepass(*MeshProxy));
+
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
 		MeshProxy->Material.IsMasked() ?
 		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;

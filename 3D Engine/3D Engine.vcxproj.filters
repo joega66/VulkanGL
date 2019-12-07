@@ -218,6 +218,9 @@
     <ClInclude Include="Renderer\MeshDrawInterface.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\DepthPrepass.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -352,6 +355,9 @@
     <ClCompile Include="Renderer\MeshProxy.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\DepthPrepass.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -418,6 +424,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\DrawVoxels.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\DepthPrepass.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

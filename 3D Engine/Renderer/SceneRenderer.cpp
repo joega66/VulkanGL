@@ -38,8 +38,10 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	}
 	else
 	{
+		RenderDepthPrepass(Scene, CmdList);
+
 		drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
-		drm::RenderTargetView DepthView(SceneDepth, ELoadAction::Clear, EStoreAction::Store, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
+		drm::RenderTargetView DepthView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthWriteStencilWrite);
 
 		RenderPassInitializer RenderPassInit = { 1 };
 		RenderPassInit.ColorTargets[0] = SurfaceView;
@@ -79,17 +81,4 @@ void SceneRenderer::RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdL
 	Scene.SetResources(CmdList, FragShader, FragShader->SceneBindings);
 
 	CmdList.Draw(3, 1, 0, 0);*/
-}
-
-void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList)
-{
-	PipelineStateInitializer PSOInit = {};
-
-	PSOInit.Viewport.Width = gScreen.GetWidth();
-	PSOInit.Viewport.Height = gScreen.GetHeight();
-
-	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet };
-
-	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Descriptors);
-	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Descriptors);
 }

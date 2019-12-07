@@ -1,6 +1,7 @@
 #include "LightingPass.h"
 #include "MaterialShader.h"
 #include "SceneProxy.h"
+#include "SceneRenderer.h"
 
 template<EMeshType MeshType>
 class LightingPassVS : public MeshShader<MeshType>
@@ -83,4 +84,18 @@ void LightingPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshEleme
 {
 	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
 	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
+}
+
+void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList)
+{
+	PipelineStateInitializer PSOInit = {};
+	PSOInit.Viewport.Width = SceneDepth->Width;
+	PSOInit.Viewport.Height = SceneDepth->Height;
+	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
+	PSOInit.DepthStencilState.DepthWriteEnable = false;
+
+	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet };
+
+	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Descriptors);
+	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Descriptors);
 }
