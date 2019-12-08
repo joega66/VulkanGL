@@ -86,9 +86,10 @@ VoxelizationPass::VoxelizationPass(const MeshProxy& MeshProxy)
 
 void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
-	const std::array<drm::DescriptorSetRef, 3> DescriptorSets = 
+	const std::array<drm::DescriptorSetRef, 4> DescriptorSets = 
 	{
 		Pass.Scene,
+		MeshProxy.MeshSet,
 		MeshProxy.MaterialSet,
 		Pass.Voxels
 	};
@@ -98,7 +99,7 @@ void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const Mesh
 
 void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecInfo;
+	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{
@@ -275,16 +276,16 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 
 	CmdList.BeginRenderPass(RPInit);
 
-	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(WorldToVoxelBuffer, ShaderBinding(0));
-	DescriptorSet->Write(VoxelColors, ShaderBinding(1));
-	DescriptorSet->Write(VoxelPositions, ShaderBinding(2));
-	DescriptorSet->Update();
+	drm::DescriptorSetRef DrawVoxelsDescriptorSet = drm::CreateDescriptorSet();
+	DrawVoxelsDescriptorSet->Write(WorldToVoxelBuffer, ShaderBinding(0));
+	DrawVoxelsDescriptorSet->Write(VoxelColors, ShaderBinding(1));
+	DrawVoxelsDescriptorSet->Write(VoxelPositions, ShaderBinding(2));
+	DrawVoxelsDescriptorSet->Update();
 
 	const std::vector<drm::DescriptorSetRef> DescriptorSets =
 	{
 		Scene.DescriptorSet,
-		DescriptorSet
+		DrawVoxelsDescriptorSet
 	};
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());

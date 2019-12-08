@@ -47,10 +47,11 @@ drm::DescriptorSetRef CMaterial::CreateDescriptorSet() const
 
 	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
 
-	DescriptorSet->Write(Diffuse, LinearSampler, ShaderBinding(1));
-	DescriptorSet->Write(Specular, LinearSampler, ShaderBinding(2));
-	DescriptorSet->Write(Opacity, LinearSampler, ShaderBinding(3));
-	DescriptorSet->Write(Bump, BumpSampler, ShaderBinding(4));
+	DescriptorSet->Write(Diffuse, LinearSampler, ShaderBinding(0));
+	DescriptorSet->Write(Specular, LinearSampler, ShaderBinding(1));
+	DescriptorSet->Write(Opacity, LinearSampler, ShaderBinding(2));
+	DescriptorSet->Write(Bump, BumpSampler, ShaderBinding(3));
+	DescriptorSet->Update();
 
 	return DescriptorSet;
 }

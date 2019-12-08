@@ -64,9 +64,10 @@ DepthPrepass::DepthPrepass(const MeshProxy& MeshProxy)
 
 void DepthPrepass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
-	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
+	std::array<drm::DescriptorSetRef, 3> DescriptorSets =
 	{
 		Pass.SceneSet,
+		MeshProxy.MeshSet,
 		MeshProxy.MaterialSet
 	};
 
@@ -77,7 +78,7 @@ void DepthPrepass::SetPipelineState(PipelineStateInitializer& PSOInit, const Mes
 {
 	if (FragShader)
 	{
-		PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecInfo;
+		PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
 	}
 	
 	PSOInit.GraphicsPipelineState =
@@ -100,7 +101,7 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, RenderCommandList& Cmd
 {
 	RenderPassInitializer RPInit = { 0 };
 	RPInit.DepthTarget = drm::RenderTargetView(
-		SceneDepth, 
+		SceneDepth,
 		ELoadAction::Clear, 
 		EStoreAction::Store, 
 		ClearDepthStencilValue{}, 

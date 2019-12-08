@@ -3,6 +3,14 @@
 
 #include "MaterialCommon.glsl"
 
+#define MESH_SET 1
+
+layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniform
+{
+	mat4 Transform;
+	mat4 Inverse;
+} LocalToWorld;
+
 #if GEOMETRY_SHADER
 layout(location = 0) in vec4 InPosition[];
 layout(location = 1) in vec2 InUV[];

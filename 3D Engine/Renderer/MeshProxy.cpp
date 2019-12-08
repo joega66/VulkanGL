@@ -9,8 +9,10 @@ MeshProxy::MeshProxy(
 	, Elements(Elements)
 {
 	MaterialSet = Material.CreateDescriptorSet();
-	MaterialSet->Write(LocalToWorldUniform, ShaderBinding(0)); // Temp: LocalToWorld goes in the material set
-	MaterialSet->Update();
 
-	SpecInfo = Material.CreateSpecializationInfo();
+	SpecializationInfo = Material.CreateSpecializationInfo();
+
+	MeshSet = drm::CreateDescriptorSet();
+	MeshSet->Write(LocalToWorldUniform, ShaderBinding(0));
+	MeshSet->Update();
 }

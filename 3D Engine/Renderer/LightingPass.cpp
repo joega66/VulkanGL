@@ -57,9 +57,10 @@ LightingPass::LightingPass(const MeshProxy& MeshProxy)
 
 void LightingPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
-	const std::array<drm::DescriptorSetRef, 2> DescriptorSets =
+	const std::array<drm::DescriptorSetRef, 3> DescriptorSets =
 	{
 		Pass.SceneSet,
+		MeshProxy.MeshSet,
 		MeshProxy.MaterialSet
 	};
 
@@ -68,7 +69,7 @@ void LightingPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProx
 
 void LightingPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecInfo;
+	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{

@@ -3,7 +3,7 @@ layout(triangle_strip, max_vertices = 3) out;
 
 #include "MeshCommon.glsl"
 #include "SceneCommon.glsl"
-#define VOXEL_SET 2
+#define VOXEL_SET 3
 #include "VoxelsCommon.glsl"
 
 layout(location = 4) out vec4 OutTriangleAABB;

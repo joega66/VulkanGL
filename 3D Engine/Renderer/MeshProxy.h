@@ -7,9 +7,11 @@ class MeshProxy
 public:
 	const CMaterial& Material;
 
+	drm::DescriptorSetRef MeshSet;
+
 	drm::DescriptorSetRef MaterialSet;
 
-	SpecializationInfo SpecInfo;
+	SpecializationInfo SpecializationInfo;
 
 	drm::BufferRef LocalToWorldUniform;
 
@@ -21,5 +23,3 @@ public:
 		const drm::BufferRef& LocalToWorldUniform
 	);
 };
-
-CLASS(MeshProxy);
