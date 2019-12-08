@@ -12,6 +12,7 @@ MeshProxy::MeshProxy(
 
 	SpecializationInfo = Material.CreateSpecializationInfo();
 
+	// @todo Make virtual
 	MeshSet = drm::CreateDescriptorSet();
 	MeshSet->Write(LocalToWorldUniform, ShaderBinding(0));
 	MeshSet->Update();

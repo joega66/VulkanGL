@@ -28,8 +28,7 @@ Entity EntityManager::Clone(Entity& Other)
 		auto ComponentArray = ComponentArrayEntry.second.get();
 		if (ComponentArray->HasComponent(Other))
 		{
-			auto Component = ComponentArray->CopyComponent(Other);
-			ComponentArray->AddComponent(Entity, std::move(Component));
+			ComponentArray->CopyComponent(Entity, Other);
 		}
 	}
 

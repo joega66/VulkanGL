@@ -3,13 +3,13 @@
 
 class Entity;
 
+/** ComponentArray interface. Only meant to be implemented by ComponentArray. */
 class IComponentArray
 {
 public:
-	virtual void RemoveComponent(Entity& Entity) = 0;
-	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) = 0;
-	virtual void AddComponent(Entity& Entity, std::shared_ptr<void> Data) = 0;
 	virtual bool HasComponent(Entity& Entity) const = 0;
+	virtual void CopyComponent(Entity& Destination, Entity& Source) = 0;
+	virtual void RemoveComponent(Entity& Entity) = 0;
 };
 
 template<typename ComponentType>
@@ -17,12 +17,21 @@ class ComponentArray : public IComponentArray
 {
 public:
 	ComponentArray() = default;
+
+	/** Get an entity's component. */
 	ComponentType& GetComponent(Entity& Entity);
+
+	/** Add a component to an entity. */
 	template<typename ...Args>
 	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs);
-	virtual void AddComponent(Entity& Entity, std::shared_ptr<void> Data) final;
-	virtual std::shared_ptr<void> CopyComponent(Entity& Entity) final;
+
+	/** Check if entity has a component. */
 	virtual bool HasComponent(Entity& Entity) const final;
+	
+	/** Copy component from source entity to destination. */
+	virtual void CopyComponent(Entity& Destination, Entity& Source) final;
+
+	/** Remove component from an entity. */
 	virtual void RemoveComponent(Entity& Entity) final;
 
 private:

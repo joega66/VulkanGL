@@ -15,7 +15,7 @@ public:
 		MeshDrawTypes.emplace_back(std::forward<MeshDrawType>(InMeshDrawType));
 	}
 
-	void Draw(RenderCommandList& CmdList, const PipelineStateInitializer& ParentPSOInit, const PassDescriptorsType& PassDescriptors);
+	void Draw(RenderCommandList& CmdList, const PipelineStateInitializer& PassPSOInit, const PassDescriptorsType& PassDescriptors);
 
 private:
 	std::vector<const MeshProxy*> MeshProxies;
@@ -25,7 +25,7 @@ private:
 template<typename MeshDrawType>
 inline void MeshDrawInterface<MeshDrawType>::Draw(
 	RenderCommandList& CmdList, 
-	const PipelineStateInitializer& ParentPSOInit, 
+	const PipelineStateInitializer& PassPSOInit,
 	const PassDescriptorsType& PassDescriptors)
 {
 	for (uint32 MeshDrawIndex = 0; MeshDrawIndex < MeshProxies.size(); MeshDrawIndex++)
@@ -33,9 +33,11 @@ inline void MeshDrawInterface<MeshDrawType>::Draw(
 		const MeshProxy& MeshProxy = *MeshProxies[MeshDrawIndex];
 		const MeshDrawType& DrawType = MeshDrawTypes[MeshDrawIndex];
 
-		PipelineStateInitializer PSOInit = ParentPSOInit;
 		DrawType.BindDescriptorSets(CmdList, MeshProxy, PassDescriptors);
+
+		PipelineStateInitializer PSOInit = PassPSOInit;
 		DrawType.SetPipelineState(PSOInit, MeshProxy);
+
 		CmdList.BindPipeline(PSOInit);
 
 		for (auto& MeshElement : MeshProxy.Elements)

@@ -102,10 +102,10 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, RenderCommandList& Cmd
 	RenderPassInitializer RPInit = { 0 };
 	RPInit.DepthTarget = drm::RenderTargetView(
 		SceneDepth,
-		ELoadAction::Clear, 
+		ELoadAction::Clear,
 		EStoreAction::Store, 
 		ClearDepthStencilValue{}, 
-		EImageLayout::DepthWriteStencilWrite);
+		EImageLayout::DepthReadStencilWrite);
 	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
 	CmdList.BeginRenderPass(RPInit);

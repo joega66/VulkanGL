@@ -15,11 +15,8 @@ void GameSystem::Start(Scene& Scene)
 
 	{
 		// Create the Sponza entity.
-
 		auto Sponza = ECS.CreateEntity();
-
 		auto SponzaMesh = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/sponza.obj");
-
 		ECS.AddComponent<CStaticMesh>(Sponza, SponzaMesh);
 		auto& Transform = ECS.GetComponent<CTransform>(Sponza);
 		Transform.Scale(glm::vec3(0.25f));
@@ -27,16 +24,12 @@ void GameSystem::Start(Scene& Scene)
 
 	{
 		// Create the Directional Light entity.
-
 		auto Light = ECS.CreateFromPrefab("Cube");
-
 		auto& DirectionalLight = ECS.AddComponent<CDirectionalLight>(Light);
 		DirectionalLight.Intensity = 10.0f;
 		DirectionalLight.Direction = glm::vec3(1.0f);
-
 		auto& Material = ECS.AddComponent<CMaterial>(Light);
 		Material.Diffuse = CMaterial::White;
-
 		auto& Transform = ECS.GetComponent<CTransform>(Light);
 		Transform.Scale(glm::vec3(0.1f));
 		Transform.Translate(glm::vec3(1.0f));
