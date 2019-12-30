@@ -131,9 +131,6 @@
     <ClInclude Include="Engine\Input.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\RayMarching.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Components\CLight.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
@@ -390,13 +387,7 @@
     <None Include="..\Shaders\SkyboxFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\RayMarching.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\LightingCommon.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\RayMarchingCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\MaterialCommon.glsl">

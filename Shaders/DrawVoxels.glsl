@@ -33,7 +33,7 @@ layout(location = 1) in vec4 InVoxelColor[];
 
 layout(location = 0) out vec4 OutVoxelColor;
 
-const float CubeScale = 5;
+layout(constant_id = 0) const float VoxelSize = 5;
 
 void main()
 {
@@ -42,7 +42,7 @@ void main()
 		for (uint i = 0; i < 14; i++)
 		{
 			vec3 VoxelPosition = InVoxelPosition[0];
-			vec3 CubePosition = CreateCube(i) * CubeScale;
+			vec3 CubePosition = CreateCube(i) * VoxelSize;
 			VoxelPosition += vec3(CubePosition.x, -CubePosition.y, -CubePosition.z);
 			OutVoxelColor = InVoxelColor[0];
 			gl_Position = View.WorldToClip * vec4(VoxelPosition.xyz, 1);

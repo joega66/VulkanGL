@@ -33,8 +33,6 @@ void EditorControllerSystem::Update(Scene& Scene)
 		gCursor.Mode = ECursorMode::Normal;
 	}
 
-	//if (gInput.GetKeyDown(EKeyCode
-
 	if (gInput.GetShortcutUp("Recompile Shaders"))
 	{
 		drm::RecompileShaders();

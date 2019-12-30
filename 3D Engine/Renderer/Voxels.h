@@ -7,6 +7,7 @@ public:
 	struct PassDescriptors
 	{
 		drm::DescriptorSetRef Scene;
+		drm::DescriptorSetRef SceneTextures;
 		drm::DescriptorSetRef Voxels;
 	};
 

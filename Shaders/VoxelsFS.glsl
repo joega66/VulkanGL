@@ -2,7 +2,7 @@
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
 #include "LightingCommon.glsl"
-#define VOXEL_SET 3
+#define VOXEL_SET 4
 #include "VoxelsCommon.glsl"
 
 layout(location = 4) in vec4 TriangleAABB;

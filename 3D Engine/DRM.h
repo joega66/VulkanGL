@@ -69,7 +69,6 @@ namespace drm
 	ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr);
 	ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
 	ImageRef GetSurface();
-	RenderTargetView GetSurfaceView(ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue);
 	void* LockBuffer(drm::BufferRef Buffer);
 	void UnlockBuffer(drm::BufferRef Buffer);
 	std::string GetDeviceName();

@@ -102,7 +102,6 @@
     <ClInclude Include="Renderer\LightingPass.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\MeshProxy.h" />
-    <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\SceneProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="Renderer\ShadowDepthPass.h" />
@@ -140,8 +139,6 @@
     <None Include="..\Shaders\LightingPassVS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />
-    <None Include="..\Shaders\RayMarching.glsl" />
-    <None Include="..\Shaders\RayMarchingCommon.glsl" />
     <None Include="..\Shaders\SceneCommon.glsl" />
     <None Include="..\Shaders\SceneTexturesCommon.glsl" />
     <None Include="..\Shaders\ShadowDepthFS.glsl" />

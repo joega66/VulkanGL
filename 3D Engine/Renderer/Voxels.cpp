@@ -86,11 +86,12 @@ VoxelizationPass::VoxelizationPass(const MeshProxy& MeshProxy)
 
 void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
-	const std::array<drm::DescriptorSetRef, 4> DescriptorSets = 
+	const std::array<drm::DescriptorSetRef, 5> DescriptorSets = 
 	{
 		Pass.Scene,
 		MeshProxy.MeshSet,
 		MeshProxy.MaterialSet,
+		Pass.SceneTextures,
 		Pass.Voxels
 	};
 
@@ -128,8 +129,13 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 		glm::mat4 WorldToVoxelInv;
 	} WorldToVoxelUniform;
 
-	const glm::vec3 VoxelProbeCenter(-700, 500, 750);
-	const float VoxelSize = 5.0f;
+	const glm::vec3 VoxelProbeCenter(
+		Platform.GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
+		Platform.GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
+		Platform.GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f)
+	);
+
+	const float VoxelSize = static_cast<float>(Platform.GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
@@ -167,7 +173,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& Cmd
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageMemoryBarrier);
 
-	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, VoxelsDescriptorSet };
+	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, SceneTextures, VoxelsDescriptorSet };
 
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
 	RPInit.RenderArea.Extent = glm::uvec2(gVoxelGridSize);
@@ -290,6 +296,8 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
+	const float VoxelSize = static_cast<float>(Platform.GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
+
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = gScreen.GetWidth();
 	PSOInit.Viewport.Height = gScreen.GetHeight();
@@ -299,6 +307,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandLis
 	PSOInit.GraphicsPipelineState.Geometry = *ShaderMapRef<DrawVoxelsGS>();
 	PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<DrawVoxelsFS>();
 	PSOInit.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
+	PSOInit.SpecializationInfo.Add(0, VoxelSize);
 
 	CmdList.BindPipeline(PSOInit);
 
