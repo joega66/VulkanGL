@@ -22,6 +22,21 @@ inline void ComponentArray<ComponentType>::CopyComponent(Entity& Destination, En
 }
 
 template<typename ComponentType>
+inline void ComponentArray<ComponentType>::NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback)
+{
+	ComponentCreatedCallbacks.push_back(ComponentCallback);
+}
+
+template<typename ComponentType>
+inline void ComponentArray<ComponentType>::NotifyComponentCreated(Entity& Entity, ComponentType& Component)
+{
+	std::for_each(ComponentCreatedCallbacks.begin(), ComponentCreatedCallbacks.end(), [&](auto& Callback)
+	{
+		Callback(Entity, Component);
+	});
+}
+
+template<typename ComponentType>
 inline bool ComponentArray<ComponentType>::HasComponent(Entity& Entity) const
 {
 	return Contains(Components, Entity.GetEntityID());

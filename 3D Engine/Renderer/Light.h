@@ -2,15 +2,18 @@
 #include <Platform/Platform.h>
 #include <DRM.h>
 
-class CShadowProxy
+class ShadowProxy
 {
 public:
+	static void InitCallbacks(class EntityManager& ECS);
+
 	static constexpr EFormat FORMAT = EFormat::D32_SFLOAT;
 
-	CShadowProxy() = default;
-	CShadowProxy(const struct CDirectionalLight& DirectionalLight);
+	ShadowProxy() = default;
 
-	void Update(const glm::vec3& Direction);
+	ShadowProxy(const struct CDirectionalLight& DirectionalLight);
+
+	void Update(const struct CDirectionalLight& DirectionalLight);
 
 	/** Accessors */
 	inline float GetDepthBiasConstantFactor() const { return DepthBiasConstantFactor; }

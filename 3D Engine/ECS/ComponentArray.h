@@ -3,6 +3,9 @@
 
 class Entity;
 
+template<typename ComponentType>
+using ComponentCallback = std::function<void(Entity& Entity, ComponentType& Component)>;
+
 /** ComponentArray interface. Only meant to be implemented by ComponentArray. */
 class IComponentArray
 {
@@ -25,6 +28,12 @@ public:
 	template<typename ...Args>
 	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs);
 
+	/** Add a callback for when a component is created.	*/
+	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback);
+
+	/** Notify callbacks that the component was created. */
+	void NotifyComponentCreated(Entity& Entity, ComponentType& Component);
+
 	/** Check if entity has a component. */
 	virtual bool HasComponent(Entity& Entity) const final;
 	
@@ -37,4 +46,5 @@ public:
 private:
 	// @todo Object pool for components
 	HashTable<uint64, ComponentType> Components;
+	std::vector<ComponentCallback<ComponentType>> ComponentCreatedCallbacks;
 };

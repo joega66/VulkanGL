@@ -33,23 +33,24 @@ void SceneProxy::InitView()
 	const glm::mat4 ViewToClip = View.GetViewToClip();
 	const glm::mat4 WorldToClip = ViewToClip * WorldToView;
 
-	struct ViewUniformData
-	{
+	UNIFORM_STRUCT(ViewUniformBuffer,
 		glm::mat4 WorldToView;
 		glm::mat4 ViewToClip;
 		glm::mat4 WorldToClip;
+		glm::mat4 ClipToWorld;
 		glm::vec3 Position;
 		float _Pad0;
 		float AspectRatio;
 		float FOV;
 		glm::vec2 ScreenDims;
-	};
+	);
 
-	const ViewUniformData ViewUniformData =
+	const ViewUniformBuffer ViewUniformBuffer =
 	{
 		WorldToView,
 		ViewToClip,
 		WorldToClip,
+		glm::inverse(WorldToClip),
 		View.GetPosition(),
 		0.0f,
 		gScreen.GetAspectRatio(),
@@ -57,14 +58,12 @@ void SceneProxy::InitView()
 		glm::vec2(gScreen.GetWidth(), gScreen.GetHeight())
 	};
 
-	ViewUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformData), &ViewUniformData);
+	ViewUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformBuffer), &ViewUniformBuffer);
 }
 
 void SceneProxy::InitLights()
 {
 	{
-		auto DirectionalLights = ECS.GetVisibleEntities<CDirectionalLight>();
-
 		UNIFORM_STRUCT(DirectionalLightProxy,
 			glm::vec3 Color;
 			float Intensity;
@@ -74,7 +73,7 @@ void SceneProxy::InitLights()
 
 		std::vector<DirectionalLightProxy> DirectionalLightProxies;
 
-		for (auto Entity : DirectionalLights)
+		for (auto Entity : ECS.GetVisibleEntities<CDirectionalLight>())
 		{
 			auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
 
@@ -95,24 +94,11 @@ void SceneProxy::InitLights()
 		Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 		drm::UnlockBuffer(DirectionalLightBuffer);
 
-		auto ShadowProxies = ECS.GetVisibleEntities<CShadowProxy>();
-		for (auto Entity : ShadowProxies)
+		for (auto Entity : ECS.GetEntities<ShadowProxy>())
 		{
 			auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
-			auto& ShadowProxy = ECS.GetComponent<CShadowProxy>(Entity);
-			ShadowProxy.Update(DirectionalLight.Direction);
-		}
-
-		std::vector<Entity> LightsWithNoShadowProxies;
-		std::set_difference(DirectionalLights.begin(), DirectionalLights.end(), ShadowProxies.begin(), ShadowProxies.end(), std::back_inserter(LightsWithNoShadowProxies));
-
-		for (auto Entity : LightsWithNoShadowProxies)
-		{
-			auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
-			if (DirectionalLight.ShadowType != EShadowType::None)
-			{
-				ECS.AddComponent<CShadowProxy>(Entity, CShadowProxy(DirectionalLight));
-			}
+			auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
+			ShadowProxy.Update(DirectionalLight);
 		}
 	}
 	

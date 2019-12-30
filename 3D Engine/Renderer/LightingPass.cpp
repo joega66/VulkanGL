@@ -70,7 +70,7 @@ void LightingPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProx
 
 void LightingPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
+	PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{
@@ -95,10 +95,6 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	PSOInit.Viewport.Height = SceneDepth->Height;
 	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSOInit.DepthStencilState.DepthWriteEnable = false;
-
-	drm::DescriptorSetRef SceneTextures = drm::CreateDescriptorSet();
-	SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
-	SceneTextures->Update();
 
 	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet, SceneTextures };
 

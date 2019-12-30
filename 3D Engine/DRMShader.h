@@ -92,35 +92,16 @@ private:
 	//EShaderStage StageFlags = EShaderStage::All;
 };
 
-class SpecConstant
-{
-public:
-	SpecConstant() = default;
-
-	SpecConstant(uint32 ConstantID)
-		: ConstantID(ConstantID)
-	{
-	}
-
-	operator uint32() const
-	{
-		return ConstantID;
-	}
-
-private:
-	uint32 ConstantID = -1;
-};
-
 class SpecializationInfo
 {
 public:
-	struct SpecMapEntry
+	struct SpecializationMapEntry
 	{
 		uint32 ConstantID;
 		uint32 Offset;
 		size_t Size;
 
-		bool operator==(const SpecMapEntry& Other) const
+		bool operator==(const SpecializationMapEntry& Other) const
 		{
 			return ConstantID == Other.ConstantID
 				&& Offset == Other.Offset
@@ -130,28 +111,28 @@ public:
 
 	SpecializationInfo() = default;
 		
-	template<typename SpecConstantType>
-	void Add(const SpecConstant& SpecConstant, const SpecConstantType& Constant)
+	template<typename SpecializationConstantType>
+	void Add(uint32 ConstantID, const SpecializationConstantType& Constant)
 	{
 		const uint32 Offset = Data.size();
 		Data.resize(Offset + sizeof(Constant));
 		memcpy(Data.data() + Offset, &Constant, sizeof(Constant));
-		const SpecMapEntry Entry = { SpecConstant, Offset, sizeof(Constant) };
-		Entries.push_back(std::move(Entry));
+		const SpecializationMapEntry MapEntry = { ConstantID, Offset, sizeof(Constant) };
+		MapEntries.push_back(std::move(MapEntry));
 	}
 
 	bool operator==(const SpecializationInfo& Other) const
 	{
-		return Entries == Other.Entries
+		return MapEntries == Other.MapEntries
 			&& Data == Other.Data;
 	}
 
-	const std::vector<SpecMapEntry>& GetEntries() const { return Entries; }
+	inline const std::vector<SpecializationMapEntry>& GetMapEntries() const { return MapEntries; }
 
-	const std::vector<uint8>& GetData() const { return Data; }
+	inline const std::vector<uint8>& GetData() const { return Data; }
 
 private:
-	std::vector<SpecMapEntry> Entries;
+	std::vector<SpecializationMapEntry> MapEntries;
 	std::vector<uint8> Data;
 };
 
@@ -166,12 +147,11 @@ public:
 	ShaderCompilerWorker Worker;
 
 	ShaderCompilationInfo(
-		std::type_index Type, 
+		std::type_index Type,
 		EShaderStage Stage, 
 		const std::string& Entrypoint,
 		const std::string& Filename,
 		const HashTable<std::string, ShaderBinding>& Bindings,
-		const HashTable<std::string, SpecConstant>& SpecConstants,
 		uint64 LastWriteTime,
 		const ShaderCompilerWorker& Worker)
 		: Type(Type)
@@ -179,7 +159,6 @@ public:
 		, Entrypoint(Entrypoint)
 		, Filename(Filename)
 		, Bindings(Bindings)
-		, SpecConstants(SpecConstants)
 		, LastWriteTime(LastWriteTime)
 		, Worker(Worker)
 	{
@@ -197,21 +176,8 @@ public:
 		}
 	}
 
-	void Bind(const std::string& Name, SpecConstant& SpecConstant) const
-	{
-		if (auto Iter = SpecConstants.find(Name); Iter != SpecConstants.end())
-		{
-			SpecConstant = Iter->second;
-		}
-		else
-		{
-			LOG("Shader %s does not have spec constant %s", Type.name(), Name.c_str());
-		}
-	}
-
 private:
 	HashTable<std::string, ShaderBinding> Bindings;
-	HashTable<std::string, SpecConstant> SpecConstants;
 };
 
 namespace drm

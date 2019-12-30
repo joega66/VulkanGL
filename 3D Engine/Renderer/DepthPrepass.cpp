@@ -78,7 +78,7 @@ void DepthPrepass::SetPipelineState(PipelineStateInitializer& PSOInit, const Mes
 {
 	if (FragShader)
 	{
-		PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
+		PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
 	}
 	
 	PSOInit.GraphicsPipelineState =

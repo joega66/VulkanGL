@@ -1,8 +1,8 @@
-#include "SceneCommon.glsl"
 #define SCENE_TEXTURES_SET 1
-#include "SceneTexturesCommon.glsl"
-
 #define SHADOW_SET 2
+
+#include "SceneCommon.glsl"
+#include "SceneTexturesCommon.glsl"
 
 layout(binding = 0, set = SHADOW_SET) uniform LightProjBuffer
 {

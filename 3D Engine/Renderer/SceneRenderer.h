@@ -9,17 +9,16 @@ class RenderCommandList;
 class SceneRenderer
 {
 public:
-	SceneRenderer(const class Scene& Scene);
+	SceneRenderer(class Scene& Scene);
 
 	void Render(SceneProxy& Scene);
 
 private:
 	StaticMeshRef Cube;
 
-	// Scene render targets.
-	drm::ImageRef SceneDepth;
+	drm::DescriptorSetRef SceneTextures;
 
-	drm::DescriptorSetRef RenderTargetsSet;
+	drm::ImageRef SceneDepth;
 
 	drm::ImageRef ShadowMask;
 

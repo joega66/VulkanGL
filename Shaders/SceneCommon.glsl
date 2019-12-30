@@ -8,6 +8,7 @@ layout(binding = 0, set = SCENE_SET) uniform ViewUniform
 	mat4 WorldToView;
 	mat4 ViewToClip;
 	mat4 WorldToClip;
+	mat4 ClipToWorld;
 	vec3 Position;
 	float _Pad0;
 	float AspectRatio;

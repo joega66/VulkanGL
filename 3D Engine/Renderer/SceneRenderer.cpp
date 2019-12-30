@@ -6,14 +6,18 @@
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 
-SceneRenderer::SceneRenderer(const Scene& Scene)
+SceneRenderer::SceneRenderer(Scene& Scene)
 {
-	RenderTargetsSet = drm::CreateDescriptorSet();
+	SceneTextures = drm::CreateDescriptorSet();
 
 	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
 		SceneDepth = drm::CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::RenderTargetable | EImageUsage::Sampled);
 		ShadowMask = drm::CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::RenderTargetable | EImageUsage::Sampled);
+
+		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
+		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, ShaderBinding(1));
+		SceneTextures->Update();
 	});
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");
@@ -25,6 +29,8 @@ SceneRenderer::SceneRenderer(const Scene& Scene)
 	VoxelsDescriptorSet = drm::CreateDescriptorSet();
 	VoxelsDescriptorSet->Write(VoxelColors, ShaderBinding(1));
 	VoxelsDescriptorSet->Write(VoxelPositions, ShaderBinding(2));
+
+	ShadowProxy::InitCallbacks(Scene.ECS);
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)
@@ -79,9 +85,9 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, RenderCommandLis
 {
 	drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 
-	for (auto Entity : Scene.ECS.GetVisibleEntities<CShadowProxy>())
+	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
-		auto& ShadowProxy = Scene.ECS.GetComponent<CShadowProxy>(Entity);
+		auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 		auto ShadowMap = ShadowProxy.GetShadowMap();
 
 		RenderPassInitializer RPInit = { 1 };
@@ -107,31 +113,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, RenderCommandLis
 		CmdList.BindPipeline(PSOInit);
 
 		CmdList.Draw(3, 1, 0, 0);
+
+		CmdList.EndRenderPass();
 	}
-
-	/*RenderPassInitializer RPInit = { 1 };
-	RPInit.ColorTargets[0] = SurfaceView;
-	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-
-	CmdList.BeginRenderPass(RPInit);
-
-	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(SceneDepth, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
-	DescriptorSet->Update();
-
-	CmdList.BindDescriptorSets(1, &DescriptorSet);
-
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = SceneDepth->Width;
-	PSOInit.Viewport.Height = SceneDepth->Height;
-	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-	PSOInit.DepthStencilState.DepthWriteEnable = false;
-	PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<FullscreenVS>();
-	PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<FullscreenFS<EVisualize::Depth>>();
-
-	CmdList.BindPipeline(PSOInit);
-
-	CmdList.Draw(3, 1, 0, 0);*/
-
-	CmdList.EndRenderPass();
 }

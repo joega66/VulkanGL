@@ -28,7 +28,7 @@ void GameSystem::Start(Scene& Scene)
 		const float64 Y = Platform.GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
 		const float64 Z = Platform.GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
-		auto Light = ECS.CreateFromPrefab("Cube");
+		auto Light = ECS.CreateEntity();
 		auto& DirectionalLight = ECS.AddComponent<CDirectionalLight>(Light);
 		DirectionalLight.Intensity = 10.0f;
 		DirectionalLight.Direction = glm::vec3(X, Y, Z);

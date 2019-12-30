@@ -259,7 +259,6 @@ VkPipeline VulkanDevice::CreatePipeline(
 	}
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStages(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
-	std::vector<VkSpecializationInfo> VulkanSpecInfos(Shaders.size());
 
 	for (uint32 StageIndex = 0; StageIndex < ShaderStages.size(); StageIndex++)
 	{
@@ -270,24 +269,26 @@ VkPipeline VulkanDevice::CreatePipeline(
 		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->CompilationInfo.Stage);
 		ShaderStage.module = VulkanShader.ShaderModule;
 		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
+	}
 
-		const SpecializationInfo& SpecInfo = PSOInit.SpecializationInfos[(int32)Shader->CompilationInfo.Stage];
-		const std::vector<SpecializationInfo::SpecMapEntry>& Entries = SpecInfo.GetEntries();
+	const SpecializationInfo& SpecializationInfo = PSOInit.SpecializationInfo;
+	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = SpecializationInfo.GetMapEntries();
+	VkSpecializationInfo VulkanSpecializationInfo;
 
-		if (Entries.size() > 0)
+	if (MapEntries.size() > 0)
+	{
+		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
+
+		const std::vector<uint8>& Data = SpecializationInfo.GetData();
+		VulkanSpecializationInfo.mapEntryCount = MapEntries.size();
+		VulkanSpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
+		VulkanSpecializationInfo.dataSize = Data.size();
+		VulkanSpecializationInfo.pData = Data.data();
+
+		std::for_each(ShaderStages.begin(), ShaderStages.end(), [&] (VkPipelineShaderStageCreateInfo& ShaderStage)
 		{
-			const std::vector<uint8>& Data = SpecInfo.GetData();
-
-			// @todo Stupid, but works until drm::CreateSpecializationInfo
-			VkSpecializationInfo& VulkanSpecInfo = VulkanSpecInfos[StageIndex];
-			VulkanSpecInfo.mapEntryCount = Entries.size();
-			static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecMapEntry));
-			VulkanSpecInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(Entries.data());
-			VulkanSpecInfo.dataSize = Data.size();
-			VulkanSpecInfo.pData = Data.data();
-
-			ShaderStage.pSpecializationInfo = &VulkanSpecInfo;
-		}
+			ShaderStage.pSpecializationInfo = &VulkanSpecializationInfo;
+		});
 	}
 
 	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };

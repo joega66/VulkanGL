@@ -19,6 +19,12 @@ Entity EntityManager::CreateEntity()
 	return NewEntity;
 }
 
+Entity EntityManager::CreateEntity(const std::string& Name)
+{
+	check(Contains(Prefabs, Name), "No Prefab named %s", Name.c_str());
+	return Clone(Prefabs[Name]);
+}
+
 Entity EntityManager::Clone(Entity& Other)
 {
 	Entity Entity = CreateEntity();
@@ -33,12 +39,6 @@ Entity EntityManager::Clone(Entity& Other)
 	}
 
 	return Entity;
-}
-
-Entity EntityManager::CreateFromPrefab(const std::string& Name)
-{
-	check(Contains(Prefabs, Name), "No Prefab named %s", Name.c_str());
-	return Clone(Prefabs[Name]);
 }
 
 void EntityManager::Destroy(Entity& Entity)

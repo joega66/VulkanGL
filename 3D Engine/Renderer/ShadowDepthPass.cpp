@@ -74,7 +74,7 @@ void ShadowDepthPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshP
 
 void ShadowDepthPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
+	PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{
@@ -109,9 +109,9 @@ public:
 
 void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	for (auto Entity : Scene.ECS.GetEntities<CShadowProxy>())
+	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
-		auto& ShadowProxy = Scene.ECS.GetComponent<CShadowProxy>(Entity);
+		auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 		drm::ImageRef ShadowMap = ShadowProxy.GetShadowMap();
 
 		RenderPassInitializer RPInit = { 0 };
@@ -144,19 +144,15 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, RenderCommandList& Cmd
 
 void SceneRenderer::RenderShadowMask(SceneProxy& Scene, RenderCommandList& CmdList)
 {
-	drm::DescriptorSetRef SceneTextures = drm::CreateDescriptorSet();
-	SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
-	SceneTextures->Update();
-
 	RenderPassInitializer RPInit = { 1 };
 	RPInit.ColorTargets[0] = drm::RenderTargetView(ShadowMask, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::ShaderReadOnlyOptimal);
 	RPInit.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask->Width, ShadowMask->Height) };
 
 	CmdList.BeginRenderPass(RPInit);
 
-	for (auto Entity : Scene.ECS.GetEntities<CShadowProxy>())
+	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
-		auto& ShadowProxy = Scene.ECS.GetComponent<CShadowProxy>(Entity);
+		auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
 		std::array<drm::DescriptorSetRef, 3> Descriptors =
 		{

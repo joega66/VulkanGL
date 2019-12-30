@@ -4,8 +4,9 @@
 const float PI = 3.14159265;
 const float AMBIENT = 0.01f;
 
-#define SCENE_TEXTURES 3
-layout(binding = 0, set = SCENE_TEXTURES) uniform sampler2D ShadowMask;
+#define SCENE_TEXTURES_SET 3
+
+#include "SceneTexturesCommon.glsl"
 
 struct LightParams
 {

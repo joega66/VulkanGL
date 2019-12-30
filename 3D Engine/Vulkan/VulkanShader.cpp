@@ -110,20 +110,6 @@ static std::vector<VkVertexInputAttributeDescription> ParseVertexInputAttributeD
 	return Descriptions;
 }
 
-static HashTable<std::string, SpecConstant> ParseSpecializationConstants(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
-{
-	HashTable<std::string, SpecConstant> SpecConstants;
-	std::vector<spirv_cross::SpecializationConstant> SPIRVSpecializationConstants = GLSL.get_specialization_constants();
-
-	for (auto& SPIRSpecConstant : SPIRVSpecializationConstants)
-	{
-		const std::string Name = GLSL.get_name(SPIRSpecConstant.id);
-		SpecConstants[Name] = SpecConstant(SPIRSpecConstant.constant_id);
-	}
-
-	return SpecConstants;
-}
-
 ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
 {
 	static const std::string ShaderCompilerPath = "../Shaders/glslc.exe";
@@ -214,13 +200,11 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 	ParseBindings(ShaderBindings, GLSL, Resources.sampled_images);
 	ParseBindings(ShaderBindings, GLSL, Resources.storage_buffers);
 
-	const HashTable<std::string, SpecConstant> SpecConstants = ParseSpecializationConstants(GLSL, Resources);
-
 	const std::vector<VkVertexInputAttributeDescription> Attributes = ParseVertexInputAttributeDescriptions(GLSL, Resources);
 
 	Device.ShaderCache[Meta.Type] = std::make_unique<VulkanShader>(&Device, ShaderModule, Attributes);
 	
-	return ShaderCompilationInfo(Meta.Type, Meta.Stage, Meta.EntryPoint, Meta.Filename, ShaderBindings, SpecConstants, LastWriteTime, Worker);
+	return ShaderCompilationInfo(Meta.Type, Meta.Stage, Meta.EntryPoint, Meta.Filename, ShaderBindings, LastWriteTime, Worker);
 }
 
 void VulkanDRM::RecompileShaders()

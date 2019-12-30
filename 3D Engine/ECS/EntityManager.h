@@ -13,21 +13,28 @@ public:
 
 	EntityManager& operator=(const EntityManager&) = delete;
 
+	/** Create a prefab entity. */
 	Entity CreatePrefab(const std::string& Name);
 
+	/** Create an empty entity. */
 	Entity CreateEntity();
 
+	/** Create an entity from a prefab. */
+	Entity CreateEntity(const std::string& Name);
+
+	/** Clone an entity. */
 	Entity Clone(Entity& Other);
 
-	Entity CreateFromPrefab(const std::string& Name);
-
+	/** Destroy the entity and all associated components. */
 	void Destroy(Entity& Entity);
 
 	template<typename ComponentType, typename ...Args>
 	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs)
 	{
 		auto Array = GetComponentArray<ComponentType>();
-		return Array->AddComponent(Entity, InArgs...);
+		ComponentType& Component = Array->AddComponent(Entity, InArgs...);
+		Array->NotifyComponentCreated(Entity, Component);
+		return Component;
 	}
 
 	template<typename ComponentType>
@@ -92,11 +99,28 @@ public:
 		return EntitiesWithComponents;
 	}
 
+	/** Add a callback for when ComponentType is created. */
+	template<typename ComponentType>
+	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback)
+	{
+		auto Array = GetComponentArray<ComponentType>();
+		Array->NewComponentCallback(ComponentCallback);
+	}
+
 private:
+	/** Next entity id to be allocated. */
 	uint64 NextEntityID = 0;
+
+	/** Map of prefab names to prefab entities. */
 	HashTable<std::string, Entity> Prefabs;
+
+	/** Map of entity id's to prefab names*/
 	HashTable<uint64, std::string> PrefabNames;
+
+	/** Currently active entities in the scene. */
 	std::vector<Entity> Entities;
+
+	/** Map of a component's type to its component array. */
 	HashTable<std::type_index, std::unique_ptr<IComponentArray>> ComponentArrays;
 
 	template<typename ComponentType>

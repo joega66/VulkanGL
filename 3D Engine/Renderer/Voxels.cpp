@@ -99,7 +99,7 @@ void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const Mesh
 
 void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
 {
-	PSOInit.SpecializationInfos[(int32)EShaderStage::Fragment] = MeshProxy.SpecializationInfo;
+	PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
 
 	PSOInit.GraphicsPipelineState =
 	{

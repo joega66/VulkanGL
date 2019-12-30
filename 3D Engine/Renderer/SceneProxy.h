@@ -24,6 +24,7 @@ class SceneProxy
 
 public:
 	EntityManager& ECS;
+
 	const View& View;
 
 	SceneProxy(const SceneProxy&) = delete;
