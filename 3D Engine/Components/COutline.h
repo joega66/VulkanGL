@@ -1,7 +1,6 @@
 #pragma once
-#include <Components/CTransform.h>
 
-struct COutline : Component<COutline>
+struct COutline
 {
 	// The transform of the outline.
 	//CTransform Transform;

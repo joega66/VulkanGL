@@ -1,8 +1,7 @@
 #pragma once
-#include <ECS/Component.h>
 #include "DRMResource.h"
 
-class CTransform : public Component<CTransform>
+class CTransform
 {
 public:
 	CTransform(const CTransform& Other);

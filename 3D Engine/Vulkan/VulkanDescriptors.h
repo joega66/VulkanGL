@@ -39,7 +39,7 @@ public:
 	VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 
-	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool, VulkanAllocator& Allocator);
+	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool);
 	virtual ~VulkanDescriptorSet() override;
 
 	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) override;
@@ -52,7 +52,6 @@ private:
 
 	VulkanDevice& Device;
 	VulkanDescriptorPool& DescriptorPool;
-	VulkanAllocator& Allocator;
 
 	std::vector<VkDescriptorSetLayoutBinding> VulkanBindings;
 	std::vector<VkWriteDescriptorSet> PendingWrites;

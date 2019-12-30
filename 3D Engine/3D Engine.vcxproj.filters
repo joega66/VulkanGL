@@ -182,9 +182,6 @@
     <ClInclude Include="ECS\Entity.h">
       <Filter>Source\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="ECS\Component.h">
-      <Filter>Source\ECS</Filter>
-    </ClInclude>
     <ClInclude Include="ECS\ComponentArray.h">
       <Filter>Source\ECS</Filter>
     </ClInclude>
@@ -219,6 +216,9 @@
       <Filter>Source\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\DepthPrepass.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\ShadowDepthPass.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
@@ -358,6 +358,12 @@
     <ClCompile Include="Renderer\DepthPrepass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\Light.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\ShadowDepthPass.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -427,6 +433,18 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\DepthPrepass.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\ShadowDepthVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\ShadowDepthFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\ShadowProjectionFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SceneTexturesCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

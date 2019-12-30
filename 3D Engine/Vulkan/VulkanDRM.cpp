@@ -141,7 +141,7 @@ RenderCommandListRef VulkanDRM::CreateCommandList()
 
 drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()
 {
-	return MakeRef<VulkanDescriptorSet>(Device, DescriptorPool, Allocator);
+	return MakeRef<VulkanDescriptorSet>(Device, DescriptorPool);
 }
 
 drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)

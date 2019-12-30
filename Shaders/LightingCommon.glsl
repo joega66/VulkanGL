@@ -4,6 +4,9 @@
 const float PI = 3.14159265;
 const float AMBIENT = 0.01f;
 
+#define SCENE_TEXTURES 3
+layout(binding = 0, set = SCENE_TEXTURES) uniform sampler2D ShadowMask;
+
 struct LightParams
 {
 	vec3 L;
@@ -80,7 +83,7 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in MaterialParams Material,
 	vec3 Kd = vec3(1.0) - Fresnel;
 	Kd *= 1.0 - Material.Shininess;
 
-	vec3 Lo = (Kd * Material.Albedo / PI + Specular) * Light.Radiance * NdotL; // * Shadow
+	vec3 Lo = (Kd * Material.Albedo / PI + Specular) * Light.Radiance * NdotL;
 
 	return Lo;
 }
@@ -92,6 +95,8 @@ vec4 Shade(in MaterialParams Material)
 	vec3 R0 = vec3(0.04);
 	R0 = mix(R0, Material.Albedo, Material.Shininess);
 
+	vec2 ScreenUV = gl_FragCoord.xy / View.ScreenDims;
+
 	// Directional lights
 	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
 	{
@@ -99,7 +104,9 @@ vec4 Shade(in MaterialParams Material)
 		Light.L = DirectionalLights[LightIndex].Direction;
 		Light.Radiance = DirectionalLights[LightIndex].Intensity * DirectionalLights[LightIndex].Color;
 
-		Lo += DirectLighting(V, Light, Material, R0);
+		float ShadowFactor = texture(ShadowMask, ScreenUV).r;
+
+		Lo += DirectLighting(V, Light, Material, R0) * ( 1.0 - ShadowFactor );
 	}
 
 	// Point lights

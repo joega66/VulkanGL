@@ -88,8 +88,8 @@ VkDescriptorSetLayout VulkanDevice::GetDescriptorSetLayout(const std::vector<VkD
 static CAST(drm::Buffer, VulkanBuffer);
 static CAST(drm::Image, VulkanImage);
 
-VulkanDescriptorSet::VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool, VulkanAllocator& Allocator)
-	: Device(Device), DescriptorPool(DescriptorPool), Allocator(Allocator)
+VulkanDescriptorSet::VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool)
+	: Device(Device), DescriptorPool(DescriptorPool)
 {
 }
 
@@ -116,7 +116,8 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler
 	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	const VkSampler VulkanSampler = Device.GetSampler(Sampler);
 	const VulkanImageRef& VulkanImage = ResourceCast(Image);
-	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VulkanSampler, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
+	const VkImageLayout ImageLayout = Image->IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VulkanSampler, VulkanImage->ImageView, ImageLayout };
 
 	MaybeAddBinding(Binding, DescriptorType);
 
@@ -134,7 +135,7 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const ShaderBinding& Bindin
 {
 	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	const VulkanImageRef& VulkanImage = ResourceCast(Image);
-	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VK_NULL_HANDLE, VulkanImage->ImageView, VulkanImage->GetVulkanLayout() };
+	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VK_NULL_HANDLE, VulkanImage->ImageView, VK_IMAGE_LAYOUT_GENERAL };
 
 	MaybeAddBinding(Binding, DescriptorType);
 

@@ -2,12 +2,6 @@
 #include <Platform/Platform.h>
 #include <DRMShader.h>
 
-template<typename T>
-inline constexpr void CheckStd140Layout()
-{
-	static_assert(sizeof(T) % 16 == 0);
-}
-
 enum class EFormat
 {
 	UNDEFINED,
@@ -335,15 +329,20 @@ namespace drm
 		virtual ~Image() {}
 
 		bool IsColor() const;
+
 		bool IsStencil() const;
 
 		static bool IsDepthStencil(EFormat Format);
+
 		bool IsDepthStencil() const;
 
 		static bool IsDepth(EFormat Format);
+
 		bool IsDepth() const;
 
 		uint32 GetStrideInBytes() const;
+
+		inline float64 GetAspect() const { return static_cast<float64>(Width) / static_cast<float64>(Height); }
 	};
 
 	CLASS(Image);

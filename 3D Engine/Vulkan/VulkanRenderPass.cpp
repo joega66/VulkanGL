@@ -147,10 +147,8 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorTarget.FinalLayout);
 			Descriptions[i] = ColorDescription;
 
-			VkAttachmentReference ColorRef = {};
-			ColorRef.attachment = i;
-			ColorRef.layout = ColorTarget.FinalLayout == EImageLayout::Present ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : ColorDescription.finalLayout;
-			ColorRefs[i] = ColorRef;
+			ColorRefs[i].attachment = i;
+			ColorRefs[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 			Image->Layout = ColorTarget.FinalLayout;
 		}
@@ -176,7 +174,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			Descriptions[RPInit.NumRenderTargets] = DepthDescription;
 
 			DepthRef.attachment = RPInit.NumRenderTargets;
-			DepthRef.layout = DepthDescription.finalLayout;
+			DepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 			DepthImage->Layout = RPInit.DepthTarget.FinalLayout;
 		}

@@ -57,11 +57,12 @@ LightingPass::LightingPass(const MeshProxy& MeshProxy)
 
 void LightingPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
-	const std::array<drm::DescriptorSetRef, 3> DescriptorSets =
+	const std::array<drm::DescriptorSetRef, 4> DescriptorSets =
 	{
 		Pass.SceneSet,
 		MeshProxy.MeshSet,
-		MeshProxy.MaterialSet
+		MeshProxy.MaterialSet,
+		Pass.SceneTextures,
 	};
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
@@ -95,7 +96,11 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& Cmd
 	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSOInit.DepthStencilState.DepthWriteEnable = false;
 
-	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet };
+	drm::DescriptorSetRef SceneTextures = drm::CreateDescriptorSet();
+	SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
+	SceneTextures->Update();
+
+	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet, SceneTextures };
 
 	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Descriptors);
 	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Descriptors);

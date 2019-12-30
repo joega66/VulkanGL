@@ -1,5 +1,4 @@
 #pragma once
-#include <ECS/Component.h>
 
 enum class ELightType
 {
@@ -14,11 +13,13 @@ enum class EShadowType
 	Soft,
 };
 
-struct CLight : public Component<CLight>
+struct CLight
 {
 	EShadowType ShadowType = EShadowType::None;
 	glm::vec3 Color = glm::vec3(1.0f);
 	float Intensity = 1.0f;
+	float DepthBiasConstantFactor = 1.0f;
+	float DepthBiasSlopeFactor = 1.0f;
 };
 
 struct CDirectionalLight : public CLight

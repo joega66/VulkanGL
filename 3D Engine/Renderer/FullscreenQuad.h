@@ -18,7 +18,8 @@ public:
 
 enum class EVisualize
 {
-	Voxels,
+	Depth,
+	RGBA8,
 };
 
 template<EVisualize Visualize>
@@ -38,9 +39,6 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		if constexpr (Visualize == EVisualize::Voxels)
-		{
-			Worker.SetDefine("VOXELS");
-		}
+		Worker.SetDefine("TEXTURE", static_cast<uint32>(Visualize));
 	}
 };

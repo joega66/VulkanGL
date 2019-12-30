@@ -1,16 +1,15 @@
 #pragma once
 #include <DRM.h>
 
-class LightingPass
+class ShadowDepthPass
 {
 public:
 	struct PassDescriptors
 	{
-		drm::DescriptorSetRef SceneSet;
-		drm::DescriptorSetRef SceneTextures;
+		drm::DescriptorSetRef ShadowProxy;
 	};
 
-	LightingPass(const class MeshProxy& MeshProxy);
+	ShadowDepthPass(const class MeshProxy& MeshProxy);
 	void BindDescriptorSets(RenderCommandList& CmdList, const class MeshProxy& MeshProxy, const PassDescriptors& Pass) const;
 	void SetPipelineState(PipelineStateInitializer& PSOInit, const class MeshProxy& MeshProxy) const;
 	void Draw(RenderCommandList& CmdList, const struct MeshElement& MeshElement) const;

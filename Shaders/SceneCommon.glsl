@@ -12,7 +12,7 @@ layout(binding = 0, set = SCENE_SET) uniform ViewUniform
 	float _Pad0;
 	float AspectRatio;
 	float FieldOfView;
-	vec2 _Pad1;
+	vec2 ScreenDims;
 } View;
 
 struct DirectionalLight

@@ -1,8 +1,7 @@
 #pragma once
-#include <ECS/Component.h>
 #include <DRMResource.h>
 
-struct CMaterial : Component<CMaterial>
+struct CMaterial
 {
 	CMaterial();
 

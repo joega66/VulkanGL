@@ -1,13 +1,16 @@
 #pragma once
 #include "Entity.h"
 
+/** The EntityManager stores entities and performs component operations (Add, Get, Has, Remove) */
 class EntityManager
 {
+	/** Only Scene can construct the EntityManager. */
 	friend class Scene;
 	EntityManager() = default;
 
 public:
 	EntityManager(const EntityManager&) = delete;
+
 	EntityManager& operator=(const EntityManager&) = delete;
 
 	Entity CreatePrefab(const std::string& Name);
@@ -24,7 +27,7 @@ public:
 	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs)
 	{
 		auto Array = GetComponentArray<ComponentType>();
-		return Array->AddComponent(Entity, std::forward<Args>(InArgs)...);
+		return Array->AddComponent(Entity, InArgs...);
 	}
 
 	template<typename ComponentType>
@@ -48,6 +51,10 @@ public:
 		return Array->RemoveComponent(Entity);
 	}
 
+	/** GetEntities
+	  * @return Entities with types ComponentTypes.
+	  * Entities are returned in sorted order for faster ranges operations.
+	  */
 	template<typename ...ComponentTypes>
 	std::vector<Entity> GetEntities()
 	{
@@ -56,6 +63,27 @@ public:
 		for (auto Entity : Entities)
 		{
 			if (EntityHasComponents<ComponentTypes...>(Entity))
+			{
+				EntitiesWithComponents.push_back(Entity);
+			}
+		}
+
+		return EntitiesWithComponents;
+	}
+
+	/** GetVisibleEntities
+	  * @return Entities with ComponentTypes which are not hidden.
+	  * Entities are returned in sorted order for faster ranges operations.
+	  */
+	template<typename ...ComponentTypes>
+	std::vector<Entity> GetVisibleEntities()
+	{
+		std::vector<Entity> EntitiesWithComponents;
+
+		for (auto Entity : Entities)
+		{
+			if (IsVisible(Entity) &&
+				EntityHasComponents<ComponentTypes...>(Entity))
 			{
 				EntitiesWithComponents.push_back(Entity);
 			}
@@ -99,6 +127,8 @@ private:
 	}
 
 	void InitDefaultComponents(Entity& Entity);
+
+	bool IsVisible(Entity& Entity);
 };
 
 #include "ComponentArray.inl"

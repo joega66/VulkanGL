@@ -77,8 +77,7 @@ uint64 OS_Platform::GetLastWriteTime(const std::string& Filename) const
 
 void OS_Platform::WriteLog(const std::string& InLog)
 {
-	std::string Recent = InLog + '\n';
-	std::cerr << Recent;
+	printf("%s\n", InLog.c_str());
 }
 
 void OS_Platform::WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
@@ -220,6 +219,12 @@ int32 OS_Platform::GetInt(const std::string& Filename, const std::string& Sectio
 	const std::string Path = ConfigPath + Filename;
 
 	return GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, Path.c_str());
+}
+
+float64 OS_Platform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default) const
+{
+	std::string FloatStr = GetString(Filename, Section, Key, std::to_string(Default));
+	return std::atof(FloatStr.c_str());
 }
 
 std::string OS_Platform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const

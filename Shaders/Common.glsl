@@ -12,7 +12,7 @@ struct DrawIndirectCommand
 
 float LinearizeDepth(float D, float zNear, float zFar)
 {
-	return zNear * zFar / (zFar + D * (zNear - zFar));
+	return zNear * zFar / mix(zFar, zNear, D);
 }
 
 uvec3 Unflatten3D(uint Index, uvec3 Dim)

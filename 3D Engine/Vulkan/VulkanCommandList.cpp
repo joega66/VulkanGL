@@ -32,9 +32,9 @@ VulkanCommandList::~VulkanCommandList()
 
 void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 {
-	// Determine if this command list touched the surface.
 	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumRenderTargets; ColorTargetIndex++)
 	{
+		// Determine if this command list touched the surface.
 		if (RPInit.ColorTargets[ColorTargetIndex].Image == drm::GetSurface())
 		{
 			bTouchedSurface = true;
@@ -202,6 +202,20 @@ void VulkanCommandList::ClearColorImage(drm::ImageRef Image, const ClearColorVal
 	Range.levelCount = 1;
 
 	vkCmdClearColorImage(CommandBuffer, VulkanImage->Image, VulkanImage->GetVulkanLayout(), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
+}
+
+void VulkanCommandList::ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue)
+{
+	const VulkanImageRef& VulkanImage = ResourceCast(Image);
+
+	VkImageSubresourceRange Range = {};
+	Range.aspectMask = VulkanImage->GetVulkanAspect();
+	Range.baseArrayLayer = 0;
+	Range.baseMipLevel = 0;
+	Range.layerCount = 1;
+	Range.levelCount = 1;
+
+	vkCmdClearDepthStencilImage(CommandBuffer, VulkanImage->Image, VulkanImage->GetVulkanLayout(), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
 }
 
 static inline VkAccessFlags GetVulkanAccessFlags(EAccess Access)

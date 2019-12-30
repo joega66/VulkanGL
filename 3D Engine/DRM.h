@@ -1,6 +1,12 @@
 #pragma once
 #include "RenderCommandList.h"
 
+#define UNIFORM_STRUCT(StructName, Members)		\
+struct StructName								\
+{												\
+	Members										\
+}; static_assert(sizeof(StructName) % 16 == 0);	\
+
 struct TextureCreateInfo
 {
 	int32 Width;

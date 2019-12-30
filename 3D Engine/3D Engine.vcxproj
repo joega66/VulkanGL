@@ -40,10 +40,12 @@
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
     <ClCompile Include="Renderer\DepthPrepass.cpp" />
+    <ClCompile Include="Renderer\Light.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\MeshProxy.cpp" />
     <ClCompile Include="Renderer\SceneProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
+    <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
     <ClCompile Include="Renderer\Skybox.cpp" />
     <ClCompile Include="Renderer\Voxels.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
@@ -74,7 +76,6 @@
     <ClInclude Include="Components\CTransform.h" />
     <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="DRMPrivate.h" />
-    <ClInclude Include="ECS\Component.h" />
     <ClInclude Include="ECS\ComponentArray.h" />
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="ECS\EntityManager.h" />
@@ -104,6 +105,7 @@
     <ClInclude Include="Renderer\RayMarching.h" />
     <ClInclude Include="Renderer\SceneProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
+    <ClInclude Include="Renderer\ShadowDepthPass.h" />
     <ClInclude Include="Renderer\Voxels.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="SPIRV-Cross\spirv.hpp" />
@@ -141,6 +143,10 @@
     <None Include="..\Shaders\RayMarching.glsl" />
     <None Include="..\Shaders\RayMarchingCommon.glsl" />
     <None Include="..\Shaders\SceneCommon.glsl" />
+    <None Include="..\Shaders\SceneTexturesCommon.glsl" />
+    <None Include="..\Shaders\ShadowDepthFS.glsl" />
+    <None Include="..\Shaders\ShadowDepthVS.glsl" />
+    <None Include="..\Shaders\ShadowProjectionFS.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshCommon.glsl" />
@@ -154,7 +160,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3251e0ea-e82a-4fe7-a893-499a35dca794}</ProjectGuid>
     <RootNamespace>_3D_Engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

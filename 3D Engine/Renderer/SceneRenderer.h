@@ -19,6 +19,10 @@ private:
 	// Scene render targets.
 	drm::ImageRef SceneDepth;
 
+	drm::DescriptorSetRef RenderTargetsSet;
+
+	drm::ImageRef ShadowMask;
+
 	drm::DescriptorSetRef VoxelsDescriptorSet;
 
 	drm::BufferRef VoxelIndirectBuffer;
@@ -31,15 +35,19 @@ private:
 
 	void RenderDepthPrepass(SceneProxy& Scene, RenderCommandList& CmdList);
 
+	void RenderShadowDepths(SceneProxy& Scene, RenderCommandList& CmdList);
+
+	void RenderShadowMask(SceneProxy& Scene, RenderCommandList& CmdList);
+
 	void RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList);
 
 	void RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList);
 
 	void RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList);
 
-	void RenderRayMarching(SceneProxy& Scene, RenderCommandList& CmdList);
-
 	void RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList);
 
 	void RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList);
+
+	void RenderDepthVisualization(SceneProxy& Scene, RenderCommandList& CmdList);
 };

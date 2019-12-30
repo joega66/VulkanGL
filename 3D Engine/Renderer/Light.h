@@ -1,18 +1,27 @@
 #pragma once
 #include <Platform/Platform.h>
+#include <DRM.h>
 
-struct PointLightProxy
+class CShadowProxy
 {
-	glm::vec3 Position;
-	float Intensity;
-	glm::vec3 Color;
-	float Range;
-};
+public:
+	static constexpr EFormat FORMAT = EFormat::D32_SFLOAT;
 
-struct DirectionalLightProxy
-{
-	glm::vec3 Color;
-	float Intensity;
-	glm::vec3 Direction;
-	int _Pad1;
+	CShadowProxy() = default;
+	CShadowProxy(const struct CDirectionalLight& DirectionalLight);
+
+	void Update(const glm::vec3& Direction);
+
+	/** Accessors */
+	inline float GetDepthBiasConstantFactor() const { return DepthBiasConstantFactor; }
+	inline float GetDepthBiasSlopeFactor() const { return DepthBiasSlopeFactor; }
+	inline drm::ImageRef GetShadowMap() const { return ShadowMap; }
+	inline drm::DescriptorSetRef GetDescriptorSet() const { return DescriptorSet; }
+
+private:
+	float DepthBiasConstantFactor;
+	float DepthBiasSlopeFactor;
+	drm::BufferRef LightViewProjBuffer;
+	drm::ImageRef ShadowMap;
+	drm::DescriptorSetRef DescriptorSet;
 };

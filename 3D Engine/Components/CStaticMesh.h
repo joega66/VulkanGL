@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/StaticMesh.h>
 
-struct CStaticMesh : public Component<CStaticMesh>
+struct CStaticMesh
 {
 	CStaticMesh() = default;
 	CStaticMesh(StaticMeshRef StaticMesh);

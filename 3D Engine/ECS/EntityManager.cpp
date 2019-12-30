@@ -59,3 +59,8 @@ void EntityManager::InitDefaultComponents(Entity& Entity)
 	AddComponent<CTransform>(Entity);
 	AddComponent<CRenderer>(Entity);
 }
+
+bool EntityManager::IsVisible(Entity& Entity) 
+{ 
+	return GetComponent<CRenderer>(Entity).bVisible; 
+}

@@ -84,6 +84,7 @@ public:
 	// .ini
 	bool GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default) const;
 	int32 GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default) const;
+	float64 GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default) const;
 	std::string GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const;
 
 private:

@@ -19,20 +19,22 @@ void GameSystem::Start(Scene& Scene)
 		auto SponzaMesh = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/sponza.obj");
 		ECS.AddComponent<CStaticMesh>(Sponza, SponzaMesh);
 		auto& Transform = ECS.GetComponent<CTransform>(Sponza);
-		Transform.Scale(glm::vec3(0.25f));
+		Transform.Scale(glm::vec3(0.1f));
 	}
 
 	{
 		// Create the Directional Light entity.
+		const float64 X = Platform.GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
+		const float64 Y = Platform.GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
+		const float64 Z = Platform.GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
+
 		auto Light = ECS.CreateFromPrefab("Cube");
 		auto& DirectionalLight = ECS.AddComponent<CDirectionalLight>(Light);
 		DirectionalLight.Intensity = 10.0f;
-		DirectionalLight.Direction = glm::vec3(1.0f);
-		auto& Material = ECS.AddComponent<CMaterial>(Light);
-		Material.Diffuse = CMaterial::White;
-		auto& Transform = ECS.GetComponent<CTransform>(Light);
-		Transform.Scale(glm::vec3(0.1f));
-		Transform.Translate(glm::vec3(1.0f));
+		DirectionalLight.Direction = glm::vec3(X, Y, Z);
+		DirectionalLight.ShadowType = EShadowType::Soft;
+		DirectionalLight.DepthBiasConstantFactor = 1.75f;
+		DirectionalLight.DepthBiasSlopeFactor = 1.75f;
 	}
 }
 

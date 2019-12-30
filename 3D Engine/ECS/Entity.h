@@ -18,6 +18,11 @@ public:
 		return EntityID != Entity.GetEntityID();
 	}
 
+	bool operator<(const Entity& Entity) const
+	{
+		return EntityID < Entity.GetEntityID();
+	}
+
 	uint64 GetEntityID() const;
 
 	explicit operator bool() const;

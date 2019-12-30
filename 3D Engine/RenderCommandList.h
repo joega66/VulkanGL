@@ -309,6 +309,7 @@ public:
 	virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
 	virtual void Finish() = 0;
 	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) = 0;
+	virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) = 0;
 	virtual void PipelineBarrier(
 		EPipelineStage SrcStageMask,
 		EPipelineStage DstStageMask,

@@ -4,6 +4,7 @@
 #include "DepthPrepass.h"
 #include "LightingPass.h"
 #include "Voxels.h"
+#include "ShadowDepthPass.h"
 #include "MeshDrawInterface.h"
 
 namespace EStaticDrawListType
@@ -22,6 +23,7 @@ class SceneProxy
 	SceneProxy(Scene& Scene);
 
 public:
+	EntityManager& ECS;
 	const View& View;
 
 	SceneProxy(const SceneProxy&) = delete;
@@ -35,9 +37,7 @@ public:
 
 	MeshDrawInterface<VoxelizationPass> VoxelsPass;
 
-	std::vector<DirectionalLightProxy> DirectionalLightProxies;
-
-	std::vector<PointLightProxy> PointLightProxies;
+	MeshDrawInterface<ShadowDepthPass> ShadowDepthPass;
 
 	drm::BufferRef ViewUniform;
 
@@ -48,9 +48,9 @@ public:
 	drm::DescriptorSetRef DescriptorSet;
 
 private:
-	void InitView(Scene& Scene);
-	void InitLights(Scene& Scene);
-	void InitDrawLists(Scene& Scene);
+	void InitView();
+	void InitLights();
+	void InitDrawLists();
 	void AddToDrawLists(const MeshProxy& MeshProxy);
 
 	std::vector<MeshProxy> MeshProxies;

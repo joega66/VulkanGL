@@ -43,6 +43,8 @@ public:
 
 	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) override;
 
+	virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) override;
+
 	virtual void PipelineBarrier(
 		EPipelineStage SrcStageMask,
 		EPipelineStage DstStageMask,
