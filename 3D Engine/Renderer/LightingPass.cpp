@@ -55,7 +55,7 @@ LightingPass::LightingPass(const MeshProxy& MeshProxy)
 	FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
 }
 
-void LightingPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
+void LightingPass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
 	const std::array<drm::DescriptorSetRef, 4> DescriptorSets =
 	{
@@ -82,13 +82,13 @@ void LightingPass::SetPipelineState(PipelineStateInitializer& PSOInit, const Mes
 	};
 }
 
-void LightingPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshElement) const
+void LightingPass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
 {
 	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
 	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
 }
 
-void SceneRenderer::RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = SceneDepth->Width;

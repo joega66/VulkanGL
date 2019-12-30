@@ -84,7 +84,7 @@ VoxelizationPass::VoxelizationPass(const MeshProxy& MeshProxy)
 	FragShader = *ShaderMapRef<VoxelsFS<MeshType>>();
 }
 
-void VoxelizationPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
+void VoxelizationPass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
 	const std::array<drm::DescriptorSetRef, 5> DescriptorSets = 
 	{
@@ -112,13 +112,13 @@ void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit, const
 	};
 }
 
-void VoxelizationPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshElement) const
+void VoxelizationPass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
 {
 	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
 	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
 }
 
-void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
 	OrthoProj[1][1] *= -1;
@@ -159,7 +159,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList)
 	RenderVoxelVisualization(Scene, CmdList);
 }
 
-void SceneRenderer::RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	ImageMemoryBarrier ImageMemoryBarrier(VoxelColors, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
@@ -251,7 +251,7 @@ public:
 	}
 };
 
-void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	BufferMemoryBarrier BufferBarrier(VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead);
 	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General);

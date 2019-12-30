@@ -295,11 +295,21 @@ VkPipeline VulkanDevice::CreatePipeline(
 	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = ShaderCache[GraphicsPipeline.Vertex->CompilationInfo.Type]->Attributes;
 	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
 
+	static const HashTable<VkFormat, uint32> VulkanFormatSize =
+	{
+		ENTRY(VK_FORMAT_R32G32B32A32_SFLOAT, 16)
+		ENTRY(VK_FORMAT_R32G32B32_SFLOAT, 12)
+		ENTRY(VK_FORMAT_R32G32_SFLOAT, 8)
+		ENTRY(VK_FORMAT_R32_SFLOAT, 4)
+		ENTRY(VK_FORMAT_R32_SINT, 4)
+		ENTRY(VK_FORMAT_R32_UINT, 4)
+	};
+
 	for (uint32 i = 0; i < Bindings.size(); i++)
 	{
 		VkVertexInputBindingDescription& Binding = Bindings[i];
 		Binding.binding = AttributeDescriptions[i].binding;
-		Binding.stride = GetValue(SizeOfVulkanFormat, AttributeDescriptions[i].format);
+		Binding.stride = GetValue(VulkanFormatSize, AttributeDescriptions[i].format);
 		Binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 	}
 

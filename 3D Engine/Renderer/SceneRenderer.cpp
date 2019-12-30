@@ -36,8 +36,8 @@ void SceneRenderer::Render(SceneProxy& Scene)
 {
 	drm::BeginFrame();
 
-	RenderCommandListRef CommandList = drm::CreateCommandList();
-	RenderCommandList& CmdList = *CommandList;
+	drm::CommandListRef CommandList = drm::CreateCommandList();
+	drm::CommandList& CmdList = *CommandList;
 
 	if (Platform.GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
 	{
@@ -80,7 +80,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	drm::EndFrame();
 }
 
-void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 

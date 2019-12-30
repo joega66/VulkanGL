@@ -94,7 +94,7 @@
     <ClInclude Include="DRMShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
-    <ClInclude Include="RenderCommandList.h" />
+    <ClInclude Include="DRMCommandList.h" />
     <ClInclude Include="Renderer\DepthPrepass.h" />
     <ClInclude Include="Renderer\MeshDrawInterface.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />

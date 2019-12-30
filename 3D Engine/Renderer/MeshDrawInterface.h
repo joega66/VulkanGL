@@ -15,7 +15,7 @@ public:
 		MeshDrawTypes.emplace_back(std::forward<MeshDrawType>(InMeshDrawType));
 	}
 
-	void Draw(RenderCommandList& CmdList, const PipelineStateInitializer& PassPSOInit, const PassDescriptorsType& PassDescriptors);
+	void Draw(drm::CommandList& CmdList, const PipelineStateInitializer& PassPSOInit, const PassDescriptorsType& PassDescriptors);
 
 private:
 	std::vector<const MeshProxy*> MeshProxies;
@@ -24,7 +24,7 @@ private:
 
 template<typename MeshDrawType>
 inline void MeshDrawInterface<MeshDrawType>::Draw(
-	RenderCommandList& CmdList, 
+	drm::CommandList& CmdList, 
 	const PipelineStateInitializer& PassPSOInit,
 	const PassDescriptorsType& PassDescriptors)
 {

@@ -1,6 +1,7 @@
 #include "VulkanDescriptors.h"
 #include "VulkanDevice.h"
 #include "VulkanMemory.h"
+#include "VulkanDRM.h"
 
 VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device)
 	: Device(Device)
@@ -84,9 +85,6 @@ VkDescriptorSetLayout VulkanDevice::GetDescriptorSetLayout(const std::vector<VkD
 
 	return DescriptorSetLayout;
 }
-
-static CAST(drm::Buffer, VulkanBuffer);
-static CAST(drm::Image, VulkanImage);
 
 VulkanDescriptorSet::VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool)
 	: Device(Device), DescriptorPool(DescriptorPool)

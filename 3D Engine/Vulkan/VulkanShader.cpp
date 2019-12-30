@@ -74,15 +74,6 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 	}
 }
 
-static void ParseBindings(HashTable<std::string, ShaderBinding>& ShaderBindings, const spirv_cross::CompilerGLSL& GLSL, const std::vector<spirv_cross::Resource>& Resources)
-{
-	for (auto& Resource : Resources)
-	{
-		uint32 Binding = GLSL.get_decoration(Resource.id, spv::DecorationBinding);
-		ShaderBindings[Resource.name] = ShaderBinding(Binding);
-	}
-}
-
 static std::vector<VkVertexInputAttributeDescription> ParseVertexInputAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
 {
 	std::vector<VkVertexInputAttributeDescription> Descriptions;
@@ -195,16 +186,11 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
 
-	HashTable<std::string, ShaderBinding> ShaderBindings;
-	ParseBindings(ShaderBindings, GLSL, Resources.uniform_buffers);
-	ParseBindings(ShaderBindings, GLSL, Resources.sampled_images);
-	ParseBindings(ShaderBindings, GLSL, Resources.storage_buffers);
-
 	const std::vector<VkVertexInputAttributeDescription> Attributes = ParseVertexInputAttributeDescriptions(GLSL, Resources);
 
 	Device.ShaderCache[Meta.Type] = std::make_unique<VulkanShader>(&Device, ShaderModule, Attributes);
 	
-	return ShaderCompilationInfo(Meta.Type, Meta.Stage, Meta.EntryPoint, Meta.Filename, ShaderBindings, LastWriteTime, Worker);
+	return ShaderCompilationInfo(Meta.Type, Meta.Stage, Meta.EntryPoint, Meta.Filename, LastWriteTime, Worker);
 }
 
 void VulkanDRM::RecompileShaders()

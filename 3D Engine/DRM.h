@@ -1,5 +1,5 @@
 #pragma once
-#include "RenderCommandList.h"
+#include "DRMCommandList.h"
 
 #define UNIFORM_STRUCT(StructName, Members)		\
 struct StructName								\
@@ -26,14 +26,10 @@ class DRM
 public:
 	virtual ~DRM() {}
 
-	virtual void Init() = 0;
-	virtual void Release() = 0;
-
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;
-	
-	virtual void SubmitCommands(RenderCommandListRef CmdList) = 0;
-	virtual RenderCommandListRef CreateCommandList() = 0;
+	virtual void SubmitCommands(drm::CommandListRef CmdList) = 0;
+	virtual drm::CommandListRef CreateCommandList() = 0;
 	virtual drm::DescriptorSetRef CreateDescriptorSet() = 0;
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
 	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr) = 0;
@@ -62,8 +58,8 @@ namespace drm
 {
 	void BeginFrame();
 	void EndFrame();
-	void SubmitCommands(RenderCommandListRef CmdList);
-	RenderCommandListRef CreateCommandList();
+	void SubmitCommands(drm::CommandListRef CmdList);
+	drm::CommandListRef CreateCommandList();
 	drm::DescriptorSetRef CreateDescriptorSet();
 	drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr);
 	ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr);

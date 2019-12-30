@@ -26,7 +26,6 @@ public:
 	SkyboxFS(const ShaderCompilationInfo& CompilationInfo)
 		: drm::Shader(CompilationInfo)
 	{
-		CompilationInfo.Bind("Skybox", Skybox);
 	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
@@ -38,18 +37,16 @@ public:
 		static ShaderInfo Base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
 		return Base;
 	}
-
-	ShaderBinding Skybox;
 };
 
-void SceneRenderer::RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	Ref<SkyboxVS> VertShader = *ShaderMapRef<SkyboxVS>();
 	Ref<SkyboxFS> FragShader = *ShaderMapRef<SkyboxFS>();
 
 	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
 
-	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, FragShader->Skybox);
+	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, ShaderBinding(0));
 	DescriptorSet->Update();
 
 	std::array<drm::DescriptorSetRef, 2> DescriptorSets =

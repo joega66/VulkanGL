@@ -146,9 +146,6 @@
     <ClInclude Include="Vulkan\VulkanCommandList.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="RenderCommandList.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
     <ClInclude Include="DRM.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
@@ -217,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="Renderer\ShadowDepthPass.h">
       <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="DRMCommandList.h">
+      <Filter>Source\DRM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

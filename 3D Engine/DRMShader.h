@@ -151,33 +151,16 @@ public:
 		EShaderStage Stage, 
 		const std::string& Entrypoint,
 		const std::string& Filename,
-		const HashTable<std::string, ShaderBinding>& Bindings,
 		uint64 LastWriteTime,
 		const ShaderCompilerWorker& Worker)
 		: Type(Type)
 		, Stage(Stage)
 		, Entrypoint(Entrypoint)
 		, Filename(Filename)
-		, Bindings(Bindings)
 		, LastWriteTime(LastWriteTime)
 		, Worker(Worker)
 	{
 	}
-
-	void Bind(const std::string& Name, ShaderBinding& Binding) const
-	{
-		if (auto Iter = Bindings.find(Name); Iter != Bindings.end())
-		{
-			Binding = Iter->second;
-		}
-		else
-		{
-			LOG("Shader %s does not have binding %s", Type.name(), Name.c_str());
-		}
-	}
-
-private:
-	HashTable<std::string, ShaderBinding> Bindings;
 };
 
 namespace drm

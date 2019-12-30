@@ -75,11 +75,7 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 	check(AiMesh->mTextureCoords[0] > 0, "Static mesh is missing texture coordinates.");
 
 	const uint32 NumVertices = AiMesh->mNumVertices;
-
-	std::vector<glm::vec3> Positions(NumVertices);
 	std::vector<glm::vec2> TextureCoordinates(NumVertices);
-	std::vector<glm::vec3> Normals(NumVertices);
-	std::vector<glm::vec3> Tangents(NumVertices);
 	std::vector<uint32> Indices;
 
 	glm::vec3& Min = StaticMesh->Bounds.Min;
@@ -87,12 +83,9 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 
 	for (uint32 i = 0; i < NumVertices; i++)
 	{
-		Positions[i] = glm::vec3(AiMesh->mVertices[i].x, AiMesh->mVertices[i].y, AiMesh->mVertices[i].z);
 		TextureCoordinates[i] = glm::vec2(AiMesh->mTextureCoords[0][i].x, AiMesh->mTextureCoords[0][i].y);
-		Normals[i] = glm::vec3(AiMesh->mNormals[i].x, AiMesh->mNormals[i].y, AiMesh->mNormals[i].z);
-		Tangents[i] = glm::vec3(AiMesh->mTangents[i].x, AiMesh->mTangents[i].y, AiMesh->mTangents[i].z);
 
-		const glm::vec3& Position = Positions[i];
+		const aiVector3D& Position = AiMesh->mVertices[i];
 		if (Position.x > Max.x)
 			Max.x = Position.x;
 		if (Position.y > Max.y)
@@ -120,10 +113,10 @@ void ProcessMesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene,
 	CMaterial Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
 	drm::BufferRef IndexBuffer = drm::CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32), Indices.data());
-	drm::BufferRef PositionBuffer = drm::CreateBuffer(EBufferUsage::Vertex, Positions.size() * sizeof(glm::vec3), Positions.data());
+	drm::BufferRef PositionBuffer = drm::CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mVertices);
 	drm::BufferRef TextureCoordinateBuffer = drm::CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2), TextureCoordinates.data());
-	drm::BufferRef NormalBuffer = drm::CreateBuffer(EBufferUsage::Vertex, Normals.size() * sizeof(glm::vec3), Normals.data());
-	drm::BufferRef TangentBuffer = drm::CreateBuffer(EBufferUsage::Vertex, Tangents.size() * sizeof(glm::vec3), Tangents.data());
+	drm::BufferRef NormalBuffer = drm::CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mNormals);
+	drm::BufferRef TangentBuffer = drm::CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mTangents);
 
 	StaticMesh->Batch.Elements.emplace_back(MeshElement(
 		Indices.size()

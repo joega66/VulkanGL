@@ -10,9 +10,9 @@ public:
 	};
 
 	ShadowDepthPass(const class MeshProxy& MeshProxy);
-	void BindDescriptorSets(RenderCommandList& CmdList, const class MeshProxy& MeshProxy, const PassDescriptors& Pass) const;
+	void BindDescriptorSets(drm::CommandList& CmdList, const class MeshProxy& MeshProxy, const PassDescriptors& Pass) const;
 	void SetPipelineState(PipelineStateInitializer& PSOInit, const class MeshProxy& MeshProxy) const;
-	void Draw(RenderCommandList& CmdList, const struct MeshElement& MeshElement) const;
+	void Draw(drm::CommandList& CmdList, const struct MeshElement& MeshElement) const;
 
 private:
 	drm::ShaderRef VertShader;

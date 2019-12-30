@@ -295,29 +295,32 @@ struct ImageMemoryBarrier
 	}
 };
 
-class RenderCommandList
+namespace drm
 {
-public:
-	virtual ~RenderCommandList() {}
-	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
-	virtual void EndRenderPass() = 0;
-	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
-	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) = 0;
-	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) = 0;
-	virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
-	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
-	virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
-	virtual void Finish() = 0;
-	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) = 0;
-	virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) = 0;
-	virtual void PipelineBarrier(
-		EPipelineStage SrcStageMask,
-		EPipelineStage DstStageMask,
-		uint32 NumBufferBarriers,
-		const BufferMemoryBarrier* BufferBarriers,
-		uint32 NumImageBarriers,
-		const ImageMemoryBarrier* ImageBarriers
-	) = 0;
-};
+	class CommandList
+	{
+	public:
+		virtual ~CommandList() {}
+		virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
+		virtual void EndRenderPass() = 0;
+		virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
+		virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) = 0;
+		virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) = 0;
+		virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
+		virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
+		virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
+		virtual void Finish() = 0;
+		virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) = 0;
+		virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) = 0;
+		virtual void PipelineBarrier(
+			EPipelineStage SrcStageMask,
+			EPipelineStage DstStageMask,
+			uint32 NumBufferBarriers,
+			const BufferMemoryBarrier* BufferBarriers,
+			uint32 NumImageBarriers,
+			const ImageMemoryBarrier* ImageBarriers
+		) = 0;
+	};
 
-CLASS(RenderCommandList);
+	CLASS(CommandList);
+};

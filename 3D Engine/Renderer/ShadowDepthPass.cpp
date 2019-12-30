@@ -60,7 +60,7 @@ ShadowDepthPass::ShadowDepthPass(const MeshProxy& MeshProxy)
 	}
 }
 
-void ShadowDepthPass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
+void ShadowDepthPass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
 	const std::array<drm::DescriptorSetRef, 3> DescriptorSets =
 	{
@@ -86,7 +86,7 @@ void ShadowDepthPass::SetPipelineState(PipelineStateInitializer& PSOInit, const 
 	};
 }
 
-void ShadowDepthPass::Draw(RenderCommandList& CmdList, const MeshElement& MeshElement) const
+void ShadowDepthPass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
 {
 	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
 	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
@@ -107,7 +107,7 @@ public:
 	}
 };
 
-void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
@@ -142,7 +142,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, RenderCommandList& Cmd
 	RenderShadowMask(Scene, CmdList);
 }
 
-void SceneRenderer::RenderShadowMask(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	RenderPassInitializer RPInit = { 1 };
 	RPInit.ColorTargets[0] = drm::RenderTargetView(ShadowMask, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::ShaderReadOnlyOptimal);

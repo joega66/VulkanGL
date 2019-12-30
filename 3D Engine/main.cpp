@@ -12,14 +12,8 @@ int main(int argc, char* argv[])
 
 	GDRM = MakeRef<VulkanDRM>();
 
-	GDRM->Init();
-
-	{
-		CoreEngine CoreEngine;
-		CoreEngine.Run();
-	}
+	CoreEngine CoreEngine;
+	CoreEngine.Run();
 	
-	GDRM->Release();
-
 	return 0;
 }

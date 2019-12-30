@@ -5,20 +5,17 @@
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 #include "VulkanShader.h"
+#include "VulkanCommandList.h"
 
 class VulkanDRM final : public DRM
 {
 public:
 	VulkanDRM();
 
-	virtual void Init();
-	virtual void Release();
-
 	virtual void BeginFrame();
 	virtual void EndFrame();
-
-	virtual void SubmitCommands(RenderCommandListRef CmdList);
-	virtual RenderCommandListRef CreateCommandList();
+	virtual void SubmitCommands(drm::CommandListRef CmdList);
+	virtual drm::CommandListRef CreateCommandList();
 	virtual drm::DescriptorSetRef CreateDescriptorSet();
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr);
 	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data);
@@ -44,5 +41,10 @@ private:
 
 CLASS(VulkanDRM);
 
-extern HashTable<VkFormat, uint32> SizeOfVulkanFormat;
-extern HashTable<EFormat, uint32> ImageFormatToGLSLSize;
+namespace
+{
+	CAST(drm::Buffer, VulkanBuffer);
+	CAST(drm::Image, VulkanImage);
+	CAST(drm::CommandList, VulkanCommandList);
+	CAST(drm::DescriptorSet, VulkanDescriptorSet);
+}

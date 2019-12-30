@@ -15,12 +15,12 @@ namespace drm
 		GDRM->EndFrame();
 	}
 
-	void SubmitCommands(RenderCommandListRef CmdList)
+	void SubmitCommands(drm::CommandListRef CmdList)
 	{
 		GDRM->SubmitCommands(CmdList);
 	}
 
-	RenderCommandListRef CreateCommandList()
+	drm::CommandListRef CreateCommandList()
 	{
 		return GDRM->CreateCommandList();
 	}

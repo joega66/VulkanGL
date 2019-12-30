@@ -1,12 +1,12 @@
 #pragma once
-#include "../RenderCommandList.h"
+#include "../DRMCommandList.h"
 #include "VulkanDevice.h"
 #include "VulkanSurface.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 #include "VulkanShader.h"
 
-class VulkanCommandList final : public RenderCommandList
+class VulkanCommandList final : public drm::CommandList
 {
 public:
 	VkQueue Queue;

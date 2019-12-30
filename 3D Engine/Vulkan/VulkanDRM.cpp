@@ -1,63 +1,22 @@
 #include "VulkanDRM.h"
 #include "VulkanCommands.h"
-#include "VulkanCommandList.h"
 #include <Engine/Timers.h>
 #include <Engine/Screen.h>
-
-static CAST(drm::Buffer, VulkanBuffer);
-static CAST(drm::Image, VulkanImage);
-static CAST(RenderCommandList, VulkanCommandList);
-
-HashTable<VkFormat, uint32> SizeOfVulkanFormat;
-HashTable<EFormat, uint32> ImageFormatToGLSLSize;
 
 VulkanDRM::VulkanDRM()
 	: Swapchain(Device)
 	, Allocator(Device)
 	, DescriptorPool(Device)
 {
-	SizeOfVulkanFormat = ([&] ()
-	{
-		HashTable<VkFormat, uint32> Result; 
-		for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
-		{
-			auto SizeOf = GetValue(GLSLTypeSizes, GLSLType);
-			Result[Format] = SizeOf;
-		} 
-		return Result;
-	}());
-
-	ImageFormatToGLSLSize = ([&] ()
-	{
-		HashTable<EFormat, uint32> Result; 
-		for (auto&[GLSLType, Format] : GLSLTypeToVulkanFormat)
-		{
-			auto ImageFormat = VulkanImage::GetEngineFormat(Format); 
-			auto GLSLSize = GetValue(GLSLTypeSizes, GLSLType); 
-			Result[ImageFormat] = GLSLSize;
-		} 
-		return Result;
-	}());
-}
-
-void VulkanDRM::Init()
-{
-	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
+	gScreen.RegisterScreenResChangedCallback([&] (int32 Width, int32 Height)
 	{
 		Swapchain.Free();
 		Swapchain.Init();
 	});
-	
-	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
+	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &RenderEndSem));
-}
-
-void VulkanDRM::Release()
-{
-	vkDestroySemaphore(Device, RenderEndSem, nullptr);
-	vkDestroySemaphore(Device, ImageAvailableSem, nullptr);
 }
 
 void VulkanDRM::BeginFrame()
@@ -83,7 +42,7 @@ void VulkanDRM::EndFrame()
 	DescriptorPool.EndFrame();
 }
 
-void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
+void VulkanDRM::SubmitCommands(drm::CommandListRef CmdList)
 { 
 	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
 
@@ -134,7 +93,7 @@ void VulkanDRM::SubmitCommands(RenderCommandListRef CmdList)
 	}
 }
 
-RenderCommandListRef VulkanDRM::CreateCommandList()
+drm::CommandListRef VulkanDRM::CreateCommandList()
 {
 	return MakeRef<VulkanCommandList>(Device, Allocator, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
@@ -195,15 +154,6 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 
 		CmdList->Finish();
 
-		SubmitCommands(CmdList);
-	}
-
-	if (UsageFlags == EImageUsage::Storage)
-	{
-		RenderCommandListRef CmdList = drm::CreateCommandList();
-		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::ShaderRead | EAccess::ShaderWrite, EImageLayout::General);
-		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
-		CmdList->Finish();
 		SubmitCommands(CmdList);
 	}
 

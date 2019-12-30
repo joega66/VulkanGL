@@ -1,11 +1,6 @@
 #include "VulkanCommandList.h"
 #include "VulkanDRM.h"
 
-static CAST(drm::Buffer, VulkanBuffer);
-static CAST(drm::Image, VulkanImage);
-static CAST(RenderCommandList, VulkanCommandList);
-static CAST(drm::DescriptorSet, VulkanDescriptorSet);
-
 VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VkQueueFlagBits QueueFlags)
 	: Device(Device)
 	, Allocator(Allocator)

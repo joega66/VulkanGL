@@ -62,7 +62,7 @@ DepthPrepass::DepthPrepass(const MeshProxy& MeshProxy)
 	}
 }
 
-void DepthPrepass::BindDescriptorSets(RenderCommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
+void DepthPrepass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
 {
 	std::array<drm::DescriptorSetRef, 3> DescriptorSets =
 	{
@@ -91,13 +91,13 @@ void DepthPrepass::SetPipelineState(PipelineStateInitializer& PSOInit, const Mes
 	};
 }
 
-void DepthPrepass::Draw(RenderCommandList& CmdList, const MeshElement& MeshElement) const
+void DepthPrepass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
 {
 	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
 	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
 }
 
-void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, RenderCommandList& CmdList)
+void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	RenderPassInitializer RPInit = { 0 };
 	RPInit.DepthTarget = drm::RenderTargetView(

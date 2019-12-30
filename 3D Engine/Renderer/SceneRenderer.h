@@ -32,21 +32,21 @@ private:
 
 	drm::BufferRef WorldToVoxelBuffer;
 
-	void RenderDepthPrepass(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderShadowDepths(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderShadowMask(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderVoxels(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderVoxelization(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderVoxelVisualization(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderLightingPass(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderSkybox(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void RenderDepthVisualization(SceneProxy& Scene, RenderCommandList& CmdList);
+	void RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
 };

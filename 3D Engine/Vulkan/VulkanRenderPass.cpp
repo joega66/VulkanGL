@@ -1,8 +1,6 @@
 #include "VulkanDevice.h"
 #include "VulkanDRM.h"
 
-static CAST(drm::Image, VulkanImage);
-
 VulkanDevice::VulkanRenderPassHash::MinRenderTargetView::MinRenderTargetView(const drm::RenderTargetView& RTView)
 {
 	const VulkanImageRef& VulkanImage = ResourceCast(RTView.Image);
