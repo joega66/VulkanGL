@@ -1,8 +1,8 @@
-#include "ShadowDepthPass.h"
 #include "MaterialShader.h"
 #include "MeshProxy.h"
 #include "SceneRenderer.h"
 #include "FullscreenQuad.h"
+#include "ShadowProxy.h"
 
 template<EMeshType MeshType>
 class ShadowDepthVS : public MeshShader<MeshType>
@@ -48,48 +48,20 @@ public:
 	}
 };
 
-ShadowDepthPass::ShadowDepthPass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToShadowDepthPass(const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	VertShader = *ShaderMapRef<ShadowDepthVS<MeshType>>();
-
-	if (MeshProxy.Material.IsMasked())
+	ShaderStages ShaderStages =
 	{
-		FragShader = *ShaderMapRef<ShadowDepthFS<MeshType>>();
-	}
-}
-
-void ShadowDepthPass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
-{
-	const std::array<drm::DescriptorSetRef, 3> DescriptorSets =
-	{
-		Pass.ShadowProxy,
-		MeshProxy.MeshSet,
-		MeshProxy.MaterialSet
+		*ShaderMapRef<ShadowDepthVS<MeshType>>(),
+		nullptr,
+		nullptr,
+		nullptr,
+		*ShaderMapRef<ShadowDepthFS<MeshType>>()
 	};
 
-	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-}
-
-void ShadowDepthPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
-{
-	PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
-
-	PSOInit.GraphicsPipelineState =
-	{
-		VertShader,
-		nullptr,
-		nullptr,
-		nullptr,
-		FragShader
-	};
-}
-
-void ShadowDepthPass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
-{
-	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
-	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
+	ShadowDepthPass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
 }
 
 class ShadowProjectionFS : public drm::Shader
@@ -107,11 +79,28 @@ public:
 	}
 };
 
+struct ShadowDepthPassDescriptorSets
+{
+	drm::DescriptorSetRef ShadowProxyDescriptorSet;
+
+	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
+	{
+		std::array<drm::DescriptorSetRef, 3> DescriptorSets =
+		{
+			ShadowProxyDescriptorSet,
+			MeshProxy.MeshSet,
+			MeshProxy.MaterialSet
+		};
+
+		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
+	}
+};
+
 void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
-		auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
+		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 		drm::ImageRef ShadowMap = ShadowProxy.GetShadowMap();
 
 		RenderPassInitializer RPInit = { 0 };
@@ -132,9 +121,9 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 		PSOInit.RasterizationState.DepthBiasConstantFactor = ShadowProxy.GetDepthBiasConstantFactor();
 		PSOInit.RasterizationState.DepthBiasSlopeFactor = ShadowProxy.GetDepthBiasSlopeFactor();
 
-		ShadowDepthPass::PassDescriptors PassDescriptors = { ShadowProxy.GetDescriptorSet() };
+		ShadowDepthPassDescriptorSets DescriptorSets = { ShadowProxy.GetDescriptorSet() };
 
-		Scene.ShadowDepthPass.Draw(CmdList, PSOInit, PassDescriptors);
+		MeshDrawCommand::Draw(Scene.ShadowDepthPass, CmdList, DescriptorSets, PSOInit);
 
 		CmdList.EndRenderPass();
 	}
@@ -152,7 +141,7 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
-		auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
+		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
 		std::array<drm::DescriptorSetRef, 3> Descriptors =
 		{
@@ -168,8 +157,8 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 		PSOInit.Viewport.Height = ShadowMask->Height;
 		PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSOInit.DepthStencilState.DepthWriteEnable = false;
-		PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<FullscreenVS>();
-		PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<ShadowProjectionFS>();
+		PSOInit.ShaderStages.Vertex = *ShaderMapRef<FullscreenVS>();
+		PSOInit.ShaderStages.Fragment = *ShaderMapRef<ShadowProjectionFS>();
 
 		CmdList.BindPipeline(PSOInit);
 

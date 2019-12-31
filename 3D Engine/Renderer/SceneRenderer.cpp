@@ -1,9 +1,11 @@
 #include "SceneRenderer.h"
 #include "FullscreenQuad.h"
-#include "Light.h"
+#include "ShadowProxy.h"
 #include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
+
+uint32 gVoxelGridSize;
 
 SceneRenderer::SceneRenderer(Scene& Scene)
 {
@@ -11,11 +13,11 @@ SceneRenderer::SceneRenderer(Scene& Scene)
 
 	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
-		SceneDepth = drm::CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::RenderTargetable | EImageUsage::Sampled);
-		ShadowMask = drm::CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::RenderTargetable | EImageUsage::Sampled);
+		SceneDepth = drm::CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		ShadowMask = drm::CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 
-		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
-		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, ShaderBinding(1));
+		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, 0);
+		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
 		SceneTextures->Update();
 	});
 
@@ -26,8 +28,8 @@ SceneRenderer::SceneRenderer(Scene& Scene)
 	VoxelPositions = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::ivec3));
 
 	VoxelsDescriptorSet = drm::CreateDescriptorSet();
-	VoxelsDescriptorSet->Write(VoxelColors, ShaderBinding(1));
-	VoxelsDescriptorSet->Write(VoxelPositions, ShaderBinding(2));
+	VoxelsDescriptorSet->Write(VoxelColors, 1);
+	VoxelsDescriptorSet->Write(VoxelPositions, 2);
 
 	ShadowProxy::InitCallbacks(Scene.ECS);
 }
@@ -96,7 +98,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		CmdList.BeginRenderPass(RPInit);
 
 		drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
-		DescriptorSet->Write(ShadowMap, SamplerState{ EFilter::Nearest }, ShaderBinding(0));
+		DescriptorSet->Write(ShadowMap, SamplerState{ EFilter::Nearest }, 0);
 		DescriptorSet->Update();
 
 		CmdList.BindDescriptorSets(1, &DescriptorSet);
@@ -106,8 +108,8 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		PSOInit.Viewport.Height = SceneDepth->Height;
 		PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSOInit.DepthStencilState.DepthWriteEnable = false;
-		PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<FullscreenVS>();
-		PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<FullscreenFS<EVisualize::Depth>>();
+		PSOInit.ShaderStages.Vertex = *ShaderMapRef<FullscreenVS>();
+		PSOInit.ShaderStages.Fragment = *ShaderMapRef<FullscreenFS<EVisualize::Depth>>();
 
 		CmdList.BindPipeline(PSOInit);
 

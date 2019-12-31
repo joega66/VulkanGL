@@ -73,7 +73,7 @@ void VulkanSurface::Init()
 			, Extent.width
 			, Extent.height
 			, 1
-			, EImageUsage::RenderTargetable);
+			, EImageUsage::Attachment);
 	}
 }
 

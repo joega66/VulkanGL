@@ -7,7 +7,7 @@
 #include <Components/CTransform.h>
 #include <Components/CRenderer.h>
 #include "MeshProxy.h"
-#include "ShadowDepthPass.h"
+#include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(Scene& Scene)
 	: View(Scene.View)
@@ -19,9 +19,9 @@ SceneProxy::SceneProxy(Scene& Scene)
 	InitDrawLists();
 
 	DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(ViewUniform, ShaderBinding(0));
-	DescriptorSet->Write(DirectionalLightBuffer, ShaderBinding(1));
-	DescriptorSet->Write(PointLightBuffer, ShaderBinding(2));
+	DescriptorSet->Write(ViewUniform, 0);
+	DescriptorSet->Write(DirectionalLightBuffer, 1);
+	DescriptorSet->Write(PointLightBuffer, 2);
 	DescriptorSet->Update();
 }
 
@@ -63,75 +63,80 @@ void SceneProxy::InitView()
 
 void SceneProxy::InitLights()
 {
+	InitDirectionalLights();
+	InitPointLights();
+}
+
+void SceneProxy::InitDirectionalLights()
+{
+	UNIFORM_STRUCT(DirectionalLightProxy,
+		glm::vec3 Color;
+		float Intensity;
+		glm::vec3 Direction;
+		int32 _Pad1;
+	);
+
+	std::vector<DirectionalLightProxy> DirectionalLightProxies;
+
+	for (auto Entity : ECS.GetVisibleEntities<CDirectionalLight>())
 	{
-		UNIFORM_STRUCT(DirectionalLightProxy,
-			glm::vec3 Color;
-			float Intensity;
-			glm::vec3 Direction;
-			int32 _Pad1;
-		);
+		auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
 
-		std::vector<DirectionalLightProxy> DirectionalLightProxies;
+		DirectionalLightProxy DirectionalLightProxy;
+		DirectionalLightProxy.Intensity = DirectionalLight.Intensity;
+		DirectionalLightProxy.Color = DirectionalLight.Color;
+		DirectionalLightProxy.Direction = glm::normalize(DirectionalLight.Direction);
 
-		for (auto Entity : ECS.GetVisibleEntities<CDirectionalLight>())
-		{
-			auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
-
-			DirectionalLightProxy DirectionalLightProxy;
-			DirectionalLightProxy.Intensity = DirectionalLight.Intensity;
-			DirectionalLightProxy.Color = DirectionalLight.Color;
-			DirectionalLightProxy.Direction = glm::normalize(DirectionalLight.Direction);
-
-			DirectionalLightProxies.emplace_back(DirectionalLightProxy);
-		}
-
-		glm::uvec4 NumDirectionalLights;
-		NumDirectionalLights.x = DirectionalLightProxies.size();
-
-		DirectionalLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-		void* Data = drm::LockBuffer(DirectionalLightBuffer);
-		Platform.Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
-		Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-		drm::UnlockBuffer(DirectionalLightBuffer);
-
-		for (auto Entity : ECS.GetEntities<ShadowProxy>())
-		{
-			auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
-			auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
-			ShadowProxy.Update(DirectionalLight);
-		}
+		DirectionalLightProxies.emplace_back(DirectionalLightProxy);
 	}
-	
+
+	glm::uvec4 NumDirectionalLights;
+	NumDirectionalLights.x = DirectionalLightProxies.size();
+
+	DirectionalLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	void* Data = drm::LockBuffer(DirectionalLightBuffer);
+	Platform.Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
+	Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	drm::UnlockBuffer(DirectionalLightBuffer);
+
+	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
-		UNIFORM_STRUCT(PointLightProxy,
-			glm::vec3 Position;
-			float Intensity;
-			glm::vec3 Color;
-			float Range;
-		);
-
-		std::vector<PointLightProxy> PointLightProxies;
-
-		for (auto Entity : ECS.GetVisibleEntities<CPointLight>())
-		{
-			auto& PointLight = ECS.GetComponent<CPointLight>(Entity);
-			auto& Transform = ECS.GetComponent<CTransform>(Entity);
-			PointLightProxies.emplace_back(PointLightProxy{
-				Transform.GetPosition(), 
-				PointLight.Intensity, 
-				PointLight.Color, 
-				PointLight.Range });
-		}
-
-		glm::uvec4 NumPointLights;
-		NumPointLights.x = PointLightProxies.size();
-
-		PointLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-		void* Data = drm::LockBuffer(PointLightBuffer);
-		Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
-		Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-		drm::UnlockBuffer(PointLightBuffer);
+		auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
+		auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
+		ShadowProxy.Update(DirectionalLight);
 	}
+}
+
+void SceneProxy::InitPointLights()
+{
+	UNIFORM_STRUCT(PointLightProxy,
+		glm::vec3 Position;
+		float Intensity;
+		glm::vec3 Color;
+		float Range;
+	);
+
+	std::vector<PointLightProxy> PointLightProxies;
+
+	for (auto Entity : ECS.GetVisibleEntities<CPointLight>())
+	{
+		auto& PointLight = ECS.GetComponent<CPointLight>(Entity);
+		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+		PointLightProxies.emplace_back(PointLightProxy{
+			Transform.GetPosition(),
+			PointLight.Intensity,
+			PointLight.Color,
+			PointLight.Range });
+	}
+
+	glm::uvec4 NumPointLights;
+	NumPointLights.x = PointLightProxies.size();
+
+	PointLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
+	void* Data = drm::LockBuffer(PointLightBuffer);
+	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
+	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
+	drm::UnlockBuffer(PointLightBuffer);
 }
 
 void SceneProxy::InitDrawLists()
@@ -187,15 +192,8 @@ void SceneProxy::InitDrawLists()
 
 void SceneProxy::AddToDrawLists(const MeshProxy& MeshProxy)
 {
-	DepthPrepass.Add(MeshProxy, class DepthPrepass(MeshProxy));
-
-	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
-		MeshProxy.Material.IsMasked() ?
-		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
-
-	LightingPass[StaticDrawListType].Add(MeshProxy, class LightingPass(MeshProxy));
-
-	VoxelsPass.Add(MeshProxy, class VoxelizationPass(MeshProxy));
-
-	ShadowDepthPass.Add(MeshProxy, class ShadowDepthPass(MeshProxy));
+	AddToDepthPrepass(MeshProxy);
+	AddToShadowDepthPass(MeshProxy);
+	AddToVoxelsPass(MeshProxy);
+	AddToLightingPass(MeshProxy);
 }

@@ -1,11 +1,8 @@
-#include "Voxels.h"
 #include "SceneRenderer.h"
 #include "MaterialShader.h"
 #include "MeshProxy.h"
 #include "FullscreenQuad.h"
 #include <Engine/Screen.h>
-
-uint32 gVoxelGridSize;
 
 template<EMeshType MeshType>
 class VoxelsVS : public MeshShader<MeshType>
@@ -75,47 +72,20 @@ public:
 	}
 };
 
-VoxelizationPass::VoxelizationPass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToVoxelsPass(const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	VertShader = *ShaderMapRef<VoxelsVS<MeshType>>();
-	GeomShader = *ShaderMapRef<VoxelsGS<MeshType>>();
-	FragShader = *ShaderMapRef<VoxelsFS<MeshType>>();
-}
-
-void VoxelizationPass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
-{
-	const std::array<drm::DescriptorSetRef, 5> DescriptorSets = 
+	ShaderStages ShaderStages =
 	{
-		Pass.Scene,
-		MeshProxy.MeshSet,
-		MeshProxy.MaterialSet,
-		Pass.SceneTextures,
-		Pass.Voxels
-	};
-
-	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-}
-
-void VoxelizationPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
-{
-	PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
-
-	PSOInit.GraphicsPipelineState =
-	{
-		VertShader,
+		*ShaderMapRef<VoxelsVS<MeshType>>(),
 		nullptr,
 		nullptr,
-		GeomShader,
-		FragShader
+		*ShaderMapRef<VoxelsGS<MeshType>>(),
+		*ShaderMapRef<VoxelsFS<MeshType>>()
 	};
-}
 
-void VoxelizationPass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
-{
-	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
-	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
+	VoxelsPass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
 }
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -150,14 +120,35 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	VoxelIndirectBuffer = drm::CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
 
-	VoxelsDescriptorSet->Write(WorldToVoxelBuffer, ShaderBinding(0));
-	VoxelsDescriptorSet->Write(VoxelIndirectBuffer, ShaderBinding(3));
+	VoxelsDescriptorSet->Write(WorldToVoxelBuffer, 0);
+	VoxelsDescriptorSet->Write(VoxelIndirectBuffer, 3);
 	VoxelsDescriptorSet->Update();
 
 	RenderVoxelization(Scene, CmdList);
 
 	RenderVoxelVisualization(Scene, CmdList);
 }
+
+struct VoxelizationPassDescriptorSets
+{
+	drm::DescriptorSetRef Scene;
+	drm::DescriptorSetRef SceneTextures;
+	drm::DescriptorSetRef Voxels;
+
+	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
+	{
+		const std::array<drm::DescriptorSetRef, 5> DescriptorSets =
+		{
+			Scene,
+			MeshProxy.MeshSet,
+			MeshProxy.MaterialSet,
+			SceneTextures,
+			Voxels
+		};
+
+		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
+	}
+};
 
 void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
@@ -173,8 +164,6 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageMemoryBarrier);
 
-	VoxelizationPass::PassDescriptors Descriptors = { Scene.DescriptorSet, SceneTextures, VoxelsDescriptorSet };
-
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
 	RPInit.RenderArea.Extent = glm::uvec2(gVoxelGridSize);
 
@@ -186,7 +175,9 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 	PSOInit.Viewport.Width = gVoxelGridSize;
 	PSOInit.Viewport.Height = gVoxelGridSize;
 
-	Scene.VoxelsPass.Draw(CmdList, PSOInit, Descriptors);
+	VoxelizationPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures, VoxelsDescriptorSet };
+
+	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList, DescriptorSets, PSOInit);
 
 	CmdList.EndRenderPass();
 }
@@ -283,9 +274,9 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	CmdList.BeginRenderPass(RPInit);
 
 	drm::DescriptorSetRef DrawVoxelsDescriptorSet = drm::CreateDescriptorSet();
-	DrawVoxelsDescriptorSet->Write(WorldToVoxelBuffer, ShaderBinding(0));
-	DrawVoxelsDescriptorSet->Write(VoxelColors, ShaderBinding(1));
-	DrawVoxelsDescriptorSet->Write(VoxelPositions, ShaderBinding(2));
+	DrawVoxelsDescriptorSet->Write(WorldToVoxelBuffer, 0);
+	DrawVoxelsDescriptorSet->Write(VoxelColors, 1);
+	DrawVoxelsDescriptorSet->Write(VoxelPositions, 2);
 	DrawVoxelsDescriptorSet->Update();
 
 	const std::vector<drm::DescriptorSetRef> DescriptorSets =
@@ -303,9 +294,9 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	PSOInit.Viewport.Height = gScreen.GetHeight();
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 	PSOInit.DepthStencilState.DepthWriteEnable = true;
-	PSOInit.GraphicsPipelineState.Vertex = *ShaderMapRef<DrawVoxelsVS>();
-	PSOInit.GraphicsPipelineState.Geometry = *ShaderMapRef<DrawVoxelsGS>();
-	PSOInit.GraphicsPipelineState.Fragment = *ShaderMapRef<DrawVoxelsFS>();
+	PSOInit.ShaderStages.Vertex = *ShaderMapRef<DrawVoxelsVS>();
+	PSOInit.ShaderStages.Geometry = *ShaderMapRef<DrawVoxelsGS>();
+	PSOInit.ShaderStages.Fragment = *ShaderMapRef<DrawVoxelsFS>();
 	PSOInit.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSOInit.SpecializationInfo.Add(0, VoxelSize);
 

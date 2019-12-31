@@ -65,33 +65,6 @@ struct ShaderInfo
 	EShaderStage Stage;
 };
 
-class ShaderBinding
-{
-public:
-	ShaderBinding() = default;
-
-	ShaderBinding(uint32 Binding)
-		: Binding(Binding)
-	{
-	}
-
-	inline uint32 GetBinding() const { return Binding; }
-
-	operator uint32() const
-	{
-		return Binding;
-	}
-
-	operator bool() const
-	{
-		return Binding != -1;
-	}
-
-private:
-	uint32 Binding = -1;
-	//EShaderStage StageFlags = EShaderStage::All;
-};
-
 class SpecializationInfo
 {
 public:

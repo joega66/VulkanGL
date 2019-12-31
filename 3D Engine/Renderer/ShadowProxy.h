@@ -1,5 +1,4 @@
 #pragma once
-#include <Platform/Platform.h>
 #include <DRM.h>
 
 class ShadowProxy
@@ -22,8 +21,8 @@ public:
 	inline drm::DescriptorSetRef GetDescriptorSet() const { return DescriptorSet; }
 
 private:
-	float DepthBiasConstantFactor;
-	float DepthBiasSlopeFactor;
+	float DepthBiasConstantFactor = 0.0f;
+	float DepthBiasSlopeFactor = 0.0f;
 	drm::BufferRef LightViewProjBuffer;
 	drm::ImageRef ShadowMap;
 	drm::DescriptorSetRef DescriptorSet;

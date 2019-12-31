@@ -139,6 +139,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 	if (Data)
 	{
 		VulkanCommandListRef CmdList = ResourceCast(drm::CreateCommandList());
+
 		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
 		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);

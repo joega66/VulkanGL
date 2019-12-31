@@ -1,4 +1,3 @@
-#include "LightingPass.h"
 #include "MaterialShader.h"
 #include "SceneProxy.h"
 #include "SceneRenderer.h"
@@ -47,46 +46,46 @@ public:
 	}
 };
 
-LightingPass::LightingPass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToLightingPass(const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	VertShader = *ShaderMapRef<LightingPassVS<MeshType>>();
-	FragShader = *ShaderMapRef<LightingPassFS<MeshType>>();
-}
-
-void LightingPass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
-{
-	const std::array<drm::DescriptorSetRef, 4> DescriptorSets =
+	ShaderStages ShaderStages =
 	{
-		Pass.SceneSet,
-		MeshProxy.MeshSet,
-		MeshProxy.MaterialSet,
-		Pass.SceneTextures,
+		*ShaderMapRef<LightingPassVS<MeshType>>(),
+		nullptr,
+		nullptr,
+		nullptr,
+		*ShaderMapRef<LightingPassFS<MeshType>>()
 	};
 
-	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
+	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
+		MeshProxy.Material.IsMasked() ?
+		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
+
+	LightingPass[StaticDrawListType].push_back(
+		MeshDrawCommand(std::move(ShaderStages), MeshProxy)
+	);
 }
 
-void LightingPass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
+struct LightingPassDescriptorSets
 {
-	PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
+	drm::DescriptorSetRef Scene;
+	drm::DescriptorSetRef SceneTextures;
 
-	PSOInit.GraphicsPipelineState =
+	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
 	{
-		VertShader,
-		nullptr,
-		nullptr,
-		nullptr,
-		FragShader
-	};
-}
+		const std::array<drm::DescriptorSetRef, 4> DescriptorSets =
+		{
+			Scene,
+			MeshProxy.MeshSet,
+			MeshProxy.MaterialSet,
+			SceneTextures
+		};
 
-void LightingPass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
-{
-	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
-	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
-}
+		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
+	}
+};
 
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
@@ -96,8 +95,8 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdL
 	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSOInit.DepthStencilState.DepthWriteEnable = false;
 
-	LightingPass::PassDescriptors Descriptors = { Scene.DescriptorSet, SceneTextures };
+	LightingPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures };
 
-	Scene.LightingPass[EStaticDrawListType::Opaque].Draw(CmdList, PSOInit, Descriptors);
-	Scene.LightingPass[EStaticDrawListType::Masked].Draw(CmdList, PSOInit, Descriptors);
+	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList, DescriptorSets, PSOInit);
+	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList, DescriptorSets, PSOInit);
 }

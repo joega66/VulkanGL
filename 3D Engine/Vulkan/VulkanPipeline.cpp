@@ -75,7 +75,7 @@ bool VulkanDevice::VulkanPipelineHash::operator==(const VulkanPipelineHash& Othe
 
 bool VulkanDevice::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
 {
-	const GraphicsPipelineState& GfxPipelineState = PSOInit.GraphicsPipelineState;
+	const ShaderStages& GfxPipelineState = PSOInit.ShaderStages;
 
 	switch (Shader->CompilationInfo.Stage)
 	{
@@ -235,7 +235,7 @@ VkPipeline VulkanDevice::CreatePipeline(
 		}
 	}
 
-	const auto& GraphicsPipeline = PSOInit.GraphicsPipelineState;
+	const auto& GraphicsPipeline = PSOInit.ShaderStages;
 
 	std::vector<drm::ShaderRef> Shaders;
 

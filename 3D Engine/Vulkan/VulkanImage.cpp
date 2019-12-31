@@ -134,7 +134,7 @@ void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout
 	{
 		VkFlags Usage = 0;
 
-		if (Any(UsageFlags & EImageUsage::RenderTargetable))
+		if (Any(UsageFlags & EImageUsage::Attachment))
 		{
 			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
@@ -336,7 +336,7 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 void VulkanDevice::FreeImage(VulkanImage& Image)
 {
 	// The image is no longer being referenced; destroy vulkan objects.
-	if (Any(Image.Usage & EImageUsage::RenderTargetable))
+	if (Any(Image.Usage & EImageUsage::Attachment))
 	{
 		for (auto Iter = RenderPassCache.begin(); Iter != RenderPassCache.end();)
 		{

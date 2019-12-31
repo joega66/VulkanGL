@@ -46,7 +46,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
 
-	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, ShaderBinding(0));
+	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, 0);
 	DescriptorSet->Update();
 
 	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
@@ -60,7 +60,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = gScreen.GetWidth();
 	PSOInit.Viewport.Height = gScreen.GetHeight();
-	PSOInit.GraphicsPipelineState = { VertShader, nullptr, nullptr, nullptr, FragShader };
+	PSOInit.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
 	CmdList.BindPipeline(PSOInit);
 

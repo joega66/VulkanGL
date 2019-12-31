@@ -1,4 +1,4 @@
-#include "Light.h"
+#include "ShadowProxy.h"
 #include <Components/CLight.h>
 #include <ECS/EntityManager.h>
 
@@ -15,10 +15,10 @@ ShadowProxy::ShadowProxy(const CDirectionalLight& DirectionalLight)
 	const int32 Resolution = Platform.GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
 
-	ShadowMap = drm::CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::RenderTargetable | EImageUsage::Sampled);
+	ShadowMap = drm::CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
 	DescriptorSet = drm::CreateDescriptorSet();
-	DescriptorSet->Write(ShadowMap, SamplerState{}, ShaderBinding(1));
+	DescriptorSet->Write(ShadowMap, SamplerState{}, 1);
 
 	Update(DirectionalLight);
 }
@@ -39,6 +39,6 @@ void ShadowProxy::Update(const CDirectionalLight& DirectionalLight)
 
 	LightViewProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &LightViewProjMatrix);
 
-	DescriptorSet->Write(LightViewProjBuffer, ShaderBinding(0));
+	DescriptorSet->Write(LightViewProjBuffer, 0);
 	DescriptorSet->Update();
 }

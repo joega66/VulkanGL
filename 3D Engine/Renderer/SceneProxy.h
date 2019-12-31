@@ -1,11 +1,6 @@
 #pragma once
 #include <Engine/Scene.h>
-#include "Light.h"
-#include "DepthPrepass.h"
-#include "LightingPass.h"
-#include "Voxels.h"
-#include "ShadowDepthPass.h"
-#include "MeshDrawInterface.h"
+#include "MeshDrawCommand.h"
 
 namespace EStaticDrawListType
 {
@@ -30,15 +25,7 @@ public:
 	SceneProxy(const SceneProxy&) = delete;
 	SceneProxy& operator=(const SceneProxy&) = delete;
 
-	const drm::ImageRef Skybox;
-
-	MeshDrawInterface<DepthPrepass> DepthPrepass;
-
-	std::array<MeshDrawInterface<LightingPass>, EStaticDrawListType::Max> LightingPass;
-
-	MeshDrawInterface<VoxelizationPass> VoxelsPass;
-
-	MeshDrawInterface<ShadowDepthPass> ShadowDepthPass;
+	drm::ImageRef Skybox;
 
 	drm::BufferRef ViewUniform;
 
@@ -48,11 +35,26 @@ public:
 
 	drm::DescriptorSetRef DescriptorSet;
 
+	std::vector<MeshProxy> MeshProxies;
+
+	std::vector<MeshDrawCommand> DepthPrepass;
+
+	std::vector<MeshDrawCommand> ShadowDepthPass;
+
+	std::vector<MeshDrawCommand> VoxelsPass;
+
+	std::array<std::vector<MeshDrawCommand>, EStaticDrawListType::Max> LightingPass;
+
 private:
 	void InitView();
 	void InitLights();
+	void InitDirectionalLights();
+	void InitPointLights();
 	void InitDrawLists();
-	void AddToDrawLists(const MeshProxy& MeshProxy);
 
-	std::vector<MeshProxy> MeshProxies;
+	void AddToDrawLists(const MeshProxy& MeshProxy);
+	void AddToDepthPrepass(const MeshProxy& MeshProxy);
+	void AddToShadowDepthPass(const MeshProxy& MeshProxy);
+	void AddToVoxelsPass(const MeshProxy& MeshProxy);
+	void AddToLightingPass(const MeshProxy& MeshProxy);
 };

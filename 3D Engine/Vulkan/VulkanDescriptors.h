@@ -42,9 +42,9 @@ public:
 	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool);
 	virtual ~VulkanDescriptorSet() override;
 
-	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) override;
-	virtual void Write(drm::ImageRef Image, const ShaderBinding& Binding) override;
-	virtual void Write(drm::BufferRef Buffer, const ShaderBinding& Binding) override;
+	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, uint32 Binding) override;
+	virtual void Write(drm::ImageRef Image, uint32 Binding) override;
+	virtual void Write(drm::BufferRef Buffer, uint32 Binding) override;
 	virtual void Update() override;
 
 private:
@@ -56,7 +56,7 @@ private:
 	std::vector<VkDescriptorSetLayoutBinding> VulkanBindings;
 	std::vector<VkWriteDescriptorSet> PendingWrites;
 
-	void MaybeAddBinding(const ShaderBinding& Binding, VkDescriptorType DescriptorType);
+	void MaybeAddBinding(uint32 Binding, VkDescriptorType DescriptorType);
 };
 
 CLASS(VulkanDescriptorSet);

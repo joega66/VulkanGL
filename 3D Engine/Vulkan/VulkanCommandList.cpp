@@ -101,7 +101,7 @@ void VulkanCommandList::EndRenderPass()
 
 void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 {
-	const GraphicsPipelineState& PipelineState = PSOInit.GraphicsPipelineState;
+	const ShaderStages& PipelineState = PSOInit.ShaderStages;
 	// Validate gfx pipeline stages.
 	assert(PipelineState.Vertex && PipelineState.Vertex->CompilationInfo.Stage == EShaderStage::Vertex);
 	assert(!PipelineState.TessControl || (PipelineState.TessControl && PipelineState.TessControl->CompilationInfo.Stage == EShaderStage::TessControl));

@@ -109,7 +109,7 @@ VulkanDescriptorSet::~VulkanDescriptorSet()
 	DescriptorPool.Free(DescriptorSet);
 }
 
-void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding)
+void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler, uint32 Binding)
 {
 	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	const VkSampler VulkanSampler = Device.GetSampler(Sampler);
@@ -120,7 +120,7 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler
 	MaybeAddBinding(Binding, DescriptorType);
 
 	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding.GetBinding();
+	Write.dstBinding = Binding;
 	Write.dstArrayElement = 0;
 	Write.descriptorType = DescriptorType;
 	Write.descriptorCount = 1;
@@ -129,7 +129,7 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler
 	PendingWrites.push_back(Write);
 }
 
-void VulkanDescriptorSet::Write(drm::ImageRef Image, const ShaderBinding& Binding)
+void VulkanDescriptorSet::Write(drm::ImageRef Image, uint32 Binding)
 {
 	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	const VulkanImageRef& VulkanImage = ResourceCast(Image);
@@ -138,7 +138,7 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const ShaderBinding& Bindin
 	MaybeAddBinding(Binding, DescriptorType);
 
 	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding.GetBinding();
+	Write.dstBinding = Binding;
 	Write.dstArrayElement = 0;
 	Write.descriptorType = DescriptorType;
 	Write.descriptorCount = 1;
@@ -147,7 +147,7 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, const ShaderBinding& Bindin
 	PendingWrites.push_back(Write);
 }
 
-void VulkanDescriptorSet::Write(drm::BufferRef Buffer, const ShaderBinding& Binding)
+void VulkanDescriptorSet::Write(drm::BufferRef Buffer, uint32 Binding)
 {
 	const VkDescriptorType DescriptorType = Buffer->Usage == EBufferUsage::Uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
@@ -157,7 +157,7 @@ void VulkanDescriptorSet::Write(drm::BufferRef Buffer, const ShaderBinding& Bind
 	MaybeAddBinding(Binding, DescriptorType);
 
 	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding.GetBinding();
+	Write.dstBinding = Binding;
 	Write.dstArrayElement = 0;
 	Write.descriptorType = DescriptorType;
 	Write.descriptorCount = 1;
@@ -198,18 +198,18 @@ void VulkanDescriptorSet::Update()
 	PendingWrites.clear();
 }
 
-void VulkanDescriptorSet::MaybeAddBinding(const ShaderBinding& Binding, VkDescriptorType DescriptorType)
+void VulkanDescriptorSet::MaybeAddBinding(uint32 Binding, VkDescriptorType DescriptorType)
 {
 	if (DescriptorSetLayout == VK_NULL_HANDLE)
 	{
 		check(std::none_of(VulkanBindings.begin(), VulkanBindings.end(),
 			[&] (const auto& VulkanBinding)
 		{
-			return VulkanBinding.binding == Binding.GetBinding();
+			return VulkanBinding.binding == Binding;
 		}), "This binding has already been seen before.");
 
 		VkDescriptorSetLayoutBinding VulkanBinding;
-		VulkanBinding.binding = Binding.GetBinding();
+		VulkanBinding.binding = Binding;
 		VulkanBinding.descriptorCount = 1;
 		VulkanBinding.descriptorType = DescriptorType;
 		VulkanBinding.pImmutableSamplers = nullptr;

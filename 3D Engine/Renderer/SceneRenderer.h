@@ -6,6 +6,8 @@
 class Scene;
 class RenderCommandList;
 
+extern uint32 gVoxelGridSize;
+
 class SceneRenderer
 {
 public:

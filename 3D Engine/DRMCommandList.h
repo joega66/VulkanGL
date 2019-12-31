@@ -200,7 +200,7 @@ struct InputAssemblyState
 	}
 };
 
-struct GraphicsPipelineState
+struct ShaderStages
 {
 	drm::ShaderRef Vertex;
 	drm::ShaderRef TessControl;
@@ -208,13 +208,13 @@ struct GraphicsPipelineState
 	drm::ShaderRef Geometry;
 	drm::ShaderRef Fragment;
 
-	friend bool operator==(const GraphicsPipelineState& L, const GraphicsPipelineState& R)
+	friend bool operator==(const ShaderStages& L, const ShaderStages& R)
 	{
 		return L.Vertex == R.Vertex && L.TessControl == R.TessControl && L.TessEval == R.TessEval 
 			&& L.Geometry == R.Geometry && L.Fragment == R.Fragment;
 	}
 
-	friend bool operator!=(const GraphicsPipelineState& L, const GraphicsPipelineState& R)
+	friend bool operator!=(const ShaderStages& L, const ShaderStages& R)
 	{
 		return !(L == R);
 	}
@@ -247,7 +247,7 @@ struct PipelineStateInitializer
 	MultisampleState MultisampleState;
 	std::array<ColorBlendAttachmentState, MaxRenderTargets> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
-	GraphicsPipelineState GraphicsPipelineState;
+	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
 
 	friend bool operator==(const PipelineStateInitializer& L, const PipelineStateInitializer& R)
@@ -265,7 +265,7 @@ struct PipelineStateInitializer
 			&& L.RasterizationState == R.RasterizationState
 			&& L.MultisampleState == R.MultisampleState
 			&& L.InputAssemblyState == R.InputAssemblyState
-			&& L.GraphicsPipelineState == R.GraphicsPipelineState
+			&& L.ShaderStages == R.ShaderStages
 			&& L.SpecializationInfo == R.SpecializationInfo;
 	}
 };

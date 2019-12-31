@@ -107,9 +107,6 @@
     <ClInclude Include="Renderer\FullscreenQuad.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\LightingPass.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\MaterialShader.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -133,9 +130,6 @@
     </ClInclude>
     <ClInclude Include="Components\CLight.h">
       <Filter>Source\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\Light.h">
-      <Filter>Source\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Timers.h">
       <Filter>Source\Engine</Filter>
@@ -200,23 +194,17 @@
     <ClInclude Include="Components\COutline.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\Voxels.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\MeshProxy.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\MeshDrawInterface.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\DepthPrepass.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\ShadowDepthPass.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="DRMCommandList.h">
       <Filter>Source\DRM</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\MeshDrawCommand.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\ShadowProxy.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -355,10 +343,10 @@
     <ClCompile Include="Renderer\DepthPrepass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\Light.cpp">
+    <ClCompile Include="Renderer\ShadowDepthPass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\ShadowDepthPass.cpp">
+    <ClCompile Include="Renderer\ShadowProxy.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

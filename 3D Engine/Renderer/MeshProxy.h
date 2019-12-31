@@ -13,13 +13,19 @@ public:
 
 	SpecializationInfo SpecializationInfo;
 
-	drm::BufferRef LocalToWorldUniform;
-
-	std::vector<MeshElement> Elements;
-
 	MeshProxy(
 		const CMaterial& Material, 
 		const std::vector<MeshElement>& Elements,
 		const drm::BufferRef& LocalToWorldUniform
 	);
+
+	void DrawElements(drm::CommandList& CmdList) const;
+
+	inline const class SpecializationInfo& GetSpecializationInfo() const { return SpecializationInfo; }
+
+	std::vector<MeshElement> Elements;
+
+private:
+	drm::BufferRef LocalToWorldUniform;
+
 };

@@ -126,7 +126,7 @@ enum class EBufferUsage
 enum class EImageUsage
 {
 	None,
-	RenderTargetable = 1 << 0,
+	Attachment = 1 << 0,
 	Sampled = 1 << 1,
 	Cubemap = 1 << 2,
 	Storage = 1 << 3,
@@ -365,9 +365,9 @@ namespace drm
 	{
 	public:
 		virtual ~DescriptorSet() {}
-		virtual void Write(ImageRef Image, const SamplerState& Sampler, const ShaderBinding& Binding) = 0;
-		virtual void Write(ImageRef Image, const ShaderBinding& Binding) = 0;
-		virtual void Write(BufferRef Buffer, const ShaderBinding& Binding) = 0;
+		virtual void Write(ImageRef Image, const SamplerState& Sampler, uint32 Binding) = 0;
+		virtual void Write(ImageRef Image, uint32 Binding) = 0;
+		virtual void Write(BufferRef Buffer, uint32 Binding) = 0;
 		virtual void Update() = 0;
 	};
 

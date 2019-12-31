@@ -14,6 +14,16 @@ MeshProxy::MeshProxy(
 
 	// @todo Make virtual
 	MeshSet = drm::CreateDescriptorSet();
-	MeshSet->Write(LocalToWorldUniform, ShaderBinding(0));
+	MeshSet->Write(LocalToWorldUniform, 0);
 	MeshSet->Update();
+}
+
+void MeshProxy::DrawElements(drm::CommandList& CmdList) const
+{
+	std::for_each(Elements.begin(), Elements.end(),
+		[&] (const MeshElement& MeshElement)
+	{
+		CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
+		CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
+	});
 }

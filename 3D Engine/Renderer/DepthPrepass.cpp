@@ -1,4 +1,3 @@
-#include "DepthPrepass.h"
 #include "MaterialShader.h"
 #include "SceneProxy.h"
 #include "SceneRenderer.h"
@@ -47,55 +46,38 @@ public:
 	}
 };
 
-DepthPrepass::DepthPrepass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToDepthPrepass(const MeshProxy& MeshProxy)
 {
-	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
+	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	VertShader = *ShaderMapRef<DepthPrepassVS<MeshType>>();
-
-	const CMaterial& Material = MeshProxy.Material;
-
-	// Optional: Frag shader only needed for masked materials.
-	if (Material.IsMasked())
+	ShaderStages ShaderStages =
 	{
-		FragShader = *ShaderMapRef<DepthPrepassFS<MeshType>>();
-	}
-}
-
-void DepthPrepass::BindDescriptorSets(drm::CommandList& CmdList, const MeshProxy& MeshProxy, const PassDescriptors& Pass) const
-{
-	std::array<drm::DescriptorSetRef, 3> DescriptorSets =
-	{
-		Pass.SceneSet,
-		MeshProxy.MeshSet,
-		MeshProxy.MaterialSet
+		*ShaderMapRef<DepthPrepassVS<MeshType>>(),
+		nullptr,
+		nullptr,
+		nullptr,
+		MeshProxy.Material.IsMasked() ? *ShaderMapRef<DepthPrepassFS<MeshType>>() : nullptr
 	};
 
-	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
+	DepthPrepass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
 }
 
-void DepthPrepass::SetPipelineState(PipelineStateInitializer& PSOInit, const MeshProxy& MeshProxy) const
+struct DepthPrepassDescriptorSets
 {
-	if (FragShader)
+	drm::DescriptorSetRef SceneDescriptorSet;
+
+	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
 	{
-		PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
+		std::array<drm::DescriptorSetRef, 3> DescriptorSets =
+		{
+			SceneDescriptorSet,
+			MeshProxy.MeshSet,
+			MeshProxy.MaterialSet
+		};
+
+		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 	}
-	
-	PSOInit.GraphicsPipelineState =
-	{
-		VertShader,
-		nullptr,
-		nullptr,
-		nullptr,
-		FragShader
-	};
-}
-
-void DepthPrepass::Draw(drm::CommandList& CmdList, const MeshElement& MeshElement) const
-{
-	CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
-	CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
-}
+};
 
 void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
@@ -114,9 +96,9 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdL
 	PSOInit.Viewport.Width = SceneDepth->Width;
 	PSOInit.Viewport.Height = SceneDepth->Height;
 
-	DepthPrepass::PassDescriptors PassDescriptors = { Scene.DescriptorSet };
+	DepthPrepassDescriptorSets DescriptorSets = { Scene.DescriptorSet };
 
-	Scene.DepthPrepass.Draw(CmdList, PSOInit, PassDescriptors);
+	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList, DescriptorSets, PSOInit);
 
 	CmdList.EndRenderPass();
 }
