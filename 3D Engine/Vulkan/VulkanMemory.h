@@ -6,8 +6,20 @@ class VulkanDevice;
 
 struct VulkanMemory
 {
-	friend struct SharedVulkanMemory;
+	friend class VulkanBuffer;
 public:
+	VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
+
+	static std::shared_ptr<class VulkanBuffer> Allocate(std::shared_ptr<VulkanMemory> Memory, VkDeviceSize Size, EBufferUsage Usage);
+
+	inline VkBuffer GetVulkanHandle() const { return Buffer; }
+	inline VkDeviceMemory GetMemoryHandle() const { return Memory; }
+	inline VkBufferUsageFlags GetVulkanUsage() const { return Usage; }
+	inline VkMemoryPropertyFlags GetProperties() const { return Properties; }
+	inline VkDeviceSize GetSize() const { return Size; }
+	inline VkDeviceSize GetSizeRemaining() const { return Size - Used; };
+
+private:
 	VkBuffer Buffer;
 
 	VkDeviceMemory Memory;
@@ -20,13 +32,6 @@ public:
 
 	VkDeviceSize Used;
 
-	VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
-
-	VkDeviceSize SizeRemaining() const;
-
-	static std::shared_ptr<struct SharedVulkanMemory> Allocate(std::shared_ptr<VulkanMemory> Buffer, VkDeviceSize Size);
-
-private:
 	struct Slot
 	{
 		VkDeviceSize Offset;
@@ -35,30 +40,17 @@ private:
 
 	std::list<Slot> FreeList;
 
-	void Free(const struct SharedVulkanMemory& SharedBuffer);
+	void Free(const class VulkanBuffer& Buffer);
 };
 
 CLASS(VulkanMemory);
-
-struct SharedVulkanMemory
-{
-	VulkanMemoryRef Shared;
-	VkDeviceSize Size;
-	VkDeviceSize Offset;
-	
-	SharedVulkanMemory(VulkanMemoryRef Buffer, VkDeviceSize Size, VkDeviceSize Offset);
-	VkBuffer& GetVulkanHandle() const;
-	~SharedVulkanMemory();
-};
-
-CLASS(SharedVulkanMemory);
 
 class VulkanAllocator
 {
 public:
 	VulkanAllocator(VulkanDevice& Device);
 
-	SharedVulkanMemoryRef Allocate(
+	std::shared_ptr<class VulkanBuffer> Allocate(
 		VkDeviceSize Size, 
 		VkBufferUsageFlags VulkanUsage, 
 		EBufferUsage Usage,
@@ -66,46 +58,46 @@ public:
 
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
 
-	void UploadBufferData(const SharedVulkanMemory& Buffer, const void* Data);
+	void UploadBufferData(const VulkanBuffer& Buffer, const void* Data);
 
-	void* LockBuffer(const SharedVulkanMemory& Buffer);
+	void* LockBuffer(const VulkanBuffer& Buffer);
 
-	void UnlockBuffer(const SharedVulkanMemory& Buffer);
-
-	void UploadImageData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const uint8* Pixels);
-
-	void UploadCubemapData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const struct CubemapCreateInfo& CubemapCreateInfo);
+	void UnlockBuffer(const VulkanBuffer& Buffer);
 
 private:
 	VulkanDevice& Device;
 
 	const VkDeviceSize BufferAllocationSize;
 
-	std::map<VkImage, std::unique_ptr<VulkanMemory>> LockedStagingImages;
-
 	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanMemory>> LockedStagingBuffers;
 
 	std::list<std::unique_ptr<VulkanMemory>> FreeStagingBuffers;
 
-	std::list<VulkanMemoryRef> Buffers;
+	std::list<VulkanMemoryRef> MemoryBuffers;
 
 	[[nodiscard]] VulkanMemory CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
-
-	void* LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size,
-		std::function<void(std::unique_ptr<VulkanMemory> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanMemory* Buffer = nullptr);
-
-	void UnlockImage(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, VkDeviceSize Size);
 };
 
 class VulkanBuffer : public drm::Buffer
 {
 public:
-	SharedVulkanMemoryRef Memory;
-
-	VulkanBuffer(SharedVulkanMemoryRef Memory, EBufferUsage Usage)
-		: Memory(Memory), drm::Buffer(Usage)
+	VulkanBuffer(VulkanMemoryRef Memory, VkDeviceSize Size, VkDeviceSize Offset, EBufferUsage Usage)
+		: Memory(Memory), Size(Size), Offset(Offset), drm::Buffer(Usage)
 	{
 	}
+
+	~VulkanBuffer();
+
+	inline VkBuffer GetVulkanHandle() const { return Memory->Buffer; }
+	inline VkDeviceMemory GetMemoryHandle() const { return Memory->Memory; }
+	inline VkDeviceSize GetSize() const { return Size; }
+	inline VkDeviceSize GetOffset() const { return Offset; }
+	inline VkMemoryPropertyFlags GetProperties() const { return Memory->Properties; }
+	
+private:
+	VulkanMemoryRef Memory;
+	VkDeviceSize Size;
+	VkDeviceSize Offset;
 };
 
 CLASS(VulkanBuffer);

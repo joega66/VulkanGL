@@ -13,11 +13,6 @@ enum class EShaderStage
 	//All = Vertex | TessControl | TessEvaluation | Geometry | Fragment | Compute
 };
 
-enum
-{
-	NumGraphicsStages = (int32)EShaderStage::Fragment + 1
-};
-
 class ShaderCompilerWorker
 {
 public:

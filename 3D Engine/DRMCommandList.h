@@ -2,6 +2,25 @@
 #include "DRMShader.h"
 #include "DRMResource.h"
 
+struct RenderArea
+{
+	glm::ivec2 Offset;
+	glm::uvec2 Extent;
+};
+
+enum
+{
+	MaxRenderTargets = 8
+};
+
+struct RenderPassInitializer
+{
+	uint32 NumRenderTargets;
+	std::array<drm::RenderTargetView, MaxRenderTargets> ColorTargets;
+	drm::RenderTargetView DepthTarget;
+	RenderArea RenderArea;
+};
+
 struct Viewport
 {
 	int32 X = 0;
@@ -20,6 +39,25 @@ struct Viewport
 			&& L.MinDepth == R.MinDepth
 			&& L.MaxDepth == R.MaxDepth;
 	}
+};
+
+enum class EStencilOp
+{
+	Keep,
+	Zero,
+	Replace,
+};
+
+enum class ECompareOp
+{
+	Never,
+	Less,
+	Equal,
+	LessOrEqual,
+	Greater,
+	NotEqual,
+	GreaterOrEqual,
+	Always
 };
 
 struct StencilOpState
@@ -42,6 +80,18 @@ struct StencilOpState
 			&& L.WriteMask == R.WriteMask
 			&& L.Reference == R.Reference;
 	}
+};
+
+enum class EDepthCompareTest
+{
+	Never,
+	Less,
+	Equal,
+	LEqual,
+	Greater,
+	NEqual,
+	GEqual,
+	Always
 };
 
 struct DepthStencilState
@@ -68,6 +118,27 @@ struct DepthStencilState
 			&& L.MinDepthBounds == R.MinDepthBounds
 			&& L.MaxDepthBounds == R.MaxDepthBounds;
 	}
+};
+
+enum class EPolygonMode
+{
+	Fill,
+	Line,
+	Point
+};
+
+enum class EFrontFace
+{
+	CCW,
+	CW
+};
+
+enum class ECullMode
+{
+	None,
+	Front,
+	Back,
+	FrontAndBack
 };
 
 struct RasterizationState
@@ -160,6 +231,16 @@ enum class EBlendOp
 	MAX = 4,
 };
 
+enum class EColorChannel
+{
+	None,
+	R = 0x01,
+	G = 0x02,
+	B = 0x04,
+	A = 0x08,
+	RGBA = R | G | B | A
+};
+
 struct ColorBlendAttachmentState
 {
 	bool BlendEnable = false;
@@ -187,6 +268,16 @@ struct ColorBlendAttachmentState
 	{
 		return !(L == R);
 	}
+};
+
+enum class EPrimitiveTopology
+{
+	PointList,
+	LineList,
+	LineStrip,
+	TriangleList,
+	TriangleStrip,
+	TriangleFan
 };
 
 struct InputAssemblyState
@@ -218,25 +309,6 @@ struct ShaderStages
 	{
 		return !(L == R);
 	}
-};
-
-struct RenderArea
-{
-	glm::ivec2 Offset;
-	glm::uvec2 Extent;
-};
-
-enum
-{
-	MaxRenderTargets = 8
-};
-
-struct RenderPassInitializer
-{
-	uint32 NumRenderTargets;
-	std::array<drm::RenderTargetView, MaxRenderTargets> ColorTargets;
-	drm::RenderTargetView DepthTarget;
-	RenderArea RenderArea;
 };
 
 struct PipelineStateInitializer
@@ -309,7 +381,6 @@ namespace drm
 		virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 		virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 		virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
-		virtual void Finish() = 0;
 		virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) = 0;
 		virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) = 0;
 		virtual void PipelineBarrier(
@@ -320,6 +391,7 @@ namespace drm
 			uint32 NumImageBarriers,
 			const ImageMemoryBarrier* ImageBarriers
 		) = 0;
+		virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRef DstImage) = 0;
 	};
 
 	CLASS(CommandList);

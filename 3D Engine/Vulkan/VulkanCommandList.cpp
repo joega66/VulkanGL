@@ -149,8 +149,8 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Bu
 	{
 		check(VertexBuffers, "Null vertex buffer found.");
 		VulkanBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
-		Offsets[Location] = VulkanVertexBuffer->Memory->Offset;
-		Buffers[Location] = VulkanVertexBuffer->Memory->GetVulkanHandle();
+		Offsets[Location] = VulkanVertexBuffer->GetOffset();
+		Buffers[Location] = VulkanVertexBuffer->GetVulkanHandle();
 	}
 
 	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
@@ -159,7 +159,7 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Bu
 void VulkanCommandList::DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
 {
 	VulkanBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->Memory->GetVulkanHandle(), VulkanIndexBuffer->Memory->Offset, VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->GetVulkanHandle(), VulkanIndexBuffer->GetOffset(), VK_INDEX_TYPE_UINT32);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
@@ -172,17 +172,11 @@ void VulkanCommandList::DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint3
 {
 	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
 	vkCmdDrawIndirect(
-		CommandBuffer, 
-		VulkanBuffer->Memory->GetVulkanHandle(), 
-		VulkanBuffer->Memory->Offset + Offset, 
-		DrawCount, 
+		CommandBuffer,
+		VulkanBuffer->GetVulkanHandle(),
+		VulkanBuffer->GetOffset() + Offset,
+		DrawCount,
 		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
-}
-
-void VulkanCommandList::Finish()
-{
-	vulkan(vkEndCommandBuffer(CommandBuffer));
-	bFinished = true;
 }
 
 void VulkanCommandList::ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color)
@@ -244,9 +238,9 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.DstAccessMask);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		Barrier.buffer = VulkanBuffer->Memory->GetVulkanHandle();
-		Barrier.offset = VulkanBuffer->Memory->Offset;
-		Barrier.size = VulkanBuffer->Memory->Size;
+		Barrier.buffer = VulkanBuffer->GetVulkanHandle();
+		Barrier.offset = VulkanBuffer->GetOffset();
+		Barrier.size = VulkanBuffer->GetSize();
 
 		VulkanBufferBarriers.push_back(Barrier);
 	}
@@ -287,4 +281,59 @@ void VulkanCommandList::PipelineBarrier(
 		VulkanBufferBarriers.size(), VulkanBufferBarriers.data(),
 		VulkanImageBarriers.size(), VulkanImageBarriers.data()
 	);
+}
+
+void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRef DstImage)
+{
+	VulkanBufferRef VulkanBuffer = ResourceCast(SrcBuffer);
+	VulkanImageRef VulkanImage = ResourceCast(DstImage);
+	std::vector<VkBufferImageCopy> Regions;
+
+	if (Any(VulkanImage->Usage & EImageUsage::Cubemap))
+	{
+		const uint32 FaceSize = DstImage->GetSize() / 6;
+
+		Regions.resize(6, {});
+
+		for (uint32 LayerIndex = 0; LayerIndex < Regions.size(); LayerIndex++)
+		{
+			// VkImageSubresourceRange(3) Manual Page:
+			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
+			VkBufferImageCopy& Region = Regions[LayerIndex];
+			Region.bufferOffset = LayerIndex * FaceSize;
+			Region.bufferRowLength = 0;
+			Region.bufferImageHeight = 0;
+			Region.imageSubresource.aspectMask = VulkanImage->GetVulkanAspect();
+			Region.imageSubresource.mipLevel = 0;
+			Region.imageSubresource.baseArrayLayer = LayerIndex;
+			Region.imageSubresource.layerCount = 1;
+			Region.imageOffset = { 0, 0, 0 };
+			Region.imageExtent = {
+				VulkanImage->Width,
+				VulkanImage->Height,
+				VulkanImage->Depth
+			};
+		}
+	}
+	else
+	{
+		VkBufferImageCopy Region = {};
+		Region.bufferOffset = 0;
+		Region.bufferRowLength = 0;
+		Region.bufferImageHeight = 0;
+		Region.imageSubresource.aspectMask = VulkanImage->GetVulkanAspect();
+		Region.imageSubresource.mipLevel = 0;
+		Region.imageSubresource.baseArrayLayer = 0;
+		Region.imageSubresource.layerCount = 1;
+		Region.imageOffset = { 0, 0, 0 };
+		Region.imageExtent = {
+			VulkanImage->Width,
+			VulkanImage->Height,
+			VulkanImage->Depth
+		};
+
+		Regions.push_back(Region);
+	}
+
+	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), VulkanImage->Image, VulkanImage->GetVulkanLayout(), Regions.size(), Regions.data());
 }

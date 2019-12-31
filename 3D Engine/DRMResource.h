@@ -1,6 +1,5 @@
 #pragma once
 #include <Platform/Platform.h>
-#include <DRMShader.h>
 
 enum class EFormat
 {
@@ -121,6 +120,7 @@ enum class EBufferUsage
 	Storage = 1 << 3,
 	Index = 1 << 4,
 	Uniform = 1 << 5,
+	Transfer = 1 << 6,
 };
 
 enum class EImageUsage
@@ -156,84 +156,6 @@ struct ClearColorValue
 	float	Float32[4];
 	int32	Int32[4];
 	uint32	Uint32[4];
-};
-
-enum class EDepthCompareTest
-{
-	Never,
-	Less,
-	Equal,
-	LEqual,
-	Greater,
-	NEqual,
-	GEqual,
-	Always
-};
-
-enum class EPolygonMode
-{
-	Fill,
-	Line,
-	Point
-};
-
-enum class EFrontFace
-{
-	CCW,
-	CW
-};
-
-enum class ECullMode
-{
-	None,
-	Front,
-	Back,
-	FrontAndBack
-};
-
-enum class EColorChannel
-{
-	None,
-	R = 0x01,
-	G = 0x02,
-	B = 0x04,
-	A = 0x08,
-	RGBA = R | G | B | A
-};
-
-enum class EPrimitiveTopology
-{
-	PointList,
-	LineList,
-	LineStrip,
-	TriangleList,
-	TriangleStrip,
-	TriangleFan
-};
-
-enum class EUniformUpdate
-{
-	SingleFrame,
-	Frequent,
-};
-
-enum class EStencilOp
-{
-	Keep,
-	Zero,
-	Replace,
-};
-
-enum class ECompareOp
-{
-	Never,
-	Less,
-	Equal,
-	LessOrEqual,
-	Greater,
-	NotEqual,
-	GreaterOrEqual,
-	Always
 };
 
 enum class EImageLayout
@@ -332,17 +254,22 @@ namespace drm
 
 		bool IsStencil() const;
 
-		static bool IsDepthStencil(EFormat Format);
-
 		bool IsDepthStencil() const;
-
-		static bool IsDepth(EFormat Format);
 
 		bool IsDepth() const;
 
 		uint32 GetStrideInBytes() const;
 
 		inline float64 GetAspect() const { return static_cast<float64>(Width) / static_cast<float64>(Height); }
+
+		inline uint32 GetSize() const 
+		{ 
+			return Width * Height * Depth * GetStrideInBytes() * (Any(Usage & EImageUsage::Cubemap) ? 6 : 1); 
+		}
+
+		static bool IsDepthStencil(EFormat Format);
+
+		static bool IsDepth(EFormat Format);
 	};
 
 	CLASS(Image);

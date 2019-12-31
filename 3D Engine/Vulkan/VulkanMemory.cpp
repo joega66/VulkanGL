@@ -3,46 +3,46 @@
 #include "VulkanCommands.h"
 #include <DRM.h>
 
-VulkanAllocator::VulkanAllocator(VulkanDevice& Device) 
+VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 	: Device(Device)
 	, BufferAllocationSize(2 * (1 << 20)) // Allocate in 2MB chunks
 {
 }
 
-SharedVulkanMemoryRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
+VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
 {
-	VkMemoryPropertyFlags Properties = Any(Usage & EBufferUsage::KeepCPUAccessible) ?
+	VkMemoryPropertyFlags Properties = Any(Usage & (EBufferUsage::KeepCPUAccessible | EBufferUsage::Transfer)) ?
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	for (auto& Buffer : Buffers)
+	for (VulkanMemoryRef& Memory : MemoryBuffers)
 	{
 		// Find a buffer with the same properties and usage
-		if (Buffer->Usage == VulkanUsage && Buffer->Properties == Properties)
+		if (Memory->GetVulkanUsage() == VulkanUsage && Memory->GetProperties() == Properties)
 		{
-			auto SharedBuffer = VulkanMemory::Allocate(Buffer, Size);
+			VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(Memory, Size, Usage);
 
-			if (SharedBuffer)
+			if (VulkanBuffer)
 			{
 				if (Data)
 				{
-					UploadBufferData(*SharedBuffer, Data);
+					UploadBufferData(*VulkanBuffer, Data);
 				}
-				return SharedBuffer;
+				return VulkanBuffer;
 			}
 		}
 	}
 
 	// Buffer not found - Create a new one
-	Buffers.emplace_back(MakeRef<VulkanMemory>(CreateBuffer(Size, VulkanUsage, Properties)));
+	MemoryBuffers.emplace_back(MakeRef<VulkanMemory>(CreateBuffer(Size, VulkanUsage, Properties)));
 
-	auto SharedMemory = VulkanMemory::Allocate(Buffers.back(), Size);
+	VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, Usage);
 
 	if (Data)
 	{
-		UploadBufferData(*SharedMemory, Data);
+		UploadBufferData(*VulkanBuffer, Data);
 	}
 
-	return SharedMemory;
+	return VulkanBuffer;
 }
 
 uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemoryPropertyFlags RequiredProperties) const
@@ -67,10 +67,10 @@ uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemor
 	fail("Suitable memory not found.");
 }
 
-void VulkanAllocator::UploadBufferData(const SharedVulkanMemory& Buffer, const void* Data)
+void VulkanAllocator::UploadBufferData(const VulkanBuffer& Buffer, const void* Data)
 {
 	void* MemMapped = LockBuffer(Buffer);
-	Platform.Memcpy(MemMapped, Data, (size_t)Buffer.Size);
+	Platform.Memcpy(MemMapped, Data, (size_t)Buffer.GetSize());
 	UnlockBuffer(Buffer);
 }
 
@@ -98,12 +98,12 @@ VulkanMemory VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags
 	return VulkanMemory(Buffer, Memory, Usage, Properties, BufferInfo.size);
 }
 
-void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, std::function<void(std::unique_ptr<VulkanMemory> StagingBuffer)>&& LockStagingBuffer, const SharedVulkanMemory* Buffer)
+void* VulkanAllocator::LockBuffer(const VulkanBuffer& Buffer)
 {
-	if (Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+	if (Buffer.GetProperties() & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
 	{
 		auto StagingBufferIter = std::find_if(FreeStagingBuffers.begin(), FreeStagingBuffers.end(),
-			[&] (const std::unique_ptr<VulkanMemory>& StagingBuffer) { return StagingBuffer->Size >= Size; });
+			[&] (const std::unique_ptr<VulkanMemory>& StagingBuffer) { return StagingBuffer->GetSize() >= Buffer.GetSize(); });
 
 		std::unique_ptr<VulkanMemory> StagingBuffer;
 
@@ -111,7 +111,7 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 		{
 			// No staging buffer of suitable size found - Make a new one
 			StagingBuffer = std::make_unique<VulkanMemory>(
-				CreateBuffer(BufferAllocationSize > Size ? BufferAllocationSize : Size,
+				CreateBuffer(BufferAllocationSize > Buffer.GetSize() ? BufferAllocationSize : Buffer.GetSize(),
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
 			);
@@ -123,154 +123,46 @@ void* VulkanAllocator::LockBuffer(VkBufferUsageFlags Usage, VkDeviceSize Size, s
 		}
 
 		void* MemMapped = nullptr;
-		vulkan(vkMapMemory(Device, StagingBuffer->Memory, 0, Size, 0, &MemMapped));
+		vulkan(vkMapMemory(Device, StagingBuffer->GetMemoryHandle(), 0, Buffer.GetSize(), 0, &MemMapped));
 
-		LockStagingBuffer(std::move(StagingBuffer));
+		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.GetOffset())] = std::move(StagingBuffer);
 
 		return MemMapped;
 	}
 	else
 	{
-		check(Buffer && Buffer->Shared->Properties & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
-			"CPU-mappable buffer must have these memory properties.");
 		void* MemMapped = nullptr;
-		vulkan(vkMapMemory(Device, Buffer->Shared->Memory, Buffer->Offset, Buffer->Size, 0, &MemMapped));
+		vulkan(vkMapMemory(Device, Buffer.GetMemoryHandle(), Buffer.GetOffset(), Buffer.GetSize(), 0, &MemMapped));
 		return MemMapped;
 	}
 }
 
-void* VulkanAllocator::LockBuffer(const SharedVulkanMemory& Buffer)
+void VulkanAllocator::UnlockBuffer(const VulkanBuffer& Buffer)
 {
-	VulkanMemoryRef Backing = Buffer.Shared;
-	return LockBuffer(Backing->Usage, Backing->Size,
-		[&] (auto StagingBuffer) 
-	{ 
-		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset)] = std::move(StagingBuffer); 
-	}, &Buffer
-	);
-}
-
-void VulkanAllocator::UnlockBuffer(const SharedVulkanMemory& Buffer)
-{
-	if (Buffer.Shared->Usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+	if (Buffer.GetProperties() & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
 	{
-		auto Key = std::make_pair(Buffer.GetVulkanHandle(), Buffer.Offset);
+		auto Key = std::make_pair(Buffer.GetVulkanHandle(), Buffer.GetOffset());
 
 		std::unique_ptr<VulkanMemory> StagingBuffer = std::move(LockedStagingBuffers[Key]);
 		LockedStagingBuffers.erase(Key);
 
-		vkUnmapMemory(Device, StagingBuffer->Memory);
+		vkUnmapMemory(Device, StagingBuffer->GetMemoryHandle());
 
 		VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
 
 		VkBufferCopy Copy = {};
-		Copy.size = Buffer.Size;
-		Copy.dstOffset = Buffer.Offset;
+		Copy.size = Buffer.GetSize();
+		Copy.dstOffset = Buffer.GetOffset();
 		Copy.srcOffset = 0;
 
-		vkCmdCopyBuffer(CommandBuffer, StagingBuffer->Buffer, Buffer.GetVulkanHandle(), 1, &Copy);
+		vkCmdCopyBuffer(CommandBuffer, StagingBuffer->GetVulkanHandle(), Buffer.GetVulkanHandle(), 1, &Copy);
 
 		FreeStagingBuffers.push_back(std::move(StagingBuffer));
 	}
 	else
 	{
-		vkUnmapMemory(Device, Buffer.Shared->Memory);
+		vkUnmapMemory(Device, Buffer.GetMemoryHandle());
 	}
-}
-
-void VulkanAllocator::UploadImageData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const uint8* Pixels)
-{
-	VkDeviceSize Size = (VkDeviceSize)Image->Width * Image->Height * Image->Depth * Image->GetStrideInBytes();
-
-	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
-		[&] (auto StagingBuffer)
-	{
-		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
-	});
-	Platform.Memcpy(MemMapped, Pixels, (size_t)Size);
-	UnlockImage(CommandBuffer, Image, Size);
-}
-
-void VulkanAllocator::UploadCubemapData(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, const CubemapCreateInfo& CubemapCreateInfo)
-{
-	VkDeviceSize Size = (VkDeviceSize)Image->Width * Image->Height * 6 * Image->GetStrideInBytes();
-
-	void* MemMapped = LockBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, Size,
-		[&](auto StagingBuffer)
-	{
-		LockedStagingImages[Image->Image] = std::move(StagingBuffer);
-	});
-
-	for (uint32 FaceIndex = 0; FaceIndex < CubemapCreateInfo.CubeFaces.size(); FaceIndex++)
-	{
-		auto& Face = CubemapCreateInfo.CubeFaces[FaceIndex];
-
-		if (Face.Data)
-		{
-			Platform.Memcpy((uint8*)MemMapped + FaceIndex * Size / 6, Face.Data, (size_t)Size / 6);
-		}
-	}
-
-	UnlockImage(CommandBuffer, Image, Size);
-}
-
-void VulkanAllocator::UnlockImage(VkCommandBuffer CommandBuffer, const VulkanImageRef Image, VkDeviceSize Size)
-{
-	std::vector<VkBufferImageCopy> Regions;
-
-	if (Any(Image->Usage & EImageUsage::Cubemap))
-	{
-		Size /= 6;
-		Regions.resize(6, {});
-
-		for (uint32 LayerIndex = 0; LayerIndex < Regions.size(); LayerIndex++)
-		{
-			// VkImageSubresourceRange(3) Manual Page:
-			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
-			VkBufferImageCopy& Region = Regions[LayerIndex];
-			Region.bufferOffset = LayerIndex * Size;
-			Region.bufferRowLength = 0;
-			Region.bufferImageHeight = 0;
-			Region.imageSubresource.aspectMask = Image->GetVulkanAspect();
-			Region.imageSubresource.mipLevel = 0;
-			Region.imageSubresource.baseArrayLayer = LayerIndex;
-			Region.imageSubresource.layerCount = 1;
-			Region.imageOffset = { 0, 0, 0 };
-			Region.imageExtent = {
-				Image->Width,
-				Image->Height,
-				Image->Depth
-			};
-		}
-	}
-	else
-	{
-		VkBufferImageCopy Region = {};
-		Region.bufferOffset = 0;
-		Region.bufferRowLength = 0;
-		Region.bufferImageHeight = 0;
-		Region.imageSubresource.aspectMask = Image->GetVulkanAspect();
-		Region.imageSubresource.mipLevel = 0;
-		Region.imageSubresource.baseArrayLayer = 0;
-		Region.imageSubresource.layerCount = 1;
-		Region.imageOffset = { 0, 0, 0 };
-		Region.imageExtent = {
-			Image->Width,
-			Image->Height,
-			Image->Depth
-		};
-
-		Regions.push_back(Region);
-	}
-
-	std::unique_ptr<VulkanMemory> StagingBuffer = std::move(LockedStagingImages[Image->Image]);
-	LockedStagingImages.erase(Image->Image);
-
-	vkUnmapMemory(Device, StagingBuffer->Memory);
-
-	vkCmdCopyBufferToImage(CommandBuffer, StagingBuffer->Buffer, Image->Image, Image->GetVulkanLayout(), Regions.size(), Regions.data());
-
-	FreeStagingBuffers.push_back(std::move(StagingBuffer));
 }
 
 VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size)
@@ -278,14 +170,9 @@ VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsage
 {
 }
 
-VkDeviceSize VulkanMemory::SizeRemaining() const
+std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemory> Memory, VkDeviceSize Size, EBufferUsage Usage)
 {
-	return Size - Used;
-}
-
-std::shared_ptr<struct SharedVulkanMemory> VulkanMemory::Allocate(std::shared_ptr<VulkanMemory> Buffer, VkDeviceSize Size)
-{
-	for (auto Iter = Buffer->FreeList.begin(); Iter != Buffer->FreeList.end(); Iter++)
+	for (auto Iter = Memory->FreeList.begin(); Iter != Memory->FreeList.end(); Iter++)
 	{
 		if (Iter->Size >= Size)
 		{
@@ -298,32 +185,32 @@ std::shared_ptr<struct SharedVulkanMemory> VulkanMemory::Allocate(std::shared_pt
 			}
 			else
 			{
-				Buffer->FreeList.erase(Iter);
+				Memory->FreeList.erase(Iter);
 			}
 
-			return MakeRef<SharedVulkanMemory>(Buffer, Size, Offset);
+			return MakeRef<VulkanBuffer>(Memory, Size, Offset, Usage);
 		}
 	}
 
-	if (Buffer->SizeRemaining() >= Size)
+	if (Memory->GetSizeRemaining() >= Size)
 	{
-		auto SharedBuffer = MakeRef<SharedVulkanMemory>(Buffer, Size, Buffer->Used);
-		Buffer->Used += Size;
-		return SharedBuffer;
+		VulkanBufferRef VulkanBuffer = MakeRef<class VulkanBuffer>(Memory, Size, Memory->Used, Usage);
+		Memory->Used += Size;
+		return VulkanBuffer;
 	}
 
 	return nullptr;
 }
 
-void VulkanMemory::Free(const SharedVulkanMemory& SharedBuffer)
+void VulkanMemory::Free(const VulkanBuffer& Buffer)
 {
-	if (SharedBuffer.Offset + SharedBuffer.Size == Used)
+	if (Buffer.GetOffset() + Buffer.GetSize() == Used)
 	{
-		Used -= SharedBuffer.Size;
+		Used -= Buffer.GetSize();
 		return;
 	}
 
-	Slot New = { SharedBuffer.Offset, SharedBuffer.Size };
+	Slot New = { Buffer.GetOffset(), Buffer.GetSize() };
 
 	for (auto Iter = FreeList.begin(); Iter != FreeList.end();)
 	{
@@ -342,17 +229,7 @@ void VulkanMemory::Free(const SharedVulkanMemory& SharedBuffer)
 	FreeList.push_back(New);
 }
 
-SharedVulkanMemory::SharedVulkanMemory(VulkanMemoryRef Buffer, VkDeviceSize Size, VkDeviceSize Offset)
-	: Shared(Buffer), Size(Size), Offset(Offset)
+VulkanBuffer::~VulkanBuffer()
 {
-}
-
-VkBuffer& SharedVulkanMemory::GetVulkanHandle() const
-{
-	return Shared->Buffer;
-}
-
-SharedVulkanMemory::~SharedVulkanMemory()
-{
-	Shared->Free(*this);
+	Memory->Free(*this);
 }

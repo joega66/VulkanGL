@@ -17,8 +17,6 @@ public:
 
 	bool bTouchedSurface = false;
 
-	bool bFinished = false;
-
 	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VkQueueFlagBits QueueFlags);
 
 	virtual ~VulkanCommandList() override;
@@ -39,8 +37,6 @@ public:
 
 	virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) override;
 
-	virtual void Finish() override;
-
 	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) override;
 
 	virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) override;
@@ -53,6 +49,8 @@ public:
 		uint32 NumImageBarriers,
 		const ImageMemoryBarrier* ImageBarriers
 	) override;
+
+	virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRef DstImage) override;
 
 private:
 	VulkanDevice& Device;

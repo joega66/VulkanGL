@@ -75,8 +75,6 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 	}
 
-	CmdList.Finish();
-
 	drm::SubmitCommands(CommandList);
 
 	drm::EndFrame();

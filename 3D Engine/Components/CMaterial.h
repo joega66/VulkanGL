@@ -1,5 +1,6 @@
 #pragma once
 #include <DRMResource.h>
+#include <DRMShader.h>
 
 struct CMaterial
 {
