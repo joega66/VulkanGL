@@ -104,7 +104,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 		drm::ImageRef ShadowMap = ShadowProxy.GetShadowMap();
 
 		RenderPassInitializer RPInit = { 0 };
-		RPInit.DepthTarget = drm::RenderTargetView(
+		RPInit.DepthAttachment = drm::AttachmentView(
 			ShadowMap,
 			ELoadAction::Clear, EStoreAction::Store,
 			ClearDepthStencilValue{},
@@ -134,7 +134,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	RenderPassInitializer RPInit = { 1 };
-	RPInit.ColorTargets[0] = drm::RenderTargetView(ShadowMask, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::ShaderReadOnlyOptimal);
+	RPInit.ColorAttachments[0] = drm::AttachmentView(ShadowMask, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::ShaderReadOnlyOptimal);
 	RPInit.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask->Width, ShadowMask->Height) };
 
 	CmdList.BeginRenderPass(RPInit);

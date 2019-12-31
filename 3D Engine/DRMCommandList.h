@@ -10,14 +10,14 @@ struct RenderArea
 
 enum
 {
-	MaxRenderTargets = 8
+	MaxAttachments = 8
 };
 
 struct RenderPassInitializer
 {
-	uint32 NumRenderTargets;
-	std::array<drm::RenderTargetView, MaxRenderTargets> ColorTargets;
-	drm::RenderTargetView DepthTarget;
+	uint32 NumAttachments;
+	std::array<drm::AttachmentView, MaxAttachments> ColorAttachments;
+	drm::AttachmentView DepthAttachment;
 	RenderArea RenderArea;
 };
 
@@ -317,14 +317,14 @@ struct PipelineStateInitializer
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::array<ColorBlendAttachmentState, MaxRenderTargets> ColorBlendAttachmentStates;
+	std::array<ColorBlendAttachmentState, MaxAttachments> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
 
 	friend bool operator==(const PipelineStateInitializer& L, const PipelineStateInitializer& R)
 	{
-		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < MaxRenderTargets; RenderTargetIndex++)
+		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < MaxAttachments; RenderTargetIndex++)
 		{
 			if (L.ColorBlendAttachmentStates[RenderTargetIndex] != R.ColorBlendAttachmentStates[RenderTargetIndex])
 			{

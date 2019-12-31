@@ -45,7 +45,7 @@ enum class EMBModality
 	TASKMODAL,
 };
 
-class OS_Platform
+class WindowsPlatform
 {
 public:
 	struct GLFWwindow* Window = nullptr;
@@ -68,7 +68,7 @@ public:
 	void WriteLog(const std::string& Log);
 	void WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& Log);
 	void WriteLog(const std::string& Expression, const std::string& File, const std::string& Func, int32 Line, const std::string& Log);
-	static std::string FormatString(std::string format, ...);
+	static std::string FormatString(std::string Format, ...);
 
 	// Processes
 	void ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const;
@@ -92,15 +92,15 @@ private:
 
 };
 
-extern OS_Platform Platform;
+extern WindowsPlatform Platform;
 
 // Log.
-#define LOG(Fmt, ...) { Platform.WriteLog(OS_Platform::FormatString(Fmt, __VA_ARGS__)); }
+#define LOG(Fmt, ...) { Platform.WriteLog(WindowsPlatform::FormatString(Fmt, __VA_ARGS__)); }
 
 // Log and crash if expression fails.
-#define check(Expression, Fmt, ...) { ((Expression))? ((void)0) : [&] () { Platform.WriteLog(#Expression, __FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }(); }
+#define check(Expression, Fmt, ...) { ((Expression))? ((void)0) : [&] () { Platform.WriteLog(#Expression, __FILE__, __func__, __LINE__, WindowsPlatform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }(); }
 
 // Log error and crash.
-#define fail(Fmt, ...) { Platform.WriteLog(__FILE__, __func__, __LINE__, OS_Platform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }
+#define fail(Fmt, ...) { Platform.WriteLog(__FILE__, __func__, __LINE__, WindowsPlatform::FormatString(Fmt, __VA_ARGS__)); throw std::runtime_error(""); }
 
 #define signal_unimplemented() { fail("UNIMPLEMENTED"); }

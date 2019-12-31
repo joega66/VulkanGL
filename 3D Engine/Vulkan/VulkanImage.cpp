@@ -342,10 +342,10 @@ void VulkanDevice::FreeImage(VulkanImage& Image)
 		{
 			const auto&[CacheInfo, CachedRenderPass, CachedFramebuffer] = *Iter;
 
-			if (Image.Image == Image.Image == CacheInfo.DepthTarget.Image ||
+			if (Image.Image == Image.Image == CacheInfo.DepthAttachment.Image ||
 				(Image.IsColor() && std::any_of(
-					CacheInfo.ColorTargets.begin(),
-					CacheInfo.ColorTargets.end(),
+					CacheInfo.ColorAttachments.begin(),
+					CacheInfo.ColorAttachments.end(),
 					[&] (auto ColorTarget) { return Image.Image == ColorTarget.Image; })))
 			{
 				vkDestroyFramebuffer(Device, CachedFramebuffer, nullptr);

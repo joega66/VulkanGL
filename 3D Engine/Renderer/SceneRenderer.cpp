@@ -57,12 +57,12 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 		else
 		{
-			drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
-			drm::RenderTargetView DepthView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite);
+			drm::AttachmentView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+			drm::AttachmentView DepthView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite);
 
 			RenderPassInitializer RenderPassInit = { 1 };
-			RenderPassInit.ColorTargets[0] = SurfaceView;
-			RenderPassInit.DepthTarget = DepthView;
+			RenderPassInit.ColorAttachments[0] = SurfaceView;
+			RenderPassInit.DepthAttachment = DepthView;
 			RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
 			CmdList.BeginRenderPass(RenderPassInit);
@@ -82,7 +82,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	drm::RenderTargetView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
@@ -90,7 +90,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		auto ShadowMap = ShadowProxy.GetShadowMap();
 
 		RenderPassInitializer RPInit = { 1 };
-		RPInit.ColorTargets[0] = SurfaceView;
+		RPInit.ColorAttachments[0] = SurfaceView;
 		RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 
 		CmdList.BeginRenderPass(RPInit);

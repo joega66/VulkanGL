@@ -55,20 +55,20 @@ private:
 
 	struct VulkanRenderPassHash
 	{
-		struct MinRenderTargetView
+		struct MinAttachmentView
 		{
 			VkImage Image = VK_NULL_HANDLE;
 			ELoadAction LoadAction = ELoadAction::DontCare;
 			EStoreAction StoreAction = EStoreAction::DontCare;
 			EImageLayout InitialLayout = EImageLayout::Undefined;
 			EImageLayout FinalLayout = EImageLayout::Undefined;
-			MinRenderTargetView() = default;
-			MinRenderTargetView(const drm::RenderTargetView& RTView);
-			bool operator==(const MinRenderTargetView& Other);
+			MinAttachmentView() = default;
+			MinAttachmentView(const drm::AttachmentView& AView);
+			bool operator==(const MinAttachmentView& Other);
 		};
 
-		std::vector<MinRenderTargetView> ColorTargets;
-		MinRenderTargetView DepthTarget;
+		std::vector<MinAttachmentView> ColorAttachments;
+		MinAttachmentView DepthAttachment;
 
 		VulkanRenderPassHash(const RenderPassInitializer& RPInit);
 		bool operator==(const VulkanRenderPassHash& Other);
@@ -83,7 +83,7 @@ private:
 		PipelineStateInitializer PSOInit;
 		VkPipelineLayout PipelineLayout;
 		VkRenderPass RenderPass;
-		uint32 NumRenderTargets;
+		uint32 NumAttachments;
 
 		VulkanPipelineHash(const PipelineStateInitializer& PSOInit, VkPipelineLayout PipelineLayout, VkRenderPass RenderPass, uint32 NumRenderTargets);
 		bool operator==(const VulkanPipelineHash& Other) const;

@@ -27,10 +27,10 @@ VulkanCommandList::~VulkanCommandList()
 
 void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 {
-	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumRenderTargets; ColorTargetIndex++)
+	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumAttachments; ColorTargetIndex++)
 	{
 		// Determine if this command list touched the surface.
-		if (RPInit.ColorTargets[ColorTargetIndex].Image == drm::GetSurface())
+		if (RPInit.ColorAttachments[ColorTargetIndex].Image == drm::GetSurface())
 		{
 			bTouchedSurface = true;
 		}
@@ -39,10 +39,10 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 	VkFramebuffer Framebuffer;
 	std::tie(Pending.RenderPass, Framebuffer) = Device.GetRenderPass(RPInit);
 
-	const uint32 NumRTs = RPInit.NumRenderTargets;
+	const uint32 NumRTs = RPInit.NumAttachments;
 	std::vector<VkClearValue> ClearValues;
 
-	if (RPInit.DepthTarget.Image)
+	if (RPInit.DepthAttachment.Image)
 	{
 		ClearValues.resize(NumRTs + 1);
 	}
@@ -53,26 +53,26 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 
 	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
 	{
-		const auto& ClearValue = std::get<ClearColorValue>(RPInit.ColorTargets[ColorTargetIndex].ClearValue);
+		const auto& ClearValue = std::get<ClearColorValue>(RPInit.ColorAttachments[ColorTargetIndex].ClearValue);
 		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
 		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
 		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
 	}
 
-	if (RPInit.DepthTarget.Image)
+	if (RPInit.DepthAttachment.Image)
 	{
-		VulkanImageRef Image = ResourceCast(RPInit.DepthTarget.Image);
+		VulkanImageRef Image = ResourceCast(RPInit.DepthAttachment.Image);
 
 		ClearValues[NumRTs].depthStencil = { 0, 0 };
 
 		if (Image->IsDepth())
 		{
-			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(RPInit.DepthTarget.ClearValue).DepthClear;
+			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).DepthClear;
 		}
 
 		if (Image->IsStencil())
 		{
-			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthTarget.ClearValue).StencilClear;
+			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).StencilClear;
 		}
 	}
 
@@ -91,7 +91,7 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 
 	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	Pending.NumRenderTargets = RPInit.NumRenderTargets;
+	Pending.NumRenderTargets = RPInit.NumAttachments;
 }
 
 void VulkanCommandList::EndRenderPass()

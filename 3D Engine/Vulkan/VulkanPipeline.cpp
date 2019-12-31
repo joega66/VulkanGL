@@ -61,7 +61,7 @@ VulkanDevice::VulkanPipelineHash::VulkanPipelineHash(
 	PSOInit(PSOInit), 
 	PipelineLayout(PipelineLayout), 
 	RenderPass(RenderPass), 
-	NumRenderTargets(NumRenderTargets)
+	NumAttachments(NumRenderTargets)
 {
 }
 
@@ -70,7 +70,7 @@ bool VulkanDevice::VulkanPipelineHash::operator==(const VulkanPipelineHash& Othe
 	return PSOInit == Other.PSOInit
 		&& PipelineLayout == Other.PipelineLayout
 		&& RenderPass == Other.RenderPass
-		&& NumRenderTargets == Other.NumRenderTargets;
+		&& NumAttachments == Other.NumAttachments;
 }
 
 bool VulkanDevice::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
@@ -173,7 +173,7 @@ VkPipeline VulkanDevice::CreatePipeline(
 		MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
 	}
 
-	std::array<VkPipelineColorBlendAttachmentState, MaxRenderTargets> ColorBlendAttachmentStates;
+	std::array<VkPipelineColorBlendAttachmentState, MaxAttachments> ColorBlendAttachmentStates;
 
 	{
 		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < NumRenderTargets; RenderTargetIndex++)

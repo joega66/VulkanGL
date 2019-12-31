@@ -274,7 +274,7 @@ namespace drm
 
 	CLASS(Image);
 
-	class RenderTargetView
+	class AttachmentView
 	{
 	public:
 		ImageRef Image = nullptr;
@@ -283,9 +283,9 @@ namespace drm
 		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
 		EImageLayout FinalLayout = EImageLayout::Undefined;
 
-		RenderTargetView() = default;
-		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
-		RenderTargetView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
+		AttachmentView() = default;
+		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
+		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
 	};
 
 	class DescriptorSet

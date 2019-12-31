@@ -55,7 +55,7 @@ namespace drm
 		return EngineFormatStrides[Format];
 	}
 
-	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
+	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)
@@ -64,7 +64,7 @@ namespace drm
 	{
 	}
 
-	RenderTargetView::RenderTargetView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
+	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)

@@ -82,7 +82,7 @@ struct DepthPrepassDescriptorSets
 void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	RenderPassInitializer RPInit = { 0 };
-	RPInit.DepthTarget = drm::RenderTargetView(
+	RPInit.DepthAttachment = drm::AttachmentView(
 		SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,

@@ -14,9 +14,9 @@
 #include <Windows.h>
 #include <GLFW/glfw3.h>
 
-OS_Platform Platform;
+WindowsPlatform Platform;
 
-void OS_Platform::OpenWindow(int32 Width, int32 Height)
+void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 {
 	glfwInit();
 
@@ -25,18 +25,18 @@ void OS_Platform::OpenWindow(int32 Width, int32 Height)
 	Window = glfwCreateWindow(Width, Height, "Vulkan Engine", nullptr, nullptr);
 }
 
-bool OS_Platform::WindowShouldClose()
+bool WindowsPlatform::WindowShouldClose()
 {
 	return glfwWindowShouldClose(Window);
 }
 
-void OS_Platform::PollEvents()
+void WindowsPlatform::PollEvents()
 {
 	// Process window events.
 	glfwPollEvents();
 }
 
-std::string OS_Platform::FileRead(const std::string& Filename) const
+std::string WindowsPlatform::FileRead(const std::string& Filename) const
 {
 	std::ifstream File(Filename, std::ios::ate | std::ios::binary);
 
@@ -53,55 +53,55 @@ std::string OS_Platform::FileRead(const std::string& Filename) const
 	return Buffer;
 }
 
-void OS_Platform::FileDelete(const std::string& Filename) const
+void WindowsPlatform::FileDelete(const std::string& Filename) const
 {
 	check(std::filesystem::remove(Filename), "Failed to remove file...");
 }
 
-void OS_Platform::FileRename(const std::string& Old, const std::string& New) const
+void WindowsPlatform::FileRename(const std::string& Old, const std::string& New) const
 {
 	check(FileExists(Old), "Renaming file that doesn't exist...");
 	std::filesystem::rename(Old, New);
 }
 
-bool OS_Platform::FileExists(const std::string& Filename) const
+bool WindowsPlatform::FileExists(const std::string& Filename) const
 {
 	return std::filesystem::is_regular_file(Filename);
 }
 
-uint64 OS_Platform::GetLastWriteTime(const std::string& Filename) const
+uint64 WindowsPlatform::GetLastWriteTime(const std::string& Filename) const
 {
 	const uint64 LastWriteTime = std::filesystem::last_write_time(Filename).time_since_epoch().count();
 	return LastWriteTime;
 }
 
-void OS_Platform::WriteLog(const std::string& InLog)
+void WindowsPlatform::WriteLog(const std::string& InLog)
 {
 	printf("%s\n", InLog.c_str());
 }
 
-void OS_Platform::WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
+void WindowsPlatform::WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
 {
 	std::string Header = "[Debug] [" + SanitizeFile(File) + ":" + Func + ":" + std::to_string(Line) + "]\n";
 	std::string Recent = Header + InLog + '\n';
 	std::cerr << Recent;
 }
 
-void OS_Platform::WriteLog(const std::string& Expression, const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
+void WindowsPlatform::WriteLog(const std::string& Expression, const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
 {
 	std::string Header = "[Warning] [" + SanitizeFile(File) + ":" + Func + ":" + std::to_string(Line) + ":" + Expression + "]\n";
 	std::string Recent = Header + InLog + '\n';
 	std::cerr << Recent;
 }
 
-std::string OS_Platform::SanitizeFile(const std::string& File)
+std::string WindowsPlatform::SanitizeFile(const std::string& File)
 {
 	std::string FileSanitized = File;
 	FileSanitized.erase(FileSanitized.begin(), FileSanitized.begin() + FileSanitized.find_last_of('\\') + 1);
 	return FileSanitized;
 }
 
-std::string OS_Platform::FormatString(std::string Format, ...)
+std::string WindowsPlatform::FormatString(std::string Format, ...)
 {
 	va_list Args, ArgsCopy;
 	va_start(Args, Format);
@@ -126,7 +126,7 @@ std::string OS_Platform::FormatString(std::string Format, ...)
 	}
 }
 
-void OS_Platform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
+void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
 {
 	enum { ParentRead, ParentWrite, ChildWrite, ChildRead, NumPipeTypes };
 
@@ -183,27 +183,27 @@ void OS_Platform::ForkProcess(const std::string& ExePath, const std::string& Cmd
 	}
 }
 
-void OS_Platform::Memcpy(void* Dst, const void* Src, size_t Size) const
+void WindowsPlatform::Memcpy(void* Dst, const void* Src, size_t Size) const
 {
 	memcpy(Dst, Src, Size);
 }
 
 #undef LoadImage
-uint8* OS_Platform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const
+uint8* WindowsPlatform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const
 {
 	uint8* Image = stbi_load(Filename.c_str(), &Width, &Height, &NumChannels, STBI_rgb_alpha);
 	check(Image, "%s failed to load", Filename.c_str());
 	return Image;
 }
 
-void OS_Platform::FreeImage(uint8* Pixels) const
+void WindowsPlatform::FreeImage(uint8* Pixels) const
 {
 	stbi_image_free(Pixels);
 }
 
 static const std::string ConfigPath = "../Config/";
 
-bool OS_Platform::GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default) const
+bool WindowsPlatform::GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default) const
 {
 	const std::string DefaultString = Default ? "true" : "false";
 	
@@ -214,20 +214,20 @@ bool OS_Platform::GetBool(const std::string& Filename, const std::string& Sectio
 	return ReturnedString == "true" ? true : false;
 }
 
-int32 OS_Platform::GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default) const
+int32 WindowsPlatform::GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default) const
 {
 	const std::string Path = ConfigPath + Filename;
 
 	return GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, Path.c_str());
 }
 
-float64 OS_Platform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default) const
+float64 WindowsPlatform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default) const
 {
 	std::string FloatStr = GetString(Filename, Section, Key, std::to_string(Default));
 	return std::atof(FloatStr.c_str());
 }
 
-std::string OS_Platform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const
+std::string WindowsPlatform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const
 {
 	const std::string Path = ConfigPath + Filename;
 
@@ -238,12 +238,12 @@ std::string OS_Platform::GetString(const std::string& Filename, const std::strin
 	return std::string(ReturnedString.data());
 }
 
-void OS_Platform::Exit()
+void WindowsPlatform::Exit()
 {
 	exit(-1);
 }
 
-EMBReturn OS_Platform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality) const
+EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality) const
 {
 	static const HashTable<EMBType, UINT> WindowsMBType =
 	{
