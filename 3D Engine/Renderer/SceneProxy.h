@@ -25,6 +25,7 @@ public:
 	SceneProxy(const SceneProxy&) = delete;
 	SceneProxy& operator=(const SceneProxy&) = delete;
 
+	/** Skybox to be rendered in the scene. */
 	drm::ImageRef Skybox;
 
 	drm::BufferRef ViewUniform;
@@ -35,7 +36,11 @@ public:
 
 	drm::DescriptorSetRef DescriptorSet;
 
+	/** Meshes in the scene. */
 	std::vector<MeshProxy> MeshProxies;
+
+	/** Meshes that passed view frustum culling. */
+	std::vector<const MeshProxy*> VisibleMeshProxies;
 
 	std::vector<MeshDrawCommand> DepthPrepass;
 
@@ -50,9 +55,8 @@ private:
 	void InitLights();
 	void InitDirectionalLights();
 	void InitPointLights();
-	void InitDrawLists();
+	void InitMeshDrawCommands();
 
-	void AddToDrawLists(const MeshProxy& MeshProxy);
 	void AddToDepthPrepass(const MeshProxy& MeshProxy);
 	void AddToShadowDepthPass(const MeshProxy& MeshProxy);
 	void AddToVoxelsPass(const MeshProxy& MeshProxy);

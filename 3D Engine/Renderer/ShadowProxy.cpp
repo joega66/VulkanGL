@@ -36,7 +36,7 @@ void ShadowProxy::Update(const CDirectionalLight& DirectionalLight)
 	LightProjMatrix[1][1] *= -1;
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
-
+	
 	LightViewProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &LightViewProjMatrix);
 
 	DescriptorSet->Write(LightViewProjBuffer, 0);

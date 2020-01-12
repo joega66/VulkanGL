@@ -1,7 +1,7 @@
 #pragma once
 #include <ECS/System.h>
 #include <ECS/EntityManager.h>
-#include <Components/CTransform.h>
+#include <Components/Transform.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 #include <Engine/Scene.h>
@@ -47,7 +47,7 @@ private:
 		{
 			gCursor.Mode = ECursorMode::Normal;
 
-			CTransform& Transform = ECS.GetComponent<CTransform>(SelectedEntity);
+			Transform& Transform = ECS.GetComponent<class Transform>(SelectedEntity);
 			glm::vec3 Position = Transform.GetPosition();
 			Ray Ray0 = Scene.View.ScreenPointToRay(gCursor.Last);
 			Ray Ray1 = Scene.View.ScreenPointToRay(gCursor.Position);

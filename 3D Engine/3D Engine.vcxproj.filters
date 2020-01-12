@@ -89,15 +89,6 @@
     <ClInclude Include="Platform\Platform.h">
       <Filter>Source\Platforms</Filter>
     </ClInclude>
-    <ClInclude Include="Components\CStaticMesh.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\CTransform.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\CMaterial.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\StaticMesh.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -206,6 +197,15 @@
     <ClInclude Include="Renderer\ShadowProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Components\Material.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\StaticMeshComponent.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Transform.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -243,12 +243,6 @@
     </ClCompile>
     <ClCompile Include="Platform\Platform.cpp">
       <Filter>Source\Platforms</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\CStaticMesh.cpp">
-      <Filter>Source\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\CTransform.cpp">
-      <Filter>Source\Components</Filter>
     </ClCompile>
     <ClCompile Include="Engine\StaticMesh.cpp">
       <Filter>Source\Engine</Filter>
@@ -288,9 +282,6 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanPipeline.cpp">
       <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\CMaterial.cpp">
-      <Filter>Source\Components</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Screen.cpp">
       <Filter>Source\Engine</Filter>
@@ -348,6 +339,15 @@
     </ClCompile>
     <ClCompile Include="Renderer\ShadowProxy.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\Material.cpp">
+      <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\StaticMeshComponent.cpp">
+      <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\Transform.cpp">
+      <Filter>Source\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

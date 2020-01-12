@@ -2,8 +2,23 @@
 #include <Platform/Platform.h>
 #include <ECS/Entity.h>
 
-struct BoundingBox
+class BoundingBox
 {
+public:
+	BoundingBox() = default;
+
+	BoundingBox(const glm::vec3& Min, const glm::vec3& Max);
+
+	/** Test the point against the current extents. */
+	void TestPoint(const glm::vec3& Point);
+
+	/** Transform the bounding box by a matrix. */
+	BoundingBox Transform(const glm::mat4& M) const;
+
+	inline const glm::vec3& GetMin() const { return Min; }
+	inline const glm::vec3& GetMax() const { return Max; }
+
+private:
 	glm::vec3 Min = glm::vec3(std::numeric_limits<float>::max());
 	glm::vec3 Max = glm::vec3(std::numeric_limits<float>::min());
 };
@@ -18,7 +33,7 @@ struct Ray
 	{
 	}
 
-	glm::vec3 Intersect(float T) const
+	inline glm::vec3 Intersect(float T) const
 	{
 		return Origin + Direction * T;
 	}
@@ -34,12 +49,22 @@ struct Plane
 	static const Plane YZ;
 };
 
+using FrustumPlanes = std::array<glm::vec4, 6>;
+
 class Scene;
 
 class Physics
 {
 public:
+	/** Ray-box intersection. */
 	static bool Raycast(Scene& Scene, const Ray& Ray, Entity Entity, float& T);
+
+	/** Ray-box intersection. */
 	static bool Raycast(Scene& Scene, const Ray& Ray, Entity Entity);
+	
+	/** Ray-plane intersection. */
 	static bool Raycast(Scene& Scene, const Ray& Ray, const Plane& Plane, float& T);
+
+	/** Test whether the bounding box is inside the frustum. */
+	static bool IsBoxInsideFrustum(const FrustumPlanes& FrustumPlanes, const BoundingBox& BB);
 };

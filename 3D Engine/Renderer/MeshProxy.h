@@ -5,7 +5,7 @@
 class MeshProxy
 {
 public:
-	const CMaterial& Material;
+	const Material& Material;
 
 	drm::DescriptorSetRef MeshSet;
 
@@ -14,8 +14,8 @@ public:
 	SpecializationInfo SpecializationInfo;
 
 	MeshProxy(
-		const CMaterial& Material, 
-		const std::vector<MeshElement>& Elements,
+		const class Material& Material, 
+		const std::vector<Submesh>& Submeshes,
 		const drm::BufferRef& LocalToWorldUniform
 	);
 
@@ -23,9 +23,8 @@ public:
 
 	inline const class SpecializationInfo& GetSpecializationInfo() const { return SpecializationInfo; }
 
-	std::vector<MeshElement> Elements;
+	std::vector<Submesh> Submeshes;
 
 private:
 	drm::BufferRef LocalToWorldUniform;
-
 };

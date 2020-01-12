@@ -1,5 +1,5 @@
 #include "EntityManager.h"
-#include <Components/CTransform.h>
+#include <Components/Transform.h>
 #include <Components/CRenderer.h>
 
 Entity EntityManager::CreatePrefab(const std::string& Name)
@@ -56,7 +56,7 @@ void EntityManager::Destroy(Entity& Entity)
 
 void EntityManager::InitDefaultComponents(Entity& Entity)
 {
-	AddComponent<CTransform>(Entity);
+	AddComponent<Transform>(Entity);
 	AddComponent<CRenderer>(Entity);
 }
 

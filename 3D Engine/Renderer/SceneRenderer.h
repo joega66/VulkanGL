@@ -1,7 +1,7 @@
 #pragma once
 #include <DRM.h>
 #include <Renderer/SceneProxy.h>
-#include <Components/CStaticMesh.h>
+#include <Components/StaticMeshComponent.h>
 
 class Scene;
 class RenderCommandList;
@@ -16,7 +16,7 @@ public:
 	void Render(SceneProxy& Scene);
 
 private:
-	StaticMeshRef Cube;
+	const StaticMesh* Cube;
 
 	drm::DescriptorSetRef SceneTextures;
 

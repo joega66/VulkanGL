@@ -21,7 +21,11 @@ public:
 	// Get the World-to-View matrix.
 	glm::mat4 GetWorldToView() const;
 	// Get the View-to-Projective matrix.
-	glm::mat4 GetViewToClip() const;
+	inline const glm::mat4& GetViewToClip() const { return ViewToClip; }
+
+	/** Get the World-to-Projective matrix. */
+	inline glm::mat4 GetWorldToClip() const { return GetViewToClip() * GetWorldToView(); }
+
 	// Get the view position.
 	const glm::vec3& GetPosition() const { return Position; }
 	// Get the FOV.
@@ -29,6 +33,9 @@ public:
 
 	// Freeze/Unfreeze the view.
 	bool bFreeze = false;
+
+	/** Get the combined clipping planes in model space. */
+	FrustumPlanes GetFrustumPlanes() const;
 
 private:
 	glm::vec3 Position;
@@ -41,4 +48,9 @@ private:
 	float Yaw;
 	float Pitch;
 	float FOV;
+
+	/** Transforms points from view to clip space. */
+	glm::mat4 ViewToClip;
+
+	void CalcViewToClip(float Width, float Height);
 };

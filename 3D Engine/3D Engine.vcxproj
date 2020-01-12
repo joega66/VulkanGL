@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Components\CMaterial.cpp" />
-    <ClCompile Include="Components\CStaticMesh.cpp" />
-    <ClCompile Include="Components\CTransform.cpp" />
+    <ClCompile Include="Components\Material.cpp" />
+    <ClCompile Include="Components\StaticMeshComponent.cpp" />
+    <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="CoreEngine.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
@@ -69,11 +69,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Components\CLight.h" />
-    <ClInclude Include="Components\CMaterial.h" />
+    <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\COutline.h" />
     <ClInclude Include="Components\CRenderer.h" />
-    <ClInclude Include="Components\CStaticMesh.h" />
-    <ClInclude Include="Components\CTransform.h" />
+    <ClInclude Include="Components\StaticMeshComponent.h" />
+    <ClInclude Include="Components\Transform.h" />
     <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="DRMPrivate.h" />
     <ClInclude Include="ECS\ComponentArray.h" />
@@ -153,7 +153,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3251e0ea-e82a-4fe7-a893-499a35dca794}</ProjectGuid>
     <RootNamespace>_3D_Engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

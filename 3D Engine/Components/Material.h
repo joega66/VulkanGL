@@ -2,9 +2,10 @@
 #include <DRMResource.h>
 #include <DRMShader.h>
 
-struct CMaterial
+class Material
 {
-	CMaterial();
+public:
+	Material();
 
 	drm::ImageRef Diffuse;
 	drm::ImageRef Specular;

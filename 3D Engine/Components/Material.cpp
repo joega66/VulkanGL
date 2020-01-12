@@ -1,10 +1,10 @@
-#include "CMaterial.h"
+#include "Material.h"
 #include <DRM.h>
 
-drm::ImageRef CMaterial::Red;
-drm::ImageRef CMaterial::Green;
-drm::ImageRef CMaterial::Blue;
-drm::ImageRef CMaterial::White;
+drm::ImageRef Material::Red;
+drm::ImageRef Material::Green;
+drm::ImageRef Material::Blue;
+drm::ImageRef Material::White;
 
 static drm::ImageRef GetDummy()
 {
@@ -17,7 +17,7 @@ static drm::ImageRef GetDummy()
 	return Dummy;
 }
 
-CMaterial::CMaterial()
+Material::Material()
 	: Diffuse(GetDummy())
 	, Specular(GetDummy())
 	, Opacity(GetDummy())
@@ -25,22 +25,22 @@ CMaterial::CMaterial()
 {
 }
 
-bool CMaterial::HasSpecularMap() const
+bool Material::HasSpecularMap() const
 {
 	return Specular != GetDummy();
 }
 
-bool CMaterial::IsMasked() const
+bool Material::IsMasked() const
 { 
 	return Opacity != GetDummy(); 
 }
 
-bool CMaterial::HasBumpMap() const
+bool Material::HasBumpMap() const
 {
 	return Bump != GetDummy();
 }
 
-drm::DescriptorSetRef CMaterial::CreateDescriptorSet() const
+drm::DescriptorSetRef Material::CreateDescriptorSet() const
 {
 	static const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	static const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
@@ -56,7 +56,7 @@ drm::DescriptorSetRef CMaterial::CreateDescriptorSet() const
 	return DescriptorSet;
 }
 
-SpecializationInfo CMaterial::CreateSpecializationInfo() const
+SpecializationInfo Material::CreateSpecializationInfo() const
 {
 	SpecializationInfo SpecInfo;
 	SpecInfo.Add(0, HasSpecularMap());

@@ -64,9 +64,9 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	CmdList.BindPipeline(PSOInit);
 
-	for (const auto& Element : Cube->Batch.Elements)
+	for (const auto& Submesh : Cube->Submeshes)
 	{
-		CmdList.BindVertexBuffers(1, &Element.GetPositionBuffer());
-		CmdList.DrawIndexed(Element.IndexBuffer, Element.IndexCount, 1, 0, 0, 0);
+		CmdList.BindVertexBuffers(1, &Submesh.GetPositionBuffer());
+		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0);
 	}
 }

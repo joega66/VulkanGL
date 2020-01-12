@@ -8,11 +8,11 @@ class Screen
 public:
 	void Init();
 
-	int32 GetWidth() const { return Width; }
+	inline int32 GetWidth() const { return Width; }
 
-	int32 GetHeight() const { return Height; }
+	inline int32 GetHeight() const { return Height; }
 
-	float GetAspectRatio() const { return (float)Width / Height; }
+	inline float GetAspectRatio() const { return static_cast<float>(Width) / static_cast<float>(Height); }
 
 	void RegisterScreenResChangedCallback(const ScreenResChangedCallback& Callback);
 

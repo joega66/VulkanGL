@@ -16,27 +16,41 @@ AssetManager::AssetManager()
 	LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 }
 
-StaticMeshRef AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File)
+std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File, bool Breakup)
 {
-	StaticMeshRef Mesh = MakeRef<StaticMesh>(File);
+	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(File);
 
 	// Add default engine materials if missing.
-	for (uint32 ElementIndex = 0; ElementIndex < Mesh->Batch.Elements.size(); ElementIndex++)
+	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
 	{
-		if (!Mesh->Batch.Materials[ElementIndex].Diffuse)
+		if (!StaticMesh->Materials[SubmeshIndex].Diffuse)
 		{
-			Mesh->Batch.Materials[ElementIndex].Diffuse = GetImage("Engine_Diffuse_Default");
+			StaticMesh->Materials[SubmeshIndex].Diffuse = GetImage("Engine_Diffuse_Default");
 		}
 	}
 
-	StaticMeshes[Name] = Mesh;
-
-	return Mesh;
+	if (Breakup)
+	{
+		std::vector<const class StaticMesh*> OutStaticMeshes;
+		OutStaticMeshes.reserve(StaticMesh->Submeshes.size());
+		for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
+		{
+			const std::string MadeUpSubmeshName = Name + std::to_string(SubmeshIndex);
+			StaticMeshes[MadeUpSubmeshName] = std::make_unique<class StaticMesh>(*StaticMesh, SubmeshIndex);
+			OutStaticMeshes.push_back(StaticMeshes[MadeUpSubmeshName].get());
+		}
+		return OutStaticMeshes;
+	}
+	else
+	{
+		StaticMeshes[Name] = std::move(StaticMesh);
+		return { StaticMeshes[Name].get() };
+	}
 }
 
-StaticMeshRef AssetManager::GetStaticMesh(const std::string& Name) const
+const StaticMesh* AssetManager::GetStaticMesh(const std::string& Name) const
 {
-	return GetValue(StaticMeshes, Name);
+	return GetValue(StaticMeshes, Name).get();
 }
 
 void AssetManager::LoadImage(const std::string& Name, const std::string& File, EFormat Format)

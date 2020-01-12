@@ -2,9 +2,9 @@
 #include <Engine/Scene.h>
 #include <Engine/Screen.h>
 #include <Components/CLight.h>
-#include <Components/CMaterial.h>
-#include <Components/CStaticMesh.h>
-#include <Components/CTransform.h>
+#include <Components/Material.h>
+#include <Components/StaticMeshComponent.h>
+#include <Components/Transform.h>
 #include <Components/CRenderer.h>
 #include "MeshProxy.h"
 #include "ShadowProxy.h"
@@ -16,7 +16,7 @@ SceneProxy::SceneProxy(Scene& Scene)
 {
 	InitView();
 	InitLights();
-	InitDrawLists();
+	InitMeshDrawCommands();
 
 	DescriptorSet = drm::CreateDescriptorSet();
 	DescriptorSet->Write(ViewUniform, 0);
@@ -27,12 +27,6 @@ SceneProxy::SceneProxy(Scene& Scene)
 
 void SceneProxy::InitView()
 {
-	// Initialize view uniform.
-
-	const glm::mat4 WorldToView = View.GetWorldToView();
-	const glm::mat4 ViewToClip = View.GetViewToClip();
-	const glm::mat4 WorldToClip = ViewToClip * WorldToView;
-
 	UNIFORM_STRUCT(ViewUniformBuffer,
 		glm::mat4 WorldToView;
 		glm::mat4 ViewToClip;
@@ -45,6 +39,9 @@ void SceneProxy::InitView()
 		glm::vec2 ScreenDims;
 	);
 
+	const glm::mat4 WorldToView = View.GetWorldToView();
+	const glm::mat4& ViewToClip = View.GetViewToClip();
+	const glm::mat4 WorldToClip = View.GetWorldToClip();
 	const ViewUniformBuffer ViewUniformBuffer =
 	{
 		WorldToView,
@@ -73,7 +70,7 @@ void SceneProxy::InitDirectionalLights()
 		glm::vec3 Color;
 		float Intensity;
 		glm::vec3 Direction;
-		int32 _Pad1;
+		float _Pad1;
 	);
 
 	std::vector<DirectionalLightProxy> DirectionalLightProxies;
@@ -121,7 +118,7 @@ void SceneProxy::InitPointLights()
 	for (auto Entity : ECS.GetVisibleEntities<CPointLight>())
 	{
 		auto& PointLight = ECS.GetComponent<CPointLight>(Entity);
-		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+		auto& Transform = ECS.GetComponent<class Transform>(Entity);
 		PointLightProxies.emplace_back(PointLightProxy{
 			Transform.GetPosition(),
 			PointLight.Intensity,
@@ -139,61 +136,50 @@ void SceneProxy::InitPointLights()
 	drm::UnlockBuffer(PointLightBuffer);
 }
 
-void SceneProxy::InitDrawLists()
+void SceneProxy::InitMeshDrawCommands()
 {
-	// Gather mesh proxies.
-	for (auto Entity : ECS.GetVisibleEntities<CStaticMesh>())
-	{
-		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+	auto StaticMeshEntities = ECS.GetVisibleEntities<StaticMeshComponent>();
+	
+	MeshProxies.reserve(StaticMeshEntities.size());
+	VisibleMeshProxies.reserve(StaticMeshEntities.size());
 
-		struct LocalToWorldUniformData
-		{
+	const FrustumPlanes ViewFrustumPlanes = View.GetFrustumPlanes();
+
+	// Gather mesh proxies.
+	for (auto Entity : StaticMeshEntities)
+	{
+		UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 			glm::mat4 Transform;
 			glm::mat4 Inverse;
-		} LocalToWorldUniformData = { Transform.GetLocalToWorld(), glm::inverse(Transform.GetLocalToWorld()) };
+		);
 
-		drm::BufferRef LocalToWorldUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(LocalToWorldUniformData), &LocalToWorldUniformData);
+		const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
+		const LocalToWorldUniformBuffer LocalToWorldUniformBuffer = { Transform.GetLocalToWorld(), glm::inverse(Transform.GetLocalToWorld()) };
+		const drm::BufferRef LocalToWorldUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(LocalToWorldUniformBuffer), &LocalToWorldUniformBuffer);
+		const StaticMesh* StaticMesh = ECS.GetComponent<StaticMeshComponent>(Entity).StaticMesh;
+		const Material& Material = ECS.GetComponent<class Material>(Entity);
 
-		auto& StaticMesh = ECS.GetComponent<CStaticMesh>(Entity);
-		const auto& MeshBatch = StaticMesh.StaticMesh->Batch;
-		const auto& MeshElements = MeshBatch.Elements;
-
-		if (ECS.HasComponent<CMaterial>(Entity))
+		MeshProxies.emplace_back(MeshProxy(Material, StaticMesh->Submeshes, LocalToWorldUniform));
+		
+		const BoundingBox WorldSpaceBB = StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
+		
+		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, WorldSpaceBB))
 		{
-			const CMaterial& Material = ECS.GetComponent<CMaterial>(Entity);
-			MeshProxies.emplace_back(MeshProxy(
-				Material,
-				MeshElements,
-				LocalToWorldUniform)
-			);
-		}
-		else
-		{
-			const std::vector<CMaterial>& Materials = MeshBatch.Materials;
-
-			for (uint32 ElementIndex = 0; ElementIndex < MeshElements.size(); ElementIndex++)
-			{
-				const CMaterial& Material = Materials[ElementIndex];
-				const std::vector<MeshElement> MeshElement = { MeshElements[ElementIndex] };
-				MeshProxies.emplace_back(MeshProxy(
-					Material,
-					MeshElement,
-					LocalToWorldUniform)
-				);
-			}
+			VisibleMeshProxies.push_back(&MeshProxies.back());
 		}
 	}
 
+	// Add to scene draw lists.
 	for (const MeshProxy& MeshProxy : MeshProxies)
 	{
-		AddToDrawLists(MeshProxy);
+		AddToShadowDepthPass(MeshProxy);
+		AddToVoxelsPass(MeshProxy);
 	}
-}
 
-void SceneProxy::AddToDrawLists(const MeshProxy& MeshProxy)
-{
-	AddToDepthPrepass(MeshProxy);
-	AddToShadowDepthPass(MeshProxy);
-	AddToVoxelsPass(MeshProxy);
-	AddToLightingPass(MeshProxy);
+	// Add to visible draw lists.
+	for (const MeshProxy* MeshProxy : VisibleMeshProxies)
+	{
+		AddToDepthPrepass(*MeshProxy);
+		AddToLightingPass(*MeshProxy);
+	}
 }

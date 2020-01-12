@@ -1,7 +1,7 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
 #include <Components/CRenderer.h>
-#include <Components/CStaticMesh.h>
+#include <Components/StaticMeshComponent.h>
 #include <Components/COutline.h>
 
 void TransformGizmoSystem::Start(Scene& Scene)
@@ -17,33 +17,33 @@ void TransformGizmoSystem::Start(Scene& Scene)
 		ECS.CreateEntity()
 	};
 
-	auto& XAxis = ECS.GetComponent<CTransform>(TranslateAxis.X);
+	auto& XAxis = ECS.GetComponent<Transform>(TranslateAxis.X);
 	XAxis.Scale(glm::vec3(0.5f));
 	XAxis.Translate(glm::vec3(1.0f, -1.0f, 0.0f));
 	XAxis.Rotate(glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
 
-	auto& YAxis = ECS.GetComponent<CTransform>(TranslateAxis.Y);
+	auto& YAxis = ECS.GetComponent<Transform>(TranslateAxis.Y);
 	YAxis.Scale(glm::vec3(0.5f));
 
-	auto& ZAxis = ECS.GetComponent<CTransform>(TranslateAxis.Z);
+	auto& ZAxis = ECS.GetComponent<Transform>(TranslateAxis.Z);
 	ZAxis.Scale(glm::vec3(0.5f));
 	ZAxis.Translate(glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
 	auto TransformGizmo = Scene.Assets.GetStaticMesh("Transform_Gizmo");
 
-	ECS.AddComponent<CStaticMesh>(TranslateAxis.X, TransformGizmo);
-	ECS.AddComponent<CStaticMesh>(TranslateAxis.Y, TransformGizmo);
-	ECS.AddComponent<CStaticMesh>(TranslateAxis.Z, TransformGizmo);
+	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.X, TransformGizmo);
+	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Y, TransformGizmo);
+	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Z, TransformGizmo);
 	
-	auto& MatX = ECS.AddComponent<CMaterial>(TranslateAxis.X);
-	MatX.Diffuse = CMaterial::Green;
+	auto& MatX = ECS.AddComponent<Material>(TranslateAxis.X);
+	MatX.Diffuse = Material::Green;
 
-	auto& MatY = ECS.AddComponent<CMaterial>(TranslateAxis.Y);
-	MatY.Diffuse = CMaterial::Blue;
+	auto& MatY = ECS.AddComponent<Material>(TranslateAxis.Y);
+	MatY.Diffuse = Material::Blue;
 
-	auto& MatZ = ECS.AddComponent<CMaterial>(TranslateAxis.Z);
-	MatZ.Diffuse = CMaterial::Red;
+	auto& MatZ = ECS.AddComponent<Material>(TranslateAxis.Z);
+	MatZ.Diffuse = Material::Red;
 
 	ECS.GetComponent<CRenderer>(TranslateAxis.X).bVisible = false;
 	ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = false;
@@ -95,7 +95,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		std::vector<Entity> Hits;
 
 		// @todo Wrap this in a helper for just returning the closest hit entity.
-		for (auto Entity : ECS.GetEntities<CStaticMesh>())
+		for (auto Entity : ECS.GetEntities<StaticMeshComponent>())
 		{
 			if (Entity.GetEntityID() == TranslateAxis.X.GetEntityID() ||
 				Entity.GetEntityID() == TranslateAxis.Y.GetEntityID() ||
@@ -115,8 +115,8 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		{
 			std::sort(Hits.begin(), Hits.end(), [&](auto& A, auto& B)
 			{
-				CTransform& TransformA = ECS.GetComponent<CTransform>(A);
-				CTransform& TransformB = ECS.GetComponent<CTransform>(B);
+				Transform& TransformA = ECS.GetComponent<Transform>(A);
+				Transform& TransformB = ECS.GetComponent<Transform>(B);
 				return glm::distance(TransformA.GetPosition(), Scene.View.GetPosition()) <
 					glm::distance(TransformB.GetPosition(), Scene.View.GetPosition());
 			});
@@ -153,7 +153,7 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 		{
 			if (Physics::Raycast(Scene, Scene.View.ScreenPointToRay(gCursor.Position), Entity))
 			{
-				CTransform& Transform = ECS.GetComponent<CTransform>(Entity);
+				Transform& Transform = ECS.GetComponent<class Transform>(Entity);
 				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.GetPosition()); NewDist < Dist)
 				{
 					ClosestHit = Entity;
@@ -194,10 +194,10 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
 		ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = true;
 		ECS.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = true;
 
-		auto& Transform = ECS.GetComponent<CTransform>(Entity);
+		auto& TransformComponent = ECS.GetComponent<Transform>(Entity);
 
-		ECS.GetComponent<CTransform>(TranslateAxis.X).SetParent(&Transform);
-		ECS.GetComponent<CTransform>(TranslateAxis.Y).SetParent(&Transform);
-		ECS.GetComponent<CTransform>(TranslateAxis.Z).SetParent(&Transform);
+		ECS.GetComponent<Transform>(TranslateAxis.X).SetParent(&TransformComponent);
+		ECS.GetComponent<Transform>(TranslateAxis.Y).SetParent(&TransformComponent);
+		ECS.GetComponent<Transform>(TranslateAxis.Z).SetParent(&TransformComponent);
 	}
 }

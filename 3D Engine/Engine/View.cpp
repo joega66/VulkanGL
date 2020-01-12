@@ -9,6 +9,10 @@ View::View(const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitc
 	, FOV(FOV)
 {
 	Axis({ 0.0f, 0.0f });
+	gScreen.RegisterScreenResChangedCallback([&] (uint32 Width, uint32 Height)
+	{
+		CalcViewToClip(static_cast<float>(Width), static_cast<float>(Height));
+	});
 }
 
 Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
@@ -83,10 +87,23 @@ void View::Translate(const float DS)
 	Position += Front * DS;
 }
 
-glm::mat4 View::GetViewToClip() const
+FrustumPlanes View::GetFrustumPlanes() const
 {
-	glm::mat4 Perspective = glm::perspective(glm::radians(FOV), (float)gScreen.GetWidth() / gScreen.GetHeight(), 0.1f, 1000.0f);
-	// @todo VK_KHR_maintenance1
-	Perspective[1][1] *= -1;
-	return Perspective;
+	const glm::mat4 WorldToClip = glm::transpose(GetWorldToClip());
+	const FrustumPlanes FrustumPlanes =
+	{
+		WorldToClip[3] + WorldToClip[0],
+		WorldToClip[3] - WorldToClip[0],
+		WorldToClip[3] + WorldToClip[1],
+		WorldToClip[3] - WorldToClip[1],
+		WorldToClip[3] + WorldToClip[2],
+		WorldToClip[3] - WorldToClip[2]
+	};
+	return FrustumPlanes;
+}
+
+void View::CalcViewToClip(float Width, float Height)
+{
+	ViewToClip = glm::perspective(glm::radians(FOV), Width / Height, 0.1f, 1000.0f);
+	ViewToClip[1][1] *= -1;
 }

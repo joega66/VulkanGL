@@ -1,12 +1,12 @@
 #pragma once
 #include "DRMResource.h"
 
-class CTransform
+class Transform
 {
 public:
-	CTransform(const CTransform& Other);
+	Transform(const Transform& Other);
 
-	CTransform(const glm::vec3& Position = glm::vec3(0.0f), const glm::vec3& Rotation = glm::vec3(0.0f, 1.0f, 0.0), float Angle = 0.0f, const glm::vec3& Scale = glm::vec3(1.0f));
+	Transform(const glm::vec3& Position = glm::vec3(0.0f), const glm::vec3& Rotation = glm::vec3(0.0f, 1.0f, 0.0), float Angle = 0.0f, const glm::vec3& Scale = glm::vec3(1.0f));
 
 	const glm::mat4& GetLocalToWorld() const;
 
@@ -16,9 +16,9 @@ public:
 
 	void Scale(const glm::vec3& ScaleBy);
 
-	void SetParent(CTransform* Parent);
+	void SetParent(Transform* Parent);
 
-	void RemoveChild(CTransform* Child);
+	void RemoveChild(Transform* Child);
 
 	inline const glm::vec3& GetPosition() const
 	{
@@ -46,11 +46,11 @@ private:
 
 	glm::mat4 LocalToWorld;
 
-	CTransform* Parent = nullptr;
+	Transform* Parent = nullptr;
 
-	std::list<CTransform*> Children;
+	std::list<Transform*> Children;
 
-	void AddChild(CTransform* Child);
+	void AddChild(Transform* Child);
 
 	glm::mat4 GetLocalToParent();
 

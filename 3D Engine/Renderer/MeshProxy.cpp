@@ -1,12 +1,12 @@
 #include "MeshProxy.h"
 
 MeshProxy::MeshProxy(
-	const CMaterial& Material,
-	const std::vector<MeshElement>& Elements,
+	const class Material& Material,
+	const std::vector<Submesh>& Submeshes,
 	const drm::BufferRef& LocalToWorldUniform)
 	: Material(Material)
 	, LocalToWorldUniform(LocalToWorldUniform)
-	, Elements(Elements)
+	, Submeshes(Submeshes)
 {
 	MaterialSet = Material.CreateDescriptorSet();
 
@@ -20,10 +20,10 @@ MeshProxy::MeshProxy(
 
 void MeshProxy::DrawElements(drm::CommandList& CmdList) const
 {
-	std::for_each(Elements.begin(), Elements.end(),
-		[&] (const MeshElement& MeshElement)
+	std::for_each(Submeshes.begin(), Submeshes.end(),
+		[&] (const Submesh& Submesh)
 	{
-		CmdList.BindVertexBuffers(MeshElement.VertexBuffers.size(), MeshElement.VertexBuffers.data());
-		CmdList.DrawIndexed(MeshElement.IndexBuffer, MeshElement.IndexCount, 1, 0, 0, 0);
+		CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
+		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0);
 	});
 }
