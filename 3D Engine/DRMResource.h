@@ -126,10 +126,11 @@ enum class EBufferUsage
 enum class EImageUsage
 {
 	None,
-	Attachment = 1 << 0,
-	Sampled = 1 << 1,
-	Cubemap = 1 << 2,
-	Storage = 1 << 3,
+	Attachment	= 1 << 0,
+	Sampled		= 1 << 1,
+	Cubemap		= 1 << 2,
+	Storage		= 1 << 3,
+	Surface		= 1 << 4,
 };
 
 enum class ELoadAction

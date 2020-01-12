@@ -22,8 +22,10 @@ public:
 	static drm::ImageRef Green;
 	static drm::ImageRef Blue;
 	static drm::ImageRef White;
+	/** Dummy texture for "empty" descriptors. */
+	static drm::ImageRef Dummy;
 
-	drm::DescriptorSetRef CreateDescriptorSet() const;
+	drm::DescriptorSetRef CreateDescriptorSet(class DRM& Device) const;
 
 	SpecializationInfo CreateSpecializationInfo() const;
 };

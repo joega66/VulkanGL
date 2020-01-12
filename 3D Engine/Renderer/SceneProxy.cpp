@@ -9,24 +9,24 @@
 #include "MeshProxy.h"
 #include "ShadowProxy.h"
 
-SceneProxy::SceneProxy(Scene& Scene)
+SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
 	: ShaderMap(Scene.ShaderMap)
 	, View(Scene.View)
 	, ECS(Scene.ECS)
 	, Skybox(Scene.Skybox)
 {
-	InitView();
-	InitLights();
-	InitMeshDrawCommands();
+	InitView(Device);
+	InitLights(Device);
+	InitMeshDrawCommands(Device);
 
-	DescriptorSet = drm::CreateDescriptorSet();
+	DescriptorSet = Device.CreateDescriptorSet();
 	DescriptorSet->Write(ViewUniform, 0);
 	DescriptorSet->Write(DirectionalLightBuffer, 1);
 	DescriptorSet->Write(PointLightBuffer, 2);
 	DescriptorSet->Update();
 }
 
-void SceneProxy::InitView()
+void SceneProxy::InitView(DRM& Device)
 {
 	UNIFORM_STRUCT(ViewUniformBuffer,
 		glm::mat4 WorldToView;
@@ -56,16 +56,16 @@ void SceneProxy::InitView()
 		glm::vec2(gScreen.GetWidth(), gScreen.GetHeight())
 	};
 
-	ViewUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformBuffer), &ViewUniformBuffer);
+	ViewUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformBuffer), &ViewUniformBuffer);
 }
 
-void SceneProxy::InitLights()
+void SceneProxy::InitLights(DRM& Device)
 {
-	InitDirectionalLights();
-	InitPointLights();
+	InitDirectionalLights(Device);
+	InitPointLights(Device);
 }
 
-void SceneProxy::InitDirectionalLights()
+void SceneProxy::InitDirectionalLights(DRM& Device)
 {
 	UNIFORM_STRUCT(DirectionalLightProxy,
 		glm::vec3 Color;
@@ -91,21 +91,21 @@ void SceneProxy::InitDirectionalLights()
 	glm::uvec4 NumDirectionalLights;
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
-	DirectionalLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	void* Data = drm::LockBuffer(DirectionalLightBuffer);
+	DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	void* Data = Device.LockBuffer(DirectionalLightBuffer);
 	Platform.Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	drm::UnlockBuffer(DirectionalLightBuffer);
+	Device.UnlockBuffer(DirectionalLightBuffer);
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
 		auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
 		auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
-		ShadowProxy.Update(DirectionalLight);
+		ShadowProxy.Update(Device, DirectionalLight);
 	}
 }
 
-void SceneProxy::InitPointLights()
+void SceneProxy::InitPointLights(DRM& Device)
 {
 	UNIFORM_STRUCT(PointLightProxy,
 		glm::vec3 Position;
@@ -130,14 +130,14 @@ void SceneProxy::InitPointLights()
 	glm::uvec4 NumPointLights;
 	NumPointLights.x = PointLightProxies.size();
 
-	PointLightBuffer = drm::CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-	void* Data = drm::LockBuffer(PointLightBuffer);
+	PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
+	void* Data = Device.LockBuffer(PointLightBuffer);
 	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	drm::UnlockBuffer(PointLightBuffer);
+	Device.UnlockBuffer(PointLightBuffer);
 }
 
-void SceneProxy::InitMeshDrawCommands()
+void SceneProxy::InitMeshDrawCommands(DRM& Device)
 {
 	auto StaticMeshEntities = ECS.GetVisibleEntities<StaticMeshComponent>();
 	
@@ -156,11 +156,15 @@ void SceneProxy::InitMeshDrawCommands()
 
 		const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
 		const LocalToWorldUniformBuffer LocalToWorldUniformBuffer = { Transform.GetLocalToWorld(), glm::inverse(Transform.GetLocalToWorld()) };
-		const drm::BufferRef LocalToWorldUniform = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(LocalToWorldUniformBuffer), &LocalToWorldUniformBuffer);
+		const drm::BufferRef LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(LocalToWorldUniformBuffer), &LocalToWorldUniformBuffer);
 		const StaticMesh* StaticMesh = ECS.GetComponent<StaticMeshComponent>(Entity).StaticMesh;
 		const Material& Material = ECS.GetComponent<class Material>(Entity);
 
-		MeshProxies.emplace_back(MeshProxy(Material, StaticMesh->Submeshes, LocalToWorldUniform));
+		drm::DescriptorSetRef MeshSet = Device.CreateDescriptorSet();
+		MeshSet->Write(LocalToWorldUniform, 0);
+		MeshSet->Update();
+
+		MeshProxies.emplace_back(MeshProxy(Device, MeshSet, Material, StaticMesh->Submeshes, LocalToWorldUniform));
 		
 		const BoundingBox WorldSpaceBB = StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
 		

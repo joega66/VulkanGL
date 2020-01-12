@@ -1,21 +1,18 @@
 #include "MeshProxy.h"
 
 MeshProxy::MeshProxy(
+	DRM& Device,
+	drm::DescriptorSetRef MeshSet,
 	const class Material& Material,
 	const std::vector<Submesh>& Submeshes,
 	const drm::BufferRef& LocalToWorldUniform)
-	: Material(Material)
+	: MeshSet(MeshSet)
+	, Material(Material)
 	, LocalToWorldUniform(LocalToWorldUniform)
 	, Submeshes(Submeshes)
 {
-	MaterialSet = Material.CreateDescriptorSet();
-
+	MaterialSet = Material.CreateDescriptorSet(Device);
 	SpecializationInfo = Material.CreateSpecializationInfo();
-
-	// @todo Make virtual
-	MeshSet = drm::CreateDescriptorSet();
-	MeshSet->Write(LocalToWorldUniform, 0);
-	MeshSet->Update();
 }
 
 void MeshProxy::DrawElements(drm::CommandList& CmdList) const

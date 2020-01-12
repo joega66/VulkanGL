@@ -30,7 +30,7 @@ void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumAttachments; ColorTargetIndex++)
 	{
 		// Determine if this command list touched the surface.
-		if (RPInit.ColorAttachments[ColorTargetIndex].Image == drm::GetSurface())
+		if (Any(RPInit.ColorAttachments[ColorTargetIndex].Image->Usage & EImageUsage::Surface))
 		{
 			bTouchedSurface = true;
 		}

@@ -8,7 +8,7 @@
 
 using TextureCache = HashTable<std::string, drm::ImageRef>;
 
-static drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
+static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
 {
 	for (uint32 TextureIndex = 0; TextureIndex < AiMaterial->GetTextureCount(AiType); TextureIndex++)
 	{
@@ -29,7 +29,7 @@ static drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiM
 
 			if (Pixels)
 			{
-				Material = drm::CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Pixels);
+				Material = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Pixels);
 			}
 
 			Platform.FreeImage(Pixels);
@@ -43,26 +43,26 @@ static drm::ImageRef LoadMaterials(const std::string& Directory, aiMaterial* AiM
 	return nullptr;
 }
 
-static Material ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
+static Material ProcessMaterials(DRM& Device, StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
 {
 	Material Material;
 
-	if (drm::ImageRef Diffuse = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); Diffuse)
+	if (drm::ImageRef Diffuse = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); Diffuse)
 	{
 		Material.Diffuse = Diffuse;
 	}
 
-	if (drm::ImageRef Specular = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_SPECULAR, TextureCache); Specular)
+	if (drm::ImageRef Specular = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_SPECULAR, TextureCache); Specular)
 	{
 		Material.Specular = Specular;
 	}
 
-	if (drm::ImageRef Opacity = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_OPACITY, TextureCache); Opacity)
+	if (drm::ImageRef Opacity = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_OPACITY, TextureCache); Opacity)
 	{
 		Material.Opacity = Opacity;
 	}
 
-	if (drm::ImageRef Bump = LoadMaterials(StaticMesh->Directory, AiMaterial, aiTextureType_HEIGHT, TextureCache); Bump)
+	if (drm::ImageRef Bump = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_HEIGHT, TextureCache); Bump)
 	{
 		Material.Bump = Bump;
 	}
@@ -70,7 +70,7 @@ static Material ProcessMaterials(StaticMesh* StaticMesh, aiMaterial* AiMaterial,
 	return Material;
 }
 
-static void ProcessSubmesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
+static void ProcessSubmesh(DRM& Device, StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
 {
 	check(AiMesh->mTextureCoords[0] > 0, "Static mesh is missing texture coordinates.");
 
@@ -100,13 +100,13 @@ static void ProcessSubmesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene
 		}
 	}
 
-	Material Materials = ProcessMaterials(StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
+	Material Materials = ProcessMaterials(Device, StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
-	drm::BufferRef IndexBuffer = drm::CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32), Indices.data());
-	drm::BufferRef PositionBuffer = drm::CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mVertices);
-	drm::BufferRef TextureCoordinateBuffer = drm::CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2), TextureCoordinates.data());
-	drm::BufferRef NormalBuffer = drm::CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mNormals);
-	drm::BufferRef TangentBuffer = drm::CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mTangents);
+	drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32), Indices.data());
+	drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mVertices);
+	drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2), TextureCoordinates.data());
+	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mNormals);
+	drm::BufferRef TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mTangents);
 
 	StaticMesh->Submeshes.emplace_back(Submesh(
 		Indices.size()
@@ -120,21 +120,21 @@ static void ProcessSubmesh(StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene
 	StaticMesh->SubmeshNames.push_back(std::string(AiMesh->mName.C_Str()));
 }
 
-void ProcessNode(StaticMesh* StaticMesh, const aiNode* AiNode, const aiScene* AiScene, TextureCache& TextureCache)
+void ProcessNode(DRM& Device, StaticMesh* StaticMesh, const aiNode* AiNode, const aiScene* AiScene, TextureCache& TextureCache)
 {
 	for (uint32 MeshIndex = 0; MeshIndex < AiNode->mNumMeshes; MeshIndex++)
 	{
 		aiMesh* AiMesh = AiScene->mMeshes[AiNode->mMeshes[MeshIndex]];
-		ProcessSubmesh(StaticMesh, AiMesh, AiScene, TextureCache);
+		ProcessSubmesh(Device, StaticMesh, AiMesh, AiScene, TextureCache);
 	}
 
 	for (uint32 i = 0; i < AiNode->mNumChildren; i++)
 	{
-		ProcessNode(StaticMesh, AiNode->mChildren[i], AiScene, TextureCache);
+		ProcessNode(Device, StaticMesh, AiNode->mChildren[i], AiScene, TextureCache);
 	}
 }
 
-StaticMesh::StaticMesh(const std::string& Filename)
+StaticMesh::StaticMesh(DRM& Device, const std::string& Filename)
 	: Filename(Filename), Directory(Filename.substr(0, Filename.find_last_of("/")))
 {
 	uint32 AssimpLoadFlags = 0;
@@ -157,7 +157,7 @@ StaticMesh::StaticMesh(const std::string& Filename)
 	}
 
 	TextureCache TextureCache;
-	ProcessNode(this, AiScene->mRootNode, AiScene, TextureCache);
+	ProcessNode(Device, this, AiScene->mRootNode, AiScene, TextureCache);
 
 	std::for_each(SubmeshBounds.begin(), SubmeshBounds.end(), [&] (const BoundingBox& SubmeshBounds)
 	{

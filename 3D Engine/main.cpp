@@ -1,4 +1,3 @@
-#include <DRMPrivate.h>
 #include <Platform/Platform.h>
 #include <Vulkan/VulkanDRM.h>
 #include <vulkan/VulkanShaderMap.h>
@@ -11,11 +10,11 @@ int main(int argc, char* argv[])
 
 	Platform.OpenWindow(WindowResolutionX, WindowResolutionY);
 
-	GDRM = MakeRef<VulkanDRM>();
-	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(std::static_pointer_cast<VulkanDRM>(GDRM)->Device);
+	std::unique_ptr<VulkanDRM> Device = std::make_unique<VulkanDRM>();
+	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(Device->Device);
 
 	CoreEngine CoreEngine;
-	CoreEngine.Run(*ShaderMap);
+	CoreEngine.Run(*Device, *ShaderMap);
 	
 	return 0;
 }

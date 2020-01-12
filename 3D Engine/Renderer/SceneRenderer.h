@@ -12,11 +12,13 @@ extern uint32 gVoxelGridSize;
 class SceneRenderer
 {
 public:
-	SceneRenderer(class Scene& Scene);
+	SceneRenderer(DRM& Device, class Scene& Scene);
 
 	void Render(SceneProxy& Scene);
 
 private:
+	DRM& Device;
+
 	const StaticMesh* Cube;
 
 	drm::DescriptorSetRef SceneTextures;

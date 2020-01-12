@@ -11,26 +11,29 @@
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 
-void CoreEngine::Run(DRMShaderMap& ShaderMap)
+void CoreEngine::Run(class DRM& Device, DRMShaderMap& ShaderMap)
 {
 	gCursor.Init();
 	gInput.Init();
 	gScreen.Init();
 
 	uint8 Red[] = { 255, 0, 0, 0 };
-	Material::Red = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Red);
+	Material::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Red);
 
 	uint8 Green[] = { 0, 255, 0, 0 };
-	Material::Green = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Green);
+	Material::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Green);
 
 	uint8 Blue[] = { 0, 0, 255, 0 };
-	Material::Blue = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Blue);
+	Material::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Blue);
 
 	uint8 White[] = { 255, 255, 255, 0 };
-	Material::White = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, White);
+	Material::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, White);
 
-	Scene Scene(ShaderMap);
-	SceneRenderer SceneRenderer(Scene);
+	uint8 DummyColor[] = { 234, 115, 79, 0 };
+	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, DummyColor);
+
+	Scene Scene(Device, ShaderMap);
+	SceneRenderer SceneRenderer(Device, Scene);
 	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;
@@ -47,7 +50,7 @@ void CoreEngine::Run(DRMShaderMap& ShaderMap)
 
 		SystemsManager.UpdateSystems(Scene);
 		
-		SceneProxy SceneProxy(Scene);
+		SceneProxy SceneProxy(Device, Scene);
 
 		SceneRenderer.Render(SceneProxy);
 

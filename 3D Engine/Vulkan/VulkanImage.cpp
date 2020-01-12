@@ -1,9 +1,8 @@
 #include "VulkanImage.h"
 #include "VulkanDRM.h"
 #include "VulkanCommands.h"
-#include "DRMCommandList.h"
 
-const HashTable<EFormat, VkFormat> VulkanFormat =
+static const HashTable<EFormat, VkFormat> VulkanFormat =
 {
 	ENTRY(EFormat::UNDEFINED, VK_FORMAT_UNDEFINED)
 	ENTRY(EFormat::R8_UNORM, VK_FORMAT_R8_UNORM)
@@ -59,7 +58,7 @@ const HashTable<EFormat, VkFormat> VulkanFormat =
 	ENTRY(EFormat::BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
 
-const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
+static const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
 {
 	ENTRY(EImageLayout::Undefined, VK_IMAGE_LAYOUT_UNDEFINED)
 	ENTRY(EImageLayout::General, VK_IMAGE_LAYOUT_GENERAL)

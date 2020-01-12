@@ -14,6 +14,8 @@ public:
 	SpecializationInfo SpecializationInfo;
 
 	MeshProxy(
+		DRM& Device,
+		drm::DescriptorSetRef MeshSet,
 		const class Material& Material, 
 		const std::vector<Submesh>& Submeshes,
 		const drm::BufferRef& LocalToWorldUniform

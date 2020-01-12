@@ -39,21 +39,3 @@ public:
 	virtual void UnlockBuffer(drm::BufferRef Buffer) = 0;
 	virtual std::string GetDRMName() = 0;
 };
-
-CLASS(DRM);
-
-namespace drm
-{
-	void BeginFrame();
-	void EndFrame();
-	void SubmitCommands(drm::CommandListRef CmdList);
-	drm::CommandListRef CreateCommandList();
-	drm::DescriptorSetRef CreateDescriptorSet();
-	drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr);
-	ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr);
-	ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo);
-	ImageRef GetSurface();
-	void* LockBuffer(drm::BufferRef Buffer);
-	void UnlockBuffer(drm::BufferRef Buffer);
-	std::string GetDeviceName();
-}

@@ -9,7 +9,7 @@ struct SwapchainSupportDetails
 	std::vector<VkSurfaceFormatKHR> Formats;
 	std::vector<VkPresentModeKHR> PresentModes;
 
-	void QuerySwapchainSupport(VkPhysicalDevice Device, VkSurfaceKHR Surface);
+	SwapchainSupportDetails(VkPhysicalDevice Device, VkSurfaceKHR Surface);
 };
 
 class VulkanSurface

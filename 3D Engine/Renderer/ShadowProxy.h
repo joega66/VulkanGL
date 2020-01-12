@@ -4,15 +4,15 @@
 class ShadowProxy
 {
 public:
-	static void InitCallbacks(class EntityManager& ECS);
+	static void InitCallbacks(DRM& Device, class EntityManager& ECS);
 
 	static constexpr EFormat FORMAT = EFormat::D32_SFLOAT;
 
 	ShadowProxy() = default;
 
-	ShadowProxy(const struct CDirectionalLight& DirectionalLight);
+	ShadowProxy(DRM& Device, const struct CDirectionalLight& DirectionalLight);
 
-	void Update(const struct CDirectionalLight& DirectionalLight);
+	void Update(DRM& Device, const struct CDirectionalLight& DirectionalLight);
 
 	/** Accessors */
 	inline float GetDepthBiasConstantFactor() const { return DepthBiasConstantFactor; }

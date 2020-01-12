@@ -88,8 +88,7 @@ static bool IsDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, cons
 		return false;
 	}
 
-	SwapchainSupportDetails SwapchainSupport = {};
-	SwapchainSupport.QuerySwapchainSupport(Device, Surface);
+	SwapchainSupportDetails SwapchainSupport(Device, Surface);
 
 	if (SwapchainSupport.Formats.empty() || SwapchainSupport.PresentModes.empty())
 	{

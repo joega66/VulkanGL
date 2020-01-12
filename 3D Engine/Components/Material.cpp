@@ -5,47 +5,37 @@ drm::ImageRef Material::Red;
 drm::ImageRef Material::Green;
 drm::ImageRef Material::Blue;
 drm::ImageRef Material::White;
-
-static drm::ImageRef GetDummy()
-{
-	static drm::ImageRef Dummy = nullptr;
-	if (Dummy == nullptr)
-	{
-		uint8 DummyColor[] = { 234, 115, 79, 0 };
-		Dummy = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, DummyColor);
-	}
-	return Dummy;
-}
+drm::ImageRef Material::Dummy;
 
 Material::Material()
-	: Diffuse(GetDummy())
-	, Specular(GetDummy())
-	, Opacity(GetDummy())
-	, Bump(GetDummy())
+	: Diffuse(Dummy)
+	, Specular(Dummy)
+	, Opacity(Dummy)
+	, Bump(Dummy)
 {
 }
 
 bool Material::HasSpecularMap() const
 {
-	return Specular != GetDummy();
+	return Specular != Dummy;
 }
 
 bool Material::IsMasked() const
 { 
-	return Opacity != GetDummy(); 
+	return Opacity != Dummy; 
 }
 
 bool Material::HasBumpMap() const
 {
-	return Bump != GetDummy();
+	return Bump != Dummy;
 }
 
-drm::DescriptorSetRef Material::CreateDescriptorSet() const
+drm::DescriptorSetRef Material::CreateDescriptorSet(DRM& Device) const
 {
 	static const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	static const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 
-	drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
+	drm::DescriptorSetRef DescriptorSet = Device.CreateDescriptorSet();
 
 	DescriptorSet->Write(Diffuse, LinearSampler, 0);
 	DescriptorSet->Write(Specular, LinearSampler, 1);

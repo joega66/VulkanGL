@@ -110,7 +110,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	WorldToVoxelBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
+	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
 
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;
@@ -118,7 +118,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	VoxelIndirectBuffer = drm::CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
+	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
 
 	VoxelsDescriptorSet->Write(WorldToVoxelBuffer, 0);
 	VoxelsDescriptorSet->Write(VoxelIndirectBuffer, 3);
@@ -257,7 +257,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
 
-	drm::AttachmentView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SurfaceView(Device.GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 	drm::AttachmentView DepthView(
 		SceneDepth,
 		ELoadAction::Clear,
@@ -273,7 +273,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.BeginRenderPass(RPInit);
 
-	drm::DescriptorSetRef DrawVoxelsDescriptorSet = drm::CreateDescriptorSet();
+	drm::DescriptorSetRef DrawVoxelsDescriptorSet = Device.CreateDescriptorSet();
 	DrawVoxelsDescriptorSet->Write(WorldToVoxelBuffer, 0);
 	DrawVoxelsDescriptorSet->Write(VoxelColors, 1);
 	DrawVoxelsDescriptorSet->Write(VoxelPositions, 2);

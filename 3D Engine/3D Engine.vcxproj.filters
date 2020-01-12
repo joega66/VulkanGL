@@ -137,9 +137,6 @@
     <ClInclude Include="DRMShader.h">
       <Filter>Source\DRM</Filter>
     </ClInclude>
-    <ClInclude Include="DRMPrivate.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Screen.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -264,9 +261,6 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanDRM.cpp">
       <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="DRM.cpp">
-      <Filter>Source\DRM</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCommandList.cpp">
       <Filter>Source\Vulkan</Filter>

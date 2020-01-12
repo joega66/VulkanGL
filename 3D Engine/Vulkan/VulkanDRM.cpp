@@ -137,7 +137,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 
 	if (Data)
 	{
-		VulkanCommandListRef CmdList = ResourceCast(drm::CreateCommandList());
+		VulkanCommandListRef CmdList = ResourceCast(CreateCommandList());
 
 		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
@@ -185,15 +185,15 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Form
 
 	if (bHasData)
 	{
-		VulkanCommandListRef CmdList = ResourceCast(drm::CreateCommandList());
+		VulkanCommandListRef CmdList = ResourceCast(CreateCommandList());
 
 		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
 		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
-		drm::BufferRef StagingBuffer = drm::CreateBuffer(EBufferUsage::Transfer, VulkanImage->GetSize());
+		drm::BufferRef StagingBuffer = CreateBuffer(EBufferUsage::Transfer, VulkanImage->GetSize());
 
-		void* MemMapped = drm::LockBuffer(StagingBuffer);
+		void* MemMapped = LockBuffer(StagingBuffer);
 
 		const uint32 FaceSize = VulkanImage->GetSize() / 6;
 
@@ -206,7 +206,7 @@ drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Form
 			}
 		}
 
-		drm::UnlockBuffer(StagingBuffer);
+		UnlockBuffer(StagingBuffer);
 
 		CmdList->CopyBufferToImage(StagingBuffer, VulkanImage);
 

@@ -15,17 +15,17 @@ namespace EStaticDrawListType
 class SceneProxy
 {
 	friend class CoreEngine;
-	SceneProxy(Scene& Scene);
+	SceneProxy(DRM& Device, Scene& Scene);
 
 public:
+	SceneProxy(const SceneProxy&) = delete;
+	SceneProxy& operator=(const SceneProxy&) = delete;
+
 	DRMShaderMap& ShaderMap;
 
 	EntityManager& ECS;
 
 	const View& View;
-
-	SceneProxy(const SceneProxy&) = delete;
-	SceneProxy& operator=(const SceneProxy&) = delete;
 
 	/** Skybox to be rendered in the scene. */
 	drm::ImageRef Skybox;
@@ -53,11 +53,11 @@ public:
 	std::array<std::vector<MeshDrawCommand>, EStaticDrawListType::Max> LightingPass;
 
 private:
-	void InitView();
-	void InitLights();
-	void InitDirectionalLights();
-	void InitPointLights();
-	void InitMeshDrawCommands();
+	void InitView(DRM& Device);
+	void InitLights(DRM& Device);
+	void InitDirectionalLights(DRM& Device);
+	void InitPointLights(DRM& Device);
+	void InitMeshDrawCommands(DRM& Device);
 
 	void AddToDepthPrepass(const MeshProxy& MeshProxy);
 	void AddToShadowDepthPass(const MeshProxy& MeshProxy);

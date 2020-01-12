@@ -1,7 +1,8 @@
 #include "AssetManager.h"
-#include "../DRM.h"
+#include <DRM.h>
 
-AssetManager::AssetManager()
+AssetManager::AssetManager(DRM& Device)
+	: Device(Device)
 {
 	std::array<std::string, 6> Cubemap =
 	{
@@ -18,7 +19,7 @@ AssetManager::AssetManager()
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File, bool Breakup)
 {
-	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(File);
+	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(Device, File);
 
 	// Add default engine materials if missing.
 	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
@@ -57,7 +58,7 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
-	Images[Name] = drm::CreateImage(Width, Height, 1, Format, EImageUsage::Sampled, Pixels);
+	Images[Name] = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled, Pixels);
 	Platform.FreeImage(Pixels);
 }
 
@@ -87,11 +88,11 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 		return Face.Width == Other.Width && Face.Height == Other.Height;
 	}), "Cubemap faces must have same dimensions.");
 
-	Cubemaps[Name] = drm::CreateCubemap(
+	Cubemaps[Name] = Device.CreateCubemap(
 		Face.Width
 		, Face.Height
 		, Format
-		, EImageUsage::Sampled
+		, EImageUsage::Sampled | EImageUsage::Cubemap
 		, CubemapCreateInfo);
 
 	std::for_each(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(), [&](const auto& Other)

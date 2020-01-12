@@ -2,28 +2,28 @@
 #include <Components/CLight.h>
 #include <ECS/EntityManager.h>
 
-void ShadowProxy::InitCallbacks(EntityManager& ECS)
+void ShadowProxy::InitCallbacks(DRM& Device, EntityManager& ECS)
 {
 	ECS.NewComponentCallback<CDirectionalLight>([&] (Entity& Entity, CDirectionalLight& DirectionalLight)
 	{
-		ECS.AddComponent<ShadowProxy>(Entity, ShadowProxy(DirectionalLight));
+		ECS.AddComponent<ShadowProxy>(Entity, ShadowProxy(Device, DirectionalLight));
 	});
 }
 
-ShadowProxy::ShadowProxy(const CDirectionalLight& DirectionalLight)
+ShadowProxy::ShadowProxy(DRM& Device, const CDirectionalLight& DirectionalLight)
 {
 	const int32 Resolution = Platform.GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
 
-	ShadowMap = drm::CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
+	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-	DescriptorSet = drm::CreateDescriptorSet();
+	DescriptorSet = Device.CreateDescriptorSet();
 	DescriptorSet->Write(ShadowMap, SamplerState{}, 1);
 
-	Update(DirectionalLight);
+	Update(Device, DirectionalLight);
 }
 
-void ShadowProxy::Update(const CDirectionalLight& DirectionalLight)
+void ShadowProxy::Update(DRM& Device, const CDirectionalLight& DirectionalLight)
 {
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
@@ -37,7 +37,7 @@ void ShadowProxy::Update(const CDirectionalLight& DirectionalLight)
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
 	
-	LightViewProjBuffer = drm::CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &LightViewProjMatrix);
+	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &LightViewProjMatrix);
 
 	DescriptorSet->Write(LightViewProjBuffer, 0);
 	DescriptorSet->Update();

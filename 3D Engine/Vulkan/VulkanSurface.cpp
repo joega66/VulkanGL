@@ -11,8 +11,7 @@ VulkanSurface::VulkanSurface(VulkanDevice& Device)
 
 void VulkanSurface::Init()
 {
-	SwapchainSupportDetails SwapchainSupport = {};
-	SwapchainSupport.QuerySwapchainSupport(Device.PhysicalDevice, Device.Surface);
+	SwapchainSupportDetails SwapchainSupport(Device.PhysicalDevice, Device.Surface);
 
 	VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
 	VkPresentModeKHR PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
@@ -73,7 +72,7 @@ void VulkanSurface::Init()
 			, Extent.width
 			, Extent.height
 			, 1
-			, EImageUsage::Attachment);
+			, EImageUsage::Attachment | EImageUsage::Surface);
 	}
 }
 
@@ -140,7 +139,7 @@ VkExtent2D VulkanSurface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& Capab
 	}
 }
 
-void SwapchainSupportDetails::QuerySwapchainSupport(VkPhysicalDevice Device, VkSurfaceKHR Surface)
+SwapchainSupportDetails::SwapchainSupportDetails(VkPhysicalDevice Device, VkSurfaceKHR Surface)
 {
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Device, Surface, &Capabilities);
 

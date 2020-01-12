@@ -8,14 +8,15 @@
 
 uint32 gVoxelGridSize;
 
-SceneRenderer::SceneRenderer(Scene& Scene)
+SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene)
+	: Device(Device)
 {
-	SceneTextures = drm::CreateDescriptorSet();
+	SceneTextures = Device.CreateDescriptorSet();
 
 	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
 	{
-		SceneDepth = drm::CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-		ShadowMask = drm::CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
+		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, 0);
 		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
@@ -25,21 +26,21 @@ SceneRenderer::SceneRenderer(Scene& Scene)
 	Cube = Scene.Assets.GetStaticMesh("Cube");
 
 	gVoxelGridSize = Platform.GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-	VoxelColors = drm::CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelPositions = drm::CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::ivec3));
+	VoxelColors = Device.CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::ivec3));
 
-	VoxelsDescriptorSet = drm::CreateDescriptorSet();
+	VoxelsDescriptorSet = Device.CreateDescriptorSet();
 	VoxelsDescriptorSet->Write(VoxelColors, 1);
 	VoxelsDescriptorSet->Write(VoxelPositions, 2);
 
-	ShadowProxy::InitCallbacks(Scene.ECS);
+	ShadowProxy::InitCallbacks(Device, Scene.ECS);
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)
 {
-	drm::BeginFrame();
+	Device.BeginFrame();
 
-	drm::CommandListRef CommandList = drm::CreateCommandList();
+	drm::CommandListRef CommandList = Device.CreateCommandList();
 	drm::CommandList& CmdList = *CommandList;
 
 	if (Platform.GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
@@ -58,7 +59,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 		else
 		{
-			drm::AttachmentView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+			drm::AttachmentView SurfaceView(Device.GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 			drm::AttachmentView DepthView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite);
 
 			RenderPassInitializer RenderPassInit = { 1 };
@@ -76,14 +77,14 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 	}
 
-	drm::SubmitCommands(CommandList);
+	Device.SubmitCommands(CommandList);
 
-	drm::EndFrame();
+	Device.EndFrame();
 }
 
 void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	drm::AttachmentView SurfaceView(drm::GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SurfaceView(Device.GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
@@ -96,7 +97,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 
 		CmdList.BeginRenderPass(RPInit);
 
-		drm::DescriptorSetRef DescriptorSet = drm::CreateDescriptorSet();
+		drm::DescriptorSetRef DescriptorSet = Device.CreateDescriptorSet();
 		DescriptorSet->Write(ShadowMap, SamplerState{ EFilter::Nearest }, 0);
 		DescriptorSet->Update();
 
