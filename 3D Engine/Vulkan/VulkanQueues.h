@@ -5,8 +5,10 @@
 class VulkanQueues
 {
 public:
-	void FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface);
+	/** Finds the queue families for the physical device. */
+	VulkanQueues(VkPhysicalDevice Device, VkSurfaceKHR Surface);
 
+	/** Gets the queues and creates the command pools. */
 	void Create(VkDevice Device);
 
 	bool IsComplete() const;

@@ -6,18 +6,26 @@ class VulkanDevice
 {
 	template<typename DRMObject, typename ...VulkanObjects>
 	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
-public:
-	VkPhysicalDevice PhysicalDevice;
 
+private:
+	VkInstance Instance;
+
+	VkDebugReportCallbackEXT DebugReportCallback;
+
+public:
 	VkSurfaceKHR Surface;
 
+	VkPhysicalDevice PhysicalDevice;
+
 	VulkanQueues Queues;
+
+	VkDevice Device;
 
 	VkPhysicalDeviceProperties Properties;
 
 	VkPhysicalDeviceFeatures Features;
 
-	VulkanDevice();
+	VulkanDevice(bool bUseValidationLayers);
 
 	~VulkanDevice();
 	
@@ -44,11 +52,6 @@ public:
 	static const char* GetVulkanErrorString(VkResult Result);
 
 private:
-	VkInstance Instance;
-
-	VkDevice Device;
-
-	VkDebugReportCallbackEXT DebugReportCallback;
 
 	struct VulkanRenderPassHash
 	{

@@ -1,8 +1,6 @@
 #pragma once
 #include "VulkanImage.h"
 
-class VulkanDevice;
-
 struct SwapchainSupportDetails
 {
 	VkSurfaceCapabilitiesKHR Capabilities;
@@ -12,25 +10,22 @@ struct SwapchainSupportDetails
 	SwapchainSupportDetails(VkPhysicalDevice Device, VkSurfaceKHR Surface);
 };
 
-class VulkanSurface
+class VulkanSwapchain
 {
 public:
+	/** SwapchainKHR. */
 	VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
+
+	/** Swapchain images. */
 	std::vector<VulkanImageRef> Images;
 
-	VulkanSurface(VulkanDevice& Device);
+	VulkanSwapchain() = default;
 
-	void Init();
+	/** Create a new swapchain (if within surface capabilities.) */
+	void Create(class VulkanDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight);
+
+	/** Free the swapchain. */
 	void Free();
 
 	operator VkSwapchainKHR() { return Swapchain; }
-
-private:
-	VulkanDevice& Device;
-
-	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats);
-	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& AvailablePresentModes);
-	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& Capabilities);
 };
-
-CLASS(VulkanSurface);

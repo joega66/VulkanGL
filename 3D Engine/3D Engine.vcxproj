@@ -64,7 +64,7 @@
     <ClCompile Include="Vulkan\VulkanQueues.cpp" />
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="Vulkan\VulkanShaderMap.cpp" />
-    <ClCompile Include="Vulkan\VulkanSurface.cpp" />
+    <ClCompile Include="Vulkan\VulkanSwapchain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Components\CLight.h" />
@@ -118,7 +118,7 @@
     <ClInclude Include="Vulkan\VulkanMemory.h" />
     <ClInclude Include="Vulkan\VulkanQueues.h" />
     <ClInclude Include="Vulkan\VulkanShaderMap.h" />
-    <ClInclude Include="Vulkan\VulkanSurface.h" />
+    <ClInclude Include="Vulkan\VulkanSwapchain.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Config\Engine.ini" />

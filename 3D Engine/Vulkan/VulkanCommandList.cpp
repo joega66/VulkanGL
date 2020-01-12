@@ -1,9 +1,8 @@
 #include "VulkanCommandList.h"
 #include "VulkanDRM.h"
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VkQueueFlagBits QueueFlags)
+VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags)
 	: Device(Device)
-	, Allocator(Allocator)
 	, Queue(Device.Queues.GetQueue(QueueFlags))
 	, CommandPool(Device.Queues.GetCommandPool(QueueFlags))
 {
@@ -140,8 +139,6 @@ void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::
 
 void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers)
 {
-	check(NumVertexBuffers < Device.Properties.limits.maxVertexInputBindings, "maxVertexInputBindings exceeded.");
-
 	std::vector<VkDeviceSize> Offsets(NumVertexBuffers);
 	std::vector<VkBuffer> Buffers(NumVertexBuffers);
 

@@ -1,6 +1,4 @@
 #include "VulkanDescriptors.h"
-#include "VulkanDevice.h"
-#include "VulkanMemory.h"
 #include "VulkanDRM.h"
 
 VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device)

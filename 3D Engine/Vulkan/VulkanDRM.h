@@ -1,7 +1,7 @@
 #pragma once
 #include "../DRM.h"
 #include "VulkanDevice.h"
-#include "VulkanSurface.h"
+#include "VulkanSwapchain.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 #include "VulkanCommandList.h"
@@ -27,7 +27,7 @@ public:
 	VulkanDevice Device;
 
 private:
-	VulkanSurface Swapchain;
+	VulkanSwapchain Swapchain;
 	VulkanAllocator Allocator;
 	VulkanDescriptorPool DescriptorPool;
 	uint32 SwapchainIndex = -1;

@@ -4,14 +4,14 @@
 #include <Engine/Screen.h>
 
 VulkanDRM::VulkanDRM()
-	: Swapchain(Device)
+	: Device(Platform.GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
 	, Allocator(Device)
 	, DescriptorPool(Device)
 {
 	gScreen.RegisterScreenResChangedCallback([&] (int32 Width, int32 Height)
 	{
 		Swapchain.Free();
-		Swapchain.Init();
+		Swapchain.Create(Device, Width, Height);
 	});
 
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -95,7 +95,7 @@ void VulkanDRM::SubmitCommands(drm::CommandListRef CmdList)
 
 drm::CommandListRef VulkanDRM::CreateCommandList()
 {
-	return MakeRef<VulkanCommandList>(Device, Allocator, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	return MakeRef<VulkanCommandList>(Device, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
 drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()

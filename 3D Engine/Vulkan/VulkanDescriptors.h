@@ -5,7 +5,7 @@
 
 class VulkanDevice;
 
-/** Spawns descriptor sets and zerglings */
+/** Spawns descriptor sets and zerglings. */
 class VulkanDescriptorPool
 {
 public:

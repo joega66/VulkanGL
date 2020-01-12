@@ -1,7 +1,6 @@
 #pragma once
 #include "../DRMCommandList.h"
 #include "VulkanDevice.h"
-#include "VulkanSurface.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 
@@ -16,7 +15,7 @@ public:
 
 	bool bTouchedSurface = false;
 
-	VulkanCommandList(VulkanDevice& Device, VulkanAllocator& Allocator, VkQueueFlagBits QueueFlags);
+	VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags);
 
 	virtual ~VulkanCommandList() override;
 
@@ -53,8 +52,6 @@ public:
 
 private:
 	VulkanDevice& Device;
-
-	VulkanAllocator& Allocator;
 
 	struct PendingState
 	{

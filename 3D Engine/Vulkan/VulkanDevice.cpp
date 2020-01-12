@@ -1,30 +1,7 @@
 #include "VulkanDevice.h"
-#include "VulkanSurface.h"
-#include "VulkanDRM.h"
+#include "VulkanSwapchain.h"
 #include <Platform/Platform.h>
 #include <GLFW/glfw3.h>
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT Flags, VkDebugReportObjectTypeEXT ObjType,
-	uint64 Obj, size_t Location, int32 Code, const char* LayerPrefix, const char* Msg, void* UserData)
-{
-	LOG("Validation layer: %s\nLayer prefix: %s", Msg, LayerPrefix);
-	return VK_FALSE;
-}
-
-static std::vector<const char*> GetRequiredExtensions(bool bUseValidationLayers)
-{
-	uint32 GLFWExtensionCount = 0;
-	const char** GLFWExtensions;
-	GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
-	std::vector<const char*> Extensions(GLFWExtensions, GLFWExtensions + GLFWExtensionCount);
-
-	if (bUseValidationLayers)
-	{
-		Extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-	}
-
-	return Extensions;
-}
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& ValidationLayers)
 {
@@ -55,7 +32,103 @@ static bool CheckValidationLayerSupport(const std::vector<const char*>& Validati
 	return true;
 }
 
-static bool AllDeviceExtensionsSupported(VkPhysicalDevice Device, const std::vector<const char*> &DeviceExtensions)
+static std::vector<const char*> GetRequiredExtensions(bool bUseValidationLayers)
+{
+	uint32 GLFWExtensionCount = 0;
+	const char** GLFWExtensions;
+	GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
+	std::vector<const char*> Extensions(GLFWExtensions, GLFWExtensions + GLFWExtensionCount);
+
+	if (bUseValidationLayers)
+	{
+		Extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	}
+
+	return Extensions;
+}
+
+static VkInstance CreateInstance(const std::vector<const char*>& ValidationLayers, bool bUseValidationLayers)
+{
+	if (bUseValidationLayers && !CheckValidationLayerSupport(ValidationLayers))
+	{
+		fail("Validation layers requested, but are unavailable.");
+	}
+
+	VkApplicationInfo ApplicationInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
+	ApplicationInfo.pApplicationName = "Vulkan Engine";
+	ApplicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	ApplicationInfo.pEngineName = "No Engine";
+	ApplicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	ApplicationInfo.apiVersion = VK_API_VERSION_1_0;
+
+	auto Extensions = GetRequiredExtensions(bUseValidationLayers);
+
+	VkInstanceCreateInfo InstanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+	InstanceInfo.pApplicationInfo = &ApplicationInfo;
+	InstanceInfo.enabledExtensionCount = static_cast<uint32>(Extensions.size());
+	InstanceInfo.ppEnabledExtensionNames = Extensions.data();
+
+	if (bUseValidationLayers)
+	{
+		InstanceInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
+		InstanceInfo.ppEnabledLayerNames = ValidationLayers.data();
+	}
+	else
+	{
+		InstanceInfo.enabledLayerCount = 0;
+	}
+
+	VkInstance Instance;
+	vulkan(vkCreateInstance(&InstanceInfo, nullptr, &Instance));
+
+	return Instance;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT Flags, VkDebugReportObjectTypeEXT ObjType,
+	uint64 Obj, size_t Location, int32 Code, const char* LayerPrefix, const char* Msg, void* UserData)
+{
+	LOG("Validation layer: %s\nLayer prefix: %s", Msg, LayerPrefix);
+	return VK_FALSE;
+}
+
+static VkDebugReportCallbackEXT CreateDebugReportCallback(VkInstance Instance, bool bUseValidationLayers)
+{
+	if (bUseValidationLayers)
+	{
+		// Create Vulkan debug callback
+		VkDebugReportCallbackCreateInfoEXT DebugCallbackInfo = { VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT };
+		DebugCallbackInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+		DebugCallbackInfo.pfnCallback = DebugCallback;
+
+		auto CreateDebugReportCallbackEXT = [] (VkInstance Instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
+			const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback)
+		{
+			auto Func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(Instance, "vkCreateDebugReportCallbackEXT");
+			if (Func)
+			{
+				return Func(Instance, pCreateInfo, pAllocator, pCallback);
+			}
+			else
+			{
+				return VK_ERROR_EXTENSION_NOT_PRESENT;
+			}
+		};
+
+		VkDebugReportCallbackEXT DebugReportCallback;
+		vulkan(CreateDebugReportCallbackEXT(Instance, &DebugCallbackInfo, nullptr, &DebugReportCallback));
+	}
+
+	return 0;
+}
+
+static VkSurfaceKHR CreateSurface(VkInstance Instance)
+{
+	VkSurfaceKHR Surface;
+	vulkan(glfwCreateWindowSurface(Instance, Platform.Window, nullptr, &Surface));
+	return Surface;
+}
+
+static bool AllDeviceExtensionsSupported(VkPhysicalDevice Device, const std::vector<const char*>& DeviceExtensions)
 {
 	uint32 ExtensionCount;
 	vkEnumerateDeviceExtensionProperties(Device, nullptr, &ExtensionCount, nullptr);
@@ -65,7 +138,7 @@ static bool AllDeviceExtensionsSupported(VkPhysicalDevice Device, const std::vec
 
 	std::unordered_set<std::string> RequiredExtensions(DeviceExtensions.begin(), DeviceExtensions.end());
 
-	for (const auto &Extension : AvailableExtensions)
+	for (const auto& Extension : AvailableExtensions)
 	{
 		RequiredExtensions.erase(Extension.extensionName);
 	}
@@ -75,8 +148,7 @@ static bool AllDeviceExtensionsSupported(VkPhysicalDevice Device, const std::vec
 
 static bool IsDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, const std::vector<const char*>& DeviceExtensions)
 {
-	VulkanQueues Queues;
-	Queues.FindQueueFamilies(Device, Surface);
+	VulkanQueues Queues(Device, Surface);
 
 	if (!Queues.IsComplete())
 	{
@@ -98,6 +170,7 @@ static bool IsDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, cons
 	return true;
 }
 
+/** Select a Vulkan-capable physical device. */
 static VkPhysicalDevice SelectPhysicalDevice(VkInstance Instance, VkSurfaceKHR Surface, const std::vector<const char*>& DeviceExtensions)
 {
 	uint32 DeviceCount = 0;
@@ -129,7 +202,8 @@ static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
 	const VulkanQueues& Queues,
 	const std::vector<const char*>& DeviceExtensions,
 	const std::vector<const char*>& ValidationLayers,
-	bool bUseValidationLayers)
+	bool bUseValidationLayers
+)
 {
 	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
 	const float QueuePriority = 1.0f;
@@ -173,88 +247,25 @@ static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
 	return Device;
 }
 
-VulkanDevice::VulkanDevice()
+static const std::vector<const char*> ValidationLayers =
 {
-	const std::vector<const char*> ValidationLayers =
-	{
-		"VK_LAYER_LUNARG_standard_validation"
-	};
+	"VK_LAYER_LUNARG_standard_validation"
+};
 
-	const bool bUseValidationLayers = Platform.GetBool("Engine.ini", "Renderer", "UseValidationLayers", false);
+static const std::vector<const char*> DeviceExtensions =
+{
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+};
 
-	if (bUseValidationLayers && !CheckValidationLayerSupport(ValidationLayers))
-	{
-		fail("Validation layers requested, but are unavailable.");
-	}
-
-	// Create instance
-	VkApplicationInfo ApplicationInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
-	ApplicationInfo.pApplicationName = "Vulkan Engine";
-	ApplicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	ApplicationInfo.pEngineName = "No Engine";
-	ApplicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	ApplicationInfo.apiVersion = VK_API_VERSION_1_0;
-
-	auto Extensions = GetRequiredExtensions(bUseValidationLayers);
-
-	VkInstanceCreateInfo InstanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	InstanceInfo.pApplicationInfo = &ApplicationInfo;
-	InstanceInfo.enabledExtensionCount = static_cast<uint32>(Extensions.size());
-	InstanceInfo.ppEnabledExtensionNames = Extensions.data();
-
-	if (bUseValidationLayers)
-	{
-		InstanceInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
-		InstanceInfo.ppEnabledLayerNames = ValidationLayers.data();
-	}
-	else
-	{
-		InstanceInfo.enabledLayerCount = 0;
-	}
-
-	vulkan(vkCreateInstance(&InstanceInfo, nullptr, &Instance));
-
-	if (bUseValidationLayers)
-	{
-		// Create Vulkan debug callback
-		VkDebugReportCallbackCreateInfoEXT DebugCallbackInfo = { VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT };
-		DebugCallbackInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-		DebugCallbackInfo.pfnCallback = DebugCallback;
-
-		auto CreateDebugReportCallbackEXT = [] (VkInstance Instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-			const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback)
-		{
-			auto Func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(Instance, "vkCreateDebugReportCallbackEXT");
-			if (Func)
-			{
-				return Func(Instance, pCreateInfo, pAllocator, pCallback);
-			}
-			else
-			{
-				return VK_ERROR_EXTENSION_NOT_PRESENT;
-			}
-		};
-
-		vulkan(CreateDebugReportCallbackEXT(Instance, &DebugCallbackInfo, nullptr, &DebugReportCallback));
-	}
-
-	vulkan(glfwCreateWindowSurface(Instance, Platform.Window, nullptr, &Surface));
-
-	const std::vector<const char*> DeviceExtensions =
-	{
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-	};
-
-	// Select Vulkan-capable physical device
-	PhysicalDevice = SelectPhysicalDevice(Instance, Surface, DeviceExtensions);
-
-	// Find queue family indices.
-	Queues.FindQueueFamilies(PhysicalDevice, Surface);
-
-	// Create logical device 
-	Device = CreateLogicalDevice(PhysicalDevice, Surface, Queues, DeviceExtensions, ValidationLayers, bUseValidationLayers);
-
+VulkanDevice::VulkanDevice(bool bUseValidationLayers)
+	: Instance(CreateInstance(ValidationLayers, bUseValidationLayers))
+	, DebugReportCallback(CreateDebugReportCallback(Instance, bUseValidationLayers))
+	, Surface(CreateSurface(Instance))
+	, PhysicalDevice(SelectPhysicalDevice(Instance, Surface, DeviceExtensions))
+	, Queues(PhysicalDevice, Surface)
+	, Device(CreateLogicalDevice(PhysicalDevice, Surface, Queues, DeviceExtensions, ValidationLayers, bUseValidationLayers))
+{
 	// Create queues and command pools.
 	Queues.Create(Device);
 
