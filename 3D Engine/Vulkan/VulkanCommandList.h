@@ -48,7 +48,7 @@ public:
 		const ImageMemoryBarrier* ImageBarriers
 	) override;
 
-	virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRef DstImage) override;
+	virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage) override;
 
 private:
 	VulkanDevice& Device;

@@ -1,6 +1,5 @@
 #include "VulkanImage.h"
-#include "VulkanDRM.h"
-#include "VulkanCommands.h"
+#include "VulkanDevice.h"
 
 static const HashTable<EFormat, VkFormat> VulkanFormat =
 {
@@ -108,59 +107,6 @@ VulkanImage::~VulkanImage()
 }
 
 VulkanImage::operator VkImage() { return Image; }
-
-void VulkanDRM::CreateImage(VkImage& Image, VkDeviceMemory& Memory, EImageLayout& Layout,
-	uint32 Width, uint32 Height, uint32 Depth, EFormat& Format, EImageUsage UsageFlags, bool bTransferDstBit)
-{
-	Layout = EImageLayout::Undefined;
-
-	if (drm::Image::IsDepth(Format))
-	{
-		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(Device, Format));
-	}
-
-	VkImageCreateInfo Info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	Info.imageType = Depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
-	Info.extent.width = Width;
-	Info.extent.height = Height;
-	Info.extent.depth = Depth;
-	Info.mipLevels = 1;
-	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
-	Info.format = VulkanImage::GetVulkanFormat(Format);
-	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	Info.initialLayout = VulkanImage::GetVulkanLayout(Layout);
-	Info.usage = [&]()
-	{
-		VkFlags Usage = 0;
-
-		if (Any(UsageFlags & EImageUsage::Attachment))
-		{
-			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		}
-
-		Usage |= bTransferDstBit ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
-		Usage |= Any(UsageFlags & EImageUsage::Sampled) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
-		// Add transfer dst bit to storage images so they can be cleared via ClearColorImage.
-		Usage |= Any(UsageFlags & EImageUsage::Storage) ? VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
-
-		return Usage;
-	}();
-	Info.flags = Any(UsageFlags & EImageUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
-	Info.samples = VK_SAMPLE_COUNT_1_BIT;
-	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	vulkan(vkCreateImage(Device, &Info, nullptr, &Image));
-
-	VkMemoryRequirements MemRequirements = {};
-	vkGetImageMemoryRequirements(Device, Image, &MemRequirements);
-
-	VkMemoryAllocateInfo MemInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-	MemInfo.allocationSize = MemRequirements.size;
-	MemInfo.memoryTypeIndex = Allocator.FindMemoryType(MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	vulkan(vkAllocateMemory(Device, &MemInfo, nullptr, &Memory));
-	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
-}
 
 VkFormat VulkanImage::GetVulkanFormat(EFormat Format)
 {

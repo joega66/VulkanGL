@@ -7,19 +7,6 @@ struct StructName								\
 	Members										\
 }; static_assert(sizeof(StructName) % 16 == 0);	\
 
-struct TextureCreateInfo
-{
-	int32 Width;
-	int32 Height;
-	uint8* Data;
-};
-
-struct CubemapCreateInfo
-{
-	// +X, -X, +Y, -Y, +Z, -Z
-	std::array<TextureCreateInfo, 6> CubeFaces;
-};
-
 /** Direct Rendering Manager */
 class DRM
 {
@@ -32,10 +19,8 @@ public:
 	virtual drm::CommandListRef CreateCommandList() = 0;
 	virtual drm::DescriptorSetRef CreateDescriptorSet() = 0;
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
-	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr) = 0;
-	virtual drm::ImageRef CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo) = 0;
+	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags) = 0;
 	virtual drm::ImageRef GetSurface() = 0;
 	virtual void* LockBuffer(drm::BufferRef Buffer) = 0;
 	virtual void UnlockBuffer(drm::BufferRef Buffer) = 0;
-	virtual std::string GetDRMName() = 0;
 };

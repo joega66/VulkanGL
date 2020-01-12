@@ -131,6 +131,7 @@ enum class EImageUsage
 	Cubemap		= 1 << 2,
 	Storage		= 1 << 3,
 	Surface		= 1 << 4,
+	TransferDst	= 1 << 5,
 };
 
 enum class ELoadAction

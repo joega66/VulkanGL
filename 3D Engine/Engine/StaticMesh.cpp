@@ -29,7 +29,26 @@ static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, ai
 
 			if (Pixels)
 			{
-				Material = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Pixels);
+				Material = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+
+				drm::CommandListRef CmdList = Device.CreateCommandList();
+
+				// Transfer transition.
+				ImageMemoryBarrier Barrier(Material, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
+				CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+
+				// Create the staging buffer.
+				drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Material->GetSize(), Pixels);
+				CmdList->CopyBufferToImage(StagingBuffer, 0, Material);
+
+				// Shader read transition.
+				Barrier.SrcAccessMask = EAccess::TransferWrite;
+				Barrier.DstAccessMask = EAccess::ShaderRead;
+				Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+				CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
+
+				// Submit.
+				Device.SubmitCommands(CmdList);
 			}
 
 			Platform.FreeImage(Pixels);

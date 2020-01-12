@@ -117,107 +117,68 @@ drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const vo
 	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
 }
 
-drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags, const uint8* Data = nullptr)
+drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags)
 {
-	VkImage Image;
-	VkDeviceMemory Memory;
-	EImageLayout Layout;
+	EImageLayout Layout = EImageLayout::Undefined;
 
-	CreateImage(Image, Memory, Layout, Width, Height, Depth, Format, UsageFlags, Data);
-
-	VulkanImageRef VulkanImage = MakeRef<class VulkanImage>(Device
-		, Image
-		, Memory
-		, Format
-		, Layout
-		, Width
-		, Height
-		, Depth
-		, UsageFlags);
-
-	if (Data)
+	if (drm::Image::IsDepth(Format))
 	{
-		VulkanCommandListRef CmdList = ResourceCast(CreateCommandList());
-
-		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
-
-		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
-
-		drm::BufferRef StagingBuffer = CreateBuffer(EBufferUsage::Transfer, VulkanImage->GetSize(), Data);
-
-		CmdList->CopyBufferToImage(StagingBuffer, VulkanImage);
-
-		Barrier.SrcAccessMask = EAccess::TransferWrite;
-		Barrier.DstAccessMask = EAccess::ShaderRead;
-		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
-
-		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
-
-		SubmitCommands(CmdList);
+		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(Device, Format));
 	}
 
-	return VulkanImage;
-}
-
-drm::ImageRef VulkanDRM::CreateCubemap(uint32 Width, uint32 Height, EFormat Format, EImageUsage UsageFlags, const CubemapCreateInfo& CubemapCreateInfo)
-{
-	// This path will be supported, but should really prefer to use a compressed format.
-	VkImage Image;
-	VkDeviceMemory Memory;
-	EImageLayout Layout;
-
-	bool bHasData = std::find_if(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(),
-		[] (const auto& TextureInfo) { return TextureInfo.Data; }) != CubemapCreateInfo.CubeFaces.end();
-
-	const uint32 Depth = 1;
-
-	CreateImage(Image, Memory, Layout, Width, Height, Depth, Format, UsageFlags, bHasData);
-
-	VulkanImageRef VulkanImage = MakeRef<class VulkanImage>(Device
-		, Image
-		, Memory
-		, Format
-		, Layout
-		, Width
-		, Height
-		, Depth
-		, UsageFlags);
-
-	if (bHasData)
+	VkImageCreateInfo Info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	Info.imageType = Depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
+	Info.extent.width = Width;
+	Info.extent.height = Height;
+	Info.extent.depth = Depth;
+	Info.mipLevels = 1;
+	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
+	Info.format = VulkanImage::GetVulkanFormat(Format);
+	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	Info.initialLayout = VulkanImage::GetVulkanLayout(Layout);
+	Info.usage = [&] ()
 	{
-		VulkanCommandListRef CmdList = ResourceCast(CreateCommandList());
+		VkFlags Usage = 0;
 
-		ImageMemoryBarrier Barrier(VulkanImage, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
-
-		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
-
-		drm::BufferRef StagingBuffer = CreateBuffer(EBufferUsage::Transfer, VulkanImage->GetSize());
-
-		void* MemMapped = LockBuffer(StagingBuffer);
-
-		const uint32 FaceSize = VulkanImage->GetSize() / 6;
-
-		for (uint32 FaceIndex = 0; FaceIndex < CubemapCreateInfo.CubeFaces.size(); FaceIndex++)
+		if (Any(UsageFlags & EImageUsage::Attachment))
 		{
-			auto& Face = CubemapCreateInfo.CubeFaces[FaceIndex];
-			if (Face.Data)
-			{
-				Platform.Memcpy((uint8*)MemMapped + FaceIndex * FaceSize, Face.Data, FaceSize);
-			}
+			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
-		UnlockBuffer(StagingBuffer);
+		Usage |= Any(UsageFlags & EImageUsage::TransferDst) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
+		Usage |= Any(UsageFlags & EImageUsage::Sampled) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
+		// Add transfer dst bit to storage images so they can be cleared via ClearColorImage.
+		Usage |= Any(UsageFlags & EImageUsage::Storage) ? VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 
-		CmdList->CopyBufferToImage(StagingBuffer, VulkanImage);
+		return Usage;
+	}();
+	Info.flags = Any(UsageFlags & EImageUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
+	Info.samples = VK_SAMPLE_COUNT_1_BIT;
+	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		Barrier.SrcAccessMask = EAccess::TransferWrite;
-		Barrier.DstAccessMask = EAccess::ShaderRead;
-		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	VkImage Image;
+	vulkan(vkCreateImage(Device, &Info, nullptr, &Image));
 
-		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
+	VkMemoryRequirements MemRequirements = {};
+	vkGetImageMemoryRequirements(Device, Image, &MemRequirements);
 
-		SubmitCommands(CmdList);
-	}
+	VkMemoryAllocateInfo MemInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+	MemInfo.allocationSize = MemRequirements.size;
+	MemInfo.memoryTypeIndex = Allocator.FindMemoryType(MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	VkDeviceMemory Memory;
+	vulkan(vkAllocateMemory(Device, &MemInfo, nullptr, &Memory));
+	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
+
+	VulkanImageRef VulkanImage = MakeRef<class VulkanImage>(Device
+		, Image
+		, Memory
+		, Format
+		, Layout
+		, Width
+		, Height
+		, Depth
+		, UsageFlags);
 
 	return VulkanImage;
 }

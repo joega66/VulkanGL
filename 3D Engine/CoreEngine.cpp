@@ -11,26 +11,60 @@
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 
-void CoreEngine::Run(class DRM& Device, DRMShaderMap& ShaderMap)
+static void CreateDebugMaterials(DRM& Device)
+{
+	std::vector<uint8> Colors =
+	{
+		255, 0, 0, 0, // Red
+		0, 255, 0, 0, // Green
+		0, 0, 255, 0, // Blue
+		255, 255, 255, 0, // White
+		234, 115, 79, 0 // Dummy
+	};
+
+	drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
+
+	Material::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	Material::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	Material::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	Material::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+
+	drm::CommandListRef CmdList = Device.CreateCommandList();
+
+	std::vector<ImageMemoryBarrier> Barriers(5, { nullptr, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal });
+	Barriers[0].Image = Material::Red;
+	Barriers[1].Image = Material::Green;
+	Barriers[2].Image = Material::Blue;
+	Barriers[3].Image = Material::White;
+	Barriers[4].Image = Material::Dummy;
+
+	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
+
+	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
+	{
+		CmdList->CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image);
+	}
+
+	for (auto& Barrier : Barriers)
+	{
+		Barrier.SrcAccessMask = EAccess::TransferWrite;
+		Barrier.DstAccessMask = EAccess::ShaderRead;
+		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	}
+
+	CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
+
+	Device.SubmitCommands(CmdList);
+}
+
+void CoreEngine::Run(DRM& Device, DRMShaderMap& ShaderMap)
 {
 	gCursor.Init();
 	gInput.Init();
 	gScreen.Init();
 
-	uint8 Red[] = { 255, 0, 0, 0 };
-	Material::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Red);
-
-	uint8 Green[] = { 0, 255, 0, 0 };
-	Material::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Green);
-
-	uint8 Blue[] = { 0, 0, 255, 0 };
-	Material::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, Blue);
-
-	uint8 White[] = { 255, 255, 255, 0 };
-	Material::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, White);
-
-	uint8 DummyColor[] = { 234, 115, 79, 0 };
-	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, DummyColor);
+	CreateDebugMaterials(Device);
 
 	Scene Scene(Device, ShaderMap);
 	SceneRenderer SceneRenderer(Device, Scene);

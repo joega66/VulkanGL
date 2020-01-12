@@ -58,8 +58,33 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 {
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
-	Images[Name] = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled, Pixels);
+
+	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
+
+	{
+		drm::CommandListRef CmdList = Device.CreateCommandList();
+
+		// Transfer transition.
+		ImageMemoryBarrier Barrier(Image, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
+		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+
+		// Create the staging buffer.
+		drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize(), Pixels);
+		CmdList->CopyBufferToImage(StagingBuffer, 0, Image);
+
+		// Shader read transition.
+		Barrier.SrcAccessMask = EAccess::TransferWrite;
+		Barrier.DstAccessMask = EAccess::ShaderRead;
+		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
+
+		// Submit.
+		Device.SubmitCommands(CmdList);
+	}
+	
 	Platform.FreeImage(Pixels);
+
+	Images[Name] = Image;
 }
 
 drm::ImageRef AssetManager::GetImage(const std::string& Name) const
@@ -69,36 +94,49 @@ drm::ImageRef AssetManager::GetImage(const std::string& Name) const
 
 void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format)
 {
-	CubemapCreateInfo CubemapCreateInfo;
+	drm::ImageRef Image;
+	drm::BufferRef StagingBuffer;
+	void* MemMapped = nullptr;
 
-	for (uint32 i = 0; i < Files.size(); i++)
+	for (uint32 FaceIndex = 0; FaceIndex < Files.size(); FaceIndex++)
 	{
-		auto& File = Files[i];
-		auto& Face = CubemapCreateInfo.CubeFaces[i];
 		int32 Width, Height, Channels;
-		uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
-		Face = { Width, Height, Pixels };
+		uint8* Pixels = Platform.LoadImage(Files[FaceIndex], Width, Height, Channels);
+
+		if (FaceIndex == 0)
+		{
+			Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
+			StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize());
+			MemMapped = Device.LockBuffer(StagingBuffer);
+		}
+
+		check(Image->Width == Width && Image->Height == Height, "Cubemap faces must all be the same size.");
+
+		Platform.Memcpy((uint8*)MemMapped + FaceIndex * (Image->GetSize() / 6), Pixels, (Image->GetSize() / 6));
+
+		Platform.FreeImage(Pixels);
 	}
 
-	auto& Face = CubemapCreateInfo.CubeFaces[0];
+	Device.UnlockBuffer(StagingBuffer);
 
-	check(std::all_of(CubemapCreateInfo.CubeFaces.begin() + 1, CubemapCreateInfo.CubeFaces.end(), 
-		[&](const auto& Other)
-	{
-		return Face.Width == Other.Width && Face.Height == Other.Height;
-	}), "Cubemap faces must have same dimensions.");
+	drm::CommandListRef CmdList = Device.CreateCommandList();
 
-	Cubemaps[Name] = Device.CreateCubemap(
-		Face.Width
-		, Face.Height
-		, Format
-		, EImageUsage::Sampled | EImageUsage::Cubemap
-		, CubemapCreateInfo);
+	// Transfer transition.
+	ImageMemoryBarrier Barrier(Image, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
+	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
-	std::for_each(CubemapCreateInfo.CubeFaces.begin(), CubemapCreateInfo.CubeFaces.end(), [&](const auto& Other)
-	{
-		Platform.FreeImage(Other.Data);
-	});
+	CmdList->CopyBufferToImage(StagingBuffer, 0, Image);
+
+	// Shader read transition.
+	Barrier.SrcAccessMask = EAccess::TransferWrite;
+	Barrier.DstAccessMask = EAccess::ShaderRead;
+	Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
+
+	// Submit.
+	Device.SubmitCommands(CmdList);
+
+	Cubemaps[Name] = Image;
 }
 
 drm::ImageRef AssetManager::GetCubemap(const std::string& Name) const

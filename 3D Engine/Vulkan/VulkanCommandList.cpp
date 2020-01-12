@@ -280,7 +280,7 @@ void VulkanCommandList::PipelineBarrier(
 	);
 }
 
-void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRef DstImage)
+void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(SrcBuffer);
 	VulkanImageRef VulkanImage = ResourceCast(DstImage);
@@ -297,7 +297,7 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRe
 			// VkImageSubresourceRange(3) Manual Page:
 			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
 			VkBufferImageCopy& Region = Regions[LayerIndex];
-			Region.bufferOffset = LayerIndex * FaceSize;
+			Region.bufferOffset = LayerIndex * FaceSize + VulkanBuffer->GetOffset();
 			Region.bufferRowLength = 0;
 			Region.bufferImageHeight = 0;
 			Region.imageSubresource.aspectMask = VulkanImage->GetVulkanAspect();
@@ -315,7 +315,7 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRe
 	else
 	{
 		VkBufferImageCopy Region = {};
-		Region.bufferOffset = 0;
+		Region.bufferOffset = BufferOffset + VulkanBuffer->GetOffset();
 		Region.bufferRowLength = 0;
 		Region.bufferImageHeight = 0;
 		Region.imageSubresource.aspectMask = VulkanImage->GetVulkanAspect();

@@ -1,5 +1,5 @@
 #pragma once
-#include "../DRMResource.h"
+#include <DRMResource.h>
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;

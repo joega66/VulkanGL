@@ -391,7 +391,7 @@ namespace drm
 			uint32 NumImageBarriers,
 			const ImageMemoryBarrier* ImageBarriers
 		) = 0;
-		virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, drm::ImageRef DstImage) = 0;
+		virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage) = 0;
 	};
 
 	CLASS(CommandList);
