@@ -4,7 +4,6 @@
 #include "VulkanSurface.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
-#include "VulkanShader.h"
 #include "VulkanCommandList.h"
 
 class VulkanDRM final : public DRM
@@ -24,11 +23,10 @@ public:
 	virtual void* LockBuffer(drm::BufferRef Buffer);
 	virtual void UnlockBuffer(drm::BufferRef Buffer);
 	virtual std::string GetDRMName() { return "Vulkan"; }
-	virtual ShaderCompilationInfo CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta);
-	virtual void RecompileShaders();
+
+	VulkanDevice Device;
 
 private:
-	VulkanDevice Device;
 	VulkanSurface Swapchain;
 	VulkanAllocator Allocator;
 	VulkanDescriptorPool DescriptorPool;

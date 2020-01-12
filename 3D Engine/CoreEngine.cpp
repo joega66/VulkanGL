@@ -1,4 +1,5 @@
 #include "CoreEngine.h"
+#include <DRMShader.h>
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/SceneProxy.h>
 #include <Engine/Scene.h>
@@ -10,7 +11,7 @@
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 
-void CoreEngine::Run()
+void CoreEngine::Run(DRMShaderMap& ShaderMap)
 {
 	gCursor.Init();
 	gInput.Init();
@@ -28,7 +29,7 @@ void CoreEngine::Run()
 	uint8 White[] = { 255, 255, 255, 0 };
 	Material::White = drm::CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled, White);
 
-	Scene Scene;
+	Scene Scene(ShaderMap);
 	SceneRenderer SceneRenderer(Scene);
 	SystemsManager SystemsManager;
 

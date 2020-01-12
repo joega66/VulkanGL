@@ -80,9 +80,6 @@
     <ClInclude Include="Vulkan\VulkanMemory.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanShader.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanSurface.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -206,6 +203,9 @@
     <ClInclude Include="Components\Transform.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanShaderMap.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -233,9 +233,6 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanMemory.cpp">
-      <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanShader.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanSurface.cpp">
@@ -348,6 +345,9 @@
     </ClCompile>
     <ClCompile Include="Components\Transform.cpp">
       <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanShaderMap.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -52,11 +52,11 @@ void SceneProxy::AddToDepthPrepass(const MeshProxy& MeshProxy)
 
 	ShaderStages ShaderStages =
 	{
-		*ShaderMapRef<DepthPrepassVS<MeshType>>(),
+		ShaderMap.FindShader<DepthPrepassVS<MeshType>>(),
 		nullptr,
 		nullptr,
 		nullptr,
-		MeshProxy.Material.IsMasked() ? *ShaderMapRef<DepthPrepassFS<MeshType>>() : nullptr
+		MeshProxy.Material.IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr
 	};
 
 	DepthPrepass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));

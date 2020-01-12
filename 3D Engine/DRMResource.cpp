@@ -39,6 +39,23 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
+	uint32 Image::GetSize(EFormat Format)
+	{
+		static HashTable<EFormat, uint32> EngineFormatStrides =
+		{
+			ENTRY(EFormat::R8_UNORM, 1)
+			ENTRY(EFormat::R8G8B8A8_UNORM, 4)
+			ENTRY(EFormat::R32_SFLOAT, 4)
+			ENTRY(EFormat::R32_SINT, 4)
+			ENTRY(EFormat::R32_UINT, 4)
+			ENTRY(EFormat::R32G32B32A32_SFLOAT, 16)
+			ENTRY(EFormat::R32G32B32_SFLOAT, 12)
+			ENTRY(EFormat::R32G32_SFLOAT, 8)
+		};
+
+		return EngineFormatStrides[Format];
+	}
+
 	bool Image::IsDepth() const
 	{
 		return IsDepth(Format);
@@ -46,13 +63,7 @@ namespace drm
 
 	uint32 Image::GetStrideInBytes() const
 	{
-		static HashTable<EFormat, uint32> EngineFormatStrides =
-		{
-			ENTRY(EFormat::R8_UNORM, 1)
-			ENTRY(EFormat::R8G8B8A8_UNORM, 4)
-		};
-
-		return EngineFormatStrides[Format];
+		return GetSize(Format);
 	}
 
 	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)

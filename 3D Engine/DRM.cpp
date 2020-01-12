@@ -64,31 +64,4 @@ namespace drm
 	{
 		return GDRM->GetDRMName();
 	}
-
-	ShaderCompilationInfo CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
-	{
-		return GDRM->CompileShader(Worker, Meta);
-	}
-
-	void RecompileShaders()
-	{
-		GDRM->RecompileShaders();
-	}
-}
-
-void DRM::CacheShader(drm::ShaderRef Shader)
-{
-	GDRM->Shaders[Shader->CompilationInfo.Type] = Shader;
-}
-
-drm::ShaderRef DRM::FindShader(std::type_index Type)
-{
-	if (Contains(GDRM->Shaders, Type))
-	{
-		return GDRM->Shaders[Type];
-	}
-	else
-	{
-		return nullptr;
-	}
 }

@@ -258,16 +258,24 @@ VkPipeline VulkanDevice::CreatePipeline(
 		Shaders.push_back(GraphicsPipeline.Fragment);
 	}
 
+	static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
+	{
+		ENTRY(EShaderStage::Vertex, VK_SHADER_STAGE_VERTEX_BIT)
+		ENTRY(EShaderStage::TessControl, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
+		ENTRY(EShaderStage::TessEvaluation, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+		ENTRY(EShaderStage::Geometry, VK_SHADER_STAGE_GEOMETRY_BIT)
+		ENTRY(EShaderStage::Fragment, VK_SHADER_STAGE_FRAGMENT_BIT)
+		ENTRY(EShaderStage::Compute, VK_SHADER_STAGE_COMPUTE_BIT)
+	};
+
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStages(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
 
 	for (uint32 StageIndex = 0; StageIndex < ShaderStages.size(); StageIndex++)
 	{
 		const drm::ShaderRef& Shader = Shaders[StageIndex];
-		const VulkanShader& VulkanShader = *ShaderCache[Shader->CompilationInfo.Type];
-
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[StageIndex];
-		ShaderStage.stage = VulkanShader::GetVulkanStage(Shader->CompilationInfo.Stage);
-		ShaderStage.module = VulkanShader.ShaderModule;
+		ShaderStage.stage = GetValue(VulkanStages, Shader->CompilationInfo.Stage);
+		ShaderStage.module = Shader->CompilationInfo.Module;
 		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
 	}
 
@@ -291,33 +299,52 @@ VkPipeline VulkanDevice::CreatePipeline(
 		});
 	}
 
-	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-	const std::vector<VkVertexInputAttributeDescription>& AttributeDescriptions = ShaderCache[GraphicsPipeline.Vertex->CompilationInfo.Type]->Attributes;
-	std::vector<VkVertexInputBindingDescription> Bindings(AttributeDescriptions.size());
+	const std::vector<VertexAttributeDescription>& VertexAttributes = GraphicsPipeline.Vertex->CompilationInfo.VertexAttributeDescriptions;
 
-	static const HashTable<VkFormat, uint32> VulkanFormatSize =
-	{
-		ENTRY(VK_FORMAT_R32G32B32A32_SFLOAT, 16)
-		ENTRY(VK_FORMAT_R32G32B32_SFLOAT, 12)
-		ENTRY(VK_FORMAT_R32G32_SFLOAT, 8)
-		ENTRY(VK_FORMAT_R32_SFLOAT, 4)
-		ENTRY(VK_FORMAT_R32_SINT, 4)
-		ENTRY(VK_FORMAT_R32_UINT, 4)
-	};
+	std::vector<VkVertexInputAttributeDescription> VulkanVertexAttributes;
+	VulkanVertexAttributes.reserve(VertexAttributes.size());
 
-	for (uint32 i = 0; i < Bindings.size(); i++)
+	for (uint32 VertexAttributeIndex = 0; VertexAttributeIndex < VertexAttributes.size(); VertexAttributeIndex++)
 	{
-		VkVertexInputBindingDescription& Binding = Bindings[i];
-		Binding.binding = AttributeDescriptions[i].binding;
-		Binding.stride = GetValue(VulkanFormatSize, AttributeDescriptions[i].format);
-		Binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		const VertexAttributeDescription& VertexAttributeDescription = VertexAttributes[VertexAttributeIndex];
+
+		const VkVertexInputAttributeDescription VulkanVertexAttributeDescription =
+		{
+			static_cast<uint32>(VertexAttributeDescription.Location),
+			VertexAttributeDescription.Binding,
+			VulkanImage::GetVulkanFormat(VertexAttributeDescription.Format),
+			VertexAttributeDescription.Offset
+		};
+
+		VulkanVertexAttributes.push_back(VulkanVertexAttributeDescription);
 	}
 
-	VertexInputState.pVertexBindingDescriptions = Bindings.data();
-	VertexInputState.vertexBindingDescriptionCount = Bindings.size();
-	VertexInputState.pVertexAttributeDescriptions = AttributeDescriptions.data();
-	VertexInputState.vertexAttributeDescriptionCount = AttributeDescriptions.size();
+	std::vector<VkVertexInputBindingDescription> VertexBindings;
+	VertexBindings.reserve(VertexAttributes.size());
 
+	for (uint32 VertexBindingIndex = 0; VertexBindingIndex < VertexAttributes.size(); VertexBindingIndex++)
+	{
+		const VkVertexInputBindingDescription VertexBinding =
+		{
+			VertexAttributes[VertexBindingIndex].Binding,
+			VulkanImage::GetSize(VertexAttributes[VertexBindingIndex].Format),
+			VK_VERTEX_INPUT_RATE_VERTEX
+		};
+
+		VertexBindings.push_back(VertexBinding);
+	}
+
+	const VkPipelineVertexInputStateCreateInfo VertexInputState = 
+	{ 
+		VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		nullptr,
+		0,
+		VertexBindings.size(),
+		VertexBindings.data(),
+		VulkanVertexAttributes.size(),
+		VulkanVertexAttributes.data(),
+	};
+	
 	VkPipelineInputAssemblyStateCreateInfo InputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 	{
 		const auto& In = PSOInit.InputAssemblyState;

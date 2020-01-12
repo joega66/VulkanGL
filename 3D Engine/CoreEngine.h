@@ -3,5 +3,5 @@
 class CoreEngine
 {
 public:
-	void Run();
+	void Run(class DRMShaderMap& ShaderMap);
 };

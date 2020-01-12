@@ -1,33 +1,7 @@
-#include "VulkanShader.h"
+#include "VulkanShaderMap.h"
 #include "VulkanDRM.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
-
 #include <filesystem>
-
-VulkanShader::VulkanShader(const VulkanDevice* Device, VkShaderModule ShaderModule, const std::vector<VkVertexInputAttributeDescription>& Attributes)
-	: Device(Device), ShaderModule(ShaderModule), Attributes(Attributes)
-{
-}
-
-VulkanShader::~VulkanShader()
-{
-	vkDestroyShaderModule(*Device, ShaderModule, nullptr);
-}
-
-static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
-{
-	ENTRY(EShaderStage::Vertex, VK_SHADER_STAGE_VERTEX_BIT)
-	ENTRY(EShaderStage::TessControl, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
-	ENTRY(EShaderStage::TessEvaluation, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
-	ENTRY(EShaderStage::Geometry, VK_SHADER_STAGE_GEOMETRY_BIT)
-	ENTRY(EShaderStage::Fragment, VK_SHADER_STAGE_FRAGMENT_BIT)
-	ENTRY(EShaderStage::Compute, VK_SHADER_STAGE_COMPUTE_BIT)
-};
-
-VkShaderStageFlagBits VulkanShader::GetVulkanStage(EShaderStage Stage)
-{
-	return VulkanStages.at(Stage);
-}
 
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 {
@@ -74,18 +48,18 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 	}
 }
 
-static std::vector<VkVertexInputAttributeDescription> ParseVertexInputAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
 {
-	std::vector<VkVertexInputAttributeDescription> Descriptions;
+	std::vector<VertexAttributeDescription> Descriptions;
 
 	for (auto& Resource : Resources.stage_inputs)
 	{
-		VkVertexInputAttributeDescription Description = {};
+		VertexAttributeDescription Description = {};
 
-		Description.binding = Descriptions.size();
-		Description.location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
-		Description.format = GetFormatFromBaseType(GLSL.get_type(Resource.type_id));
-		Description.offset = 0;
+		Description.Binding = Descriptions.size();
+		Description.Location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
+		Description.Format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(GLSL.get_type(Resource.type_id)));
+		Description.Offset = 0;
 
 		Descriptions.push_back(Description);
 	}
@@ -93,15 +67,21 @@ static std::vector<VkVertexInputAttributeDescription> ParseVertexInputAttributeD
 	// This sorting saves from having to figure out
 	// a mapping between layout(location = ...) and buffer binding point
 	std::sort(Descriptions.begin(), Descriptions.end(),
-		[] (const VkVertexInputAttributeDescription& LHS, const VkVertexInputAttributeDescription& RHS)
+		[] (const VertexAttributeDescription& LHS, const VertexAttributeDescription& RHS)
 	{
-		return LHS.location < RHS.location;
+		return LHS.Location < RHS.Location;
 	});
 
 	return Descriptions;
 }
 
-ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worker, const ShaderMetadata& Meta)
+ShaderCompilationInfo VulkanShaderMap::CompileShader(
+	const ShaderCompilerWorker& Worker,
+	const std::string& Filename,
+	const std::string& EntryPoint,
+	EShaderStage Stage,
+	std::type_index Type
+)
 {
 	static const std::string ShaderCompilerPath = "../Shaders/glslc.exe";
 	static const std::string SPIRVExt = ".spv";
@@ -110,7 +90,7 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 
 	const std::string ShaderExt = [&] ()
 	{
-		switch (Meta.Stage)
+		switch (Stage)
 		{
 		case EShaderStage::Vertex:
 			PrivateWorker.SetDefine("VERTEX_SHADER");
@@ -134,47 +114,47 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 
 	std::stringstream SS;
 
-	const auto SetDefines = [&](const std::pair<std::string, std::string>& Defines)
+	const auto SetDefines = [&] (const std::pair<std::string, std::string>& Defines)
 	{
 		const auto& [Define, Value] = Defines;
 		SS << " -D" + Define + "=" + Value;
 	};
 
 	std::for_each(Worker.GetDefines().begin(), Worker.GetDefines().end(), SetDefines);
-	
+
 	std::for_each(PrivateWorker.GetDefines().begin(), PrivateWorker.GetDefines().end(), SetDefines);
 
 	SS << " -std=450";
 	SS << " -fshader-stage=" + ShaderExt;
 	SS << " -o ";
-	SS << Meta.Filename + SPIRVExt;
-	SS << " " + Meta.Filename;
+	SS << Filename + SPIRVExt;
+	SS << " " + Filename;
 
 	while (true)
 	{
 		Platform.ForkProcess(ShaderCompilerPath, SS.str());
 
 		// Hack until ForkProcess can return STDOUT of child process.
-		if (Platform.FileExists(Meta.Filename + SPIRVExt))
+		if (Platform.FileExists(Filename + SPIRVExt))
 		{
 			break;
 		}
 
-		const EMBReturn Ret = Platform.DisplayMessageBox(EMBType::RETRYCANCEL, EMBIcon::WARNING, "Shader failed to compile. Filename: " + Meta.Filename, "Shader Compiler Error");
+		const EMBReturn Ret = Platform.DisplayMessageBox(EMBType::RETRYCANCEL, EMBIcon::WARNING, "Shader failed to compile. Filename: " + Filename, "Shader Compiler Error");
 
 		switch (Ret)
 		{
 		case EMBReturn::CANCEL:
 			Platform.Exit();
 		case EMBReturn::RETRY:
-			LOG("Recompiling shader %s", Meta.Filename.c_str());
+			LOG("Recompiling shader %s", Filename.c_str());
 		}
 	}
 
-	const uint64 LastWriteTime = Platform.GetLastWriteTime(Meta.Filename);
+	const uint64 LastWriteTime = Platform.GetLastWriteTime(Filename);
 
-	const std::string SPIRV = Platform.FileRead(Meta.Filename + SPIRVExt);
-	Platform.FileDelete(Meta.Filename + SPIRVExt);
+	const std::string SPIRV = Platform.FileRead(Filename + SPIRVExt);
+	Platform.FileDelete(Filename + SPIRVExt);
 
 	VkShaderModuleCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 	CreateInfo.codeSize = SPIRV.size();
@@ -186,14 +166,17 @@ ShaderCompilationInfo VulkanDRM::CompileShader(const ShaderCompilerWorker& Worke
 	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
 
-	const std::vector<VkVertexInputAttributeDescription> Attributes = ParseVertexInputAttributeDescriptions(GLSL, Resources);
+	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = ParseVertexAttributeDescriptions(GLSL, Resources);
 
-	Device.ShaderCache[Meta.Type] = std::make_unique<VulkanShader>(&Device, ShaderModule, Attributes);
-	
-	return ShaderCompilationInfo(Meta.Type, Meta.Stage, Meta.EntryPoint, Meta.Filename, LastWriteTime, Worker);
+	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions);
 }
 
-void VulkanDRM::RecompileShaders()
+VulkanShaderMap::VulkanShaderMap(VulkanDevice& Device)
+	: Device(Device)
+{
+}
+
+void VulkanShaderMap::RecompileShaders()
 {
 	for (const auto& [ShaderType, Shader] : Shaders)
 	{
@@ -205,10 +188,16 @@ void VulkanDRM::RecompileShaders()
 		{
 			LOG("Recompiling shader %s", CompileInfo.Filename.c_str());
 
-			// The old VkShaderModule will be cleaned up in CompileShader by RAII.
-			ShaderMetadata Meta(CompileInfo.Filename, CompileInfo.Entrypoint, CompileInfo.Stage, CompileInfo.Type);
+			// Destroy the old shader module.
+			vkDestroyShaderModule(Device, CompileInfo.Module, nullptr);
 
-			const ShaderCompilationInfo NewCompilationInfo = CompileShader(CompileInfo.Worker, Meta);
+			const ShaderCompilationInfo NewCompilationInfo = CompileShader(
+				CompileInfo.Worker,
+				CompileInfo.Filename, 
+				CompileInfo.Entrypoint, 
+				CompileInfo.Stage, 
+				CompileInfo.Type
+			);
 
 			Shader->CompilationInfo = NewCompilationInfo;
 

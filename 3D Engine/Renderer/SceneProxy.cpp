@@ -10,7 +10,8 @@
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(Scene& Scene)
-	: View(Scene.View)
+	: ShaderMap(Scene.ShaderMap)
+	, View(Scene.View)
 	, ECS(Scene.ECS)
 	, Skybox(Scene.Skybox)
 {

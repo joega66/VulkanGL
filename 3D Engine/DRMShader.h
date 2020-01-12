@@ -1,5 +1,5 @@
 #pragma once
-#include <Platform/Platform.h>
+#include <DRMResource.h>
 #include <typeindex>
 
 enum class EShaderStage
@@ -38,19 +38,6 @@ public:
 
 private:
 	ShaderDefines Defines;
-};
-
-struct ShaderMetadata
-{
-	std::string Filename;
-	std::string EntryPoint;
-	EShaderStage Stage;
-	std::type_index Type;
-
-	ShaderMetadata(const std::string& Filename, const std::string& EntryPoint, EShaderStage Stage, std::type_index Type)
-		: Filename(Filename), EntryPoint(EntryPoint), Stage(Stage), Type(Type)
-	{
-	}
 };
 
 struct ShaderInfo
@@ -104,6 +91,14 @@ private:
 	std::vector<uint8> Data;
 };
 
+struct VertexAttributeDescription
+{
+	uint64	Location;
+	uint32	Binding;
+	EFormat	Format;
+	uint32	Offset;
+};
+
 class ShaderCompilationInfo
 {
 public:
@@ -113,6 +108,8 @@ public:
 	std::string Filename;
 	uint64 LastWriteTime;
 	ShaderCompilerWorker Worker;
+	uint64 Module;
+	std::vector<VertexAttributeDescription> VertexAttributeDescriptions;
 
 	ShaderCompilationInfo(
 		std::type_index Type,
@@ -120,13 +117,17 @@ public:
 		const std::string& Entrypoint,
 		const std::string& Filename,
 		uint64 LastWriteTime,
-		const ShaderCompilerWorker& Worker)
+		const ShaderCompilerWorker& Worker,
+		uint64 Module,
+		const std::vector<VertexAttributeDescription>& VertexAttributeDescriptions)
 		: Type(Type)
 		, Stage(Stage)
 		, Entrypoint(Entrypoint)
 		, Filename(Filename)
 		, LastWriteTime(LastWriteTime)
 		, Worker(Worker)
+		, Module(Module)
+		, VertexAttributeDescriptions(VertexAttributeDescriptions)
 	{
 	}
 };
@@ -150,3 +151,48 @@ namespace drm
 
 	CLASS(Shader);
 }
+
+/** */
+class DRMShaderMap
+{
+public:
+	/** Find shader of ShaderType. */
+	template<typename ShaderType>
+	std::shared_ptr<ShaderType> FindShader()
+	{
+		std::type_index Type = std::type_index(typeid(ShaderType));
+
+		if (Contains(Shaders, Type))
+		{
+			return std::static_pointer_cast<ShaderType>(Shaders[Type]);
+		}
+		else
+		{
+			ShaderCompilerWorker Worker;
+			ShaderType::SetEnvironmentVariables(Worker);
+			const auto& [Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
+			const ShaderCompilationInfo CompilationInfo = CompileShader(Worker, Filename, EntryPoint, Stage, Type);
+			std::shared_ptr<ShaderType> Shader = MakeRef<ShaderType>(CompilationInfo);
+			Shaders[Shader->CompilationInfo.Type] = Shader;
+			return Shader;
+		}
+	}
+
+	/** Recompile cached shaders. */
+	virtual void RecompileShaders() = 0;
+
+private:
+	/** Compile the shader. */
+	virtual ShaderCompilationInfo CompileShader(
+		const ShaderCompilerWorker& Worker,
+		const std::string& Filename,
+		const std::string& EntryPoint,
+		EShaderStage Stage,
+		std::type_index Type
+	) = 0;
+
+protected:
+	/** Cached shaders. */
+	HashTable<std::type_index, drm::ShaderRef> Shaders;
+
+};

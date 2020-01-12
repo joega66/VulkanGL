@@ -1,6 +1,7 @@
 #include "SceneRenderer.h"
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
+#include <DRMShader.h>
 #include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
@@ -106,8 +107,8 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		PSOInit.Viewport.Height = SceneDepth->Height;
 		PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSOInit.DepthStencilState.DepthWriteEnable = false;
-		PSOInit.ShaderStages.Vertex = *ShaderMapRef<FullscreenVS>();
-		PSOInit.ShaderStages.Fragment = *ShaderMapRef<FullscreenFS<EVisualize::Depth>>();
+		PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
+		PSOInit.ShaderStages.Fragment = Scene.ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
 
 		CmdList.BindPipeline(PSOInit);
 

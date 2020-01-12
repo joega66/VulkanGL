@@ -2,6 +2,7 @@
 #include <Engine/Scene.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
+#include <DRMShader.h>
 
 void EditorControllerSystem::Start(Scene& Scene)
 {
@@ -35,6 +36,6 @@ void EditorControllerSystem::Update(Scene& Scene)
 
 	if (gInput.GetShortcutUp("Recompile Shaders"))
 	{
-		drm::RecompileShaders();
+		Scene.ShaderMap.RecompileShaders();
 	}
 }

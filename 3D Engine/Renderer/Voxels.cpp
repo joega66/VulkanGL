@@ -78,11 +78,11 @@ void SceneProxy::AddToVoxelsPass(const MeshProxy& MeshProxy)
 
 	ShaderStages ShaderStages =
 	{
-		*ShaderMapRef<VoxelsVS<MeshType>>(),
+		ShaderMap.FindShader<VoxelsVS<MeshType>>(),
 		nullptr,
 		nullptr,
-		*ShaderMapRef<VoxelsGS<MeshType>>(),
-		*ShaderMapRef<VoxelsFS<MeshType>>()
+		ShaderMap.FindShader<VoxelsGS<MeshType>>(),
+		ShaderMap.FindShader<VoxelsFS<MeshType>>()
 	};
 
 	VoxelsPass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
@@ -294,9 +294,9 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	PSOInit.Viewport.Height = gScreen.GetHeight();
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 	PSOInit.DepthStencilState.DepthWriteEnable = true;
-	PSOInit.ShaderStages.Vertex = *ShaderMapRef<DrawVoxelsVS>();
-	PSOInit.ShaderStages.Geometry = *ShaderMapRef<DrawVoxelsGS>();
-	PSOInit.ShaderStages.Fragment = *ShaderMapRef<DrawVoxelsFS>();
+	PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<DrawVoxelsVS>();
+	PSOInit.ShaderStages.Geometry = Scene.ShaderMap.FindShader<DrawVoxelsGS>();
+	PSOInit.ShaderStages.Fragment = Scene.ShaderMap.FindShader<DrawVoxelsFS>();
 	PSOInit.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSOInit.SpecializationInfo.Add(0, VoxelSize);
 

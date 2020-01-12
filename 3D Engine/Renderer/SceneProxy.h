@@ -18,6 +18,8 @@ class SceneProxy
 	SceneProxy(Scene& Scene);
 
 public:
+	DRMShaderMap& ShaderMap;
+
 	EntityManager& ECS;
 
 	const View& View;

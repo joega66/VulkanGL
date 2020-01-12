@@ -1,6 +1,5 @@
 #pragma once
 #include <DRMCommandList.h>
-#include "VulkanShader.h"
 #include "VulkanQueues.h"
 
 class VulkanDevice
@@ -17,8 +16,6 @@ public:
 	VkPhysicalDeviceProperties Properties;
 
 	VkPhysicalDeviceFeatures Features;
-
-	HashTable<std::type_index, std::unique_ptr<VulkanShader>> ShaderCache;
 
 	VulkanDevice();
 

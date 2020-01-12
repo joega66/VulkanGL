@@ -3,14 +3,18 @@
 #include <Engine/View.h>
 #include <Engine/AssetManager.h>
 
+class DRMShaderMap;
+
 class Scene
 {
 	friend class CoreEngine;
-	Scene();
+	Scene(DRMShaderMap& ShaderMap);
 
 public:
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
+
+	DRMShaderMap& ShaderMap;
 
 	AssetManager Assets;
 

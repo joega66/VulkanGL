@@ -52,11 +52,11 @@ void SceneProxy::AddToLightingPass(const MeshProxy& MeshProxy)
 
 	ShaderStages ShaderStages =
 	{
-		*ShaderMapRef<LightingPassVS<MeshType>>(),
+		ShaderMap.FindShader<LightingPassVS<MeshType>>(),
 		nullptr,
 		nullptr,
 		nullptr,
-		*ShaderMapRef<LightingPassFS<MeshType>>()
+		ShaderMap.FindShader<LightingPassFS<MeshType>>()
 	};
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =

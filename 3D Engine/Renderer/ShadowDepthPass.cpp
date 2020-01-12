@@ -54,11 +54,11 @@ void SceneProxy::AddToShadowDepthPass(const MeshProxy& MeshProxy)
 
 	ShaderStages ShaderStages =
 	{
-		*ShaderMapRef<ShadowDepthVS<MeshType>>(),
+		ShaderMap.FindShader<ShadowDepthVS<MeshType>>(),
 		nullptr,
 		nullptr,
 		nullptr,
-		*ShaderMapRef<ShadowDepthFS<MeshType>>()
+		ShaderMap.FindShader<ShadowDepthFS<MeshType>>()
 	};
 
 	ShadowDepthPass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
@@ -157,8 +157,8 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 		PSOInit.Viewport.Height = ShadowMask->Height;
 		PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSOInit.DepthStencilState.DepthWriteEnable = false;
-		PSOInit.ShaderStages.Vertex = *ShaderMapRef<FullscreenVS>();
-		PSOInit.ShaderStages.Fragment = *ShaderMapRef<ShadowProjectionFS>();
+		PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
+		PSOInit.ShaderStages.Fragment = Scene.ShaderMap.FindShader<ShadowProjectionFS>();
 
 		CmdList.BindPipeline(PSOInit);
 

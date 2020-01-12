@@ -3,6 +3,7 @@
 #include <Renderer/SceneProxy.h>
 #include <Components/StaticMeshComponent.h>
 
+class DRMShaderMap;
 class Scene;
 class RenderCommandList;
 

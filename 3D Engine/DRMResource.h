@@ -270,6 +270,8 @@ namespace drm
 		static bool IsDepthStencil(EFormat Format);
 
 		static bool IsDepth(EFormat Format);
+
+		static uint32 GetSize(EFormat Format);
 	};
 
 	CLASS(Image);

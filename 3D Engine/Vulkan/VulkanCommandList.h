@@ -4,7 +4,6 @@
 #include "VulkanSurface.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
-#include "VulkanShader.h"
 
 class VulkanCommandList final : public drm::CommandList
 {
