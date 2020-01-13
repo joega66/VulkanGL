@@ -20,7 +20,7 @@ class Scene
 	Scene(
 		DRM& Device, 
 		DRMShaderMap& ShaderMap, 
-		Cursor& Cursor, 
+		Cursor& Cursor,
 		Input& Input, 
 		Screen& Screen
 	);

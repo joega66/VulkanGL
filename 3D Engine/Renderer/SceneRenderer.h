@@ -3,8 +3,6 @@
 #include <Renderer/SceneProxy.h>
 #include <Components/StaticMeshComponent.h>
 
-extern uint32 gVoxelGridSize;
-
 class SceneRenderer
 {
 public:

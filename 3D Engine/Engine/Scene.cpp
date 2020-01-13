@@ -1,10 +1,8 @@
 #include "Scene.h"
 #include "AssetManager.h"
-#include "Screen.h"
-#include "Input.h"
 #include <DRM.h>
 
-Scene::Scene(DRM& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class Input& Input, Screen& Screen)
+Scene::Scene(DRM& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class Input& Input, class Screen& Screen)
 	: ShaderMap(ShaderMap)
 	, Cursor(Cursor)
 	, Input(Input)

@@ -1,7 +1,7 @@
 #include "EngineMain.h"
 #include <Platform/Platform.h>
 #include <Vulkan/VulkanDRM.h>
-#include <vulkan/VulkanShaderMap.h>
+#include <Vulkan/VulkanShaderMap.h>
 #include <Engine/Screen.h>
 #include <Engine/Input.h>
 #include <Engine/Cursor.h>
@@ -9,10 +9,11 @@
 
 int main(int argc, char* argv[])
 {
-	const int32 WindowSizeX = Platform::GetInt("Engine.ini", "Renderer", "WindowSizeX", 720);
-	const int32 WindowSizeY = Platform::GetInt("Engine.ini", "Renderer", "WindowSizeY", 720);
+	Platform Platform(
+		Platform::GetInt("Engine.ini", "Renderer", "WindowSizeX", 720), 
+		Platform::GetInt("Engine.ini", "Renderer", "WindowSizeY", 720)
+	);
 
-	Platform Platform(WindowSizeX, WindowSizeY);
 	Cursor Cursor(Platform);
 	Input Input(Platform);
 	Screen Screen(Platform);

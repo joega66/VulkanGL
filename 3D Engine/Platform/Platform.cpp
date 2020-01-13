@@ -83,6 +83,13 @@ void WindowsPlatform::WriteLog(const std::string& InLog)
 	printf("%s\n", InLog.c_str());
 }
 
+static std::string SanitizeFile(const std::string& File)
+{
+	std::string FileSanitized = File;
+	FileSanitized.erase(FileSanitized.begin(), FileSanitized.begin() + FileSanitized.find_last_of('\\') + 1);
+	return FileSanitized;
+}
+
 void WindowsPlatform::WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
 {
 	std::string Header = "[Debug] [" + SanitizeFile(File) + ":" + Func + ":" + std::to_string(Line) + "]\n";
@@ -95,13 +102,6 @@ void WindowsPlatform::WriteLog(const std::string& Expression, const std::string&
 	std::string Header = "[Warning] [" + SanitizeFile(File) + ":" + Func + ":" + std::to_string(Line) + ":" + Expression + "]\n";
 	std::string Recent = Header + InLog + '\n';
 	std::cerr << Recent;
-}
-
-std::string WindowsPlatform::SanitizeFile(const std::string& File)
-{
-	std::string FileSanitized = File;
-	FileSanitized.erase(FileSanitized.begin(), FileSanitized.begin() + FileSanitized.find_last_of('\\') + 1);
-	return FileSanitized;
 }
 
 std::string WindowsPlatform::FormatString(std::string Format, ...)

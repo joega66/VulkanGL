@@ -1,6 +1,7 @@
 #pragma once
 #include <Platform/Platform.h>
 
+/** The main() of the engine, after the platform-dependent stuff has been resolved. */
 class EngineMain
 {
 public:

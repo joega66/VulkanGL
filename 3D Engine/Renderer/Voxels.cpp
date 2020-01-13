@@ -38,7 +38,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -61,7 +61,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -89,7 +89,9 @@ void SceneProxy::AddToVoxelsPass(const MeshProxy& MeshProxy)
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	glm::mat4 OrthoProj = glm::ortho(-(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, -(float)gVoxelGridSize * 0.5f, (float)gVoxelGridSize * 0.5f, 0.0f, (float)gVoxelGridSize);
+	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
+
+	glm::mat4 OrthoProj = glm::ortho(-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, -(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, 0.0f, (float)VoxelGridSize);
 	OrthoProj[1][1] *= -1;
 
 	struct WorldToVoxelUniform
@@ -151,6 +153,8 @@ struct VoxelizationPassDescriptorSets
 
 void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
+	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
+
 	ImageMemoryBarrier ImageMemoryBarrier(VoxelColors, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageMemoryBarrier);
@@ -164,15 +168,15 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageMemoryBarrier);
 
 	RenderPassInitializer RPInit = { 0 }; // Disable ROP
-	RPInit.RenderArea.Extent = glm::uvec2(gVoxelGridSize);
+	RPInit.RenderArea.Extent = glm::uvec2(VoxelGridSize);
 
 	CmdList.BeginRenderPass(RPInit);
 
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.DepthStencilState.DepthTestEnable = false;
 	PSOInit.DepthStencilState.DepthWriteEnable = false;
-	PSOInit.Viewport.Width = gVoxelGridSize;
-	PSOInit.Viewport.Height = gVoxelGridSize;
+	PSOInit.Viewport.Width = VoxelGridSize;
+	PSOInit.Viewport.Height = VoxelGridSize;
 
 	VoxelizationPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures, VoxelsDescriptorSet };
 
@@ -191,7 +195,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -211,7 +215,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -231,7 +235,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetDefine("VOXEL_GRID_SIZE", gVoxelGridSize);
+		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
 	static const ShaderInfo& GetShaderInfo()

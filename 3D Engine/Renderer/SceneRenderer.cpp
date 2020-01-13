@@ -6,8 +6,6 @@
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 
-uint32 gVoxelGridSize;
-
 SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
 	: Device(Device)
 {
@@ -25,9 +23,9 @@ SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");
 
-	gVoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-	VoxelColors = Device.CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::ivec3));
+	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
+	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(glm::ivec3));
 
 	VoxelsDescriptorSet = Device.CreateDescriptorSet();
 	VoxelsDescriptorSet->Write(VoxelColors, 1);
