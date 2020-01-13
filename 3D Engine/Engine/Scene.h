@@ -7,8 +7,8 @@ class DRMShaderMap;
 
 class Scene
 {
-	friend class CoreEngine;
-	Scene(class DRM& Device, DRMShaderMap& ShaderMap);
+	friend class EngineMain;
+	Scene(class DRM& Device, DRMShaderMap& ShaderMap, class Screen& Screen);
 
 public:
 	Scene(const Scene&) = delete;

@@ -152,7 +152,7 @@ namespace drm
 	CLASS(Shader);
 }
 
-/** */
+/** The Shader Map compiles shaders and caches them by typename. */
 class DRMShaderMap
 {
 public:

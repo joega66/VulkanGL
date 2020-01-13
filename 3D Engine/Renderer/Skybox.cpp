@@ -1,5 +1,4 @@
 #include "SceneRenderer.h"
-#include <Engine/Screen.h>
 
 class SkyboxVS : public drm::Shader
 {
@@ -58,8 +57,8 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
 	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = gScreen.GetWidth();
-	PSOInit.Viewport.Height = gScreen.GetHeight();
+	PSOInit.Viewport.Width = Scene.GetWidth();
+	PSOInit.Viewport.Height = Scene.GetHeight();
 	PSOInit.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
 	CmdList.BindPipeline(PSOInit);

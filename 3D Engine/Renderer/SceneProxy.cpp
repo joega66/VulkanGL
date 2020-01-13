@@ -1,6 +1,5 @@
 #include "SceneProxy.h"
 #include <Engine/Scene.h>
-#include <Engine/Screen.h>
 #include <Components/CLight.h>
 #include <Components/Material.h>
 #include <Components/StaticMeshComponent.h>
@@ -10,8 +9,8 @@
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
-	: ShaderMap(Scene.ShaderMap)
-	, View(Scene.View)
+	: View(Scene.View)
+	, ShaderMap(Scene.ShaderMap)
 	, ECS(Scene.ECS)
 	, Skybox(Scene.Skybox)
 {
@@ -40,20 +39,17 @@ void SceneProxy::InitView(DRM& Device)
 		glm::vec2 ScreenDims;
 	);
 
-	const glm::mat4 WorldToView = View.GetWorldToView();
-	const glm::mat4& ViewToClip = View.GetViewToClip();
-	const glm::mat4 WorldToClip = View.GetWorldToClip();
 	const ViewUniformBuffer ViewUniformBuffer =
 	{
-		WorldToView,
-		ViewToClip,
-		WorldToClip,
-		glm::inverse(WorldToClip),
-		View.GetPosition(),
+		GetWorldToView(),
+		GetViewToClip(),
+		GetWorldToClip(),
+		glm::inverse(GetWorldToClip()),
+		GetPosition(),
 		0.0f,
-		gScreen.GetAspectRatio(),
-		View.GetFOV(),
-		glm::vec2(gScreen.GetWidth(), gScreen.GetHeight())
+		GetAspectRatio(),
+		GetFOV(),
+		glm::vec2(GetWidth(), GetHeight())
 	};
 
 	ViewUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformBuffer), &ViewUniformBuffer);
@@ -144,7 +140,7 @@ void SceneProxy::InitMeshDrawCommands(DRM& Device)
 	MeshProxies.reserve(StaticMeshEntities.size());
 	VisibleMeshProxies.reserve(StaticMeshEntities.size());
 
-	const FrustumPlanes ViewFrustumPlanes = View.GetFrustumPlanes();
+	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
 
 	// Gather mesh proxies.
 	for (auto Entity : StaticMeshEntities)

@@ -12,9 +12,9 @@ namespace EStaticDrawListType
 	};
 };
 
-class SceneProxy
+class SceneProxy : public View
 {
-	friend class CoreEngine;
+	friend class EngineMain;
 	SceneProxy(DRM& Device, Scene& Scene);
 
 public:
@@ -24,8 +24,6 @@ public:
 	DRMShaderMap& ShaderMap;
 
 	EntityManager& ECS;
-
-	const View& View;
 
 	/** Skybox to be rendered in the scene. */
 	drm::ImageRef Skybox;

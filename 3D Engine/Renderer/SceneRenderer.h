@@ -3,16 +3,12 @@
 #include <Renderer/SceneProxy.h>
 #include <Components/StaticMeshComponent.h>
 
-class DRMShaderMap;
-class Scene;
-class RenderCommandList;
-
 extern uint32 gVoxelGridSize;
 
 class SceneRenderer
 {
 public:
-	SceneRenderer(DRM& Device, class Scene& Scene);
+	SceneRenderer(DRM& Device, class Scene& Scene, class Screen& Screen);
 
 	void Render(SceneProxy& Scene);
 

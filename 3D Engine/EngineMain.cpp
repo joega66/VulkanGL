@@ -1,4 +1,4 @@
-#include "CoreEngine.h"
+#include "EngineMain.h"
 #include <DRMShader.h>
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/SceneProxy.h>
@@ -58,16 +58,19 @@ static void CreateDebugMaterials(DRM& Device)
 	Device.SubmitCommands(CmdList);
 }
 
-void CoreEngine::Run(DRM& Device, DRMShaderMap& ShaderMap)
+void EngineMain::Main(
+	Screen& Screen,
+	DRM& Device,
+	DRMShaderMap& ShaderMap
+)
 {
 	gCursor.Init();
 	gInput.Init();
-	gScreen.Init();
 
 	CreateDebugMaterials(Device);
 
-	Scene Scene(Device, ShaderMap);
-	SceneRenderer SceneRenderer(Device, Scene);
+	Scene Scene(Device, ShaderMap, Screen);
+	SceneRenderer SceneRenderer(Device, Scene, Screen);
 	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;

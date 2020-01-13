@@ -2,7 +2,6 @@
 #include "VulkanDRM.h"
 #include "VulkanDevice.h"
 #include <Platform/Platform.h>
-#include <Engine/Screen.h>
 
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)
 {

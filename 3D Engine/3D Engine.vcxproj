@@ -22,7 +22,7 @@
     <ClCompile Include="Components\Material.cpp" />
     <ClCompile Include="Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
-    <ClCompile Include="CoreEngine.cpp" />
+    <ClCompile Include="EngineMain.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="ECS\System.cpp" />
@@ -73,7 +73,7 @@
     <ClInclude Include="Components\CRenderer.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
-    <ClInclude Include="CoreEngine.h" />
+    <ClInclude Include="EngineMain.h" />
     <ClInclude Include="ECS\ComponentArray.h" />
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="ECS\EntityManager.h" />

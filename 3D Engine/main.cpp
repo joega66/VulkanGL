@@ -1,7 +1,8 @@
 #include <Platform/Platform.h>
 #include <Vulkan/VulkanDRM.h>
 #include <vulkan/VulkanShaderMap.h>
-#include "CoreEngine.h"
+#include "EngineMain.h"
+#include <Engine/Screen.h>
 
 int main(int argc, char* argv[])
 {
@@ -10,11 +11,13 @@ int main(int argc, char* argv[])
 
 	Platform.OpenWindow(WindowResolutionX, WindowResolutionY);
 
-	std::unique_ptr<VulkanDRM> Device = std::make_unique<VulkanDRM>();
+	Screen Screen;
+
+	std::unique_ptr<VulkanDRM> Device = std::make_unique<VulkanDRM>(Screen);
 	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(Device->Device);
 
-	CoreEngine CoreEngine;
-	CoreEngine.Run(*Device, *ShaderMap);
+	EngineMain EngineMain;
+	EngineMain.Main(Screen, *Device, *ShaderMap);
 	
 	return 0;
 }

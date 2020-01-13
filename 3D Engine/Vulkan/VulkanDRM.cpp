@@ -1,14 +1,12 @@
 #include "VulkanDRM.h"
-#include "VulkanCommands.h"
-#include <Engine/Timers.h>
 #include <Engine/Screen.h>
 
-VulkanDRM::VulkanDRM()
+VulkanDRM::VulkanDRM(Screen& Screen)
 	: Device(Platform.GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
 	, Allocator(Device)
 	, DescriptorPool(Device)
 {
-	gScreen.RegisterScreenResChangedCallback([&] (int32 Width, int32 Height)
+	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
 	{
 		Swapchain.Free();
 		Swapchain.Create(Device, Width, Height);

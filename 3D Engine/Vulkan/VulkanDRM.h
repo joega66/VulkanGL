@@ -1,5 +1,5 @@
 #pragma once
-#include "../DRM.h"
+#include <DRM.h>
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
 #include "VulkanMemory.h"
@@ -9,7 +9,7 @@
 class VulkanDRM final : public DRM
 {
 public:
-	VulkanDRM();
+	VulkanDRM(class Screen& Screen);
 
 	virtual ~VulkanDRM() override {}
 

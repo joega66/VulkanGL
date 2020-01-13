@@ -8,12 +8,12 @@
 
 uint32 gVoxelGridSize;
 
-SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene)
+SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
 	: Device(Device)
 {
 	SceneTextures = Device.CreateDescriptorSet();
 
-	gScreen.RegisterScreenResChangedCallback([&](int32 Width, int32 Height)
+	Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
 	{
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);

@@ -2,7 +2,6 @@
 #include "MaterialShader.h"
 #include "MeshProxy.h"
 #include "FullscreenQuad.h"
-#include <Engine/Screen.h>
 
 template<EMeshType MeshType>
 class VoxelsVS : public MeshShader<MeshType>
@@ -290,8 +289,8 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	const float VoxelSize = static_cast<float>(Platform.GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = gScreen.GetWidth();
-	PSOInit.Viewport.Height = gScreen.GetHeight();
+	PSOInit.Viewport.Width = Scene.GetWidth();
+	PSOInit.Viewport.Height = Scene.GetHeight();
 	PSOInit.DepthStencilState.DepthTestEnable = true;
 	PSOInit.DepthStencilState.DepthWriteEnable = true;
 	PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<DrawVoxelsVS>();
