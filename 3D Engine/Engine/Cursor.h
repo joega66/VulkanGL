@@ -8,33 +8,39 @@ enum class ECursorMode
 	Disabled
 };
 
+/** Abstraction of GLFW cursor state. */
 class Cursor
 {
 public:
-	// Determines the state of the hardware cursor.
-	ECursorMode Mode = ECursorMode::Normal;
-	// Mouse scroll delta.
-	glm::vec2 MouseScrollDelta;
-	// Mouse scroll speed.
-	float MouseScrollSpeed = 1.0f;
-	// Cursor sensitivity.
-	float Sensitivity = 0.25f;
-	// Position of the cursor last frame.
-	glm::vec2 Last;
-	// Position of the cursor this frame.
-	glm::vec2 Position;
+	/** Set GLFW cursor callbacks. */
+	Cursor(Platform& Platform);
 
-	Cursor() = default;
 	Cursor(const Cursor&) = delete;
 	Cursor& operator=(const Cursor&) = delete;
 
-	void Init() const;
+	/** Set end-of-frame updates. */
+	void Update(Platform& Platform);
 
-	void Update();
+	/** Determines the state of the hardware cursor. */
+	ECursorMode Mode = ECursorMode::Normal;
+
+	/** Mouse scroll delta. */
+	glm::vec2 MouseScrollDelta;
+
+	/** Mouse scroll speed. */
+	float MouseScrollSpeed = 1.0f;
+
+	/** Cursor sensitivity. */
+	float Sensitivity = 0.25f;
+
+	/** Position of the cursor last frame. */
+	glm::vec2 Last;
+
+	/** Position of the cursor this frame. */
+	glm::vec2 Position;
 
 private:
-	static void ScrollCallback(struct GLFWwindow* Window, double XOffset, double YOffset);
-	static void MouseCallback(struct GLFWwindow* Window, double X, double Y);
-};
+	static void GLFWScrollEvent(struct GLFWwindow* Window, double XOffset, double YOffset);
 
-extern Cursor gCursor;
+	static void GLFWMouseEvent(struct GLFWwindow* Window, double X, double Y);
+};

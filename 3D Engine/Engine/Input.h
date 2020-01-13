@@ -1,6 +1,5 @@
 #pragma once
 #include <Platform/Platform.h>
-#include <future>
 
 enum class EKeyCode : int32
 {
@@ -24,37 +23,50 @@ enum class EKeyCode : int32
 	D,
 };
 
+/** Abstraction around GLFW input callbacks. */
 class Input
 {
 public:
-	Input() = default;
+	/** Set GLFW callbacks. */
+	Input(Platform& Platform);
+
 	Input(const Input&) = delete;
 	Input& operator=(const Input&) = delete;
 
-	void Init() const;
-
+	/** Test if the key is being pressed. */
 	bool GetKeyDown(EKeyCode KeyCode) const;
 
+	/** Test if the key was released. */
 	bool GetKeyUp(EKeyCode KeyCode) const;
 
+	/** Add a new shortcut. */
 	void AddShortcut(std::string&& ShortcutName, std::vector<EKeyCode>&& Shortcut);
 
+	/** Remove the shortcut. */
 	bool RemoveShortcut(std::string&& ShortcutName);
 
+	/** Test if the shortcut is being pressed. */
 	bool GetShortcutDown(std::string&& ShortcutName) const;
 
+	/** Test if the shortcut was released. */
 	bool GetShortcutUp(std::string&& ShortcutName) const;
 
-	void Update();
+	/** Apply end-of-frame updates. */
+	void Update(Platform& Platform);
 
 private:
 	static constexpr size_t NUM_KEYS = 1024;
+
+	/** Keys being pressed. */
 	std::array<bool, NUM_KEYS> Keys;
+
+	/** Keys just released. */
 	std::array<bool, NUM_KEYS> KeysPressed;
+
+	/** Keyboard shortcuts. */
 	HashTable<std::string, std::vector<EKeyCode>> Shortcuts;
 
-	static void KeyboardCallback(struct GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
-	static void MouseButtonCallback(struct GLFWwindow* Window, int32 Button, int32 Action, int32 Mods);
-};
+	static void GLFWKeyboardEvent(struct GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
 
-extern Input gInput;
+	static void GLFWMouseButtonEvent(struct GLFWwindow* Window, int32 Button, int32 Action, int32 Mods);
+};

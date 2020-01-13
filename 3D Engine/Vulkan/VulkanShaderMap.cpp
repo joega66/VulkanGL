@@ -136,29 +136,29 @@ ShaderCompilationInfo VulkanShaderMap::CompileShader(
 
 	while (true)
 	{
-		Platform.ForkProcess(ShaderCompilerPath, SS.str());
+		Platform::ForkProcess(ShaderCompilerPath, SS.str());
 
 		// Hack until ForkProcess can return STDOUT of child process.
-		if (Platform.FileExists(Filename + SPIRVExt))
+		if (Platform::FileExists(Filename + SPIRVExt))
 		{
 			break;
 		}
 
-		const EMBReturn Ret = Platform.DisplayMessageBox(EMBType::RETRYCANCEL, EMBIcon::WARNING, "Shader failed to compile. Filename: " + Filename, "Shader Compiler Error");
+		const EMBReturn Ret = Platform::DisplayMessageBox(EMBType::RETRYCANCEL, EMBIcon::WARNING, "Shader failed to compile. Filename: " + Filename, "Shader Compiler Error");
 
 		switch (Ret)
 		{
 		case EMBReturn::CANCEL:
-			Platform.Exit();
+			Platform::Exit();
 		case EMBReturn::RETRY:
 			LOG("Recompiling shader %s", Filename.c_str());
 		}
 	}
 
-	const uint64 LastWriteTime = Platform.GetLastWriteTime(Filename);
+	const uint64 LastWriteTime = Platform::GetLastWriteTime(Filename);
 
-	const std::string SPIRV = Platform.FileRead(Filename + SPIRVExt);
-	Platform.FileDelete(Filename + SPIRVExt);
+	const std::string SPIRV = Platform::FileRead(Filename + SPIRVExt);
+	Platform::FileDelete(Filename + SPIRVExt);
 
 	VkShaderModuleCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 	CreateInfo.codeSize = SPIRV.size();
@@ -181,7 +181,7 @@ void VulkanShaderMap::RecompileShaders()
 	{
 		const ShaderCompilationInfo& CompileInfo = Shader->CompilationInfo;
 
-		const uint64 LastWriteTime = Platform.GetLastWriteTime(CompileInfo.Filename);
+		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.Filename);
 
 		if (LastWriteTime > CompileInfo.LastWriteTime)
 		{

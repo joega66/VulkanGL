@@ -25,7 +25,7 @@ public:
 
 	VkPhysicalDeviceFeatures Features;
 
-	VulkanDevice(bool bUseValidationLayers);
+	VulkanDevice(Platform& Platform, bool bUseValidationLayers);
 
 	~VulkanDevice();
 	

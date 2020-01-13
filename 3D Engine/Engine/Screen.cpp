@@ -3,18 +3,17 @@
 
 void Screen::GLFWScreenSizeChangedEvent(GLFWwindow* Window, int32 PixelWidth, int32 PixelHeight)
 {
-	Screen* Screen = static_cast<class Screen*>(glfwGetWindowUserPointer(Window));
+	const Screen* Screen = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Screen;
 	Screen->FireScreenResizeEvents(PixelWidth, PixelHeight);
 }
 
-Screen::Screen()
+Screen::Screen(Platform& Platform)
+	: Window(Platform.Window)
 {
-	glfwSetWindowUserPointer(Platform.Window, this);
-
-	glfwSetFramebufferSizeCallback(Platform.Window, GLFWScreenSizeChangedEvent);
+	glfwSetFramebufferSizeCallback(Window, GLFWScreenSizeChangedEvent);
 
 	int32 PixelWidth, PixelHeight;
-	glfwGetFramebufferSize(Platform.Window, &PixelWidth, &PixelHeight);
+	glfwGetFramebufferSize(Window, &PixelWidth, &PixelHeight);
 
 	FireScreenResizeEvents(PixelWidth, PixelHeight);
 }
@@ -22,14 +21,14 @@ Screen::Screen()
 void Screen::ScreenResizeEvent(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event)
 {
 	int32 PixelWidth, PixelHeight;
-	glfwGetFramebufferSize(Platform.Window, &PixelWidth, &PixelHeight);
+	glfwGetFramebufferSize(Window, &PixelWidth, &PixelHeight);
 
 	Event(PixelWidth, PixelHeight);
 
 	ScreenResizeEvents.push_back(Event);
 }
 
-void Screen::FireScreenResizeEvents(uint32 PixelWidth, uint32 PixelHeight)
+void Screen::FireScreenResizeEvents(uint32 PixelWidth, uint32 PixelHeight) const
 {
 	for (auto& Event : ScreenResizeEvents)
 	{

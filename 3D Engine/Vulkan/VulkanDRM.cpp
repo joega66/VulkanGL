@@ -1,8 +1,8 @@
 #include "VulkanDRM.h"
 #include <Engine/Screen.h>
 
-VulkanDRM::VulkanDRM(Screen& Screen)
-	: Device(Platform.GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
+VulkanDRM::VulkanDRM(Platform& Platform, Screen& Screen)
+	: Device(Platform, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
 	, Allocator(Device)
 	, DescriptorPool(Device)
 {

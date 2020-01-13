@@ -1,10 +1,15 @@
 #include "Scene.h"
-#include <Engine/AssetManager.h>
-#include <DRM.h>
+#include "AssetManager.h"
 #include "Screen.h"
+#include "Input.h"
+#include <DRM.h>
 
-Scene::Scene(DRM& Device, DRMShaderMap& ShaderMap, Screen& Screen)
-	: ShaderMap(ShaderMap), Assets(Device), View(Screen)
+Scene::Scene(DRM& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class Input& Input, Screen& Screen)
+	: ShaderMap(ShaderMap)
+	, Cursor(Cursor)
+	, Input(Input)
+	, Assets(Device)
+	, View(Screen)
 {
 	Skybox = Assets.GetCubemap("Engine_Cubemap_Default");
 }

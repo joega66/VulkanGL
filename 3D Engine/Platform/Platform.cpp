@@ -14,9 +14,7 @@
 #include <Windows.h>
 #include <GLFW/glfw3.h>
 
-WindowsPlatform Platform;
-
-void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
+WindowsPlatform::WindowsPlatform(int32 Width, int32 Height)
 {
 	glfwInit();
 
@@ -25,18 +23,23 @@ void WindowsPlatform::OpenWindow(int32 Width, int32 Height)
 	Window = glfwCreateWindow(Width, Height, "Vulkan Engine", nullptr, nullptr);
 }
 
-bool WindowsPlatform::WindowShouldClose()
+bool WindowsPlatform::WindowShouldClose() const
 {
 	return glfwWindowShouldClose(Window);
 }
 
-void WindowsPlatform::PollEvents()
+void WindowsPlatform::PollEvents() const
 {
 	// Process window events.
 	glfwPollEvents();
 }
 
-std::string WindowsPlatform::FileRead(const std::string& Filename) const
+void WindowsPlatform::Exit()
+{
+	exit(-1);
+}
+
+std::string WindowsPlatform::FileRead(const std::string& Filename)
 {
 	std::ifstream File(Filename, std::ios::ate | std::ios::binary);
 
@@ -53,23 +56,23 @@ std::string WindowsPlatform::FileRead(const std::string& Filename) const
 	return Buffer;
 }
 
-void WindowsPlatform::FileDelete(const std::string& Filename) const
+void WindowsPlatform::FileDelete(const std::string& Filename)
 {
 	check(std::filesystem::remove(Filename), "Failed to remove file...");
 }
 
-void WindowsPlatform::FileRename(const std::string& Old, const std::string& New) const
+void WindowsPlatform::FileRename(const std::string& Old, const std::string& New)
 {
 	check(FileExists(Old), "Renaming file that doesn't exist...");
 	std::filesystem::rename(Old, New);
 }
 
-bool WindowsPlatform::FileExists(const std::string& Filename) const
+bool WindowsPlatform::FileExists(const std::string& Filename)
 {
 	return std::filesystem::is_regular_file(Filename);
 }
 
-uint64 WindowsPlatform::GetLastWriteTime(const std::string& Filename) const
+uint64 WindowsPlatform::GetLastWriteTime(const std::string& Filename)
 {
 	const uint64 LastWriteTime = std::filesystem::last_write_time(Filename).time_since_epoch().count();
 	return LastWriteTime;
@@ -126,7 +129,7 @@ std::string WindowsPlatform::FormatString(std::string Format, ...)
 	}
 }
 
-void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs) const
+void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs)
 {
 	enum { ParentRead, ParentWrite, ChildWrite, ChildRead, NumPipeTypes };
 
@@ -183,27 +186,27 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 	}
 }
 
-void WindowsPlatform::Memcpy(void* Dst, const void* Src, size_t Size) const
+void WindowsPlatform::Memcpy(void* Dst, const void* Src, size_t Size)
 {
 	memcpy(Dst, Src, Size);
 }
 
 #undef LoadImage
-uint8* WindowsPlatform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels) const
+uint8* WindowsPlatform::LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels)
 {
 	uint8* Image = stbi_load(Filename.c_str(), &Width, &Height, &NumChannels, STBI_rgb_alpha);
 	check(Image, "%s failed to load", Filename.c_str());
 	return Image;
 }
 
-void WindowsPlatform::FreeImage(uint8* Pixels) const
+void WindowsPlatform::FreeImage(uint8* Pixels)
 {
 	stbi_image_free(Pixels);
 }
 
 static const std::string ConfigPath = "../Config/";
 
-bool WindowsPlatform::GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default) const
+bool WindowsPlatform::GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default)
 {
 	const std::string DefaultString = Default ? "true" : "false";
 	
@@ -214,20 +217,20 @@ bool WindowsPlatform::GetBool(const std::string& Filename, const std::string& Se
 	return ReturnedString == "true" ? true : false;
 }
 
-int32 WindowsPlatform::GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default) const
+int32 WindowsPlatform::GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default)
 {
 	const std::string Path = ConfigPath + Filename;
 
 	return GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, Path.c_str());
 }
 
-float64 WindowsPlatform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default) const
+float64 WindowsPlatform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default)
 {
 	std::string FloatStr = GetString(Filename, Section, Key, std::to_string(Default));
 	return std::atof(FloatStr.c_str());
 }
 
-std::string WindowsPlatform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default) const
+std::string WindowsPlatform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default)
 {
 	const std::string Path = ConfigPath + Filename;
 
@@ -238,12 +241,7 @@ std::string WindowsPlatform::GetString(const std::string& Filename, const std::s
 	return std::string(ReturnedString.data());
 }
 
-void WindowsPlatform::Exit()
-{
-	exit(-1);
-}
-
-EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality) const
+EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality)
 {
 	static const HashTable<EMBType, UINT> WindowsMBType =
 	{

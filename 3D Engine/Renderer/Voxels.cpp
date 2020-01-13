@@ -99,12 +99,12 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	} WorldToVoxelUniform;
 
 	const glm::vec3 VoxelProbeCenter(
-		Platform.GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
-		Platform.GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
-		Platform.GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f)
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f)
 	);
 
-	const float VoxelSize = static_cast<float>(Platform.GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
+	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
@@ -286,7 +286,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
-	const float VoxelSize = static_cast<float>(Platform.GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
+	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = Scene.GetWidth();

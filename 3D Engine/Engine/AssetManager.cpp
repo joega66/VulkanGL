@@ -57,7 +57,7 @@ const StaticMesh* AssetManager::GetStaticMesh(const std::string& Name) const
 void AssetManager::LoadImage(const std::string& Name, const std::string& File, EFormat Format)
 {
 	int32 Width, Height, Channels;
-	uint8* Pixels = Platform.LoadImage(File, Width, Height, Channels);
+	uint8* Pixels = Platform::LoadImage(File, Width, Height, Channels);
 
 	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
 
@@ -82,7 +82,7 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 		Device.SubmitCommands(CmdList);
 	}
 	
-	Platform.FreeImage(Pixels);
+	Platform::FreeImage(Pixels);
 
 	Images[Name] = Image;
 }
@@ -101,7 +101,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 	for (uint32 FaceIndex = 0; FaceIndex < Files.size(); FaceIndex++)
 	{
 		int32 Width, Height, Channels;
-		uint8* Pixels = Platform.LoadImage(Files[FaceIndex], Width, Height, Channels);
+		uint8* Pixels = Platform::LoadImage(Files[FaceIndex], Width, Height, Channels);
 
 		if (FaceIndex == 0)
 		{
@@ -112,9 +112,9 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 		check(Image->Width == Width && Image->Height == Height, "Cubemap faces must all be the same size.");
 
-		Platform.Memcpy((uint8*)MemMapped + FaceIndex * (Image->GetSize() / 6), Pixels, (Image->GetSize() / 6));
+		Platform::Memcpy((uint8*)MemMapped + FaceIndex * (Image->GetSize() / 6), Pixels, (Image->GetSize() / 6));
 
-		Platform.FreeImage(Pixels);
+		Platform::FreeImage(Pixels);
 	}
 
 	Device.UnlockBuffer(StagingBuffer);

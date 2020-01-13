@@ -70,7 +70,7 @@ uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemor
 void VulkanAllocator::UploadBufferData(const VulkanBuffer& Buffer, const void* Data)
 {
 	void* MemMapped = LockBuffer(Buffer);
-	Platform.Memcpy(MemMapped, Data, (size_t)Buffer.GetSize());
+	Platform::Memcpy(MemMapped, Data, (size_t)Buffer.GetSize());
 	UnlockBuffer(Buffer);
 }
 

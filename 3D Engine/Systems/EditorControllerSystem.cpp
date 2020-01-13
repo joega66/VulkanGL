@@ -6,7 +6,7 @@
 
 void EditorControllerSystem::Start(Scene& Scene)
 {
-	gInput.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
+	Scene.Input.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
 }
 
 void EditorControllerSystem::Update(Scene& Scene)
@@ -14,27 +14,27 @@ void EditorControllerSystem::Update(Scene& Scene)
 	View& View = Scene.View;
 
 	// Translate the view.
-	const float DS = gCursor.MouseScrollSpeed * gCursor.MouseScrollDelta.y;
+	const float DS = Scene.Cursor.MouseScrollSpeed * Scene.Cursor.MouseScrollDelta.y;
 	View.Translate(DS);
 
-	if (gInput.GetKeyDown(EKeyCode::MouseLeft))
+	if (Scene.Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		// Disable the mouse while looking around.
-		gCursor.Mode = ECursorMode::Disabled;
+		Scene.Cursor.Mode = ECursorMode::Disabled;
 
 		if (!View.bFreeze)
 		{
 			// Look around.
-			glm::vec2 Offset = glm::vec2(gCursor.Position.x - gCursor.Last.x, gCursor.Last.y - gCursor.Position.y) * gCursor.Sensitivity;
+			glm::vec2 Offset = glm::vec2(Scene.Cursor.Position.x - Scene.Cursor.Last.x, Scene.Cursor.Last.y - Scene.Cursor.Position.y) * Scene.Cursor.Sensitivity;
 			View.Axis(Offset);
 		}
 	}
-	else if (gInput.GetKeyUp(EKeyCode::MouseLeft))
+	else if (Scene.Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
-		gCursor.Mode = ECursorMode::Normal;
+		Scene.Cursor.Mode = ECursorMode::Normal;
 	}
 
-	if (gInput.GetShortcutUp("Recompile Shaders"))
+	if (Scene.Input.GetShortcutUp("Recompile Shaders"))
 	{
 		Scene.ShaderMap.RecompileShaders();
 	}

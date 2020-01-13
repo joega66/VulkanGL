@@ -12,7 +12,7 @@ void ShadowProxy::InitCallbacks(DRM& Device, EntityManager& ECS)
 
 ShadowProxy::ShadowProxy(DRM& Device, const CDirectionalLight& DirectionalLight)
 {
-	const int32 Resolution = Platform.GetInt("Engine.ini", "Shadows", "Resolution", 2048);
+	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
 
 	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
@@ -28,9 +28,9 @@ void ShadowProxy::Update(DRM& Device, const CDirectionalLight& DirectionalLight)
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
 
-	const float64 ZNear = Platform.GetFloat64("Engine.ini", "Shadows", "ZNear", 1.0f);
-	const float64 ZFar = Platform.GetFloat64("Engine.ini", "Shadows", "ZFar", 96.0f);
-	const float64 FOV = Platform.GetFloat64("Engine.ini", "Shadows", "FOV", 45.0f);
+	const float64 ZNear = Platform::GetFloat64("Engine.ini", "Shadows", "ZNear", 1.0f);
+	const float64 ZFar = Platform::GetFloat64("Engine.ini", "Shadows", "ZFar", 96.0f);
+	const float64 FOV = Platform::GetFloat64("Engine.ini", "Shadows", "FOV", 45.0f);
 
 	glm::mat4 LightProjMatrix = glm::perspective(FOV, ShadowMap->GetAspect(), ZNear, ZFar);
 	LightProjMatrix[1][1] *= -1;

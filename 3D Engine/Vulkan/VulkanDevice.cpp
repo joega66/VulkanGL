@@ -121,7 +121,7 @@ static VkDebugReportCallbackEXT CreateDebugReportCallback(VkInstance Instance, b
 	return 0;
 }
 
-static VkSurfaceKHR CreateSurface(VkInstance Instance)
+static VkSurfaceKHR CreateSurface(Platform& Platform, VkInstance Instance)
 {
 	VkSurfaceKHR Surface;
 	vulkan(glfwCreateWindowSurface(Instance, Platform.Window, nullptr, &Surface));
@@ -258,10 +258,10 @@ static const std::vector<const char*> DeviceExtensions =
 	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
 };
 
-VulkanDevice::VulkanDevice(bool bUseValidationLayers)
+VulkanDevice::VulkanDevice(Platform& Platform, bool bUseValidationLayers)
 	: Instance(CreateInstance(ValidationLayers, bUseValidationLayers))
 	, DebugReportCallback(CreateDebugReportCallback(Instance, bUseValidationLayers))
-	, Surface(CreateSurface(Instance))
+	, Surface(CreateSurface(Platform, Instance))
 	, PhysicalDevice(SelectPhysicalDevice(Instance, Surface, DeviceExtensions))
 	, Queues(PhysicalDevice, Surface)
 	, Device(CreateLogicalDevice(PhysicalDevice, Surface, Queues, DeviceExtensions, ValidationLayers, bUseValidationLayers))

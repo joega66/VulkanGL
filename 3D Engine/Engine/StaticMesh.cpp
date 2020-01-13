@@ -24,7 +24,7 @@ static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, ai
 			}
 
 			int32 Width, Height, NumChannels;
-			uint8* Pixels = Platform.LoadImage(Directory + "/" + TexturePath, Width, Height, NumChannels);
+			uint8* Pixels = Platform::LoadImage(Directory + "/" + TexturePath, Width, Height, NumChannels);
 			drm::ImageRef Material;
 
 			if (Pixels)
@@ -51,7 +51,7 @@ static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, ai
 				Device.SubmitCommands(CmdList);
 			}
 
-			Platform.FreeImage(Pixels);
+			Platform::FreeImage(Pixels);
 
 			TextureCache[TexturePath] = Material;
 

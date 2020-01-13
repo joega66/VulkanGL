@@ -1,8 +1,6 @@
 #include "Input.h"
 #include <GLFW/glfw3.h>
 
-Input gInput;
-
 static const HashTable<int32, EKeyCode> GLFWKeyCodes =
 {
 	ENTRY(GLFW_MOUSE_BUTTON_LEFT, EKeyCode::MouseLeft)
@@ -25,56 +23,61 @@ static const HashTable<int32, EKeyCode> GLFWKeyCodes =
 	ENTRY(GLFW_KEY_D, EKeyCode::D)
 };
 
-void Input::KeyboardCallback(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
+void Input::GLFWKeyboardEvent(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
 {
+	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Input;
+
 	if (Contains(GLFWKeyCodes, Key))
 	{
 		EKeyCode KeyCode = GetValue(GLFWKeyCodes, Key);
 
 		if (Action == GLFW_PRESS)
 		{
-			gInput.Keys[(size_t)KeyCode] = true;
+			Input->Keys[static_cast<size_t>(KeyCode)] = true;
 		}
 		else if (Action == GLFW_RELEASE)
 		{
-			gInput.Keys[(size_t)KeyCode] = false;
-			gInput.KeysPressed[(size_t)KeyCode] = true;
+			Input->Keys[static_cast<size_t>(KeyCode)] = false;
+			Input->KeysPressed[static_cast<size_t>(KeyCode)] = true;
 		}
 	}
 }
 
-void Input::MouseButtonCallback(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods)
+void Input::GLFWMouseButtonEvent(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods)
 {
+	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Input;
+
 	if (Contains(GLFWKeyCodes, Button))
 	{
 		EKeyCode KeyCode = GetValue(GLFWKeyCodes, Button);
 
 		if (Action == GLFW_PRESS)
 		{
-			gInput.Keys[(size_t)KeyCode] = true;
+			Input->Keys[static_cast<size_t>(KeyCode)] = true;
 		}
 		else if (Action == GLFW_RELEASE)
 		{
-			gInput.Keys[(size_t)KeyCode] = false;
-			gInput.KeysPressed[(size_t)KeyCode] = true;
+			Input->Keys[static_cast<size_t>(KeyCode)] = false;
+			Input->KeysPressed[static_cast<size_t>(KeyCode)] = true;
 		}
 	}
 }
 
-void Input::Init() const
+Input::Input(Platform& Platform)
 {
-	glfwSetKeyCallback(Platform.Window, KeyboardCallback);
-	glfwSetMouseButtonCallback(Platform.Window, MouseButtonCallback);
+	glfwSetKeyCallback(Platform.Window, GLFWKeyboardEvent);
+
+	glfwSetMouseButtonCallback(Platform.Window, GLFWMouseButtonEvent);
 }
 
 bool Input::GetKeyDown(EKeyCode KeyCode) const
 {
-	return (size_t)KeyCode < Keys.size() ? Keys[(size_t)KeyCode] : false;
+	return static_cast<size_t>(KeyCode) < Keys.size() ? Keys[static_cast<size_t>(KeyCode)] : false;
 }
 
 bool Input::GetKeyUp(EKeyCode KeyCode) const
 {
-	return (size_t)KeyCode < KeysPressed.size() ? KeysPressed[(size_t)KeyCode] : false;
+	return static_cast<size_t>(KeyCode) < KeysPressed.size() ? KeysPressed[static_cast<size_t>(KeyCode)] : false;
 }
 
 void Input::AddShortcut(std::string&& ShortcutName, std::vector<EKeyCode>&& Shortcut)
@@ -105,7 +108,7 @@ bool Input::GetShortcutUp(std::string&& ShortcutName) const
 	return bAllKeysPressed && GetKeyUp(Shortcut.back());
 }
 
-void Input::Update()
+void Input::Update(Platform& Platform)
 {
 	std::fill(KeysPressed.begin(), KeysPressed.end(), false);
 }

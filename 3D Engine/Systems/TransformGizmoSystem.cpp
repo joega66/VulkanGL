@@ -60,9 +60,9 @@ void TransformGizmoSystem::Update(Scene& Scene)
 	}
 }
 
-void TransformGizmoSystem::Null(Scene&)
+void TransformGizmoSystem::Null(Scene& Scene)
 {
-	if (gInput.GetKeyDown(EKeyCode::MouseLeft))
+	if (Scene.Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		State = std::bind(&TransformGizmoSystem::Selection, this, std::placeholders::_1);
 	}
@@ -73,10 +73,10 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 	auto& ECS = Scene.ECS;
 
 	// Select on key up.
-	if (gInput.GetKeyUp(EKeyCode::MouseLeft))
+	if (Scene.Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
 		// Don't select while looking around.
-		if (!(gCursor.Last == gCursor.Position))
+		if (!(Scene.Cursor.Last == Scene.Cursor.Position))
 		{
 			if (SelectedEntity)
 			{
@@ -90,7 +90,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 			return;
 		}
 
-		const Ray Ray = Scene.View.ScreenPointToRay(gCursor.Position);
+		const Ray Ray = Scene.View.ScreenPointToRay(Scene.Cursor.Position);
 
 		std::vector<Entity> Hits;
 
@@ -142,7 +142,7 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 {
 	auto& ECS = Scene.ECS;
 
-	if (gInput.GetKeyDown(EKeyCode::MouseLeft))
+	if (Scene.Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		// Check if we're grabbing an axis.
 		std::vector<Entity> Gizmo = { TranslateAxis.X, TranslateAxis.Y, TranslateAxis.Z };
@@ -151,7 +151,7 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 
 		std::for_each(Gizmo.begin(), Gizmo.end(), [&](auto& Entity)
 		{
-			if (Physics::Raycast(Scene, Scene.View.ScreenPointToRay(gCursor.Position), Entity))
+			if (Physics::Raycast(Scene, Scene.View.ScreenPointToRay(Scene.Cursor.Position), Entity))
 			{
 				Transform& Transform = ECS.GetComponent<class Transform>(Entity);
 				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.GetPosition()); NewDist < Dist)

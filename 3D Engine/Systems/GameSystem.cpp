@@ -25,9 +25,9 @@ void GameSystem::Start(Scene& Scene)
 
 	{
 		// Create the Directional Light entity.
-		const float64 X = Platform.GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
-		const float64 Y = Platform.GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
-		const float64 Z = Platform.GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
+		const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
+		const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
+		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
 		auto Light = ECS.CreateEntity();
 		auto& DirectionalLight = ECS.AddComponent<CDirectionalLight>(Light);

@@ -25,7 +25,7 @@ SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");
 
-	gVoxelGridSize = Platform.GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
+	gVoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 	VoxelColors = Device.CreateImage(gVoxelGridSize, gVoxelGridSize, gVoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
 	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, gVoxelGridSize * gVoxelGridSize * gVoxelGridSize * sizeof(glm::ivec3));
 
@@ -43,7 +43,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	drm::CommandListRef CommandList = Device.CreateCommandList();
 	drm::CommandList& CmdList = *CommandList;
 
-	if (Platform.GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
+	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
 	{
 		RenderVoxels(Scene, CmdList);
 	}
@@ -53,7 +53,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 		RenderShadowDepths(Scene, CmdList);
 
-		if (Platform.GetBool("Engine.ini", "Shadows", "Visualize", false))
+		if (Platform::GetBool("Engine.ini", "Shadows", "Visualize", false))
 		{
 			RenderDepthVisualization(Scene, CmdList);
 		}

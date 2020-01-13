@@ -29,7 +29,7 @@ VulkanQueues::VulkanQueues(VkPhysicalDevice Device, VkSurfaceKHR Surface)
 		}
 	}
 
-	if (const bool UseTransferQueue = Platform.GetBool("Engine.ini", "Renderer", "UseTransferQueue", false); UseTransferQueue)
+	if (const bool UseTransferQueue = Platform::GetBool("Engine.ini", "Renderer", "UseTransferQueue", false); UseTransferQueue)
 	{
 		// Check if a separate transfer queue is available.
 		for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)

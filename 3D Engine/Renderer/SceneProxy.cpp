@@ -89,8 +89,8 @@ void SceneProxy::InitDirectionalLights(DRM& Device)
 
 	DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	void* Data = Device.LockBuffer(DirectionalLightBuffer);
-	Platform.Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
-	Platform.Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
+	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	Device.UnlockBuffer(DirectionalLightBuffer);
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
@@ -128,8 +128,8 @@ void SceneProxy::InitPointLights(DRM& Device)
 
 	PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
 	void* Data = Device.LockBuffer(PointLightBuffer);
-	Platform.Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
-	Platform.Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
+	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
+	Platform::Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
 	Device.UnlockBuffer(PointLightBuffer);
 }
 

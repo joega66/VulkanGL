@@ -9,7 +9,7 @@
 class VulkanDRM final : public DRM
 {
 public:
-	VulkanDRM(class Screen& Screen);
+	VulkanDRM(Platform& Platform, class Screen& Screen);
 
 	virtual ~VulkanDRM() override {}
 

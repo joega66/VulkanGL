@@ -59,17 +59,17 @@ static void CreateDebugMaterials(DRM& Device)
 }
 
 void EngineMain::Main(
+	Platform& Platform,
+	Cursor& Cursor,
+	Input& Input,
 	Screen& Screen,
 	DRM& Device,
 	DRMShaderMap& ShaderMap
 )
 {
-	gCursor.Init();
-	gInput.Init();
-
 	CreateDebugMaterials(Device);
 
-	Scene Scene(Device, ShaderMap, Screen);
+	Scene Scene(Device, ShaderMap, Cursor, Input, Screen);
 	SceneRenderer SceneRenderer(Device, Scene, Screen);
 	SystemsManager SystemsManager;
 
@@ -91,7 +91,8 @@ void EngineMain::Main(
 
 		SceneRenderer.Render(SceneProxy);
 
-		gCursor.Update();
-		gInput.Update();
+		Cursor.Update(Platform);
+
+		Input.Update(Platform);
 	}
 }

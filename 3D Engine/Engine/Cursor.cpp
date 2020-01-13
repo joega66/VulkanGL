@@ -1,25 +1,28 @@
 #include "Cursor.h"
 #include <GLFW/glfw3.h>
 
-Cursor gCursor;
-
-void Cursor::ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset)
+void Cursor::GLFWScrollEvent(GLFWwindow* Window, double XOffset, double YOffset)
 {
-	gCursor.MouseScrollDelta = glm::vec2(XOffset, YOffset);
+	Cursor* Cursor = static_cast<GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Cursor;
+
+	Cursor->MouseScrollDelta = glm::vec2(XOffset, YOffset);
 }
 
-void Cursor::MouseCallback(GLFWwindow* Window, double X, double Y)
+void Cursor::GLFWMouseEvent(GLFWwindow* Window, double X, double Y)
 {
-	gCursor.Position = glm::vec2(X, Y);
+	Cursor* Cursor = static_cast<GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Cursor;
+
+	Cursor->Position = glm::vec2(X, Y);
 }
 
-void Cursor::Init() const
+Cursor::Cursor(Platform& Platform)
 {
-	glfwSetScrollCallback(Platform.Window, ScrollCallback);
-	glfwSetCursorPosCallback(Platform.Window, MouseCallback);
+	glfwSetScrollCallback(Platform.Window, GLFWScrollEvent);
+
+	glfwSetCursorPosCallback(Platform.Window, GLFWMouseEvent);
 }
 
-void Cursor::Update()
+void Cursor::Update(Platform& Platform)
 {
 	uint32 InputMode;
 
@@ -39,5 +42,6 @@ void Cursor::Update()
 	glfwSetInputMode(Platform.Window, GLFW_CURSOR, InputMode);
 
 	MouseScrollDelta = {};
+
 	Last = Position;
 }
