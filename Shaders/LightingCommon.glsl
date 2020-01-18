@@ -105,7 +105,8 @@ vec4 Shade(in MaterialParams Material)
 		Light.L = DirectionalLights[LightIndex].Direction;
 		Light.Radiance = DirectionalLights[LightIndex].Intensity * DirectionalLights[LightIndex].Color;
 
-		float ShadowFactor = texture(ShadowMask, ScreenUV).r;
+		//float ShadowFactor = texture(ShadowMask, ScreenUV).r;
+		float ShadowFactor = 0.0f;
 
 		Lo += DirectLighting(V, Light, Material, R0) * ( 1.0 - ShadowFactor );
 	}

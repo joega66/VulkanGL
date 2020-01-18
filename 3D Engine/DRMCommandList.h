@@ -373,6 +373,8 @@ namespace drm
 	{
 	public:
 		virtual ~CommandList() {}
+
+		virtual void BeginRenderPass(drm::RenderPassRef RenderPass) = 0;
 		virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) = 0;
 		virtual void EndRenderPass() = 0;
 		virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;

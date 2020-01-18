@@ -81,16 +81,7 @@ struct DepthPrepassDescriptorSets
 
 void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	RenderPassInitializer RPInit = { 0 };
-	RPInit.DepthAttachment = drm::AttachmentView(
-		SceneDepth,
-		ELoadAction::Clear,
-		EStoreAction::Store,
-		ClearDepthStencilValue{},
-		EImageLayout::DepthReadStencilWrite);
-	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-
-	CmdList.BeginRenderPass(RPInit);
+	CmdList.BeginRenderPass(DepthRenderPass);
 
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = SceneDepth->Width;

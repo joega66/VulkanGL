@@ -303,4 +303,11 @@ namespace drm
 	};
 
 	CLASS(DescriptorSet);
+
+	class RenderPass
+	{
+	public:
+	};
+
+	CLASS(RenderPass);
 }

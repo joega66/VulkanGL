@@ -1,5 +1,6 @@
 #include "VulkanDevice.h"
 #include "VulkanDRM.h"
+#include "VulkanRenderPass.h"
 
 VulkanDevice::VulkanRenderPassHash::MinAttachmentView::MinAttachmentView(const drm::AttachmentView& AView)
 {
@@ -248,4 +249,18 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 	vulkan(vkCreateFramebuffer(Device, &FramebufferInfo, nullptr, &Framebuffer));
 
 	return { RenderPass, Framebuffer };
+}
+
+VulkanRenderPass::VulkanRenderPass(
+	VkRenderPass RenderPass, 
+	VkFramebuffer Framebuffer, 
+	const VkRect2D& RenderArea,
+	const std::vector<VkClearValue>& ClearValues,
+	uint32 NumAttachments) 
+	: RenderPass(RenderPass)
+	, Framebuffer(Framebuffer)
+	, RenderArea(RenderArea)
+	, ClearValues(std::move(ClearValues))
+	, NumAttachments(NumAttachments)
+{
 }

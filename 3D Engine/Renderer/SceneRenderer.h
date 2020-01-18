@@ -15,6 +15,8 @@ private:
 
 	const StaticMesh* Cube;
 
+	drm::RenderPassRef DepthRenderPass;
+
 	drm::DescriptorSetRef SceneTextures;
 
 	drm::ImageRef SceneDepth;

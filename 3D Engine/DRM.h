@@ -23,4 +23,5 @@ public:
 	virtual drm::ImageRef GetSurface() = 0;
 	virtual void* LockBuffer(drm::BufferRef Buffer) = 0;
 	virtual void UnlockBuffer(drm::BufferRef Buffer) = 0;
+	virtual drm::RenderPassRef CreateRenderPass(RenderPassInitializer& RPInit) = 0;
 };

@@ -1,4 +1,5 @@
 #include "VulkanDRM.h"
+#include "VulkanRenderPass.h"
 #include <Engine/Screen.h>
 
 VulkanDRM::VulkanDRM(Platform& Platform, Screen& Screen)
@@ -196,4 +197,57 @@ void VulkanDRM::UnlockBuffer(drm::BufferRef Buffer)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
 	Allocator.UnlockBuffer(*VulkanBuffer);
+}
+
+drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
+{
+	const auto[RenderPass, Framebuffer] = Device.GetRenderPass(RPInit);
+
+	const VkRect2D RenderArea = 
+	{
+		RPInit.RenderArea.Offset.x,
+		RPInit.RenderArea.Offset.y,
+		RPInit.RenderArea.Extent.x,
+		RPInit.RenderArea.Extent.y
+	};
+
+	// Get the clear values from the AttachmentViews.
+	const uint32 NumRTs = RPInit.NumAttachments;
+	std::vector<VkClearValue> ClearValues;
+
+	if (RPInit.DepthAttachment.Image)
+	{
+		ClearValues.resize(NumRTs + 1);
+	}
+	else
+	{
+		ClearValues.resize(NumRTs);
+	}
+
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
+	{
+		const auto& ClearValue = std::get<ClearColorValue>(RPInit.ColorAttachments[ColorTargetIndex].ClearValue);
+		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
+		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
+		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
+	}
+
+	if (RPInit.DepthAttachment.Image)
+	{
+		VulkanImageRef Image = ResourceCast(RPInit.DepthAttachment.Image);
+
+		ClearValues[NumRTs].depthStencil = { 0, 0 };
+
+		if (Image->IsDepth())
+		{
+			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).DepthClear;
+		}
+
+		if (Image->IsStencil())
+		{
+			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).StencilClear;
+		}
+	}
+
+	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPInit.NumAttachments);
 }

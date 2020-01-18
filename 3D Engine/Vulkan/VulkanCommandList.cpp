@@ -24,6 +24,23 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, CommandPool, 1, &CommandBuffer);
 }
 
+void VulkanCommandList::BeginRenderPass(drm::RenderPassRef RenderPass)
+{
+	VulkanRenderPassRef VulkanRenderPass = ResourceCast(RenderPass);
+
+	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+	BeginInfo.renderPass = VulkanRenderPass->GetRenderPass();
+	BeginInfo.framebuffer = VulkanRenderPass->GetFramebuffer();
+	BeginInfo.renderArea = VulkanRenderPass->GetRenderArea();
+	BeginInfo.pClearValues = VulkanRenderPass->GetClearValues().data();
+	BeginInfo.clearValueCount = VulkanRenderPass->GetClearValues().size();
+
+	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	Pending.RenderPass = VulkanRenderPass->GetRenderPass();
+	Pending.NumRenderTargets = VulkanRenderPass->GetNumAttachments();
+}
+
 void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 {
 	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumAttachments; ColorTargetIndex++)

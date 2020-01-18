@@ -14,6 +14,16 @@ SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
 	Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
 	{
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		RenderPassInitializer DepthRPInit = { 0 };
+		DepthRPInit.DepthAttachment = drm::AttachmentView(
+			SceneDepth,
+			ELoadAction::Clear,
+			EStoreAction::Store,
+			ClearDepthStencilValue{},
+			EImageLayout::DepthReadStencilWrite);
+		DepthRPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
+		DepthRenderPass = Device.CreateRenderPass(DepthRPInit);
+
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, 0);
@@ -49,7 +59,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	{
 		RenderDepthPrepass(Scene, CmdList);
 
-		RenderShadowDepths(Scene, CmdList);
+		//RenderShadowDepths(Scene, CmdList);
 
 		if (Platform::GetBool("Engine.ini", "Shadows", "Visualize", false))
 		{

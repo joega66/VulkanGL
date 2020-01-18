@@ -203,6 +203,9 @@
     <ClInclude Include="EngineMain.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanRenderPass.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

@@ -19,6 +19,8 @@ public:
 
 	virtual ~VulkanCommandList() override;
 
+	virtual void BeginRenderPass(drm::RenderPassRef RenderPass) override;
+
 	virtual void BeginRenderPass(const RenderPassInitializer& RenderPassInit) override;
 
 	virtual void EndRenderPass() override;

@@ -117,6 +117,7 @@
     <ClInclude Include="Vulkan\VulkanImage.h" />
     <ClInclude Include="Vulkan\VulkanMemory.h" />
     <ClInclude Include="Vulkan\VulkanQueues.h" />
+    <ClInclude Include="Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="Vulkan\VulkanShaderMap.h" />
     <ClInclude Include="Vulkan\VulkanSwapchain.h" />
   </ItemGroup>

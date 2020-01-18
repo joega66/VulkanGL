@@ -1,6 +1,7 @@
 #pragma once
 #include <DRM.h>
 #include "VulkanDevice.h"
+#include "VulkanRenderPass.h"
 #include "VulkanSwapchain.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
@@ -23,6 +24,7 @@ public:
 	virtual drm::ImageRef GetSurface() override;
 	virtual void* LockBuffer(drm::BufferRef Buffer) override;
 	virtual void UnlockBuffer(drm::BufferRef Buffer) override;
+	virtual drm::RenderPassRef CreateRenderPass(RenderPassInitializer& RPInit) override;
 
 	VulkanDevice Device;
 
@@ -43,4 +45,5 @@ namespace
 	CAST(drm::Image, VulkanImage);
 	CAST(drm::CommandList, VulkanCommandList);
 	CAST(drm::DescriptorSet, VulkanDescriptorSet);
+	CAST(drm::RenderPass, VulkanRenderPass);
 }
