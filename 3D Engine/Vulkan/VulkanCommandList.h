@@ -4,6 +4,8 @@
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 
+class VulkanQueues;
+
 class VulkanCommandList final : public drm::CommandList
 {
 public:
@@ -13,9 +15,7 @@ public:
 
 	VkCommandBuffer CommandBuffer;
 
-	bool bTouchedSurface = false;
-
-	VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags);
+	VulkanCommandList(VulkanDevice& Device, VulkanQueues& Queues, VkQueueFlagBits QueueFlags);
 
 	virtual ~VulkanCommandList() override;
 

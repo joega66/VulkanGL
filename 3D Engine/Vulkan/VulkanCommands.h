@@ -2,11 +2,12 @@
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
+class VulkanQueues;
 
 class VulkanScopedCommandBuffer
 {
 public:
-	VulkanScopedCommandBuffer(VulkanDevice& Device, VkQueueFlags QueueFlags);
+	VulkanScopedCommandBuffer(VulkanDevice& Device, VulkanQueues& Queues, VkQueueFlags QueueFlags);
 
 	~VulkanScopedCommandBuffer();
 

@@ -1,5 +1,4 @@
 #include "VulkanDevice.h"
-#include "VulkanSwapchain.h"
 #include <Platform/Platform.h>
 #include <GLFW/glfw3.h>
 
@@ -121,13 +120,6 @@ static VkDebugReportCallbackEXT CreateDebugReportCallback(VkInstance Instance, b
 	return 0;
 }
 
-static VkSurfaceKHR CreateSurface(Platform& Platform, VkInstance Instance)
-{
-	VkSurfaceKHR Surface;
-	vulkan(glfwCreateWindowSurface(Instance, Platform.Window, nullptr, &Surface));
-	return Surface;
-}
-
 static bool AllDeviceExtensionsSupported(VkPhysicalDevice Device, const std::vector<const char*>& DeviceExtensions)
 {
 	uint32 ExtensionCount;
@@ -146,32 +138,8 @@ static bool AllDeviceExtensionsSupported(VkPhysicalDevice Device, const std::vec
 	return RequiredExtensions.empty();
 }
 
-static bool IsDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, const std::vector<const char*>& DeviceExtensions)
-{
-	VulkanQueues Queues(Device, Surface);
-
-	if (!Queues.IsComplete())
-	{
-		return false;
-	}
-
-	if (!AllDeviceExtensionsSupported(Device, DeviceExtensions))
-	{
-		return false;
-	}
-
-	SwapchainSupportDetails SwapchainSupport(Device, Surface);
-
-	if (SwapchainSupport.Formats.empty() || SwapchainSupport.PresentModes.empty())
-	{
-		return false;
-	}
-
-	return true;
-}
-
 /** Select a Vulkan-capable physical device. */
-static VkPhysicalDevice SelectPhysicalDevice(VkInstance Instance, VkSurfaceKHR Surface, const std::vector<const char*>& DeviceExtensions)
+static VkPhysicalDevice SelectPhysicalDevice(VkInstance Instance, const std::vector<const char*>& DeviceExtensions)
 {
 	uint32 DeviceCount = 0;
 	vkEnumeratePhysicalDevices(Instance, &DeviceCount, nullptr);
@@ -185,7 +153,7 @@ static VkPhysicalDevice SelectPhysicalDevice(VkInstance Instance, VkSurfaceKHR S
 
 	for (const auto& Device : Devices)
 	{
-		if (IsDeviceSuitable(Device, Surface, DeviceExtensions))
+		if (AllDeviceExtensionsSupported(Device, DeviceExtensions))
 		{
 			PhysicalDevice = Device;
 			break;
@@ -197,78 +165,11 @@ static VkPhysicalDevice SelectPhysicalDevice(VkInstance Instance, VkSurfaceKHR S
 	return PhysicalDevice;
 }
 
-static VkDevice CreateLogicalDevice(VkPhysicalDevice PhysicalDevice,
-	VkSurfaceKHR Surface,
-	const VulkanQueues& Queues,
-	const std::vector<const char*>& DeviceExtensions,
-	const std::vector<const char*>& ValidationLayers,
-	bool bUseValidationLayers
-)
-{
-	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
-	const float QueuePriority = 1.0f;
-	std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
-
-	for (int32 QueueFamily : UniqueQueueFamilies)
-	{
-		VkDeviceQueueCreateInfo QueueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-		QueueCreateInfo.queueFamilyIndex = QueueFamily;
-		QueueCreateInfo.queueCount = 1;
-		QueueCreateInfo.pQueuePriorities = &QueuePriority;
-		QueueCreateInfos.push_back(QueueCreateInfo);
-	}
-
-	VkPhysicalDeviceFeatures DeviceFeatures = {};
-	DeviceFeatures.samplerAnisotropy = VK_TRUE;
-	DeviceFeatures.geometryShader = VK_TRUE;
-	DeviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
-	DeviceFeatures.vertexPipelineStoresAndAtomics = VK_TRUE;
-
-	VkDeviceCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-	CreateInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());
-	CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
-	CreateInfo.pEnabledFeatures = &DeviceFeatures;
-	CreateInfo.enabledExtensionCount = static_cast<uint32>(DeviceExtensions.size());
-	CreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
-
-	if (bUseValidationLayers)
-	{
-		CreateInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
-		CreateInfo.ppEnabledLayerNames = ValidationLayers.data();
-	}
-	else
-	{
-		CreateInfo.enabledLayerCount = 0;
-	}
-
-	VkDevice Device;
-	vulkan(vkCreateDevice(PhysicalDevice, &CreateInfo, nullptr, &Device));
-
-	return Device;
-}
-
-static const std::vector<const char*> ValidationLayers =
-{
-	"VK_LAYER_LUNARG_standard_validation"
-};
-
-static const std::vector<const char*> DeviceExtensions =
-{
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-};
-
 VulkanDevice::VulkanDevice(Platform& Platform, bool bUseValidationLayers)
 	: Instance(CreateInstance(ValidationLayers, bUseValidationLayers))
 	, DebugReportCallback(CreateDebugReportCallback(Instance, bUseValidationLayers))
-	, Surface(CreateSurface(Platform, Instance))
-	, PhysicalDevice(SelectPhysicalDevice(Instance, Surface, DeviceExtensions))
-	, Queues(PhysicalDevice, Surface)
-	, Device(CreateLogicalDevice(PhysicalDevice, Surface, Queues, DeviceExtensions, ValidationLayers, bUseValidationLayers))
+	, PhysicalDevice(SelectPhysicalDevice(Instance, DeviceExtensions))
 {
-	// Create queues and command pools.
-	Queues.Create(Device);
-
 	// Get physical device properties/features
 	vkGetPhysicalDeviceProperties(PhysicalDevice, &Properties);
 	vkGetPhysicalDeviceFeatures(PhysicalDevice, &Features);

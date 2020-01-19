@@ -5,7 +5,7 @@ static inline bool HasQueue(const VkQueueFamilyProperties& QueueFamily, VkQueueF
 	return QueueFamily.queueCount > 0 && QueueFamily.queueFlags & QueueFlags;
 }
 
-VulkanQueues::VulkanQueues(VkPhysicalDevice Device, VkSurfaceKHR Surface)
+void VulkanQueues::FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface)
 {
 	uint32 QueueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamilyCount, nullptr);

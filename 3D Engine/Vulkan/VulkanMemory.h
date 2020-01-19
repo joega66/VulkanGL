@@ -3,6 +3,7 @@
 #include "VulkanImage.h"
 
 class VulkanDevice;
+class VulkanQueues;
 
 struct VulkanMemory
 {
@@ -48,7 +49,7 @@ CLASS(VulkanMemory);
 class VulkanAllocator
 {
 public:
-	VulkanAllocator(VulkanDevice& Device);
+	VulkanAllocator(VulkanDevice& Device, VulkanQueues& Queues);
 
 	std::shared_ptr<class VulkanBuffer> Allocate(
 		VkDeviceSize Size, 
@@ -66,6 +67,8 @@ public:
 
 private:
 	VulkanDevice& Device;
+
+	VulkanQueues& Queues;
 
 	const VkDeviceSize BufferAllocationSize;
 

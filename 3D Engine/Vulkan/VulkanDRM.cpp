@@ -1,105 +1,41 @@
 #include "VulkanDRM.h"
 #include "VulkanRenderPass.h"
-#include <Engine/Screen.h>
+#include "VulkanSurface.h"
 
-VulkanDRM::VulkanDRM(Platform& Platform, Screen& Screen)
+VulkanDRM::VulkanDRM(Platform& Platform)
 	: Device(Platform, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
-	, Allocator(Device)
-	, DescriptorPool(Device)
+	, Allocator(Device, Queues)
 {
-	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
-	{
-		Swapchain.Free();
-		Swapchain.Create(Device, Width, Height);
-	});
-
-	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
-	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &RenderEndSem));
-}
-
-void VulkanDRM::BeginFrame()
-{
-	if (VkResult Result = vkAcquireNextImageKHR(Device,
-		Swapchain,
-		std::numeric_limits<uint32>::max(),
-		ImageAvailableSem,
-		VK_NULL_HANDLE,
-		&SwapchainIndex); Result == VK_ERROR_OUT_OF_DATE_KHR)
-	{
-		signal_unimplemented();
-	}
-	else
-	{
-		vulkan(Result);
-		check(SwapchainIndex >= 0 && SwapchainIndex < Swapchain.Images.size(), "Error acquiring swapchain.");
-	}
 }
 
 void VulkanDRM::EndFrame()
 {
-	DescriptorPool.EndFrame();
+	DescriptorPool->EndFrame();
 }
 
 void VulkanDRM::SubmitCommands(drm::CommandListRef CmdList)
-{ 
+{
 	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
 
 	vulkan(vkEndCommandBuffer(VulkanCmdList->CommandBuffer));
 
-	if (VulkanCmdList->bTouchedSurface)
-	{
-		const VkPipelineStageFlags WaitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+	SubmitInfo.commandBufferCount = 1;
+	SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
 
-		VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		SubmitInfo.waitSemaphoreCount = 1;
-		SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
-		SubmitInfo.pWaitDstStageMask = &WaitDstStageMask;
-		SubmitInfo.commandBufferCount = 1;
-		SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
-		SubmitInfo.signalSemaphoreCount = 1;
-		SubmitInfo.pSignalSemaphores = &RenderEndSem;
+	vulkan(vkQueueSubmit(VulkanCmdList->Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
-		vulkan(vkQueueSubmit(VulkanCmdList->Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
-
-		VkPresentInfoKHR PresentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-		PresentInfo.pWaitSemaphores = &RenderEndSem;
-		PresentInfo.waitSemaphoreCount = 1;
-		PresentInfo.pSwapchains = &Swapchain.Swapchain;
-		PresentInfo.swapchainCount = 1;
-		PresentInfo.pImageIndices = &SwapchainIndex;
-
-		if (VkResult Result = vkQueuePresentKHR(Device.Queues.GetPresentQueue(), &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
-		{
-			signal_unimplemented();
-		}
-		else
-		{
-			vulkan(Result);
-		}
-
-		vulkan(vkQueueWaitIdle(Device.Queues.GetPresentQueue()));
-	}
-	else
-	{
-		VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		SubmitInfo.commandBufferCount = 1;
-		SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
-
-		vulkan(vkQueueSubmit(VulkanCmdList->Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
-
-		vulkan(vkQueueWaitIdle(VulkanCmdList->Queue));
-	}
+	vulkan(vkQueueWaitIdle(VulkanCmdList->Queue));
 }
 
 drm::CommandListRef VulkanDRM::CreateCommandList()
 {
-	return MakeRef<VulkanCommandList>(Device, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	return MakeRef<VulkanCommandList>(Device, Queues, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
 drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()
 {
-	return MakeRef<VulkanDescriptorSet>(Device, DescriptorPool);
+	return MakeRef<VulkanDescriptorSet>(Device, *DescriptorPool);
 }
 
 drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
@@ -182,11 +118,6 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 	return VulkanImage;
 }
 
-drm::ImageRef VulkanDRM::GetSurface()
-{
-	return Swapchain.Images[SwapchainIndex];
-}
-
 void* VulkanDRM::LockBuffer(drm::BufferRef Buffer)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
@@ -250,4 +181,52 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
 	}
 
 	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPInit.NumAttachments);
+}
+
+void VulkanDRM::CreateLogicalDevice(VulkanSurface& Surface)
+{
+	Queues.FindQueueFamilies(Device.PhysicalDevice, Surface);
+
+	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
+	const float QueuePriority = 1.0f;
+	std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
+
+	for (int32 QueueFamily : UniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo QueueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+		QueueCreateInfo.queueFamilyIndex = QueueFamily;
+		QueueCreateInfo.queueCount = 1;
+		QueueCreateInfo.pQueuePriorities = &QueuePriority;
+		QueueCreateInfos.push_back(QueueCreateInfo);
+	}
+
+	VkPhysicalDeviceFeatures DeviceFeatures = {};
+	DeviceFeatures.samplerAnisotropy = VK_TRUE;
+	DeviceFeatures.geometryShader = VK_TRUE;
+	DeviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
+	DeviceFeatures.vertexPipelineStoresAndAtomics = VK_TRUE;
+
+	VkDeviceCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+	CreateInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());
+	CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
+	CreateInfo.pEnabledFeatures = &DeviceFeatures;
+	CreateInfo.enabledExtensionCount = static_cast<uint32>(DeviceExtensions.size());
+	CreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
+
+	if (Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
+	{
+		CreateInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
+		CreateInfo.ppEnabledLayerNames = ValidationLayers.data();
+	}
+	else
+	{
+		CreateInfo.enabledLayerCount = 0;
+	}
+
+	vulkan(vkCreateDevice(Device.PhysicalDevice, &CreateInfo, nullptr, &Device.Device));
+
+	// Create queues and command pools.
+	Queues.Create(Device);
+
+	DescriptorPool = std::make_unique<VulkanDescriptorPool>(Device);
 }

@@ -1,10 +1,11 @@
 #include "VulkanCommandList.h"
 #include "VulkanDRM.h"
+#include "VulkanQueues.h"
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags)
+VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanQueues& Queues, VkQueueFlagBits QueueFlags)
 	: Device(Device)
-	, Queue(Device.Queues.GetQueue(QueueFlags))
-	, CommandPool(Device.Queues.GetCommandPool(QueueFlags))
+	, Queue(Queues.GetQueue(QueueFlags))
+	, CommandPool(Queues.GetCommandPool(QueueFlags))
 {
 	VkCommandBufferAllocateInfo CommandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	CommandBufferInfo.commandPool = CommandPool;
@@ -43,15 +44,6 @@ void VulkanCommandList::BeginRenderPass(drm::RenderPassRef RenderPass)
 
 void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
 {
-	for (uint32_t ColorTargetIndex = 0; ColorTargetIndex < RPInit.NumAttachments; ColorTargetIndex++)
-	{
-		// Determine if this command list touched the surface.
-		if (Any(RPInit.ColorAttachments[ColorTargetIndex].Image->Usage & EImageUsage::Surface))
-		{
-			bTouchedSurface = true;
-		}
-	}
-
 	VkFramebuffer Framebuffer;
 	std::tie(Pending.RenderPass, Framebuffer) = Device.GetRenderPass(RPInit);
 

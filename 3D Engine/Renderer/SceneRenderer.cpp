@@ -6,13 +6,16 @@
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 
-SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
+SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, Screen& Screen)
 	: Device(Device)
+	, Surface(Surface)
 {
 	SceneTextures = Device.CreateDescriptorSet();
 
 	Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
 	{
+		Surface.Resize(Device, Width, Height);
+
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 		RenderPassInitializer DepthRPInit = { 0 };
 		DepthRPInit.DepthAttachment = drm::AttachmentView(
@@ -46,7 +49,7 @@ SceneRenderer::SceneRenderer(DRM& Device, Scene& Scene, Screen& Screen)
 
 void SceneRenderer::Render(SceneProxy& Scene)
 {
-	Device.BeginFrame();
+	ImageIndex = Surface.AcquireNextImage(Device);
 
 	drm::CommandListRef CommandList = Device.CreateCommandList();
 	drm::CommandList& CmdList = *CommandList;
@@ -67,7 +70,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 		else
 		{
-			drm::AttachmentView SurfaceView(Device.GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+			drm::AttachmentView SurfaceView(Surface.GetImage(ImageIndex), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 			drm::AttachmentView DepthView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite);
 
 			RenderPassInitializer RenderPassInit = { 1 };
@@ -85,14 +88,14 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 	}
 
-	Device.SubmitCommands(CommandList);
+	Surface.Present(Device, ImageIndex, CommandList);
 
 	Device.EndFrame();
 }
 
 void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	drm::AttachmentView SurfaceView(Device.GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SurfaceView(Surface.GetImage(ImageIndex), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{

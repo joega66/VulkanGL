@@ -6,12 +6,16 @@
 class SceneRenderer
 {
 public:
-	SceneRenderer(DRM& Device, class Scene& Scene, class Screen& Screen);
+	SceneRenderer(DRM& Device, drm::Surface& Surface, class Scene& Scene, class Screen& Screen);
 
 	void Render(SceneProxy& Scene);
 
 private:
 	DRM& Device;
+
+	drm::Surface& Surface;
+
+	uint32 ImageIndex;
 
 	const StaticMesh* Cube;
 

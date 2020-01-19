@@ -1,10 +1,12 @@
 #include "VulkanMemory.h"
 #include "VulkanDevice.h"
 #include "VulkanCommands.h"
+#include "VulkanQueues.h"
 #include <DRM.h>
 
-VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
+VulkanAllocator::VulkanAllocator(VulkanDevice& Device, VulkanQueues& Queues)
 	: Device(Device)
+	, Queues(Queues)
 	, BufferAllocationSize(2 * (1 << 20)) // Allocate in 2MB chunks
 {
 }
@@ -148,7 +150,7 @@ void VulkanAllocator::UnlockBuffer(const VulkanBuffer& Buffer)
 
 		vkUnmapMemory(Device, StagingBuffer->GetMemoryHandle());
 
-		VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
+		VulkanScopedCommandBuffer CommandBuffer(Device, Queues, VK_QUEUE_TRANSFER_BIT);
 
 		VkBufferCopy Copy = {};
 		Copy.size = Buffer.GetSize();

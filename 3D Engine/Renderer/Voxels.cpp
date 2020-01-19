@@ -260,7 +260,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
 
-	drm::AttachmentView SurfaceView(Device.GetSurface(), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SurfaceView(Surface.GetImage(ImageIndex), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 	drm::AttachmentView DepthView(
 		SceneDepth,
 		ELoadAction::Clear,

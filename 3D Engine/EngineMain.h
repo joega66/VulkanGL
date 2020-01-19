@@ -1,5 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
+#include <DRM.h>
 
 /** The main() of the engine, after the platform-dependent stuff has been resolved. */
 class EngineMain
@@ -10,7 +11,8 @@ public:
 		class Cursor& Cursor,
 		class Input& Input,
 		class Screen& Screen,
-		class DRM& Device, 
-		class DRMShaderMap& ShaderMap
+		DRM& Device, 
+		DRMShaderMap& ShaderMap,
+		drm::Surface& Surface
 	);
 };

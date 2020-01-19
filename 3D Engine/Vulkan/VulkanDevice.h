@@ -2,22 +2,27 @@
 #include <DRMCommandList.h>
 #include "VulkanQueues.h"
 
+static const std::vector<const char*> ValidationLayers =
+{
+	"VK_LAYER_LUNARG_standard_validation"
+};
+
+static const std::vector<const char*> DeviceExtensions =
+{
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+};
+
 class VulkanDevice
 {
 	template<typename DRMObject, typename ...VulkanObjects>
 	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
-
-private:
+public:
 	VkInstance Instance;
 
 	VkDebugReportCallbackEXT DebugReportCallback;
 
-public:
-	VkSurfaceKHR Surface;
-
 	VkPhysicalDevice PhysicalDevice;
-
-	VulkanQueues Queues;
 
 	VkDevice Device;
 

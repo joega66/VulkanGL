@@ -1,5 +1,4 @@
 #include "EngineMain.h"
-#include <DRMShader.h>
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/SceneProxy.h>
 #include <Engine/Scene.h>
@@ -64,13 +63,14 @@ void EngineMain::Main(
 	Input& Input,
 	Screen& Screen,
 	DRM& Device,
-	DRMShaderMap& ShaderMap
+	DRMShaderMap& ShaderMap,
+	drm::Surface& Surface
 )
 {
 	CreateDebugMaterials(Device);
 
 	Scene Scene(Device, ShaderMap, Cursor, Input, Screen);
-	SceneRenderer SceneRenderer(Device, Scene, Screen);
+	SceneRenderer SceneRenderer(Device, Surface, Scene, Screen);
 	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;
