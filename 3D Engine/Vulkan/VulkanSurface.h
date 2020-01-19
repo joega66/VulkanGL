@@ -4,8 +4,11 @@
 class VulkanSurface : public drm::Surface
 {
 public:
-	VulkanSurface(Platform& Platform, VulkanDevice& Device);
+	VulkanSurface(Platform& Platform, VulkanDRM& Device);
 
+	/** Some initialization that needs to happen using the logical device. 
+	  * This is kinda janky and will get removed in the future.
+	  */
 	void Init(VulkanDevice& Device);
 
 	/** Get the next image index. */
@@ -19,6 +22,7 @@ public:
 
 	virtual drm::ImageRef GetImage(uint32 ImageIndex) override;
 
+	/** Get all the swapchain images. */
 	virtual void GetSwapchainImages(uint32 ImageCount, drm::ImageRef* Images) override;
 
 	operator VkSurfaceKHR() { return Surface; }
@@ -33,6 +37,11 @@ private:
 	/** Swapchain images. */
 	std::vector<VulkanImageRef> Images;
 
+	/** @TODO Move me to the SceneRenderer. */
 	VkSemaphore ImageAvailableSem = VK_NULL_HANDLE;
 	VkSemaphore RenderEndSem = VK_NULL_HANDLE;
+
+	/** Present queue. */
+	VkQueue PresentQueue = VK_NULL_HANDLE;
+	uint32 PresentIndex = -1;
 };

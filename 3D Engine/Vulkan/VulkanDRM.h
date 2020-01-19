@@ -28,10 +28,7 @@ public:
 
 	VulkanQueues Queues;
 
-	/** Temporary until I write a clean interface for selectively adding the present queue to logical device creation.
-	  * e.g. On Oculus Quest, the SDK controls the display and we wouldn't want to create a VulkanSurface.
-	  */
-	void CreateLogicalDevice(class VulkanSurface& Surface);
+	void CreateLogicalDevice();
 
 private:
 	VulkanAllocator Allocator;

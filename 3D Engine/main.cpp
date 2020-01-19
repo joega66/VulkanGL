@@ -23,10 +23,11 @@ int main(int argc, char* argv[])
 	glfwSetWindowUserPointer(Platform.Window, &WindowUserPointer);
 
 	std::unique_ptr<VulkanDRM> Device = std::make_unique<VulkanDRM>(Platform);
-	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, Device->Device);
+	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, *Device);
 	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(Device->Device);
 
-	Device->CreateLogicalDevice(*Surface);
+	Device->CreateLogicalDevice();
+
 	Surface->Init(Device->Device);
 
 	EngineMain EngineMain;

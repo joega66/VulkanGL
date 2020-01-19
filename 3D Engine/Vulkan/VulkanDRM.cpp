@@ -4,6 +4,7 @@
 
 VulkanDRM::VulkanDRM(Platform& Platform)
 	: Device(Platform, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
+	, Queues(Device.PhysicalDevice)
 	, Allocator(Device, Queues)
 {
 }
@@ -183,10 +184,8 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
 	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPInit.NumAttachments);
 }
 
-void VulkanDRM::CreateLogicalDevice(VulkanSurface& Surface)
+void VulkanDRM::CreateLogicalDevice()
 {
-	Queues.FindQueueFamilies(Device.PhysicalDevice, Surface);
-
 	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
 	const float QueuePriority = 1.0f;
 	std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;

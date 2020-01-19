@@ -54,9 +54,34 @@ static VkExtent2D ChooseSwapExtent(uint32 Width, uint32 Height, const VkSurfaceC
 	}
 }
 
-VulkanSurface::VulkanSurface(Platform& Platform, VulkanDevice& Device)
+VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& VulkanDevice)
 {
-	vulkan(glfwCreateWindowSurface(Device.Instance, Platform.Window, nullptr, &Surface));
+	vulkan(glfwCreateWindowSurface(VulkanDevice.Device.Instance, Platform.Window, nullptr, &Surface));
+
+	uint32 QueueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(VulkanDevice.Device.PhysicalDevice, &QueueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> QueueFamilies(QueueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(VulkanDevice.Device.PhysicalDevice, &QueueFamilyCount, QueueFamilies.data());
+
+	// Find the present index.
+	for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)
+	{
+		const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
+
+		VkBool32 HasPresentSupport = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(VulkanDevice.Device.PhysicalDevice, QueueFamilyIndex, Surface, &HasPresentSupport);
+
+		if (HasPresentSupport)
+		{
+			PresentIndex = QueueFamilyIndex;
+			break;
+		}
+	}
+
+	check(PresentIndex != -1, "No present family index found!");
+
+	VulkanDevice.Queues.RequestQueueFamily(PresentIndex);
 }
 
 void VulkanSurface::Init(VulkanDevice& Device)
@@ -64,6 +89,8 @@ void VulkanSurface::Init(VulkanDevice& Device)
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &RenderEndSem));
+
+	vkGetDeviceQueue(Device, PresentIndex, 0, &PresentQueue);
 }
 
 uint32 VulkanSurface::AcquireNextImage(DRM& Device)
@@ -118,7 +145,7 @@ void VulkanSurface::Present(DRM& Device, uint32 ImageIndex, drm::CommandListRef 
 	PresentInfo.swapchainCount = 1;
 	PresentInfo.pImageIndices = &ImageIndex;
 
-	if (VkResult Result = vkQueuePresentKHR(VulkanDevice.Queues.GetPresentQueue(), &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
+	if (VkResult Result = vkQueuePresentKHR(PresentQueue, &PresentInfo); Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR)
 	{
 		signal_unimplemented();
 	}
@@ -127,7 +154,7 @@ void VulkanSurface::Present(DRM& Device, uint32 ImageIndex, drm::CommandListRef 
 		vulkan(Result);
 	}
 
-	vulkan(vkQueueWaitIdle(VulkanDevice.Queues.GetPresentQueue()));
+	vulkan(vkQueueWaitIdle(PresentQueue));
 }
 
 struct SwapchainSupportDetails
@@ -184,9 +211,10 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 	SwapchainInfo.imageArrayLayers = 1;
 	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	const uint32 QueueFamilyIndices[] = { 
+	const uint32 QueueFamilyIndices[] = 
+	{ 
 		static_cast<uint32>(VulkanDevice.Queues.GetGraphicsIndex()),
-		static_cast<uint32>(VulkanDevice.Queues.GetPresentIndex())
+		static_cast<uint32>(PresentIndex)
 	};
 
 	if (QueueFamilyIndices[0] != QueueFamilyIndices[1])

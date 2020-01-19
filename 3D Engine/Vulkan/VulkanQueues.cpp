@@ -5,7 +5,7 @@ static inline bool HasQueue(const VkQueueFamilyProperties& QueueFamily, VkQueueF
 	return QueueFamily.queueCount > 0 && QueueFamily.queueFlags & QueueFlags;
 }
 
-void VulkanQueues::FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface)
+VulkanQueues::VulkanQueues(VkPhysicalDevice Device)
 {
 	uint32 QueueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamilyCount, nullptr);
@@ -18,13 +18,9 @@ void VulkanQueues::FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surfa
 	{
 		const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
 
-		VkBool32 HasPresentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(Device, QueueFamilyIndex, Surface, &HasPresentSupport);
-
-		if (HasQueue(QueueFamily, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT) && HasPresentSupport)
+		if (HasQueue(QueueFamily, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
 		{
 			GraphicsIndex = QueueFamilyIndex;
-			PresentIndex = QueueFamilyIndex;
 			break;
 		}
 	}
@@ -75,8 +71,7 @@ void VulkanQueues::Create(VkDevice Device)
 {
 	vkGetDeviceQueue(Device, GraphicsIndex, 0, &GraphicsQueue);
 	vkGetDeviceQueue(Device, TransferIndex, 0, &TransferQueue);
-	vkGetDeviceQueue(Device, PresentIndex, 0, &PresentQueue);
-
+	
 	const std::unordered_set<int32> UniqueQueueFamilies = GetUniqueFamilies();
 
 	for (auto QueueFamilyIndex : UniqueQueueFamilies)
@@ -97,7 +92,7 @@ void VulkanQueues::Create(VkDevice Device)
 
 bool VulkanQueues::IsComplete() const
 {
-	return GraphicsIndex >= 0 && TransferIndex >= 0 && PresentIndex >= 0;
+	return GraphicsIndex >= 0 && TransferIndex >= 0;
 }
 
 VkQueue VulkanQueues::GetQueue(VkQueueFlags QueueFlags) const
@@ -126,11 +121,21 @@ VkCommandPool VulkanQueues::GetCommandPool(VkQueueFlags QueueFlags) const
 
 std::unordered_set<int32> VulkanQueues::GetUniqueFamilies() const
 {
-	const std::unordered_set<int32> UniqueQueueFamilies =
+	std::unordered_set<int32> UniqueQueueFamilies =
 	{
 		GraphicsIndex,
 		TransferIndex,
-		PresentIndex
 	};
+
+	std::for_each(RequestedQueueFamilies.begin(), RequestedQueueFamilies.end(), [&] (const auto& Index)
+	{
+		UniqueQueueFamilies.emplace(Index);
+	});
+
 	return UniqueQueueFamilies;
+}
+
+void VulkanQueues::RequestQueueFamily(int32 QueueFamilyIndex)
+{
+	RequestedQueueFamilies.push_back(QueueFamilyIndex);
 }
