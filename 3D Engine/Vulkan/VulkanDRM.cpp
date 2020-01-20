@@ -81,6 +81,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
+		Usage |= Any(UsageFlags & EImageUsage::TransferSrc) ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0;
 		Usage |= Any(UsageFlags & EImageUsage::TransferDst) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 		Usage |= Any(UsageFlags & EImageUsage::Sampled) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
 		// Add transfer dst bit to storage images so they can be cleared via ClearColorImage.
@@ -221,7 +222,7 @@ void VulkanDRM::CreateLogicalDevice()
 	{
 		CreateInfo.enabledLayerCount = 0;
 	}
-
+	
 	vulkan(vkCreateDevice(Device.PhysicalDevice, &CreateInfo, nullptr, &Device.Device));
 
 	// Create queues and command pools.

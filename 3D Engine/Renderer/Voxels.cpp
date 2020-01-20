@@ -260,7 +260,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
 
-	drm::AttachmentView SurfaceView(Surface.GetImage(ImageIndex), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SceneView(SceneColor, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::TransferSrcOptimal);
 	drm::AttachmentView DepthView(
 		SceneDepth,
 		ELoadAction::Clear,
@@ -270,7 +270,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	);
 
 	RenderPassInitializer RPInit = { 1 };
-	RPInit.ColorAttachments[0] = SurfaceView;
+	RPInit.ColorAttachments[0] = SceneView;
 	RPInit.DepthAttachment = DepthView;
 	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
 

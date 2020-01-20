@@ -52,6 +52,8 @@ public:
 
 	virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage) override;
 
+	virtual void BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage, EFilter Filter) override;
+
 private:
 	VulkanDevice& Device;
 

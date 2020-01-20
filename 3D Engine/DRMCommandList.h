@@ -394,6 +394,7 @@ namespace drm
 			const ImageMemoryBarrier* ImageBarriers
 		) = 0;
 		virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage) = 0;
+		virtual void BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage, EFilter Filter) = 0;
 	};
 
 	CLASS(CommandList);

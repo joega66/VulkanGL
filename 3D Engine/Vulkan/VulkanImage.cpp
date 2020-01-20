@@ -136,6 +136,18 @@ bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
 	return Contains(VulkanDepthLayouts, Layout);
 }
 
+VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
+{
+	static const VkFilter VulkanFilters[] =
+	{
+		VK_FILTER_NEAREST,
+		VK_FILTER_LINEAR,
+		VK_FILTER_CUBIC_IMG
+	};
+
+	return VulkanFilters[(uint32)Filter];
+}
+
 VkSampler VulkanDevice::GetSampler(const SamplerState& SamplerState)
 {
 	if (auto SamplerIter = SamplerCache.find(SamplerState); SamplerIter != SamplerCache.end())
@@ -152,13 +164,6 @@ VkSampler VulkanDevice::GetSampler(const SamplerState& SamplerState)
 
 VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& SamplerState)
 {
-	static const VkFilter VulkanFilters[] =
-	{
-		VK_FILTER_NEAREST,
-		VK_FILTER_LINEAR,
-		VK_FILTER_CUBIC_IMG
-	};
-
 	static const VkSamplerMipmapMode VulkanMipmapModes[] =
 	{
 		VK_SAMPLER_MIPMAP_MODE_NEAREST,
@@ -174,7 +179,7 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 	};
 
-	VkFilter Filter = VulkanFilters[(uint32)SamplerState.Filter];
+	VkFilter Filter = GetVulkanFilter(SamplerState.Filter);
 	VkSamplerMipmapMode SMM = VulkanMipmapModes[(uint32)SamplerState.SMM];
 	VkSamplerAddressMode SAM = VulkanAddressModes[(uint32)SamplerState.SAM];
 

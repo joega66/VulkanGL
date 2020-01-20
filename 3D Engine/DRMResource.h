@@ -130,7 +130,7 @@ enum class EImageUsage
 	Sampled		= 1 << 1,
 	Cubemap		= 1 << 2,
 	Storage		= 1 << 3,
-	Surface		= 1 << 4,
+	TransferSrc = 1 << 4,
 	TransferDst	= 1 << 5,
 };
 

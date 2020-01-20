@@ -20,18 +20,16 @@ public:
 	/** Create a new swapchain (if within surface capabilities.) */
 	virtual void Resize(DRM& Device, uint32 ScreenWidth, uint32 ScreenHeight) override;
 
+	/** Get the swapchain image. */
 	virtual drm::ImageRef GetImage(uint32 ImageIndex) override;
-
-	/** Get all the swapchain images. */
-	virtual void GetSwapchainImages(uint32 ImageCount, drm::ImageRef* Images) override;
 
 	operator VkSurfaceKHR() { return Surface; }
 
 private:
-	/** */
+	/** The surface. */
 	VkSurfaceKHR Surface;
 
-	/** SwapchainKHR. */
+	/** The swapchain. */
 	VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 
 	/** Swapchain images. */

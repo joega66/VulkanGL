@@ -15,13 +15,15 @@ private:
 
 	drm::Surface& Surface;
 
-	uint32 ImageIndex;
-
 	const StaticMesh* Cube;
 
 	drm::RenderPassRef DepthRenderPass;
 
 	drm::DescriptorSetRef SceneTextures;
+
+	drm::ImageRef SceneColor;
+
+	drm::RenderPassRef LightingRenderPass;
 
 	drm::ImageRef SceneDepth;
 
@@ -54,4 +56,6 @@ private:
 	void RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList);
 
 	void RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
+
+	void Present(drm::CommandListRef CmdList);
 };

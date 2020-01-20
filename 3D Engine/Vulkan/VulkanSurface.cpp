@@ -209,7 +209,7 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 	SwapchainInfo.imageColorSpace = SurfaceFormat.colorSpace;
 	SwapchainInfo.imageExtent = Extent;
 	SwapchainInfo.imageArrayLayers = 1;
-	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
 	const uint32 QueueFamilyIndices[] = 
 	{ 
@@ -237,31 +237,30 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 
 	vkGetSwapchainImagesKHR(VulkanDevice.Device.Device, Swapchain, &ImageCount, nullptr);
 
-	std::vector<VkImage> VkImages(ImageCount);
+	std::vector<VkImage> VulkanImages(ImageCount);
 
-	vkGetSwapchainImagesKHR(VulkanDevice.Device.Device, Swapchain, &ImageCount, VkImages.data());
+	vkGetSwapchainImagesKHR(VulkanDevice.Device.Device, Swapchain, &ImageCount, VulkanImages.data());
+	
+	Images.clear();
+	Images.reserve(ImageCount);
 
-	Images.resize(ImageCount);
-
-	for (uint32 i = 0; i < ImageCount; i++)
+	for (auto& VulkanImage : VulkanImages)
 	{
-		Images[i] = MakeRef<VulkanImage>(VulkanDevice.Device
-			, VkImages[i]
-			, VkDeviceMemory()
-			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
-			, EImageLayout::Undefined
-			, Extent.width
-			, Extent.height
-			, 1
-			, EImageUsage::Attachment | EImageUsage::Surface);
+		Images.push_back(
+			MakeRef<class VulkanImage>(VulkanDevice.Device
+				, VulkanImage
+				, VkDeviceMemory()
+				, VulkanImage::GetEngineFormat(SurfaceFormat.format)
+				, EImageLayout::Undefined
+				, Extent.width
+				, Extent.height
+				, 1
+				, EImageUsage::Attachment | EImageUsage::TransferDst)
+		);
 	}
 }
 
 drm::ImageRef VulkanSurface::GetImage(uint32 ImageIndex)
 {
 	return Images[ImageIndex];
-}
-
-void VulkanSurface::GetSwapchainImages(uint32 ImageCount, drm::ImageRef* Images)
-{
 }

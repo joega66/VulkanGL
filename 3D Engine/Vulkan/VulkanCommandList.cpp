@@ -343,3 +343,36 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 
 	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), VulkanImage->Image, VulkanImage->GetVulkanLayout(), Regions.size(), Regions.data());
 }
+
+void VulkanCommandList::BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage, EFilter Filter)
+{
+	const VulkanImageRef& SrcVkImage = ResourceCast(SrcImage);
+	const VulkanImageRef& DstVkImage = ResourceCast(DstImage);
+
+	VkImageBlit Region = {};
+	Region.srcSubresource.aspectMask = SrcVkImage->GetVulkanAspect();
+	Region.srcSubresource.mipLevel = 0;
+	Region.srcSubresource.baseArrayLayer = 0;
+	Region.srcSubresource.layerCount = 1;
+	Region.dstSubresource.aspectMask = DstVkImage->GetVulkanAspect();
+	Region.dstSubresource.mipLevel = 0;
+	Region.dstSubresource.baseArrayLayer = 0;
+	Region.dstSubresource.layerCount = 1;
+	Region.srcOffsets[1].x = SrcImage->Width;
+	Region.srcOffsets[1].y = SrcImage->Height;
+	Region.srcOffsets[1].z = 1;
+	Region.dstOffsets[1].x = DstImage->Width;
+	Region.dstOffsets[1].y = DstImage->Height;
+	Region.dstOffsets[1].z = 1;
+
+	vkCmdBlitImage(
+		CommandBuffer,
+		SrcVkImage->Image,
+		SrcVkImage->GetVulkanLayout(),
+		DstVkImage->Image,
+		DstVkImage->GetVulkanLayout(),
+		1,
+		&Region,
+		VulkanImage::GetVulkanFilter(Filter)
+	);
+}

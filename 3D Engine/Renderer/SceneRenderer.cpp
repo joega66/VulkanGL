@@ -17,6 +17,8 @@ SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, S
 		Surface.Resize(Device, Width, Height);
 
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+
+		// Depth prepass.
 		RenderPassInitializer DepthRPInit = { 0 };
 		DepthRPInit.DepthAttachment = drm::AttachmentView(
 			SceneDepth,
@@ -32,6 +34,16 @@ SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, S
 		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, 0);
 		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
 		SceneTextures->Update();
+
+		drm::ImageRef SwapchainImage = Surface.GetImage(0);
+		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage->Format, EImageUsage::Attachment | EImageUsage::TransferSrc);
+
+		// Lighting pass.
+		RenderPassInitializer LightingRPInfo = { 1 };
+		LightingRPInfo.ColorAttachments[0] = drm::AttachmentView(SceneColor, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::TransferSrcOptimal);
+		LightingRPInfo.DepthAttachment = drm::AttachmentView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite);
+		LightingRPInfo.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
+		LightingRenderPass = Device.CreateRenderPass(LightingRPInfo);
 	});
 
 	Cube = Scene.Assets.GetStaticMesh("Cube");
@@ -49,8 +61,6 @@ SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, S
 
 void SceneRenderer::Render(SceneProxy& Scene)
 {
-	ImageIndex = Surface.AcquireNextImage(Device);
-
 	drm::CommandListRef CommandList = Device.CreateCommandList();
 	drm::CommandList& CmdList = *CommandList;
 
@@ -62,7 +72,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	{
 		RenderDepthPrepass(Scene, CmdList);
 
-		//RenderShadowDepths(Scene, CmdList);
+		RenderShadowDepths(Scene, CmdList);
 
 		if (Platform::GetBool("Engine.ini", "Shadows", "Visualize", false))
 		{
@@ -70,15 +80,7 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 		else
 		{
-			drm::AttachmentView SurfaceView(Surface.GetImage(ImageIndex), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
-			drm::AttachmentView DepthView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite);
-
-			RenderPassInitializer RenderPassInit = { 1 };
-			RenderPassInit.ColorAttachments[0] = SurfaceView;
-			RenderPassInit.DepthAttachment = DepthView;
-			RenderPassInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-
-			CmdList.BeginRenderPass(RenderPassInit);
+			CmdList.BeginRenderPass(LightingRenderPass);
 
 			RenderLightingPass(Scene, CmdList);
 
@@ -88,14 +90,14 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 	}
 
-	Surface.Present(Device, ImageIndex, CommandList);
+	Present(CommandList);
 
 	Device.EndFrame();
 }
 
 void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	drm::AttachmentView SurfaceView(Surface.GetImage(ImageIndex), ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
+	drm::AttachmentView SurfaceView(SceneColor, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Present);
 
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
@@ -128,4 +130,24 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 
 		CmdList.EndRenderPass();
 	}
+}
+
+void SceneRenderer::Present(drm::CommandListRef CmdList)
+{
+	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
+	drm::ImageRef PresentImage = Surface.GetImage(ImageIndex);
+
+	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
+
+	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+
+	CmdList->BlitImage(SceneColor, PresentImage, EFilter::Nearest);
+
+	Barrier.SrcAccessMask = EAccess::TransferWrite;
+	Barrier.DstAccessMask = EAccess::MemoryRead;
+	Barrier.NewLayout = EImageLayout::Present;
+
+	CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &Barrier);
+
+	Surface.Present(Device, ImageIndex, CmdList);
 }
