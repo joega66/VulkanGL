@@ -17,10 +17,12 @@ public:
 	/** Accessors */
 	inline float GetDepthBiasConstantFactor() const { return DepthBiasConstantFactor; }
 	inline float GetDepthBiasSlopeFactor() const { return DepthBiasSlopeFactor; }
+	inline drm::RenderPassRef GetRenderPass() const { return RenderPass; };
 	inline drm::ImageRef GetShadowMap() const { return ShadowMap; }
 	inline drm::DescriptorSetRef GetDescriptorSet() const { return DescriptorSet; }
 
 private:
+	drm::RenderPassRef RenderPass;
 	float DepthBiasConstantFactor = 0.0f;
 	float DepthBiasSlopeFactor = 0.0f;
 	drm::BufferRef LightViewProjBuffer;

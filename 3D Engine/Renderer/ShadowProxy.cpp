@@ -17,6 +17,17 @@ ShadowProxy::ShadowProxy(DRM& Device, const CDirectionalLight& DirectionalLight)
 
 	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
+	RenderPassInitializer RPInfo = { 0 };
+	RPInfo.DepthAttachment = drm::AttachmentView(
+		ShadowMap,
+		ELoadAction::Clear, EStoreAction::Store,
+		ClearDepthStencilValue{},
+		EImageLayout::DepthReadStencilWrite
+	);
+	RPInfo.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap->Width, ShadowMap->Height) };
+
+	RenderPass = Device.CreateRenderPass(RPInfo);
+
 	DescriptorSet = Device.CreateDescriptorSet();
 	DescriptorSet->Write(ShadowMap, SamplerState{}, 1);
 

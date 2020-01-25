@@ -15,7 +15,6 @@ public:
 		, VkImage Image
 		, VkDeviceMemory Memory
 		, EFormat Format
-		, EImageLayout Layout
 		, uint32 Width
 		, uint32 Height
 		, uint32 Depth
@@ -40,8 +39,6 @@ public:
 	[[nodiscard]] static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
 
 	VkFormat GetVulkanFormat() const;
-
-	VkImageLayout GetVulkanLayout() const;
 
 	VkImageAspectFlags GetVulkanAspect() const;
 

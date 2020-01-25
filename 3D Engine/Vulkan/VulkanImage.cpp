@@ -77,7 +77,6 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, VkImage Image
 	, VkDeviceMemory Memory
 	, EFormat Format
-	, EImageLayout Layout
 	, uint32 Width
 	, uint32 Height
 	, uint32 Depth
@@ -85,7 +84,7 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
-	, drm::Image(Format, Layout, Width, Height, Depth, UsageFlags)
+	, drm::Image(Format, Width, Height, Depth, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
@@ -206,11 +205,6 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 VkFormat VulkanImage::GetVulkanFormat() const
 {
 	return GetValue(VulkanFormat, Format);
-}
-
-VkImageLayout VulkanImage::GetVulkanLayout() const
-{
-	return GetValue(VulkanLayout, Layout);
 }
 
 VkImageAspectFlags VulkanImage::GetVulkanAspect() const

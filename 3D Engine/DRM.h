@@ -21,7 +21,7 @@ public:
 	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags) = 0;
 	virtual void* LockBuffer(drm::BufferRef Buffer) = 0;
 	virtual void UnlockBuffer(drm::BufferRef Buffer) = 0;
-	virtual drm::RenderPassRef CreateRenderPass(RenderPassInitializer& RPInit) = 0;
+	virtual drm::RenderPassRef CreateRenderPass(const RenderPassInitializer& RPInit) = 0;
 };
 
 namespace drm

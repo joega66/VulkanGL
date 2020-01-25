@@ -103,16 +103,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 		drm::ImageRef ShadowMap = ShadowProxy.GetShadowMap();
 
-		RenderPassInitializer RPInit = { 0 };
-		RPInit.DepthAttachment = drm::AttachmentView(
-			ShadowMap,
-			ELoadAction::Clear, EStoreAction::Store,
-			ClearDepthStencilValue{},
-			EImageLayout::DepthReadStencilWrite
-		);
-		RPInit.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap->Width, ShadowMap->Height) };
-		
-		CmdList.BeginRenderPass(RPInit);
+		CmdList.BeginRenderPass(ShadowProxy.GetRenderPass());
 
 		PipelineStateInitializer PSOInit = {};
 		PSOInit.Viewport.Width = ShadowMap->Width;
@@ -133,11 +124,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 
 void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	RenderPassInitializer RPInit = { 1 };
-	RPInit.ColorAttachments[0] = drm::AttachmentView(ShadowMask, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::ShaderReadOnlyOptimal);
-	RPInit.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask->Width, ShadowMask->Height) };
-
-	CmdList.BeginRenderPass(RPInit);
+	CmdList.BeginRenderPass(ShadowMaskRP);
 
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{

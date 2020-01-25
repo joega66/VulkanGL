@@ -167,10 +167,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageMemoryBarrier);
 
-	RenderPassInitializer RPInit = { 0 }; // Disable ROP
-	RPInit.RenderArea.Extent = glm::uvec2(VoxelGridSize);
-
-	CmdList.BeginRenderPass(RPInit);
+	CmdList.BeginRenderPass(VoxelRP);
 
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.DepthStencilState.DepthTestEnable = false;
@@ -260,21 +257,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
 
-	drm::AttachmentView SceneView(SceneColor, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::TransferSrcOptimal);
-	drm::AttachmentView DepthView(
-		SceneDepth,
-		ELoadAction::Clear,
-		EStoreAction::Store,
-		ClearDepthStencilValue{},
-		EImageLayout::DepthWriteStencilWrite
-	);
-
-	RenderPassInitializer RPInit = { 1 };
-	RPInit.ColorAttachments[0] = SceneView;
-	RPInit.DepthAttachment = DepthView;
-	RPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-
-	CmdList.BeginRenderPass(RPInit);
+	CmdList.BeginRenderPass(VoxelVisualizationRP);
 
 	drm::DescriptorSetRef DrawVoxelsDescriptorSet = Device.CreateDescriptorSet();
 	DrawVoxelsDescriptorSet->Write(WorldToVoxelBuffer, 0);

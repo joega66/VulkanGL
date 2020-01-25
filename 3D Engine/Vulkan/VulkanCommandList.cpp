@@ -40,66 +40,8 @@ void VulkanCommandList::BeginRenderPass(drm::RenderPassRef RenderPass)
 
 	Pending.RenderPass = VulkanRenderPass->GetRenderPass();
 	Pending.NumRenderTargets = VulkanRenderPass->GetNumAttachments();
-}
 
-void VulkanCommandList::BeginRenderPass(const RenderPassInitializer& RPInit)
-{
-	VkFramebuffer Framebuffer;
-	std::tie(Pending.RenderPass, Framebuffer) = Device.GetRenderPass(RPInit);
-
-	const uint32 NumRTs = RPInit.NumAttachments;
-	std::vector<VkClearValue> ClearValues;
-
-	if (RPInit.DepthAttachment.Image)
-	{
-		ClearValues.resize(NumRTs + 1);
-	}
-	else
-	{
-		ClearValues.resize(NumRTs);
-	}
-
-	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
-	{
-		const auto& ClearValue = std::get<ClearColorValue>(RPInit.ColorAttachments[ColorTargetIndex].ClearValue);
-		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
-		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
-		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
-	}
-
-	if (RPInit.DepthAttachment.Image)
-	{
-		VulkanImageRef Image = ResourceCast(RPInit.DepthAttachment.Image);
-
-		ClearValues[NumRTs].depthStencil = { 0, 0 };
-
-		if (Image->IsDepth())
-		{
-			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).DepthClear;
-		}
-
-		if (Image->IsStencil())
-		{
-			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).StencilClear;
-		}
-	}
-
-	VkRect2D RenderArea;
-	RenderArea.offset.x = RPInit.RenderArea.Offset.x;
-	RenderArea.offset.y = RPInit.RenderArea.Offset.y;
-	RenderArea.extent.width = RPInit.RenderArea.Extent.x;
-	RenderArea.extent.height = RPInit.RenderArea.Extent.y;
-
-	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	BeginInfo.renderPass = Pending.RenderPass;
-	BeginInfo.framebuffer = Framebuffer;
-	BeginInfo.renderArea = RenderArea;
-	BeginInfo.pClearValues = ClearValues.data();
-	BeginInfo.clearValueCount = ClearValues.size();
-
-	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	Pending.NumRenderTargets = RPInit.NumAttachments;
+	VulkanRenderPass->TransitionImages();
 }
 
 void VulkanCommandList::EndRenderPass()

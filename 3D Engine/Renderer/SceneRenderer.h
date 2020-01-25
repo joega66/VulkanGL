@@ -17,13 +17,21 @@ private:
 
 	const StaticMesh* Cube;
 
-	drm::RenderPassRef DepthRenderPass;
+	drm::RenderPassRef DepthRP;
+
+	drm::RenderPassRef DepthVisualizationRP;
+
+	drm::RenderPassRef VoxelRP;
+
+	drm::RenderPassRef VoxelVisualizationRP;
+
+	drm::RenderPassRef LightingRP;
+
+	drm::RenderPassRef ShadowMaskRP;
 
 	drm::DescriptorSetRef SceneTextures;
 
 	drm::ImageRef SceneColor;
-
-	drm::RenderPassRef LightingRenderPass;
 
 	drm::ImageRef SceneDepth;
 
@@ -58,4 +66,16 @@ private:
 	void RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
 
 	void Present(drm::CommandListRef CmdList);
+
+	void CreateDepthRP(DRM& Device);
+
+	void CreateDepthVisualizationRP(DRM& Device);
+
+	void CreateVoxelRP(DRM& Device);
+
+	void CreateVoxelVisualizationRP(DRM& Device);
+
+	void CreateLightingRP(DRM& Device);
+
+	void CreateShadowMaskRP(DRM& Device);
 };

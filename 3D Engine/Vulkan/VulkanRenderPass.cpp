@@ -148,8 +148,6 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 
 			ColorRefs[i].attachment = i;
 			ColorRefs[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-			Image->Layout = ColorAttachment.FinalLayout;
 		}
 
 		if (RPInit.DepthAttachment.Image)
@@ -174,8 +172,6 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 
 			DepthRef.attachment = RPInit.NumAttachments;
 			DepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-			DepthImage->Layout = RPInit.DepthAttachment.FinalLayout;
 		}
 
 		VkSubpassDescription Subpass = {};
@@ -255,12 +251,22 @@ VulkanRenderPass::VulkanRenderPass(
 	VkRenderPass RenderPass, 
 	VkFramebuffer Framebuffer, 
 	const VkRect2D& RenderArea,
+	const std::vector<Transition>& Transitions,
 	const std::vector<VkClearValue>& ClearValues,
 	uint32 NumAttachments) 
 	: RenderPass(RenderPass)
 	, Framebuffer(Framebuffer)
 	, RenderArea(RenderArea)
+	, Transitions(std::move(Transitions))
 	, ClearValues(std::move(ClearValues))
 	, NumAttachments(NumAttachments)
 {
+}
+
+void VulkanRenderPass::TransitionImages()
+{
+	std::for_each(Transitions.begin(), Transitions.end(), [] (Transition& Transition)
+	{
+		Transition.Image->Layout = Transition.Layout;
+	});
 }

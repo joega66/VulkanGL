@@ -243,10 +243,9 @@ namespace drm
 		uint32 Height;
 		uint32 Depth;
 		EImageUsage Usage;
-		EImageLayout Layout;
 
-		Image(EFormat Format, EImageLayout Layout, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
-			: Format(Format), Layout(Layout), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
+		Image(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
+			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
 		{
 		}
 

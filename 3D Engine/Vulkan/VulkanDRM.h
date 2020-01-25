@@ -22,7 +22,7 @@ public:
 	virtual drm::ImageRef CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags) override;
 	virtual void* LockBuffer(drm::BufferRef Buffer) override;
 	virtual void UnlockBuffer(drm::BufferRef Buffer) override;
-	virtual drm::RenderPassRef CreateRenderPass(RenderPassInitializer& RPInit) override;
+	virtual drm::RenderPassRef CreateRenderPass(const RenderPassInitializer& RPInit) override;
 
 	VulkanDevice Device;
 

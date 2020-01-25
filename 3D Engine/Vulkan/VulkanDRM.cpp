@@ -132,7 +132,7 @@ void VulkanDRM::UnlockBuffer(drm::BufferRef Buffer)
 	Allocator.UnlockBuffer(*VulkanBuffer);
 }
 
-drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
+drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPInit)
 {
 	const auto[RenderPass, Framebuffer] = Device.GetRenderPass(RPInit);
 
@@ -147,14 +147,17 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
 	// Get the clear values from the AttachmentViews.
 	const uint32 NumRTs = RPInit.NumAttachments;
 	std::vector<VkClearValue> ClearValues;
+	std::vector<VulkanRenderPass::Transition> Transitions;
 
 	if (RPInit.DepthAttachment.Image)
 	{
 		ClearValues.resize(NumRTs + 1);
+		Transitions.reserve(NumRTs + 1);
 	}
 	else
 	{
 		ClearValues.resize(NumRTs);
+		Transitions.reserve(NumRTs);
 	}
 
 	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
@@ -163,6 +166,8 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
 		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
 		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
 		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
+
+		Transitions.push_back({ ResourceCast(RPInit.ColorAttachments[ColorTargetIndex].Image), RPInit.ColorAttachments[ColorTargetIndex].FinalLayout });
 	}
 
 	if (RPInit.DepthAttachment.Image)
@@ -180,9 +185,11 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(RenderPassInitializer& RPInit)
 		{
 			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).StencilClear;
 		}
+
+		Transitions.push_back({ Image, RPInit.DepthAttachment.FinalLayout });
 	}
 
-	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPInit.NumAttachments);
+	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, Transitions, ClearValues, RPInit.NumAttachments);
 }
 
 void VulkanDRM::CreateLogicalDevice()

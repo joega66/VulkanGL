@@ -81,7 +81,7 @@ struct DepthPrepassDescriptorSets
 
 void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	CmdList.BeginRenderPass(DepthRenderPass);
+	CmdList.BeginRenderPass(DepthRP);
 
 	PipelineStateInitializer PSOInit = {};
 	PSOInit.Viewport.Width = SceneDepth->Width;
