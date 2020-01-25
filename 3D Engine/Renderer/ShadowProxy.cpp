@@ -40,11 +40,11 @@ void ShadowProxy::Update(DRM& Device, const CDirectionalLight& DirectionalLight)
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
 
+	const float64 Width = Platform::GetFloat64("Engine.ini", "Shadows", "Width", 400.0f);
 	const float64 ZNear = Platform::GetFloat64("Engine.ini", "Shadows", "ZNear", 1.0f);
 	const float64 ZFar = Platform::GetFloat64("Engine.ini", "Shadows", "ZFar", 96.0f);
-	const float64 FOV = Platform::GetFloat64("Engine.ini", "Shadows", "FOV", 45.0f);
-
-	glm::mat4 LightProjMatrix = glm::perspective(FOV, ShadowMap->GetAspect(), ZNear, ZFar);
+	
+	glm::mat4 LightProjMatrix = glm::ortho(-(float)Width * 0.5f, (float)Width * 0.5f, -(float)Width * 0.5f, (float)Width * 0.5f, (float)ZNear, (float)ZFar);
 	LightProjMatrix[1][1] *= -1;
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;

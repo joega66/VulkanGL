@@ -41,4 +41,12 @@ void GameSystem::Start(Scene& Scene)
 
 void GameSystem::Update(Scene& Scene)
 {
+	for (auto& Entity : Scene.ECS.GetEntities<CDirectionalLight>())
+	{
+		auto& DirectionalLight = Scene.ECS.GetComponent<CDirectionalLight>(Entity);
+		const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
+		const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
+		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
+		DirectionalLight.Direction = glm::vec3(X, Y, Z);
+	}
 }

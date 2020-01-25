@@ -165,7 +165,7 @@ void SceneRenderer::CreateVoxelVisualizationRP(DRM& Device)
 		SceneColor, 
 		ELoadAction::DontCare, 
 		EStoreAction::Store, 
-		ClearColorValue{}, 
+		ClearColorValue{},
 		EImageLayout::Undefined, 
 		EImageLayout::TransferSrcOptimal);
 	RPInfo.DepthAttachment = drm::AttachmentView(
