@@ -284,11 +284,26 @@ namespace drm
 		ELoadAction LoadAction = ELoadAction::DontCare;
 		EStoreAction StoreAction = EStoreAction::DontCare;
 		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
+		EImageLayout InitialLayout = EImageLayout::Undefined;
 		EImageLayout FinalLayout = EImageLayout::Undefined;
 
 		AttachmentView() = default;
-		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout);
-		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout);
+		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout);
+		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout InitialLayout, EImageLayout FinalLayout);
+
+		friend bool operator==(const AttachmentView& L, const AttachmentView& R)
+		{
+			return L.Image == R.Image
+				&& L.LoadAction == R.LoadAction
+				&& L.StoreAction == R.StoreAction
+				&& L.InitialLayout == R.InitialLayout
+				&& L.FinalLayout == R.FinalLayout;
+		}
+
+		friend bool operator!=(const AttachmentView& L, const AttachmentView& R)
+		{
+			return !(L == R);
+		}
 	};
 
 	class DescriptorSet

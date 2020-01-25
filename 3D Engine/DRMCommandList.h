@@ -19,6 +19,23 @@ struct RenderPassInitializer
 	std::array<drm::AttachmentView, MaxAttachments> ColorAttachments;
 	drm::AttachmentView DepthAttachment;
 	RenderArea RenderArea;
+
+	friend bool operator==(const RenderPassInitializer& L, const RenderPassInitializer& R)
+	{
+		if (L.NumAttachments != R.NumAttachments)
+			return false;
+
+		if (L.DepthAttachment != R.DepthAttachment)
+			return false;
+
+		for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < L.NumAttachments; ColorAttachmentIndex++)
+		{
+			if (L.ColorAttachments[ColorAttachmentIndex] != R.ColorAttachments[ColorAttachmentIndex])
+				return false;
+		}
+
+		return true;
+	}
 };
 
 struct Viewport
@@ -359,10 +376,11 @@ struct ImageMemoryBarrier
 	drm::ImageRef Image;
 	EAccess SrcAccessMask;
 	EAccess DstAccessMask;
+	EImageLayout OldLayout;
 	EImageLayout NewLayout;
 
-	ImageMemoryBarrier(drm::ImageRef Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout NewLayout)
-		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), NewLayout(NewLayout)
+	ImageMemoryBarrier(drm::ImageRef Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout OldLayout, EImageLayout NewLayout)
+		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), OldLayout(OldLayout), NewLayout(NewLayout)
 	{
 	}
 };
@@ -382,8 +400,9 @@ namespace drm
 		virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
 		virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 		virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
-		virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) = 0;
-		virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) = 0;
+		virtual void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color) = 0;
+		virtual void ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue) = 0;
+
 		virtual void PipelineBarrier(
 			EPipelineStage SrcStageMask,
 			EPipelineStage DstStageMask,
@@ -392,8 +411,21 @@ namespace drm
 			uint32 NumImageBarriers,
 			const ImageMemoryBarrier* ImageBarriers
 		) = 0;
-		virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage) = 0;
-		virtual void BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage, EFilter Filter) = 0;
+
+		virtual void CopyBufferToImage(
+			drm::BufferRef SrcBuffer,
+			uint32 BufferOffset,
+			drm::ImageRef DstImage,
+			EImageLayout DstImageLayout
+		) = 0;
+
+		virtual void BlitImage(
+			drm::ImageRef SrcImage,
+			EImageLayout SrcImageLayout,
+			drm::ImageRef DstImage,
+			EImageLayout DstImageLayout,
+			EFilter Filter
+		) = 0;
 	};
 
 	CLASS(CommandList);

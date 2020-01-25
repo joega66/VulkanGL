@@ -256,7 +256,7 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 		if (drm::Image::IsDepthStencil(Format))
 		{
 			return 
-			{ 
+			{
 				VulkanImage::GetVulkanFormat(Format), 
 				VK_FORMAT_D32_SFLOAT_S8_UINT, 
 				VK_FORMAT_D24_UNORM_S8_UINT, 
@@ -279,30 +279,6 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 
 void VulkanDevice::FreeImage(VulkanImage& Image)
 {
-	// The image is no longer being referenced; destroy vulkan objects.
-	if (Any(Image.Usage & EImageUsage::Attachment))
-	{
-		for (auto Iter = RenderPassCache.begin(); Iter != RenderPassCache.end();)
-		{
-			const auto&[CacheInfo, CachedRenderPass, CachedFramebuffer] = *Iter;
-
-			if (Image.Image == Image.Image == CacheInfo.DepthAttachment.Image ||
-				(Image.IsColor() && std::any_of(
-					CacheInfo.ColorAttachments.begin(),
-					CacheInfo.ColorAttachments.end(),
-					[&] (auto ColorTarget) { return Image.Image == ColorTarget.Image; })))
-			{
-				vkDestroyFramebuffer(Device, CachedFramebuffer, nullptr);
-				vkDestroyRenderPass(Device, CachedRenderPass, nullptr);
-				Iter = RenderPassCache.erase(Iter);
-			}
-			else
-			{
-				Iter++;
-			}
-		}
-	}
-
 	vkDestroyImage(Device, Image.Image, nullptr);
 	vkDestroyImageView(Device, Image.ImageView, nullptr);
 	vkFreeMemory(Device, Image.Memory, nullptr);

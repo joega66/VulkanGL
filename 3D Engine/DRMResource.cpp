@@ -66,20 +66,22 @@ namespace drm
 		return GetSize(Format);
 	}
 
-	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout FinalLayout)
+	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)
 		, ClearValue(ClearValue)
+		, InitialLayout(InitialLayout)
 		, FinalLayout(FinalLayout)
 	{
 	}
 
-	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout FinalLayout)
+	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout InitialLayout, EImageLayout FinalLayout)
 		: Image(Image)
 		, LoadAction(LoadAction)
 		, StoreAction(StoreAction)
 		, ClearValue(DepthStencil)
+		, InitialLayout(InitialLayout)
 		, FinalLayout(FinalLayout)
 	{
 	}

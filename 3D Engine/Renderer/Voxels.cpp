@@ -155,14 +155,21 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 {
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 
-	ImageMemoryBarrier ImageMemoryBarrier(VoxelColors, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal);
+	ImageMemoryBarrier ImageMemoryBarrier(
+		VoxelColors, 
+		EAccess::None, 
+		EAccess::TransferWrite,
+		EImageLayout::General,
+		EImageLayout::TransferDstOptimal
+	);
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageMemoryBarrier);
 
-	CmdList.ClearColorImage(VoxelColors, ClearColorValue{});
+	CmdList.ClearColorImage(VoxelColors, EImageLayout::TransferDstOptimal, ClearColorValue{});
 
 	ImageMemoryBarrier.SrcAccessMask = EAccess::TransferWrite;
 	ImageMemoryBarrier.DstAccessMask = EAccess::ShaderWrite;
+	ImageMemoryBarrier.OldLayout = EImageLayout::TransferDstOptimal;
 	ImageMemoryBarrier.NewLayout = EImageLayout::General;
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageMemoryBarrier);
@@ -244,18 +251,19 @@ public:
 
 void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	BufferMemoryBarrier BufferBarrier(VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead);
-	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General);
+	std::vector<BufferMemoryBarrier> Barriers = 
+	{
+		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead }, 
+		{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
+	};
 
-	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::VertexShader, 1, &BufferBarrier, 1, &ImageBarrier);
+	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General);
 
-	BufferMemoryBarrier VoxelIndirectBarrier(
-		VoxelIndirectBuffer,
-		EAccess::ShaderWrite,
-		EAccess::IndirectCommandRead
-	);
-
-	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::DrawIndirect, 1, &VoxelIndirectBarrier, 0, nullptr);
+	CmdList.PipelineBarrier(
+		EPipelineStage::FragmentShader, 
+		EPipelineStage::DrawIndirect | EPipelineStage::VertexShader,
+		Barriers.size(), Barriers.data(), 
+		1, &ImageBarrier);
 
 	CmdList.BeginRenderPass(VoxelVisualizationRP);
 

@@ -35,9 +35,9 @@ public:
 
 	virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) override;
 
-	virtual void ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color) override;
+	virtual void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color) override;
 
-	virtual void ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue) override;
+	virtual void ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue) override;
 
 	virtual void PipelineBarrier(
 		EPipelineStage SrcStageMask,
@@ -48,9 +48,20 @@ public:
 		const ImageMemoryBarrier* ImageBarriers
 	) override;
 
-	virtual void CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage) override;
+	virtual void CopyBufferToImage(
+		drm::BufferRef SrcBuffer, 
+		uint32 BufferOffset, 
+		drm::ImageRef DstImage, 
+		EImageLayout DstImageLayout
+	) override;
 
-	virtual void BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage, EFilter Filter) override;
+	virtual void BlitImage(
+		drm::ImageRef SrcImage,
+		EImageLayout SrcImageLayout,
+		drm::ImageRef DstImage, 
+		EImageLayout DstImageLayout,
+		EFilter Filter
+	) override;
 
 private:
 	VulkanDevice& Device;

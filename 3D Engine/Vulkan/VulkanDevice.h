@@ -57,29 +57,7 @@ public:
 	static const char* GetVulkanErrorString(VkResult Result);
 
 private:
-
-	struct VulkanRenderPassHash
-	{
-		struct MinAttachmentView
-		{
-			VkImage Image = VK_NULL_HANDLE;
-			ELoadAction LoadAction = ELoadAction::DontCare;
-			EStoreAction StoreAction = EStoreAction::DontCare;
-			EImageLayout InitialLayout = EImageLayout::Undefined;
-			EImageLayout FinalLayout = EImageLayout::Undefined;
-			MinAttachmentView() = default;
-			MinAttachmentView(const drm::AttachmentView& AView);
-			bool operator==(const MinAttachmentView& Other);
-		};
-
-		std::vector<MinAttachmentView> ColorAttachments;
-		MinAttachmentView DepthAttachment;
-
-		VulkanRenderPassHash(const RenderPassInitializer& RPInit);
-		bool operator==(const VulkanRenderPassHash& Other);
-	};
-
-	SlowCache<VulkanRenderPassHash, VkRenderPass, VkFramebuffer> RenderPassCache;
+	SlowCache<RenderPassInitializer, VkRenderPass, VkFramebuffer> RenderPassCache;
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 

@@ -251,7 +251,6 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 				, VulkanImage
 				, VkDeviceMemory()
 				, VulkanImage::GetEngineFormat(SurfaceFormat.format)
-				, EImageLayout::Undefined
 				, Extent.width
 				, Extent.height
 				, 1

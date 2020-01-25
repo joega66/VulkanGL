@@ -22,6 +22,7 @@ ShadowProxy::ShadowProxy(DRM& Device, const CDirectionalLight& DirectionalLight)
 		ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
+		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite
 	);
 	RPInfo.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap->Width, ShadowMap->Height) };

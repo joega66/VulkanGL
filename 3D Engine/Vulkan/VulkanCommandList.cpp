@@ -40,8 +40,6 @@ void VulkanCommandList::BeginRenderPass(drm::RenderPassRef RenderPass)
 
 	Pending.RenderPass = VulkanRenderPass->GetRenderPass();
 	Pending.NumRenderTargets = VulkanRenderPass->GetNumAttachments();
-
-	VulkanRenderPass->TransitionImages();
 }
 
 void VulkanCommandList::EndRenderPass()
@@ -127,7 +125,7 @@ void VulkanCommandList::DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint3
 		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
 }
 
-void VulkanCommandList::ClearColorImage(drm::ImageRef Image, const ClearColorValue& Color)
+void VulkanCommandList::ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color)
 {
 	const VulkanImageRef& VulkanImage = ResourceCast(Image);
 
@@ -138,10 +136,10 @@ void VulkanCommandList::ClearColorImage(drm::ImageRef Image, const ClearColorVal
 	Range.layerCount = 1;
 	Range.levelCount = 1;
 
-	vkCmdClearColorImage(CommandBuffer, VulkanImage->Image, VulkanImage->GetVulkanLayout(), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
+	vkCmdClearColorImage(CommandBuffer, VulkanImage->Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
 }
 
-void VulkanCommandList::ClearDepthStencilImage(drm::ImageRef Image, const ClearDepthStencilValue& DepthStencilValue)
+void VulkanCommandList::ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue)
 {
 	const VulkanImageRef& VulkanImage = ResourceCast(Image);
 
@@ -152,7 +150,7 @@ void VulkanCommandList::ClearDepthStencilImage(drm::ImageRef Image, const ClearD
 	Range.layerCount = 1;
 	Range.levelCount = 1;
 
-	vkCmdClearDepthStencilImage(CommandBuffer, VulkanImage->Image, VulkanImage->GetVulkanLayout(), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
+	vkCmdClearDepthStencilImage(CommandBuffer, VulkanImage->Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
 }
 
 static inline VkAccessFlags GetVulkanAccessFlags(EAccess Access)
@@ -204,7 +202,7 @@ void VulkanCommandList::PipelineBarrier(
 		VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.SrcAccessMask);
 		Barrier.dstAccessMask = GetVulkanAccessFlags(ImageBarrier.DstAccessMask);
-		Barrier.oldLayout = VulkanImage->GetVulkanLayout();
+		Barrier.oldLayout = VulkanImage::GetVulkanLayout(ImageBarrier.OldLayout);
 		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.NewLayout);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -216,8 +214,6 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.subresourceRange.layerCount = Any(VulkanImage->Usage & EImageUsage::Cubemap) ? 6 : 1;
 
 		VulkanImageBarriers.push_back(Barrier);
-
-		VulkanImage->Layout = ImageBarrier.NewLayout;
 	}
 
 	vkCmdPipelineBarrier(
@@ -231,7 +227,7 @@ void VulkanCommandList::PipelineBarrier(
 	);
 }
 
-void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage)
+void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage, EImageLayout DstImageLayout)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(SrcBuffer);
 	VulkanImageRef VulkanImage = ResourceCast(DstImage);
@@ -283,10 +279,16 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), VulkanImage->Image, VulkanImage->GetVulkanLayout(), Regions.size(), Regions.data());
+	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), VulkanImage->Image, VulkanImage::GetVulkanLayout(DstImageLayout), Regions.size(), Regions.data());
 }
 
-void VulkanCommandList::BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage, EFilter Filter)
+void VulkanCommandList::BlitImage(
+	drm::ImageRef SrcImage,
+	EImageLayout SrcImageLayout,
+	drm::ImageRef DstImage,
+	EImageLayout DstImageLayout,
+	EFilter Filter
+)
 {
 	const VulkanImageRef& SrcVkImage = ResourceCast(SrcImage);
 	const VulkanImageRef& DstVkImage = ResourceCast(DstImage);
@@ -310,9 +312,9 @@ void VulkanCommandList::BlitImage(drm::ImageRef SrcImage, drm::ImageRef DstImage
 	vkCmdBlitImage(
 		CommandBuffer,
 		SrcVkImage->Image,
-		SrcVkImage->GetVulkanLayout(),
+		VulkanImage::GetVulkanLayout(SrcImageLayout),
 		DstVkImage->Image,
-		DstVkImage->GetVulkanLayout(),
+		VulkanImage::GetVulkanLayout(DstImageLayout),
 		1,
 		&Region,
 		VulkanImage::GetVulkanFilter(Filter)

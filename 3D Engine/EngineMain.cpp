@@ -31,7 +31,12 @@ static void CreateDebugMaterials(DRM& Device)
 
 	drm::CommandListRef CmdList = Device.CreateCommandList();
 
-	std::vector<ImageMemoryBarrier> Barriers(5, { nullptr, EAccess::None, EAccess::TransferWrite, EImageLayout::TransferDstOptimal });
+	std::vector<ImageMemoryBarrier> Barriers
+	(
+		5, 
+		{ nullptr, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal }
+	);
+
 	Barriers[0].Image = Material::Red;
 	Barriers[1].Image = Material::Green;
 	Barriers[2].Image = Material::Blue;
@@ -42,13 +47,14 @@ static void CreateDebugMaterials(DRM& Device)
 
 	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
 	{
-		CmdList->CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image);
+		CmdList->CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image, EImageLayout::TransferDstOptimal);
 	}
 
 	for (auto& Barrier : Barriers)
 	{
 		Barrier.SrcAccessMask = EAccess::TransferWrite;
 		Barrier.DstAccessMask = EAccess::ShaderRead;
+		Barrier.OldLayout = EImageLayout::TransferDstOptimal;
 		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 

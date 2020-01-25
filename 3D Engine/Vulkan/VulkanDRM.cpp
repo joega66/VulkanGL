@@ -53,10 +53,15 @@ drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const vo
 	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
 }
 
-drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, EFormat Format, EImageUsage UsageFlags)
+drm::ImageRef VulkanDRM::CreateImage(
+	uint32 Width, 
+	uint32 Height, 
+	uint32 Depth, 
+	EFormat Format, 
+	EImageUsage UsageFlags, 
+	EImageLayout InitialLayout
+)
 {
-	EImageLayout Layout = EImageLayout::Undefined;
-
 	if (drm::Image::IsDepth(Format))
 	{
 		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(Device, Format));
@@ -71,7 +76,7 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
 	Info.format = VulkanImage::GetVulkanFormat(Format);
 	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	Info.initialLayout = VulkanImage::GetVulkanLayout(Layout);
+	Info.initialLayout = VulkanImage::GetVulkanLayout(InitialLayout);
 	Info.usage = [&] ()
 	{
 		VkFlags Usage = 0;
@@ -111,7 +116,6 @@ drm::ImageRef VulkanDRM::CreateImage(uint32 Width, uint32 Height, uint32 Depth, 
 		, Image
 		, Memory
 		, Format
-		, Layout
 		, Width
 		, Height
 		, Depth
@@ -147,17 +151,14 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPIn
 	// Get the clear values from the AttachmentViews.
 	const uint32 NumRTs = RPInit.NumAttachments;
 	std::vector<VkClearValue> ClearValues;
-	std::vector<VulkanRenderPass::Transition> Transitions;
 
 	if (RPInit.DepthAttachment.Image)
 	{
 		ClearValues.resize(NumRTs + 1);
-		Transitions.reserve(NumRTs + 1);
 	}
 	else
 	{
 		ClearValues.resize(NumRTs);
-		Transitions.reserve(NumRTs);
 	}
 
 	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
@@ -166,8 +167,6 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPIn
 		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
 		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
 		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
-
-		Transitions.push_back({ ResourceCast(RPInit.ColorAttachments[ColorTargetIndex].Image), RPInit.ColorAttachments[ColorTargetIndex].FinalLayout });
 	}
 
 	if (RPInit.DepthAttachment.Image)
@@ -185,11 +184,9 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPIn
 		{
 			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPInit.DepthAttachment.ClearValue).StencilClear;
 		}
-
-		Transitions.push_back({ Image, RPInit.DepthAttachment.FinalLayout });
 	}
 
-	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, Transitions, ClearValues, RPInit.NumAttachments);
+	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPInit.NumAttachments);
 }
 
 void VulkanDRM::CreateLogicalDevice()

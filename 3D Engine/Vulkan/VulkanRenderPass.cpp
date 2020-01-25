@@ -2,66 +2,15 @@
 #include "VulkanDRM.h"
 #include "VulkanRenderPass.h"
 
-VulkanDevice::VulkanRenderPassHash::MinAttachmentView::MinAttachmentView(const drm::AttachmentView& AView)
-{
-	const VulkanImageRef& VulkanImage = ResourceCast(AView.Image);
-	Image = VulkanImage->Image;
-	LoadAction = AView.LoadAction;
-	StoreAction = AView.StoreAction;
-	InitialLayout = AView.Image->Layout;
-	FinalLayout = AView.FinalLayout;
-}
-
-bool VulkanDevice::VulkanRenderPassHash::MinAttachmentView::operator==(const MinAttachmentView& Other)
-{
-	return Image == Other.Image &&
-		LoadAction == Other.LoadAction &&
-		StoreAction == Other.StoreAction &&
-		InitialLayout == Other.InitialLayout &&
-		FinalLayout == Other.FinalLayout;
-}
-
-VulkanDevice::VulkanRenderPassHash::VulkanRenderPassHash(const RenderPassInitializer& RPInit)
-{
-	if (RPInit.DepthAttachment.Image)
-	{
-		DepthAttachment = MinAttachmentView(RPInit.DepthAttachment);
-	}
-
-	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPInit.NumAttachments; ColorAttachmentIndex++)
-	{
-		ColorAttachments.push_back(RPInit.ColorAttachments[ColorAttachmentIndex]);
-	}
-}
-
-bool VulkanDevice::VulkanRenderPassHash::operator==(const VulkanRenderPassHash& Other)
-{
-	if (ColorAttachments.size() != Other.ColorAttachments.size())
-	{
-		return false;
-	}
-
-	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < ColorAttachments.size(); ColorAttachmentIndex++)
-	{
-		if (!(ColorAttachments[ColorAttachmentIndex] == Other.ColorAttachments[ColorAttachmentIndex]))
-		{
-			return false;
-		}
-	}
-
-	return DepthAttachment == Other.DepthAttachment;
-}
-
 std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderPassInitializer& RPInit)
 {
 	VkRenderPass RenderPass = VK_NULL_HANDLE;
 	VkFramebuffer Framebuffer;
-	VulkanRenderPassHash RenderPassHash(RPInit);
 
 	// Find or create the render pass.
-	for (const auto&[OtherRenderPassHash, CachedRenderPass, CachedFramebuffer] : RenderPassCache)
+	for (const auto&[OtherRPInit, CachedRenderPass, CachedFramebuffer] : RenderPassCache)
 	{
-		if (RenderPassHash == OtherRenderPassHash)
+		if (RPInit == OtherRPInit)
 		{
 			RenderPass = CachedRenderPass;
 			Framebuffer = CachedFramebuffer;
@@ -72,7 +21,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderP
 	if (RenderPass == VK_NULL_HANDLE)
 	{
 		std::tie(RenderPass, Framebuffer) = CreateRenderPass(RPInit);
-		RenderPassCache.push_back({ RenderPassHash, RenderPass, Framebuffer });
+		RenderPassCache.push_back({ RPInit, RenderPass, Framebuffer });
 	}
 
 	return { RenderPass, Framebuffer };
@@ -142,7 +91,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			ColorDescription.storeOp = GetVulkanStoreOp(ColorAttachment.StoreAction);
 			ColorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			ColorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			ColorDescription.initialLayout = Image->GetVulkanLayout();
+			ColorDescription.initialLayout = VulkanImage::GetVulkanLayout(ColorAttachment.InitialLayout);
 			ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorAttachment.FinalLayout);
 			Descriptions[i] = ColorDescription;
 
@@ -166,7 +115,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const Rend
 			DepthDescription.storeOp = DepthImage->IsDepth() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			DepthDescription.initialLayout = DepthImage->GetVulkanLayout();
+			DepthDescription.initialLayout = VulkanImage::GetVulkanLayout(RPInit.DepthAttachment.InitialLayout);
 			DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPInit.DepthAttachment.FinalLayout);
 			Descriptions[RPInit.NumAttachments] = DepthDescription;
 
@@ -251,22 +200,12 @@ VulkanRenderPass::VulkanRenderPass(
 	VkRenderPass RenderPass, 
 	VkFramebuffer Framebuffer, 
 	const VkRect2D& RenderArea,
-	const std::vector<Transition>& Transitions,
 	const std::vector<VkClearValue>& ClearValues,
 	uint32 NumAttachments) 
 	: RenderPass(RenderPass)
 	, Framebuffer(Framebuffer)
 	, RenderArea(RenderArea)
-	, Transitions(std::move(Transitions))
 	, ClearValues(std::move(ClearValues))
 	, NumAttachments(NumAttachments)
 {
-}
-
-void VulkanRenderPass::TransitionImages()
-{
-	std::for_each(Transitions.begin(), Transitions.end(), [] (Transition& Transition)
-	{
-		Transition.Image->Layout = Transition.Layout;
-	});
 }
