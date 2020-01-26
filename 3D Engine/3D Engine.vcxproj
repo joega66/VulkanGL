@@ -33,7 +33,7 @@
     <ClCompile Include="Engine\Screen.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\Timers.cpp" />
-    <ClCompile Include="Engine\View.cpp" />
+    <ClCompile Include="Engine\Camera.cpp" />
     <ClCompile Include="DRMResource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Physics\Physics.cpp" />
@@ -86,7 +86,7 @@
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\Timers.h" />
     <ClInclude Include="Engine\Types.h" />
-    <ClInclude Include="Engine\View.h" />
+    <ClInclude Include="Engine\Camera.h" />
     <ClInclude Include="DRM.h" />
     <ClInclude Include="DRMResource.h" />
     <ClInclude Include="DRMShader.h" />

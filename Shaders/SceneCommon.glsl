@@ -3,7 +3,7 @@
 
 #define SCENE_SET 0
 
-layout(binding = 0, set = SCENE_SET) uniform ViewUniform
+layout(binding = 0, set = SCENE_SET) uniform CameraUniform
 {
 	mat4 WorldToView;
 	mat4 ViewToClip;
@@ -14,7 +14,7 @@ layout(binding = 0, set = SCENE_SET) uniform ViewUniform
 	float AspectRatio;
 	float FieldOfView;
 	vec2 ScreenDims;
-} View;
+} Camera;
 
 struct DirectionalLight
 {

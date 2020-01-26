@@ -92,11 +92,11 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in 
 vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 {
 	vec3 Lo = vec3(0.0);
-	vec3 V = normalize(View.Position - Surface.WorldPosition);
+	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 	vec3 R0 = vec3(0.04);
 	R0 = mix(R0, Material.Albedo, Material.Shininess);
 
-	vec2 ScreenUV = gl_FragCoord.xy / View.ScreenDims;
+	vec2 ScreenUV = gl_FragCoord.xy / Camera.ScreenDims;
 
 	// Directional lights
 	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)

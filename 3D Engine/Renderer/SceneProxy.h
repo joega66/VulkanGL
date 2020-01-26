@@ -12,7 +12,7 @@ namespace EStaticDrawListType
 	};
 };
 
-class SceneProxy : public View
+class SceneProxy : public Camera
 {
 	friend class EngineMain;
 	SceneProxy(DRM& Device, Scene& Scene);
@@ -28,7 +28,7 @@ public:
 	/** Skybox to be rendered in the scene. */
 	drm::ImageRef Skybox;
 
-	drm::BufferRef ViewUniform;
+	drm::BufferRef CameraUniform;
 
 	drm::BufferRef DirectionalLightBuffer;
 

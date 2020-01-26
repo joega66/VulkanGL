@@ -1,7 +1,7 @@
-#include "View.h"
+#include "Camera.h"
 #include "Screen.h"
 
-View::View(Screen& Screen, const glm::vec3 &Position, const glm::vec3 &Up, float Yaw, float Pitch, float InFOV)
+Camera::Camera(Screen& Screen, const glm::vec3& Position, const glm::vec3& Up, float Yaw, float Pitch, float InFOV)
 	: Position(Position)
 	, WorldUp(Up)
 	, Yaw(Yaw)
@@ -18,7 +18,7 @@ View::View(Screen& Screen, const glm::vec3 &Position, const glm::vec3 &Up, float
 	});
 }
 
-Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
+Ray Camera::ScreenPointToRay(const glm::vec2& ScreenPosition) const
 { 
 	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)GetWidth(), ScreenPosition.y / (float)GetHeight());
 
@@ -48,7 +48,7 @@ Ray View::ScreenPointToRay(const glm::vec2& ScreenPosition) const
 	return Ray(RayStartWorldSpace, RayDirWorldSpace);
 }
 
-bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition) const
+bool Camera::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition) const
 {
 	const glm::vec4 ProjectiveSpace = GetViewToClip() * GetWorldToView() * glm::vec4(WorldPosition, 1.0f);
 	if (ProjectiveSpace.w > 0.0f)
@@ -66,12 +66,12 @@ bool View::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& Sc
 	return false;
 }
 
-glm::mat4 View::GetWorldToView() const
+glm::mat4 Camera::GetWorldToView() const
 {
 	return glm::lookAt(Position, Position + Front, Up);
 }
 
-void View::Axis(const glm::vec2& Offset)
+void Camera::Axis(const glm::vec2& Offset)
 {
 	Yaw += Offset.x;
 	Pitch += Offset.y;
@@ -85,12 +85,12 @@ void View::Axis(const glm::vec2& Offset)
 	Up = glm::normalize(glm::cross(Right, Front));
 }
 
-void View::Translate(const float DS)
+void Camera::Translate(const float DS)
 {
 	Position += Front * DS;
 }
 
-FrustumPlanes View::GetFrustumPlanes() const
+FrustumPlanes Camera::GetFrustumPlanes() const
 {
 	const glm::mat4 WorldToClip = glm::transpose(GetWorldToClip());
 	const FrustumPlanes FrustumPlanes =

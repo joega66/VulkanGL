@@ -10,7 +10,7 @@ void main()
 
 	Surface_SetAttributes(WorldPosition);
 
-	gl_Position = View.WorldToClip * WorldPosition;
+	gl_Position = Camera.WorldToClip * WorldPosition;
 }
 
 #endif

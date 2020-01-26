@@ -7,7 +7,7 @@ Scene::Scene(DRM& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class I
 	, Cursor(Cursor)
 	, Input(Input)
 	, Assets(Device)
-	, View(Screen)
+	, Camera(Screen)
 {
 	Skybox = Assets.GetCubemap("Engine_Cubemap_Default");
 }

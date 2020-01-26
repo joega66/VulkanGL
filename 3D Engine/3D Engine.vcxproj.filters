@@ -86,9 +86,6 @@
     <ClInclude Include="Engine\StaticMesh.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\View.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\FullscreenQuad.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -206,6 +203,9 @@
     <ClInclude Include="Vulkan\VulkanSurface.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Camera.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -239,9 +239,6 @@
       <Filter>Source\Platforms</Filter>
     </ClCompile>
     <ClCompile Include="Engine\StaticMesh.cpp">
-      <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\View.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\LightingPass.cpp">
@@ -346,6 +343,9 @@
     <ClCompile Include="Vulkan\VulkanSurface.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Camera.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -361,6 +361,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\LightingPassFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SkyboxVS.glsl">
@@ -405,6 +408,9 @@
     <None Include="..\Shaders\DrawVoxels.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Shaders\DepthPrepass.glsl">
+      <Filter>Shaders</Filter>
+    </None>
     <None Include="..\Shaders\ShadowDepthVS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -415,12 +421,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SceneTexturesCommon.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\DepthPrepass.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

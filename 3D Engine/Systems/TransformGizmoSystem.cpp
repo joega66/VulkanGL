@@ -90,7 +90,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 			return;
 		}
 
-		const Ray Ray = Scene.View.ScreenPointToRay(Scene.Cursor.Position);
+		const Ray Ray = Scene.Camera.ScreenPointToRay(Scene.Cursor.Position);
 
 		std::vector<Entity> Hits;
 
@@ -117,8 +117,8 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 			{
 				Transform& TransformA = ECS.GetComponent<Transform>(A);
 				Transform& TransformB = ECS.GetComponent<Transform>(B);
-				return glm::distance(TransformA.GetPosition(), Scene.View.GetPosition()) <
-					glm::distance(TransformB.GetPosition(), Scene.View.GetPosition());
+				return glm::distance(TransformA.GetPosition(), Scene.Camera.GetPosition()) <
+					glm::distance(TransformB.GetPosition(), Scene.Camera.GetPosition());
 			});
 
 			SelectedEntity = Hits.front();
@@ -151,10 +151,10 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 
 		std::for_each(Gizmo.begin(), Gizmo.end(), [&](auto& Entity)
 		{
-			if (Physics::Raycast(Scene, Scene.View.ScreenPointToRay(Scene.Cursor.Position), Entity))
+			if (Physics::Raycast(Scene, Scene.Camera.ScreenPointToRay(Scene.Cursor.Position), Entity))
 			{
 				Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.View.GetPosition()); NewDist < Dist)
+				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.Camera.GetPosition()); NewDist < Dist)
 				{
 					ClosestHit = Entity;
 					Dist = NewDist;

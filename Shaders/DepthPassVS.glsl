@@ -4,5 +4,5 @@
 void main()
 {
 	vec4 WorldPosition = GetWorldPosition();
-	gl_Position = View.WorldToClip * WorldPosition;
+	gl_Position = Camera.WorldToClip * WorldPosition;
 }

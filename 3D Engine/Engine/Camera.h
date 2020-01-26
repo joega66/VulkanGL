@@ -1,14 +1,13 @@
 #pragma once
 #include <Physics/Physics.h>
 
-class View
+class Camera
 {
 public:
-	View(class Screen& Screen,
-		const glm::vec3 &Position = glm::vec3(0.0f, 0.0f, 0.0f),
-		const glm::vec3 &Up = glm::vec3(0.0f, 1.0f, 0.0f),
-		float Yaw = -90.0f, float Pitch = 0.0f,
-		float FOV = 45.0f);
+	Camera(class Screen& Screen,
+		const glm::vec3& Position = glm::vec3(0.0f, 0.0f, 0.0f),
+		const glm::vec3& Up = glm::vec3(0.0f, 1.0f, 0.0f),
+		float Yaw = -90.0f, float Pitch = 0.0f, float FOV = 45.0f);
 
 	/** Get the width of the camera pixels. */
 	inline uint32 GetWidth() const { return Width; }

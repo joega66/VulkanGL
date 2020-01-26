@@ -11,22 +11,22 @@ void EditorControllerSystem::Start(Scene& Scene)
 
 void EditorControllerSystem::Update(Scene& Scene)
 {
-	View& View = Scene.View;
+	Camera& Camera = Scene.Camera;
 
 	// Translate the view.
 	const float DS = Scene.Cursor.MouseScrollSpeed * Scene.Cursor.MouseScrollDelta.y;
-	View.Translate(DS);
+	Camera.Translate(DS);
 
 	if (Scene.Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		// Disable the mouse while looking around.
 		Scene.Cursor.Mode = ECursorMode::Disabled;
 
-		if (!View.bFreeze)
+		if (!Camera.bFreeze)
 		{
 			// Look around.
 			glm::vec2 Offset = glm::vec2(Scene.Cursor.Position.x - Scene.Cursor.Last.x, Scene.Cursor.Last.y - Scene.Cursor.Position.y) * Scene.Cursor.Sensitivity;
-			View.Axis(Offset);
+			Camera.Axis(Offset);
 		}
 	}
 	else if (Scene.Input.GetKeyUp(EKeyCode::MouseLeft))

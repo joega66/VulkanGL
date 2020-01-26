@@ -9,7 +9,7 @@
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
-	: View(Scene.View)
+	: Camera(Scene.Camera)
 	, ShaderMap(Scene.ShaderMap)
 	, ECS(Scene.ECS)
 	, Skybox(Scene.Skybox)
@@ -19,7 +19,7 @@ SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
 	InitMeshDrawCommands(Device);
 
 	DescriptorSet = Device.CreateDescriptorSet();
-	DescriptorSet->Write(ViewUniform, 0);
+	DescriptorSet->Write(CameraUniform, 0);
 	DescriptorSet->Write(DirectionalLightBuffer, 1);
 	DescriptorSet->Write(PointLightBuffer, 2);
 	DescriptorSet->Update();
@@ -27,7 +27,7 @@ SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
 
 void SceneProxy::InitView(DRM& Device)
 {
-	UNIFORM_STRUCT(ViewUniformBuffer,
+	UNIFORM_STRUCT(CameraUniformBuffer,
 		glm::mat4 WorldToView;
 		glm::mat4 ViewToClip;
 		glm::mat4 WorldToClip;
@@ -39,7 +39,7 @@ void SceneProxy::InitView(DRM& Device)
 		glm::vec2 ScreenDims;
 	);
 
-	const ViewUniformBuffer ViewUniformBuffer =
+	const CameraUniformBuffer CameraUniformBuffer =
 	{
 		GetWorldToView(),
 		GetViewToClip(),
@@ -52,7 +52,7 @@ void SceneProxy::InitView(DRM& Device)
 		glm::vec2(GetWidth(), GetHeight())
 	};
 
-	ViewUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(ViewUniformBuffer), &ViewUniformBuffer);
+	CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
 }
 
 void SceneProxy::InitLights(DRM& Device)

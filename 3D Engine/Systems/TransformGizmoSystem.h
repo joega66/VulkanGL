@@ -49,8 +49,8 @@ private:
 
 			Transform& Transform = ECS.GetComponent<class Transform>(SelectedEntity);
 			glm::vec3 Position = Transform.GetPosition();
-			Ray Ray0 = Scene.View.ScreenPointToRay(Scene.Cursor.Last);
-			Ray Ray1 = Scene.View.ScreenPointToRay(Scene.Cursor.Position);
+			Ray Ray0 = Scene.Camera.ScreenPointToRay(Scene.Cursor.Last);
+			Ray Ray1 = Scene.Camera.ScreenPointToRay(Scene.Cursor.Position);
 
 			if constexpr (Axis == EAxis::X)
 			{
@@ -75,12 +75,12 @@ private:
 			}
 
 			Transform.Translate(Position);
-			Scene.View.bFreeze = true;
+			Scene.Camera.bFreeze = true;
 		}
 		else if (Scene.Input.GetKeyUp(EKeyCode::MouseLeft))
 		{
 			State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);
-			Scene.View.bFreeze = false;
+			Scene.Camera.bFreeze = false;
 		}
 	}
 

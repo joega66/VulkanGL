@@ -45,7 +45,7 @@ void main()
 			vec3 CubePosition = CreateCube(i) * VoxelSize;
 			VoxelPosition += vec3(CubePosition.x, -CubePosition.y, -CubePosition.z);
 			OutVoxelColor = InVoxelColor[0];
-			gl_Position = View.WorldToClip * vec4(VoxelPosition.xyz, 1);
+			gl_Position = Camera.WorldToClip * vec4(VoxelPosition.xyz, 1);
 			EmitVertex();
 		}
 		EndPrimitive();

@@ -1,6 +1,6 @@
 #pragma once
 #include <ECS/EntityManager.h>
-#include <Engine/View.h>
+#include <Engine/Camera.h>
 #include <Engine/AssetManager.h>
 
 class DRM;
@@ -39,7 +39,7 @@ public:
 
 	EntityManager ECS;
 
-	View View;
+	Camera Camera;
 
 	drm::ImageRef Skybox;
 };
