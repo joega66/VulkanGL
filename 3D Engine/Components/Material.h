@@ -22,6 +22,7 @@ public:
 	static drm::ImageRef Green;
 	static drm::ImageRef Blue;
 	static drm::ImageRef White;
+	static drm::ImageRef Black;
 	/** Dummy texture for "empty" descriptors. */
 	static drm::ImageRef Dummy;
 

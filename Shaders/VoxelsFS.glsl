@@ -1,6 +1,7 @@
 #include "Common.glsl"
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
+#include "MaterialCommon.glsl"
 #include "LightingCommon.glsl"
 #define VOXEL_SET 4
 #include "VoxelsCommon.glsl"
@@ -17,11 +18,15 @@ void main()
 		discard;
 	}
 
-	MaterialParams Material = GetMaterial();
+	SurfaceData Surface = Surface_Get();
 
-	vec4 Color = Shade(Material);
+	Material_DiscardMaskedPixel(Surface);
 
-	vec3 VoxelTexCoord = TransformWorldToVoxel(Material.Position);
+	MaterialData Material = Material_Get(Surface);
+
+	vec4 Color = Shade(Surface, Material);
+
+	vec3 VoxelTexCoord = TransformWorldToVoxel(Surface.WorldPosition);
 	VoxelTexCoord.xy = VoxelTexCoord.xy / 2.0 + 0.5;
 	VoxelTexCoord *= VOXEL_GRID_SIZE;
 

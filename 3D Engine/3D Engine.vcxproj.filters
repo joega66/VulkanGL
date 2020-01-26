@@ -363,9 +363,6 @@
     <None Include="..\Shaders\LightingPassFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\DepthPassVS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\SkyboxVS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -408,9 +405,6 @@
     <None Include="..\Shaders\DrawVoxels.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\DepthPrepass.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\ShadowDepthVS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -421,6 +415,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SceneTexturesCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\DepthPrepass.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -29,26 +29,31 @@ static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, ai
 
 			if (Pixels)
 			{
-				Material = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst, EImageLayout::TransferDstOptimal);
+				Material = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+
+				drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Material->GetSize(), Pixels);
 
 				drm::CommandListRef CmdList = Device.CreateCommandList();
 
-				// Create the staging buffer.
-				drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Material->GetSize(), Pixels);
-				CmdList->CopyBufferToImage(StagingBuffer, 0, Material, EImageLayout::TransferDstOptimal);
-
-				// Shader read transition.
 				ImageMemoryBarrier Barrier(
 					Material,
+					EAccess::None,
 					EAccess::TransferWrite,
-					EAccess::ShaderRead,
-					EImageLayout::TransferDstOptimal,
-					EImageLayout::ShaderReadOnlyOptimal
+					EImageLayout::Undefined,
+					EImageLayout::TransferDstOptimal
 				);
+
+				CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+
+				CmdList->CopyBufferToImage(StagingBuffer, 0, Material, EImageLayout::TransferDstOptimal);
+
+				Barrier.SrcAccessMask = EAccess::TransferWrite;
+				Barrier.DstAccessMask = EAccess::ShaderRead;
+				Barrier.OldLayout = EImageLayout::TransferDstOptimal;
+				Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
 
 				CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
 
-				// Submit.
 				Device.SubmitCommands(CmdList);
 			}
 

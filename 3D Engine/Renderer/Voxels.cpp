@@ -89,6 +89,10 @@ void SceneProxy::AddToVoxelsPass(const MeshProxy& MeshProxy)
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
+	// Set the shadow mask to black so that voxels don't have shadows.
+	SceneTextures->Write(Material::Black, SamplerState{ EFilter::Nearest }, 1);
+	SceneTextures->Update();
+
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 
 	glm::mat4 OrthoProj = glm::ortho(-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, -(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, 0.0f, (float)VoxelGridSize);
@@ -159,7 +163,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 		VoxelColors, 
 		EAccess::None, 
 		EAccess::TransferWrite,
-		EImageLayout::General,
+		EImageLayout::Undefined,
 		EImageLayout::TransferDstOptimal
 	);
 

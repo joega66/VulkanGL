@@ -10,8 +10,10 @@ layout(location = 4) out vec4 OutTriangleAABB;
 
 void main()
 {
+	SurfaceData Surface[] = { Surface_Get(0), Surface_Get(1), Surface_Get(2) };
+
 	/* 1. Find the axis that maximizes the projected area of this triangle. */
-	const vec3 FaceNormal = abs(InNormal[0] + InNormal[1] + InNormal[2]);
+	const vec3 FaceNormal = abs(Surface[0].WorldNormal + Surface[1].WorldNormal + Surface[2].WorldNormal);
 	uint Axis = FaceNormal.y > FaceNormal.x ? 1 : 0;
 	Axis = FaceNormal.z > FaceNormal[Axis] ? 2 : Axis;
 
@@ -20,7 +22,7 @@ void main()
 
 	for (uint i = 0; i < 3; i++)
 	{
-		ClipSpacePositions[i] = TransformWorldToVoxel(InPosition[i].xyz);
+		ClipSpacePositions[i] = TransformWorldToVoxel(Surface[i].WorldPosition);
 		
 		if (Axis == 0)
 		{
@@ -69,7 +71,7 @@ void main()
 	{
 		gl_Position.xyz = ClipSpacePositions[i];
 		gl_Position.w = 1.0;
-		SetGSInterpolants(i);
+		Surface_SetAttributes(i);
 		EmitVertex();
 	}
 

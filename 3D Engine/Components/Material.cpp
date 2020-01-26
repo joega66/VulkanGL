@@ -5,6 +5,7 @@ drm::ImageRef Material::Red;
 drm::ImageRef Material::Green;
 drm::ImageRef Material::Blue;
 drm::ImageRef Material::White;
+drm::ImageRef Material::Black;
 drm::ImageRef Material::Dummy;
 
 Material::Material()

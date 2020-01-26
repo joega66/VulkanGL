@@ -64,13 +64,13 @@ float SmithGF(float NdotV, float NdotL, float Roughness)
 	return Geom1 * Geom2;
 }
 
-vec3 DirectLighting(in vec3 V, in LightParams Light, in MaterialParams Material, in vec3 R0)
+vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in MaterialData Material, in vec3 R0)
 {
-	float NdotV = max(dot(Material.Normal, V), 0.0);
+	float NdotV = max(dot(Surface.WorldNormal, V), 0.0);
 	vec3 H = normalize(Light.L + V);
 
-	float NdotL = max(dot(Material.Normal, Light.L), 0.0);
-	float NdotH = max(dot(Material.Normal, H), 0.0);
+	float NdotL = max(dot(Surface.WorldNormal, Light.L), 0.0);
+	float NdotH = max(dot(Surface.WorldNormal, H), 0.0);
 
 	vec3 Fresnel = FresnelSchlick(NdotL, R0);
 	float NDF = TrowbridgeReitzNDF(NdotH, Material.Roughness);
@@ -89,10 +89,10 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in MaterialParams Material,
 	return Lo;
 }
 
-vec4 Shade(in MaterialParams Material)
+vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 {
 	vec3 Lo = vec3(0.0);
-	vec3 V = normalize(View.Position - Material.Position);
+	vec3 V = normalize(View.Position - Surface.WorldPosition);
 	vec3 R0 = vec3(0.04);
 	R0 = mix(R0, Material.Albedo, Material.Shininess);
 
@@ -107,13 +107,13 @@ vec4 Shade(in MaterialParams Material)
 
 		float ShadowFactor = texture(ShadowMask, ScreenUV).r;
 
-		Lo += DirectLighting(V, Light, Material, R0) * ( 1.0 - ShadowFactor );
+		Lo += DirectLighting(V, Light, Surface, Material, R0) * ( 1.0 - ShadowFactor );
 	}
 
 	// Point lights
 	for (int LightIndex = 0; LightIndex < NumPointLights.x; LightIndex++)
 	{
-		vec3 FragToLight = PointLights[LightIndex].Position - Material.Position;
+		vec3 FragToLight = PointLights[LightIndex].Position - Surface.WorldPosition;
 		float Distance = length(FragToLight);
 		float Attenuation = 1.0 / (Distance * Distance);
 
@@ -121,7 +121,7 @@ vec4 Shade(in MaterialParams Material)
 		Light.L = normalize(FragToLight);
 		Light.Radiance = PointLights[LightIndex].Intensity * PointLights[LightIndex].Color * Attenuation;
 
-		Lo += DirectLighting(V, Light, Material, R0);
+		Lo += DirectLighting(V, Light, Surface, Material, R0);
 	}
 
 	// Ambient

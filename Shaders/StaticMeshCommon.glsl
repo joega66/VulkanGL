@@ -1,15 +1,15 @@
 #ifndef STATIC_MESH_COMMON
 #define STATIC_MESH_COMMON
 
-#include "MaterialCommon.glsl"
-
 #define MESH_SET 1
 
-layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniform
-{
-	mat4 Transform;
-	mat4 Inverse;
-} LocalToWorld;
+//struct SurfaceOutput
+//{
+//	vec3 Position;
+//	vec2 UV;
+//	vec3 Normal;
+//	vec3 Tangent;
+//};
 
 #if GEOMETRY_SHADER
 layout(location = 0) in vec4 InPosition[];
@@ -35,14 +35,20 @@ layout(location = 2) out vec3 OutNormal;
 layout(location = 3) out vec3 OutTangent;
 #endif
 
+layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniform
+{
+	mat4 Transform;
+	mat4 Inverse;
+} LocalToWorld;
+
 #if VERTEX_SHADER
 
-vec4 GetWorldPosition()
+vec4 Surface_GetWorldPosition()
 {
 	return LocalToWorld.Transform * vec4(InPosition, 1.0f);
 }
 
-void SetVSInterpolants(in vec4 WorldPosition)
+void Surface_SetAttributes(in vec4 WorldPosition)
 {
 	OutPosition = WorldPosition;
 	OutUV = InUV;
@@ -52,7 +58,7 @@ void SetVSInterpolants(in vec4 WorldPosition)
 
 #elif GEOMETRY_SHADER
 
-void SetGSInterpolants(in uint VertexIndex)
+void Surface_SetAttributes(in uint VertexIndex)
 {
 	OutPosition = InPosition[VertexIndex];
 	OutUV = InUV[VertexIndex];
@@ -60,52 +66,24 @@ void SetGSInterpolants(in uint VertexIndex)
 	OutTangent = InTangent[VertexIndex];
 }
 
-#endif
-
-#if FRAGMENT_SHADER
-
-// For discarding masked pixels in the depth prepass.
-void DiscardMaskedPixel()
+SurfaceData Surface_Get(in uint VertexIndex)
 {
-	float Alpha = texture(Opacity, InUV).r;
-	if (Alpha <= 0)
-	{
-		discard;
-	}
+	SurfaceData Surface;
+	Surface.WorldPosition = InPosition[VertexIndex].xyz;
+	Surface.WorldNormal = InNormal[VertexIndex];
+	Surface.UV = InUV[VertexIndex];
+	return Surface;
 }
 
-MaterialParams GetMaterial()
+#elif FRAGMENT_SHADER
+
+SurfaceData Surface_Get()
 {
-	MaterialParams Material;
-	Material.Position = InPosition.xyz;
-	Material.Normal = normalize(InNormal);
-	Material.Albedo = texture(Diffuse, InUV).rgb;
-	Material.Roughness = 0.25f;
-	Material.Shininess = 0.0f;
-
-	if (HasOpacityMap)
-	{
-		Material.Alpha = texture(Opacity, InUV).r;
-		if (Material.Alpha <= 0)
-		{
-			discard;
-		}
-	}
-	else
-	{
-		Material.Alpha = 1.0f;
-	}
-
-	if (HasSpecularMap)
-	{
-		Material.Specular = texture(Specular, InUV).rgb;
-	}
-	else
-	{
-		Material.Specular = vec3(1.0f);
-	}
-
-	return Material;
+	SurfaceData Surface;
+	Surface.WorldPosition = InPosition.xyz;
+	Surface.WorldNormal = normalize(InNormal);
+	Surface.UV = InUV;
+	return Surface;
 }
 
 #endif

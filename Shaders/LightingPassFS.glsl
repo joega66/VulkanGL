@@ -1,12 +1,15 @@
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
+#include "MaterialCommon.glsl"
 #include "LightingCommon.glsl"
 
 layout(location = 0) out vec4 OutColor;
 
 void main()
 {
-	MaterialParams Material = GetMaterial();
+	SurfaceData Surface = Surface_Get();
 
-	OutColor = Shade(Material);
+	MaterialData Material = Material_Get(Surface);
+
+	OutColor = Shade(Surface, Material);
 }

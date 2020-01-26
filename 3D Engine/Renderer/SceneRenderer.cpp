@@ -23,8 +23,6 @@ SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, S
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		SceneTextures->Write(SceneDepth, SamplerState{ EFilter::Nearest }, 0);
-		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
-		SceneTextures->Update();
 
 		CreateDepthRP(Device);
 		CreateDepthVisualizationRP(Device);
@@ -36,7 +34,7 @@ SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, S
 	Cube = Scene.Assets.GetStaticMesh("Cube");
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage, EImageLayout::General);
+	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
 	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(glm::ivec3));
 
 	VoxelsDescriptorSet = Device.CreateDescriptorSet();
@@ -69,6 +67,9 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 		else
 		{
+			SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
+			SceneTextures->Update();
+
 			CmdList.BeginRenderPass(LightingRP);
 
 			RenderLightingPass(Scene, CmdList);
@@ -120,7 +121,7 @@ void SceneRenderer::Present(drm::CommandListRef CmdList)
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
 	drm::ImageRef PresentImage = Surface.GetImage(ImageIndex);
 
-	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Present, EImageLayout::TransferDstOptimal);
+	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
 
 	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 

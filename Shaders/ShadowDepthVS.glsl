@@ -7,9 +7,9 @@ layout(binding = 0, set = 0) uniform LightViewProjBuffer
 
 void main()
 {
-	vec4 WorldPosition = GetWorldPosition();
+	vec4 WorldPosition = Surface_GetWorldPosition();
 
-	SetVSInterpolants(WorldPosition);
+	Surface_SetAttributes(WorldPosition);
 
 	gl_Position = LightViewProj * WorldPosition;
 }

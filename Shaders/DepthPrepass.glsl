@@ -1,13 +1,14 @@
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
+#include "MaterialCommon.glsl"
 
 #ifdef VERTEX_SHADER
 
 void main()
 {
-	vec4 WorldPosition = GetWorldPosition();
+	vec4 WorldPosition = Surface_GetWorldPosition();
 
-	SetVSInterpolants(WorldPosition);
+	Surface_SetAttributes(WorldPosition);
 
 	gl_Position = View.WorldToClip * WorldPosition;
 }
@@ -18,7 +19,9 @@ void main()
 
 void main()
 {
-	DiscardMaskedPixel();
+	SurfaceData Surface = Surface_Get();
+
+	Material_DiscardMaskedPixel(Surface);
 }
 
 #endif

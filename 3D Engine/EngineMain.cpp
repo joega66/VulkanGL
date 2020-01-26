@@ -18,6 +18,7 @@ static void CreateDebugMaterials(DRM& Device)
 		0, 255, 0, 0, // Green
 		0, 0, 255, 0, // Blue
 		255, 255, 255, 0, // White
+		0, 0, 0, 0, // Black
 		234, 115, 79, 0 // Dummy
 	};
 
@@ -27,13 +28,14 @@ static void CreateDebugMaterials(DRM& Device)
 	Material::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	Material::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 
 	drm::CommandListRef CmdList = Device.CreateCommandList();
 
 	std::vector<ImageMemoryBarrier> Barriers
 	(
-		5, 
+		Colors.size() / 4,
 		{ nullptr, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal }
 	);
 
@@ -41,7 +43,8 @@ static void CreateDebugMaterials(DRM& Device)
 	Barriers[1].Image = Material::Green;
 	Barriers[2].Image = Material::Blue;
 	Barriers[3].Image = Material::White;
-	Barriers[4].Image = Material::Dummy;
+	Barriers[4].Image = Material::Black;
+	Barriers[5].Image = Material::Dummy;
 
 	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
 
@@ -77,6 +80,7 @@ void EngineMain::Main(
 
 	Scene Scene(Device, ShaderMap, Cursor, Input, Screen);
 	SceneRenderer SceneRenderer(Device, Surface, Scene, Screen);
+
 	SystemsManager SystemsManager;
 
 	EditorControllerSystem EditorControllerSystem;

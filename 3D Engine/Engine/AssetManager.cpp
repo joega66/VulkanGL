@@ -59,28 +59,32 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform::LoadImage(File, Width, Height, Channels);
 
-	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst, EImageLayout::TransferDstOptimal);
+	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
 
 	{
 		drm::CommandListRef CmdList = Device.CreateCommandList();
 
-		// Create the staging buffer.
 		drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize(), Pixels);
+
+		ImageMemoryBarrier Barrier(
+			Image,
+			EAccess::None,
+			EAccess::TransferWrite,
+			EImageLayout::Undefined,
+			EImageLayout::TransferDstOptimal
+		);
+
+		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
 		CmdList->CopyBufferToImage(StagingBuffer, 0, Image, EImageLayout::TransferDstOptimal);
 
-		// Shader read transition.
-		ImageMemoryBarrier Barrier(
-			Image, 
-			EAccess::TransferWrite,
-			EAccess::ShaderRead,
-			EImageLayout::TransferDstOptimal, 
-			EImageLayout::ShaderReadOnlyOptimal
-		);
-		
+		Barrier.SrcAccessMask = EAccess::TransferWrite;
+		Barrier.DstAccessMask = EAccess::ShaderRead;
+		Barrier.OldLayout = EImageLayout::TransferDstOptimal;
+		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+
 		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
 
-		// Submit.
 		Device.SubmitCommands(CmdList);
 	}
 	
@@ -107,7 +111,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 		if (FaceIndex == 0)
 		{
-			Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst, EImageLayout::TransferDstOptimal);
+			Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
 			StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize());
 			MemMapped = Device.LockBuffer(StagingBuffer);
 		}
@@ -123,20 +127,25 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 	drm::CommandListRef CmdList = Device.CreateCommandList();
 
-	CmdList->CopyBufferToImage(StagingBuffer, 0, Image, EImageLayout::TransferDstOptimal);
-
-	// Shader read transition.
 	ImageMemoryBarrier Barrier(
-		Image, 
+		Image,
+		EAccess::None,
 		EAccess::TransferWrite,
-		EAccess::ShaderRead,
-		EImageLayout::TransferDstOptimal, 
-		EImageLayout::ShaderReadOnlyOptimal
+		EImageLayout::Undefined,
+		EImageLayout::TransferDstOptimal
 	);
 
+	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+
+	CmdList->CopyBufferToImage(StagingBuffer, 0, Image, EImageLayout::TransferDstOptimal);
+
+	Barrier.SrcAccessMask = EAccess::TransferWrite;
+	Barrier.DstAccessMask = EAccess::ShaderRead;
+	Barrier.OldLayout = EImageLayout::TransferDstOptimal;
+	Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	
 	CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
 
-	// Submit.
 	Device.SubmitCommands(CmdList);
 
 	Cubemaps[Name] = Image;

@@ -3,9 +3,9 @@
 
 void main()
 {
-	vec4 WorldPosition = GetWorldPosition();
+	vec4 WorldPosition = Surface_GetWorldPosition();
 
-	SetVSInterpolants(WorldPosition);
+	Surface_SetAttributes(WorldPosition);
 
 	gl_Position = View.WorldToClip * WorldPosition;
 }
