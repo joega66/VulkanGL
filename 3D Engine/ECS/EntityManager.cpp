@@ -54,13 +54,17 @@ void EntityManager::Destroy(Entity& Entity)
 	}));
 }
 
+void EntityManager::NotifyComponentEvents()
+{
+	for (auto& ComponentArrayEntry : ComponentArrays)
+	{
+		auto ComponentArray = ComponentArrayEntry.second.get();
+		ComponentArray->NotifyComponentCreatedEvents();
+	}
+}
+
 void EntityManager::InitDefaultComponents(Entity& Entity)
 {
 	AddComponent<Transform>(Entity);
 	AddComponent<CRenderer>(Entity);
-}
-
-bool EntityManager::IsVisible(Entity& Entity) 
-{ 
-	return GetComponent<CRenderer>(Entity).bVisible; 
 }

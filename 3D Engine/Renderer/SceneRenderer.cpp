@@ -5,6 +5,7 @@
 #include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
+#include <Components/Transform.h>
 
 SceneRenderer::SceneRenderer(DRM& Device, drm::Surface& Surface, Scene& Scene, Screen& Screen)
 	: Device(Device)

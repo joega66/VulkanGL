@@ -88,8 +88,8 @@ struct ShadowDepthPassDescriptorSets
 		std::array<drm::DescriptorSetRef, 3> DescriptorSets =
 		{
 			ShadowProxyDescriptorSet,
-			MeshProxy.MeshSet,
-			MeshProxy.MaterialSet
+			MeshProxy.GetSurfaceSet(),
+			MeshProxy.GetMaterialSet()
 		};
 
 		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());

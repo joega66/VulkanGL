@@ -9,6 +9,7 @@
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
+#include <Systems/RenderSystem.h>
 
 static void CreateDebugMaterials(DRM& Device)
 {
@@ -83,12 +84,16 @@ void EngineMain::Main(
 
 	SystemsManager SystemsManager;
 
+	RenderSystem RenderSystem;
+	SystemsManager.Register(RenderSystem);
+
 	EditorControllerSystem EditorControllerSystem;
 	SystemsManager.Register(EditorControllerSystem);
 
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
+	SystemsManager.StartRenderSystems(Scene.ECS, Device);
 	SystemsManager.StartSystems(Scene);
 
 	while (!Platform.WindowShouldClose())
@@ -96,7 +101,11 @@ void EngineMain::Main(
 		Platform.PollEvents();
 
 		SystemsManager.UpdateSystems(Scene);
-		
+
+		Scene.ECS.NotifyComponentEvents();
+
+		SystemsManager.UpdateRenderSystems(Scene.ECS, Device);
+
 		SceneProxy SceneProxy(Device, Scene);
 
 		SceneRenderer.Render(SceneProxy);

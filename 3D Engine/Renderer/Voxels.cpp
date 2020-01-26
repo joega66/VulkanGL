@@ -145,8 +145,8 @@ struct VoxelizationPassDescriptorSets
 		const std::array<drm::DescriptorSetRef, 5> DescriptorSets =
 		{
 			Scene,
-			MeshProxy.MeshSet,
-			MeshProxy.MaterialSet,
+			MeshProxy.GetSurfaceSet(),
+			MeshProxy.GetMaterialSet(),
 			SceneTextures,
 			Voxels
 		};

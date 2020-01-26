@@ -6,6 +6,7 @@ template<typename ...Args>
 inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, Args &&...InArgs)
 {
 	Components.emplace(Entity.GetEntityID(), std::move(ComponentType(std::forward<Args>(InArgs)...)));
+	NewEntities.push_back(Entity);
 	return Components[Entity.GetEntityID()];
 }
 
@@ -28,12 +29,18 @@ inline void ComponentArray<ComponentType>::NewComponentCallback(ComponentCallbac
 }
 
 template<typename ComponentType>
-inline void ComponentArray<ComponentType>::NotifyComponentCreated(Entity& Entity, ComponentType& Component)
+inline void ComponentArray<ComponentType>::NotifyComponentCreatedEvents()
 {
-	std::for_each(ComponentCreatedCallbacks.begin(), ComponentCreatedCallbacks.end(), [&](auto& Callback)
+	for (auto Entity : NewEntities)
 	{
-		Callback(Entity, Component);
-	});
+		auto& Component = GetComponent(Entity);
+		std::for_each(ComponentCreatedCallbacks.begin(), ComponentCreatedCallbacks.end(), [&] (auto& Callback)
+		{
+			Callback(Entity, Component);
+		});
+	}
+
+	NewEntities.clear();
 }
 
 template<typename ComponentType>

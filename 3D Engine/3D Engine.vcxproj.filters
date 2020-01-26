@@ -206,6 +206,9 @@
     <ClInclude Include="Engine\Camera.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Systems\RenderSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -345,6 +348,9 @@
     </ClCompile>
     <ClCompile Include="Engine\Camera.cpp">
       <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\RenderSystem.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

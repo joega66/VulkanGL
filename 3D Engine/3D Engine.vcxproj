@@ -52,6 +52,7 @@
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\GameSystem.cpp" />
+    <ClCompile Include="Systems\RenderSystem.cpp" />
     <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
     <ClCompile Include="Vulkan\VulkanCommands.cpp" />
@@ -108,6 +109,7 @@
     <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
     <ClInclude Include="Systems\GameSystem.h" />
+    <ClInclude Include="Systems\RenderSystem.h" />
     <ClInclude Include="Systems\TransformGizmoSystem.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
     <ClInclude Include="Vulkan\VulkanCommands.h" />

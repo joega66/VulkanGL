@@ -32,9 +32,7 @@ public:
 	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs)
 	{
 		auto Array = GetComponentArray<ComponentType>();
-		ComponentType& Component = Array->AddComponent(Entity, InArgs...);
-		Array->NotifyComponentCreated(Entity, Component);
-		return Component;
+		return Array->AddComponent(Entity, InArgs...);
 	}
 
 	template<typename ComponentType>
@@ -78,27 +76,6 @@ public:
 		return EntitiesWithComponents;
 	}
 
-	/** GetVisibleEntities
-	  * @return Entities with ComponentTypes which are not hidden.
-	  * Entities are returned in sorted order for faster ranges operations.
-	  */
-	template<typename ...ComponentTypes>
-	std::vector<Entity> GetVisibleEntities()
-	{
-		std::vector<Entity> EntitiesWithComponents;
-
-		for (auto Entity : Entities)
-		{
-			if (IsVisible(Entity) &&
-				EntityHasComponents<ComponentTypes...>(Entity))
-			{
-				EntitiesWithComponents.push_back(Entity);
-			}
-		}
-
-		return EntitiesWithComponents;
-	}
-
 	/** Add a callback for when ComponentType is created. */
 	template<typename ComponentType>
 	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback)
@@ -106,6 +83,9 @@ public:
 		auto Array = GetComponentArray<ComponentType>();
 		Array->NewComponentCallback(ComponentCallback);
 	}
+
+	/** Call component events. */
+	void NotifyComponentEvents();
 
 private:
 	/** Next entity id to be allocated. */
@@ -151,8 +131,6 @@ private:
 	}
 
 	void InitDefaultComponents(Entity& Entity);
-
-	bool IsVisible(Entity& Entity);
 };
 
 #include "ComponentArray.inl"

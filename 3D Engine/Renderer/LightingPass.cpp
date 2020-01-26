@@ -60,7 +60,7 @@ void SceneProxy::AddToLightingPass(const MeshProxy& MeshProxy)
 	};
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
-		MeshProxy.Material.IsMasked() ?
+		MeshProxy.GetMaterial()->IsMasked() ?
 		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
 
 	LightingPass[StaticDrawListType].push_back(
@@ -78,8 +78,8 @@ struct LightingPassDescriptorSets
 		const std::array<drm::DescriptorSetRef, 4> DescriptorSets =
 		{
 			Scene,
-			MeshProxy.MeshSet,
-			MeshProxy.MaterialSet,
+			MeshProxy.GetSurfaceSet(),
+			MeshProxy.GetMaterialSet(),
 			SceneTextures
 		};
 

@@ -36,12 +36,6 @@ public:
 
 	drm::DescriptorSetRef DescriptorSet;
 
-	/** Meshes in the scene. */
-	std::vector<MeshProxy> MeshProxies;
-
-	/** Meshes that passed view frustum culling. */
-	std::vector<const MeshProxy*> VisibleMeshProxies;
-
 	std::vector<MeshDrawCommand> DepthPrepass;
 
 	std::vector<MeshDrawCommand> ShadowDepthPass;

@@ -13,6 +13,7 @@ public:
 	virtual bool HasComponent(Entity& Entity) const = 0;
 	virtual void CopyComponent(Entity& Destination, Entity& Source) = 0;
 	virtual void RemoveComponent(Entity& Entity) = 0;
+	virtual void NotifyComponentCreatedEvents() = 0;
 };
 
 template<typename ComponentType>
@@ -31,8 +32,8 @@ public:
 	/** Add a callback for when a component is created.	*/
 	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback);
 
-	/** Notify callbacks that the component was created. */
-	void NotifyComponentCreated(Entity& Entity, ComponentType& Component);
+	/** Notify callbacks that a component was created. */
+	virtual void NotifyComponentCreatedEvents() final;
 
 	/** Check if entity has a component. */
 	virtual bool HasComponent(Entity& Entity) const final;
@@ -46,5 +47,10 @@ public:
 private:
 	// @todo Object pool for components
 	HashTable<uint64, ComponentType> Components;
+
+	/** Component created events. */
 	std::vector<ComponentCallback<ComponentType>> ComponentCreatedCallbacks;
+
+	/** Entities that have a new component. Cleared every frame. */
+	std::vector<Entity> NewEntities;
 };

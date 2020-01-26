@@ -34,7 +34,8 @@ public:
 	{
 		DescriptorSets.Set(CmdList, MeshProxy);
 
-		PSOInit.SpecializationInfo = MeshProxy.SpecializationInfo;
+		PSOInit.SpecializationInfo = MeshProxy.GetSpecializationInfo();
+
 		PSOInit.ShaderStages = ShaderStages;
 
 		CmdList.BindPipeline(PSOInit);

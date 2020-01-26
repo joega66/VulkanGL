@@ -56,7 +56,7 @@ void SceneProxy::AddToDepthPrepass(const MeshProxy& MeshProxy)
 		nullptr,
 		nullptr,
 		nullptr,
-		MeshProxy.Material.IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr
+		MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr
 	};
 
 	DepthPrepass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
@@ -71,8 +71,8 @@ struct DepthPrepassDescriptorSets
 		std::array<drm::DescriptorSetRef, 3> DescriptorSets =
 		{
 			SceneDescriptorSet,
-			MeshProxy.MeshSet,
-			MeshProxy.MaterialSet
+			MeshProxy.GetSurfaceSet(),
+			MeshProxy.GetMaterialSet()
 		};
 
 		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());

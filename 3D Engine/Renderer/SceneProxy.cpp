@@ -5,7 +5,6 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 #include <Components/CRenderer.h>
-#include "MeshProxy.h"
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
@@ -72,7 +71,7 @@ void SceneProxy::InitDirectionalLights(DRM& Device)
 
 	std::vector<DirectionalLightProxy> DirectionalLightProxies;
 
-	for (auto Entity : ECS.GetVisibleEntities<CDirectionalLight>())
+	for (auto Entity : ECS.GetEntities<CDirectionalLight>())
 	{
 		auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
 
@@ -112,7 +111,7 @@ void SceneProxy::InitPointLights(DRM& Device)
 
 	std::vector<PointLightProxy> PointLightProxies;
 
-	for (auto Entity : ECS.GetVisibleEntities<CPointLight>())
+	for (auto Entity : ECS.GetEntities<CPointLight>())
 	{
 		auto& PointLight = ECS.GetComponent<CPointLight>(Entity);
 		auto& Transform = ECS.GetComponent<class Transform>(Entity);
@@ -135,52 +134,20 @@ void SceneProxy::InitPointLights(DRM& Device)
 
 void SceneProxy::InitMeshDrawCommands(DRM& Device)
 {
-	auto StaticMeshEntities = ECS.GetVisibleEntities<StaticMeshComponent>();
-	
-	MeshProxies.reserve(StaticMeshEntities.size());
-	VisibleMeshProxies.reserve(StaticMeshEntities.size());
-
 	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
 
-	// Gather mesh proxies.
-	for (auto Entity : StaticMeshEntities)
+	// Initialize the draw commands.
+	for (auto Entity : ECS.GetEntities<MeshProxy>())
 	{
-		UNIFORM_STRUCT(LocalToWorldUniformBuffer,
-			glm::mat4 Transform;
-			glm::mat4 Inverse;
-		);
+		const MeshProxy& MeshProxy = ECS.GetComponent<class MeshProxy>(Entity);
 
-		const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-		const LocalToWorldUniformBuffer LocalToWorldUniformBuffer = { Transform.GetLocalToWorld(), glm::inverse(Transform.GetLocalToWorld()) };
-		const drm::BufferRef LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(LocalToWorldUniformBuffer), &LocalToWorldUniformBuffer);
-		const StaticMesh* StaticMesh = ECS.GetComponent<StaticMeshComponent>(Entity).StaticMesh;
-		const Material& Material = ECS.GetComponent<class Material>(Entity);
-
-		drm::DescriptorSetRef MeshSet = Device.CreateDescriptorSet();
-		MeshSet->Write(LocalToWorldUniform, 0);
-		MeshSet->Update();
-
-		MeshProxies.emplace_back(MeshProxy(Device, MeshSet, Material, StaticMesh->Submeshes, LocalToWorldUniform));
-		
-		const BoundingBox WorldSpaceBB = StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
-		
-		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, WorldSpaceBB))
+		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, MeshProxy.WorldSpaceBB))
 		{
-			VisibleMeshProxies.push_back(&MeshProxies.back());
+			AddToDepthPrepass(MeshProxy);
+			AddToLightingPass(MeshProxy);
 		}
-	}
 
-	// Add to scene draw lists.
-	for (const MeshProxy& MeshProxy : MeshProxies)
-	{
 		AddToShadowDepthPass(MeshProxy);
 		AddToVoxelsPass(MeshProxy);
-	}
-
-	// Add to visible draw lists.
-	for (const MeshProxy* MeshProxy : VisibleMeshProxies)
-	{
-		AddToDepthPrepass(*MeshProxy);
-		AddToLightingPass(*MeshProxy);
 	}
 }
