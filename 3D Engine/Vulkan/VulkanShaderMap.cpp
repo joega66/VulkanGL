@@ -170,7 +170,8 @@ ShaderCompilationInfo VulkanShaderMap::CompileShader(
 	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
 
-	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = ParseVertexAttributeDescriptions(GLSL, Resources);
+	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = 
+		Stage == EShaderStage::Vertex ? ParseVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
 
 	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions);
 }

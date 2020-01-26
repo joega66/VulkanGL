@@ -57,6 +57,9 @@ void SceneRenderer::Render(SceneProxy& Scene)
 	}
 	else
 	{
+		SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
+		SceneTextures->Update();
+
 		RenderDepthPrepass(Scene, CmdList);
 
 		RenderShadowDepths(Scene, CmdList);
@@ -67,9 +70,6 @@ void SceneRenderer::Render(SceneProxy& Scene)
 		}
 		else
 		{
-			SceneTextures->Write(ShadowMask, SamplerState{ EFilter::Nearest }, 1);
-			SceneTextures->Update();
-
 			CmdList.BeginRenderPass(LightingRP);
 
 			RenderLightingPass(Scene, CmdList);
