@@ -67,7 +67,7 @@ public:
 
 		for (auto Entity : Entities)
 		{
-			if (EntityHasComponents<ComponentTypes...>(Entity))
+			if (EntityStatus[Entity.GetEntityID()] && EntityHasComponents<ComponentTypes...>(Entity))
 			{
 				EntitiesWithComponents.push_back(Entity);
 			}
@@ -89,16 +89,22 @@ public:
 
 private:
 	/** Next entity id to be allocated. */
-	uint64 NextEntityID = 0;
+	uint32 NextEntityID = 0;
 
 	/** Map of prefab names to prefab entities. */
 	HashTable<std::string, Entity> Prefabs;
 
 	/** Map of entity id's to prefab names*/
-	HashTable<uint64, std::string> PrefabNames;
+	HashTable<uint32, std::string> PrefabNames;
 
-	/** Currently active entities in the scene. */
+	/** Entity pool. */
 	std::vector<Entity> Entities;
+
+	/** Whether the entity is dead or alive. */
+	std::vector<bool> EntityStatus;
+
+	/** Dead entities for recycling Entity IDs. */
+	std::list<Entity> DeadEntities;
 
 	/** Map of a component's type to its component array. */
 	HashTable<std::type_index, std::unique_ptr<IComponentArray>> ComponentArrays;
@@ -129,8 +135,6 @@ private:
 	{
 		return EntityHasComponents<ComponentType1>(Entity) && EntityHasComponents<ComponentType2, More...>(Entity);
 	}
-
-	void InitDefaultComponents(Entity& Entity);
 };
 
 #include "ComponentArray.inl"

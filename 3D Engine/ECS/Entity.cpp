@@ -6,12 +6,12 @@ Entity::Entity()
 {
 }
 
-Entity::Entity(uint64 EntityID)
+Entity::Entity(uint32 EntityID)
 	: EntityID(EntityID)
 {
 }
 
-uint64 Entity::GetEntityID() const
+uint32 Entity::GetEntityID() const
 {
 	return EntityID;
 }

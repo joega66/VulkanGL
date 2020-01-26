@@ -5,17 +5,34 @@
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
 	check(!Contains(Prefabs, Name), "Prefab %s already exists.", Name.c_str());
-	Prefabs.emplace(Name, Entity{ NextEntityID++ });
+	Prefabs.emplace(Name, CreateEntity());
 	Entity Prefab = GetValue(Prefabs, Name);
 	PrefabNames.emplace(Prefab.GetEntityID(), Name);
-	InitDefaultComponents(Prefab);
 	return Prefab;
 }
 
 Entity EntityManager::CreateEntity()
 {
-	Entity NewEntity = Entities.emplace_back(Entity{ NextEntityID++ });
-	InitDefaultComponents(NewEntity);
+	Entity NewEntity = [&] ()
+	{
+		if (!DeadEntities.empty())
+		{
+			auto Entity = DeadEntities.front();
+			DeadEntities.pop_front();
+			EntityStatus[Entity.GetEntityID()] = true;
+			return Entity;
+		}
+		else
+		{
+			EntityStatus.push_back(true);
+			return Entities.emplace_back(Entity{ NextEntityID++ });
+		}
+	}();
+	
+	// Add components every entity should probably have...
+	AddComponent<Transform>(NewEntity);
+	AddComponent<CRenderer>(NewEntity);
+
 	return NewEntity;
 }
 
@@ -48,10 +65,9 @@ void EntityManager::Destroy(Entity& Entity)
 		ComponentArray.second.get()->RemoveComponent(Entity);
 	}
 
-	Entities.erase(std::remove_if(Entities.begin(), Entities.end(), [&] (auto& Other)
-	{
-		return Entity == Other;
-	}));
+	DeadEntities.push_back(Entity);
+
+	EntityStatus[Entity.GetEntityID()] = false;
 }
 
 void EntityManager::NotifyComponentEvents()
@@ -61,10 +77,4 @@ void EntityManager::NotifyComponentEvents()
 		auto ComponentArray = ComponentArrayEntry.second.get();
 		ComponentArray->NotifyComponentCreatedEvents();
 	}
-}
-
-void EntityManager::InitDefaultComponents(Entity& Entity)
-{
-	AddComponent<Transform>(Entity);
-	AddComponent<CRenderer>(Entity);
 }

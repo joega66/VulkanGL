@@ -5,9 +5,24 @@ template<typename ComponentType>
 template<typename ...Args>
 inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, Args &&...InArgs)
 {
-	Components.emplace(Entity.GetEntityID(), std::move(ComponentType(std::forward<Args>(InArgs)...)));
+	// Set the component to alive.
+	ComponentStatus[Entity.GetEntityID()] = true;
+
+	// Construct the component.
+	Components[Entity.GetEntityID()] = std::move(ComponentType(std::forward<Args>(InArgs)...));
+
+	// Later notify component events that this component was created.
 	NewEntities.push_back(Entity);
+
+	// Return the newly created component.
 	return Components[Entity.GetEntityID()];
+}
+
+template<typename ComponentType>
+inline ComponentArray<ComponentType>::ComponentArray()
+{
+	ComponentStatus.resize(ArraySize, false);
+	Components.resize(ArraySize);
 }
 
 template<typename ComponentType>
@@ -46,11 +61,11 @@ inline void ComponentArray<ComponentType>::NotifyComponentCreatedEvents()
 template<typename ComponentType>
 inline bool ComponentArray<ComponentType>::HasComponent(Entity& Entity) const
 {
-	return Contains(Components, Entity.GetEntityID());
+	return ComponentStatus[Entity.GetEntityID()];
 }
 
 template<typename ComponentType>
 inline void ComponentArray<ComponentType>::RemoveComponent(Entity& Entity)
 {
-	Components.erase(Entity.GetEntityID());
+	ComponentStatus[Entity.GetEntityID()] = false;
 }

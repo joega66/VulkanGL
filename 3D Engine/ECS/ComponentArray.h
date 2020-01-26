@@ -20,7 +20,7 @@ template<typename ComponentType>
 class ComponentArray : public IComponentArray
 {
 public:
-	ComponentArray() = default;
+	ComponentArray();
 
 	/** Get an entity's component. */
 	ComponentType& GetComponent(Entity& Entity);
@@ -45,12 +45,18 @@ public:
 	virtual void RemoveComponent(Entity& Entity) final;
 
 private:
-	// @todo Object pool for components
-	HashTable<uint64, ComponentType> Components;
+	/** @todo Laziness. Need an object pool for real. */
+	static constexpr uint32 ArraySize = 256;
+
+	/** Component pool. */
+	std::vector<ComponentType> Components;
+
+	/** Whether the component is alive in the component pool. */
+	std::vector<bool> ComponentStatus;
 
 	/** Component created events. */
 	std::vector<ComponentCallback<ComponentType>> ComponentCreatedCallbacks;
 
-	/** Entities that have a new component. Cleared every frame. */
+	/** Entities that were given a component this frame. */
 	std::vector<Entity> NewEntities;
 };
