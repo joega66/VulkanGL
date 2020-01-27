@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
 
 	std::unique_ptr<VulkanDRM> Device = std::make_unique<VulkanDRM>(Platform);
 	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, *Device);
-	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(Device->Device);
+	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(*Device);
 
 	Device->CreateLogicalDevice();
 
-	Surface->Init(Device->Device);
+	Surface->Init(*Device);
 
 	EngineMain EngineMain;
 	EngineMain.Main(Platform, Cursor, Input, Screen, *Device, *ShaderMap, *Surface);

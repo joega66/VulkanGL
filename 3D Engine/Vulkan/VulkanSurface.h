@@ -1,5 +1,6 @@
 #pragma once
-#include "VulkanDRM.h"
+#include <DRM.h>
+#include "VulkanImage.h"
 
 class VulkanSurface : public drm::Surface
 {
@@ -7,9 +8,9 @@ public:
 	VulkanSurface(Platform& Platform, VulkanDRM& Device);
 
 	/** Some initialization that needs to happen using the logical device. 
-	  * This is kinda janky and will get removed in the future.
+	  * This is kinda janky and will get removed when drm::Semaphore comes.
 	  */
-	void Init(VulkanDevice& Device);
+	void Init(VulkanDRM& Device);
 
 	/** Get the next image index. */
 	virtual uint32 AcquireNextImage(DRM& Device) override;

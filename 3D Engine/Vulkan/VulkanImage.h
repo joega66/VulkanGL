@@ -2,7 +2,7 @@
 #include <DRMResource.h>
 #include <vulkan/vulkan.h>
 
-class VulkanDevice;
+class VulkanDRM;
 
 class VulkanImage : public drm::Image
 {
@@ -11,7 +11,7 @@ public:
 	VkImageView ImageView;
 	VkDeviceMemory Memory;
 
-	VulkanImage(VulkanDevice& Device 
+	VulkanImage(VulkanDRM& Device
 		, VkImage Image
 		, VkDeviceMemory Memory
 		, EFormat Format
@@ -24,7 +24,7 @@ public:
 
 	operator VkImage();
 
-	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);
+	static VkFormat FindSupportedDepthFormat(VulkanDRM& Device, EFormat Format);
 
 	static VkFormat GetVulkanFormat(EFormat Format);
 
@@ -36,14 +36,14 @@ public:
 
 	static VkFilter GetVulkanFilter(EFilter Filter);
 
-	[[nodiscard]] static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
+	[[nodiscard]] static VkSampler CreateSampler(VulkanDRM& Device, const struct SamplerState& SamplerState);
 
 	VkFormat GetVulkanFormat() const;
 
 	VkImageAspectFlags GetVulkanAspect() const;
 
 private:
-	VulkanDevice& Device;
+	VulkanDRM& Device;
 };
 
 CLASS(VulkanImage);

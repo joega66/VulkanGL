@@ -2,13 +2,6 @@
 #include "VulkanRenderPass.h"
 #include "VulkanSurface.h"
 
-VulkanDRM::VulkanDRM(Platform& Platform)
-	: Device(Platform, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
-	, Queues(Device.PhysicalDevice)
-	, Allocator(Device, Queues)
-{
-}
-
 void VulkanDRM::EndFrame()
 {
 	DescriptorPool->EndFrame();
@@ -31,12 +24,12 @@ void VulkanDRM::SubmitCommands(drm::CommandListRef CmdList)
 
 drm::CommandListRef VulkanDRM::CreateCommandList()
 {
-	return MakeRef<VulkanCommandList>(Device, Queues, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	return MakeRef<VulkanCommandList>(*this, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
 drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()
 {
-	return MakeRef<VulkanDescriptorSet>(Device, *DescriptorPool);
+	return MakeRef<VulkanDescriptorSet>(*this, *DescriptorPool);
 }
 
 drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
@@ -64,7 +57,7 @@ drm::ImageRef VulkanDRM::CreateImage(
 {
 	if (drm::Image::IsDepth(Format))
 	{
-		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(Device, Format));
+		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(*this, Format));
 	}
 
 	VkImageCreateInfo Info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
@@ -112,7 +105,7 @@ drm::ImageRef VulkanDRM::CreateImage(
 	vulkan(vkAllocateMemory(Device, &MemInfo, nullptr, &Memory));
 	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
 
-	VulkanImageRef VulkanImage = MakeRef<class VulkanImage>(Device
+	VulkanImageRef VulkanImage = MakeRef<class VulkanImage>(*this
 		, Image
 		, Memory
 		, Format
@@ -138,7 +131,7 @@ void VulkanDRM::UnlockBuffer(drm::BufferRef Buffer)
 
 drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPInit)
 {
-	const auto[RenderPass, Framebuffer] = Device.GetRenderPass(RPInit);
+	const auto[RenderPass, Framebuffer] = VulkanCache.GetRenderPass(RPInit);
 
 	const VkRect2D RenderArea = 
 	{
@@ -227,10 +220,10 @@ void VulkanDRM::CreateLogicalDevice()
 		CreateInfo.enabledLayerCount = 0;
 	}
 	
-	vulkan(vkCreateDevice(Device.PhysicalDevice, &CreateInfo, nullptr, &Device.Device));
+	vulkan(vkCreateDevice(PhysicalDevice, &CreateInfo, nullptr, &Device));
 
 	// Create queues and command pools.
 	Queues.Create(Device);
 
-	DescriptorPool = std::make_unique<VulkanDescriptorPool>(Device);
+	DescriptorPool = std::make_unique<VulkanDescriptorPool>(*this);
 }

@@ -1,10 +1,10 @@
 #pragma once
-#include "../DRMCommandList.h"
-#include "VulkanDevice.h"
+#include <DRMCommandList.h>
+#include "VulkanImage.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 
-class VulkanQueues;
+class VulkanDRM;
 
 class VulkanCommandList final : public drm::CommandList
 {
@@ -15,7 +15,7 @@ public:
 
 	VkCommandBuffer CommandBuffer;
 
-	VulkanCommandList(VulkanDevice& Device, VulkanQueues& Queues, VkQueueFlagBits QueueFlags);
+	VulkanCommandList(VulkanDRM& Device, VkQueueFlagBits QueueFlags);
 
 	virtual ~VulkanCommandList() override;
 
@@ -64,7 +64,7 @@ public:
 	) override;
 
 private:
-	VulkanDevice& Device;
+	VulkanDRM& Device;
 
 	struct PendingState
 	{

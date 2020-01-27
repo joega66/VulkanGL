@@ -1,38 +1,18 @@
 #pragma once
-#include <DRMCommandList.h>
-#include "VulkanQueues.h"
+#include <DRM.h>
+#include <vulkan/vulkan.h>
 
-static const std::vector<const char*> ValidationLayers =
-{
-	"VK_LAYER_LUNARG_standard_validation"
-};
+class VulkanDRM;
 
-static const std::vector<const char*> DeviceExtensions =
-{
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-};
-
-class VulkanDevice
+/** A (very slow) Vulkan object cache. */
+class VulkanCache
 {
 	template<typename DRMObject, typename ...VulkanObjects>
 	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
 public:
-	VkInstance Instance;
+	VulkanCache(VulkanDRM& Device);
 
-	VkDebugReportCallbackEXT DebugReportCallback;
-
-	VkPhysicalDevice PhysicalDevice;
-
-	VkDevice Device;
-
-	VkPhysicalDeviceProperties Properties;
-
-	VkPhysicalDeviceFeatures Features;
-
-	VulkanDevice(Platform& Platform, bool bUseValidationLayers);
-
-	~VulkanDevice();
+	~VulkanCache();
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassInitializer& RPInit);
 
@@ -48,8 +28,6 @@ public:
 
 	VkDescriptorSetLayout GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings);
 
-	operator VkDevice() const { return Device; }
-
 	void FreeImage(class VulkanImage& Image);
 
 	void DestroyPipelinesWithShader(const drm::ShaderRef& Shader);
@@ -57,6 +35,8 @@ public:
 	static const char* GetVulkanErrorString(VkResult Result);
 
 private:
+	VulkanDRM& Device;
+
 	SlowCache<RenderPassInitializer, VkRenderPass, VkFramebuffer> RenderPassCache;
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
@@ -87,8 +67,3 @@ private:
 
 	std::unordered_map<SamplerState, VkSampler, SamplerState::Hash> SamplerCache;
 };
-
-CLASS(VulkanDevice);
-
-#define vulkan(Result) \
-	check(Result == VK_SUCCESS, "%s", VulkanDevice::GetVulkanErrorString(Result));

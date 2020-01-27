@@ -1,8 +1,7 @@
-#include "VulkanDevice.h"
-#include "VulkanDRM.h"
 #include "VulkanRenderPass.h"
+#include "VulkanDRM.h"
 
-std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetRenderPass(const RenderPassInitializer& RPInit)
+std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPassInitializer& RPInit)
 {
 	VkRenderPass RenderPass = VK_NULL_HANDLE;
 	VkFramebuffer Framebuffer;
@@ -55,7 +54,7 @@ static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction StoreAction)
 	}
 }
 
-std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::CreateRenderPass(const RenderPassInitializer& RPInit)
+std::pair<VkRenderPass, VkFramebuffer> VulkanCache::CreateRenderPass(const RenderPassInitializer& RPInit)
 {
 	VkRenderPass RenderPass;
 

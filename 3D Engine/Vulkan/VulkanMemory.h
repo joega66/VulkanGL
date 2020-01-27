@@ -1,9 +1,8 @@
 #pragma once
-#include "../DRMResource.h"
-#include "VulkanImage.h"
+#include <DRMResource.h>
+#include <vulkan/vulkan.h>
 
-class VulkanDevice;
-class VulkanQueues;
+class VulkanDRM;
 
 struct VulkanMemory
 {
@@ -49,7 +48,7 @@ CLASS(VulkanMemory);
 class VulkanAllocator
 {
 public:
-	VulkanAllocator(VulkanDevice& Device, VulkanQueues& Queues);
+	VulkanAllocator(VulkanDRM& Device);
 
 	std::shared_ptr<class VulkanBuffer> Allocate(
 		VkDeviceSize Size, 
@@ -59,16 +58,14 @@ public:
 
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
 
-	void UploadBufferData(const VulkanBuffer& Buffer, const void* Data);
+	void UploadBufferData(const class VulkanBuffer& Buffer, const void* Data);
 
-	void* LockBuffer(const VulkanBuffer& Buffer);
+	void* LockBuffer(const class VulkanBuffer& Buffer);
 
-	void UnlockBuffer(const VulkanBuffer& Buffer);
+	void UnlockBuffer(const class VulkanBuffer& Buffer);
 
 private:
-	VulkanDevice& Device;
-
-	VulkanQueues& Queues;
+	VulkanDRM& Device;
 
 	const VkDeviceSize BufferAllocationSize;
 
@@ -89,7 +86,7 @@ public:
 	{
 	}
 
-	~VulkanBuffer();
+	virtual ~VulkanBuffer() override;
 
 	inline VkBuffer GetVulkanHandle() const { return Memory->Buffer; }
 	inline VkDeviceMemory GetMemoryHandle() const { return Memory->Memory; }

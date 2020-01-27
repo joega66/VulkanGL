@@ -1,5 +1,6 @@
 #pragma once
-#include "VulkanImage.h"
+#include <DRMResource.h>
+#include <vulkan/vulkan.h>
 
 class VulkanRenderPass : public drm::RenderPass
 {

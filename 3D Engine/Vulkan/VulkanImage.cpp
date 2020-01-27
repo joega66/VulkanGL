@@ -1,5 +1,5 @@
 #include "VulkanImage.h"
-#include "VulkanDevice.h"
+#include "VulkanDRM.h"
 
 static const HashTable<EFormat, VkFormat> VulkanFormat =
 {
@@ -73,7 +73,7 @@ static const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
 	ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 };
 
-VulkanImage::VulkanImage(VulkanDevice& Device
+VulkanImage::VulkanImage(VulkanDRM& Device
 	, VkImage Image
 	, VkDeviceMemory Memory
 	, EFormat Format
@@ -102,7 +102,7 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 
 VulkanImage::~VulkanImage()
 {
-	Device.FreeImage(*this);
+	Device.GetCache().FreeImage(*this);
 }
 
 VulkanImage::operator VkImage() { return Image; }
@@ -147,7 +147,7 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 	return VulkanFilters[(uint32)Filter];
 }
 
-VkSampler VulkanDevice::GetSampler(const SamplerState& SamplerState)
+VkSampler VulkanCache::GetSampler(const SamplerState& SamplerState)
 {
 	if (auto SamplerIter = SamplerCache.find(SamplerState); SamplerIter != SamplerCache.end())
 	{
@@ -155,13 +155,13 @@ VkSampler VulkanDevice::GetSampler(const SamplerState& SamplerState)
 	}
 	else
 	{
-		VkSampler Sampler = VulkanImage::CreateSampler(*this, SamplerState);
+		VkSampler Sampler = VulkanImage::CreateSampler(Device, SamplerState);
 		SamplerCache.emplace(SamplerState, Sampler);
 		return Sampler;
 	}
 }
 
-VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& SamplerState)
+VkSampler VulkanImage::CreateSampler(VulkanDRM& Device, const SamplerState& SamplerState)
 {
 	static const VkSamplerMipmapMode VulkanMipmapModes[] =
 	{
@@ -189,8 +189,8 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 	SamplerInfo.addressModeU = SAM;
 	SamplerInfo.addressModeV = SAM;
 	SamplerInfo.addressModeW = SAM;
-	SamplerInfo.anisotropyEnable = Device.Features.samplerAnisotropy;
-	SamplerInfo.maxAnisotropy = Device.Features.samplerAnisotropy ? Device.Properties.limits.maxSamplerAnisotropy : 1.0f;
+	SamplerInfo.anisotropyEnable = Device.GetFeatures().samplerAnisotropy;
+	SamplerInfo.maxAnisotropy = Device.GetFeatures().samplerAnisotropy ? Device.GetProperties().limits.maxSamplerAnisotropy : 1.0f;
 	SamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
 	SamplerInfo.compareEnable = VK_FALSE;
@@ -229,12 +229,12 @@ VkImageAspectFlags VulkanImage::GetVulkanAspect() const
 	return Flags;
 }
 
-static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
+static VkFormat FindSupportedFormat(VulkanDRM& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
 {
 	for (VkFormat Format : Candidates)
 	{
 		VkFormatProperties Props;
-		vkGetPhysicalDeviceFormatProperties(Device.PhysicalDevice, Format, &Props);
+		vkGetPhysicalDeviceFormatProperties(Device.GetPhysicalDevice(), Format, &Props);
 
 		if (Tiling == VK_IMAGE_TILING_LINEAR && (Props.linearTilingFeatures & Features) == Features)
 		{
@@ -249,7 +249,7 @@ static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFo
 	fail("Failed to find supported format.");
 }
 
-VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format)
+VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDRM& Device, EFormat Format)
 {
 	const auto Candidates = [&]() -> std::vector<VkFormat>
 	{
@@ -277,7 +277,7 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-void VulkanDevice::FreeImage(VulkanImage& Image)
+void VulkanCache::FreeImage(VulkanImage& Image)
 {
 	vkDestroyImage(Device, Image.Image, nullptr);
 	vkDestroyImageView(Device, Image.ImageView, nullptr);

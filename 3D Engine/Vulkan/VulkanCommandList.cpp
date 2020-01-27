@@ -1,11 +1,10 @@
 #include "VulkanCommandList.h"
 #include "VulkanDRM.h"
-#include "VulkanQueues.h"
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VulkanQueues& Queues, VkQueueFlagBits QueueFlags)
+VulkanCommandList::VulkanCommandList(VulkanDRM& Device, VkQueueFlagBits QueueFlags)
 	: Device(Device)
-	, Queue(Queues.GetQueue(QueueFlags))
-	, CommandPool(Queues.GetCommandPool(QueueFlags))
+	, Queue(Device.GetQueues().GetQueue(QueueFlags))
+	, CommandPool(Device.GetQueues().GetCommandPool(QueueFlags))
 {
 	VkCommandBufferAllocateInfo CommandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	CommandBufferInfo.commandPool = CommandPool;
@@ -57,7 +56,7 @@ void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 	assert(!PipelineState.Geometry || (PipelineState.Geometry && PipelineState.Geometry->CompilationInfo.Stage == EShaderStage::Geometry));
 	assert(!PipelineState.Fragment || (PipelineState.Fragment && PipelineState.Fragment->CompilationInfo.Stage == EShaderStage::Fragment));
 
-	VkPipeline Pipeline = Device.GetPipeline(PSOInit, Pending.PipelineLayout, Pending.RenderPass, Pending.NumRenderTargets);
+	VkPipeline Pipeline = Device.GetCache().GetPipeline(PSOInit, Pending.PipelineLayout, Pending.RenderPass, Pending.NumRenderTargets);
 	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
 }
 
@@ -73,7 +72,7 @@ void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::
 		DescriptorSetLayouts[SetIndex] = VulkanDescriptorSet->DescriptorSetLayout;
 	}
 
-	Pending.PipelineLayout = Device.GetPipelineLayout(DescriptorSetLayouts);
+	Pending.PipelineLayout = Device.GetCache().GetPipelineLayout(DescriptorSetLayouts);
 
 	vkCmdBindDescriptorSets(
 		CommandBuffer,

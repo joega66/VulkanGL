@@ -1,4 +1,4 @@
-#include "VulkanDevice.h"
+#include "VulkanCache.h"
 #include "VulkanDRM.h"
 
 static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
@@ -53,7 +53,7 @@ static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
 };
 
-VulkanDevice::VulkanPipelineHash::VulkanPipelineHash(
+VulkanCache::VulkanPipelineHash::VulkanPipelineHash(
 	const PipelineStateInitializer& PSOInit, 
 	VkPipelineLayout PipelineLayout, 
 	VkRenderPass RenderPass, 
@@ -65,7 +65,7 @@ VulkanDevice::VulkanPipelineHash::VulkanPipelineHash(
 {
 }
 
-bool VulkanDevice::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other) const
+bool VulkanCache::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other) const
 {
 	return PSOInit == Other.PSOInit
 		&& PipelineLayout == Other.PipelineLayout
@@ -73,7 +73,7 @@ bool VulkanDevice::VulkanPipelineHash::operator==(const VulkanPipelineHash& Othe
 		&& NumAttachments == Other.NumAttachments;
 }
 
-bool VulkanDevice::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
+bool VulkanCache::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
 {
 	const ShaderStages& GfxPipelineState = PSOInit.ShaderStages;
 
@@ -94,7 +94,7 @@ bool VulkanDevice::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) c
 	}
 }
 
-VkPipeline VulkanDevice::GetPipeline(
+VkPipeline VulkanCache::GetPipeline(
 	const PipelineStateInitializer& PSOInit,
 	VkPipelineLayout PipelineLayout,
 	VkRenderPass RenderPass,
@@ -116,7 +116,7 @@ VkPipeline VulkanDevice::GetPipeline(
 	return Pipeline;
 }
 
-VkPipeline VulkanDevice::CreatePipeline(
+VkPipeline VulkanCache::CreatePipeline(
 	const PipelineStateInitializer& PSOInit,
 	VkPipelineLayout PipelineLayout,
 	VkRenderPass RenderPass,
@@ -418,7 +418,7 @@ VkPipeline VulkanDevice::CreatePipeline(
 	return Pipeline;
 }
 
-VkPipelineLayout VulkanDevice::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts)
+VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts)
 {
 	for (const auto&[CachedDescriptorSetLayouts, CachedPipelineLayout] : PipelineLayoutCache)
 	{
@@ -443,7 +443,7 @@ VkPipelineLayout VulkanDevice::GetPipelineLayout(const std::vector<VkDescriptorS
 	return PipelineLayout;
 }
 
-void VulkanDevice::DestroyPipelinesWithShader(const drm::ShaderRef& Shader)
+void VulkanCache::DestroyPipelinesWithShader(const drm::ShaderRef& Shader)
 {
 	PipelineCache.erase(std::remove_if(
 		PipelineCache.begin(),

@@ -1,10 +1,10 @@
 #include "VulkanCommands.h"
-#include "VulkanDevice.h"
+#include "VulkanDRM.h"
 
-VulkanScopedCommandBuffer::VulkanScopedCommandBuffer(VulkanDevice& Device, VulkanQueues& Queues, VkQueueFlags QueueFlags)
+VulkanScopedCommandBuffer::VulkanScopedCommandBuffer(VulkanDRM& Device, VkQueueFlags QueueFlags)
 	: Device(Device)
-	, Queue(Queues.GetQueue(QueueFlags))
-	, CommandPool(Queues.GetCommandPool(QueueFlags))
+	, Queue(Device.GetQueues().GetQueue(QueueFlags))
+	, CommandPool(Device.GetQueues().GetCommandPool(QueueFlags))
 {
 	VkCommandBufferAllocateInfo Info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	Info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;

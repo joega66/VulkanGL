@@ -1,12 +1,12 @@
 #pragma once
 #include <DRMShader.h>
 
-class VulkanDevice;
+class VulkanDRM;
 
 class VulkanShaderMap final : public DRMShaderMap
 {
 public:
-	VulkanShaderMap(VulkanDevice& Device);
+	VulkanShaderMap(VulkanDRM& Device);
 
 	virtual void RecompileShaders() override;
 
@@ -19,5 +19,5 @@ private:
 		std::type_index Type
 	) override;
 
-	VulkanDevice& Device;
+	VulkanDRM& Device;
 };

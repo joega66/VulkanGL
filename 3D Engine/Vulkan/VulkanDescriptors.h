@@ -1,15 +1,14 @@
 #pragma once
-#include <Platform/Platform.h>
 #include <DRMResource.h>
 #include <vulkan/vulkan.h>
 
-class VulkanDevice;
+class VulkanDRM;
 
 /** Spawns descriptor sets and zerglings. */
 class VulkanDescriptorPool
 {
 public:
-	VulkanDescriptorPool(VulkanDevice& Device);
+	VulkanDescriptorPool(VulkanDRM& Device);
 
 	[[nodiscard]] VkDescriptorSet Spawn(const VkDescriptorSetLayout& DescriptorSetLayout);
 
@@ -20,7 +19,7 @@ public:
 private:
 	static constexpr uint32 MaxDescriptorSetCount = 4096;
 
-	VulkanDevice& Device;
+	VulkanDRM& Device;
 
 	uint32 DescriptorSetCount = 0;
 
@@ -39,7 +38,7 @@ public:
 	VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 
-	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool);
+	VulkanDescriptorSet(VulkanDRM& Device, VulkanDescriptorPool& DescriptorPool);
 	virtual ~VulkanDescriptorSet() override;
 
 	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, uint32 Binding) override;
@@ -50,7 +49,8 @@ public:
 private:
 	std::once_flag SpawnDescriptorSetOnceFlag;
 
-	VulkanDevice& Device;
+	VulkanDRM& Device;
+
 	VulkanDescriptorPool& DescriptorPool;
 
 	std::vector<VkDescriptorSetLayoutBinding> VulkanBindings;

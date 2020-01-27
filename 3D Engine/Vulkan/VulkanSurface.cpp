@@ -1,5 +1,5 @@
 #include "VulkanSurface.h"
-#include <Platform/Platform.h>
+#include "VulkanDRM.h"
 #include <GLFW/glfw3.h>
 
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)
@@ -54,15 +54,15 @@ static VkExtent2D ChooseSwapExtent(uint32 Width, uint32 Height, const VkSurfaceC
 	}
 }
 
-VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& VulkanDevice)
+VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& Device)
 {
-	vulkan(glfwCreateWindowSurface(VulkanDevice.Device.Instance, Platform.Window, nullptr, &Surface));
+	vulkan(glfwCreateWindowSurface(Device.GetInstance(), Platform.Window, nullptr, &Surface));
 
 	uint32 QueueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(VulkanDevice.Device.PhysicalDevice, &QueueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(Device.GetPhysicalDevice(), &QueueFamilyCount, nullptr);
 
 	std::vector<VkQueueFamilyProperties> QueueFamilies(QueueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(VulkanDevice.Device.PhysicalDevice, &QueueFamilyCount, QueueFamilies.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(Device.GetPhysicalDevice(), &QueueFamilyCount, QueueFamilies.data());
 
 	// Find the present index.
 	for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)
@@ -70,7 +70,7 @@ VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& VulkanDevice)
 		const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
 
 		VkBool32 HasPresentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(VulkanDevice.Device.PhysicalDevice, QueueFamilyIndex, Surface, &HasPresentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(Device.GetPhysicalDevice(), QueueFamilyIndex, Surface, &HasPresentSupport);
 
 		if (HasPresentSupport)
 		{
@@ -81,10 +81,10 @@ VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& VulkanDevice)
 
 	check(PresentIndex != -1, "No present family index found!");
 
-	VulkanDevice.Queues.RequestQueueFamily(PresentIndex);
+	Device.GetQueues().RequestQueueFamily(PresentIndex);
 }
 
-void VulkanSurface::Init(VulkanDevice& Device)
+void VulkanSurface::Init(VulkanDRM& Device)
 {
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
@@ -99,7 +99,7 @@ uint32 VulkanSurface::AcquireNextImage(DRM& Device)
 
 	uint32 ImageIndex;
 
-	if (VkResult Result = vkAcquireNextImageKHR(VulkanDevice.Device,
+	if (VkResult Result = vkAcquireNextImageKHR(VulkanDevice,
 		Swapchain,
 		std::numeric_limits<uint32>::max(),
 		ImageAvailableSem,
@@ -191,7 +191,7 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 {
 	VulkanDRM& VulkanDevice = static_cast<VulkanDRM&>(Device);
 
-	const SwapchainSupportDetails SwapchainSupport(VulkanDevice.Device.PhysicalDevice, Surface);
+	const SwapchainSupportDetails SwapchainSupport(VulkanDevice.GetPhysicalDevice(), Surface);
 	const VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
 	const VkPresentModeKHR PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
 	const VkExtent2D Extent = ChooseSwapExtent(Width, Height, SwapchainSupport.Capabilities);
@@ -213,7 +213,7 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 
 	const uint32 QueueFamilyIndices[] = 
 	{ 
-		static_cast<uint32>(VulkanDevice.Queues.GetGraphicsIndex()),
+		static_cast<uint32>(VulkanDevice.GetQueues().GetGraphicsIndex()),
 		static_cast<uint32>(PresentIndex)
 	};
 
@@ -233,13 +233,13 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 	SwapchainInfo.presentMode = PresentMode;
 	SwapchainInfo.clipped = VK_TRUE;
 
-	vulkan(vkCreateSwapchainKHR(VulkanDevice.Device.Device, &SwapchainInfo, nullptr, &Swapchain));
+	vulkan(vkCreateSwapchainKHR(VulkanDevice, &SwapchainInfo, nullptr, &Swapchain));
 
-	vkGetSwapchainImagesKHR(VulkanDevice.Device.Device, Swapchain, &ImageCount, nullptr);
+	vkGetSwapchainImagesKHR(VulkanDevice, Swapchain, &ImageCount, nullptr);
 
 	std::vector<VkImage> VulkanImages(ImageCount);
 
-	vkGetSwapchainImagesKHR(VulkanDevice.Device.Device, Swapchain, &ImageCount, VulkanImages.data());
+	vkGetSwapchainImagesKHR(VulkanDevice, Swapchain, &ImageCount, VulkanImages.data());
 	
 	Images.clear();
 	Images.reserve(ImageCount);
@@ -247,7 +247,7 @@ void VulkanSurface::Resize(DRM& Device, uint32 Width, uint32 Height)
 	for (auto& VulkanImage : VulkanImages)
 	{
 		Images.push_back(
-			MakeRef<class VulkanImage>(VulkanDevice.Device
+			MakeRef<class VulkanImage>(VulkanDevice
 				, VulkanImage
 				, VkDeviceMemory()
 				, VulkanImage::GetEngineFormat(SurfaceFormat.format)

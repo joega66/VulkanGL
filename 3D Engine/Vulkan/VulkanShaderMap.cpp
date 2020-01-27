@@ -74,7 +74,7 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	return Descriptions;
 }
 
-VulkanShaderMap::VulkanShaderMap(VulkanDevice& Device)
+VulkanShaderMap::VulkanShaderMap(VulkanDRM& Device)
 	: Device(Device)
 {
 }
@@ -202,7 +202,7 @@ void VulkanShaderMap::RecompileShaders()
 			Shader->CompilationInfo = NewCompilationInfo;
 
 			// Destroy cached pipelines with this shader.
-			Device.DestroyPipelinesWithShader(Shader);
+			Device.GetCache().DestroyPipelinesWithShader(Shader);
 		}
 	}
 }
