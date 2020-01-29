@@ -2,7 +2,7 @@
 #include "AssetManager.h"
 #include <DRM.h>
 
-Scene::Scene(DRM& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class Input& Input, class Screen& Screen)
+Scene::Scene(DRMDevice& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class Input& Input, class Screen& Screen)
 	: ShaderMap(ShaderMap)
 	, Cursor(Cursor)
 	, Input(Input)

@@ -6,12 +6,12 @@
 class SceneRenderer
 {
 public:
-	SceneRenderer(DRM& Device, drm::Surface& Surface, class Scene& Scene, class Screen& Screen);
+	SceneRenderer(DRMDevice& Device, drm::Surface& Surface, class Scene& Scene, class Screen& Screen);
 
 	void Render(SceneProxy& Scene);
 
 private:
-	DRM& Device;
+	DRMDevice& Device;
 
 	drm::Surface& Surface;
 
@@ -67,15 +67,15 @@ private:
 
 	void Present(drm::CommandListRef CmdList);
 
-	void CreateDepthRP(DRM& Device);
+	void CreateDepthRP();
 
-	void CreateDepthVisualizationRP(DRM& Device);
+	void CreateDepthVisualizationRP();
 
-	void CreateVoxelRP(DRM& Device);
+	void CreateVoxelRP();
 
-	void CreateVoxelVisualizationRP(DRM& Device);
+	void CreateVoxelVisualizationRP();
 
-	void CreateLightingRP(DRM& Device);
+	void CreateLightingRP();
 
-	void CreateShadowMaskRP(DRM& Device);
+	void CreateShadowMaskRP();
 };

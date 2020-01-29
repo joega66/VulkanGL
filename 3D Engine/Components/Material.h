@@ -25,8 +25,8 @@ public:
 	static drm::ImageRef Black;
 	/** Dummy texture for "empty" descriptors. */
 	static drm::ImageRef Dummy;
-
-	drm::DescriptorSetRef CreateDescriptorSet(class DRM& Device) const;
+	
+	drm::DescriptorSetRef CreateDescriptorSet(class DRMDevice& Device) const;
 
 	SpecializationInfo CreateSpecializationInfo() const;
 };

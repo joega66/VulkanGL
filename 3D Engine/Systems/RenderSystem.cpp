@@ -10,7 +10,7 @@ UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 	glm::mat4 Inverse;
 );
 
-void RenderSystem::Start(EntityManager& ECS, DRM& Device)
+void RenderSystem::Start(EntityManager& ECS, DRMDevice& Device)
 {
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
@@ -26,7 +26,7 @@ void RenderSystem::Start(EntityManager& ECS, DRM& Device)
 	});
 }
 
-void RenderSystem::Update(EntityManager& ECS, DRM& Device)
+void RenderSystem::Update(EntityManager& ECS, DRMDevice& Device)
 {
 	for (auto& Entity : ECS.GetEntities<MeshProxy>())
 	{

@@ -11,7 +11,7 @@
 #include <Systems/TransformGizmoSystem.h>
 #include <Systems/RenderSystem.h>
 
-static void CreateDebugMaterials(DRM& Device)
+static void CreateDebugMaterials(DRMDevice& Device)
 {
 	std::vector<uint8> Colors =
 	{
@@ -72,7 +72,7 @@ void EngineMain::Main(
 	Cursor& Cursor,
 	Input& Input,
 	Screen& Screen,
-	DRM& Device,
+	DRMDevice& Device,
 	DRMShaderMap& ShaderMap,
 	drm::Surface& Surface
 )

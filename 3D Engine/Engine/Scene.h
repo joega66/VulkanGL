@@ -3,7 +3,7 @@
 #include <Engine/Camera.h>
 #include <Engine/AssetManager.h>
 
-class DRM;
+class DRMDevice;
 class DRMShaderMap;
 class Cursor;
 class Input;
@@ -18,7 +18,7 @@ class Scene
 {
 	friend class EngineMain;
 	Scene(
-		DRM& Device, 
+		DRMDevice& Device, 
 		DRMShaderMap& ShaderMap, 
 		Cursor& Cursor,
 		Input& Input, 

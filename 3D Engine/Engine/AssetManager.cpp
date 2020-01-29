@@ -1,7 +1,7 @@
 #include "AssetManager.h"
 #include <DRM.h>
 
-AssetManager::AssetManager(DRM& Device)
+AssetManager::AssetManager(DRMDevice& Device)
 	: Device(Device)
 {
 	std::array<std::string, 6> Cubemap =

@@ -60,7 +60,7 @@ public:
 	BoundingBox Bounds;
 
 	/** Load a static mesh from file. */
-	StaticMesh(class DRM& Device, const std::string& Filename);
+	StaticMesh(class DRMDevice& Device, const std::string& Filename);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
 	StaticMesh(

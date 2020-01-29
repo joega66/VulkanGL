@@ -2,7 +2,7 @@
 #include <Components/CLight.h>
 #include <ECS/EntityManager.h>
 
-void ShadowProxy::InitCallbacks(DRM& Device, EntityManager& ECS)
+void ShadowProxy::InitCallbacks(DRMDevice& Device, EntityManager& ECS)
 {
 	ECS.NewComponentCallback<CDirectionalLight>([&] (Entity& Entity, CDirectionalLight& DirectionalLight)
 	{
@@ -10,7 +10,7 @@ void ShadowProxy::InitCallbacks(DRM& Device, EntityManager& ECS)
 	});
 }
 
-ShadowProxy::ShadowProxy(DRM& Device, const CDirectionalLight& DirectionalLight)
+ShadowProxy::ShadowProxy(DRMDevice& Device, const CDirectionalLight& DirectionalLight)
 {
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
@@ -35,7 +35,7 @@ ShadowProxy::ShadowProxy(DRM& Device, const CDirectionalLight& DirectionalLight)
 	Update(Device, DirectionalLight);
 }
 
-void ShadowProxy::Update(DRM& Device, const CDirectionalLight& DirectionalLight)
+void ShadowProxy::Update(DRMDevice& Device, const CDirectionalLight& DirectionalLight)
 {
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;

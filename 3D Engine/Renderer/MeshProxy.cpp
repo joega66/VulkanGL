@@ -1,7 +1,7 @@
 #include "MeshProxy.h"
 
 MeshProxy::MeshProxy(
-	DRM& Device,
+	DRMDevice& Device,
 	drm::DescriptorSetRef SurfaceSet,
 	const class Material& Material,
 	const std::vector<Submesh>& Submeshes,

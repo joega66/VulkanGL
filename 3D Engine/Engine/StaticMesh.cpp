@@ -8,7 +8,7 @@
 
 using TextureCache = HashTable<std::string, drm::ImageRef>;
 
-static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
+static drm::ImageRef LoadMaterials(DRMDevice& Device, const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
 {
 	for (uint32 TextureIndex = 0; TextureIndex < AiMaterial->GetTextureCount(AiType); TextureIndex++)
 	{
@@ -68,7 +68,7 @@ static drm::ImageRef LoadMaterials(DRM& Device, const std::string& Directory, ai
 	return nullptr;
 }
 
-static Material ProcessMaterials(DRM& Device, StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
+static Material ProcessMaterials(DRMDevice& Device, StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
 {
 	Material Material;
 
@@ -95,7 +95,7 @@ static Material ProcessMaterials(DRM& Device, StaticMesh* StaticMesh, aiMaterial
 	return Material;
 }
 
-static void ProcessSubmesh(DRM& Device, StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
+static void ProcessSubmesh(DRMDevice& Device, StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
 {
 	check(AiMesh->mTextureCoords[0] > 0, "Static mesh is missing texture coordinates.");
 
@@ -145,7 +145,7 @@ static void ProcessSubmesh(DRM& Device, StaticMesh* StaticMesh, aiMesh* AiMesh, 
 	StaticMesh->SubmeshNames.push_back(std::string(AiMesh->mName.C_Str()));
 }
 
-void ProcessNode(DRM& Device, StaticMesh* StaticMesh, const aiNode* AiNode, const aiScene* AiScene, TextureCache& TextureCache)
+void ProcessNode(DRMDevice& Device, StaticMesh* StaticMesh, const aiNode* AiNode, const aiScene* AiScene, TextureCache& TextureCache)
 {
 	for (uint32 MeshIndex = 0; MeshIndex < AiNode->mNumMeshes; MeshIndex++)
 	{
@@ -159,7 +159,7 @@ void ProcessNode(DRM& Device, StaticMesh* StaticMesh, const aiNode* AiNode, cons
 	}
 }
 
-StaticMesh::StaticMesh(DRM& Device, const std::string& Filename)
+StaticMesh::StaticMesh(DRMDevice& Device, const std::string& Filename)
 	: Filename(Filename), Directory(Filename.substr(0, Filename.find_last_of("/")))
 {
 	uint32 AssimpLoadFlags = 0;

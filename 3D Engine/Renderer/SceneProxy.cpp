@@ -7,7 +7,7 @@
 #include <Components/CRenderer.h>
 #include "ShadowProxy.h"
 
-SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
+SceneProxy::SceneProxy(DRMDevice& Device, Scene& Scene)
 	: Camera(Scene.Camera)
 	, ShaderMap(Scene.ShaderMap)
 	, ECS(Scene.ECS)
@@ -24,7 +24,7 @@ SceneProxy::SceneProxy(DRM& Device, Scene& Scene)
 	DescriptorSet->Update();
 }
 
-void SceneProxy::InitView(DRM& Device)
+void SceneProxy::InitView(DRMDevice& Device)
 {
 	UNIFORM_STRUCT(CameraUniformBuffer,
 		glm::mat4 WorldToView;
@@ -54,13 +54,13 @@ void SceneProxy::InitView(DRM& Device)
 	CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
 }
 
-void SceneProxy::InitLights(DRM& Device)
+void SceneProxy::InitLights(DRMDevice& Device)
 {
 	InitDirectionalLights(Device);
 	InitPointLights(Device);
 }
 
-void SceneProxy::InitDirectionalLights(DRM& Device)
+void SceneProxy::InitDirectionalLights(DRMDevice& Device)
 {
 	UNIFORM_STRUCT(DirectionalLightProxy,
 		glm::vec3 Color;
@@ -100,7 +100,7 @@ void SceneProxy::InitDirectionalLights(DRM& Device)
 	}
 }
 
-void SceneProxy::InitPointLights(DRM& Device)
+void SceneProxy::InitPointLights(DRMDevice& Device)
 {
 	UNIFORM_STRUCT(PointLightProxy,
 		glm::vec3 Position;
@@ -132,7 +132,7 @@ void SceneProxy::InitPointLights(DRM& Device)
 	Device.UnlockBuffer(PointLightBuffer);
 }
 
-void SceneProxy::InitMeshDrawCommands(DRM& Device)
+void SceneProxy::InitMeshDrawCommands(DRMDevice& Device)
 {
 	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
 

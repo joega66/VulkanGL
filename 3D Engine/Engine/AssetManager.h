@@ -1,12 +1,12 @@
 #pragma once
 #include "StaticMesh.h"
 
-class DRM;
+class DRMDevice;
 
 class AssetManager
 {
 	friend class Scene;
-	AssetManager(DRM& Device);
+	AssetManager(DRMDevice& Device);
 
 public:
 	AssetManager(const AssetManager&) = delete;
@@ -29,7 +29,7 @@ public:
 	drm::ImageRef GetCubemap(const std::string& Name) const;
 
 private:
-	DRM& Device;
+	DRMDevice& Device;
 
 	HashTable<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	HashTable<std::string, drm::ImageRef> Images;

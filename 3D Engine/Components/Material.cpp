@@ -31,7 +31,7 @@ bool Material::HasBumpMap() const
 	return Bump != Dummy;
 }
 
-drm::DescriptorSetRef Material::CreateDescriptorSet(DRM& Device) const
+drm::DescriptorSetRef Material::CreateDescriptorSet(DRMDevice& Device) const
 {
 	static const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	static const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };

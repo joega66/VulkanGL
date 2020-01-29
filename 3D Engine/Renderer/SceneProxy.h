@@ -15,7 +15,7 @@ namespace EStaticDrawListType
 class SceneProxy : public Camera
 {
 	friend class EngineMain;
-	SceneProxy(DRM& Device, Scene& Scene);
+	SceneProxy(DRMDevice& Device, Scene& Scene);
 
 public:
 	SceneProxy(const SceneProxy&) = delete;
@@ -45,11 +45,11 @@ public:
 	std::array<std::vector<MeshDrawCommand>, EStaticDrawListType::Max> LightingPass;
 
 private:
-	void InitView(DRM& Device);
-	void InitLights(DRM& Device);
-	void InitDirectionalLights(DRM& Device);
-	void InitPointLights(DRM& Device);
-	void InitMeshDrawCommands(DRM& Device);
+	void InitView(DRMDevice& Device);
+	void InitLights(DRMDevice& Device);
+	void InitDirectionalLights(DRMDevice& Device);
+	void InitPointLights(DRMDevice& Device);
+	void InitMeshDrawCommands(DRMDevice& Device);
 
 	void AddToDepthPrepass(const MeshProxy& MeshProxy);
 	void AddToShadowDepthPass(const MeshProxy& MeshProxy);

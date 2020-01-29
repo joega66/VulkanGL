@@ -26,7 +26,7 @@ void SystemsManager::UpdateSystems(Scene& Scene)
 	}
 }
 
-void SystemsManager::StartRenderSystems(EntityManager& ECS, DRM& Device)
+void SystemsManager::StartRenderSystems(EntityManager& ECS, DRMDevice& Device)
 {
 	for (auto& System : RenderSystems)
 	{
@@ -34,7 +34,7 @@ void SystemsManager::StartRenderSystems(EntityManager& ECS, DRM& Device)
 	}
 }
 
-void SystemsManager::UpdateRenderSystems(EntityManager& ECS, DRM& Device)
+void SystemsManager::UpdateRenderSystems(EntityManager& ECS, DRMDevice& Device)
 {
 	for (auto& System : RenderSystems)
 	{

@@ -11,7 +11,7 @@ public:
 		class Cursor& Cursor,
 		class Input& Input,
 		class Screen& Screen,
-		DRM& Device, 
+		DRMDevice& Device, 
 		DRMShaderMap& ShaderMap,
 		drm::Surface& Surface
 	);

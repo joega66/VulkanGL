@@ -16,7 +16,7 @@ static const std::vector<const char*> DeviceExtensions =
 	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
 };
 
-class VulkanDRM final : public DRM
+class VulkanDRM final : public DRMDevice
 {
 public:
 	VulkanDRM(Platform& Platform);
