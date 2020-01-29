@@ -45,7 +45,7 @@ public:
 	virtual void UnlockBuffer(drm::BufferRef Buffer) = 0;
 
 	/** Create a render pass resource. */
-	virtual drm::RenderPassRef CreateRenderPass(const RenderPassInitializer& RPInit) = 0;
+	virtual drm::RenderPassRef CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
 };
 
 namespace drm

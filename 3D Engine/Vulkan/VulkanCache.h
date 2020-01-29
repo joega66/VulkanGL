@@ -14,12 +14,12 @@ public:
 
 	~VulkanCache();
 	
-	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassInitializer& RPInit);
+	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassDesc& RPDesc);
 
 	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts);
 
 	VkPipeline GetPipeline(
-		const PipelineStateInitializer& PSOInit, 
+		const PipelineStateDesc& PSODesc, 
 		VkPipelineLayout PipelineLayout, 
 		VkRenderPass RenderPass, 
 		uint32 NumRenderTargets);
@@ -37,18 +37,18 @@ public:
 private:
 	VulkanDevice& Device;
 
-	SlowCache<RenderPassInitializer, VkRenderPass, VkFramebuffer> RenderPassCache;
+	SlowCache<RenderPassDesc, VkRenderPass, VkFramebuffer> RenderPassCache;
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 
 	struct VulkanPipelineHash
 	{
-		PipelineStateInitializer PSOInit;
+		PipelineStateDesc PSODesc;
 		VkPipelineLayout PipelineLayout;
 		VkRenderPass RenderPass;
 		uint32 NumAttachments;
 
-		VulkanPipelineHash(const PipelineStateInitializer& PSOInit, VkPipelineLayout PipelineLayout, VkRenderPass RenderPass, uint32 NumRenderTargets);
+		VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout, VkRenderPass RenderPass, uint32 NumRenderTargets);
 		bool operator==(const VulkanPipelineHash& Other) const;
 		bool HasShader(const drm::ShaderRef& Shader) const;
 	};
@@ -57,10 +57,10 @@ private:
 
 	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout> DescriptorSetLayoutCache;
 
-	[[nodiscard]] std::pair<VkRenderPass, VkFramebuffer> CreateRenderPass(const RenderPassInitializer& RPInit);
+	[[nodiscard]] std::pair<VkRenderPass, VkFramebuffer> CreateRenderPass(const RenderPassDesc& RPDesc);
 
 	[[nodiscard]] VkPipeline CreatePipeline(
-		const PipelineStateInitializer& PSOInit,
+		const PipelineStateDesc& PSODesc,
 		VkPipelineLayout PipelineLayout,
 		VkRenderPass RenderPass,
 		uint32 NumRenderTargets);

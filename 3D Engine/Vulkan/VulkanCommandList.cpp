@@ -46,9 +46,9 @@ void VulkanCommandList::EndRenderPass()
 	vkCmdEndRenderPass(CommandBuffer);
 }
 
-void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
+void VulkanCommandList::BindPipeline(const PipelineStateDesc& PSODesc)
 {
-	const ShaderStages& PipelineState = PSOInit.ShaderStages;
+	const ShaderStages& PipelineState = PSODesc.ShaderStages;
 	// Validate gfx pipeline stages.
 	assert(PipelineState.Vertex && PipelineState.Vertex->CompilationInfo.Stage == EShaderStage::Vertex);
 	assert(!PipelineState.TessControl || (PipelineState.TessControl && PipelineState.TessControl->CompilationInfo.Stage == EShaderStage::TessControl));
@@ -56,7 +56,7 @@ void VulkanCommandList::BindPipeline(const PipelineStateInitializer& PSOInit)
 	assert(!PipelineState.Geometry || (PipelineState.Geometry && PipelineState.Geometry->CompilationInfo.Stage == EShaderStage::Geometry));
 	assert(!PipelineState.Fragment || (PipelineState.Fragment && PipelineState.Fragment->CompilationInfo.Stage == EShaderStage::Fragment));
 
-	VkPipeline Pipeline = Device.GetCache().GetPipeline(PSOInit, Pending.PipelineLayout, Pending.RenderPass, Pending.NumRenderTargets);
+	VkPipeline Pipeline = Device.GetCache().GetPipeline(PSODesc, Pending.PipelineLayout, Pending.RenderPass, Pending.NumRenderTargets);
 	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
 }
 

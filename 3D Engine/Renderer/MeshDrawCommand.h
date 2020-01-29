@@ -9,7 +9,7 @@ public:
 	static void Draw(const std::vector<MeshDrawCommand>& MeshDrawCommands, 
 		drm::CommandList& CmdList,
 		const DescriptorSetsType& DescriptorSets,
-		PipelineStateInitializer& PSOInit
+		PipelineStateDesc& PSODesc
 		)
 	{
 		std::for_each(
@@ -17,7 +17,7 @@ public:
 			MeshDrawCommands.end(),
 			[&] (const MeshDrawCommand& MeshDrawCommand)
 		{
-			MeshDrawCommand.Draw(CmdList, DescriptorSets, PSOInit);
+			MeshDrawCommand.Draw(CmdList, DescriptorSets, PSODesc);
 		});
 	}
 
@@ -30,15 +30,15 @@ public:
 	}
 
 	template<typename DescriptorSetsType>
-	void Draw(drm::CommandList& CmdList, const DescriptorSetsType& DescriptorSets, PipelineStateInitializer& PSOInit) const
+	void Draw(drm::CommandList& CmdList, const DescriptorSetsType& DescriptorSets, PipelineStateDesc& PSODesc) const
 	{
 		DescriptorSets.Set(CmdList, MeshProxy);
 
-		PSOInit.SpecializationInfo = MeshProxy.GetSpecializationInfo();
+		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
 
-		PSOInit.ShaderStages = ShaderStages;
+		PSODesc.ShaderStages = ShaderStages;
 
-		CmdList.BindPipeline(PSOInit);
+		CmdList.BindPipeline(PSODesc);
 
 		MeshProxy.DrawElements(CmdList);
 	}

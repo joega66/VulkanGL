@@ -83,13 +83,13 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdL
 {
 	CmdList.BeginRenderPass(DepthRP);
 
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = SceneDepth->Width;
-	PSOInit.Viewport.Height = SceneDepth->Height;
+	PipelineStateDesc PSODesc = {};
+	PSODesc.Viewport.Width = SceneDepth->Width;
+	PSODesc.Viewport.Height = SceneDepth->Height;
 
 	DepthPrepassDescriptorSets DescriptorSets = { Scene.DescriptorSet };
 
-	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList, DescriptorSets, PSOInit);
+	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList, DescriptorSets, PSODesc);
 
 	CmdList.EndRenderPass();
 }

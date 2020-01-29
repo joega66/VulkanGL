@@ -89,14 +89,14 @@ struct LightingPassDescriptorSets
 
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = SceneDepth->Width;
-	PSOInit.Viewport.Height = SceneDepth->Height;
-	PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
-	PSOInit.DepthStencilState.DepthWriteEnable = false;
+	PipelineStateDesc PSODesc = {};
+	PSODesc.Viewport.Width = SceneDepth->Width;
+	PSODesc.Viewport.Height = SceneDepth->Height;
+	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
+	PSODesc.DepthStencilState.DepthWriteEnable = false;
 
 	LightingPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures };
 
-	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList, DescriptorSets, PSOInit);
-	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList, DescriptorSets, PSOInit);
+	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList, DescriptorSets, PSODesc);
+	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList, DescriptorSets, PSODesc);
 }

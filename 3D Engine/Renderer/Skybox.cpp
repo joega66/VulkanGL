@@ -56,12 +56,12 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = Scene.GetWidth();
-	PSOInit.Viewport.Height = Scene.GetHeight();
-	PSOInit.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
+	PipelineStateDesc PSODesc = {};
+	PSODesc.Viewport.Width = Scene.GetWidth();
+	PSODesc.Viewport.Height = Scene.GetHeight();
+	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
-	CmdList.BindPipeline(PSOInit);
+	CmdList.BindPipeline(PSODesc);
 
 	for (const auto& Submesh : Cube->Submeshes)
 	{

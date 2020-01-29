@@ -180,15 +180,15 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 
 	CmdList.BeginRenderPass(VoxelRP);
 
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.DepthStencilState.DepthTestEnable = false;
-	PSOInit.DepthStencilState.DepthWriteEnable = false;
-	PSOInit.Viewport.Width = VoxelGridSize;
-	PSOInit.Viewport.Height = VoxelGridSize;
+	PipelineStateDesc PSODesc = {};
+	PSODesc.DepthStencilState.DepthTestEnable = false;
+	PSODesc.DepthStencilState.DepthWriteEnable = false;
+	PSODesc.Viewport.Width = VoxelGridSize;
+	PSODesc.Viewport.Height = VoxelGridSize;
 
 	VoxelizationPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures, VoxelsDescriptorSet };
 
-	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList, DescriptorSets, PSOInit);
+	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList, DescriptorSets, PSODesc);
 
 	CmdList.EndRenderPass();
 }
@@ -287,18 +287,18 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
-	PipelineStateInitializer PSOInit = {};
-	PSOInit.Viewport.Width = Scene.GetWidth();
-	PSOInit.Viewport.Height = Scene.GetHeight();
-	PSOInit.DepthStencilState.DepthTestEnable = true;
-	PSOInit.DepthStencilState.DepthWriteEnable = true;
-	PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<DrawVoxelsVS>();
-	PSOInit.ShaderStages.Geometry = Scene.ShaderMap.FindShader<DrawVoxelsGS>();
-	PSOInit.ShaderStages.Fragment = Scene.ShaderMap.FindShader<DrawVoxelsFS>();
-	PSOInit.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
-	PSOInit.SpecializationInfo.Add(0, VoxelSize);
+	PipelineStateDesc PSODesc = {};
+	PSODesc.Viewport.Width = Scene.GetWidth();
+	PSODesc.Viewport.Height = Scene.GetHeight();
+	PSODesc.DepthStencilState.DepthTestEnable = true;
+	PSODesc.DepthStencilState.DepthWriteEnable = true;
+	PSODesc.ShaderStages.Vertex = Scene.ShaderMap.FindShader<DrawVoxelsVS>();
+	PSODesc.ShaderStages.Geometry = Scene.ShaderMap.FindShader<DrawVoxelsGS>();
+	PSODesc.ShaderStages.Fragment = Scene.ShaderMap.FindShader<DrawVoxelsFS>();
+	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
+	PSODesc.SpecializationInfo.Add(0, VoxelSize);
 
-	CmdList.BindPipeline(PSOInit);
+	CmdList.BindPipeline(PSODesc);
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 

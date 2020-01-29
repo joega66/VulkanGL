@@ -54,11 +54,11 @@ static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 };
 
 VulkanCache::VulkanPipelineHash::VulkanPipelineHash(
-	const PipelineStateInitializer& PSOInit, 
+	const PipelineStateDesc& PSODesc, 
 	VkPipelineLayout PipelineLayout, 
 	VkRenderPass RenderPass, 
 	uint32 NumRenderTargets) : 
-	PSOInit(PSOInit), 
+	PSODesc(PSODesc), 
 	PipelineLayout(PipelineLayout), 
 	RenderPass(RenderPass), 
 	NumAttachments(NumRenderTargets)
@@ -67,7 +67,7 @@ VulkanCache::VulkanPipelineHash::VulkanPipelineHash(
 
 bool VulkanCache::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other) const
 {
-	return PSOInit == Other.PSOInit
+	return PSODesc == Other.PSODesc
 		&& PipelineLayout == Other.PipelineLayout
 		&& RenderPass == Other.RenderPass
 		&& NumAttachments == Other.NumAttachments;
@@ -75,32 +75,32 @@ bool VulkanCache::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other
 
 bool VulkanCache::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
 {
-	const ShaderStages& GfxPipelineState = PSOInit.ShaderStages;
+	const ShaderStages& ShaderStages = PSODesc.ShaderStages;
 
 	switch (Shader->CompilationInfo.Stage)
 	{
 	case EShaderStage::Vertex:
-		return GfxPipelineState.Vertex == Shader;
+		return ShaderStages.Vertex == Shader;
 	case EShaderStage::TessControl:
-		return GfxPipelineState.TessControl == Shader;
+		return ShaderStages.TessControl == Shader;
 	case EShaderStage::TessEvaluation:
-		return GfxPipelineState.TessEval == Shader;
+		return ShaderStages.TessEval == Shader;
 	case EShaderStage::Geometry:
-		return GfxPipelineState.Geometry == Shader;
+		return ShaderStages.Geometry == Shader;
 	case EShaderStage::Fragment:
-		return GfxPipelineState.Fragment == Shader;
+		return ShaderStages.Fragment == Shader;
 	default:
 		fail("Shader stage %u not implemented.", (uint32)Shader->CompilationInfo.Stage);
 	}
 }
 
 VkPipeline VulkanCache::GetPipeline(
-	const PipelineStateInitializer& PSOInit,
+	const PipelineStateDesc& PSODesc,
 	VkPipelineLayout PipelineLayout,
 	VkRenderPass RenderPass,
 	uint32 NumRenderTargets)
 {
-	VulkanPipelineHash PipelineHash(PSOInit, PipelineLayout, RenderPass, NumRenderTargets);
+	VulkanPipelineHash PipelineHash(PSODesc, PipelineLayout, RenderPass, NumRenderTargets);
 
 	// Find or create the pipeline.
 	for (const auto& [OtherPipelineHash, CachedPipeline] : PipelineCache)
@@ -111,13 +111,13 @@ VkPipeline VulkanCache::GetPipeline(
 		}
 	}
 
-	VkPipeline Pipeline = CreatePipeline(PSOInit, PipelineLayout, RenderPass, NumRenderTargets);
+	VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout, RenderPass, NumRenderTargets);
 	PipelineCache.push_back({ std::move(PipelineHash), Pipeline });
 	return Pipeline;
 }
 
 VkPipeline VulkanCache::CreatePipeline(
-	const PipelineStateInitializer& PSOInit,
+	const PipelineStateDesc& PSODesc,
 	VkPipelineLayout PipelineLayout,
 	VkRenderPass RenderPass,
 	uint32 NumRenderTargets)
@@ -125,7 +125,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	VkPipelineDepthStencilStateCreateInfo DepthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 
 	{
-		const auto& In = PSOInit.DepthStencilState;
+		const auto& In = PSODesc.DepthStencilState;
 
 		DepthStencilState.depthTestEnable = In.DepthTestEnable;
 		DepthStencilState.depthWriteEnable = In.DepthWriteEnable;
@@ -147,7 +147,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	VkPipelineRasterizationStateCreateInfo RasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
 
 	{
-		const auto& In = PSOInit.RasterizationState;
+		const auto& In = PSODesc.RasterizationState;
 
 		RasterizationState.depthClampEnable = In.DepthClampEnable;
 		RasterizationState.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
@@ -164,7 +164,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	VkPipelineMultisampleStateCreateInfo MultisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 
 	{
-		const auto& In = PSOInit.MultisampleState;
+		const auto& In = PSODesc.MultisampleState;
 
 		MultisampleState.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
 		MultisampleState.sampleShadingEnable = In.SampleShadingEnable;
@@ -178,7 +178,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	{
 		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < NumRenderTargets; RenderTargetIndex++)
 		{
-			const auto& In = PSOInit.ColorBlendAttachmentStates[RenderTargetIndex];
+			const auto& In = PSODesc.ColorBlendAttachmentStates[RenderTargetIndex];
 			auto& Out = ColorBlendAttachmentStates[RenderTargetIndex];
 
 			Out = {};
@@ -235,27 +235,27 @@ VkPipeline VulkanCache::CreatePipeline(
 		}
 	}
 
-	const auto& GraphicsPipeline = PSOInit.ShaderStages;
+	const auto& ShaderStages = PSODesc.ShaderStages;
 
 	std::vector<drm::ShaderRef> Shaders;
 
-	Shaders.push_back(GraphicsPipeline.Vertex);
+	Shaders.push_back(ShaderStages.Vertex);
 
-	if (GraphicsPipeline.TessControl)
+	if (ShaderStages.TessControl)
 	{
-		Shaders.push_back(GraphicsPipeline.TessControl);
+		Shaders.push_back(ShaderStages.TessControl);
 	}
-	if (GraphicsPipeline.TessEval)
+	if (ShaderStages.TessEval)
 	{
-		Shaders.push_back(GraphicsPipeline.TessEval);
+		Shaders.push_back(ShaderStages.TessEval);
 	}
-	if (GraphicsPipeline.Geometry)
+	if (ShaderStages.Geometry)
 	{
-		Shaders.push_back(GraphicsPipeline.Geometry);
+		Shaders.push_back(ShaderStages.Geometry);
 	}
-	if (GraphicsPipeline.Fragment)
+	if (ShaderStages.Fragment)
 	{
-		Shaders.push_back(GraphicsPipeline.Fragment);
+		Shaders.push_back(ShaderStages.Fragment);
 	}
 
 	static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
@@ -268,18 +268,18 @@ VkPipeline VulkanCache::CreatePipeline(
 		ENTRY(EShaderStage::Compute, VK_SHADER_STAGE_COMPUTE_BIT)
 	};
 
-	std::vector<VkPipelineShaderStageCreateInfo> ShaderStages(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
+	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageInfos(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
 
-	for (uint32 StageIndex = 0; StageIndex < ShaderStages.size(); StageIndex++)
+	for (uint32 StageIndex = 0; StageIndex < ShaderStageInfos.size(); StageIndex++)
 	{
 		const drm::ShaderRef& Shader = Shaders[StageIndex];
-		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStages[StageIndex];
+		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
 		ShaderStage.stage = GetValue(VulkanStages, Shader->CompilationInfo.Stage);
 		ShaderStage.module = Shader->CompilationInfo.Module;
 		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
 	}
 
-	const SpecializationInfo& SpecializationInfo = PSOInit.SpecializationInfo;
+	const SpecializationInfo& SpecializationInfo = PSODesc.SpecializationInfo;
 	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = SpecializationInfo.GetMapEntries();
 	VkSpecializationInfo VulkanSpecializationInfo;
 
@@ -293,13 +293,13 @@ VkPipeline VulkanCache::CreatePipeline(
 		VulkanSpecializationInfo.dataSize = Data.size();
 		VulkanSpecializationInfo.pData = Data.data();
 
-		std::for_each(ShaderStages.begin(), ShaderStages.end(), [&] (VkPipelineShaderStageCreateInfo& ShaderStage)
+		std::for_each(ShaderStageInfos.begin(), ShaderStageInfos.end(), [&] (VkPipelineShaderStageCreateInfo& ShaderStage)
 		{
 			ShaderStage.pSpecializationInfo = &VulkanSpecializationInfo;
 		});
 	}
 
-	const std::vector<VertexAttributeDescription>& VertexAttributes = GraphicsPipeline.Vertex->CompilationInfo.VertexAttributeDescriptions;
+	const std::vector<VertexAttributeDescription>& VertexAttributes = ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions;
 
 	std::vector<VkVertexInputAttributeDescription> VulkanVertexAttributes;
 	VulkanVertexAttributes.reserve(VertexAttributes.size());
@@ -347,7 +347,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	
 	VkPipelineInputAssemblyStateCreateInfo InputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 	{
-		const auto& In = PSOInit.InputAssemblyState;
+		const auto& In = PSODesc.InputAssemblyState;
 		InputAssemblyState.topology = [&] ()
 		{
 			for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
@@ -365,7 +365,7 @@ VkPipeline VulkanCache::CreatePipeline(
 
 	VkViewport Viewport = {};
 	{
-		const auto& In = PSOInit.Viewport;
+		const auto& In = PSODesc.Viewport;
 		Viewport.x = (float)In.X;
 		Viewport.y = (float)In.Y;
 		Viewport.width = (float)In.Width;
@@ -398,8 +398,8 @@ VkPipeline VulkanCache::CreatePipeline(
 	ColorBlendState.attachmentCount = NumRenderTargets;
 
 	VkGraphicsPipelineCreateInfo PipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	PipelineInfo.stageCount = ShaderStages.size();
-	PipelineInfo.pStages = ShaderStages.data();
+	PipelineInfo.stageCount = ShaderStageInfos.size();
+	PipelineInfo.pStages = ShaderStageInfos.data();
 	PipelineInfo.pVertexInputState = &VertexInputState;
 	PipelineInfo.pInputAssemblyState = &InputAssemblyState;
 	PipelineInfo.pViewportState = &ViewportState;

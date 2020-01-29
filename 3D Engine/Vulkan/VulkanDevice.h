@@ -46,7 +46,7 @@ public:
 
 	virtual void UnlockBuffer(drm::BufferRef Buffer) override;
 
-	virtual drm::RenderPassRef CreateRenderPass(const RenderPassInitializer& RPInit) override;
+	virtual drm::RenderPassRef CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
 	operator VkDevice() const { return Device; }
 

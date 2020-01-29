@@ -101,15 +101,15 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 
 		CmdList.BindDescriptorSets(1, &DescriptorSet);
 
-		PipelineStateInitializer PSOInit = {};
-		PSOInit.Viewport.Width = SceneDepth->Width;
-		PSOInit.Viewport.Height = SceneDepth->Height;
-		PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-		PSOInit.DepthStencilState.DepthWriteEnable = false;
-		PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
-		PSOInit.ShaderStages.Fragment = Scene.ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
+		PipelineStateDesc PSODesc = {};
+		PSODesc.Viewport.Width = SceneDepth->Width;
+		PSODesc.Viewport.Height = SceneDepth->Height;
+		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
+		PSODesc.DepthStencilState.DepthWriteEnable = false;
+		PSODesc.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
+		PSODesc.ShaderStages.Fragment = Scene.ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
 
-		CmdList.BindPipeline(PSOInit);
+		CmdList.BindPipeline(PSODesc);
 
 		CmdList.Draw(3, 1, 0, 0);
 
@@ -140,80 +140,80 @@ void SceneRenderer::Present(drm::CommandListRef CmdList)
 
 void SceneRenderer::CreateDepthRP()
 {
-	RenderPassInitializer DepthRPInit = { 0 };
-	DepthRPInit.DepthAttachment = drm::AttachmentView(
+	RenderPassDesc RPDesc = { 0 };
+	RPDesc.DepthAttachment = drm::AttachmentView(
 		SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	DepthRPInit.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-	DepthRP = Device.CreateRenderPass(DepthRPInit);
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
+	DepthRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateVoxelRP()
 {
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-	RenderPassInitializer RPInfo = { 0 }; // Disable ROP
-	RPInfo.RenderArea.Extent = glm::uvec2(VoxelGridSize);
-	VoxelRP = Device.CreateRenderPass(RPInfo);
+	RenderPassDesc RPDesc = { 0 }; // Disable ROP
+	RPDesc.RenderArea.Extent = glm::uvec2(VoxelGridSize);
+	VoxelRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateVoxelVisualizationRP()
 {
-	RenderPassInitializer RPInfo = { 1 };
-	RPInfo.ColorAttachments[0] = drm::AttachmentView(
+	RenderPassDesc RPDesc = { 1 };
+	RPDesc.ColorAttachments[0] = drm::AttachmentView(
 		SceneColor, 
 		ELoadAction::DontCare, 
 		EStoreAction::Store, 
 		ClearColorValue{},
 		EImageLayout::Undefined, 
 		EImageLayout::TransferSrcOptimal);
-	RPInfo.DepthAttachment = drm::AttachmentView(
+	RPDesc.DepthAttachment = drm::AttachmentView(
 		SceneDepth, 
 		ELoadAction::Clear,
 		EStoreAction::Store, 
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthWriteStencilWrite);
-	RPInfo.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-	VoxelVisualizationRP = Device.CreateRenderPass(RPInfo);
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
+	VoxelVisualizationRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateLightingRP()
 {
-	RenderPassInitializer RPInfo = { 1 };
-	RPInfo.ColorAttachments[0] = drm::AttachmentView(SceneColor, ELoadAction::DontCare, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal);
-	RPInfo.DepthAttachment = drm::AttachmentView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite, EImageLayout::DepthReadStencilWrite);
-	RPInfo.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
-	LightingRP = Device.CreateRenderPass(RPInfo);
+	RenderPassDesc RPDesc = { 1 };
+	RPDesc.ColorAttachments[0] = drm::AttachmentView(SceneColor, ELoadAction::DontCare, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal);
+	RPDesc.DepthAttachment = drm::AttachmentView(SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite, EImageLayout::DepthReadStencilWrite);
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth->Width, SceneDepth->Height) };
+	LightingRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateShadowMaskRP()
 {
-	RenderPassInitializer RPInfo = { 1 };
-	RPInfo.ColorAttachments[0] = drm::AttachmentView(
+	RenderPassDesc RPDesc = { 1 };
+	RPDesc.ColorAttachments[0] = drm::AttachmentView(
 		ShadowMask, 
 		ELoadAction::Clear, 
 		EStoreAction::Store, 
 		ClearColorValue{},
 		EImageLayout::Undefined,
 		EImageLayout::ShaderReadOnlyOptimal);
-	RPInfo.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask->Width, ShadowMask->Height) };
-	ShadowMaskRP = Device.CreateRenderPass(RPInfo);
+	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask->Width, ShadowMask->Height) };
+	ShadowMaskRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateDepthVisualizationRP()
 {
-	RenderPassInitializer RPInfo = { 1 };
-	RPInfo.ColorAttachments[0] = drm::AttachmentView(
+	RenderPassDesc RPDesc = { 1 };
+	RPDesc.ColorAttachments[0] = drm::AttachmentView(
 		SceneColor, 
 		ELoadAction::DontCare, 
 		EStoreAction::Store, 
 		ClearColorValue{}, 
 		EImageLayout::Undefined,
 		EImageLayout::TransferSrcOptimal);
-	RPInfo.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneColor->Width, SceneColor->Height) };
-	DepthVisualizationRP = Device.CreateRenderPass(RPInfo);
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneColor->Width, SceneColor->Height) };
+	DepthVisualizationRP = Device.CreateRenderPass(RPDesc);
 }

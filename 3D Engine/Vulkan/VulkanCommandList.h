@@ -23,7 +23,7 @@ public:
 
 	virtual void EndRenderPass() override;
 
-	virtual void BindPipeline(const PipelineStateInitializer& PSOInit) override;
+	virtual void BindPipeline(const PipelineStateDesc& PSODesc) override;
 
 	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) override;
 

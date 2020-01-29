@@ -321,6 +321,7 @@ namespace drm
 	class RenderPass
 	{
 	public:
+		virtual ~RenderPass() {}
 	};
 
 	CLASS(RenderPass);

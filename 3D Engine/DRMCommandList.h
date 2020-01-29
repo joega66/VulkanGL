@@ -13,14 +13,14 @@ enum
 	MaxAttachments = 8
 };
 
-struct RenderPassInitializer
+struct RenderPassDesc
 {
 	uint32 NumAttachments;
 	std::array<drm::AttachmentView, MaxAttachments> ColorAttachments;
 	drm::AttachmentView DepthAttachment;
 	RenderArea RenderArea;
 
-	friend bool operator==(const RenderPassInitializer& L, const RenderPassInitializer& R)
+	friend bool operator==(const RenderPassDesc& L, const RenderPassDesc& R)
 	{
 		if (L.NumAttachments != R.NumAttachments)
 			return false;
@@ -328,7 +328,7 @@ struct ShaderStages
 	}
 };
 
-struct PipelineStateInitializer
+struct PipelineStateDesc
 {
 	Viewport Viewport;
 	DepthStencilState DepthStencilState;
@@ -339,7 +339,7 @@ struct PipelineStateInitializer
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
 
-	friend bool operator==(const PipelineStateInitializer& L, const PipelineStateInitializer& R)
+	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
 		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < MaxAttachments; RenderTargetIndex++)
 		{
@@ -394,7 +394,7 @@ namespace drm
 
 		virtual void BeginRenderPass(drm::RenderPassRef RenderPass) = 0;
 		virtual void EndRenderPass() = 0;
-		virtual void BindPipeline(const PipelineStateInitializer& PSOInit) = 0;
+		virtual void BindPipeline(const PipelineStateDesc& PSODesc) = 0;
 		virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) = 0;
 		virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) = 0;
 		virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;

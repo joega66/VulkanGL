@@ -105,16 +105,16 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 
 		CmdList.BeginRenderPass(ShadowProxy.GetRenderPass());
 
-		PipelineStateInitializer PSOInit = {};
-		PSOInit.Viewport.Width = ShadowMap->Width;
-		PSOInit.Viewport.Height = ShadowMap->Height;
-		PSOInit.RasterizationState.DepthBiasEnable = true;
-		PSOInit.RasterizationState.DepthBiasConstantFactor = ShadowProxy.GetDepthBiasConstantFactor();
-		PSOInit.RasterizationState.DepthBiasSlopeFactor = ShadowProxy.GetDepthBiasSlopeFactor();
+		PipelineStateDesc PSODesc = {};
+		PSODesc.Viewport.Width = ShadowMap->Width;
+		PSODesc.Viewport.Height = ShadowMap->Height;
+		PSODesc.RasterizationState.DepthBiasEnable = true;
+		PSODesc.RasterizationState.DepthBiasConstantFactor = ShadowProxy.GetDepthBiasConstantFactor();
+		PSODesc.RasterizationState.DepthBiasSlopeFactor = ShadowProxy.GetDepthBiasSlopeFactor();
 
 		ShadowDepthPassDescriptorSets DescriptorSets = { ShadowProxy.GetDescriptorSet() };
 
-		MeshDrawCommand::Draw(Scene.ShadowDepthPass, CmdList, DescriptorSets, PSOInit);
+		MeshDrawCommand::Draw(Scene.ShadowDepthPass, CmdList, DescriptorSets, PSODesc);
 
 		CmdList.EndRenderPass();
 	}
@@ -139,15 +139,15 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 
 		CmdList.BindDescriptorSets(Descriptors.size(), Descriptors.data());
 
-		PipelineStateInitializer PSOInit = {};
-		PSOInit.Viewport.Width = ShadowMask->Width;
-		PSOInit.Viewport.Height = ShadowMask->Height;
-		PSOInit.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-		PSOInit.DepthStencilState.DepthWriteEnable = false;
-		PSOInit.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
-		PSOInit.ShaderStages.Fragment = Scene.ShaderMap.FindShader<ShadowProjectionFS>();
+		PipelineStateDesc PSODesc = {};
+		PSODesc.Viewport.Width = ShadowMask->Width;
+		PSODesc.Viewport.Height = ShadowMask->Height;
+		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
+		PSODesc.DepthStencilState.DepthWriteEnable = false;
+		PSODesc.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
+		PSODesc.ShaderStages.Fragment = Scene.ShaderMap.FindShader<ShadowProjectionFS>();
 
-		CmdList.BindPipeline(PSOInit);
+		CmdList.BindPipeline(PSODesc);
 
 		CmdList.Draw(3, 1, 0, 0);
 	}
