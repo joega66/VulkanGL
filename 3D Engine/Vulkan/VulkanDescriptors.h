@@ -2,13 +2,13 @@
 #include <DRMResource.h>
 #include <vulkan/vulkan.h>
 
-class VulkanDRM;
+class VulkanDevice;
 
 /** Spawns descriptor sets and zerglings. */
 class VulkanDescriptorPool
 {
 public:
-	VulkanDescriptorPool(VulkanDRM& Device);
+	VulkanDescriptorPool(VulkanDevice& Device);
 
 	[[nodiscard]] VkDescriptorSet Spawn(const VkDescriptorSetLayout& DescriptorSetLayout);
 
@@ -19,7 +19,7 @@ public:
 private:
 	static constexpr uint32 MaxDescriptorSetCount = 4096;
 
-	VulkanDRM& Device;
+	VulkanDevice& Device;
 
 	uint32 DescriptorSetCount = 0;
 
@@ -38,7 +38,7 @@ public:
 	VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 
-	VulkanDescriptorSet(VulkanDRM& Device, VulkanDescriptorPool& DescriptorPool);
+	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool);
 	virtual ~VulkanDescriptorSet() override;
 
 	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, uint32 Binding) override;
@@ -49,7 +49,7 @@ public:
 private:
 	std::once_flag SpawnDescriptorSetOnceFlag;
 
-	VulkanDRM& Device;
+	VulkanDevice& Device;
 
 	VulkanDescriptorPool& DescriptorPool;
 

@@ -1,5 +1,5 @@
 #include "VulkanImage.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 
 static const HashTable<EFormat, VkFormat> VulkanFormat =
 {
@@ -73,7 +73,7 @@ static const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
 	ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 };
 
-VulkanImage::VulkanImage(VulkanDRM& Device
+VulkanImage::VulkanImage(VulkanDevice& Device
 	, VkImage Image
 	, VkDeviceMemory Memory
 	, EFormat Format
@@ -161,7 +161,7 @@ VkSampler VulkanCache::GetSampler(const SamplerState& SamplerState)
 	}
 }
 
-VkSampler VulkanImage::CreateSampler(VulkanDRM& Device, const SamplerState& SamplerState)
+VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& SamplerState)
 {
 	static const VkSamplerMipmapMode VulkanMipmapModes[] =
 	{
@@ -229,7 +229,7 @@ VkImageAspectFlags VulkanImage::GetVulkanAspect() const
 	return Flags;
 }
 
-static VkFormat FindSupportedFormat(VulkanDRM& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
+static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
 {
 	for (VkFormat Format : Candidates)
 	{
@@ -249,7 +249,7 @@ static VkFormat FindSupportedFormat(VulkanDRM& Device, const std::vector<VkForma
 	fail("Failed to find supported format.");
 }
 
-VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDRM& Device, EFormat Format)
+VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format)
 {
 	const auto Candidates = [&]() -> std::vector<VkFormat>
 	{

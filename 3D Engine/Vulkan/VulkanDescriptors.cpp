@@ -1,7 +1,7 @@
 #include "VulkanDescriptors.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 
-VulkanDescriptorPool::VulkanDescriptorPool(VulkanDRM& Device)
+VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device)
 	: Device(Device)
 {
 	PendingFreeDescriptorSets.resize(MaxDescriptorSetCount);
@@ -84,7 +84,7 @@ VkDescriptorSetLayout VulkanCache::GetDescriptorSetLayout(const std::vector<VkDe
 	return DescriptorSetLayout;
 }
 
-VulkanDescriptorSet::VulkanDescriptorSet(VulkanDRM& Device, VulkanDescriptorPool& DescriptorPool)
+VulkanDescriptorSet::VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool)
 	: Device(Device), DescriptorPool(DescriptorPool)
 {
 }

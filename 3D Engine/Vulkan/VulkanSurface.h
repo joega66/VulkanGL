@@ -5,12 +5,12 @@
 class VulkanSurface : public drm::Surface
 {
 public:
-	VulkanSurface(Platform& Platform, VulkanDRM& Device);
+	VulkanSurface(Platform& Platform, VulkanDevice& Device);
 
 	/** Some initialization that needs to happen using the logical device. 
 	  * This is kinda janky and will get removed when drm::Semaphore comes.
 	  */
-	void Init(VulkanDRM& Device);
+	void Init(VulkanDevice& Device);
 
 	/** Get the next image index. */
 	virtual uint32 AcquireNextImage(DRMDevice& Device) override;

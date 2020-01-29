@@ -16,13 +16,12 @@ static const std::vector<const char*> DeviceExtensions =
 	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
 };
 
-class VulkanDRM final : public DRMDevice
+class VulkanDevice final : public DRMDevice
 {
 public:
-	VulkanDRM(Platform& Platform);
+	VulkanDevice(Platform& Platform);
 
-	/** @Begin DRM device interface. */
-	virtual ~VulkanDRM() override {}
+	virtual ~VulkanDevice() override {}
 
 	virtual void EndFrame() override;
 
@@ -48,7 +47,6 @@ public:
 	virtual void UnlockBuffer(drm::BufferRef Buffer) override;
 
 	virtual drm::RenderPassRef CreateRenderPass(const RenderPassInitializer& RPInit) override;
-	/** @End DRM device interface. */
 
 	operator VkDevice() const { return Device; }
 

@@ -2,7 +2,7 @@
 #include <DRMResource.h>
 #include <vulkan/vulkan.h>
 
-class VulkanDRM;
+class VulkanDevice;
 
 struct VulkanMemory
 {
@@ -48,7 +48,7 @@ CLASS(VulkanMemory);
 class VulkanAllocator
 {
 public:
-	VulkanAllocator(VulkanDRM& Device);
+	VulkanAllocator(VulkanDevice& Device);
 
 	std::shared_ptr<class VulkanBuffer> Allocate(
 		VkDeviceSize Size, 
@@ -65,7 +65,7 @@ public:
 	void UnlockBuffer(const class VulkanBuffer& Buffer);
 
 private:
-	VulkanDRM& Device;
+	VulkanDevice& Device;
 
 	const VkDeviceSize BufferAllocationSize;
 

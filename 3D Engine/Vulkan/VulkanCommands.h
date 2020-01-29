@@ -1,19 +1,19 @@
 #pragma once
 #include <vulkan/vulkan.h>
 
-class VulkanDRM;
+class VulkanDevice;
 
 class VulkanScopedCommandBuffer
 {
 public:
-	VulkanScopedCommandBuffer(VulkanDRM& Device, VkQueueFlags QueueFlags);
+	VulkanScopedCommandBuffer(VulkanDevice& Device, VkQueueFlags QueueFlags);
 
 	~VulkanScopedCommandBuffer();
 
 	operator VkCommandBuffer() { return CommandBuffer; }
 
 private:
-	VulkanDRM& Device;
+	VulkanDevice& Device;
 	VkQueue Queue;
 	VkCommandPool CommandPool;
 	VkCommandBuffer CommandBuffer;

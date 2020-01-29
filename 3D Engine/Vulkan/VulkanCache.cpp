@@ -1,7 +1,7 @@
 #include "VulkanCache.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 
-VulkanCache::VulkanCache(VulkanDRM& Device)
+VulkanCache::VulkanCache(VulkanDevice& Device)
 	: Device(Device)
 {
 }

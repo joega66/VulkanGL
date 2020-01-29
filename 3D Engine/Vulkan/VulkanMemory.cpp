@@ -1,8 +1,8 @@
 #include "VulkanMemory.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 #include "VulkanCommands.h"
 
-VulkanAllocator::VulkanAllocator(VulkanDRM& Device)
+VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 	: Device(Device)
 	, BufferAllocationSize(2 * (1 << 20)) // Allocate in 2MB chunks
 {

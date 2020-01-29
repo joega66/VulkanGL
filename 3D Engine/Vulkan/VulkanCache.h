@@ -2,7 +2,7 @@
 #include <DRM.h>
 #include <vulkan/vulkan.h>
 
-class VulkanDRM;
+class VulkanDevice;
 
 /** A (very slow) Vulkan object cache. */
 class VulkanCache
@@ -10,7 +10,7 @@ class VulkanCache
 	template<typename DRMObject, typename ...VulkanObjects>
 	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
 public:
-	VulkanCache(VulkanDRM& Device);
+	VulkanCache(VulkanDevice& Device);
 
 	~VulkanCache();
 	
@@ -35,7 +35,7 @@ public:
 	static const char* GetVulkanErrorString(VkResult Result);
 
 private:
-	VulkanDRM& Device;
+	VulkanDevice& Device;
 
 	SlowCache<RenderPassInitializer, VkRenderPass, VkFramebuffer> RenderPassCache;
 

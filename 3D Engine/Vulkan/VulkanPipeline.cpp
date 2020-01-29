@@ -1,5 +1,5 @@
 #include "VulkanCache.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 
 static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 {

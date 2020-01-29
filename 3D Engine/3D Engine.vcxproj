@@ -59,7 +59,7 @@
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp" />
     <ClCompile Include="Vulkan\VulkanCache.cpp" />
     <ClCompile Include="Vulkan\VulkanDeviceCreation.cpp" />
-    <ClCompile Include="Vulkan\VulkanDRM.cpp" />
+    <ClCompile Include="Vulkan\VulkanDevice.cpp" />
     <ClCompile Include="Vulkan\VulkanImage.cpp" />
     <ClCompile Include="Vulkan\VulkanMemory.cpp" />
     <ClCompile Include="Vulkan\VulkanPipeline.cpp" />
@@ -116,7 +116,7 @@
     <ClInclude Include="Vulkan\VulkanCommands.h" />
     <ClInclude Include="Vulkan\VulkanDescriptors.h" />
     <ClInclude Include="Vulkan\VulkanCache.h" />
-    <ClInclude Include="Vulkan\VulkanDRM.h" />
+    <ClInclude Include="Vulkan\VulkanDevice.h" />
     <ClInclude Include="Vulkan\VulkanImage.h" />
     <ClInclude Include="Vulkan\VulkanMemory.h" />
     <ClInclude Include="Vulkan\VulkanQueues.h" />

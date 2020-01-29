@@ -1,13 +1,13 @@
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 #include "VulkanRenderPass.h"
 #include "VulkanSurface.h"
 
-void VulkanDRM::EndFrame()
+void VulkanDevice::EndFrame()
 {
 	DescriptorPool->EndFrame();
 }
 
-void VulkanDRM::SubmitCommands(drm::CommandListRef CmdList)
+void VulkanDevice::SubmitCommands(drm::CommandListRef CmdList)
 {
 	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
 
@@ -22,17 +22,17 @@ void VulkanDRM::SubmitCommands(drm::CommandListRef CmdList)
 	vulkan(vkQueueWaitIdle(VulkanCmdList->Queue));
 }
 
-drm::CommandListRef VulkanDRM::CreateCommandList()
+drm::CommandListRef VulkanDevice::CreateCommandList()
 {
 	return MakeRef<VulkanCommandList>(*this, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
-drm::DescriptorSetRef VulkanDRM::CreateDescriptorSet()
+drm::DescriptorSetRef VulkanDevice::CreateDescriptorSet()
 {
 	return MakeRef<VulkanDescriptorSet>(*this, *DescriptorPool);
 }
 
-drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
+drm::BufferRef VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
 {
 	VkBufferUsageFlags VulkanUsage = 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
@@ -46,7 +46,7 @@ drm::BufferRef VulkanDRM::CreateBuffer(EBufferUsage Usage, uint32 Size, const vo
 	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
 }
 
-drm::ImageRef VulkanDRM::CreateImage(
+drm::ImageRef VulkanDevice::CreateImage(
 	uint32 Width, 
 	uint32 Height, 
 	uint32 Depth, 
@@ -117,19 +117,19 @@ drm::ImageRef VulkanDRM::CreateImage(
 	return VulkanImage;
 }
 
-void* VulkanDRM::LockBuffer(drm::BufferRef Buffer)
+void* VulkanDevice::LockBuffer(drm::BufferRef Buffer)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
 	return Allocator.LockBuffer(*VulkanBuffer);
 }
 
-void VulkanDRM::UnlockBuffer(drm::BufferRef Buffer)
+void VulkanDevice::UnlockBuffer(drm::BufferRef Buffer)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
 	Allocator.UnlockBuffer(*VulkanBuffer);
 }
 
-drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPInit)
+drm::RenderPassRef VulkanDevice::CreateRenderPass(const RenderPassInitializer& RPInit)
 {
 	const auto[RenderPass, Framebuffer] = VulkanCache.GetRenderPass(RPInit);
 
@@ -182,7 +182,7 @@ drm::RenderPassRef VulkanDRM::CreateRenderPass(const RenderPassInitializer& RPIn
 	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPInit.NumAttachments);
 }
 
-void VulkanDRM::CreateLogicalDevice()
+void VulkanDevice::CreateLogicalDevice()
 {
 	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
 	const float QueuePriority = 1.0f;

@@ -1,7 +1,7 @@
 #include "VulkanCommands.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 
-VulkanScopedCommandBuffer::VulkanScopedCommandBuffer(VulkanDRM& Device, VkQueueFlags QueueFlags)
+VulkanScopedCommandBuffer::VulkanScopedCommandBuffer(VulkanDevice& Device, VkQueueFlags QueueFlags)
 	: Device(Device)
 	, Queue(Device.GetQueues().GetQueue(QueueFlags))
 	, CommandPool(Device.GetQueues().GetCommandPool(QueueFlags))

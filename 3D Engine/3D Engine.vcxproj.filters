@@ -110,9 +110,6 @@
     <ClInclude Include="Engine\Timers.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanDRM.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanCommandList.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -209,6 +206,9 @@
     <ClInclude Include="Vulkan\VulkanCache.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanDevice.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -252,9 +252,6 @@
     </ClCompile>
     <ClCompile Include="Engine\Timers.cpp">
       <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanDRM.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCommandList.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -353,6 +350,9 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanDeviceCreation.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanDevice.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>

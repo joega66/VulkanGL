@@ -1,5 +1,5 @@
 #include "VulkanSurface.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 #include <GLFW/glfw3.h>
 
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)
@@ -54,7 +54,7 @@ static VkExtent2D ChooseSwapExtent(uint32 Width, uint32 Height, const VkSurfaceC
 	}
 }
 
-VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& Device)
+VulkanSurface::VulkanSurface(Platform& Platform, VulkanDevice& Device)
 {
 	vulkan(glfwCreateWindowSurface(Device.GetInstance(), Platform.Window, nullptr, &Surface));
 
@@ -84,7 +84,7 @@ VulkanSurface::VulkanSurface(Platform& Platform, VulkanDRM& Device)
 	Device.GetQueues().RequestQueueFamily(PresentIndex);
 }
 
-void VulkanSurface::Init(VulkanDRM& Device)
+void VulkanSurface::Init(VulkanDevice& Device)
 {
 	VkSemaphoreCreateInfo SemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	vulkan(vkCreateSemaphore(Device, &SemaphoreInfo, nullptr, &ImageAvailableSem));
@@ -95,7 +95,7 @@ void VulkanSurface::Init(VulkanDRM& Device)
 
 uint32 VulkanSurface::AcquireNextImage(DRMDevice& Device)
 {
-	VulkanDRM& VulkanDevice = static_cast<VulkanDRM&>(Device);
+	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
 	uint32 ImageIndex;
 
@@ -119,7 +119,7 @@ uint32 VulkanSurface::AcquireNextImage(DRMDevice& Device)
 
 void VulkanSurface::Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandListRef CmdList)
 {
-	VulkanDRM& VulkanDevice = static_cast<VulkanDRM&>(Device);
+	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
 	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
 
@@ -189,7 +189,7 @@ struct SwapchainSupportDetails
 
 void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 {
-	VulkanDRM& VulkanDevice = static_cast<VulkanDRM&>(Device);
+	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
 	const SwapchainSupportDetails SwapchainSupport(VulkanDevice.GetPhysicalDevice(), Surface);
 	const VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);

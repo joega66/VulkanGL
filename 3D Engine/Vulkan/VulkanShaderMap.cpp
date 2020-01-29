@@ -1,5 +1,5 @@
 #include "VulkanShaderMap.h"
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
@@ -74,7 +74,7 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	return Descriptions;
 }
 
-VulkanShaderMap::VulkanShaderMap(VulkanDRM& Device)
+VulkanShaderMap::VulkanShaderMap(VulkanDevice& Device)
 	: Device(Device)
 {
 }

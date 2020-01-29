@@ -1,4 +1,4 @@
-#include "VulkanDRM.h"
+#include "VulkanDevice.h"
 #include <GLFW/glfw3.h>
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& ValidationLayers)
@@ -178,7 +178,7 @@ static VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures(VkPhysicalDevice Physi
 	return Features;
 }
 
-VulkanDRM::VulkanDRM(Platform& Platform)
+VulkanDevice::VulkanDevice(Platform& Platform)
 	: Instance(CreateInstance(ValidationLayers, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false)))
 	, DebugReportCallback(CreateDebugReportCallback(Instance, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false)))
 	, PhysicalDevice(SelectPhysicalDevice(Instance, DeviceExtensions))

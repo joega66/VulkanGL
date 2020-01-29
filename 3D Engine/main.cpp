@@ -1,6 +1,6 @@
 #include "EngineMain.h"
 #include <Platform/Platform.h>
-#include <Vulkan/VulkanDRM.h>
+#include <Vulkan/VulkanDevice.h>
 #include <Vulkan/VulkanShaderMap.h>
 #include <Vulkan/VulkanSurface.h>
 #include <Engine/Screen.h>
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	GLFWWindowUserPointer WindowUserPointer{ &Cursor, &Input, &Screen };
 	glfwSetWindowUserPointer(Platform.Window, &WindowUserPointer);
 
-	std::unique_ptr<VulkanDRM> Device = std::make_unique<VulkanDRM>(Platform);
+	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>(Platform);
 	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, *Device);
 	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(*Device);
 

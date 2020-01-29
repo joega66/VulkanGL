@@ -4,7 +4,7 @@
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 
-class VulkanDRM;
+class VulkanDevice;
 
 class VulkanCommandList final : public drm::CommandList
 {
@@ -15,7 +15,7 @@ public:
 
 	VkCommandBuffer CommandBuffer;
 
-	VulkanCommandList(VulkanDRM& Device, VkQueueFlagBits QueueFlags);
+	VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags);
 
 	virtual ~VulkanCommandList() override;
 
@@ -64,7 +64,7 @@ public:
 	) override;
 
 private:
-	VulkanDRM& Device;
+	VulkanDevice& Device;
 
 	struct PendingState
 	{
