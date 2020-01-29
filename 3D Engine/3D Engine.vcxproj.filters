@@ -104,9 +104,6 @@
     <ClInclude Include="Engine\Input.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Components\CLight.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Timers.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -208,6 +205,9 @@
     </ClInclude>
     <ClInclude Include="Vulkan\VulkanDevice.h">
       <Filter>Source\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Light.h">
+      <Filter>Source\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -343,9 +343,6 @@
     <ClCompile Include="Engine\Camera.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Systems\RenderSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Vulkan\VulkanCache.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
@@ -354,6 +351,9 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanDevice.cpp">
       <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\RenderSystem.cpp">
+      <Filter>Source\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

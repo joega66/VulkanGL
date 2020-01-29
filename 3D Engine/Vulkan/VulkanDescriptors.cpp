@@ -147,7 +147,7 @@ void VulkanDescriptorSet::Write(drm::ImageRef Image, uint32 Binding)
 
 void VulkanDescriptorSet::Write(drm::BufferRef Buffer, uint32 Binding)
 {
-	const VkDescriptorType DescriptorType = Buffer->Usage == EBufferUsage::Uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	const VkDescriptorType DescriptorType = Any(Buffer->Usage & EBufferUsage::Uniform) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
 	const VkDescriptorBufferInfo* BufferInfo = new VkDescriptorBufferInfo{ VulkanBuffer->GetVulkanHandle(), VulkanBuffer->GetOffset(), VulkanBuffer->GetSize() };
 

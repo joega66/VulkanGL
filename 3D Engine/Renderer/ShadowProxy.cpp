@@ -1,16 +1,9 @@
 #include "ShadowProxy.h"
-#include <Components/CLight.h>
+#include <Components/Light.h>
 #include <ECS/EntityManager.h>
 
-void ShadowProxy::InitCallbacks(DRMDevice& Device, EntityManager& ECS)
-{
-	ECS.NewComponentCallback<CDirectionalLight>([&] (Entity& Entity, CDirectionalLight& DirectionalLight)
-	{
-		ECS.AddComponent<ShadowProxy>(Entity, ShadowProxy(Device, DirectionalLight));
-	});
-}
-
-ShadowProxy::ShadowProxy(DRMDevice& Device, const CDirectionalLight& DirectionalLight)
+ShadowProxy::ShadowProxy(DRMDevice& Device, const DirectionalLight& DirectionalLight)
+	: LightViewProjBuffer(Device.CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4)))
 {
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
@@ -23,19 +16,18 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, const CDirectionalLight& Directional
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
-		EImageLayout::DepthReadStencilWrite
-	);
+		EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap->Width, ShadowMap->Height) };
 
 	RenderPass = Device.CreateRenderPass(RPDesc);
 
 	DescriptorSet = Device.CreateDescriptorSet();
+	DescriptorSet->Write(LightViewProjBuffer, 0);
 	DescriptorSet->Write(ShadowMap, SamplerState{}, 1);
-
-	Update(Device, DirectionalLight);
+	DescriptorSet->Update();
 }
 
-void ShadowProxy::Update(DRMDevice& Device, const CDirectionalLight& DirectionalLight)
+void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalLight)
 {
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
@@ -49,8 +41,7 @@ void ShadowProxy::Update(DRMDevice& Device, const CDirectionalLight& Directional
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
 	
-	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4), &LightViewProjMatrix);
-
-	DescriptorSet->Write(LightViewProjBuffer, 0);
-	DescriptorSet->Update();
+	glm::mat4* LightViewProjMatrixPtr = static_cast<glm::mat4*>(Device.LockBuffer(LightViewProjBuffer));
+	*LightViewProjMatrixPtr = LightViewProjMatrix;
+	Device.UnlockBuffer(LightViewProjBuffer);
 }

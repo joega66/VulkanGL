@@ -43,8 +43,6 @@ SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Sc
 	VoxelsDescriptorSet->Write(VoxelPositions, 2);
 
 	CreateVoxelRP();
-
-	ShadowProxy::InitCallbacks(Device, Scene.ECS);
 }
 
 void SceneRenderer::Render(SceneProxy& Scene)

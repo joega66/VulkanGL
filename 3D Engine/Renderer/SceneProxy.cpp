@@ -1,6 +1,6 @@
 #include "SceneProxy.h"
 #include <Engine/Scene.h>
-#include <Components/CLight.h>
+#include <Components/Light.h>
 #include <Components/Material.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
@@ -71,9 +71,9 @@ void SceneProxy::InitDirectionalLights(DRMDevice& Device)
 
 	std::vector<DirectionalLightProxy> DirectionalLightProxies;
 
-	for (auto Entity : ECS.GetEntities<CDirectionalLight>())
+	for (auto Entity : ECS.GetEntities<DirectionalLight>())
 	{
-		auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
+		auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
 
 		DirectionalLightProxy DirectionalLightProxy;
 		DirectionalLightProxy.Intensity = DirectionalLight.Intensity;
@@ -91,13 +91,6 @@ void SceneProxy::InitDirectionalLights(DRMDevice& Device)
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	Device.UnlockBuffer(DirectionalLightBuffer);
-
-	for (auto Entity : ECS.GetEntities<ShadowProxy>())
-	{
-		auto& DirectionalLight = ECS.GetComponent<CDirectionalLight>(Entity);
-		auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
-		ShadowProxy.Update(Device, DirectionalLight);
-	}
 }
 
 void SceneProxy::InitPointLights(DRMDevice& Device)

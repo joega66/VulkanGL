@@ -22,7 +22,7 @@ struct CLight
 	float DepthBiasSlopeFactor = 1.0f;
 };
 
-struct CDirectionalLight : public CLight
+struct DirectionalLight : public CLight
 {
 	glm::vec3 Direction;
 };

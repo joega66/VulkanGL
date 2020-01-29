@@ -69,7 +69,7 @@
     <ClCompile Include="Vulkan\VulkanSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Components\CLight.h" />
+    <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\COutline.h" />
     <ClInclude Include="Components\CRenderer.h" />

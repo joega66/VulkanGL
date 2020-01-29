@@ -2,8 +2,9 @@
 #include <Engine/Scene.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
+#include <Components/Light.h>
 #include <Renderer/MeshProxy.h>
-#include <DRM.h>
+#include <Renderer/ShadowProxy.h>
 
 UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 	glm::mat4 Transform;
@@ -24,6 +25,11 @@ void RenderSystem::Start(EntityManager& ECS, DRMDevice& Device)
 
 		ECS.AddComponent<MeshProxy>(Entity, MeshProxy(Device, SurfaceSet, Material, StaticMesh->Submeshes, LocalToWorldUniform));
 	});
+
+	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
+	{
+		ECS.AddComponent<ShadowProxy>(Entity, ShadowProxy(Device, DirectionalLight));
+	});
 }
 
 void RenderSystem::Update(EntityManager& ECS, DRMDevice& Device)
@@ -40,5 +46,12 @@ void RenderSystem::Update(EntityManager& ECS, DRMDevice& Device)
 		Device.UnlockBuffer(MeshProxy.LocalToWorldUniform);
 
 		MeshProxy.WorldSpaceBB = StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
+	}
+
+	for (auto Entity : ECS.GetEntities<ShadowProxy>())
+	{
+		auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
+		auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
+		ShadowProxy.Update(Device, DirectionalLight);
 	}
 }

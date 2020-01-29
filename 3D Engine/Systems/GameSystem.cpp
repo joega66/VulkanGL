@@ -1,7 +1,7 @@
 #include "GameSystem.h"
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
-#include <Components/CLight.h>
+#include <Components/Light.h>
 #include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 
@@ -30,7 +30,7 @@ void GameSystem::Start(Scene& Scene)
 		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
 		auto Light = ECS.CreateEntity();
-		auto& DirectionalLight = ECS.AddComponent<CDirectionalLight>(Light);
+		auto& DirectionalLight = ECS.AddComponent<struct DirectionalLight>(Light);
 		DirectionalLight.Intensity = 10.0f;
 		DirectionalLight.Direction = glm::vec3(X, Y, Z);
 		DirectionalLight.ShadowType = EShadowType::Soft;
@@ -41,9 +41,9 @@ void GameSystem::Start(Scene& Scene)
 
 void GameSystem::Update(Scene& Scene)
 {
-	for (auto& Entity : Scene.ECS.GetEntities<CDirectionalLight>())
+	for (auto& Entity : Scene.ECS.GetEntities<DirectionalLight>())
 	{
-		auto& DirectionalLight = Scene.ECS.GetComponent<CDirectionalLight>(Entity);
+		auto& DirectionalLight = Scene.ECS.GetComponent<struct DirectionalLight>(Entity);
 		const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
 		const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
 		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
