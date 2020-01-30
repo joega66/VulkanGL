@@ -37,7 +37,7 @@ public:
 private:
 	VulkanDevice& Device;
 
-	SlowCache<RenderPassDesc, VkRenderPass, VkFramebuffer> RenderPassCache;
+	SlowCache<RenderPassDesc, VkRenderPass> RenderPassCache;
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 
@@ -57,7 +57,9 @@ private:
 
 	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout> DescriptorSetLayoutCache;
 
-	[[nodiscard]] std::pair<VkRenderPass, VkFramebuffer> CreateRenderPass(const RenderPassDesc& RPDesc);
+	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
+
+	[[nodiscard]] VkFramebuffer CreateFramebuffer(VkRenderPass RenderPass, const RenderPassDesc& RPDesc) const;
 
 	[[nodiscard]] VkPipeline CreatePipeline(
 		const PipelineStateDesc& PSODesc,

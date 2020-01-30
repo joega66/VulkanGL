@@ -142,19 +142,18 @@ drm::RenderPassRef VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	};
 
 	// Get the clear values from the AttachmentViews.
-	const uint32 NumRTs = RPDesc.NumAttachments;
 	std::vector<VkClearValue> ClearValues;
 
 	if (RPDesc.DepthAttachment.Image)
 	{
-		ClearValues.resize(NumRTs + 1);
+		ClearValues.resize(RPDesc.NumAttachments + 1);
 	}
 	else
 	{
-		ClearValues.resize(NumRTs);
+		ClearValues.resize(RPDesc.NumAttachments);
 	}
 
-	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < NumRTs; ColorTargetIndex++)
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPDesc.NumAttachments; ColorTargetIndex++)
 	{
 		const auto& ClearValue = std::get<ClearColorValue>(RPDesc.ColorAttachments[ColorTargetIndex].ClearValue);
 		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
@@ -166,20 +165,20 @@ drm::RenderPassRef VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	{
 		VulkanImageRef Image = ResourceCast(RPDesc.DepthAttachment.Image);
 
-		ClearValues[NumRTs].depthStencil = { 0, 0 };
+		ClearValues[RPDesc.NumAttachments].depthStencil = { 0, 0 };
 
 		if (Image->IsDepth())
 		{
-			ClearValues[NumRTs].depthStencil.depth = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).DepthClear;
+			ClearValues[RPDesc.NumAttachments].depthStencil.depth = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).DepthClear;
 		}
 
 		if (Image->IsStencil())
 		{
-			ClearValues[NumRTs].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).StencilClear;
+			ClearValues[RPDesc.NumAttachments].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).StencilClear;
 		}
 	}
 
-	return MakeRef<VulkanRenderPass>(RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.NumAttachments);
+	return MakeRef<VulkanRenderPass>(*this, RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.NumAttachments);
 }
 
 void VulkanDevice::CreateLogicalDevice()

@@ -18,9 +18,8 @@ VulkanCache::~VulkanCache()
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}
 
-	for (const auto&[CacheInfo, RenderPass, Framebuffer] : RenderPassCache)
+	for (const auto&[CacheInfo, RenderPass] : RenderPassCache)
 	{
-		vkDestroyFramebuffer(Device, Framebuffer, nullptr);
 		vkDestroyRenderPass(Device, RenderPass, nullptr);
 	}
 }

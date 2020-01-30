@@ -281,9 +281,9 @@ namespace drm
 	{
 	public:
 		ImageRef Image = nullptr;
+		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
 		ELoadAction LoadAction = ELoadAction::DontCare;
 		EStoreAction StoreAction = EStoreAction::DontCare;
-		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
 		EImageLayout InitialLayout = EImageLayout::Undefined;
 		EImageLayout FinalLayout = EImageLayout::Undefined;
 
@@ -293,8 +293,7 @@ namespace drm
 
 		friend bool operator==(const AttachmentView& L, const AttachmentView& R)
 		{
-			return L.Image == R.Image
-				&& L.LoadAction == R.LoadAction
+			return L.LoadAction == R.LoadAction
 				&& L.StoreAction == R.StoreAction
 				&& L.InitialLayout == R.InitialLayout
 				&& L.FinalLayout == R.FinalLayout;

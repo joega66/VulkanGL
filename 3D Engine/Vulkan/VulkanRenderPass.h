@@ -2,16 +2,21 @@
 #include <DRMResource.h>
 #include <vulkan/vulkan.h>
 
+class VulkanDevice;
+
 class VulkanRenderPass : public drm::RenderPass
 {
 public:
 	VulkanRenderPass(
+		VulkanDevice& Device,
 		VkRenderPass RenderPass,
 		VkFramebuffer Framebuffer,
 		const VkRect2D& RenderArea,
 		const std::vector<VkClearValue>& ClearValues,
 		uint32 NumAttachments
 	);
+
+	virtual ~VulkanRenderPass() override;
 
 	inline VkRenderPass GetRenderPass() const { return RenderPass; }
 	inline VkFramebuffer GetFramebuffer() const { return Framebuffer; }
@@ -20,13 +25,16 @@ public:
 	inline uint32 GetNumAttachments() const { return NumAttachments; }
 
 private:
+	VulkanDevice& Device;
+
 	/** The Vulkan render pass. */
 	VkRenderPass RenderPass;
 
 	/** The Vulkan framebuffer. */
 	VkFramebuffer Framebuffer;
 
-	/** Yeah, render area is in RenderPassBeginInfo, but I don't allow 
+	/** 
+	  * Yeah, render area is in RenderPassBeginInfo, but I don't allow 
 	  * specifying a render area smaller than the framebuffer because it's really not
 	  * optimal on mobile.
 	  */
