@@ -60,7 +60,7 @@ static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction StoreAction)
 
 VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 {
-	check(RPDesc.NumAttachments < MaxAttachments, "Trying to set too many render targets.");
+	check(RPDesc.NumAttachments < RenderPassDesc::MaxAttachments, "Trying to set too many render targets.");
 
 	std::vector<VkAttachmentDescription> Descriptions;
 

@@ -8,13 +8,13 @@ struct RenderArea
 	glm::uvec2 Extent;
 };
 
-enum
-{
-	MaxAttachments = 8
-};
-
 struct RenderPassDesc
 {
+	enum
+	{
+		MaxAttachments = 8
+	};
+
 	uint32 NumAttachments;
 	std::array<drm::AttachmentView, MaxAttachments> ColorAttachments;
 	drm::AttachmentView DepthAttachment;
@@ -334,16 +334,16 @@ struct PipelineStateDesc
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::array<ColorBlendAttachmentState, MaxAttachments> ColorBlendAttachmentStates;
+	std::array<ColorBlendAttachmentState, RenderPassDesc::MaxAttachments> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
-		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < MaxAttachments; RenderTargetIndex++)
+		for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPassDesc::MaxAttachments; AttachmentIndex++)
 		{
-			if (L.ColorBlendAttachmentStates[RenderTargetIndex] != R.ColorBlendAttachmentStates[RenderTargetIndex])
+			if (L.ColorBlendAttachmentStates[AttachmentIndex] != R.ColorBlendAttachmentStates[AttachmentIndex])
 			{
 				return false;
 			}

@@ -173,7 +173,7 @@ VkPipeline VulkanCache::CreatePipeline(
 		MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
 	}
 
-	std::array<VkPipelineColorBlendAttachmentState, MaxAttachments> ColorBlendAttachmentStates;
+	std::array<VkPipelineColorBlendAttachmentState, RenderPassDesc::MaxAttachments> ColorBlendAttachmentStates;
 
 	{
 		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < NumRenderTargets; RenderTargetIndex++)
@@ -193,8 +193,6 @@ VkPipeline VulkanCache::CreatePipeline(
 				ENTRY(EBlendOp::MIN, VK_BLEND_OP_MIN)
 				ENTRY(EBlendOp::MAX,VK_BLEND_OP_MAX)
 			};
-
-			static const auto EngineToVulkanBlendOp = [&] (EBlendOp BlendOp) { return VulkanBlendOp.at(BlendOp); };
 
 			static const HashTable<EBlendFactor, VkBlendFactor> VulkanBlendFactor = 
 			{
@@ -219,14 +217,12 @@ VkPipeline VulkanCache::CreatePipeline(
 				ENTRY(EBlendFactor::ONE_MINUS_SRC1_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA)
 			};
 
-			static const auto EngineToVulkanBlendFactor = [&] (EBlendFactor BlendFactor) { return VulkanBlendFactor.at(BlendFactor); };
-
-			Out.srcColorBlendFactor = EngineToVulkanBlendFactor(In.SrcColorBlendFactor);
-			Out.dstColorBlendFactor = EngineToVulkanBlendFactor(In.DstColorBlendFactor);
-			Out.colorBlendOp = EngineToVulkanBlendOp(In.ColorBlendOp);
-			Out.srcAlphaBlendFactor = EngineToVulkanBlendFactor(In.SrcAlphaBlendFactor);
-			Out.dstAlphaBlendFactor = EngineToVulkanBlendFactor(In.DstAlphaBlendFactor);
-			Out.alphaBlendOp = EngineToVulkanBlendOp(In.AlphaBlendOp);
+			Out.srcColorBlendFactor = VulkanBlendFactor.at(In.SrcColorBlendFactor);
+			Out.dstColorBlendFactor = VulkanBlendFactor.at(In.DstColorBlendFactor);
+			Out.colorBlendOp = VulkanBlendOp.at(In.ColorBlendOp);
+			Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.SrcAlphaBlendFactor);
+			Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.DstAlphaBlendFactor);
+			Out.alphaBlendOp = VulkanBlendOp.at(In.AlphaBlendOp);
 
 			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
 			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;

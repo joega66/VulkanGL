@@ -169,6 +169,7 @@ void VulkanDescriptorSet::Update()
 	{
 		DescriptorSetLayout = Device.GetCache().GetDescriptorSetLayout(VulkanBindings);
 		DescriptorSet = DescriptorPool.Spawn(DescriptorSetLayout);
+		VulkanBindings.clear();
 	});
 
 	std::for_each(PendingWrites.begin(), PendingWrites.end(), 

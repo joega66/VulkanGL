@@ -228,10 +228,13 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 		SwapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
 
+	VkSwapchainKHR OldSwapchain = Swapchain;
+
 	SwapchainInfo.preTransform = SwapchainSupport.Capabilities.currentTransform;
 	SwapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	SwapchainInfo.presentMode = PresentMode;
 	SwapchainInfo.clipped = VK_TRUE;
+	SwapchainInfo.oldSwapchain = OldSwapchain;
 
 	vulkan(vkCreateSwapchainKHR(VulkanDevice, &SwapchainInfo, nullptr, &Swapchain));
 
