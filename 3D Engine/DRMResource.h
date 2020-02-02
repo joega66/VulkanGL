@@ -218,6 +218,21 @@ struct SamplerState
 	};
 };
 
+enum EDescriptorType
+{
+	SampledImage,
+	StorageImage,
+	UniformBuffer,
+	StorageBuffer,
+};
+
+struct DescriptorTemplateEntry
+{
+	uint32 Binding;
+	uint32 DescriptorCount;
+	EDescriptorType DescriptorType;
+};
+
 namespace drm
 {
 	class Buffer
@@ -316,6 +331,16 @@ namespace drm
 	};
 
 	CLASS(DescriptorSet);
+
+	class DescriptorTemplate
+	{
+	public:
+		virtual ~DescriptorTemplate() {}
+		virtual drm::DescriptorSetRef CreateDescriptorSet() = 0;
+		virtual void UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, void* Data) = 0;
+	};
+
+	CLASS(DescriptorTemplate);
 
 	class RenderPass
 	{

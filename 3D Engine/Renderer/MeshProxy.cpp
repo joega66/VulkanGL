@@ -4,14 +4,15 @@ MeshProxy::MeshProxy(
 	DRMDevice& Device,
 	drm::DescriptorSetRef SurfaceSet,
 	const class Material& Material,
+	drm::DescriptorSetRef MaterialSet,
 	const std::vector<Submesh>& Submeshes,
 	const drm::BufferRef& LocalToWorldUniform)
 	: SurfaceSet(SurfaceSet)
 	, Material(&Material)
+	, MaterialSet(MaterialSet)
 	, LocalToWorldUniform(LocalToWorldUniform)
 	, Submeshes(Submeshes)
 {
-	MaterialSet = Material.CreateDescriptorSet(Device);
 	SpecializationInfo = Material.CreateSpecializationInfo();
 }
 

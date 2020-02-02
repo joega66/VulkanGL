@@ -25,6 +25,9 @@ public:
 	/** Create a descriptor set for listing the resources referenced in shaders. */
 	virtual drm::DescriptorSetRef CreateDescriptorSet() = 0;
 
+	/** Create a descriptor template. */
+	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) = 0;
+
 	/** Create a buffer resource. */
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
 

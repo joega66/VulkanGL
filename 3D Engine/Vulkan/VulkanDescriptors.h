@@ -60,3 +60,35 @@ private:
 };
 
 CLASS(VulkanDescriptorSet);
+
+class VulkanDescriptorTemplate : public drm::DescriptorTemplate
+{
+public:
+	VulkanDescriptorTemplate(VulkanDevice& Device, uint32 NumEntries, const DescriptorTemplateEntry* Entries);
+	
+	virtual ~VulkanDescriptorTemplate() override;
+
+	virtual drm::DescriptorSetRef CreateDescriptorSet() override;
+
+	virtual void UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, void* Data) override;
+
+private:
+	VulkanDevice& Device;
+
+	/** The descriptor set layout of this template. */
+	VkDescriptorSetLayout DescriptorSetLayout;
+
+	/** The descriptor update template. */
+	VkDescriptorUpdateTemplate DescriptorTemplate;
+
+	/** Descriptor update template entries. */
+	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
+
+	/** The template data structure passed to vkUpdateDescriptorSetWithTemplate. */
+	void* Data = nullptr;
+
+	PFN_vkCreateDescriptorUpdateTemplateKHR p_vkCreateDescriptorUpdateTemplateKHR;
+	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
+};
+
+CLASS(VulkanDescriptorTemplate);

@@ -14,6 +14,7 @@ static const std::vector<const char*> DeviceExtensions =
 {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+	VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
 };
 
 class VulkanDevice final : public DRMDevice
@@ -30,6 +31,8 @@ public:
 	virtual drm::CommandListRef CreateCommandList() override;
 
 	virtual drm::DescriptorSetRef CreateDescriptorSet() override;
+
+	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) override;
 
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
 
@@ -59,6 +62,8 @@ public:
 	
 	void CreateLogicalDevice();
 
+	std::unique_ptr<VulkanDescriptorPool> DescriptorPool;
+
 private:
 	VkInstance Instance;
 
@@ -78,8 +83,6 @@ private:
 
 	/** The logical device. */
 	VkDevice Device;
-
-	std::unique_ptr<VulkanDescriptorPool> DescriptorPool;
 };
 
 namespace

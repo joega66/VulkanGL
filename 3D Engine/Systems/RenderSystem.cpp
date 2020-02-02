@@ -11,19 +11,40 @@ UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 	glm::mat4 Inverse;
 );
 
+class StaticMeshSet
+{
+public:
+	drm::BufferRef LocalToWorldUniform;
+	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	{
+		static const std::vector<DescriptorTemplateEntry> Entries = { { 0, 1, UniformBuffer }, };
+		return Entries;
+	}
+};
+
 void RenderSystem::Start(EntityManager& ECS, DRMDevice& Device)
 {
+	MaterialTemplate = Device.CreateDescriptorTemplate(MaterialSet::GetEntries().size(), MaterialSet::GetEntries().data());
+
+	StaticMeshTemplate = Device.CreateDescriptorTemplate(StaticMeshSet::GetEntries().size(), StaticMeshSet::GetEntries().data());
+
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
-		const drm::BufferRef LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer));
-		const StaticMesh* StaticMesh = ECS.GetComponent<class StaticMeshComponent>(Entity).StaticMesh;
-		const Material& Material = ECS.GetComponent<class Material>(Entity);
+		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
 
-		drm::DescriptorSetRef SurfaceSet = Device.CreateDescriptorSet();
-		SurfaceSet->Write(LocalToWorldUniform, 0);
-		SurfaceSet->Update();
+		StaticMeshSet StaticMeshSet = { Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer)) };
 
-		ECS.AddComponent<MeshProxy>(Entity, MeshProxy(Device, SurfaceSet, Material, StaticMesh->Submeshes, LocalToWorldUniform));
+		drm::DescriptorSetRef SurfaceSet = StaticMeshTemplate->CreateDescriptorSet();
+
+		StaticMeshTemplate->UpdateDescriptorSet(SurfaceSet, &StaticMeshSet);
+
+		Material& Material = ECS.GetComponent<class Material>(Entity);
+
+		drm::DescriptorSetRef MaterialSet = MaterialTemplate->CreateDescriptorSet();
+
+		MaterialTemplate->UpdateDescriptorSet(MaterialSet, &Material.MaterialSet);
+
+		ECS.AddComponent<MeshProxy>(Entity, MeshProxy(Device, SurfaceSet, Material, MaterialSet, StaticMesh->Submeshes, StaticMeshSet.LocalToWorldUniform));
 	});
 
 	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)

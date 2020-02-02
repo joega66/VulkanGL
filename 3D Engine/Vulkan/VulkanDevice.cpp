@@ -32,6 +32,11 @@ drm::DescriptorSetRef VulkanDevice::CreateDescriptorSet()
 	return MakeRef<VulkanDescriptorSet>(*this, *DescriptorPool);
 }
 
+drm::DescriptorTemplateRef VulkanDevice::CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries)
+{
+	return MakeRef<VulkanDescriptorTemplate>(*this, NumEntries, Entries);
+}
+
 drm::BufferRef VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
 {
 	VkBufferUsageFlags VulkanUsage = 0;

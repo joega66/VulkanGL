@@ -9,42 +9,22 @@ drm::ImageRef Material::Black;
 drm::ImageRef Material::Dummy;
 
 Material::Material()
-	: Diffuse(Dummy)
-	, Specular(Dummy)
-	, Opacity(Dummy)
-	, Bump(Dummy)
 {
 }
 
 bool Material::HasSpecularMap() const
 {
-	return Specular != Dummy;
+	return MaterialSet.Specular != Dummy;
 }
 
 bool Material::IsMasked() const
 { 
-	return Opacity != Dummy; 
+	return MaterialSet.Opacity != Dummy;
 }
 
 bool Material::HasBumpMap() const
 {
-	return Bump != Dummy;
-}
-
-drm::DescriptorSetRef Material::CreateDescriptorSet(DRMDevice& Device) const
-{
-	static const SamplerState LinearSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	static const SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-
-	drm::DescriptorSetRef DescriptorSet = Device.CreateDescriptorSet();
-
-	DescriptorSet->Write(Diffuse, LinearSampler, 0);
-	DescriptorSet->Write(Specular, LinearSampler, 1);
-	DescriptorSet->Write(Opacity, LinearSampler, 2);
-	DescriptorSet->Write(Bump, BumpSampler, 3);
-	DescriptorSet->Update();
-
-	return DescriptorSet;
+	return MaterialSet.Bump != Dummy;
 }
 
 SpecializationInfo Material::CreateSpecializationInfo() const
@@ -53,4 +33,12 @@ SpecializationInfo Material::CreateSpecializationInfo() const
 	SpecInfo.Add(0, HasSpecularMap());
 	SpecInfo.Add(1, IsMasked());
 	return SpecInfo;
+}
+
+MaterialSet::MaterialSet()
+	: Diffuse(Material::Dummy)
+	, Specular(Material::Dummy)
+	, Opacity(Material::Dummy)
+	, Bump(Material::Dummy)
+{
 }

@@ -11,6 +11,7 @@ public:
 		DRMDevice& Device,
 		drm::DescriptorSetRef SurfaceSet,
 		const class Material& Material,
+		drm::DescriptorSetRef MaterialSet,
 		const std::vector<Submesh>& Submeshes,
 		const drm::BufferRef& LocalToWorldUniform
 	);
@@ -39,5 +40,4 @@ private:
 	SpecializationInfo SpecializationInfo;
 
 	std::vector<Submesh> Submeshes;
-
 };

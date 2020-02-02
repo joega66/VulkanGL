@@ -74,22 +74,22 @@ static Material ProcessMaterials(DRMDevice& Device, StaticMesh* StaticMesh, aiMa
 
 	if (drm::ImageRef Diffuse = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); Diffuse)
 	{
-		Material.Diffuse = Diffuse;
+		Material.MaterialSet.Diffuse = Diffuse;
 	}
 
 	if (drm::ImageRef Specular = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_SPECULAR, TextureCache); Specular)
 	{
-		Material.Specular = Specular;
+		Material.MaterialSet.Specular = Specular;
 	}
 
 	if (drm::ImageRef Opacity = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_OPACITY, TextureCache); Opacity)
 	{
-		Material.Opacity = Opacity;
+		Material.MaterialSet.Opacity = Opacity;
 	}
 
 	if (drm::ImageRef Bump = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_HEIGHT, TextureCache); Bump)
 	{
-		Material.Bump = Bump;
+		Material.MaterialSet.Bump = Bump;
 	}
 
 	return Material;
