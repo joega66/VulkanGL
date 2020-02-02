@@ -12,6 +12,39 @@ namespace EStaticDrawListType
 	};
 };
 
+struct SceneDescriptors
+{
+	drm::BufferRef CameraUniform;
+	drm::BufferRef DirectionalLightBuffer;
+	drm::BufferRef PointLightBuffer;
+
+	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	{
+		static std::vector<DescriptorTemplateEntry> Entries =
+		{
+			{ 0, 1, UniformBuffer },
+			{ 1, 1, StorageBuffer },
+			{ 2, 1, StorageBuffer },
+		};
+		return Entries;
+	}
+};
+
+struct SkyboxDescriptors
+{
+	drm::ImageRef Skybox;
+	SamplerState SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear };
+
+	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	{
+		static std::vector<DescriptorTemplateEntry> Entries =
+		{
+			{ 0, 1, SampledImage }
+		};
+		return Entries;
+	}
+};
+
 class SceneProxy : public Camera
 {
 	friend class EngineMain;
@@ -25,16 +58,9 @@ public:
 
 	EntityManager& ECS;
 
-	/** Skybox to be rendered in the scene. */
-	drm::ImageRef Skybox;
+	DescriptorSet<SkyboxDescriptors> SkyboxDescriptorSet;
 
-	drm::BufferRef CameraUniform;
-
-	drm::BufferRef DirectionalLightBuffer;
-
-	drm::BufferRef PointLightBuffer;
-
-	drm::DescriptorSetRef DescriptorSet;
+	DescriptorSet<SceneDescriptors> DescriptorSet;
 
 	std::vector<MeshDrawCommand> DepthPrepass;
 

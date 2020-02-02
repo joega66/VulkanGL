@@ -11,17 +11,17 @@ SceneProxy::SceneProxy(DRMDevice& Device, Scene& Scene)
 	: Camera(Scene.Camera)
 	, ShaderMap(Scene.ShaderMap)
 	, ECS(Scene.ECS)
-	, Skybox(Scene.Skybox)
+	, SkyboxDescriptorSet(Device)
+	, DescriptorSet(Device)
 {
 	InitView(Device);
 	InitLights(Device);
 	InitMeshDrawCommands(Device);
+	
+	DescriptorSet.Update();
 
-	DescriptorSet = Device.CreateDescriptorSet();
-	DescriptorSet->Write(CameraUniform, 0);
-	DescriptorSet->Write(DirectionalLightBuffer, 1);
-	DescriptorSet->Write(PointLightBuffer, 2);
-	DescriptorSet->Update();
+	SkyboxDescriptorSet.Skybox = Scene.Skybox;
+	SkyboxDescriptorSet.Update();
 }
 
 void SceneProxy::InitView(DRMDevice& Device)
@@ -51,7 +51,7 @@ void SceneProxy::InitView(DRMDevice& Device)
 		glm::vec2(GetWidth(), GetHeight())
 	};
 
-	CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
+	DescriptorSet.CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
 }
 
 void SceneProxy::InitLights(DRMDevice& Device)
@@ -86,11 +86,11 @@ void SceneProxy::InitDirectionalLights(DRMDevice& Device)
 	glm::uvec4 NumDirectionalLights;
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
-	DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	void* Data = Device.LockBuffer(DirectionalLightBuffer);
+	DescriptorSet.DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	void* Data = Device.LockBuffer(DescriptorSet.DirectionalLightBuffer);
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	Device.UnlockBuffer(DirectionalLightBuffer);
+	Device.UnlockBuffer(DescriptorSet.DirectionalLightBuffer);
 }
 
 void SceneProxy::InitPointLights(DRMDevice& Device)
@@ -118,11 +118,11 @@ void SceneProxy::InitPointLights(DRMDevice& Device)
 	glm::uvec4 NumPointLights;
 	NumPointLights.x = PointLightProxies.size();
 
-	PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-	void* Data = Device.LockBuffer(PointLightBuffer);
+	DescriptorSet.PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
+	void* Data = Device.LockBuffer(DescriptorSet.PointLightBuffer);
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	Device.UnlockBuffer(PointLightBuffer);
+	Device.UnlockBuffer(DescriptorSet.PointLightBuffer);
 }
 
 void SceneProxy::InitMeshDrawCommands(DRMDevice& Device)

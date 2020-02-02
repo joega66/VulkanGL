@@ -3,6 +3,44 @@
 #include <Renderer/SceneProxy.h>
 #include <Components/StaticMeshComponent.h>
 
+struct SceneTexturesDescriptors
+{
+	drm::ImageRef Depth;
+	SamplerState DepthSampler{ EFilter::Nearest };
+	drm::ImageRef ShadowMask;
+	SamplerState ShadowMaskSampler{ EFilter::Nearest };
+
+	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	{
+		static const std::vector<DescriptorTemplateEntry> Entries = 
+		{ 
+			{ 0, 1, SampledImage },
+			{ 1, 1, SampledImage },
+		};
+		return Entries;
+	}
+};
+
+struct VoxelDescriptors
+{
+	drm::BufferRef WorldToVoxelBuffer;
+	drm::ImageRef VoxelColors;
+	drm::BufferRef VoxelPositions;
+	drm::BufferRef VoxelIndirectBuffer;
+
+	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	{
+		static const std::vector<DescriptorTemplateEntry> Entries =
+		{
+			{ 0, 1, UniformBuffer },
+			{ 1, 1, StorageImage },
+			{ 2, 1, StorageBuffer },
+			{ 3, 1, StorageBuffer },
+		};
+		return Entries;
+	}
+};
+
 class SceneRenderer
 {
 public:
@@ -29,23 +67,13 @@ private:
 
 	drm::RenderPassRef ShadowMaskRP;
 
-	drm::DescriptorSetRef SceneTextures;
-
-	drm::ImageRef SceneColor;
-
-	drm::ImageRef SceneDepth;
-
 	drm::ImageRef ShadowMask;
 
-	drm::DescriptorSetRef VoxelsDescriptorSet;
+	DescriptorSet<SceneTexturesDescriptors> SceneTextures;
 
-	drm::BufferRef VoxelIndirectBuffer;
+	DescriptorSet<VoxelDescriptors> VoxelDescriptorSet;
 
-	drm::ImageRef VoxelColors;
-
-	drm::BufferRef VoxelPositions;
-
-	drm::BufferRef WorldToVoxelBuffer;
+	drm::ImageRef SceneColor;
 
 	void RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList);
 

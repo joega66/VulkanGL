@@ -24,9 +24,9 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& N
 	// Add default engine materials if missing.
 	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
 	{
-		if (!StaticMesh->Materials[SubmeshIndex].MaterialSet.Diffuse)
+		if (!StaticMesh->Materials[SubmeshIndex].Descriptors.Diffuse)
 		{
-			StaticMesh->Materials[SubmeshIndex].MaterialSet.Diffuse = GetImage("Engine_Diffuse_Default");
+			StaticMesh->Materials[SubmeshIndex].Descriptors.Diffuse = GetImage("Engine_Diffuse_Default");
 		}
 	}
 

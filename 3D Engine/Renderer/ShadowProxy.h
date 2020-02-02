@@ -1,6 +1,23 @@
 #pragma once
 #include <DRM.h>
 
+struct ShadowDescriptors
+{
+	drm::BufferRef LightViewProjBuffer;
+	drm::ImageRef ShadowMap;
+	SamplerState ShadowSampler;
+
+	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	{
+		static std::vector<DescriptorTemplateEntry> Entries =
+		{
+			{ 0, 1, UniformBuffer },
+			{ 1, 1, SampledImage },
+		};
+		return Entries;
+	}
+};
+
 class ShadowProxy
 {
 public:
@@ -8,7 +25,7 @@ public:
 
 	ShadowProxy() = default;
 
-	ShadowProxy(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
+	ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors>& ShadowTemplate, const struct DirectionalLight& DirectionalLight);
 
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
 

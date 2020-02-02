@@ -14,17 +14,17 @@ Material::Material()
 
 bool Material::HasSpecularMap() const
 {
-	return MaterialSet.Specular != Dummy;
+	return Descriptors.Specular != Dummy;
 }
 
 bool Material::IsMasked() const
 { 
-	return MaterialSet.Opacity != Dummy;
+	return Descriptors.Opacity != Dummy;
 }
 
 bool Material::HasBumpMap() const
 {
-	return MaterialSet.Bump != Dummy;
+	return Descriptors.Bump != Dummy;
 }
 
 SpecializationInfo Material::CreateSpecializationInfo() const
@@ -35,7 +35,7 @@ SpecializationInfo Material::CreateSpecializationInfo() const
 	return SpecInfo;
 }
 
-MaterialSet::MaterialSet()
+MaterialDescriptors::MaterialDescriptors()
 	: Diffuse(Material::Dummy)
 	, Specular(Material::Dummy)
 	, Opacity(Material::Dummy)

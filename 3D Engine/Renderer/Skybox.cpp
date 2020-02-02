@@ -42,16 +42,11 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	Ref<SkyboxVS> VertShader = Scene.ShaderMap.FindShader<SkyboxVS>();
 	Ref<SkyboxFS> FragShader = Scene.ShaderMap.FindShader<SkyboxFS>();
-	
-	drm::DescriptorSetRef DescriptorSet = Device.CreateDescriptorSet();
-
-	DescriptorSet->Write(Scene.Skybox, SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }, 0);
-	DescriptorSet->Update();
 
 	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
 	{
 		Scene.DescriptorSet,
-		DescriptorSet
+		Scene.SkyboxDescriptorSet
 	};
 
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());

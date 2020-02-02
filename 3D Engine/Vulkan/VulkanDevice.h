@@ -30,8 +30,6 @@ public:
 
 	virtual drm::CommandListRef CreateCommandList() override;
 
-	virtual drm::DescriptorSetRef CreateDescriptorSet() override;
-
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) override;
 
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;

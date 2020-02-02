@@ -48,11 +48,12 @@ void VulkanDescriptorPool::Free(VkDescriptorSet DescriptorSet)
 
 void VulkanDescriptorPool::EndFrame()
 {
-	vkFreeDescriptorSets(Device, DescriptorPool, PendingFreeCount, PendingFreeDescriptorSets.data());
-
-	DescriptorSetCount -= PendingFreeCount;
-
-	PendingFreeCount = 0;
+	if (PendingFreeCount)
+	{
+		vkFreeDescriptorSets(Device, DescriptorPool, PendingFreeCount, PendingFreeDescriptorSets.data());
+		DescriptorSetCount -= PendingFreeCount;
+		PendingFreeCount = 0;
+	}
 }
 
 VkDescriptorSetLayout VulkanCache::GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings)
@@ -91,130 +92,7 @@ VulkanDescriptorSet::VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorP
 
 VulkanDescriptorSet::~VulkanDescriptorSet()
 {
-	std::for_each(PendingWrites.begin(), PendingWrites.end(),
-		[&](auto& Write)
-	{
-		if (Write.pBufferInfo)
-		{
-			delete Write.pBufferInfo;
-		}
-		else
-		{
-			delete Write.pImageInfo;
-		}
-	});
-
 	DescriptorPool.Free(DescriptorSet);
-}
-
-void VulkanDescriptorSet::Write(drm::ImageRef Image, const SamplerState& Sampler, uint32 Binding)
-{
-	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	const VkSampler VulkanSampler = Device.GetCache().GetSampler(Sampler);
-	const VulkanImageRef& VulkanImage = ResourceCast(Image);
-	const VkImageLayout ImageLayout = Image->IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VulkanSampler, VulkanImage->ImageView, ImageLayout };
-
-	MaybeAddBinding(Binding, DescriptorType);
-
-	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding;
-	Write.dstArrayElement = 0;
-	Write.descriptorType = DescriptorType;
-	Write.descriptorCount = 1;
-	Write.pImageInfo = ImageInfo;
-
-	PendingWrites.push_back(Write);
-}
-
-void VulkanDescriptorSet::Write(drm::ImageRef Image, uint32 Binding)
-{
-	const VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-	const VulkanImageRef& VulkanImage = ResourceCast(Image);
-	const VkDescriptorImageInfo* ImageInfo = new VkDescriptorImageInfo{ VK_NULL_HANDLE, VulkanImage->ImageView, VK_IMAGE_LAYOUT_GENERAL };
-
-	MaybeAddBinding(Binding, DescriptorType);
-
-	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding;
-	Write.dstArrayElement = 0;
-	Write.descriptorType = DescriptorType;
-	Write.descriptorCount = 1;
-	Write.pImageInfo = ImageInfo;
-
-	PendingWrites.push_back(Write);
-}
-
-void VulkanDescriptorSet::Write(drm::BufferRef Buffer, uint32 Binding)
-{
-	const VkDescriptorType DescriptorType = Any(Buffer->Usage & EBufferUsage::Uniform) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
-	const VkDescriptorBufferInfo* BufferInfo = new VkDescriptorBufferInfo{ VulkanBuffer->GetVulkanHandle(), VulkanBuffer->GetOffset(), VulkanBuffer->GetSize() };
-
-	MaybeAddBinding(Binding, DescriptorType);
-
-	VkWriteDescriptorSet Write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	Write.dstBinding = Binding;
-	Write.dstArrayElement = 0;
-	Write.descriptorType = DescriptorType;
-	Write.descriptorCount = 1;
-	Write.pBufferInfo = BufferInfo;
-
-	PendingWrites.push_back(Write);
-}
-
-void VulkanDescriptorSet::Update()
-{
-	std::call_once(SpawnDescriptorSetOnceFlag, [&] ()
-	{
-		DescriptorSetLayout = Device.GetCache().GetDescriptorSetLayout(VulkanBindings);
-		DescriptorSet = DescriptorPool.Spawn(DescriptorSetLayout);
-		VulkanBindings.clear();
-	});
-
-	std::for_each(PendingWrites.begin(), PendingWrites.end(), 
-		[&] (auto& Write)
-	{
-		Write.dstSet = DescriptorSet;
-	});
-
-	vkUpdateDescriptorSets(Device, PendingWrites.size(), PendingWrites.data(), 0, nullptr);
-
-	std::for_each(PendingWrites.begin(), PendingWrites.end(),
-		[&] (auto& Write)
-	{
-		if (Write.pBufferInfo)
-		{
-			delete Write.pBufferInfo;
-		}
-		else
-		{
-			delete Write.pImageInfo;
-		}
-	});
-	
-	PendingWrites.clear();
-}
-
-void VulkanDescriptorSet::MaybeAddBinding(uint32 Binding, VkDescriptorType DescriptorType)
-{
-	if (DescriptorSetLayout == VK_NULL_HANDLE)
-	{
-		check(std::none_of(VulkanBindings.begin(), VulkanBindings.end(),
-			[&] (const auto& VulkanBinding)
-		{
-			return VulkanBinding.binding == Binding;
-		}), "This binding has already been seen before.");
-
-		VkDescriptorSetLayoutBinding VulkanBinding;
-		VulkanBinding.binding = Binding;
-		VulkanBinding.descriptorCount = 1;
-		VulkanBinding.descriptorType = DescriptorType;
-		VulkanBinding.pImmutableSamplers = nullptr;
-		VulkanBinding.stageFlags = VK_SHADER_STAGE_ALL;
-
-		VulkanBindings.push_back(VulkanBinding);
-	}
 }
 
 VulkanDescriptorTemplate::VulkanDescriptorTemplate(
@@ -266,8 +144,8 @@ VulkanDescriptorTemplate::VulkanDescriptorTemplate(
 	DescriptorSetLayoutInfo.bindingCount = static_cast<uint32>(DescriptorSetLayoutBindings.size());
 	DescriptorSetLayoutInfo.pBindings = DescriptorSetLayoutBindings.data();
 
-	vulkan(vkCreateDescriptorSetLayout(Device, &DescriptorSetLayoutInfo, nullptr, &DescriptorSetLayout));
-
+	DescriptorSetLayout = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings);
+	
 	VkDescriptorUpdateTemplateCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO };
 	CreateInfo.descriptorUpdateEntryCount = DescriptorUpdateTemplateEntries.size();
 	CreateInfo.pDescriptorUpdateEntries = DescriptorUpdateTemplateEntries.data();
@@ -277,6 +155,7 @@ VulkanDescriptorTemplate::VulkanDescriptorTemplate(
 	p_vkCreateDescriptorUpdateTemplateKHR = (PFN_vkCreateDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkCreateDescriptorUpdateTemplateKHR");
 	p_vkCreateDescriptorUpdateTemplateKHR(Device, &CreateInfo, nullptr, &DescriptorTemplate);
 	p_vkUpdateDescriptorSetWithTemplateKHR = (PFN_vkUpdateDescriptorSetWithTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkUpdateDescriptorSetWithTemplateKHR");
+	p_vkDestroyDescriptorUpdateTemplateKHR = (PFN_vkDestroyDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR");
 
 	Data = new uint8[StructSize];
 }
@@ -352,7 +231,6 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 
 VulkanDescriptorTemplate::~VulkanDescriptorTemplate()
 {
-	vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr);
-	vkDestroyDescriptorUpdateTemplate(Device, DescriptorTemplate, nullptr);
+	p_vkDestroyDescriptorUpdateTemplateKHR(Device, DescriptorTemplate, nullptr);
 	delete[] Data;
 }

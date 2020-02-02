@@ -22,9 +22,6 @@ public:
 	/** Create a command list. */
 	virtual drm::CommandListRef CreateCommandList() = 0;
 
-	/** Create a descriptor set for listing the resources referenced in shaders. */
-	virtual drm::DescriptorSetRef CreateDescriptorSet() = 0;
-
 	/** Create a descriptor template. */
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) = 0;
 
@@ -63,3 +60,62 @@ namespace drm
 		virtual drm::ImageRef GetImage(uint32 ImageIndex) = 0;
 	};
 }
+
+/** Descriptor set template helpers. */
+
+template<typename DescriptorSetType>
+class DescriptorTemplate
+{
+private:
+	drm::DescriptorTemplateRef DescriptorUpdateTemplate;
+
+public:
+	DescriptorTemplate(DRMDevice& Device)
+	{
+		DescriptorUpdateTemplate = Device.CreateDescriptorTemplate(DescriptorSetType::GetEntries().size(), DescriptorSetType::GetEntries().data());
+	}
+
+	inline drm::DescriptorSetRef CreateDescriptorSet() 
+	{ 
+		return DescriptorUpdateTemplate->CreateDescriptorSet();
+	}
+
+	inline void UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, DescriptorSetType& DescriptorWrite) 
+	{ 
+		DescriptorUpdateTemplate->UpdateDescriptorSet(DescriptorSet, &DescriptorWrite);
+	}
+
+	inline operator drm::DescriptorTemplateRef() { return DescriptorUpdateTemplate; }
+};
+
+//template<typename DescriptorSetType>
+//class __Descriptors : public DescriptorSetType
+//{
+//public:
+//	inline void Update(drm::DescriptorTemplateRef DescriptorTemplate, drm::DescriptorSetRef DescriptorSet) 
+//	{ 
+//		DescriptorTemplate->UpdateDescriptorSet(DescriptorSet, this); 
+//	}
+//};
+
+template<typename DescriptorSetType>
+class DescriptorSet : public DescriptorSetType
+{
+private:
+	drm::DescriptorTemplateRef DescriptorTemplate;
+	drm::DescriptorSetRef _DescriptorSet;
+
+public:
+	DescriptorSet(DRMDevice& Device)
+	{
+		DescriptorTemplate = Device.CreateDescriptorTemplate(DescriptorSetType::GetEntries().size(), DescriptorSetType::GetEntries().data());
+		_DescriptorSet = DescriptorTemplate->CreateDescriptorSet();
+	}
+
+	inline void Update() 
+	{ 
+		DescriptorTemplate->UpdateDescriptorSet(_DescriptorSet, this);
+	}
+
+	inline operator drm::DescriptorSetRef() const { return _DescriptorSet; }
+};

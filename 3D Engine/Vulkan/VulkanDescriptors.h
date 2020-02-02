@@ -39,12 +39,8 @@ public:
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 
 	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool);
-	virtual ~VulkanDescriptorSet() override;
 
-	virtual void Write(drm::ImageRef Image, const SamplerState& Sampler, uint32 Binding) override;
-	virtual void Write(drm::ImageRef Image, uint32 Binding) override;
-	virtual void Write(drm::BufferRef Buffer, uint32 Binding) override;
-	virtual void Update() override;
+	virtual ~VulkanDescriptorSet() override;
 
 private:
 	std::once_flag SpawnDescriptorSetOnceFlag;
@@ -52,11 +48,6 @@ private:
 	VulkanDevice& Device;
 
 	VulkanDescriptorPool& DescriptorPool;
-
-	std::vector<VkDescriptorSetLayoutBinding> VulkanBindings;
-	std::vector<VkWriteDescriptorSet> PendingWrites;
-
-	void MaybeAddBinding(uint32 Binding, VkDescriptorType DescriptorType);
 };
 
 CLASS(VulkanDescriptorSet);
@@ -89,6 +80,7 @@ private:
 
 	PFN_vkCreateDescriptorUpdateTemplateKHR p_vkCreateDescriptorUpdateTemplateKHR;
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
+	PFN_vkDestroyDescriptorUpdateTemplateKHR p_vkDestroyDescriptorUpdateTemplateKHR;
 };
 
 CLASS(VulkanDescriptorTemplate);

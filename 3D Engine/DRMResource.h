@@ -324,10 +324,6 @@ namespace drm
 	{
 	public:
 		virtual ~DescriptorSet() {}
-		virtual void Write(ImageRef Image, const SamplerState& Sampler, uint32 Binding) = 0;
-		virtual void Write(ImageRef Image, uint32 Binding) = 0;
-		virtual void Write(BufferRef Buffer, uint32 Binding) = 0;
-		virtual void Update() = 0;
 	};
 
 	CLASS(DescriptorSet);

@@ -84,8 +84,8 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdL
 	CmdList.BeginRenderPass(DepthRP);
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.Viewport.Width = SceneDepth->Width;
-	PSODesc.Viewport.Height = SceneDepth->Height;
+	PSODesc.Viewport.Width = SceneTextures.Depth->Width;
+	PSODesc.Viewport.Height = SceneTextures.Depth->Height;
 
 	DepthPrepassDescriptorSets DescriptorSets = { Scene.DescriptorSet };
 

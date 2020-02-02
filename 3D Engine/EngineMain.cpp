@@ -84,7 +84,7 @@ void EngineMain::Main(
 
 	SystemsManager SystemsManager;
 
-	RenderSystem RenderSystem;
+	RenderSystem RenderSystem(Device);
 	SystemsManager.Register(RenderSystem);
 
 	EditorControllerSystem EditorControllerSystem;

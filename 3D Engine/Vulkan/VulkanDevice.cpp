@@ -27,11 +27,6 @@ drm::CommandListRef VulkanDevice::CreateCommandList()
 	return MakeRef<VulkanCommandList>(*this, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 }
 
-drm::DescriptorSetRef VulkanDevice::CreateDescriptorSet()
-{
-	return MakeRef<VulkanDescriptorSet>(*this, *DescriptorPool);
-}
-
 drm::DescriptorTemplateRef VulkanDevice::CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries)
 {
 	return MakeRef<VulkanDescriptorTemplate>(*this, NumEntries, Entries);

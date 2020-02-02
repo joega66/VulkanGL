@@ -2,7 +2,7 @@
 #include <DRMResource.h>
 #include <DRMShader.h>
 
-struct MaterialSet
+struct MaterialDescriptors
 {
 	drm::ImageRef Diffuse;
 	SamplerState DiffuseSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
@@ -13,7 +13,7 @@ struct MaterialSet
 	drm::ImageRef Bump;
 	SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 
-	MaterialSet();
+	MaterialDescriptors();
 
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()
 	{
@@ -33,7 +33,7 @@ class Material
 public:
 	Material();
 
-	MaterialSet MaterialSet;
+	MaterialDescriptors Descriptors;
 
 	bool HasSpecularMap() const;
 
