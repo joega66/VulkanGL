@@ -17,7 +17,7 @@ layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelDiffuseGI;
 
 layout(binding = 2, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
 {
-	ivec3 VoxelPositions[];
+	int VoxelPositions[];
 };
 
 layout(binding = 3, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
@@ -38,4 +38,15 @@ vec3 TransformVoxelToWorld(vec3 VoxelPosition)
 	WorldPosition.xy = (WorldPosition.xy - 0.5f) * 2.0f;
 	WorldPosition = vec3(WorldToVoxelInv * vec4(WorldPosition, 1));
 	return WorldPosition;
+}
+
+int EncodeVoxelPosition(ivec3 VoxelPosition)
+{
+	return (VoxelPosition.z << 20) | (VoxelPosition.y << 10) | (VoxelPosition.x << 0);
+}
+
+ivec3 DecodeVoxelPosition(int VoxelPosition)
+{
+	const int Mask = 0x000003FF;
+	return ivec3((VoxelPosition >> 0) & Mask, (VoxelPosition >> 10) & Mask, (VoxelPosition >> 20) & Mask);
 }

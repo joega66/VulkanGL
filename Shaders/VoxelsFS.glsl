@@ -33,5 +33,5 @@ void main()
 	imageStore(VoxelDiffuseGI, ivec3(VoxelTexCoord), vec4(Color));
 
 	uint VoxelIndex = atomicAdd(VoxelDrawIndirect.VertexCount, 1);
-	VoxelPositions[VoxelIndex] = ivec3(VoxelTexCoord);
+	VoxelPositions[VoxelIndex] = EncodeVoxelPosition(ivec3(VoxelTexCoord));
 }

@@ -14,9 +14,10 @@ layout(location = 1) out vec4 OutVoxelColor;
 
 void main()
 {
-	OutPosition = TransformVoxelToWorld(VoxelPositions[gl_VertexIndex]);
+	ivec3 VoxelPosition = DecodeVoxelPosition(VoxelPositions[gl_VertexIndex]);
+	OutPosition = TransformVoxelToWorld(VoxelPosition);
 
-	OutVoxelColor = imageLoad(VoxelDiffuseGI, VoxelPositions[gl_VertexIndex]);
+	OutVoxelColor = imageLoad(VoxelDiffuseGI, VoxelPosition);
 
 	gl_Position = vec4(OutPosition, 1);
 }

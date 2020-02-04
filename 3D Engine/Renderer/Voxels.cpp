@@ -266,15 +266,10 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 		EPipelineStage::FragmentShader, 
 		EPipelineStage::DrawIndirect | EPipelineStage::VertexShader,
 		Barriers.size(), Barriers.data(), 
-		1, &ImageBarrier);
+		1, &ImageBarrier
+	);
 
 	CmdList.BeginRenderPass(VoxelVisualizationRP);
-
-	/*drm::DescriptorSetRef DrawVoxelsDescriptorSet = Device.CreateDescriptorSet();
-	DrawVoxelsDescriptorSet->Write(WorldToVoxelBuffer, 0);
-	DrawVoxelsDescriptorSet->Write(VoxelColors, 1);
-	DrawVoxelsDescriptorSet->Write(VoxelPositions, 2);
-	DrawVoxelsDescriptorSet->Update();*/
 
 	const std::vector<drm::DescriptorSetRef> DescriptorSets =
 	{

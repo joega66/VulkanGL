@@ -34,9 +34,9 @@ SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Sc
 	Cube = Scene.Assets.GetStaticMesh("Cube");
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-
+	check(VoxelGridSize.x <= 1024, "Exceeded voxel bits.");
 	VoxelDescriptorSet.VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelDescriptorSet.VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(glm::ivec3));
+	VoxelDescriptorSet.VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
 
 	CreateVoxelRP();
 }
