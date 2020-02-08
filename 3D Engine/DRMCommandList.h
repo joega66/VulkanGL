@@ -58,6 +58,18 @@ struct Viewport
 	}
 };
 
+struct ScissorDesc
+{
+	glm::ivec2 Offset = glm::ivec2(0);
+	glm::uvec2 Extent = glm::uvec2(0);
+
+	friend bool operator==(const ScissorDesc& L, const ScissorDesc& R)
+	{
+		return L.Offset == R.Offset
+			&& L.Extent == R.Extent;
+	}
+};
+
 enum class EStencilOp
 {
 	Keep,
@@ -330,6 +342,7 @@ struct ShaderStages
 
 struct PipelineStateDesc
 {
+	ScissorDesc Scissor;
 	Viewport Viewport;
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
@@ -349,7 +362,8 @@ struct PipelineStateDesc
 			}
 		}
 
-		return L.Viewport == R.Viewport
+		return L.Scissor == R.Scissor
+			&& L.Viewport == R.Viewport
 			&& L.DepthStencilState == R.DepthStencilState
 			&& L.RasterizationState == R.RasterizationState
 			&& L.MultisampleState == R.MultisampleState
@@ -385,6 +399,12 @@ struct ImageMemoryBarrier
 	}
 };
 
+enum class EIndexType
+{
+	UINT16,
+	UINT32
+};
+
 namespace drm
 {
 	class CommandList
@@ -397,7 +417,17 @@ namespace drm
 		virtual void BindPipeline(const PipelineStateDesc& PSODesc) = 0;
 		virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) = 0;
 		virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) = 0;
-		virtual void DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance) = 0;
+
+		virtual void DrawIndexed(
+			drm::BufferRef IndexBuffer, 
+			uint32 IndexCount, 
+			uint32 InstanceCount, 
+			uint32 FirstIndex, 
+			uint32 VertexOffset, 
+			uint32 FirstInstance,
+			EIndexType IndexType = EIndexType::UINT32
+			) = 0;
+
 		virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
 		virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
 		virtual void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color) = 0;

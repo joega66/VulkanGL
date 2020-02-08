@@ -266,6 +266,8 @@ namespace drm
 
 		virtual ~Image() {}
 
+		virtual uint64 GetNativeHandle() = 0;
+
 		bool IsColor() const;
 
 		bool IsStencil() const;

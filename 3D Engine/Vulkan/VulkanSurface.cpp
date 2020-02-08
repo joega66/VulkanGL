@@ -192,8 +192,11 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
 	const SwapchainSupportDetails SwapchainSupport(VulkanDevice.GetPhysicalDevice(), Surface);
-	const VkSurfaceFormatKHR SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
-	const VkPresentModeKHR PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
+
+	SurfaceFormat = ChooseSwapSurfaceFormat(SwapchainSupport.Formats);
+
+	PresentMode = ChooseSwapPresentMode(SwapchainSupport.PresentModes);
+
 	const VkExtent2D Extent = ChooseSwapExtent(Width, Height, SwapchainSupport.Capabilities);
 	uint32 ImageCount = SwapchainSupport.Capabilities.minImageCount + 1;
 

@@ -59,6 +59,8 @@ namespace drm
 		virtual void Resize(DRMDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight) = 0;
 		virtual drm::ImageRef GetImage(uint32 ImageIndex) = 0;
 	};
+
+	void UploadImageData(DRMDevice& Device, const void* SrcPixels, drm::ImageRef DstImage);
 }
 
 /** Descriptor set template helpers. */
@@ -87,16 +89,6 @@ public:
 
 	inline operator drm::DescriptorTemplateRef() { return DescriptorUpdateTemplate; }
 };
-
-//template<typename DescriptorSetType>
-//class __Descriptors : public DescriptorSetType
-//{
-//public:
-//	inline void Update(drm::DescriptorTemplateRef DescriptorTemplate, drm::DescriptorSetRef DescriptorSet) 
-//	{ 
-//		DescriptorTemplate->UpdateDescriptorSet(DescriptorSet, this); 
-//	}
-//};
 
 template<typename DescriptorSetType>
 class DescriptorSet : public DescriptorSetType

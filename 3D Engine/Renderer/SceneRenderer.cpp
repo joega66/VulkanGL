@@ -6,6 +6,7 @@
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 #include <Components/Transform.h>
+#include <Systems/UserInterface.h>
 
 SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Scene, Screen& Screen)
 	: Device(Device)
@@ -41,7 +42,7 @@ SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Sc
 	CreateVoxelRP();
 }
 
-void SceneRenderer::Render(SceneProxy& Scene)
+void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 {
 	drm::CommandListRef CommandList = Device.CreateCommandList();
 	drm::CommandList& CmdList = *CommandList;
@@ -70,6 +71,8 @@ void SceneRenderer::Render(SceneProxy& Scene)
 			RenderLightingPass(Scene, CmdList);
 
 			RenderSkybox(Scene, CmdList);
+
+			UserInterface.Render(CmdList);
 
 			CmdList.EndRenderPass();
 		}
@@ -155,7 +158,7 @@ void SceneRenderer::CreateVoxelVisualizationRP()
 	RPDesc.ColorAttachments[0] = drm::AttachmentView(
 		SceneColor, 
 		ELoadAction::DontCare, 
-		EStoreAction::Store, 
+		EStoreAction::Store,
 		ClearColorValue{},
 		EImageLayout::Undefined, 
 		EImageLayout::TransferSrcOptimal);

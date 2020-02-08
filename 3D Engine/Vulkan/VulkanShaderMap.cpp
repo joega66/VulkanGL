@@ -54,8 +54,6 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	for (auto& Resource : Resources.stage_inputs)
 	{
 		VertexAttributeDescription Description = {};
-
-		Description.Binding = Descriptions.size();
 		Description.Location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
 		Description.Format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(GLSL.get_type(Resource.type_id)));
 		Description.Offset = 0;
@@ -70,6 +68,11 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	{
 		return LHS.Location < RHS.Location;
 	});
+
+	for (uint32_t Binding = 0; Binding < Descriptions.size(); Binding++)
+	{
+		Descriptions[Binding].Binding = Binding;
+	}
 
 	return Descriptions;
 }

@@ -69,6 +69,8 @@ private:
 
 	const VkDeviceSize BufferAllocationSize;
 
+	//std::map<VkDeviceMemory, void*>
+
 	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanMemory>> LockedStagingBuffers;
 
 	std::list<std::unique_ptr<VulkanMemory>> FreeStagingBuffers;

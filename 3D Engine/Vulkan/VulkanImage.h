@@ -22,6 +22,8 @@ public:
 	
 	virtual ~VulkanImage() override;
 
+	virtual uint64 GetNativeHandle() override { return Image; }
+
 	operator VkImage();
 
 	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);

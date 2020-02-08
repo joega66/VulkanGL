@@ -19,9 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ThirdParty\imgui\examples\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\ThirdParty\imgui\examples\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="..\ThirdParty\imgui\imgui.cpp" />
+    <ClCompile Include="..\ThirdParty\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\ThirdParty\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Components\Material.cpp" />
     <ClCompile Include="Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
+    <ClCompile Include="DRM.cpp" />
     <ClCompile Include="EngineMain.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
@@ -54,6 +61,7 @@
     <ClCompile Include="Systems\GameSystem.cpp" />
     <ClCompile Include="Systems\RenderSystem.cpp" />
     <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
+    <ClCompile Include="Systems\UserInterface.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
     <ClCompile Include="Vulkan\VulkanCommands.cpp" />
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp" />
@@ -69,6 +77,14 @@
     <ClCompile Include="Vulkan\VulkanSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ThirdParty\imgui\examples\imgui_impl_glfw.h" />
+    <ClInclude Include="..\ThirdParty\imgui\examples\imgui_impl_vulkan.h" />
+    <ClInclude Include="..\ThirdParty\imgui\imconfig.h" />
+    <ClInclude Include="..\ThirdParty\imgui\imgui.h" />
+    <ClInclude Include="..\ThirdParty\imgui\imgui_internal.h" />
+    <ClInclude Include="..\ThirdParty\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\ThirdParty\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h" />
     <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\COutline.h" />
@@ -112,6 +128,7 @@
     <ClInclude Include="Systems\GameSystem.h" />
     <ClInclude Include="Systems\RenderSystem.h" />
     <ClInclude Include="Systems\TransformGizmoSystem.h" />
+    <ClInclude Include="Systems\UserInterface.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
     <ClInclude Include="Vulkan\VulkanCommands.h" />
     <ClInclude Include="Vulkan\VulkanDescriptors.h" />
@@ -145,6 +162,8 @@
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshCommon.glsl" />
+    <None Include="..\Shaders\UserInterfaceFS.glsl" />
+    <None Include="..\Shaders\UserInterfaceVS.glsl" />
     <None Include="..\Shaders\VoxelsCommon.glsl" />
     <None Include="..\Shaders\VoxelsFS.glsl" />
     <None Include="..\Shaders\VoxelsGS.glsl" />
@@ -203,11 +222,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.114.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes</IncludePath>
+    <IncludePath>C:\Users\Joe\Source\Repos\3D Engine\ThirdParty;C:\Users\Joe\Documents\GitHub\VulkanGL\ThirdParty;C:\Users\Joe\Documents\GitHub\VulkanGL\imgui;C:\VulkanSDK\1.1.114.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.1.114.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib;C:\VulkanSDK\1.1.73.0\Lib;C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes</IncludePath>
+    <IncludePath>C:\Users\Joe\Source\Repos\3D Engine\ThirdParty;C:\Users\Joe\Documents\GitHub\VulkanGL\ThirdParty;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\Users\Joe\Source\Repos\3D Engine\3D Engine;$(IncludePath);C:\Users\Joe\Source\Repos\3D Engine\3D Engine;C:\Users\Joe\Source\Repos\3D Engine\Includes;C:\VulkanSDK\1.1.73.0\Include;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Source\Repos\3D Engine\WinLib;$(LibraryPath);C:\Users\Joe\Source\Repos\3D Engine\WinLib;C:\VulkanSDK\1.1.73.0\Lib;C:\VulkanSDK\1.1.73.0\Lib32;C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

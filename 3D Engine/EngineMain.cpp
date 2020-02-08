@@ -10,6 +10,7 @@
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 #include <Systems/RenderSystem.h>
+#include <Systems/UserInterface.h>
 
 static void CreateDebugMaterials(DRMDevice& Device)
 {
@@ -93,6 +94,9 @@ void EngineMain::Main(
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
+	UserInterface UserInterface(Device, ShaderMap, Screen);
+	SystemsManager.Register(UserInterface);
+
 	SystemsManager.StartRenderSystems(Scene.ECS, Device);
 	SystemsManager.StartSystems(Scene);
 
@@ -108,7 +112,7 @@ void EngineMain::Main(
 
 		SceneProxy SceneProxy(Device, Scene);
 
-		SceneRenderer.Render(SceneProxy);
+		SceneRenderer.Render(UserInterface, SceneProxy);
 
 		Cursor.Update(Platform);
 

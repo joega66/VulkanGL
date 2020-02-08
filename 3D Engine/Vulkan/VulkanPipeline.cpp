@@ -370,11 +370,20 @@ VkPipeline VulkanCache::CreatePipeline(
 		Viewport.maxDepth = In.MaxDepth;
 	}
 
-	VkRect2D Scissor = {};
+	VkRect2D Scissor;
+
+	if (PSODesc.Scissor == ScissorDesc{})
 	{
 		Scissor.extent.width = (uint32)Viewport.width;
 		Scissor.extent.height = (uint32)Viewport.height;
 		Scissor.offset = { 0, 0 };
+	}
+	else
+	{
+		Scissor.extent.width = PSODesc.Scissor.Extent.x;
+		Scissor.extent.height = PSODesc.Scissor.Extent.y;
+		Scissor.offset.x = PSODesc.Scissor.Offset.x;
+		Scissor.offset.y = PSODesc.Scissor.Offset.y;
 	}
 
 	VkPipelineViewportStateCreateInfo ViewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };

@@ -46,7 +46,7 @@ class SceneRenderer
 public:
 	SceneRenderer(DRMDevice& Device, drm::Surface& Surface, class Scene& Scene, class Screen& Screen);
 
-	void Render(SceneProxy& Scene);
+	void Render(class UserInterface& UserInterface, SceneProxy& Scene);
 
 private:
 	DRMDevice& Device;

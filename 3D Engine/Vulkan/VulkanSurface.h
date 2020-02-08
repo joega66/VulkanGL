@@ -26,9 +26,15 @@ public:
 
 	operator VkSurfaceKHR() { return Surface; }
 
+	inline VkSurfaceFormatKHR GetFormat() const { return SurfaceFormat; }
+	inline VkPresentModeKHR GetPresentMode() const { return PresentMode; }
+
 private:
-	/** The surface. */
 	VkSurfaceKHR Surface;
+
+	VkSurfaceFormatKHR SurfaceFormat;
+
+	VkPresentModeKHR PresentMode;
 
 	/** The swapchain. */
 	VkSwapchainKHR Swapchain = VK_NULL_HANDLE;

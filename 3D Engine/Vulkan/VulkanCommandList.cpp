@@ -92,7 +92,6 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Bu
 
 	for (uint32 Location = 0; Location < NumVertexBuffers; Location++)
 	{
-		check(VertexBuffers, "Null vertex buffer found.");
 		VulkanBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
 		Offsets[Location] = VulkanVertexBuffer->GetOffset();
 		Buffers[Location] = VulkanVertexBuffer->GetVulkanHandle();
@@ -101,10 +100,17 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::Bu
 	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
 }
 
-void VulkanCommandList::DrawIndexed(drm::BufferRef IndexBuffer, uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, uint32 VertexOffset, uint32 FirstInstance)
+void VulkanCommandList::DrawIndexed(
+	drm::BufferRef IndexBuffer, 
+	uint32 IndexCount, 
+	uint32 InstanceCount, 
+	uint32 FirstIndex, 
+	uint32 VertexOffset, 
+	uint32 FirstInstance,
+	EIndexType IndexType)
 {
 	VulkanBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->GetVulkanHandle(), VulkanIndexBuffer->GetOffset(), VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->GetVulkanHandle(), VulkanIndexBuffer->GetOffset(), IndexType == EIndexType::UINT32 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
