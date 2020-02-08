@@ -2,9 +2,14 @@
 #include "VulkanDevice.h"
 #include "VulkanCommands.h"
 
+inline static VkDeviceSize Align(VkDeviceSize Size, VkDeviceSize Alignment)
+{
+	return (Size + Alignment - 1) & ~(Alignment - 1);
+}
+
 VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 	: Device(Device)
-	, BufferAllocationSize(2 * (1 << 20)) // Allocate in 2MB chunks
+	, BufferAllocationSize(20 * (1 << 20))
 {
 }
 
@@ -13,12 +18,28 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 	VkMemoryPropertyFlags Properties = Any(Usage & (EBufferUsage::KeepCPUAccessible | EBufferUsage::Transfer)) ?
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
+	const VkDeviceSize AlignedSize = [&] ()
+	{
+		if (VulkanUsage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+		{
+			return Align(Size, Device.GetProperties().limits.minUniformBufferOffsetAlignment);
+		}
+		else if (VulkanUsage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+		{
+			return Align(Size, Device.GetProperties().limits.minStorageBufferOffsetAlignment);
+		}
+		else
+		{
+			return Size;
+		}
+	}();
+
 	for (VulkanMemoryRef& Memory : MemoryBuffers)
 	{
 		// Find a buffer with the same properties and usage
 		if (Memory->GetVulkanUsage() == VulkanUsage && Memory->GetProperties() == Properties)
 		{
-			VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(Memory, Size, Usage);
+			VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(Memory, Size, AlignedSize, Usage);
 
 			if (VulkanBuffer)
 			{
@@ -34,7 +55,7 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 	// Buffer not found - Create a new one
 	MemoryBuffers.emplace_back(MakeRef<VulkanMemory>(CreateBuffer(Size, VulkanUsage, Properties)));
 
-	VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, Usage);
+	VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, AlignedSize, Usage);
 
 	if (Data)
 	{
@@ -169,17 +190,17 @@ VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsage
 {
 }
 
-std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemory> Memory, VkDeviceSize Size, EBufferUsage Usage)
+std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemory> Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
 {
 	for (auto Iter = Memory->FreeList.begin(); Iter != Memory->FreeList.end(); Iter++)
 	{
-		if (Iter->Size >= Size)
+		if (Iter->Size >= AlignedSize)
 		{
 			VkDeviceSize Offset = Iter->Offset;
 
-			if (auto Diff = Iter->Size - Size; Diff > 0)
+			if (auto Diff = Iter->Size - AlignedSize; Diff > 0)
 			{
-				Iter->Offset += Size;
+				Iter->Offset += AlignedSize;
 				Iter->Size = Diff;
 			}
 			else
@@ -187,14 +208,14 @@ std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemor
 				Memory->FreeList.erase(Iter);
 			}
 
-			return MakeRef<VulkanBuffer>(Memory, Size, Offset, Usage);
+			return MakeRef<VulkanBuffer>(Memory, Size, AlignedSize, Offset, Usage);
 		}
 	}
 
-	if (Memory->GetSizeRemaining() >= Size)
+	if (Memory->GetSizeRemaining() >= AlignedSize)
 	{
-		VulkanBufferRef VulkanBuffer = MakeRef<class VulkanBuffer>(Memory, Size, Memory->Used, Usage);
-		Memory->Used += Size;
+		VulkanBufferRef VulkanBuffer = MakeRef<class VulkanBuffer>(Memory, Size, AlignedSize, Memory->Used, Usage);
+		Memory->Used += AlignedSize;
 		return VulkanBuffer;
 	}
 
@@ -203,13 +224,13 @@ std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemor
 
 void VulkanMemory::Free(const VulkanBuffer& Buffer)
 {
-	if (Buffer.GetOffset() + Buffer.GetSize() == Used)
+	if (Buffer.GetOffset() + Buffer.GetAlignedSize() == Used)
 	{
-		Used -= Buffer.GetSize();
+		Used -= Buffer.GetAlignedSize();
 		return;
 	}
 
-	Slot New = { Buffer.GetOffset(), Buffer.GetSize() };
+	Slot New = { Buffer.GetOffset(), Buffer.GetAlignedSize() };
 
 	for (auto Iter = FreeList.begin(); Iter != FreeList.end();)
 	{

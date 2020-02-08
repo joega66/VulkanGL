@@ -10,7 +10,12 @@ struct VulkanMemory
 public:
 	VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
 
-	static std::shared_ptr<class VulkanBuffer> Allocate(std::shared_ptr<VulkanMemory> Memory, VkDeviceSize Size, EBufferUsage Usage);
+	static std::shared_ptr<class VulkanBuffer> Allocate(
+		std::shared_ptr<VulkanMemory> Memory, 
+		VkDeviceSize Size,
+		VkDeviceSize AlignedSize,
+		EBufferUsage Usage
+	);
 
 	inline VkBuffer GetVulkanHandle() const { return Buffer; }
 	inline VkDeviceMemory GetMemoryHandle() const { return Memory; }
@@ -69,8 +74,6 @@ private:
 
 	const VkDeviceSize BufferAllocationSize;
 
-	//std::map<VkDeviceMemory, void*>
-
 	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanMemory>> LockedStagingBuffers;
 
 	std::list<std::unique_ptr<VulkanMemory>> FreeStagingBuffers;
@@ -83,8 +86,8 @@ private:
 class VulkanBuffer : public drm::Buffer
 {
 public:
-	VulkanBuffer(VulkanMemoryRef Memory, VkDeviceSize Size, VkDeviceSize Offset, EBufferUsage Usage)
-		: Memory(Memory), Size(Size), Offset(Offset), drm::Buffer(Usage)
+	VulkanBuffer(VulkanMemoryRef Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, VkDeviceSize Offset, EBufferUsage Usage)
+		: Memory(Memory), Size(Size), AlignedSize(AlignedSize), Offset(Offset), drm::Buffer(Usage)
 	{
 	}
 
@@ -93,13 +96,15 @@ public:
 	inline VkBuffer GetVulkanHandle() const { return Memory->Buffer; }
 	inline VkDeviceMemory GetMemoryHandle() const { return Memory->Memory; }
 	inline VkDeviceSize GetSize() const { return Size; }
+	inline VkDeviceSize GetAlignedSize() const { return AlignedSize; }
 	inline VkDeviceSize GetOffset() const { return Offset; }
 	inline VkMemoryPropertyFlags GetProperties() const { return Memory->Properties; }
 	
 private:
-	VulkanMemoryRef Memory;
-	VkDeviceSize Size;
-	VkDeviceSize Offset;
+	VulkanMemoryRef Memory;		// The backing memory.
+	VkDeviceSize Size;			// The requested size of the buffer.
+	VkDeviceSize AlignedSize;	// The aligned size of the buffer.
+	VkDeviceSize Offset;		// Offset into the memory buffer.
 };
 
 CLASS(VulkanBuffer);
