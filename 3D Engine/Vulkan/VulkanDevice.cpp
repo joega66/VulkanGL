@@ -4,7 +4,7 @@
 
 void VulkanDevice::EndFrame()
 {
-	DescriptorPool->EndFrame();
+	DescriptorPoolManager.DeferredFree(*this);
 }
 
 void VulkanDevice::SubmitCommands(drm::CommandListRef CmdList)
@@ -223,6 +223,4 @@ void VulkanDevice::CreateLogicalDevice()
 
 	// Create queues and command pools.
 	Queues.Create(Device);
-
-	DescriptorPool = std::make_unique<VulkanDescriptorPool>(*this);
 }

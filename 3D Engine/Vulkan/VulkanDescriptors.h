@@ -4,53 +4,65 @@
 
 class VulkanDevice;
 
+class VulkanDescriptorSet : public drm::DescriptorSet
+{
+public:
+	VulkanDescriptorSet(
+		class VulkanDescriptorPool& DescriptorPool,
+		VkDescriptorSetLayout Layout,
+		VkDescriptorSet DescriptorSet
+	);
+
+	virtual ~VulkanDescriptorSet() override;
+
+	inline VkDescriptorSet GetVulkanHandle() const { return DescriptorSet; }
+	inline VkDescriptorSetLayout GetLayout() const { return Layout; }
+
+private:
+	VulkanDescriptorPool& DescriptorPool;
+	const VkDescriptorSetLayout Layout;
+	const VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
+};
+
+CLASS(VulkanDescriptorSet);
+
 /** Spawns descriptor sets and zerglings. */
 class VulkanDescriptorPool
 {
 public:
-	VulkanDescriptorPool(VulkanDevice& Device);
+	VulkanDescriptorPool(VulkanDevice& Device, const VkDescriptorPoolCreateInfo& CreateInfo);
 
-	[[nodiscard]] VkDescriptorSet Spawn(const VkDescriptorSetLayout& DescriptorSetLayout);
+	/** Allocate a descriptor set. */
+	[[nodiscard]] VkDescriptorSet Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
 
+	/** Queue a descriptor set to be freed. */
 	void Free(VkDescriptorSet DescriptorSet);
 
-	void EndFrame();
+	/** Free all the descriptor sets waiting to be freed. */
+	void DeferredFree(VulkanDevice& Device);
 
 private:
-	static constexpr uint32 MaxDescriptorSetCount = 4096;
-
-	VulkanDevice& Device;
-
-	uint32 DescriptorSetCount = 0;
-
 	VkDescriptorPool DescriptorPool;
-
-	uint32 PendingFreeCount = 0;
-
-	std::vector<VkDescriptorSet> PendingFreeDescriptorSets;
+	uint32 NumDescriptorSets = 0;
+	std::vector<VkDescriptorSet> DescriptorSetsWaitingToBeFreed;
 };
 
-class VulkanAllocator;
-
-class VulkanDescriptorSet : public drm::DescriptorSet
+class VulkanDescriptorPoolManager
 {
 public:
-	VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
-	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
+	static constexpr uint32 SetsPerPool = 1024;
 
-	VulkanDescriptorSet(VulkanDevice& Device, VulkanDescriptorPool& DescriptorPool);
+	VulkanDescriptorPoolManager();
 
-	virtual ~VulkanDescriptorSet() override;
+	VulkanDescriptorSetRef Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
+
+	void DeferredFree(VulkanDevice& Device);
 
 private:
-	std::once_flag SpawnDescriptorSetOnceFlag;
-
-	VulkanDevice& Device;
-
-	VulkanDescriptorPool& DescriptorPool;
+	std::vector<std::unique_ptr<VulkanDescriptorPool>> DescriptorPools;
+	std::array<VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE> PoolSizes;
+	VkDescriptorPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 };
-
-CLASS(VulkanDescriptorSet);
 
 class VulkanDescriptorTemplate : public drm::DescriptorTemplate
 {
@@ -65,19 +77,11 @@ public:
 
 private:
 	VulkanDevice& Device;
-
-	/** The descriptor set layout of this template. */
 	VkDescriptorSetLayout DescriptorSetLayout;
-
-	/** The descriptor update template. */
 	VkDescriptorUpdateTemplate DescriptorTemplate;
-
-	/** Descriptor update template entries. */
 	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
-
-	/** The template data structure passed to vkUpdateDescriptorSetWithTemplate. */
 	void* Data = nullptr;
-
+	
 	PFN_vkCreateDescriptorUpdateTemplateKHR p_vkCreateDescriptorUpdateTemplateKHR;
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 	PFN_vkDestroyDescriptorUpdateTemplateKHR p_vkDestroyDescriptorUpdateTemplateKHR;

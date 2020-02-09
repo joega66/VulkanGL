@@ -57,10 +57,9 @@ public:
 	inline const VkPhysicalDeviceFeatures& GetFeatures() const { return Features; }
 	inline VulkanCache& GetCache() { return VulkanCache; }
 	inline VulkanQueues& GetQueues() { return Queues; }
+	inline VulkanDescriptorPoolManager& GetDescriptorPoolManager() { return DescriptorPoolManager; }
 	
 	void CreateLogicalDevice();
-
-	std::unique_ptr<VulkanDescriptorPool> DescriptorPool;
 
 private:
 	VkInstance Instance;
@@ -81,6 +80,8 @@ private:
 
 	/** The logical device. */
 	VkDevice Device;
+
+	VulkanDescriptorPoolManager DescriptorPoolManager;
 };
 
 namespace

@@ -68,8 +68,8 @@ void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::
 	for (uint32 SetIndex = 0; SetIndex < NumDescriptorSets; SetIndex++)
 	{
 		VulkanDescriptorSetRef VulkanDescriptorSet = ResourceCast(DescriptorSets[SetIndex]);
-		VulkanDescriptorSets[SetIndex] = VulkanDescriptorSet->DescriptorSet;
-		DescriptorSetLayouts[SetIndex] = VulkanDescriptorSet->DescriptorSetLayout;
+		VulkanDescriptorSets[SetIndex] = VulkanDescriptorSet->GetVulkanHandle();
+		DescriptorSetLayouts[SetIndex] = VulkanDescriptorSet->GetLayout();
 	}
 
 	Pending.PipelineLayout = Device.GetCache().GetPipelineLayout(DescriptorSetLayouts);
