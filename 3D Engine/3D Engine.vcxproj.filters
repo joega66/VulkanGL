@@ -101,9 +101,6 @@
     <ClInclude Include="Physics\Physics.h">
       <Filter>Source\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="Components\CRenderer.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\AssetManager.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>

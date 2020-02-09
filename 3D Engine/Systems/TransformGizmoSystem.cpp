@@ -1,6 +1,5 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
-#include <Components/CRenderer.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/COutline.h>
 
@@ -44,10 +43,6 @@ void TransformGizmoSystem::Start(Scene& Scene)
 
 	auto& MatZ = ECS.AddComponent<Material>(TranslateAxis.Z);
 	MatZ.Descriptors.Diffuse = Material::Red;
-
-	ECS.GetComponent<CRenderer>(TranslateAxis.X).bVisible = false;
-	ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = false;
-	ECS.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = false;
 }
 
 void TransformGizmoSystem::Update(Scene& Scene)
@@ -127,10 +122,6 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		}
 		else
 		{
-			ECS.GetComponent<CRenderer>(TranslateAxis.X).bVisible = false;
-			ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = false;
-			ECS.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = false;
-
 			SelectedEntity = Entity();
 
 			State = std::bind(&TransformGizmoSystem::Null, this, std::placeholders::_1);
@@ -189,10 +180,6 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
 	if (!ECS.HasComponent<COutline>(Entity))
 	{
 		ECS.AddComponent<COutline>(Entity);
-
-		ECS.GetComponent<CRenderer>(TranslateAxis.X).bVisible = true;
-		ECS.GetComponent<CRenderer>(TranslateAxis.Y).bVisible = true;
-		ECS.GetComponent<CRenderer>(TranslateAxis.Z).bVisible = true;
 
 		auto& TransformComponent = ECS.GetComponent<Transform>(Entity);
 

@@ -12,6 +12,7 @@ struct MaterialDescriptors
 	SamplerState OpacitySampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	drm::ImageRef Bump;
 	SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	drm::BufferRef PBRUniform;
 
 	MaterialDescriptors();
 
@@ -22,7 +23,8 @@ struct MaterialDescriptors
 			{ 0, 1, SampledImage },
 			{ 1, 1, SampledImage },
 			{ 2, 1, SampledImage },
-			{ 3, 1, SampledImage }
+			{ 3, 1, SampledImage },
+			{ 4, 1, UniformBuffer },
 		};
 		return Entries;
 	}
@@ -31,7 +33,13 @@ struct MaterialDescriptors
 class Material
 {
 public:
-	Material();
+	Material() = default;
+
+	Material(
+		class DRMDevice& Device,
+		float Roughness,
+		float Shininess
+	);
 
 	MaterialDescriptors Descriptors;
 
@@ -43,10 +51,17 @@ public:
 
 	SpecializationInfo CreateSpecializationInfo() const;
 
+	inline float GetRoughness() const { return Roughness; }
+	inline float GetShininess() const { return Shininess; }
+
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;
 	static drm::ImageRef Blue;
 	static drm::ImageRef White;
 	static drm::ImageRef Black;
 	static drm::ImageRef Dummy;
+
+private:
+	float Roughness;
+	float Shininess;
 };

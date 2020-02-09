@@ -4,7 +4,6 @@
 #include <Components/Material.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
-#include <Components/CRenderer.h>
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(DRMDevice& Device, Scene& Scene)

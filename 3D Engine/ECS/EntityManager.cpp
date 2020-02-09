@@ -1,6 +1,5 @@
 #include "EntityManager.h"
 #include <Components/Transform.h>
-#include <Components/CRenderer.h>
 
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
@@ -31,7 +30,6 @@ Entity EntityManager::CreateEntity()
 	
 	// Add components every entity should probably have...
 	AddComponent<Transform>(NewEntity);
-	AddComponent<CRenderer>(NewEntity);
 
 	return NewEntity;
 }

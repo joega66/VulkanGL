@@ -8,8 +8,20 @@ drm::ImageRef Material::White;
 drm::ImageRef Material::Black;
 drm::ImageRef Material::Dummy;
 
-Material::Material()
+Material::Material(
+	DRMDevice& Device,
+	float Roughness,
+	float Shininess)
+	: Roughness(Roughness)
+	, Shininess(Shininess)
 {
+	struct PBRUniformData
+	{
+		float Roughness;
+		float Shininess;
+	} PBRUniformData = { Roughness, Shininess };
+
+	Descriptors.PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(PBRUniformData), &PBRUniformData);
 }
 
 bool Material::HasSpecularMap() const
