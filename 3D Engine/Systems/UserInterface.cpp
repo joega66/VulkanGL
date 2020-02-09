@@ -1,6 +1,7 @@
 #include "UserInterface.h"
-#include <imgui/imgui.h>
 #include <Engine/Screen.h>
+#include <imgui/imgui.h>
+#include <imgui/examples/imgui_impl_glfw.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -40,21 +41,15 @@ public:
 	}
 };
 
-UserInterface::UserInterface(DRMDevice& Device, DRMShaderMap& ShaderMap, Screen& Screen)
+UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap& ShaderMap, Screen& Screen)
 	: Descriptors(Device)
 {
 	ImGui::CreateContext();
 
+	ImGui_ImplGlfw_InitForVulkan(Platform.Window, true);
+
 	ImGuiIO& ImGui = ImGui::GetIO();
 	ImGui.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-
-	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
-	{
-		ImGui.DisplaySize = ImVec2((float)Width, (float)Height);
-
-		PSODesc.Viewport.Width = Width;
-		PSODesc.Viewport.Height = Height;
-	});
 
 	ImGui::StyleColorsDark();
 
@@ -76,6 +71,13 @@ UserInterface::UserInterface(DRMDevice& Device, DRMShaderMap& ShaderMap, Screen&
 	// HACK!
 	std::vector<VertexAttributeDescription>& Descriptions = PSODesc.ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions;
 	Descriptions[2].Format = EFormat::R8G8B8A8_UNORM;
+	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
+	{
+		ImGui.DisplaySize = ImVec2((float)Width, (float)Height);
+
+		PSODesc.Viewport.Width = Width;
+		PSODesc.Viewport.Height = Height;
+	});
 
 	/*attribute_desc[0].location = 0;
 	attribute_desc[0].binding = binding_desc[0].binding;
@@ -98,144 +100,21 @@ UserInterface::~UserInterface()
 
 void UserInterface::Start(EntityManager& ECS, DRMDevice& Device)
 {
-
 }
 
 void UserInterface::Update(EntityManager& ECS, DRMDevice& Device)
 {
-	//ImGui_ImplGlfw_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
 	ImGui::ShowDemoWindow();
 	
-	static float f = 0.0f;
-	static int counter = 0;
-
-	ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-	ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-
-	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-	//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-	if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-		counter++;
-	ImGui::SameLine();
-	ImGui::Text("counter = %d", counter);
-
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 	ImGui::End();
-
+	
 	ImGui::Render();
 
-	const ImDrawData* DrawData = ImGui::GetDrawData();
-	const uint32 VertexBufferSize = DrawData->TotalVtxCount * sizeof(ImDrawVert);
-	const uint32 IndexBufferSize = DrawData->TotalIdxCount * sizeof(ImDrawIdx);
-
-	if ((VertexBufferSize == 0) || (IndexBufferSize == 0))
-	{
-		return;
-	}
-
-	// Copy ImGui vertex/index buffer data.
-
-	PosBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImVec2));
-	UvBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImVec2));
-	ColBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImU32));
-
-	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::KeepCPUAccessible, IndexBufferSize);
-
-	ImVec2* PosData = static_cast<ImVec2*>(Device.LockBuffer(PosBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-		{
-			PosData[i] = DrawList->VtxBuffer.Data[i].pos;
-		}
-		PosData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(PosBuffer);
-
-	ImVec2* UvData = static_cast<ImVec2*>(Device.LockBuffer(UvBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-		{
-			UvData[i] = DrawList->VtxBuffer.Data[i].uv;
-		}
-		UvData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(UvBuffer);
-
-	ImU32* ColData = static_cast<ImU32*>(Device.LockBuffer(ColBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-		{
-			ColData[i] = DrawList->VtxBuffer.Data[i].col;
-		}
-		ColData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(ColBuffer);
-
-	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(Device.LockBuffer(IndexBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		Platform::Memcpy(IndexData, DrawList->IdxBuffer.Data, DrawList->IdxBuffer.Size * sizeof(ImDrawIdx));
-		IndexData += DrawList->IdxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(IndexBuffer);
-
-	//ImVec2* PosData = static_cast<ImVec2*>(Device.LockBuffer(PosBuffer));
-	//ImVec2* UvData = static_cast<ImVec2*>(Device.LockBuffer(UvBuffer));
-	//ImU32* ColData = static_cast<ImU32*>(Device.LockBuffer(ColBuffer));
-
-	//ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(Device.LockBuffer(IndexBuffer));
-
-	//for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	//{
-	//	const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-	//	for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-	//	{
-	//		PosData[i] = DrawList->VtxBuffer.Data[i].pos;
-	//		UvData[i] = DrawList->VtxBuffer.Data[i].uv;
-	//		ColData[i] = DrawList->VtxBuffer.Data[i].col;
-	//	}
-	//	//Platform::Memcpy(VertexData, DrawList->VtxBuffer.Data, DrawList->VtxBuffer.Size * sizeof(ImDrawVert));
-	//	//VertexData += DrawList->VtxBuffer.Size;
-	//	Platform::Memcpy(IndexData, DrawList->IdxBuffer.Data, DrawList->IdxBuffer.Size * sizeof(ImDrawIdx));
-	//	IndexData += DrawList->IdxBuffer.Size;
-
-	//	PosData += DrawList->VtxBuffer.Size;
-	//	UvData += DrawList->VtxBuffer.Size;
-	//	ColData += DrawList->VtxBuffer.Size;
-	//}
-
-	//Device.UnlockBuffer(PosBuffer);
-	//Device.UnlockBuffer(UvBuffer);
-	//Device.UnlockBuffer(ColBuffer);
-
-	//Device.UnlockBuffer(IndexBuffer);
-
-	ImGuiIO& ImGui = ImGui::GetIO();
-	glm::vec4* ImGuiData = static_cast<glm::vec4*>(Device.LockBuffer(Descriptors.ImguiUniform));
-	ImGuiData->x = 2.0f / ImGui.DisplaySize.x;
-	ImGuiData->y = 2.0f / ImGui.DisplaySize.y;
-	ImGuiData->z = -1.0f - DrawData->DisplayPos.x * ImGuiData->x;
-	ImGuiData->w = -1.0f - DrawData->DisplayPos.y * ImGuiData->y;
-	Device.UnlockBuffer(Descriptors.ImguiUniform);
+	UploadImGuiDrawData(Device);
 }
 
 void UserInterface::Render(drm::CommandList& CmdList)
@@ -304,4 +183,85 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 	drm::UploadImageData(Device, Pixels, Descriptors.FontImage);
 	
 	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)Descriptors.FontImage->GetNativeHandle();
+}
+
+void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
+{
+	const ImDrawData* DrawData = ImGui::GetDrawData();
+	const uint32 VertexBufferSize = DrawData->TotalVtxCount * sizeof(ImDrawVert);
+	const uint32 IndexBufferSize = DrawData->TotalIdxCount * sizeof(ImDrawIdx);
+
+	if ((VertexBufferSize == 0) || (IndexBufferSize == 0))
+	{
+		return;
+	}
+
+	// Upload ImGui vertex/index buffer data.
+
+	PosBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImVec2));
+	UvBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImVec2));
+	ColBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImU32));
+
+	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::KeepCPUAccessible, IndexBufferSize);
+
+	ImVec2* PosData = static_cast<ImVec2*>(Device.LockBuffer(PosBuffer));
+
+	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
+	{
+		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
+		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
+		{
+			PosData[i] = DrawList->VtxBuffer.Data[i].pos;
+		}
+		PosData += DrawList->VtxBuffer.Size;
+	}
+
+	Device.UnlockBuffer(PosBuffer);
+
+	ImVec2* UvData = static_cast<ImVec2*>(Device.LockBuffer(UvBuffer));
+
+	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
+	{
+		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
+		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
+		{
+			UvData[i] = DrawList->VtxBuffer.Data[i].uv;
+		}
+		UvData += DrawList->VtxBuffer.Size;
+	}
+
+	Device.UnlockBuffer(UvBuffer);
+
+	ImU32* ColData = static_cast<ImU32*>(Device.LockBuffer(ColBuffer));
+
+	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
+	{
+		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
+		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
+		{
+			ColData[i] = DrawList->VtxBuffer.Data[i].col;
+		}
+		ColData += DrawList->VtxBuffer.Size;
+	}
+
+	Device.UnlockBuffer(ColBuffer);
+
+	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(Device.LockBuffer(IndexBuffer));
+
+	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
+	{
+		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
+		Platform::Memcpy(IndexData, DrawList->IdxBuffer.Data, DrawList->IdxBuffer.Size * sizeof(ImDrawIdx));
+		IndexData += DrawList->IdxBuffer.Size;
+	}
+
+	Device.UnlockBuffer(IndexBuffer);
+
+	ImGuiIO& ImGui = ImGui::GetIO();
+	glm::vec4* ImGuiData = static_cast<glm::vec4*>(Device.LockBuffer(Descriptors.ImguiUniform));
+	ImGuiData->x = 2.0f / ImGui.DisplaySize.x;
+	ImGuiData->y = 2.0f / ImGui.DisplaySize.y;
+	ImGuiData->z = -1.0f - DrawData->DisplayPos.x * ImGuiData->x;
+	ImGuiData->w = -1.0f - DrawData->DisplayPos.y * ImGuiData->y;
+	Device.UnlockBuffer(Descriptors.ImguiUniform);
 }

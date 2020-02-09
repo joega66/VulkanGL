@@ -5,7 +5,7 @@
 class UserInterface : public IRenderSystem
 {
 public:
-	UserInterface(DRMDevice& Device, DRMShaderMap& ShaderMap, class Screen& Screen);
+	UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap& ShaderMap, class Screen& Screen);
 
 	~UserInterface();
 	
@@ -17,6 +17,8 @@ public:
 
 private:
 	void CreateImGuiRenderResources(DRMDevice& Device);
+
+	void UploadImGuiDrawData(DRMDevice& Device);
 
 	struct ImGuiDescriptors
 	{

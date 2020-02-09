@@ -94,7 +94,7 @@ void EngineMain::Main(
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
-	UserInterface UserInterface(Device, ShaderMap, Screen);
+	UserInterface UserInterface(Platform, Device, ShaderMap, Screen);
 	SystemsManager.Register(UserInterface);
 
 	SystemsManager.StartRenderSystems(Scene.ECS, Device);
