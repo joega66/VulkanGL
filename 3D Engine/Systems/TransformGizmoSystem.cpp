@@ -36,13 +36,13 @@ void TransformGizmoSystem::Start(Scene& Scene)
 	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Z, TransformGizmo);
 	
 	auto& MatX = ECS.AddComponent<Material>(TranslateAxis.X);
-	MatX.Descriptors.Diffuse = Material::Green;
+	MatX.Descriptors.BaseColor = Material::Green;
 
 	auto& MatY = ECS.AddComponent<Material>(TranslateAxis.Y);
-	MatY.Descriptors.Diffuse = Material::Blue;
+	MatY.Descriptors.BaseColor = Material::Blue;
 
 	auto& MatZ = ECS.AddComponent<Material>(TranslateAxis.Z);
-	MatZ.Descriptors.Diffuse = Material::Red;
+	MatZ.Descriptors.BaseColor = Material::Red;
 }
 
 void TransformGizmoSystem::Update(Scene& Scene)

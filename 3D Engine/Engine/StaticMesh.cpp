@@ -46,26 +46,11 @@ static drm::ImageRef LoadMaterials(DRMDevice& Device, const std::string& Directo
 
 static Material ProcessMaterials(DRMDevice& Device, StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
 {
-	Material Material(Device, 0.0f, 0.0f);
+	Material Material(Device, EMaterialMode::Opaque, 0.0f, 0.0f); // Only support Opaque for OBJ because the format is annoying
 
-	if (drm::ImageRef Diffuse = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); Diffuse)
+	if (drm::ImageRef BaseColor = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); BaseColor)
 	{
-		Material.Descriptors.Diffuse = Diffuse;
-	}
-
-	if (drm::ImageRef Specular = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_SPECULAR, TextureCache); Specular)
-	{
-		Material.Descriptors.Specular = Specular;
-	}
-
-	if (drm::ImageRef Opacity = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_OPACITY, TextureCache); Opacity)
-	{
-		Material.Descriptors.Opacity = Opacity;
-	}
-
-	if (drm::ImageRef Bump = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_HEIGHT, TextureCache); Bump)
-	{
-		Material.Descriptors.Bump = Bump;
+		Material.Descriptors.BaseColor = BaseColor;
 	}
 
 	return Material;
@@ -199,13 +184,27 @@ void StaticMesh::AssimpLoad(DRMDevice& Device)
 
 tinygltf::TinyGLTF Loader;
 
-static drm::ImageRef LoadTexture(DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex, EFormat Format)
+static EFormat GetFormat(int32 Bits, int32 Components)
 {
-	auto& Texture = Model.textures[TextureIndex];
-	auto& Image = Model.images[Texture.source];
-	drm::ImageRef TextureResource = Device.CreateImage(Image.width, Image.height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
-	drm::UploadImageData(Device, Image.image.data(), TextureResource);
-	return TextureResource;
+	if (Bits == 8 && Components == 4)
+		return EFormat::R8G8B8A8_UNORM;
+	signal_unimplemented();
+}
+
+static drm::ImageRef LoadTexture(DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
+{
+	if (TextureIndex == -1)
+	{
+		return Material::Dummy;
+	}
+	else
+	{
+		auto& Texture = Model.textures[TextureIndex];
+		auto& Image = Model.images[Texture.source];
+		drm::ImageRef TextureResource = Device.CreateImage(Image.width, Image.height, 1, GetFormat(Image.bits, Image.component), EImageUsage::Sampled | EImageUsage::TransferDst);
+		drm::UploadImageData(Device, Image.image.data(), TextureResource);
+		return TextureResource;
+	}
 }
 
 void StaticMesh::GLTFLoad(DRMDevice& Device)
@@ -262,9 +261,29 @@ void StaticMesh::GLTFLoad(DRMDevice& Device)
 
 			auto& GLTFMaterial = Model.materials[Primitive.material];
 
-			Material Material(Device, static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor), static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor));
-			Material.Descriptors.Diffuse = LoadTexture(Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index, EFormat::R8G8B8A8_UNORM);
-			
+			const EMaterialMode MaterialMode = [](const std::string& AlphaMode)
+			{
+				if (AlphaMode == "MASK")
+				{
+					return EMaterialMode::Masked;
+				}
+				else
+				{
+					return EMaterialMode::Opaque;
+				}
+			}(GLTFMaterial.alphaMode);
+
+			Material Material(
+				Device,
+				MaterialMode,
+				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor), 
+				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
+			);
+
+			// @todo Use asset manager to share loaded textures and cache materials... Add MaterialComponent
+			Material.Descriptors.BaseColor = LoadTexture(Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+			Material.Descriptors.MetallicRoughness = LoadTexture(Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+
 			Materials.push_back(Material);
 
 			const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);

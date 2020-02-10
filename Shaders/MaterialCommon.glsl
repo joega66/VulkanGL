@@ -3,52 +3,51 @@
 
 #define MATERIAL_SET 2
 
-layout(binding = 0, set = MATERIAL_SET) uniform sampler2D Diffuse;
-layout(binding = 1, set = MATERIAL_SET) uniform sampler2D Specular;
-layout(binding = 2, set = MATERIAL_SET) uniform sampler2D Opacity;
-layout(binding = 3, set = MATERIAL_SET) uniform sampler2D Bump;
-layout(binding = 4, set = MATERIAL_SET) uniform PBRUniformBuffer
+layout(binding = 0, set = MATERIAL_SET) uniform sampler2D BaseColorTexture;
+layout(binding = 1, set = MATERIAL_SET) uniform sampler2D MetallicRoughnessTexture;
+layout(binding = 2, set = MATERIAL_SET) uniform PBRUniformBuffer
 {
 	float Roughness;
 	float Metallicity;
 } PBR;
 
-layout(constant_id = 0) const bool HasSpecularMap = false;
-layout(constant_id = 1) const bool HasOpacityMap = false;
-layout(constant_id = 2) const bool HasBumpMap = false;
+layout(constant_id = 0) const bool HasMetallicRoughnessTexture = false;
+layout(constant_id = 1) const bool IsMasked = false;
 
 struct MaterialData
 {
-	vec3 Albedo;
-	vec3 Specular;
+	vec3 BaseColor;
+	float Alpha;
 	float Roughness;
 	float Metallicity;
-	float Alpha;
 };
 
 MaterialData Material_Get(in SurfaceData Surface)
 {
+	vec4 BaseColor = texture(BaseColorTexture, Surface.UV).rgba;
+	
 	MaterialData Material;
-	Material.Albedo = texture(Diffuse, Surface.UV).rgb;
-	Material.Roughness = PBR.Roughness;
-	Material.Metallicity = PBR.Metallicity;
-
-	if (HasOpacityMap)
+	Material.BaseColor = BaseColor.rgb;
+	
+	if (HasMetallicRoughnessTexture)
 	{
-		Material.Alpha = texture(Opacity, Surface.UV).r;
+		vec2 MetallicRoughness = texture(MetallicRoughnessTexture, Surface.UV).gb;
+		Material.Metallicity = MetallicRoughness.x;
+		Material.Roughness = MetallicRoughness.y;
+	}
+	else
+	{
+		Material.Roughness = PBR.Roughness;
+		Material.Metallicity = PBR.Metallicity;
+	}
+
+	if (IsMasked)
+	{
+		Material.Alpha = BaseColor.a;
 	}
 	else
 	{
 		Material.Alpha = 1.0f;
-	}
-
-	if (HasSpecularMap)
-	{
-		Material.Specular = texture(Specular, Surface.UV).rgb;
-	}
-	else
-	{
-		Material.Specular = vec3(1.0f);
 	}
 
 	return Material;
@@ -57,7 +56,7 @@ MaterialData Material_Get(in SurfaceData Surface)
 #ifdef FRAGMENT_SHADER
 void Material_DiscardMaskedPixel(in SurfaceData Surface)
 {
-	float Alpha = texture(Opacity, Surface.UV).r;
+	float Alpha = texture(BaseColorTexture, Surface.UV).a;
 	if (Alpha <= 0)
 	{
 		discard;

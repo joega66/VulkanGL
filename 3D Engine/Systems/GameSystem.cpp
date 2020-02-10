@@ -11,7 +11,7 @@ void GameSystem::Start(Scene& Scene)
 
 	{
 		// Create the Sponza entities.
-		std::vector<const StaticMesh*> SponzaMeshes = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/sponza.obj", true);
+		std::vector<const StaticMesh*> SponzaMeshes = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/Sponza.gltf", true);
 		std::for_each(SponzaMeshes.begin(), SponzaMeshes.end(), [&] (const StaticMesh* StaticMesh)
 		{
 			auto SponzaEntity = ECS.CreateEntity();

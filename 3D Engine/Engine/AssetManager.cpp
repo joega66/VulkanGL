@@ -12,7 +12,7 @@ AssetManager::AssetManager(DRMDevice& Device)
 	};
 
 	LoadCubemap("Engine_Cubemap_Default", Cubemap);
-	LoadImage("Engine_Diffuse_Default", "../Images/Frozen-Ice-Texture.jpg");
+	LoadImage("Engine_BaseColor_Default", "../Images/Frozen-Ice-Texture.jpg");
 	LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
 	LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 }
@@ -24,9 +24,9 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& N
 	// Add default engine materials if missing.
 	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
 	{
-		if (!StaticMesh->Materials[SubmeshIndex].Descriptors.Diffuse)
+		if (!StaticMesh->Materials[SubmeshIndex].Descriptors.BaseColor)
 		{
-			StaticMesh->Materials[SubmeshIndex].Descriptors.Diffuse = GetImage("Engine_Diffuse_Default");
+			StaticMesh->Materials[SubmeshIndex].Descriptors.BaseColor = GetImage("Engine_BaseColor_Default");
 		}
 	}
 

@@ -4,14 +4,10 @@
 
 struct MaterialDescriptors
 {
-	drm::ImageRef Diffuse;
-	SamplerState DiffuseSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	drm::ImageRef Specular;
-	SamplerState SpecularSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	drm::ImageRef Opacity;
-	SamplerState OpacitySampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	drm::ImageRef Bump;
-	SamplerState BumpSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	drm::ImageRef BaseColor;
+	SamplerState BaseColorSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	drm::ImageRef MetallicRoughness;
+	SamplerState MetallicRoughnessSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	drm::BufferRef PBRUniform;
 
 	MaterialDescriptors();
@@ -22,12 +18,16 @@ struct MaterialDescriptors
 		{
 			{ 0, 1, SampledImage },
 			{ 1, 1, SampledImage },
-			{ 2, 1, SampledImage },
-			{ 3, 1, SampledImage },
-			{ 4, 1, UniformBuffer },
+			{ 2, 1, UniformBuffer },
 		};
 		return Entries;
 	}
+};
+
+enum class EMaterialMode
+{
+	Opaque,
+	Masked,
 };
 
 class Material
@@ -37,20 +37,16 @@ public:
 
 	Material(
 		class DRMDevice& Device,
+		EMaterialMode MaterialMode,
 		float Roughness,
 		float Metallicity
 	);
 
 	MaterialDescriptors Descriptors;
 
-	bool HasSpecularMap() const;
-
-	bool IsMasked() const;
-
-	bool HasBumpMap() const;
-
 	SpecializationInfo CreateSpecializationInfo() const;
 
+	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };
 	inline float GetRoughness() const { return Roughness; }
 	inline float GetMetallicity() const { return Metallicity; }
 
@@ -62,6 +58,7 @@ public:
 	static drm::ImageRef Dummy;
 
 private:
+	EMaterialMode MaterialMode;
 	float Roughness = 0.0f;
 	float Metallicity = 0.0f;
 };
