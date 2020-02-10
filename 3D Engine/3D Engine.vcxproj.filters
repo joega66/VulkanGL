@@ -242,6 +242,9 @@
     <ClInclude Include="..\ThirdParty\imgui\examples\imgui_impl_vulkan.h">
       <Filter>ThirdParty\Imgui\examples</Filter>
     </ClInclude>
+    <ClInclude Include="..\ThirdParty\tiny_gltf.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

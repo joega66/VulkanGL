@@ -82,7 +82,7 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in 
 	Specular *= Material.Specular;
 
 	vec3 Kd = vec3(1.0) - Fresnel;
-	Kd *= 1.0 - Material.Shininess;
+	Kd *= 1.0 - Material.Metallicity;
 
 	vec3 Lo = (Kd * Material.Albedo / PI + Specular) * Light.Radiance * NdotL;
 
@@ -94,7 +94,7 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 	vec3 Lo = vec3(0.0);
 	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 	vec3 R0 = vec3(0.04);
-	R0 = mix(R0, Material.Albedo, Material.Shininess);
+	R0 = mix(R0, Material.Albedo, Material.Metallicity);
 
 	vec2 ScreenUV = gl_FragCoord.xy / Camera.ScreenDims;
 

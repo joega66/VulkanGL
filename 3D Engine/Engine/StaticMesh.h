@@ -1,6 +1,8 @@
 #pragma once
 #include <Components/Material.h>
+#include <DRM.h>
 #include <Physics/Physics.h>
+#include <filesystem>
 
 class Submesh
 {
@@ -16,12 +18,14 @@ class Submesh
 public:
 	Submesh(
 		uint32 IndexCount
+		, EIndexType IndexType
 		, drm::BufferRef IndexBuffer
 		, drm::BufferRef PositionBuffer
 		, drm::BufferRef TextureCoordinateBuffer
 		, drm::BufferRef NormalBuffer
 		, drm::BufferRef TangentBuffer)
 		: IndexCount(IndexCount)
+		, IndexType(IndexType)
 		, IndexBuffer(IndexBuffer)
 	{
 		VertexBuffers[Positions] = PositionBuffer;
@@ -31,12 +35,14 @@ public:
 	}
 
 	inline uint32 GetIndexCount() const { return IndexCount; }
+	inline EIndexType GetIndexType() const { return IndexType; }
 	inline drm::BufferRef GetIndexBuffer() const { return IndexBuffer; }
 	inline const std::array<drm::BufferRef, NumLocations>& GetVertexBuffers() const { return VertexBuffers; }
 	inline drm::BufferRef GetPositionBuffer() const { return VertexBuffers[Positions]; }
 
 private:
-	uint32 IndexCount;
+	const uint32 IndexCount;
+	const EIndexType IndexType;
 	drm::BufferRef IndexBuffer;
 	std::array<drm::BufferRef, NumLocations> VertexBuffers;
 };
@@ -45,7 +51,7 @@ class StaticMesh
 {
 public:
 	/** Filename of the static mesh. */
-	const std::string Filename;
+	const std::filesystem::path Filename;
 
 	/** Directory the file is located in. */
 	const std::string Directory;
@@ -63,8 +69,9 @@ public:
 	StaticMesh(class DRMDevice& Device, const std::string& Filename);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
-	StaticMesh(
-		const StaticMesh& StaticMesh,
-		uint32 SubmeshIndex
-	);
+	StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex);
+
+private:
+	void AssimpLoad(class DRMDevice& Device);
+	void GLTFLoad(class DRMDevice& Device);
 };

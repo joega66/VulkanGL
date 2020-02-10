@@ -22,6 +22,6 @@ void MeshProxy::DrawElements(drm::CommandList& CmdList) const
 		[&] (const Submesh& Submesh)
 	{
 		CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
-		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0);
+		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
 	});
 }

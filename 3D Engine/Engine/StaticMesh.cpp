@@ -1,6 +1,5 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
-#include "../DRM.h"
 
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
@@ -112,6 +111,7 @@ static void ProcessSubmesh(DRMDevice& Device, StaticMesh* StaticMesh, aiMesh* Ai
 
 	StaticMesh->Submeshes.emplace_back(Submesh(
 		Indices.size()
+		, EIndexType::UINT32
 		, IndexBuffer
 		, PositionBuffer
 		, TextureCoordinateBuffer
@@ -136,30 +136,17 @@ void ProcessNode(DRMDevice& Device, StaticMesh* StaticMesh, const aiNode* AiNode
 	}
 }
 
-StaticMesh::StaticMesh(DRMDevice& Device, const std::string& Filename)
-	: Filename(Filename), Directory(Filename.substr(0, Filename.find_last_of("/")))
+StaticMesh::StaticMesh(DRMDevice& Device, const std::string& FilenameStr)
+	: Filename(FilenameStr), Directory(FilenameStr.substr(0, FilenameStr.find_last_of("/")))
 {
-	uint32 AssimpLoadFlags = 0;
-
-	AssimpLoadFlags |= aiProcess_Triangulate
-		| aiProcess_JoinIdenticalVertices
-		| aiProcess_OptimizeMeshes
-		| aiProcess_OptimizeGraph
-		| aiProcess_FlipUVs
-		| aiProcess_CalcTangentSpace;
-
-	Assimp::Importer Importer;
-	const aiScene* AiScene = Importer.ReadFile(Filename, AssimpLoadFlags);
-
-	if (!AiScene || AiScene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !AiScene->mRootNode)
+	if (Filename.extension() == ".obj")
 	{
-		std::string AssimpError = Importer.GetErrorString();
-		fail("Assimp error: %s", AssimpError.c_str());
-		return;
+		AssimpLoad(Device);
 	}
-
-	TextureCache TextureCache;
-	ProcessNode(Device, this, AiScene->mRootNode, AiScene, TextureCache);
+	else if (Filename.extension() == ".bin" || Filename.extension() == ".gltf")
+	{
+		GLTFLoad(Device);
+	}
 
 	std::for_each(SubmeshBounds.begin(), SubmeshBounds.end(), [&] (const BoundingBox& SubmeshBounds)
 	{
@@ -177,4 +164,115 @@ StaticMesh::StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex)
 	, SubmeshNames{ StaticMesh.SubmeshNames[SubmeshIndex] }
 	, Bounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
 {
+}
+
+void StaticMesh::AssimpLoad(DRMDevice& Device)
+{
+	uint32 AssimpLoadFlags = 0;
+
+	AssimpLoadFlags |= aiProcess_Triangulate
+		| aiProcess_JoinIdenticalVertices
+		| aiProcess_OptimizeMeshes
+		| aiProcess_OptimizeGraph
+		| aiProcess_FlipUVs
+		| aiProcess_CalcTangentSpace;
+
+	Assimp::Importer Importer;
+	const aiScene* AiScene = Importer.ReadFile(Filename.generic_string(), AssimpLoadFlags);
+
+	if (!AiScene || AiScene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !AiScene->mRootNode)
+	{
+		std::string AssimpError = Importer.GetErrorString();
+		fail("Assimp error: %s", AssimpError.c_str());
+		return;
+	}
+
+	TextureCache TextureCache;
+	ProcessNode(Device, this, AiScene->mRootNode, AiScene, TextureCache);
+}
+
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBI_MSC_SECURE_CRT
+#include <tiny_gltf.h>
+
+tinygltf::TinyGLTF Loader;
+
+static drm::ImageRef LoadTexture(DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex, EFormat Format)
+{
+	auto& Texture = Model.textures[TextureIndex];
+	auto& Image = Model.images[Texture.source];
+	drm::ImageRef TextureResource = Device.CreateImage(Image.width, Image.height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
+	drm::UploadImageData(Device, Image.image.data(), TextureResource);
+	return TextureResource;
+}
+
+void StaticMesh::GLTFLoad(DRMDevice& Device)
+{
+	tinygltf::Model Model;
+	std::string Err;
+	std::string Warn;
+	
+	Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Filename.generic_string());
+
+	if (!Err.empty())
+	{
+		LOG("TinyGLTF error: %s", Err.c_str());
+	}
+	if (!Warn.empty())
+	{
+		LOG("TinyGLTF warning: %s", Warn.c_str());
+	}
+
+	for (auto& Mesh : Model.meshes)
+	{
+		for (auto& Primitive : Mesh.primitives)
+		{
+			// @todo Nonzero strides
+			auto& IndexAccessor = Model.accessors[Primitive.indices];
+			auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
+			auto& NormalAccessor = Model.accessors[Primitive.attributes["NORMAL"]];
+			auto& UvAccessor = Model.accessors[Primitive.attributes["TEXCOORD_0"]];
+
+			auto& IndexView = Model.bufferViews[IndexAccessor.bufferView];
+			auto& PositionView = Model.bufferViews[PositionAccessor.bufferView];
+			auto& NormalView = Model.bufferViews[NormalAccessor.bufferView];
+			auto& UvView = Model.bufferViews[UvAccessor.bufferView];
+
+			auto& IndexData = Model.buffers[IndexView.buffer];
+			auto& PositionData = Model.buffers[PositionView.buffer];
+			auto& NormalData = Model.buffers[NormalView.buffer];
+			auto& UvData = Model.buffers[UvView.buffer];
+
+			drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength, IndexData.data.data() + IndexView.byteOffset);
+			drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength, PositionData.data.data() + PositionView.byteOffset);
+			drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength, UvData.data.data() + UvView.byteOffset);
+			drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength, NormalData.data.data() + NormalView.byteOffset);
+
+			Submeshes.emplace_back(Submesh(
+				IndexAccessor.count
+				, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
+				, IndexBuffer
+				, PositionBuffer
+				, TextureCoordinateBuffer
+				, NormalBuffer
+				, NormalBuffer) // @todo Generate tangents
+			);
+
+			auto& GLTFMaterial = Model.materials[Primitive.material];
+
+			Material Material(Device, static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor), static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor));
+			Material.Descriptors.Diffuse = LoadTexture(Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index, EFormat::R8G8B8A8_UNORM);
+			
+			Materials.push_back(Material);
+
+			const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);
+			const glm::vec3 Max(PositionAccessor.maxValues[0], PositionAccessor.maxValues[1], PositionAccessor.maxValues[2]);
+			
+			SubmeshBounds.push_back(BoundingBox(Min, Max));
+			
+			SubmeshNames.push_back(Mesh.name);
+		}
+	}
 }

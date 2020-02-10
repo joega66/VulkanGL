@@ -38,7 +38,7 @@ public:
 	Material(
 		class DRMDevice& Device,
 		float Roughness,
-		float Shininess
+		float Metallicity
 	);
 
 	MaterialDescriptors Descriptors;
@@ -52,7 +52,7 @@ public:
 	SpecializationInfo CreateSpecializationInfo() const;
 
 	inline float GetRoughness() const { return Roughness; }
-	inline float GetShininess() const { return Shininess; }
+	inline float GetMetallicity() const { return Metallicity; }
 
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;
@@ -62,6 +62,6 @@ public:
 	static drm::ImageRef Dummy;
 
 private:
-	float Roughness;
-	float Shininess;
+	float Roughness = 0.0f;
+	float Metallicity = 0.0f;
 };

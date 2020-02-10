@@ -11,15 +11,15 @@ drm::ImageRef Material::Dummy;
 Material::Material(
 	DRMDevice& Device,
 	float Roughness,
-	float Shininess)
+	float Metallicity)
 	: Roughness(Roughness)
-	, Shininess(Shininess)
+	, Metallicity(Metallicity)
 {
 	struct PBRUniformData
 	{
 		float Roughness;
-		float Shininess;
-	} PBRUniformData = { Roughness, Shininess };
+		float Metallicity;
+	} PBRUniformData = { Roughness, Metallicity };
 
 	Descriptors.PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(PBRUniformData), &PBRUniformData);
 }

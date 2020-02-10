@@ -127,7 +127,7 @@ void SceneProxy::InitPointLights(DRMDevice& Device)
 void SceneProxy::InitMeshDrawCommands(DRMDevice& Device)
 {
 	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
-
+	
 	for (auto Entity : ECS.GetEntities<MeshProxy>())
 	{
 		const MeshProxy& MeshProxy = ECS.GetComponent<class MeshProxy>(Entity);

@@ -23,6 +23,15 @@ void GameSystem::Start(Scene& Scene)
 		});
 	}
 
+	const auto& Helmet = Scene.Assets.LoadStaticMesh("DamagedHelmet", "../Meshes/DamagedHelmet/DamagedHelmet.gltf");
+	auto HelmetEntity = ECS.CreateEntity();
+	auto& Transform = ECS.GetComponent<class Transform>(HelmetEntity);
+	Transform.Scale(glm::vec3(2));
+	Transform.Translate(glm::vec3(0.0, 5, -10));
+	Transform.Rotate(glm::vec3(1, 0, 0), 90);
+	ECS.AddComponent<StaticMeshComponent>(HelmetEntity, Helmet[0]);
+	ECS.AddComponent<Material>(HelmetEntity, Helmet.front()->Materials.front());
+
 	{
 		// Create the Directional Light entity.
 		const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);

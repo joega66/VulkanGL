@@ -10,7 +10,7 @@ layout(binding = 3, set = MATERIAL_SET) uniform sampler2D Bump;
 layout(binding = 4, set = MATERIAL_SET) uniform PBRUniformBuffer
 {
 	float Roughness;
-	float Shininess;
+	float Metallicity;
 } PBR;
 
 layout(constant_id = 0) const bool HasSpecularMap = false;
@@ -22,7 +22,7 @@ struct MaterialData
 	vec3 Albedo;
 	vec3 Specular;
 	float Roughness;
-	float Shininess;
+	float Metallicity;
 	float Alpha;
 };
 
@@ -31,7 +31,7 @@ MaterialData Material_Get(in SurfaceData Surface)
 	MaterialData Material;
 	Material.Albedo = texture(Diffuse, Surface.UV).rgb;
 	Material.Roughness = PBR.Roughness;
-	Material.Shininess = PBR.Shininess;
+	Material.Metallicity = PBR.Metallicity;
 
 	if (HasOpacityMap)
 	{
