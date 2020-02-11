@@ -61,33 +61,8 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 
 	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
 
-	{
-		drm::CommandListRef CmdList = Device.CreateCommandList();
+	drm::UploadImageData(Device, Pixels, Image);
 
-		drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize(), Pixels);
-
-		ImageMemoryBarrier Barrier(
-			Image,
-			EAccess::None,
-			EAccess::TransferWrite,
-			EImageLayout::Undefined,
-			EImageLayout::TransferDstOptimal
-		);
-
-		CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
-
-		CmdList->CopyBufferToImage(StagingBuffer, 0, Image, EImageLayout::TransferDstOptimal);
-
-		Barrier.SrcAccessMask = EAccess::TransferWrite;
-		Barrier.DstAccessMask = EAccess::ShaderRead;
-		Barrier.OldLayout = EImageLayout::TransferDstOptimal;
-		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
-
-		CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
-
-		Device.SubmitCommands(CmdList);
-	}
-	
 	Platform::FreeImage(Pixels);
 
 	Images[Name] = Image;

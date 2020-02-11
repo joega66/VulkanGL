@@ -340,6 +340,19 @@ struct ShaderStages
 	}
 };
 
+enum class EDynamicState
+{
+	Viewport = 0,
+	Scissor = 1,
+	LineWidth = 2,
+	DepthBias = 3,
+	BlendConstants = 4,
+	DepthBounds = 5,
+	StencilCompareMask = 6,
+	StencilWriteMask = 7,
+	StencilReference = 8,
+};
+
 struct PipelineStateDesc
 {
 	ScissorDesc Scissor;
@@ -351,6 +364,7 @@ struct PipelineStateDesc
 	InputAssemblyState InputAssemblyState;
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
+	std::vector<EDynamicState> DynamicStates;
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
@@ -369,7 +383,8 @@ struct PipelineStateDesc
 			&& L.MultisampleState == R.MultisampleState
 			&& L.InputAssemblyState == R.InputAssemblyState
 			&& L.ShaderStages == R.ShaderStages
-			&& L.SpecializationInfo == R.SpecializationInfo;
+			&& L.SpecializationInfo == R.SpecializationInfo
+			&& L.DynamicStates == R.DynamicStates;
 	}
 };
 
@@ -456,6 +471,8 @@ namespace drm
 			EImageLayout DstImageLayout,
 			EFilter Filter
 		) = 0;
+
+		virtual void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors) = 0;
 	};
 
 	CLASS(CommandList);

@@ -325,3 +325,9 @@ void VulkanCommandList::BlitImage(
 		VulkanImage::GetVulkanFilter(Filter)
 	);
 }
+
+void VulkanCommandList::SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors)
+{
+	static_assert(sizeof(ScissorDesc) == sizeof(VkRect2D));
+	vkCmdSetScissor(CommandBuffer, 0, ScissorCount, reinterpret_cast<const VkRect2D*>(Scissors));
+}

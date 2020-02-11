@@ -67,10 +67,12 @@ UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<UserInterfaceVS>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<UserInterfaceFS>();
+	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
 
 	// HACK!
 	std::vector<VertexAttributeDescription>& Descriptions = PSODesc.ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions;
 	Descriptions[2].Format = EFormat::R8G8B8A8_UNORM;
+
 	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
 	{
 		ImGui.DisplaySize = ImVec2((float)Width, (float)Height);
@@ -127,6 +129,8 @@ void UserInterface::Render(drm::CommandList& CmdList)
 
 		CmdList.BindDescriptorSets(1, &DescriptorSet);
 
+		CmdList.BindPipeline(PSODesc);
+
 		const std::vector<drm::BufferRef> VertexBuffers = { PosBuffer, UvBuffer, ColBuffer };
 
 		CmdList.BindVertexBuffers(VertexBuffers.size(), VertexBuffers.data());
@@ -151,13 +155,13 @@ void UserInterface::Render(drm::CommandList& CmdList)
 				ClipRect.z = (DrawCmd->ClipRect.z - ClipOff.x) * ClipScale.x;
 				ClipRect.w = (DrawCmd->ClipRect.w - ClipOff.y) * ClipScale.y;
 
-				// @todo SetScissor / dynamic state
-				PSODesc.Scissor.Offset.x = static_cast<int32_t>(ClipRect.x);
-				PSODesc.Scissor.Offset.y = static_cast<int32_t>(ClipRect.y);
-				PSODesc.Scissor.Extent.x = static_cast<uint32_t>(ClipRect.z - ClipRect.x);
-				PSODesc.Scissor.Extent.y = static_cast<uint32_t>(ClipRect.w - ClipRect.y);
+				ScissorDesc Scissor;
+				Scissor.Offset.x = static_cast<int32_t>(ClipRect.x);
+				Scissor.Offset.y = static_cast<int32_t>(ClipRect.y);
+				Scissor.Extent.x = static_cast<uint32_t>(ClipRect.z - ClipRect.x);
+				Scissor.Extent.y = static_cast<uint32_t>(ClipRect.w - ClipRect.y);
 
-				CmdList.BindPipeline(PSODesc);
+				CmdList.SetScissor(1, &Scissor);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}

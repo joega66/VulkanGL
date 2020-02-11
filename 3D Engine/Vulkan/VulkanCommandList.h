@@ -71,6 +71,8 @@ public:
 		EFilter Filter
 	) override;
 
+	virtual void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors) override;
+
 private:
 	VulkanDevice& Device;
 

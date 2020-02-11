@@ -402,6 +402,10 @@ VkPipeline VulkanCache::CreatePipeline(
 	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
 	ColorBlendState.attachmentCount = NumRenderTargets;
 
+	VkPipelineDynamicStateCreateInfo DynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+	DynamicState.dynamicStateCount = PSODesc.DynamicStates.size();
+	DynamicState.pDynamicStates = reinterpret_cast<const VkDynamicState*>(PSODesc.DynamicStates.data());
+
 	VkGraphicsPipelineCreateInfo PipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	PipelineInfo.stageCount = ShaderStageInfos.size();
 	PipelineInfo.pStages = ShaderStageInfos.data();
@@ -412,6 +416,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	PipelineInfo.pMultisampleState = &MultisampleState;
 	PipelineInfo.pDepthStencilState = &DepthStencilState;
 	PipelineInfo.pColorBlendState = &ColorBlendState;
+	PipelineInfo.pDynamicState = &DynamicState;
 	PipelineInfo.layout = PipelineLayout;
 	PipelineInfo.renderPass = RenderPass;
 	PipelineInfo.subpass = 0;
