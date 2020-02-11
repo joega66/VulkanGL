@@ -1,5 +1,6 @@
 #pragma once
 #include "StaticMesh.h"
+#include <filesystem>
 
 class DRMDevice;
 
@@ -23,6 +24,7 @@ public:
 	const StaticMesh* GetStaticMesh(const std::string& Name) const;
 
 	void LoadImage(const std::string& Name, const std::string& File, EFormat Format = EFormat::R8G8B8A8_UNORM);
+	void LoadImage(const std::filesystem::path& Path, drm::ImageRef Image);
 	drm::ImageRef GetImage(const std::string& Name) const;
 
 	void LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);

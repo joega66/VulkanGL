@@ -19,7 +19,7 @@ AssetManager::AssetManager(DRMDevice& Device)
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File, bool Breakup)
 {
-	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(Device, File);
+	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(*this, Device, File);
 
 	// Add default engine materials if missing.
 	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
@@ -51,7 +51,7 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& N
 
 const StaticMesh* AssetManager::GetStaticMesh(const std::string& Name) const
 {
-	return GetValue(StaticMeshes, Name).get();
+	return StaticMeshes.at(Name).get();
 }
 
 void AssetManager::LoadImage(const std::string& Name, const std::string& File, EFormat Format)
@@ -93,9 +93,21 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 	Images[Name] = Image;
 }
 
+void AssetManager::LoadImage(const std::filesystem::path& Path, drm::ImageRef Image)
+{
+	Images[Path.generic_string()] = Image;
+}
+
 drm::ImageRef AssetManager::GetImage(const std::string& Name) const
 {
-	return GetValue(Images, Name);
+	if (auto Iter = Images.find(Name); Iter != Images.end())
+	{
+		return Iter->second;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format)
@@ -153,5 +165,5 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 drm::ImageRef AssetManager::GetCubemap(const std::string& Name) const
 {
-	return GetValue(Cubemaps, Name);
+	return Cubemaps.at(Name);
 }

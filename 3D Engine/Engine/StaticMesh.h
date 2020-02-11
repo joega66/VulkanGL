@@ -66,12 +66,12 @@ public:
 	BoundingBox Bounds;
 
 	/** Load a static mesh from file. */
-	StaticMesh(class DRMDevice& Device, const std::string& Filename);
+	StaticMesh(class AssetManager& Assets, class DRMDevice& Device, const std::string& Filename);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
 	StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex);
 
 private:
 	void AssimpLoad(class DRMDevice& Device);
-	void GLTFLoad(class DRMDevice& Device);
+	void GLTFLoad(class AssetManager& Assets, class DRMDevice& Device);
 };

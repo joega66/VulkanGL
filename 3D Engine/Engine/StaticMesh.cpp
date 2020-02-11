@@ -1,6 +1,5 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
-
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -121,7 +120,7 @@ void ProcessNode(DRMDevice& Device, StaticMesh* StaticMesh, const aiNode* AiNode
 	}
 }
 
-StaticMesh::StaticMesh(DRMDevice& Device, const std::string& FilenameStr)
+StaticMesh::StaticMesh(AssetManager& Assets, DRMDevice& Device, const std::string& FilenameStr)
 	: Filename(FilenameStr), Directory(FilenameStr.substr(0, FilenameStr.find_last_of("/")))
 {
 	if (Filename.extension() == ".obj")
@@ -130,7 +129,7 @@ StaticMesh::StaticMesh(DRMDevice& Device, const std::string& FilenameStr)
 	}
 	else if (Filename.extension() == ".bin" || Filename.extension() == ".gltf")
 	{
-		GLTFLoad(Device);
+		GLTFLoad(Assets, Device);
 	}
 
 	std::for_each(SubmeshBounds.begin(), SubmeshBounds.end(), [&] (const BoundingBox& SubmeshBounds)
@@ -184,14 +183,19 @@ void StaticMesh::AssimpLoad(DRMDevice& Device)
 
 tinygltf::TinyGLTF Loader;
 
-static EFormat GetFormat(int32 Bits, int32 Components)
+static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 {
-	if (Bits == 8 && Components == 4)
+	if (PixelType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && Bits == 8 && Components == 4)
+	{
 		return EFormat::R8G8B8A8_UNORM;
-	signal_unimplemented();
+	}
+	else
+	{
+		signal_unimplemented();
+	}
 }
 
-static drm::ImageRef LoadTexture(DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
+static drm::ImageRef LoadImageFromGLTF(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
 	if (TextureIndex == -1)
 	{
@@ -201,13 +205,23 @@ static drm::ImageRef LoadTexture(DRMDevice& Device, tinygltf::Model& Model, int3
 	{
 		auto& Texture = Model.textures[TextureIndex];
 		auto& Image = Model.images[Texture.source];
-		drm::ImageRef TextureResource = Device.CreateImage(Image.width, Image.height, 1, GetFormat(Image.bits, Image.component), EImageUsage::Sampled | EImageUsage::TransferDst);
-		drm::UploadImageData(Device, Image.image.data(), TextureResource);
-		return TextureResource;
+
+		if (drm::ImageRef LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
+		{
+			return LoadedImage;
+		}
+		else
+		{
+			drm::ImageRef NewImage = Device.CreateImage(Image.width, Image.height, 1, GetFormat(Image.bits, Image.component, Image.pixel_type), EImageUsage::Sampled | EImageUsage::TransferDst);
+			drm::UploadImageData(Device, Image.image.data(), NewImage);
+#undef LoadImage
+			Assets.LoadImage(Image.uri, NewImage);
+			return NewImage;
+		}
 	}
 }
 
-void StaticMesh::GLTFLoad(DRMDevice& Device)
+void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
 {
 	tinygltf::Model Model;
 	std::string Err;
@@ -228,7 +242,6 @@ void StaticMesh::GLTFLoad(DRMDevice& Device)
 	{
 		for (auto& Primitive : Mesh.primitives)
 		{
-			// @todo Nonzero strides
 			auto& IndexAccessor = Model.accessors[Primitive.indices];
 			auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
 			auto& NormalAccessor = Model.accessors[Primitive.attributes["NORMAL"]];
@@ -238,6 +251,9 @@ void StaticMesh::GLTFLoad(DRMDevice& Device)
 			auto& PositionView = Model.bufferViews[PositionAccessor.bufferView];
 			auto& NormalView = Model.bufferViews[NormalAccessor.bufferView];
 			auto& UvView = Model.bufferViews[UvAccessor.bufferView];
+
+			check(IndexView.byteStride == 0 && PositionView.byteStride == 0 && NormalView.byteStride == 0 && UvView.byteStride == 0,
+				"Need to add support for nonzero strides...");
 
 			auto& IndexData = Model.buffers[IndexView.buffer];
 			auto& PositionData = Model.buffers[PositionView.buffer];
@@ -280,9 +296,8 @@ void StaticMesh::GLTFLoad(DRMDevice& Device)
 				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
 			);
 
-			// @todo Use asset manager to share loaded textures and cache materials... Add MaterialComponent
-			Material.Descriptors.BaseColor = LoadTexture(Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-			Material.Descriptors.MetallicRoughness = LoadTexture(Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+			Material.Descriptors.BaseColor = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+			Material.Descriptors.MetallicRoughness = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
 
 			Materials.push_back(Material);
 
