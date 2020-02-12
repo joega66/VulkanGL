@@ -39,10 +39,7 @@ private:
 
 	DescriptorSet<ImGuiDescriptors> Descriptors;
 
-	drm::BufferRef PosBuffer;
-	drm::BufferRef UvBuffer;
-	drm::BufferRef ColBuffer;
-
+	drm::BufferRef VertexBuffer;
 	drm::BufferRef IndexBuffer;
 
 	PipelineStateDesc PSODesc;

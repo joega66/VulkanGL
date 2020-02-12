@@ -68,10 +68,11 @@ UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<UserInterfaceVS>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<UserInterfaceFS>();
 	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
-
-	// HACK!
-	std::vector<VertexAttributeDescription>& Descriptions = PSODesc.ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions;
-	Descriptions[2].Format = EFormat::R8G8B8A8_UNORM;
+	PSODesc.VertexAttributes = {
+		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) }, 
+		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
+		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
+	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
 
 	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
 	{
@@ -80,19 +81,6 @@ UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap
 		PSODesc.Viewport.Width = Width;
 		PSODesc.Viewport.Height = Height;
 	});
-
-	/*attribute_desc[0].location = 0;
-	attribute_desc[0].binding = binding_desc[0].binding;
-	attribute_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
-	attribute_desc[0].offset = IM_OFFSETOF(ImDrawVert, pos);
-	attribute_desc[1].location = 1;
-	attribute_desc[1].binding = binding_desc[0].binding;
-	attribute_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-	attribute_desc[1].offset = IM_OFFSETOF(ImDrawVert, uv);
-	attribute_desc[2].location = 2;
-	attribute_desc[2].binding = binding_desc[0].binding;
-	attribute_desc[2].format = VK_FORMAT_R8G8B8A8_UNORM;
-	attribute_desc[2].offset = IM_OFFSETOF(ImDrawVert, col);*/
 }
 
 UserInterface::~UserInterface()
@@ -131,9 +119,7 @@ void UserInterface::Render(drm::CommandList& CmdList)
 
 		CmdList.BindPipeline(PSODesc);
 
-		const std::vector<drm::BufferRef> VertexBuffers = { PosBuffer, UvBuffer, ColBuffer };
-
-		CmdList.BindVertexBuffers(VertexBuffers.size(), VertexBuffers.data());
+		CmdList.BindVertexBuffers(1, &VertexBuffer);
 
 		const ImVec2 ClipOff = DrawData->DisplayPos;         // (0,0) unless using multi-viewports
 		const ImVec2 ClipScale = DrawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
@@ -202,54 +188,19 @@ void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
 
 	// Upload ImGui vertex/index buffer data.
 
-	PosBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImVec2));
-	UvBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImVec2));
-	ColBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, DrawData->TotalVtxCount * sizeof(ImU32));
+	VertexBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, VertexBufferSize);
+	ImDrawVert* VertexData = static_cast<ImDrawVert*>(Device.LockBuffer(VertexBuffer));
+
+	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
+	{
+		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
+		Platform::Memcpy(VertexData, DrawList->VtxBuffer.Data, DrawList->VtxBuffer.Size * sizeof(ImDrawVert));
+		VertexData += DrawList->VtxBuffer.Size;
+	}
+
+	Device.UnlockBuffer(VertexBuffer);
 
 	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::KeepCPUAccessible, IndexBufferSize);
-
-	ImVec2* PosData = static_cast<ImVec2*>(Device.LockBuffer(PosBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-		{
-			PosData[i] = DrawList->VtxBuffer.Data[i].pos;
-		}
-		PosData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(PosBuffer);
-
-	ImVec2* UvData = static_cast<ImVec2*>(Device.LockBuffer(UvBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-		{
-			UvData[i] = DrawList->VtxBuffer.Data[i].uv;
-		}
-		UvData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(UvBuffer);
-
-	ImU32* ColData = static_cast<ImU32*>(Device.LockBuffer(ColBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		for (int32 i = 0; i < DrawList->VtxBuffer.Size; i++)
-		{
-			ColData[i] = DrawList->VtxBuffer.Data[i].col;
-		}
-		ColData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(ColBuffer);
-
 	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(Device.LockBuffer(IndexBuffer));
 
 	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)

@@ -295,7 +295,9 @@ VkPipeline VulkanCache::CreatePipeline(
 		});
 	}
 
-	const std::vector<VertexAttributeDescription>& VertexAttributes = ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions;
+	// If no vertex attributes were provided in the PSO desc, use default ones.
+	const std::vector<VertexAttributeDescription>& VertexAttributes = 
+		PSODesc.VertexAttributes.empty() ? ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions : PSODesc.VertexAttributes;
 
 	std::vector<VkVertexInputAttributeDescription> VulkanVertexAttributes;
 	VulkanVertexAttributes.reserve(VertexAttributes.size());
@@ -318,17 +320,35 @@ VkPipeline VulkanCache::CreatePipeline(
 	std::vector<VkVertexInputBindingDescription> VertexBindings;
 	VertexBindings.reserve(VertexAttributes.size());
 
-	for (uint32 VertexBindingIndex = 0; VertexBindingIndex < VertexAttributes.size(); VertexBindingIndex++)
+	if (PSODesc.VertexBindings.empty())
 	{
-		const VkVertexInputBindingDescription VertexBinding =
+		for (uint32 VertexBindingIndex = 0; VertexBindingIndex < VertexAttributes.size(); VertexBindingIndex++)
 		{
-			VertexAttributes[VertexBindingIndex].Binding,
-			VulkanImage::GetSize(VertexAttributes[VertexBindingIndex].Format),
-			VK_VERTEX_INPUT_RATE_VERTEX
-		};
+			const VkVertexInputBindingDescription VertexBinding =
+			{
+				VertexAttributes[VertexBindingIndex].Binding,
+				VulkanImage::GetSize(VertexAttributes[VertexBindingIndex].Format),
+				VK_VERTEX_INPUT_RATE_VERTEX
+			};
 
-		VertexBindings.push_back(VertexBinding);
+			VertexBindings.push_back(VertexBinding);
+		}
 	}
+	else
+	{
+		for (uint32 VertexInputBindingIndex = 0; VertexInputBindingIndex < PSODesc.VertexBindings.size(); VertexInputBindingIndex++)
+		{
+			const VkVertexInputBindingDescription VertexBinding =
+			{
+				PSODesc.VertexBindings[VertexInputBindingIndex].Binding,
+				PSODesc.VertexBindings[VertexInputBindingIndex].Stride,
+				VK_VERTEX_INPUT_RATE_VERTEX
+			};
+
+			VertexBindings.push_back(VertexBinding);
+		}
+	}
+	
 
 	const VkPipelineVertexInputStateCreateInfo VertexInputState = 
 	{ 

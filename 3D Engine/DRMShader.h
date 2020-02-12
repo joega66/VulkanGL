@@ -97,6 +97,26 @@ struct VertexAttributeDescription
 	uint32	Binding;
 	EFormat	Format;
 	uint32	Offset;
+
+	friend bool operator==(const VertexAttributeDescription& L, const VertexAttributeDescription& R)
+	{
+		return L.Location == R.Location
+			&& L.Binding == R.Binding
+			&& L.Format == R.Format
+			&& L.Offset == R.Offset;
+	}
+};
+
+struct VertexBindingDescription
+{
+	uint32 Binding;
+	uint32 Stride;
+
+	friend bool operator==(const VertexBindingDescription& L, const VertexBindingDescription& R)
+	{
+		return L.Binding == R.Binding
+			&& L.Stride == R.Stride;
+	}
 };
 
 class ShaderCompilationInfo

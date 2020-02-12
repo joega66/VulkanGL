@@ -365,6 +365,8 @@ struct PipelineStateDesc
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
 	std::vector<EDynamicState> DynamicStates;
+	std::vector<VertexAttributeDescription> VertexAttributes;
+	std::vector<VertexBindingDescription> VertexBindings;
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
@@ -384,7 +386,9 @@ struct PipelineStateDesc
 			&& L.InputAssemblyState == R.InputAssemblyState
 			&& L.ShaderStages == R.ShaderStages
 			&& L.SpecializationInfo == R.SpecializationInfo
-			&& L.DynamicStates == R.DynamicStates;
+			&& L.DynamicStates == R.DynamicStates
+			&& L.VertexAttributes == R.VertexAttributes
+			&& L.VertexBindings == R.VertexBindings;
 	}
 };
 
