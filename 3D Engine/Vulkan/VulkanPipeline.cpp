@@ -13,46 +13,6 @@ static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 	ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
 };
 
-static const HashTable<ECompareOp, VkCompareOp> VulkanCompareOp =
-{
-	ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
-	ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
-	ENTRY(ECompareOp::Equal, VK_COMPARE_OP_EQUAL)
-	ENTRY(ECompareOp::LessOrEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
-	ENTRY(ECompareOp::Greater, VK_COMPARE_OP_GREATER)
-	ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
-	ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
-	ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
-};
-
-static const HashTable<EStencilOp, VkStencilOp> VulkanStencilOp =
-{
-	ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
-	ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
-	ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
-};
-
-static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
-{
-	ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
-	ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
-	ENTRY(ECullMode::Front, VK_CULL_MODE_FRONT_BIT)
-	ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
-};
-
-static const HashTable<EFrontFace, VkFrontFace> VulkanFrontFace =
-{
-	ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
-	ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-};
-
-static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
-{
-	ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
-	ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)
-	ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
-};
-
 VulkanCache::VulkanPipelineHash::VulkanPipelineHash(
 	const PipelineStateDesc& PSODesc, 
 	VkPipelineLayout PipelineLayout, 
@@ -116,142 +76,177 @@ VkPipeline VulkanCache::GetPipeline(
 	return Pipeline;
 }
 
-VkPipeline VulkanCache::CreatePipeline(
-	const PipelineStateDesc& PSODesc,
-	VkPipelineLayout PipelineLayout,
-	VkRenderPass RenderPass,
-	uint32 NumRenderTargets)
+static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipelineDepthStencilStateCreateInfo& DepthStencilState)
 {
-	VkPipelineDepthStencilStateCreateInfo DepthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-
+	static const HashTable<EStencilOp, VkStencilOp> VulkanStencilOp =
 	{
-		const auto& In = PSODesc.DepthStencilState;
+		ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
+		ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
+		ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
+	};
 
-		DepthStencilState.depthTestEnable = In.DepthTestEnable;
-		DepthStencilState.depthWriteEnable = In.DepthWriteEnable;
-		DepthStencilState.depthCompareOp = GetValue(VulkanDepthCompare, In.DepthCompareTest);
-		DepthStencilState.stencilTestEnable = In.StencilTestEnable;
+	static const HashTable<ECompareOp, VkCompareOp> VulkanCompareOp =
+	{
+		ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
+		ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
+		ENTRY(ECompareOp::Equal, VK_COMPARE_OP_EQUAL)
+		ENTRY(ECompareOp::LessOrEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
+		ENTRY(ECompareOp::Greater, VK_COMPARE_OP_GREATER)
+		ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
+		ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
+		ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
+	};
 
-		const auto& Back = In.Back;
+	const auto& In = PSODesc.DepthStencilState;
+	DepthStencilState.depthTestEnable = In.DepthTestEnable;
+	DepthStencilState.depthWriteEnable = In.DepthWriteEnable;
+	DepthStencilState.depthCompareOp = VulkanDepthCompare.at(In.DepthCompareTest);
+	DepthStencilState.stencilTestEnable = In.StencilTestEnable;
 
-		DepthStencilState.back.failOp = GetValue(VulkanStencilOp, Back.FailOp);
-		DepthStencilState.back.passOp = GetValue(VulkanStencilOp, Back.PassOp);
-		DepthStencilState.back.depthFailOp = GetValue(VulkanStencilOp, Back.DepthFailOp);
-		DepthStencilState.back.compareOp = GetValue(VulkanCompareOp, Back.CompareOp);
-		DepthStencilState.back.compareMask = Back.CompareMask;
-		DepthStencilState.back.writeMask = Back.WriteMask;
-		DepthStencilState.back.reference = Back.Reference;
-		DepthStencilState.front = DepthStencilState.back;
+	const auto& Back = In.Back;
+	DepthStencilState.back.failOp = VulkanStencilOp.at(Back.FailOp);
+	DepthStencilState.back.passOp = VulkanStencilOp.at(Back.PassOp);
+	DepthStencilState.back.depthFailOp = VulkanStencilOp.at(Back.DepthFailOp);
+	DepthStencilState.back.compareOp = VulkanCompareOp.at(Back.CompareOp);
+	DepthStencilState.back.compareMask = Back.CompareMask;
+	DepthStencilState.back.writeMask = Back.WriteMask;
+	DepthStencilState.back.reference = Back.Reference;
+	DepthStencilState.front = DepthStencilState.back;
+}
+
+static void CreateRasterizationState(const PipelineStateDesc& PSODesc, VkPipelineRasterizationStateCreateInfo& RasterizationState)
+{
+	static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
+	{
+		ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
+		ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
+		ENTRY(ECullMode::Front, VK_CULL_MODE_FRONT_BIT)
+		ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
+	};
+
+	static const HashTable<EFrontFace, VkFrontFace> VulkanFrontFace =
+	{
+		ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
+		ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+	};
+
+	static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
+	{
+		ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
+		ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)
+		ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
+	};
+
+	const auto& In = PSODesc.RasterizationState;
+	RasterizationState.depthClampEnable = In.DepthClampEnable;
+	RasterizationState.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
+	RasterizationState.polygonMode = VulkanPolygonMode.at(In.PolygonMode);
+	RasterizationState.cullMode = VulkanCullMode.at(In.CullMode);
+	RasterizationState.frontFace = VulkanFrontFace.at(In.FrontFace);
+	RasterizationState.depthBiasEnable = In.DepthBiasEnable;
+	RasterizationState.depthBiasConstantFactor = In.DepthBiasConstantFactor;
+	RasterizationState.depthBiasClamp = In.DepthBiasClamp;
+	RasterizationState.depthBiasSlopeFactor = In.DepthBiasSlopeFactor;
+	RasterizationState.lineWidth = In.LineWidth;
+}
+
+static void CreateMultisampleState(const PipelineStateDesc& PSODesc, VkPipelineMultisampleStateCreateInfo& MultisampleState)
+{
+	const auto& In = PSODesc.MultisampleState;
+	MultisampleState.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
+	MultisampleState.sampleShadingEnable = In.SampleShadingEnable;
+	MultisampleState.minSampleShading = In.MinSampleShading;
+	MultisampleState.alphaToCoverageEnable = In.AlphaToCoverageEnable;
+	MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
+}
+
+static void CreateColorBlendState(
+	const PipelineStateDesc& PSODesc,
+	uint32 NumColorAttachments,
+	VkPipelineColorBlendStateCreateInfo& ColorBlendState,
+	std::array<VkPipelineColorBlendAttachmentState, RenderPassDesc::MaxAttachments>& ColorBlendAttachmentStates)
+{
+	static const HashTable<EBlendOp, VkBlendOp> VulkanBlendOp =
+	{
+		ENTRY(EBlendOp::ADD, VK_BLEND_OP_ADD)
+		ENTRY(EBlendOp::SUBTRACT, VK_BLEND_OP_SUBTRACT)
+		ENTRY(EBlendOp::REVERSE_SUBTRACT, VK_BLEND_OP_REVERSE_SUBTRACT)
+		ENTRY(EBlendOp::MIN, VK_BLEND_OP_MIN)
+		ENTRY(EBlendOp::MAX,VK_BLEND_OP_MAX)
+	};
+
+	static const HashTable<EBlendFactor, VkBlendFactor> VulkanBlendFactor =
+	{
+		ENTRY(EBlendFactor::ZERO, VK_BLEND_FACTOR_ZERO)
+		ENTRY(EBlendFactor::ONE, VK_BLEND_FACTOR_ONE)
+		ENTRY(EBlendFactor::SRC_COLOR, VK_BLEND_FACTOR_SRC_COLOR)
+		ENTRY(EBlendFactor::ONE_MINUS_SRC_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR)
+		ENTRY(EBlendFactor::DST_COLOR, VK_BLEND_FACTOR_DST_COLOR)
+		ENTRY(EBlendFactor::ONE_MINUS_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR)
+		ENTRY(EBlendFactor::SRC_ALPHA, VK_BLEND_FACTOR_SRC_ALPHA)
+		ENTRY(EBlendFactor::ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
+		ENTRY(EBlendFactor::DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA)
+		ENTRY(EBlendFactor::ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA)
+		ENTRY(EBlendFactor::CONSTANT_COLOR, VK_BLEND_FACTOR_CONSTANT_COLOR)
+		ENTRY(EBlendFactor::ONE_MINUS_CONSTANT_COLOR, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR)
+		ENTRY(EBlendFactor::CONSTANT_ALPHA, VK_BLEND_FACTOR_CONSTANT_ALPHA)
+		ENTRY(EBlendFactor::ONE_MINUS_CONSTANT_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA)
+		ENTRY(EBlendFactor::SRC_ALPHA_SATURATE, VK_BLEND_FACTOR_SRC_ALPHA_SATURATE)
+		ENTRY(EBlendFactor::SRC1_COLOR, VK_BLEND_FACTOR_SRC1_COLOR)
+		ENTRY(EBlendFactor::ONE_MINUS_SRC1_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR)
+		ENTRY(EBlendFactor::SRC1_ALPHA, VK_BLEND_FACTOR_SRC1_ALPHA)
+		ENTRY(EBlendFactor::ONE_MINUS_SRC1_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA)
+	};
+
+	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < NumColorAttachments; ColorAttachmentIndex++)
+	{
+		const ColorBlendAttachmentState& In = PSODesc.ColorBlendAttachmentStates[ColorAttachmentIndex];
+		VkPipelineColorBlendAttachmentState& Out = ColorBlendAttachmentStates[ColorAttachmentIndex];
+		Out = {};
+		Out.blendEnable = In.BlendEnable;
+		Out.srcColorBlendFactor = VulkanBlendFactor.at(In.SrcColorBlendFactor);
+		Out.dstColorBlendFactor = VulkanBlendFactor.at(In.DstColorBlendFactor);
+		Out.colorBlendOp = VulkanBlendOp.at(In.ColorBlendOp);
+		Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.SrcAlphaBlendFactor);
+		Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.DstAlphaBlendFactor);
+		Out.alphaBlendOp = VulkanBlendOp.at(In.AlphaBlendOp);
+		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
+		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
+		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
+		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
 	}
 
-	VkPipelineRasterizationStateCreateInfo RasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+	ColorBlendState.blendConstants[0] = 0.0f;
+	ColorBlendState.blendConstants[1] = 0.0f;
+	ColorBlendState.blendConstants[2] = 0.0f;
+	ColorBlendState.blendConstants[3] = 0.0f;
+	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
+	ColorBlendState.logicOpEnable = false;
+	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
+	ColorBlendState.attachmentCount = NumColorAttachments;
+}
 
+static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
+{
+	std::vector<drm::ShaderRef> ShaderStages;
+
+	ShaderStages.push_back(PSODesc.ShaderStages.Vertex);
+
+	if (PSODesc.ShaderStages.TessControl)
 	{
-		const auto& In = PSODesc.RasterizationState;
-
-		RasterizationState.depthClampEnable = In.DepthClampEnable;
-		RasterizationState.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
-		RasterizationState.polygonMode = GetValue(VulkanPolygonMode, In.PolygonMode);
-		RasterizationState.cullMode = GetValue(VulkanCullMode, In.CullMode);
-		RasterizationState.frontFace = GetValue(VulkanFrontFace, In.FrontFace);
-		RasterizationState.depthBiasEnable = In.DepthBiasEnable;
-		RasterizationState.depthBiasConstantFactor = In.DepthBiasConstantFactor;
-		RasterizationState.depthBiasClamp = In.DepthBiasClamp;
-		RasterizationState.depthBiasSlopeFactor = In.DepthBiasSlopeFactor;
-		RasterizationState.lineWidth = In.LineWidth;
+		ShaderStages.push_back(PSODesc.ShaderStages.TessControl);
 	}
-
-	VkPipelineMultisampleStateCreateInfo MultisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-
+	if (PSODesc.ShaderStages.TessEval)
 	{
-		const auto& In = PSODesc.MultisampleState;
-
-		MultisampleState.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
-		MultisampleState.sampleShadingEnable = In.SampleShadingEnable;
-		MultisampleState.minSampleShading = In.MinSampleShading;
-		MultisampleState.alphaToCoverageEnable = In.AlphaToCoverageEnable;
-		MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
+		ShaderStages.push_back(PSODesc.ShaderStages.TessEval);
 	}
-
-	std::array<VkPipelineColorBlendAttachmentState, RenderPassDesc::MaxAttachments> ColorBlendAttachmentStates;
-
+	if (PSODesc.ShaderStages.Geometry)
 	{
-		for (uint32 RenderTargetIndex = 0; RenderTargetIndex < NumRenderTargets; RenderTargetIndex++)
-		{
-			const auto& In = PSODesc.ColorBlendAttachmentStates[RenderTargetIndex];
-			auto& Out = ColorBlendAttachmentStates[RenderTargetIndex];
-
-			Out = {};
-
-			Out.blendEnable = In.BlendEnable;
-
-			static const HashTable<EBlendOp, VkBlendOp> VulkanBlendOp =
-			{
-				ENTRY(EBlendOp::ADD, VK_BLEND_OP_ADD)
-				ENTRY(EBlendOp::SUBTRACT, VK_BLEND_OP_SUBTRACT)
-				ENTRY(EBlendOp::REVERSE_SUBTRACT, VK_BLEND_OP_REVERSE_SUBTRACT)
-				ENTRY(EBlendOp::MIN, VK_BLEND_OP_MIN)
-				ENTRY(EBlendOp::MAX,VK_BLEND_OP_MAX)
-			};
-
-			static const HashTable<EBlendFactor, VkBlendFactor> VulkanBlendFactor = 
-			{
-				ENTRY(EBlendFactor::ZERO, VK_BLEND_FACTOR_ZERO)
-				ENTRY(EBlendFactor::ONE, VK_BLEND_FACTOR_ONE)
-				ENTRY(EBlendFactor::SRC_COLOR, VK_BLEND_FACTOR_SRC_COLOR)
-				ENTRY(EBlendFactor::ONE_MINUS_SRC_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR)
-				ENTRY(EBlendFactor::DST_COLOR, VK_BLEND_FACTOR_DST_COLOR)
-				ENTRY(EBlendFactor::ONE_MINUS_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR)
-				ENTRY(EBlendFactor::SRC_ALPHA, VK_BLEND_FACTOR_SRC_ALPHA)
-				ENTRY(EBlendFactor::ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
-				ENTRY(EBlendFactor::DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA)
-				ENTRY(EBlendFactor::ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA)
-				ENTRY(EBlendFactor::CONSTANT_COLOR, VK_BLEND_FACTOR_CONSTANT_COLOR)
-				ENTRY(EBlendFactor::ONE_MINUS_CONSTANT_COLOR, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR)
-				ENTRY(EBlendFactor::CONSTANT_ALPHA, VK_BLEND_FACTOR_CONSTANT_ALPHA)
-				ENTRY(EBlendFactor::ONE_MINUS_CONSTANT_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA)
-				ENTRY(EBlendFactor::SRC_ALPHA_SATURATE, VK_BLEND_FACTOR_SRC_ALPHA_SATURATE)
-				ENTRY(EBlendFactor::SRC1_COLOR, VK_BLEND_FACTOR_SRC1_COLOR)
-				ENTRY(EBlendFactor::ONE_MINUS_SRC1_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR)
-				ENTRY(EBlendFactor::SRC1_ALPHA, VK_BLEND_FACTOR_SRC1_ALPHA)
-				ENTRY(EBlendFactor::ONE_MINUS_SRC1_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA)
-			};
-
-			Out.srcColorBlendFactor = VulkanBlendFactor.at(In.SrcColorBlendFactor);
-			Out.dstColorBlendFactor = VulkanBlendFactor.at(In.DstColorBlendFactor);
-			Out.colorBlendOp = VulkanBlendOp.at(In.ColorBlendOp);
-			Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.SrcAlphaBlendFactor);
-			Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.DstAlphaBlendFactor);
-			Out.alphaBlendOp = VulkanBlendOp.at(In.AlphaBlendOp);
-
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
-		}
+		ShaderStages.push_back(PSODesc.ShaderStages.Geometry);
 	}
-
-	const auto& ShaderStages = PSODesc.ShaderStages;
-
-	std::vector<drm::ShaderRef> Shaders;
-
-	Shaders.push_back(ShaderStages.Vertex);
-
-	if (ShaderStages.TessControl)
+	if (PSODesc.ShaderStages.Fragment)
 	{
-		Shaders.push_back(ShaderStages.TessControl);
-	}
-	if (ShaderStages.TessEval)
-	{
-		Shaders.push_back(ShaderStages.TessEval);
-	}
-	if (ShaderStages.Geometry)
-	{
-		Shaders.push_back(ShaderStages.Geometry);
-	}
-	if (ShaderStages.Fragment)
-	{
-		Shaders.push_back(ShaderStages.Fragment);
+		ShaderStages.push_back(PSODesc.ShaderStages.Fragment);
 	}
 
 	static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
@@ -264,48 +259,57 @@ VkPipeline VulkanCache::CreatePipeline(
 		ENTRY(EShaderStage::Compute, VK_SHADER_STAGE_COMPUTE_BIT)
 	};
 
-	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageInfos(Shaders.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
+	ShaderStageInfos.resize(ShaderStages.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
 
 	for (uint32 StageIndex = 0; StageIndex < ShaderStageInfos.size(); StageIndex++)
 	{
-		const drm::ShaderRef& Shader = Shaders[StageIndex];
+		const drm::ShaderRef& Shader = ShaderStages[StageIndex];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
-		ShaderStage.stage = GetValue(VulkanStages, Shader->CompilationInfo.Stage);
+		ShaderStage.stage = VulkanStages.at(Shader->CompilationInfo.Stage);
 		ShaderStage.module = Shader->CompilationInfo.Module;
 		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
 	}
+}
 
-	const SpecializationInfo& SpecializationInfo = PSODesc.SpecializationInfo;
-	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = SpecializationInfo.GetMapEntries();
-	VkSpecializationInfo VulkanSpecializationInfo;
+static void CreateSpecializationInfo(
+	const PipelineStateDesc& PSODesc, 
+	VkSpecializationInfo& SpecializationInfo, 
+	std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
+{
+	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = PSODesc.SpecializationInfo.GetMapEntries();
 
 	if (MapEntries.size() > 0)
 	{
 		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
 
-		const std::vector<uint8>& Data = SpecializationInfo.GetData();
-		VulkanSpecializationInfo.mapEntryCount = MapEntries.size();
-		VulkanSpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
-		VulkanSpecializationInfo.dataSize = Data.size();
-		VulkanSpecializationInfo.pData = Data.data();
+		const std::vector<uint8>& Data = PSODesc.SpecializationInfo.GetData();
+		SpecializationInfo.mapEntryCount = MapEntries.size();
+		SpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
+		SpecializationInfo.dataSize = Data.size();
+		SpecializationInfo.pData = Data.data();
 
-		std::for_each(ShaderStageInfos.begin(), ShaderStageInfos.end(), [&] (VkPipelineShaderStageCreateInfo& ShaderStage)
+		std::for_each(ShaderStageInfos.begin(), ShaderStageInfos.end(), [&] (VkPipelineShaderStageCreateInfo& ShaderStageInfo)
 		{
-			ShaderStage.pSpecializationInfo = &VulkanSpecializationInfo;
+			ShaderStageInfo.pSpecializationInfo = &SpecializationInfo;
 		});
 	}
+}
 
-	// If no vertex attributes were provided in the PSO desc, use default ones.
-	const std::vector<VertexAttributeDescription>& VertexAttributes = 
-		PSODesc.VertexAttributes.empty() ? ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions : PSODesc.VertexAttributes;
+static void CreateVertexInputState(
+	const PipelineStateDesc& PSODesc,
+	VkPipelineVertexInputStateCreateInfo& VertexInputState,
+	std::vector<VkVertexInputAttributeDescription>& VulkanVertexAttributes,
+	std::vector<VkVertexInputBindingDescription>& VertexBindings)
+{
+	// If no vertex attributes were provided in the PSO desc, use the ones from shader reflection.
+	const std::vector<VertexAttributeDescription>& VertexAttributes =
+		PSODesc.VertexAttributes.empty() ? PSODesc.ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions : PSODesc.VertexAttributes;
 
-	std::vector<VkVertexInputAttributeDescription> VulkanVertexAttributes;
 	VulkanVertexAttributes.reserve(VertexAttributes.size());
 
 	for (uint32 VertexAttributeIndex = 0; VertexAttributeIndex < VertexAttributes.size(); VertexAttributeIndex++)
 	{
 		const VertexAttributeDescription& VertexAttributeDescription = VertexAttributes[VertexAttributeIndex];
-
 		const VkVertexInputAttributeDescription VulkanVertexAttributeDescription =
 		{
 			static_cast<uint32>(VertexAttributeDescription.Location),
@@ -313,11 +317,9 @@ VkPipeline VulkanCache::CreatePipeline(
 			VulkanImage::GetVulkanFormat(VertexAttributeDescription.Format),
 			VertexAttributeDescription.Offset
 		};
-
 		VulkanVertexAttributes.push_back(VulkanVertexAttributeDescription);
 	}
 
-	std::vector<VkVertexInputBindingDescription> VertexBindings;
 	VertexBindings.reserve(VertexAttributes.size());
 
 	if (PSODesc.VertexBindings.empty())
@@ -330,72 +332,59 @@ VkPipeline VulkanCache::CreatePipeline(
 				VulkanImage::GetSize(VertexAttributes[VertexBindingIndex].Format),
 				VK_VERTEX_INPUT_RATE_VERTEX
 			};
-
 			VertexBindings.push_back(VertexBinding);
 		}
 	}
 	else
 	{
-		for (uint32 VertexInputBindingIndex = 0; VertexInputBindingIndex < PSODesc.VertexBindings.size(); VertexInputBindingIndex++)
+		for (uint32 VertexBindingIndex = 0; VertexBindingIndex < PSODesc.VertexBindings.size(); VertexBindingIndex++)
 		{
 			const VkVertexInputBindingDescription VertexBinding =
 			{
-				PSODesc.VertexBindings[VertexInputBindingIndex].Binding,
-				PSODesc.VertexBindings[VertexInputBindingIndex].Stride,
+				PSODesc.VertexBindings[VertexBindingIndex].Binding,
+				PSODesc.VertexBindings[VertexBindingIndex].Stride,
 				VK_VERTEX_INPUT_RATE_VERTEX
 			};
-
 			VertexBindings.push_back(VertexBinding);
 		}
 	}
-	
 
-	const VkPipelineVertexInputStateCreateInfo VertexInputState = 
-	{ 
-		VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		nullptr,
-		0,
-		VertexBindings.size(),
-		VertexBindings.data(),
-		VulkanVertexAttributes.size(),
-		VulkanVertexAttributes.data(),
-	};
-	
-	VkPipelineInputAssemblyStateCreateInfo InputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+	VertexInputState.vertexBindingDescriptionCount = VertexBindings.size();
+	VertexInputState.pVertexBindingDescriptions = VertexBindings.data();
+	VertexInputState.vertexAttributeDescriptionCount = VulkanVertexAttributes.size();
+	VertexInputState.pVertexAttributeDescriptions = VulkanVertexAttributes.data();
+}
+
+static void CreateInputAssemblyState(const PipelineStateDesc& PSODesc, VkPipelineInputAssemblyStateCreateInfo& InputAssemblyState)
+{
+	InputAssemblyState.topology = [&] ()
 	{
-		const auto& In = PSODesc.InputAssemblyState;
-		InputAssemblyState.topology = [&] ()
+		for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
 		{
-			for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
+			if (static_cast<uint32>(PSODesc.InputAssemblyState.Topology) == VulkanTopology)
 			{
-				if ((uint32)In.Topology == VulkanTopology)
-				{
-					return VulkanTopology;
-				}
-				VulkanTopology = VkPrimitiveTopology(VulkanTopology + 1);
+				return VulkanTopology;
 			}
-			fail("VkPrimitiveTopology not found.");
-		}();
-		InputAssemblyState.primitiveRestartEnable = In.PrimitiveRestartEnable;
-	}
+			VulkanTopology = static_cast<VkPrimitiveTopology>(VulkanTopology + 1);
+		}
+		fail("VkPrimitiveTopology not found.");
+	}();
+	InputAssemblyState.primitiveRestartEnable = PSODesc.InputAssemblyState.PrimitiveRestartEnable;
+}
 
-	VkViewport Viewport = {};
-	{
-		const auto& In = PSODesc.Viewport;
-		Viewport.x = (float)In.X;
-		Viewport.y = (float)In.Y;
-		Viewport.width = (float)In.Width;
-		Viewport.height = (float)In.Height;
-		Viewport.minDepth = In.MinDepth;
-		Viewport.maxDepth = In.MaxDepth;
-	}
-
-	VkRect2D Scissor;
+static void CreateViewportState(const PipelineStateDesc& PSODesc, VkViewport& Viewport, VkRect2D& Scissor, VkPipelineViewportStateCreateInfo& ViewportState)
+{
+	Viewport.x = static_cast<float>(PSODesc.Viewport.X);
+	Viewport.y = static_cast<float>(PSODesc.Viewport.Y);
+	Viewport.width = static_cast<float>(PSODesc.Viewport.Width);
+	Viewport.height = static_cast<float>(PSODesc.Viewport.Height);
+	Viewport.minDepth = PSODesc.Viewport.MinDepth;
+	Viewport.maxDepth = PSODesc.Viewport.MaxDepth;
 
 	if (PSODesc.Scissor == ScissorDesc{})
 	{
-		Scissor.extent.width = (uint32)Viewport.width;
-		Scissor.extent.height = (uint32)Viewport.height;
+		Scissor.extent.width = static_cast<uint32>(Viewport.width);
+		Scissor.extent.height = static_cast<uint32>(Viewport.height);
 		Scissor.offset = { 0, 0 };
 	}
 	else
@@ -406,21 +395,49 @@ VkPipeline VulkanCache::CreatePipeline(
 		Scissor.offset.y = PSODesc.Scissor.Offset.y;
 	}
 
-	VkPipelineViewportStateCreateInfo ViewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	ViewportState.pViewports = &Viewport;
 	ViewportState.viewportCount = 1;
 	ViewportState.pScissors = &Scissor;
 	ViewportState.scissorCount = 1;
+}
 
+VkPipeline VulkanCache::CreatePipeline(
+	const PipelineStateDesc& PSODesc,
+	VkPipelineLayout PipelineLayout,
+	VkRenderPass RenderPass,
+	uint32 NumRenderTargets)
+{
+	VkPipelineDepthStencilStateCreateInfo DepthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+	CreateDepthStencilState(PSODesc, DepthStencilState);
+
+	VkPipelineRasterizationStateCreateInfo RasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+	CreateRasterizationState(PSODesc, RasterizationState);
+
+	VkPipelineMultisampleStateCreateInfo MultisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+	CreateMultisampleState(PSODesc, MultisampleState);
+
+	std::array<VkPipelineColorBlendAttachmentState, RenderPassDesc::MaxAttachments> ColorBlendAttachmentStates;
 	VkPipelineColorBlendStateCreateInfo ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-	ColorBlendState.blendConstants[0] = 0.0f;
-	ColorBlendState.blendConstants[1] = 0.0f;
-	ColorBlendState.blendConstants[2] = 0.0f;
-	ColorBlendState.blendConstants[3] = 0.0f;
-	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
-	ColorBlendState.logicOpEnable = false;
-	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
-	ColorBlendState.attachmentCount = NumRenderTargets;
+	CreateColorBlendState(PSODesc, NumRenderTargets, ColorBlendState, ColorBlendAttachmentStates);
+
+	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageInfos;
+	CreateShaderStageInfos(PSODesc, ShaderStageInfos);
+
+	VkSpecializationInfo SpecializationInfo;
+	CreateSpecializationInfo(PSODesc, SpecializationInfo, ShaderStageInfos);
+
+	std::vector<VkVertexInputAttributeDescription> VulkanVertexAttributes;
+	std::vector<VkVertexInputBindingDescription> VertexBindings;
+	VkPipelineVertexInputStateCreateInfo VertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+	CreateVertexInputState(PSODesc, VertexInputState, VulkanVertexAttributes, VertexBindings);
+	
+	VkPipelineInputAssemblyStateCreateInfo InputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+	CreateInputAssemblyState(PSODesc, InputAssemblyState);
+
+	VkViewport Viewport;
+	VkRect2D Scissor;
+	VkPipelineViewportStateCreateInfo ViewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+	CreateViewportState(PSODesc, Viewport, Scissor, ViewportState);
 
 	VkPipelineDynamicStateCreateInfo DynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 	DynamicState.dynamicStateCount = PSODesc.DynamicStates.size();
@@ -483,7 +500,6 @@ void VulkanCache::DestroyPipelinesWithShader(const drm::ShaderRef& Shader)
 		const auto& [PipelineHash, Pipeline] = Iter;
 		if (PipelineHash.HasShader(Shader))
 		{
-			// @todo I should just use RAII when evicting *any* of the hashes.
 			vkDestroyPipeline(Device, Pipeline, nullptr);
 			return true;
 		}
