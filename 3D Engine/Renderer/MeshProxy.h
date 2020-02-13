@@ -21,7 +21,7 @@ public:
 	inline const Material* GetMaterial() const { return Material; }
 	inline const drm::DescriptorSetRef& GetSurfaceSet() const { return SurfaceSet; }
 	inline const drm::DescriptorSetRef& GetMaterialSet() const { return MaterialSet; }
-	inline const SpecializationInfo& GetSpecializationInfo() const { return SpecializationInfo; }
+	inline const SpecializationInfo& GetSpecializationInfo() const { return Material->GetSpecializationInfo(); }
 	inline const std::vector<Submesh>& GetSubmeshes() const { return Submeshes; }
 
 	/** World-space bounding box. */
@@ -36,8 +36,6 @@ private:
 	drm::DescriptorSetRef SurfaceSet;
 
 	drm::DescriptorSetRef MaterialSet;
-
-	SpecializationInfo SpecializationInfo;
 
 	std::vector<Submesh> Submeshes;
 };

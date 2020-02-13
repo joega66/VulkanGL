@@ -10,10 +10,12 @@ drm::ImageRef Material::Dummy;
 
 Material::Material(
 	DRMDevice& Device,
+	const MaterialDescriptors& InDescriptors,
 	EMaterialMode MaterialMode,
 	float Roughness,
 	float Metallicity)
-	: MaterialMode(MaterialMode)
+	: Descriptors(InDescriptors)
+	, MaterialMode(MaterialMode)
 	, Roughness(Roughness)
 	, Metallicity(Metallicity)
 {
@@ -24,14 +26,9 @@ Material::Material(
 	} PBRUniformData = { Roughness, Metallicity };
 
 	Descriptors.PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(PBRUniformData), &PBRUniformData);
-}
 
-SpecializationInfo Material::CreateSpecializationInfo() const
-{
-	SpecializationInfo SpecInfo;
-	SpecInfo.Add(0, Descriptors.MetallicRoughness != Material::Dummy);
-	SpecInfo.Add(1, MaterialMode == EMaterialMode::Masked);
-	return SpecInfo;
+	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != Material::Dummy);
+	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
 }
 
 MaterialDescriptors::MaterialDescriptors()

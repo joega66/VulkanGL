@@ -13,7 +13,6 @@ MeshProxy::MeshProxy(
 	, LocalToWorldUniform(LocalToWorldUniform)
 	, Submeshes(Submeshes)
 {
-	SpecializationInfo = Material.CreateSpecializationInfo();
 }
 
 void MeshProxy::DrawElements(drm::CommandList& CmdList) const

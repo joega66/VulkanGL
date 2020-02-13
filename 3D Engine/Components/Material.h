@@ -37,6 +37,7 @@ public:
 
 	Material(
 		class DRMDevice& Device,
+		const MaterialDescriptors& Descriptors,
 		EMaterialMode MaterialMode,
 		float Roughness,
 		float Metallicity
@@ -44,11 +45,10 @@ public:
 
 	MaterialDescriptors Descriptors;
 
-	SpecializationInfo CreateSpecializationInfo() const;
-
 	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };
 	inline float GetRoughness() const { return Roughness; }
 	inline float GetMetallicity() const { return Metallicity; }
+	inline const SpecializationInfo& GetSpecializationInfo() const { return SpecializationInfo; }
 
 	static drm::ImageRef Red;
 	static drm::ImageRef Green;
@@ -61,4 +61,5 @@ private:
 	EMaterialMode MaterialMode;
 	float Roughness = 0.0f;
 	float Metallicity = 0.0f;
+	SpecializationInfo SpecializationInfo;
 };

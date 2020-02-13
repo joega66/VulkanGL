@@ -45,12 +45,14 @@ static drm::ImageRef LoadMaterials(DRMDevice& Device, const std::string& Directo
 
 static Material ProcessMaterials(DRMDevice& Device, StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
 {
-	Material Material(Device, EMaterialMode::Opaque, 0.0f, 0.0f); // Only support Opaque for OBJ because the format is annoying
+	MaterialDescriptors Descriptors;
 
 	if (drm::ImageRef BaseColor = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); BaseColor)
 	{
-		Material.Descriptors.BaseColor = BaseColor;
+		Descriptors.BaseColor = BaseColor;
 	}
+
+	Material Material(Device, Descriptors, EMaterialMode::Opaque, 0.0f, 0.0f); // Only support Opaque for OBJ because the format is annoying
 
 	return Material;
 }
@@ -289,15 +291,17 @@ void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
 				}
 			}(GLTFMaterial.alphaMode);
 
+			MaterialDescriptors Descriptors;
+			Descriptors.BaseColor = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+			Descriptors.MetallicRoughness = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+
 			Material Material(
 				Device,
+				Descriptors,
 				MaterialMode,
 				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor), 
 				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
 			);
-
-			Material.Descriptors.BaseColor = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-			Material.Descriptors.MetallicRoughness = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
 
 			Materials.push_back(Material);
 
