@@ -322,11 +322,11 @@ struct InputAssemblyState
 
 struct ShaderStages
 {
-	drm::ShaderRef Vertex;
-	drm::ShaderRef TessControl;
-	drm::ShaderRef TessEval;
-	drm::ShaderRef Geometry;
-	drm::ShaderRef Fragment;
+	const drm::Shader* Vertex;
+	const drm::Shader* TessControl;
+	const drm::Shader* TessEval;
+	const drm::Shader* Geometry;
+	const drm::Shader* Fragment;
 
 	friend bool operator==(const ShaderStages& L, const ShaderStages& R)
 	{

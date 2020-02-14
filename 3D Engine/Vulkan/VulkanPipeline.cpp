@@ -33,7 +33,7 @@ bool VulkanCache::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other
 		&& NumAttachments == Other.NumAttachments;
 }
 
-bool VulkanCache::VulkanPipelineHash::HasShader(const drm::ShaderRef& Shader) const
+bool VulkanCache::VulkanPipelineHash::HasShader(const drm::Shader* Shader) const
 {
 	const ShaderStages& ShaderStages = PSODesc.ShaderStages;
 
@@ -247,7 +247,7 @@ static void CreateColorBlendState(
 
 static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
 {
-	std::vector<drm::ShaderRef> ShaderStages;
+	std::vector<const drm::Shader*> ShaderStages;
 
 	ShaderStages.push_back(PSODesc.ShaderStages.Vertex);
 
@@ -282,7 +282,7 @@ static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector
 
 	for (uint32 StageIndex = 0; StageIndex < ShaderStageInfos.size(); StageIndex++)
 	{
-		const drm::ShaderRef& Shader = ShaderStages[StageIndex];
+		const drm::Shader* Shader = ShaderStages[StageIndex];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
 		ShaderStage.stage = VulkanStages.at(Shader->CompilationInfo.Stage);
 		ShaderStage.module = Shader->CompilationInfo.Module;
@@ -509,7 +509,7 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSe
 	return PipelineLayout;
 }
 
-void VulkanCache::DestroyPipelinesWithShader(const drm::ShaderRef& Shader)
+void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 {
 	PipelineCache.erase(std::remove_if(
 		PipelineCache.begin(),

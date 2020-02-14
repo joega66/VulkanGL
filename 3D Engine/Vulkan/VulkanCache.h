@@ -30,7 +30,7 @@ public:
 
 	void FreeImage(class VulkanImage& Image);
 
-	void DestroyPipelinesWithShader(const drm::ShaderRef& Shader);
+	void DestroyPipelinesWithShader(const drm::Shader* Shader);
 
 	static const char* GetVulkanErrorString(VkResult Result);
 
@@ -50,7 +50,7 @@ private:
 
 		VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout, VkRenderPass RenderPass, uint32 NumRenderTargets);
 		bool operator==(const VulkanPipelineHash& Other) const;
-		bool HasShader(const drm::ShaderRef& Shader) const;
+		bool HasShader(const drm::Shader* Shader) const;
 	};
 
 	SlowCache<VulkanPipelineHash, VkPipeline> PipelineCache;

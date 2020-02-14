@@ -168,8 +168,6 @@ namespace drm
 		{
 		}
 	};
-
-	CLASS(Shader);
 }
 
 /** The Shader Map compiles shaders and caches them by typename. */
@@ -178,13 +176,13 @@ class DRMShaderMap
 public:
 	/** Find shader of ShaderType. */
 	template<typename ShaderType>
-	std::shared_ptr<ShaderType> FindShader()
+	const ShaderType* FindShader()
 	{
 		std::type_index Type = std::type_index(typeid(ShaderType));
 
 		if (Contains(Shaders, Type))
 		{
-			return std::static_pointer_cast<ShaderType>(Shaders[Type]);
+			return static_cast<const ShaderType*>(Shaders[Type].get());
 		}
 		else
 		{
@@ -192,9 +190,8 @@ public:
 			ShaderType::SetEnvironmentVariables(Worker);
 			const auto& [Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
 			const ShaderCompilationInfo CompilationInfo = CompileShader(Worker, Filename, EntryPoint, Stage, Type);
-			std::shared_ptr<ShaderType> Shader = MakeRef<ShaderType>(CompilationInfo);
-			Shaders[Shader->CompilationInfo.Type] = Shader;
-			return Shader;
+			Shaders.emplace(CompilationInfo.Type, std::make_unique<ShaderType>(CompilationInfo));
+			return static_cast<const ShaderType*>(Shaders[CompilationInfo.Type].get());
 		}
 	}
 
@@ -213,6 +210,6 @@ private:
 
 protected:
 	/** Cached shaders. */
-	HashTable<std::type_index, drm::ShaderRef> Shaders;
+	HashTable<std::type_index, std::unique_ptr<drm::Shader>> Shaders;
 
 };

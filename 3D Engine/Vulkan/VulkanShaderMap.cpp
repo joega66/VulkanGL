@@ -197,7 +197,7 @@ void VulkanShaderMap::RecompileShaders()
 			const ShaderCompilationInfo NewCompilationInfo = CompileShader(
 				CompileInfo.Worker,
 				CompileInfo.Filename, 
-				CompileInfo.Entrypoint, 
+				CompileInfo.Entrypoint,
 				CompileInfo.Stage, 
 				CompileInfo.Type
 			);
@@ -205,7 +205,7 @@ void VulkanShaderMap::RecompileShaders()
 			Shader->CompilationInfo = NewCompilationInfo;
 
 			// Destroy cached pipelines with this shader.
-			Device.GetCache().DestroyPipelinesWithShader(Shader);
+			Device.GetCache().DestroyPipelinesWithShader(Shader.get());
 		}
 	}
 }

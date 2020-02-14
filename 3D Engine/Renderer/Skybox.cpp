@@ -40,8 +40,8 @@ public:
 
 void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	Ref<SkyboxVS> VertShader = Scene.ShaderMap.FindShader<SkyboxVS>();
-	Ref<SkyboxFS> FragShader = Scene.ShaderMap.FindShader<SkyboxFS>();
+	const SkyboxVS* VertShader = Scene.ShaderMap.FindShader<SkyboxVS>();
+	const SkyboxFS* FragShader = Scene.ShaderMap.FindShader<SkyboxFS>();
 
 	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
 	{
