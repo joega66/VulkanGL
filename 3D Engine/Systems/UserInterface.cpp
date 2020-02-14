@@ -55,6 +55,7 @@ UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap
 
 	CreateImGuiRenderResources(Device);
 
+	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
 	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
 	PSODesc.ColorBlendAttachmentStates[0].DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;

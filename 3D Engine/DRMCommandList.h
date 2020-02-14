@@ -360,7 +360,7 @@ struct PipelineStateDesc
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::array<ColorBlendAttachmentState, RenderPassDesc::MaxAttachments> ColorBlendAttachmentStates;
+	std::vector<ColorBlendAttachmentState> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
@@ -370,19 +370,12 @@ struct PipelineStateDesc
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
-		for (uint32 AttachmentIndex = 0; AttachmentIndex < RenderPassDesc::MaxAttachments; AttachmentIndex++)
-		{
-			if (L.ColorBlendAttachmentStates[AttachmentIndex] != R.ColorBlendAttachmentStates[AttachmentIndex])
-			{
-				return false;
-			}
-		}
-
 		return L.Scissor == R.Scissor
 			&& L.Viewport == R.Viewport
 			&& L.DepthStencilState == R.DepthStencilState
 			&& L.RasterizationState == R.RasterizationState
 			&& L.MultisampleState == R.MultisampleState
+			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
 			&& L.InputAssemblyState == R.InputAssemblyState
 			&& L.ShaderStages == R.ShaderStages
 			&& L.SpecializationInfo == R.SpecializationInfo

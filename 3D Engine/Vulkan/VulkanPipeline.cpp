@@ -164,7 +164,7 @@ static void CreateColorBlendState(
 	const PipelineStateDesc& PSODesc,
 	uint32 NumColorAttachments,
 	VkPipelineColorBlendStateCreateInfo& ColorBlendState,
-	std::array<VkPipelineColorBlendAttachmentState, RenderPassDesc::MaxAttachments>& ColorBlendAttachmentStates)
+	std::vector<VkPipelineColorBlendAttachmentState>& ColorBlendAttachmentStates)
 {
 	static const HashTable<EBlendOp, VkBlendOp> VulkanBlendOp =
 	{
@@ -198,24 +198,43 @@ static void CreateColorBlendState(
 		ENTRY(EBlendFactor::ONE_MINUS_SRC1_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA)
 	};
 
-	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < NumColorAttachments; ColorAttachmentIndex++)
+	static auto ConvertColorBlendAttachmentStates = [] (
+		const std::vector<ColorBlendAttachmentState>& InColorBlendAttachmentStates,
+		std::vector<VkPipelineColorBlendAttachmentState>& ColorBlendAttachmentStates
+	)
 	{
-		const ColorBlendAttachmentState& In = PSODesc.ColorBlendAttachmentStates[ColorAttachmentIndex];
-		VkPipelineColorBlendAttachmentState& Out = ColorBlendAttachmentStates[ColorAttachmentIndex];
-		Out = {};
-		Out.blendEnable = In.BlendEnable;
-		Out.srcColorBlendFactor = VulkanBlendFactor.at(In.SrcColorBlendFactor);
-		Out.dstColorBlendFactor = VulkanBlendFactor.at(In.DstColorBlendFactor);
-		Out.colorBlendOp = VulkanBlendOp.at(In.ColorBlendOp);
-		Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.SrcAlphaBlendFactor);
-		Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.DstAlphaBlendFactor);
-		Out.alphaBlendOp = VulkanBlendOp.at(In.AlphaBlendOp);
-		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
-		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
-		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
-		Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
-	}
+		for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < InColorBlendAttachmentStates.size(); ColorAttachmentIndex++)
+		{
+			const ColorBlendAttachmentState& In = InColorBlendAttachmentStates[ColorAttachmentIndex];
+			VkPipelineColorBlendAttachmentState Out;
+			Out = {};
+			Out.blendEnable = In.BlendEnable;
+			Out.srcColorBlendFactor = VulkanBlendFactor.at(In.SrcColorBlendFactor);
+			Out.dstColorBlendFactor = VulkanBlendFactor.at(In.DstColorBlendFactor);
+			Out.colorBlendOp = VulkanBlendOp.at(In.ColorBlendOp);
+			Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.SrcAlphaBlendFactor);
+			Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.DstAlphaBlendFactor);
+			Out.alphaBlendOp = VulkanBlendOp.at(In.AlphaBlendOp);
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
+			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
 
+			ColorBlendAttachmentStates.push_back(Out);
+		}
+	};
+
+	ColorBlendAttachmentStates.reserve(NumColorAttachments);
+	if (PSODesc.ColorBlendAttachmentStates.empty())
+	{
+		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(NumColorAttachments, ColorBlendAttachmentState{});
+		ConvertColorBlendAttachmentStates(DefaultColorBlendAttachmentStates, ColorBlendAttachmentStates);
+	}
+	else
+	{
+		ConvertColorBlendAttachmentStates(PSODesc.ColorBlendAttachmentStates, ColorBlendAttachmentStates);
+	}
+	
 	ColorBlendState.blendConstants[0] = 0.0f;
 	ColorBlendState.blendConstants[1] = 0.0f;
 	ColorBlendState.blendConstants[2] = 0.0f;
@@ -416,7 +435,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	VkPipelineMultisampleStateCreateInfo MultisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 	CreateMultisampleState(PSODesc, MultisampleState);
 
-	std::array<VkPipelineColorBlendAttachmentState, RenderPassDesc::MaxAttachments> ColorBlendAttachmentStates;
+	std::vector<VkPipelineColorBlendAttachmentState> ColorBlendAttachmentStates;
 	VkPipelineColorBlendStateCreateInfo ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
 	CreateColorBlendState(PSODesc, NumRenderTargets, ColorBlendState, ColorBlendAttachmentStates);
 
