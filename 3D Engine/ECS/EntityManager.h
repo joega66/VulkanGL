@@ -19,20 +19,14 @@ public:
 	/** Create an empty entity. */
 	Entity CreateEntity();
 
-	/** Create an entity from a prefab. */
-	Entity CreateEntity(const std::string& Name);
-
-	/** Clone an entity. */
-	Entity Clone(Entity& Other);
-
 	/** Destroy the entity and all associated components. */
 	void Destroy(Entity& Entity);
 
-	template<typename ComponentType, typename ...Args>
-	ComponentType& AddComponent(Entity& Entity, Args&& ...InArgs)
+	template<typename ComponentType>
+	ComponentType& AddComponent(Entity& Entity, ComponentType&& Component)
 	{
 		auto Array = GetComponentArray<ComponentType>();
-		return Array->AddComponent(Entity, InArgs...);
+		return Array->AddComponent(Entity, std::move(Component));
 	}
 
 	template<typename ComponentType>

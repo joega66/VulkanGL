@@ -101,9 +101,10 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
 		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
+		const drm::RenderPass& RenderPass = ShadowProxy.GetRenderPass();
 		drm::ImageRef ShadowMap = ShadowProxy.GetShadowMap();
 
-		CmdList.BeginRenderPass(ShadowProxy.GetRenderPass());
+		CmdList.BeginRenderPass(RenderPass);
 
 		PipelineStateDesc PSODesc = {};
 		PSODesc.Viewport.Width = ShadowMap->Width;

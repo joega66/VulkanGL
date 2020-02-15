@@ -417,17 +417,25 @@ enum class EIndexType
 	UINT32
 };
 
+#include "Vulkan/VulkanRenderPass.h"
+
 namespace drm
 {
+	using RenderPass = VulkanRenderPass;
+
 	class CommandList
 	{
 	public:
 		virtual ~CommandList() {}
 
-		virtual void BeginRenderPass(drm::RenderPassRef RenderPass) = 0;
+		virtual void BeginRenderPass(const drm::RenderPass& RenderPass) = 0;
+
 		virtual void EndRenderPass() = 0;
+
 		virtual void BindPipeline(const PipelineStateDesc& PSODesc) = 0;
+
 		virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) = 0;
+
 		virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) = 0;
 
 		virtual void DrawIndexed(
@@ -441,8 +449,11 @@ namespace drm
 			) = 0;
 
 		virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) = 0;
+
 		virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) = 0;
+
 		virtual void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color) = 0;
+
 		virtual void ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue) = 0;
 
 		virtual void PipelineBarrier(

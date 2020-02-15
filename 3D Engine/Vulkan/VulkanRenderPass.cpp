@@ -209,7 +209,7 @@ VulkanRenderPass::VulkanRenderPass(
 	const VkRect2D& RenderArea,
 	const std::vector<VkClearValue>& ClearValues,
 	uint32 NumAttachments) 
-	: Device(Device)
+	: Device(&Device)
 	, RenderPass(RenderPass)
 	, Framebuffer(Framebuffer)
 	, RenderArea(RenderArea)
@@ -220,5 +220,29 @@ VulkanRenderPass::VulkanRenderPass(
 
 VulkanRenderPass::~VulkanRenderPass()
 {
-	vkDestroyFramebuffer(Device, Framebuffer, nullptr);
+	if (Device)
+	{
+		vkDestroyFramebuffer(*Device, Framebuffer, nullptr);
+	}
+}
+
+VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& Other)
+	: Device(std::exchange(Other.Device, nullptr))
+	, RenderPass(std::exchange(Other.RenderPass, VK_NULL_HANDLE))
+	, Framebuffer(std::exchange(Other.Framebuffer, VK_NULL_HANDLE))
+	, RenderArea(Other.RenderArea)
+	, ClearValues(std::move(Other.ClearValues))
+	, NumAttachments(Other.NumAttachments)
+{
+}
+
+VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& Other)
+{
+	Device = std::exchange(Other.Device, nullptr);
+	RenderPass = std::exchange(Other.RenderPass, VK_NULL_HANDLE);
+	Framebuffer = std::exchange(Other.Framebuffer, VK_NULL_HANDLE);
+	RenderArea = Other.RenderArea;
+	ClearValues = std::move(Other.ClearValues);
+	NumAttachments = Other.NumAttachments;
+	return *this;
 }

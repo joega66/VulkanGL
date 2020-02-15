@@ -129,7 +129,7 @@ void VulkanDevice::UnlockBuffer(drm::BufferRef Buffer)
 	Allocator.UnlockBuffer(*VulkanBuffer);
 }
 
-drm::RenderPassRef VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
+drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 {
 	const auto[RenderPass, Framebuffer] = VulkanCache.GetRenderPass(RPDesc);
 
@@ -178,7 +178,7 @@ drm::RenderPassRef VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 		}
 	}
 
-	return MakeRef<VulkanRenderPass>(*this, RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.NumAttachments);
+	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.NumAttachments);
 }
 
 void VulkanDevice::CreateLogicalDevice()

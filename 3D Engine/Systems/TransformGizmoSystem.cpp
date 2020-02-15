@@ -35,13 +35,13 @@ void TransformGizmoSystem::Start(Scene& Scene)
 	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Y, TransformGizmo);
 	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Z, TransformGizmo);
 	
-	auto& MatX = ECS.AddComponent<Material>(TranslateAxis.X);
+	auto& MatX = ECS.AddComponent(TranslateAxis.X, Material());
 	MatX.Descriptors.BaseColor = Material::Green;
 
-	auto& MatY = ECS.AddComponent<Material>(TranslateAxis.Y);
+	auto& MatY = ECS.AddComponent(TranslateAxis.Y, Material());
 	MatY.Descriptors.BaseColor = Material::Blue;
 
-	auto& MatZ = ECS.AddComponent<Material>(TranslateAxis.Z);
+	auto& MatZ = ECS.AddComponent(TranslateAxis.Z, Material());
 	MatZ.Descriptors.BaseColor = Material::Red;
 }
 
@@ -179,7 +179,7 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
 
 	if (!ECS.HasComponent<COutline>(Entity))
 	{
-		ECS.AddComponent<COutline>(Entity);
+		ECS.AddComponent(Entity, COutline());
 
 		auto& TransformComponent = ECS.GetComponent<Transform>(Entity);
 

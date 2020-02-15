@@ -29,31 +29,9 @@ Entity EntityManager::CreateEntity()
 	}();
 	
 	// Add components every entity should probably have...
-	AddComponent<Transform>(NewEntity);
+	AddComponent(NewEntity, Transform());
 
 	return NewEntity;
-}
-
-Entity EntityManager::CreateEntity(const std::string& Name)
-{
-	check(Contains(Prefabs, Name), "No Prefab named %s", Name.c_str());
-	return Clone(Prefabs[Name]);
-}
-
-Entity EntityManager::Clone(Entity& Other)
-{
-	Entity Entity = CreateEntity();
-	
-	for (auto& ComponentArrayEntry : ComponentArrays)
-	{
-		auto ComponentArray = ComponentArrayEntry.second.get();
-		if (ComponentArray->HasComponent(Other))
-		{
-			ComponentArray->CopyComponent(Entity, Other);
-		}
-	}
-
-	return Entity;
 }
 
 void EntityManager::Destroy(Entity& Entity)

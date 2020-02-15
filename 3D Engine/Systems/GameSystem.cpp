@@ -15,8 +15,8 @@ void GameSystem::Start(Scene& Scene)
 		std::for_each(SponzaMeshes.begin(), SponzaMeshes.end(), [&] (const StaticMesh* StaticMesh)
 		{
 			auto SponzaEntity = ECS.CreateEntity();
-			ECS.AddComponent<StaticMeshComponent>(SponzaEntity, StaticMesh);
-			ECS.AddComponent<Material>(SponzaEntity, StaticMesh->Materials.front());
+			ECS.AddComponent(SponzaEntity, StaticMeshComponent(StaticMesh));
+			ECS.AddComponent(SponzaEntity, Material(StaticMesh->Materials.front()));
 
 			auto& Transform = ECS.GetComponent<class Transform>(SponzaEntity);
 			Transform.Scale(glm::vec3(0.1f));
@@ -29,8 +29,8 @@ void GameSystem::Start(Scene& Scene)
 	Transform.Scale(glm::vec3(2));
 	Transform.Translate(glm::vec3(0.0, 5, -10));
 	Transform.Rotate(glm::vec3(1, 0, 0), 90);
-	ECS.AddComponent<StaticMeshComponent>(HelmetEntity, Helmet[0]);
-	ECS.AddComponent<Material>(HelmetEntity, Helmet.front()->Materials.front());
+	ECS.AddComponent(HelmetEntity, StaticMeshComponent(Helmet[0]));
+	ECS.AddComponent(HelmetEntity, Material(Helmet.front()->Materials.front()));
 
 	{
 		// Create the Directional Light entity.
@@ -39,7 +39,7 @@ void GameSystem::Start(Scene& Scene)
 		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
 		auto Light = ECS.CreateEntity();
-		auto& DirectionalLight = ECS.AddComponent<struct DirectionalLight>(Light);
+		auto& DirectionalLight = ECS.AddComponent(Light, struct DirectionalLight());
 		DirectionalLight.Intensity = 10.0f;
 		DirectionalLight.Direction = glm::vec3(X, Y, Z);
 		DirectionalLight.ShadowType = EShadowType::Soft;

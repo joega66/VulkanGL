@@ -1,12 +1,14 @@
 #pragma once
-#include <DRMResource.h>
+#include <Platform/Platform.h>
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
 
-class VulkanRenderPass : public drm::RenderPass
+class VulkanRenderPass
 {
 public:
+	VulkanRenderPass() = default;
+
 	VulkanRenderPass(
 		VulkanDevice& Device,
 		VkRenderPass RenderPass,
@@ -15,8 +17,10 @@ public:
 		const std::vector<VkClearValue>& ClearValues,
 		uint32 NumAttachments
 	);
-
-	virtual ~VulkanRenderPass() override;
+	~VulkanRenderPass();
+	VulkanRenderPass(VulkanRenderPass&& Other);
+	VulkanRenderPass& operator=(VulkanRenderPass&& Other);
+	VulkanRenderPass(const VulkanRenderPass&) = delete;
 
 	inline VkRenderPass GetRenderPass() const { return RenderPass; }
 	inline VkFramebuffer GetFramebuffer() const { return Framebuffer; }
@@ -25,7 +29,7 @@ public:
 	inline uint32 GetNumAttachments() const { return NumAttachments; }
 
 private:
-	VulkanDevice& Device;
+	const VulkanDevice* Device;
 
 	/** The Vulkan render pass. */
 	VkRenderPass RenderPass;

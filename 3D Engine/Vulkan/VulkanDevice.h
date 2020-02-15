@@ -47,7 +47,7 @@ public:
 
 	virtual void UnlockBuffer(drm::BufferRef Buffer) override;
 
-	virtual drm::RenderPassRef CreateRenderPass(const RenderPassDesc& RPDesc) override;
+	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
 	operator VkDevice() const { return Device; }
 
@@ -90,7 +90,6 @@ namespace
 	CAST(drm::Image, VulkanImage);
 	CAST(drm::CommandList, VulkanCommandList);
 	CAST(drm::DescriptorSet, VulkanDescriptorSet);
-	CAST(drm::RenderPass, VulkanRenderPass);
 };
 
 #define vulkan(Result) \

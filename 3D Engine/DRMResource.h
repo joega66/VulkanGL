@@ -339,12 +339,4 @@ namespace drm
 	};
 
 	CLASS(DescriptorTemplate);
-
-	class RenderPass
-	{
-	public:
-		virtual ~RenderPass() {}
-	};
-
-	CLASS(RenderPass);
 }

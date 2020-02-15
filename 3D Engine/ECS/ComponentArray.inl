@@ -2,14 +2,13 @@
 #include "ComponentArray.h"
 
 template<typename ComponentType>
-template<typename ...Args>
-inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, Args &&...InArgs)
+inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, ComponentType&& Component)
 {
 	// Set the component to alive.
 	ComponentStatus[Entity.GetEntityID()] = true;
-
+	
 	// Construct the component.
-	Components[Entity.GetEntityID()] = std::move(ComponentType(std::forward<Args>(InArgs)...));
+	Components[Entity.GetEntityID()] = std::move(Component);
 
 	// Later notify component events that this component was created.
 	NewEntities.push_back(Entity);
@@ -29,12 +28,6 @@ template<typename ComponentType>
 inline ComponentType & ComponentArray<ComponentType>::GetComponent(Entity& Entity)
 {
 	return Components[Entity.GetEntityID()];
-}
-
-template<typename ComponentType>
-inline void ComponentArray<ComponentType>::CopyComponent(Entity& Destination, Entity& Source)
-{
-	AddComponent(Destination, GetComponent(Source));
 }
 
 template<typename ComponentType>

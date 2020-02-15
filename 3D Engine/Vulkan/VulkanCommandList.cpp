@@ -24,21 +24,19 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, CommandPool, 1, &CommandBuffer);
 }
 
-void VulkanCommandList::BeginRenderPass(drm::RenderPassRef RenderPass)
+void VulkanCommandList::BeginRenderPass(const drm::RenderPass& RenderPass)
 {
-	VulkanRenderPassRef VulkanRenderPass = ResourceCast(RenderPass);
-
 	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	BeginInfo.renderPass = VulkanRenderPass->GetRenderPass();
-	BeginInfo.framebuffer = VulkanRenderPass->GetFramebuffer();
-	BeginInfo.renderArea = VulkanRenderPass->GetRenderArea();
-	BeginInfo.pClearValues = VulkanRenderPass->GetClearValues().data();
-	BeginInfo.clearValueCount = VulkanRenderPass->GetClearValues().size();
+	BeginInfo.renderPass = RenderPass.GetRenderPass();
+	BeginInfo.framebuffer = RenderPass.GetFramebuffer();
+	BeginInfo.renderArea = RenderPass.GetRenderArea();
+	BeginInfo.pClearValues = RenderPass.GetClearValues().data();
+	BeginInfo.clearValueCount = RenderPass.GetClearValues().size();
 
 	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	Pending.RenderPass = VulkanRenderPass->GetRenderPass();
-	Pending.NumRenderTargets = VulkanRenderPass->GetNumAttachments();
+	Pending.RenderPass = RenderPass.GetRenderPass();
+	Pending.NumRenderTargets = RenderPass.GetNumAttachments();
 }
 
 void VulkanCommandList::EndRenderPass()

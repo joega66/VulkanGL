@@ -55,17 +55,17 @@ private:
 
 	const StaticMesh* Cube;
 
-	drm::RenderPassRef DepthRP;
+	drm::RenderPass DepthRP;
 
-	drm::RenderPassRef DepthVisualizationRP;
+	drm::RenderPass DepthVisualizationRP;
 
-	drm::RenderPassRef VoxelRP;
+	drm::RenderPass VoxelRP;
 
-	drm::RenderPassRef VoxelVisualizationRP;
+	drm::RenderPass VoxelVisualizationRP;
 
-	drm::RenderPassRef LightingRP;
+	drm::RenderPass LightingRP;
 
-	drm::RenderPassRef ShadowMaskRP;
+	drm::RenderPass ShadowMaskRP;
 
 	drm::ImageRef ShadowMask;
 
