@@ -117,13 +117,11 @@ uint32 VulkanSurface::AcquireNextImage(DRMDevice& Device)
 	return ImageIndex;
 }
 
-void VulkanSurface::Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandListRef CmdList)
+void VulkanSurface::Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandList& CmdList)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
-	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
-
-	vulkan(vkEndCommandBuffer(VulkanCmdList->CommandBuffer));
+	vulkan(vkEndCommandBuffer(CmdList.CommandBuffer));
 
 	const VkPipelineStageFlags WaitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -132,11 +130,11 @@ void VulkanSurface::Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandLi
 	SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
 	SubmitInfo.pWaitDstStageMask = &WaitDstStageMask;
 	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
+	SubmitInfo.pCommandBuffers = &CmdList.CommandBuffer;
 	SubmitInfo.signalSemaphoreCount = 1;
 	SubmitInfo.pSignalSemaphores = &RenderEndSem;
 
-	vulkan(vkQueueSubmit(VulkanCmdList->Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
+	vulkan(vkQueueSubmit(CmdList.Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
 	VkPresentInfoKHR PresentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	PresentInfo.pWaitSemaphores = &RenderEndSem;

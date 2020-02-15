@@ -1,12 +1,11 @@
 #pragma once
-#include <DRMCommandList.h>
 #include "VulkanImage.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 
 class VulkanDevice;
 
-class VulkanCommandList final : public drm::CommandList
+class VulkanCommandList
 {
 public:
 	VkQueue Queue;
@@ -15,21 +14,26 @@ public:
 
 	VkCommandBuffer CommandBuffer;
 
+	/** @begin drm::CommandList */
+
 	VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags);
 
-	virtual ~VulkanCommandList() override;
+	~VulkanCommandList();
 
-	virtual void BeginRenderPass(const drm::RenderPass& RenderPass) override;
+	VulkanCommandList(const VulkanCommandList&) = delete;
+	VulkanCommandList& operator=(const VulkanCommandList&) = delete;
 
-	virtual void EndRenderPass() override;
+	void BeginRenderPass(const class VulkanRenderPass& RenderPass);
 
-	virtual void BindPipeline(const PipelineStateDesc& PSODesc) override;
+	void EndRenderPass();
 
-	virtual void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets) override;
+	void BindPipeline(const PipelineStateDesc& PSODesc);
 
-	virtual void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers) override;
+	void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets);
 
-	virtual void DrawIndexed(
+	void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers);
+
+	void DrawIndexed(
 		drm::BufferRef IndexBuffer, 
 		uint32 IndexCount, 
 		uint32 InstanceCount, 
@@ -37,49 +41,51 @@ public:
 		uint32 VertexOffset, 
 		uint32 FirstInstance,
 		EIndexType IndexType = EIndexType::UINT32
-	) override;
+	);
 
-	virtual void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance) override;
+	void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
 
-	virtual void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount) override;
+	void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount);
 
-	virtual void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color) override;
+	void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color);
 
-	virtual void ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue) override;
+	void ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);
 
-	virtual void PipelineBarrier(
+	void PipelineBarrier(
 		EPipelineStage SrcStageMask,
 		EPipelineStage DstStageMask,
 		uint32 NumBufferBarriers,
 		const BufferMemoryBarrier* BufferBarriers,
 		uint32 NumImageBarriers,
 		const ImageMemoryBarrier* ImageBarriers
-	) override;
+	);
 
-	virtual void CopyBufferToImage(
+	void CopyBufferToImage(
 		drm::BufferRef SrcBuffer, 
 		uint32 BufferOffset, 
 		drm::ImageRef DstImage, 
 		EImageLayout DstImageLayout
-	) override;
+	);
 
-	virtual void BlitImage(
+	void BlitImage(
 		drm::ImageRef SrcImage,
 		EImageLayout SrcImageLayout,
 		drm::ImageRef DstImage, 
 		EImageLayout DstImageLayout,
 		EFilter Filter
-	) override;
+	);
 
-	virtual void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors) override;
+	void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors);
 
-	virtual void CopyBuffer(
+	void CopyBuffer(
 		drm::BufferRef SrcBuffer,
 		drm::BufferRef DstBuffer,
 		uint32 SrcOffset,
 		uint32 DstOffset,
 		uint32 Size
-	) override;
+	);
+
+	/** @end */
 
 private:
 	VulkanDevice& Device;

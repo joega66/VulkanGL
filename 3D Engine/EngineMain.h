@@ -12,7 +12,7 @@ public:
 		class Input& Input,
 		class Screen& Screen,
 		DRMDevice& Device, 
-		DRMShaderMap& ShaderMap,
+		class DRMShaderMap& ShaderMap,
 		drm::Surface& Surface
 	);
 };

@@ -93,7 +93,7 @@ private:
 
 	void RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void Present(drm::CommandListRef CmdList);
+	void Present(drm::CommandList& CmdList);
 
 	void CreateDepthRP();
 

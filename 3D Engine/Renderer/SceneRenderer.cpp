@@ -44,8 +44,7 @@ SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Sc
 
 void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 {
-	drm::CommandListRef CommandList = Device.CreateCommandList(EQueue::Graphics);
-	drm::CommandList& CmdList = *CommandList;
+	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
 	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
 	{
@@ -78,7 +77,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 		}
 	}
 
-	Present(CommandList);
+	Present(CmdList);
 
 	Device.EndFrame();
 }
@@ -109,23 +108,23 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 	}
 }
 
-void SceneRenderer::Present(drm::CommandListRef CmdList)
+void SceneRenderer::Present(drm::CommandList& CmdList)
 {
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
 	drm::ImageRef PresentImage = Surface.GetImage(ImageIndex);
 
 	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
 
-	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
-	CmdList->BlitImage(SceneColor, EImageLayout::TransferSrcOptimal, PresentImage, EImageLayout::TransferDstOptimal, EFilter::Nearest);
+	CmdList.BlitImage(SceneColor, EImageLayout::TransferSrcOptimal, PresentImage, EImageLayout::TransferDstOptimal, EFilter::Nearest);
 
 	Barrier.SrcAccessMask = EAccess::TransferWrite;
 	Barrier.DstAccessMask = EAccess::MemoryRead;
 	Barrier.OldLayout = EImageLayout::TransferDstOptimal;
 	Barrier.NewLayout = EImageLayout::Present;
 
-	CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &Barrier);
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &Barrier);
 
 	Surface.Present(Device, ImageIndex, CmdList);
 }

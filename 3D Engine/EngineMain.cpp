@@ -33,7 +33,7 @@ static void CreateDebugMaterials(DRMDevice& Device)
 	Material::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 
-	drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
+	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> Barriers
 	(
@@ -48,11 +48,11 @@ static void CreateDebugMaterials(DRMDevice& Device)
 	Barriers[4].Image = Material::Black;
 	Barriers[5].Image = Material::Dummy;
 
-	CmdList->PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
 
 	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
 	{
-		CmdList->CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image, EImageLayout::TransferDstOptimal);
+		CmdList.CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image, EImageLayout::TransferDstOptimal);
 	}
 
 	for (auto& Barrier : Barriers)
@@ -63,7 +63,7 @@ static void CreateDebugMaterials(DRMDevice& Device)
 		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 
-	CmdList->PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
 
 	Device.SubmitCommands(CmdList);
 }

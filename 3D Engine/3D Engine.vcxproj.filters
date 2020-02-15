@@ -167,9 +167,6 @@
     <ClInclude Include="Renderer\MeshProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="DRMCommandList.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\MeshDrawCommand.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -241,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="..\ThirdParty\tiny_gltf.h">
       <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="DRMDefinitions.h">
+      <Filter>Source\DRM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,5 @@
 #pragma once
-#include "DRMCommandList.h"
+#include "DRMDefinitions.h"
 
 #define UNIFORM_STRUCT(StructName, Members)		\
 struct StructName								\
@@ -17,10 +17,10 @@ public:
 	virtual void EndFrame() = 0;
 
 	/** Submit a command list to the GPU. */
-	virtual void SubmitCommands(drm::CommandListRef CmdList) = 0;
+	virtual void SubmitCommands(drm::CommandList& CmdList) = 0;
 
 	/** Create a command list. */
-	virtual drm::CommandListRef CreateCommandList(EQueue Queue) = 0;
+	virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
 
 	/** Create a descriptor template. */
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) = 0;
@@ -55,7 +55,7 @@ namespace drm
 	{
 	public:
 		virtual uint32 AcquireNextImage(DRMDevice& Device) = 0;
-		virtual void Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandListRef CmdList) = 0;
+		virtual void Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandList& CmdList) = 0;
 		virtual void Resize(DRMDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight) = 0;
 		virtual drm::ImageRef GetImage(uint32 ImageIndex) = 0;
 	};

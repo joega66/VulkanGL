@@ -90,6 +90,7 @@
     <ClInclude Include="Components\COutline.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
+    <ClInclude Include="DRMDefinitions.h" />
     <ClInclude Include="EngineMain.h" />
     <ClInclude Include="ECS\ComponentArray.h" />
     <ClInclude Include="ECS\Entity.h" />
@@ -109,7 +110,6 @@
     <ClInclude Include="DRMShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
-    <ClInclude Include="DRMCommandList.h" />
     <ClInclude Include="Renderer\MeshDrawCommand.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\ShadowProxy.h" />

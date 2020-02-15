@@ -1,5 +1,6 @@
 #pragma once
 #include <ECS/System.h>
+#include <DRMShader.h>
 #include <DRM.h>
 
 class UserInterface : public IRenderSystem

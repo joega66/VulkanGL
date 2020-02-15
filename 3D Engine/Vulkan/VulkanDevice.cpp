@@ -7,26 +7,24 @@ void VulkanDevice::EndFrame()
 	DescriptorPoolManager.DeferredFree(*this);
 }
 
-void VulkanDevice::SubmitCommands(drm::CommandListRef CmdList)
+void VulkanDevice::SubmitCommands(drm::CommandList& CmdList)
 {
-	const VulkanCommandListRef& VulkanCmdList = ResourceCast(CmdList);
-
-	vulkan(vkEndCommandBuffer(VulkanCmdList->CommandBuffer));
+	vulkan(vkEndCommandBuffer(CmdList.CommandBuffer));
 
 	VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pCommandBuffers = &VulkanCmdList->CommandBuffer;
+	SubmitInfo.pCommandBuffers = &CmdList.CommandBuffer;
 
-	vulkan(vkQueueSubmit(VulkanCmdList->Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
+	vulkan(vkQueueSubmit(CmdList.Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
-	vulkan(vkQueueWaitIdle(VulkanCmdList->Queue));
+	vulkan(vkQueueWaitIdle(CmdList.Queue));
 }
 
-drm::CommandListRef VulkanDevice::CreateCommandList(EQueue Queue)
+drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 {
 	// @todo Transfer, AsyncCompute Queues
 	const VkQueueFlagBits QueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
-	return MakeRef<VulkanCommandList>(*this, QueueFlags);
+	return VulkanCommandList(*this, QueueFlags);
 }
 
 drm::DescriptorTemplateRef VulkanDevice::CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries)

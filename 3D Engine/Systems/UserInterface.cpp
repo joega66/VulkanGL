@@ -2,6 +2,7 @@
 #include <Engine/Screen.h>
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
+#include <DRMShader.h>
 
 class UserInterfaceVS : public drm::Shader
 {

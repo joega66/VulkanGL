@@ -26,9 +26,9 @@ public:
 
 	virtual void EndFrame() override;
 
-	virtual void SubmitCommands(drm::CommandListRef CmdList) override;
+	virtual void SubmitCommands(drm::CommandList& CmdList) override;
 
-	virtual drm::CommandListRef CreateCommandList(EQueue Queue) override;
+	virtual drm::CommandList CreateCommandList(EQueue Queue) override;
 
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) override;
 
@@ -88,7 +88,6 @@ namespace
 {
 	CAST(drm::Buffer, VulkanBuffer);
 	CAST(drm::Image, VulkanImage);
-	CAST(drm::CommandList, VulkanCommandList);
 	CAST(drm::DescriptorSet, VulkanDescriptorSet);
 };
 

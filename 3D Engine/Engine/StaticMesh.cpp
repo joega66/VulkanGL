@@ -95,7 +95,7 @@ static void ProcessSubmesh(DRMDevice& Device, StaticMesh* StaticMesh, aiMesh* Ai
 	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
 	drm::BufferRef TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
 
-	drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
+	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	uint32 SrcOffset = 0;
 
@@ -106,27 +106,27 @@ static void ProcessSubmesh(DRMDevice& Device, StaticMesh* StaticMesh, aiMesh* Ai
 	uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
 
 	Platform::Memcpy(Memmapped, Indices.data(), Indices.size() * sizeof(uint32));
-	CmdList->CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexBuffer->GetSize());
+	CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexBuffer->GetSize());
 	Memmapped += IndexBuffer->GetSize();
 	SrcOffset += IndexBuffer->GetSize();
 
 	Platform::Memcpy(Memmapped, AiMesh->mVertices, PositionBuffer->GetSize());
-	CmdList->CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionBuffer->GetSize());
+	CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionBuffer->GetSize());
 	Memmapped += PositionBuffer->GetSize();
 	SrcOffset += PositionBuffer->GetSize();
 
 	Platform::Memcpy(Memmapped, TextureCoordinates.data(), TextureCoordinateBuffer->GetSize());
-	CmdList->CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, TextureCoordinateBuffer->GetSize());
+	CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, TextureCoordinateBuffer->GetSize());
 	Memmapped += TextureCoordinateBuffer->GetSize();
 	SrcOffset += TextureCoordinateBuffer->GetSize();
 
 	Platform::Memcpy(Memmapped, AiMesh->mNormals, NormalBuffer->GetSize());
-	CmdList->CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalBuffer->GetSize());
+	CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalBuffer->GetSize());
 	Memmapped += NormalBuffer->GetSize();
 	SrcOffset += NormalBuffer->GetSize();
 
 	Platform::Memcpy(Memmapped, AiMesh->mTangents, TangentBuffer->GetSize());
-	CmdList->CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, TangentBuffer->GetSize());
+	CmdList.CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, TangentBuffer->GetSize());
 	Memmapped += TangentBuffer->GetSize();
 	SrcOffset += TangentBuffer->GetSize();
 
@@ -306,7 +306,7 @@ void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
 			drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
 			drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
 
-			drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
+			drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 			uint32 SrcOffset = 0;
 
@@ -319,22 +319,22 @@ void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
 			uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
 
 			Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
-			CmdList->CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
+			CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
 			Memmapped += IndexView.byteLength;
 			SrcOffset += IndexView.byteLength;
 
 			Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
-			CmdList->CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
+			CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
 			Memmapped += PositionView.byteLength;
 			SrcOffset += PositionView.byteLength;
 
 			Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
-			CmdList->CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
+			CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
 			Memmapped += UvView.byteLength;
 			SrcOffset += UvView.byteLength;
 
 			Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
-			CmdList->CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
+			CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
 			Memmapped += NormalView.byteLength;
 			SrcOffset += NormalView.byteLength;
 

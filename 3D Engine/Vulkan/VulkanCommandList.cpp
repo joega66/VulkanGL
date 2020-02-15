@@ -1,5 +1,7 @@
 #include "VulkanCommandList.h"
 #include "VulkanDevice.h"
+#include <DRMShader.h>
+#include <DRMDefinitions.h>
 
 VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags)
 	: Device(Device)
@@ -24,7 +26,7 @@ VulkanCommandList::~VulkanCommandList()
 	vkFreeCommandBuffers(Device, CommandPool, 1, &CommandBuffer);
 }
 
-void VulkanCommandList::BeginRenderPass(const drm::RenderPass& RenderPass)
+void VulkanCommandList::BeginRenderPass(const VulkanRenderPass& RenderPass)
 {
 	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	BeginInfo.renderPass = RenderPass.GetRenderPass();
