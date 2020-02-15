@@ -50,7 +50,7 @@ void SceneProxy::InitView(DRMDevice& Device)
 		glm::vec2(GetWidth(), GetHeight())
 	};
 
-	DescriptorSet.CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
+	DescriptorSet.CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
 }
 
 void SceneProxy::InitLights(DRMDevice& Device)
@@ -85,7 +85,7 @@ void SceneProxy::InitDirectionalLights(DRMDevice& Device)
 	glm::uvec4 NumDirectionalLights;
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
-	DescriptorSet.DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	DescriptorSet.DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	void* Data = Device.LockBuffer(DescriptorSet.DirectionalLightBuffer);
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
@@ -117,7 +117,7 @@ void SceneProxy::InitPointLights(DRMDevice& Device)
 	glm::uvec4 NumPointLights;
 	NumPointLights.x = PointLightProxies.size();
 
-	DescriptorSet.PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
+	DescriptorSet.PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
 	void* Data = Device.LockBuffer(DescriptorSet.PointLightBuffer);
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());

@@ -116,7 +116,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	VoxelDescriptorSet.WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
+	VoxelDescriptorSet.WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
 
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;

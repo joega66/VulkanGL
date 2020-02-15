@@ -63,7 +63,6 @@
     <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
     <ClCompile Include="Systems\UserInterface.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
-    <ClCompile Include="Vulkan\VulkanCommands.cpp" />
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp" />
     <ClCompile Include="Vulkan\VulkanCache.cpp" />
     <ClCompile Include="Vulkan\VulkanDeviceCreation.cpp" />
@@ -130,7 +129,6 @@
     <ClInclude Include="Systems\TransformGizmoSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
-    <ClInclude Include="Vulkan\VulkanCommands.h" />
     <ClInclude Include="Vulkan\VulkanDescriptors.h" />
     <ClInclude Include="Vulkan\VulkanCache.h" />
     <ClInclude Include="Vulkan\VulkanDevice.h" />

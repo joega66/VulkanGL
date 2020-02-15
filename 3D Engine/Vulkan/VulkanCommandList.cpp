@@ -329,3 +329,15 @@ void VulkanCommandList::SetScissor(uint32 ScissorCount, const ScissorDesc* Sciss
 	static_assert(sizeof(ScissorDesc) == sizeof(VkRect2D));
 	vkCmdSetScissor(CommandBuffer, 0, ScissorCount, reinterpret_cast<const VkRect2D*>(Scissors));
 }
+
+void VulkanCommandList::CopyBuffer(drm::BufferRef SrcBuffer, drm::BufferRef DstBuffer, uint32 SrcOffset, uint32 DstOffset, uint32 Size)
+{
+	const VkBufferCopy Region = 
+	{ 
+		ResourceCast(SrcBuffer)->GetOffset() + SrcOffset, 
+		ResourceCast(DstBuffer)->GetOffset() + DstOffset,
+		Size 
+	};
+
+	vkCmdCopyBuffer(CommandBuffer, ResourceCast(SrcBuffer)->GetVulkanHandle(), ResourceCast(DstBuffer)->GetVulkanHandle(), 1, &Region);
+}

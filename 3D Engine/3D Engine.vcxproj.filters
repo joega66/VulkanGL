@@ -74,9 +74,6 @@
     <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp">
       <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanCommands.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanDescriptors.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -258,9 +255,6 @@
     </ClCompile>
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp">
       <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanCommands.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp">
       <Filter>Source\Vulkan</Filter>

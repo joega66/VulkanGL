@@ -112,7 +112,7 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 	Device.UnlockBuffer(StagingBuffer);
 
-	drm::CommandListRef CmdList = Device.CreateCommandList();
+	drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	ImageMemoryBarrier Barrier(
 		Image,

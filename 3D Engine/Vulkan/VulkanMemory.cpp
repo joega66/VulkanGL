@@ -1,6 +1,5 @@
 #include "VulkanMemory.h"
 #include "VulkanDevice.h"
-#include "VulkanCommands.h"
 
 inline static VkDeviceSize Align(VkDeviceSize Size, VkDeviceSize Alignment)
 {
@@ -17,6 +16,8 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 {
 	VkMemoryPropertyFlags Properties = Any(Usage & (EBufferUsage::KeepCPUAccessible | EBufferUsage::Transfer)) ?
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	check((!Data) || (Data && Properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT), "Buffer needs to be host visible!");
 
 	const VkDeviceSize AlignedSize = [&] ()
 	{
@@ -120,69 +121,16 @@ VulkanMemory VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags
 
 void* VulkanAllocator::LockBuffer(const VulkanBuffer& Buffer)
 {
-	if (Buffer.GetProperties() & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-	{
-		auto StagingBufferIter = std::find_if(FreeStagingBuffers.begin(), FreeStagingBuffers.end(),
-			[&] (const std::unique_ptr<VulkanMemory>& StagingBuffer) { return StagingBuffer->GetSize() >= Buffer.GetSize(); });
-
-		std::unique_ptr<VulkanMemory> StagingBuffer;
-
-		if (StagingBufferIter == FreeStagingBuffers.end())
-		{
-			// No staging buffer of suitable size found - Make a new one
-			StagingBuffer = std::make_unique<VulkanMemory>(
-				CreateBuffer(BufferAllocationSize > Buffer.GetSize() ? BufferAllocationSize : Buffer.GetSize(),
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-			);
-		}
-		else
-		{
-			StagingBuffer = std::move(FreeStagingBuffers.back());
-			FreeStagingBuffers.pop_back();
-		}
-
-		void* MemMapped = nullptr;
-		vulkan(vkMapMemory(Device, StagingBuffer->GetMemoryHandle(), 0, Buffer.GetSize(), 0, &MemMapped));
-
-		LockedStagingBuffers[std::make_pair(Buffer.GetVulkanHandle(), Buffer.GetOffset())] = std::move(StagingBuffer);
-
-		return MemMapped;
-	}
-	else
-	{
-		void* MemMapped = nullptr;
-		vulkan(vkMapMemory(Device, Buffer.GetMemoryHandle(), Buffer.GetOffset(), Buffer.GetSize(), 0, &MemMapped));
-		return MemMapped;
-	}
+	check(Buffer.GetProperties() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, "Buffer must be host-visible...");
+	void* MemMapped = nullptr;
+	vulkan(vkMapMemory(Device, Buffer.GetMemoryHandle(), Buffer.GetOffset(), Buffer.GetSize(), 0, &MemMapped));
+	return MemMapped;
 }
 
 void VulkanAllocator::UnlockBuffer(const VulkanBuffer& Buffer)
 {
-	if (Buffer.GetProperties() & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-	{
-		auto Key = std::make_pair(Buffer.GetVulkanHandle(), Buffer.GetOffset());
-
-		std::unique_ptr<VulkanMemory> StagingBuffer = std::move(LockedStagingBuffers[Key]);
-		LockedStagingBuffers.erase(Key);
-
-		vkUnmapMemory(Device, StagingBuffer->GetMemoryHandle());
-
-		VulkanScopedCommandBuffer CommandBuffer(Device, VK_QUEUE_TRANSFER_BIT);
-
-		VkBufferCopy Copy = {};
-		Copy.size = Buffer.GetSize();
-		Copy.dstOffset = Buffer.GetOffset();
-		Copy.srcOffset = 0;
-
-		vkCmdCopyBuffer(CommandBuffer, StagingBuffer->GetVulkanHandle(), Buffer.GetVulkanHandle(), 1, &Copy);
-
-		FreeStagingBuffers.push_back(std::move(StagingBuffer));
-	}
-	else
-	{
-		vkUnmapMemory(Device, Buffer.GetMemoryHandle());
-	}
+	check(Buffer.GetProperties() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, "Buffer must be host-visible...");
+	vkUnmapMemory(Device, Buffer.GetMemoryHandle());
 }
 
 VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size)

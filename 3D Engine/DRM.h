@@ -20,7 +20,7 @@ public:
 	virtual void SubmitCommands(drm::CommandListRef CmdList) = 0;
 
 	/** Create a command list. */
-	virtual drm::CommandListRef CreateCommandList() = 0;
+	virtual drm::CommandListRef CreateCommandList(EQueue Queue) = 0;
 
 	/** Create a descriptor template. */
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) = 0;

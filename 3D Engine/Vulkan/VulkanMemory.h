@@ -74,10 +74,6 @@ private:
 
 	const VkDeviceSize BufferAllocationSize;
 
-	std::map<std::pair<VkBuffer, VkDeviceSize>, std::unique_ptr<VulkanMemory>> LockedStagingBuffers;
-
-	std::list<std::unique_ptr<VulkanMemory>> FreeStagingBuffers;
-
 	std::list<VulkanMemoryRef> MemoryBuffers;
 
 	[[nodiscard]] VulkanMemory CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
@@ -87,7 +83,7 @@ class VulkanBuffer : public drm::Buffer
 {
 public:
 	VulkanBuffer(VulkanMemoryRef Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, VkDeviceSize Offset, EBufferUsage Usage)
-		: Memory(Memory), Size(Size), AlignedSize(AlignedSize), Offset(Offset), drm::Buffer(Usage)
+		: Memory(Memory), Size(Size), AlignedSize(AlignedSize), Offset(Offset), drm::Buffer(Usage, static_cast<uint32>(Size))
 	{
 	}
 

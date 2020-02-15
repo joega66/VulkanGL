@@ -28,7 +28,7 @@ public:
 
 	virtual void SubmitCommands(drm::CommandListRef CmdList) override;
 
-	virtual drm::CommandListRef CreateCommandList() override;
+	virtual drm::CommandListRef CreateCommandList(EQueue Queue) override;
 
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) override;
 

@@ -89,11 +89,50 @@ static void ProcessSubmesh(DRMDevice& Device, StaticMesh* StaticMesh, aiMesh* Ai
 
 	Material Materials = ProcessMaterials(Device, StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
 
-	drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32), Indices.data());
-	drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mVertices);
-	drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2), TextureCoordinates.data());
-	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mNormals);
-	drm::BufferRef TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3), AiMesh->mTangents);
+	drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32));
+	drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
+	drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2));
+	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
+	drm::BufferRef TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
+
+	drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
+
+	uint32 SrcOffset = 0;
+
+	drm::BufferRef StagingBuffer = Device.CreateBuffer(
+		EBufferUsage::Transfer, IndexBuffer->GetSize() + PositionBuffer->GetSize() + TextureCoordinateBuffer->GetSize() + NormalBuffer->GetSize() + TangentBuffer->GetSize()
+	);
+
+	uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
+
+	Platform::Memcpy(Memmapped, Indices.data(), Indices.size() * sizeof(uint32));
+	CmdList->CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexBuffer->GetSize());
+	Memmapped += IndexBuffer->GetSize();
+	SrcOffset += IndexBuffer->GetSize();
+
+	Platform::Memcpy(Memmapped, AiMesh->mVertices, PositionBuffer->GetSize());
+	CmdList->CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionBuffer->GetSize());
+	Memmapped += PositionBuffer->GetSize();
+	SrcOffset += PositionBuffer->GetSize();
+
+	Platform::Memcpy(Memmapped, TextureCoordinates.data(), TextureCoordinateBuffer->GetSize());
+	CmdList->CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, TextureCoordinateBuffer->GetSize());
+	Memmapped += TextureCoordinateBuffer->GetSize();
+	SrcOffset += TextureCoordinateBuffer->GetSize();
+
+	Platform::Memcpy(Memmapped, AiMesh->mNormals, NormalBuffer->GetSize());
+	CmdList->CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalBuffer->GetSize());
+	Memmapped += NormalBuffer->GetSize();
+	SrcOffset += NormalBuffer->GetSize();
+
+	Platform::Memcpy(Memmapped, AiMesh->mTangents, TangentBuffer->GetSize());
+	CmdList->CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, TangentBuffer->GetSize());
+	Memmapped += TangentBuffer->GetSize();
+	SrcOffset += TangentBuffer->GetSize();
+
+	Device.UnlockBuffer(StagingBuffer);
+
+	Device.SubmitCommands(CmdList);
 
 	StaticMesh->Submeshes.emplace_back(Submesh(
 		Indices.size()
@@ -262,10 +301,46 @@ void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
 			auto& NormalData = Model.buffers[NormalView.buffer];
 			auto& UvData = Model.buffers[UvView.buffer];
 
-			drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength, IndexData.data.data() + IndexView.byteOffset);
-			drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength, PositionData.data.data() + PositionView.byteOffset);
-			drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength, UvData.data.data() + UvView.byteOffset);
-			drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength, NormalData.data.data() + NormalView.byteOffset);
+			drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
+			drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
+			drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
+			drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
+
+			drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
+
+			uint32 SrcOffset = 0;
+
+			// Create one big staging buffer for the upload, because why not.
+			drm::BufferRef StagingBuffer = Device.CreateBuffer(
+				EBufferUsage::Transfer,
+				IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
+			);
+
+			uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
+
+			Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
+			CmdList->CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
+			Memmapped += IndexView.byteLength;
+			SrcOffset += IndexView.byteLength;
+
+			Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
+			CmdList->CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
+			Memmapped += PositionView.byteLength;
+			SrcOffset += PositionView.byteLength;
+
+			Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
+			CmdList->CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
+			Memmapped += UvView.byteLength;
+			SrcOffset += UvView.byteLength;
+
+			Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
+			CmdList->CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
+			Memmapped += NormalView.byteLength;
+			SrcOffset += NormalView.byteLength;
+
+			Device.UnlockBuffer(StagingBuffer);
+
+			Device.SubmitCommands(CmdList);
 
 			Submeshes.emplace_back(Submesh(
 				IndexAccessor.count

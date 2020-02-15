@@ -73,6 +73,14 @@ public:
 
 	virtual void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors) override;
 
+	virtual void CopyBuffer(
+		drm::BufferRef SrcBuffer,
+		drm::BufferRef DstBuffer,
+		uint32 SrcOffset,
+		uint32 DstOffset,
+		uint32 Size
+	) override;
+
 private:
 	VulkanDevice& Device;
 

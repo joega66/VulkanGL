@@ -417,6 +417,13 @@ enum class EIndexType
 	UINT32
 };
 
+enum class EQueue
+{
+	Graphics,
+	Compute,
+	Transfer,
+};
+
 #include "Vulkan/VulkanRenderPass.h"
 
 namespace drm
@@ -481,6 +488,14 @@ namespace drm
 		) = 0;
 
 		virtual void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors) = 0;
+
+		virtual void CopyBuffer(
+			drm::BufferRef SrcBuffer,
+			drm::BufferRef DstBuffer,
+			uint32 SrcOffset,
+			uint32 DstOffset,
+			uint32 Size
+		) = 0;
 	};
 
 	CLASS(CommandList);

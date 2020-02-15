@@ -240,12 +240,19 @@ namespace drm
 	public:
 		EBufferUsage Usage;
 
-		Buffer(EBufferUsage Usage)
+		Buffer(EBufferUsage Usage, uint32 Size)
 			: Usage(Usage)
+			, Size(Size)
 		{
 		}
 
 		virtual ~Buffer() {}
+
+		inline uint32 GetSize() const { return Size; }
+
+	private:
+		uint32 Size;
+
 	};
 	
 	CLASS(Buffer);

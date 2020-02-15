@@ -33,7 +33,7 @@ static void CreateDebugMaterials(DRMDevice& Device)
 	Material::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 
-	drm::CommandListRef CmdList = Device.CreateCommandList();
+	drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> Barriers
 	(

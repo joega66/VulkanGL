@@ -44,7 +44,7 @@ SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Sc
 
 void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 {
-	drm::CommandListRef CommandList = Device.CreateCommandList();
+	drm::CommandListRef CommandList = Device.CreateCommandList(EQueue::Graphics);
 	drm::CommandList& CmdList = *CommandList;
 
 	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))

@@ -4,7 +4,7 @@
 
 ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors>& ShadowTemplate, const DirectionalLight& DirectionalLight)
 {
-	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform, sizeof(glm::mat4));
+	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(glm::mat4));
 
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);

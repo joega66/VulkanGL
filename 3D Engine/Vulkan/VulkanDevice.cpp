@@ -22,9 +22,11 @@ void VulkanDevice::SubmitCommands(drm::CommandListRef CmdList)
 	vulkan(vkQueueWaitIdle(VulkanCmdList->Queue));
 }
 
-drm::CommandListRef VulkanDevice::CreateCommandList()
+drm::CommandListRef VulkanDevice::CreateCommandList(EQueue Queue)
 {
-	return MakeRef<VulkanCommandList>(*this, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	// @todo Transfer, AsyncCompute Queues
+	const VkQueueFlagBits QueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+	return MakeRef<VulkanCommandList>(*this, QueueFlags);
 }
 
 drm::DescriptorTemplateRef VulkanDevice::CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries)

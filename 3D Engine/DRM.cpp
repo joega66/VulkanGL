@@ -4,7 +4,7 @@ void drm::UploadImageData(DRMDevice& Device, const void* SrcPixels, drm::ImageRe
 {
 	drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, DstImage->GetSize(), SrcPixels);
 
-	drm::CommandListRef CmdList = Device.CreateCommandList();
+	drm::CommandListRef CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	ImageMemoryBarrier Barrier(DstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
 
