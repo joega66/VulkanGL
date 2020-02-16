@@ -15,8 +15,3 @@ uint32 Entity::GetEntityID() const
 {
 	return EntityID;
 }
-
-Entity::operator bool() const
-{
-	return EntityID != InvalidID;
-}

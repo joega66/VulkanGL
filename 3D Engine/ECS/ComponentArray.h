@@ -40,14 +40,14 @@ public:
 	virtual void RemoveComponent(Entity& Entity) final;
 
 private:
-	/** @todo Laziness. Need an object pool for real. */
-	static constexpr uint32 ArraySize = 256;
-
 	/** Component pool. */
 	std::vector<ComponentType> Components;
 
-	/** Whether the component is alive in the component pool. */
-	std::vector<bool> ComponentStatus;
+	/** List of free indices in the component array. */
+	std::list<uint32> FreeList;
+
+	/** Maps an entity to its array index. */
+	std::unordered_map<uint32, uint32> EntityToArrayIndex;
 
 	/** Component created events. */
 	std::vector<ComponentCallback<ComponentType>> ComponentCreatedCallbacks;

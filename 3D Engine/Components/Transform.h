@@ -1,24 +1,33 @@
 #pragma once
-#include "DRMResource.h"
+#include <ECS/EntityManager.h>
 
 class Transform
 {
 public:
-	Transform(const Transform& Other);
+	Transform(
+		EntityManager& ECS,
+		Entity Owner,
+		const glm::vec3& Position = glm::vec3(0.0f), 
+		const glm::vec3& Rotation = glm::vec3(0.0f, 1.0f, 0.0), 
+		float Angle = 0.0f, 
+		const glm::vec3& Scale = glm::vec3(1.0f)
+	);
 
-	Transform(const glm::vec3& Position = glm::vec3(0.0f), const glm::vec3& Rotation = glm::vec3(0.0f, 1.0f, 0.0), float Angle = 0.0f, const glm::vec3& Scale = glm::vec3(1.0f));
+	Transform(Transform&&);
 
+	Transform& operator=(Transform&& Transform);
+	
 	const glm::mat4& GetLocalToWorld() const;
 
-	void Translate(const glm::vec3& Position);
+	void Translate(EntityManager& ECS, const glm::vec3& Position);
 
-	void Rotate(const glm::vec3& Axis, float Angle);
+	void Rotate(EntityManager& ECS, const glm::vec3& Axis, float Angle);
 
-	void Scale(const glm::vec3& ScaleBy);
+	void Scale(EntityManager& ECS, const glm::vec3& ScaleBy);
 
-	void SetParent(Transform* Parent);
+	void SetParent(EntityManager& ECS, Entity Parent);
 
-	void RemoveChild(Transform* Child);
+	void RemoveChild(Entity Child);
 
 	inline const glm::vec3& GetPosition() const
 	{
@@ -35,24 +44,34 @@ public:
 		return ScaleBy;
 	}
 
+	void Clean(EntityManager& ECS);
+
 private:
+	/** The owning entity. */
+	Entity Owner = {};
+
+	/** The parent entity. */
+	Entity Parent = Entity();
+
+	/** Position. */
 	glm::vec3 Position = glm::vec3(0.0f);
 
+	/** Rotational axis. */
 	glm::vec3 Rotation = glm::vec3(0.0f, 1.0f, 0.0);
 
+	/** Amount (in degrees) to rotate. */
 	float Angle = 0.0f;
-
+	
+	/** How much to scale by. */
 	glm::vec3 ScaleBy = glm::vec3(1.0f);
 
+	/** Cached local to world. */
 	glm::mat4 LocalToWorld;
 
-	Transform* Parent = nullptr;
+	/** Child entities of this transform. */
+	std::list<Entity> Children;
 
-	std::list<Transform*> Children;
-
-	void AddChild(Transform* Child);
+	void AddChild(Entity Child);
 
 	glm::mat4 GetLocalToParent();
-
-	void Clean();
 };

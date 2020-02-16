@@ -29,7 +29,7 @@ Entity EntityManager::CreateEntity()
 	}();
 	
 	// Add components every entity should probably have...
-	AddComponent(NewEntity, Transform());
+	AddComponent(NewEntity, Transform(*this, NewEntity));
 
 	return NewEntity;
 }

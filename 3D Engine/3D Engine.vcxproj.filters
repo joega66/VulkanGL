@@ -161,9 +161,6 @@
     <ClInclude Include="Vulkan\VulkanQueues.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Components\COutline.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\MeshProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -241,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="DRMDefinitions.h">
       <Filter>Source\DRM</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Outline.h">
+      <Filter>Source\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

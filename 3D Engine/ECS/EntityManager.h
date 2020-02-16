@@ -50,7 +50,8 @@ public:
 		return Array->RemoveComponent(Entity);
 	}
 
-	/** GetEntities
+	/** 
+	  * GetEntities
 	  * @return Entities with types ComponentTypes.
 	  * Entities are returned in sorted order for faster ranges operations.
 	  */

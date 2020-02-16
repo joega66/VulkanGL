@@ -1,16 +1,43 @@
 #include "Transform.h"
 #include "DRM.h"
 
-Transform::Transform(const Transform& Other)
-	: Transform(Other.Position, Other.Rotation, Other.Angle, Other.ScaleBy)
+Transform::Transform(
+	EntityManager& ECS,
+	Entity Owner,
+	const glm::vec3& Position, 
+	const glm::vec3& Rotation, 
+	float Angle, 
+	const glm::vec3& InScale
+) : Owner(Owner)
+{
+	Translate(ECS, Position);
+	Rotate(ECS, Rotation, Angle);
+	Scale(ECS, InScale);
+}
+
+Transform::Transform(Transform&& Other)
+	: Owner(Other.Owner)
+	, Parent(Other.Parent)
+	, Position(Other.Position)
+	, Rotation(Other.Rotation)
+	, Angle(Other.Angle)
+	, ScaleBy(Other.ScaleBy)
+	, LocalToWorld(std::move(Other.LocalToWorld))
+	, Children(std::move(Other.Children))
 {
 }
 
-Transform::Transform(const glm::vec3& Position, const glm::vec3& Rotation, float Angle, const glm::vec3& InScale)
+Transform& Transform::operator=(Transform&& Other)
 {
-	Translate(Position);
-	Rotate(Rotation, Angle);
-	Scale(InScale);
+	Owner = Other.Owner;
+	Parent = Other.Parent;
+	Position = Other.Position;
+	Rotation = Other.Rotation;
+	Angle = Other.Angle;
+	ScaleBy = Other.ScaleBy;
+	LocalToWorld = std::move(Other.LocalToWorld);
+	Children = std::move(Other.Children);
+	return *this;
 }
 
 const glm::mat4& Transform::GetLocalToWorld() const
@@ -27,55 +54,45 @@ glm::mat4 Transform::GetLocalToParent()
 	return LocalToParent;
 }
 
-void Transform::Translate(const glm::vec3& InPosition)
+void Transform::Translate(EntityManager& ECS, const glm::vec3& InPosition)
 {
 	Position = InPosition;
-	Clean();
+	Clean(ECS);
 }
 
-void Transform::Rotate(const glm::vec3& InRotation, float InAngle)
+void Transform::Rotate(EntityManager& ECS, const glm::vec3& InRotation, float InAngle)
 {
 	Rotation = InRotation;
 	Angle = InAngle;
-	Clean();
+	Clean(ECS);
 }
 
-void Transform::Scale(const glm::vec3& InScale)
+void Transform::Scale(EntityManager& ECS, const glm::vec3& InScale)
 {
 	ScaleBy = InScale;
-	Clean();
+	Clean(ECS);
 }
 
-void Transform::SetParent(Transform* NewParent)
+void Transform::SetParent(EntityManager& ECS, Entity NewParent)
 {
-	if (NewParent == this)
+	if (Parent.IsValid())
 	{
-		return;
+		Transform& ParentTransform = ECS.GetComponent<Transform>(Parent);
+		ParentTransform.RemoveChild(Owner);
 	}
 
-	if (Parent)
-	{
-		Parent->RemoveChild(this);
-	}
+	Transform& ParentTransform = ECS.GetComponent<Transform>(NewParent);
+	ParentTransform.AddChild(Owner);
 
-	Parent = NewParent;
-
-	if (Parent == nullptr)
-	{
-		return;
-	}
-
-	Parent->AddChild(this);
-
-	Clean();
+	Clean(ECS);
 }
 
-void Transform::AddChild(Transform* Child)
+void Transform::AddChild(Entity Child)
 {
 	Children.push_back(Child);
 }
 
-void Transform::RemoveChild(Transform* Child)
+void Transform::RemoveChild(Entity Child)
 {
 	if (std::find(Children.begin(), Children.end(), Child) != Children.end())
 	{
@@ -83,14 +100,19 @@ void Transform::RemoveChild(Transform* Child)
 	}
 }
 
-void Transform::Clean()
+void Transform::Clean(EntityManager& ECS)
 {
 	LocalToWorld = GetLocalToParent();
 
-	if (Parent)
+	if (Parent.IsValid())
 	{
-		LocalToWorld = Parent->GetLocalToWorld() * LocalToWorld;
+		const Transform& ParentTransform = ECS.GetComponent<Transform>(Parent);
+		LocalToWorld = ParentTransform.GetLocalToWorld() * LocalToWorld;
 	}
 
-	std::for_each(Children.begin(), Children.end(), [&] (Transform* Child) { Child->Clean(); });
+	std::for_each(Children.begin(), Children.end(), [&] (Entity Child) 
+	{
+		Transform& ChildTransform = ECS.GetComponent<Transform>(Child);
+		ChildTransform.Clean(ECS);
+	});
 }

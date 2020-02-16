@@ -4,30 +4,39 @@
 template<typename ComponentType>
 inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, ComponentType&& Component)
 {
-	// Set the component to alive.
-	ComponentStatus[Entity.GetEntityID()] = true;
-	
-	// Construct the component.
-	Components[Entity.GetEntityID()] = std::move(Component);
+	uint32 ArrayIndex = -1;
+
+	if (!FreeList.empty())
+	{
+		ArrayIndex = FreeList.front();
+		FreeList.pop_front();
+		Components.emplace(Components.begin() + ArrayIndex, std::move(Component));
+	}
+	else
+	{
+		Components.emplace_back(std::move(Component));
+		ArrayIndex = Components.size() - 1;
+	}
+
+	EntityToArrayIndex[Entity.GetEntityID()] = ArrayIndex;
 
 	// Later notify component events that this component was created.
 	NewEntities.push_back(Entity);
 
 	// Return the newly created component.
-	return Components[Entity.GetEntityID()];
+	return Components[ArrayIndex];
 }
 
 template<typename ComponentType>
 inline ComponentArray<ComponentType>::ComponentArray()
 {
-	ComponentStatus.resize(ArraySize, false);
-	Components.resize(ArraySize);
 }
 
 template<typename ComponentType>
 inline ComponentType & ComponentArray<ComponentType>::GetComponent(Entity& Entity)
 {
-	return Components[Entity.GetEntityID()];
+	const uint32 ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
+	return Components[ArrayIndex];
 }
 
 template<typename ComponentType>
@@ -54,11 +63,14 @@ inline void ComponentArray<ComponentType>::NotifyComponentCreatedEvents()
 template<typename ComponentType>
 inline bool ComponentArray<ComponentType>::HasComponent(Entity& Entity) const
 {
-	return ComponentStatus[Entity.GetEntityID()];
+	return EntityToArrayIndex.find(Entity.GetEntityID()) != EntityToArrayIndex.end();
 }
 
 template<typename ComponentType>
 inline void ComponentArray<ComponentType>::RemoveComponent(Entity& Entity)
 {
-	ComponentStatus[Entity.GetEntityID()] = false;
+	const uint32 ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
+	//~Components[ArrayIndex]; @todo-joe
+	FreeList.push_back(ArrayIndex);
+	EntityToArrayIndex.erase(Entity.GetEntityID());
 }

@@ -1,7 +1,7 @@
 #include "TransformGizmoSystem.h"
 #include <Engine/AssetManager.h>
 #include <Components/StaticMeshComponent.h>
-#include <Components/COutline.h>
+#include <Components/Outline.h>
 
 void TransformGizmoSystem::Start(Scene& Scene)
 {
@@ -17,17 +17,17 @@ void TransformGizmoSystem::Start(Scene& Scene)
 	};
 
 	auto& XAxis = ECS.GetComponent<Transform>(TranslateAxis.X);
-	XAxis.Scale(glm::vec3(0.5f));
-	XAxis.Translate(glm::vec3(1.0f, -1.0f, 0.0f));
-	XAxis.Rotate(glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
+	XAxis.Scale(ECS, glm::vec3(0.5f));
+	XAxis.Translate(ECS, glm::vec3(1.0f, -1.0f, 0.0f));
+	XAxis.Rotate(ECS, glm::vec3(0.0f, 0.0f, 1.0f), -90.0f);
 
 	auto& YAxis = ECS.GetComponent<Transform>(TranslateAxis.Y);
-	YAxis.Scale(glm::vec3(0.5f));
+	YAxis.Scale(ECS, glm::vec3(0.5f));
 
 	auto& ZAxis = ECS.GetComponent<Transform>(TranslateAxis.Z);
-	ZAxis.Scale(glm::vec3(0.5f));
-	ZAxis.Translate(glm::vec3(0.0f, -1.0f, 1.0f));
-	ZAxis.Rotate(glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
+	ZAxis.Scale(ECS, glm::vec3(0.5f));
+	ZAxis.Translate(ECS, glm::vec3(0.0f, -1.0f, 1.0f));
+	ZAxis.Rotate(ECS, glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
 	auto TransformGizmo = Scene.Assets.GetStaticMesh("Transform_Gizmo");
 
@@ -49,7 +49,7 @@ void TransformGizmoSystem::Update(Scene& Scene)
 {
 	State(Scene);
 
-	if (SelectedEntity)
+	if (SelectedEntity.IsValid())
 	{
 		DrawOutline(Scene, SelectedEntity);
 	}
@@ -73,7 +73,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		// Don't select while looking around.
 		if (!(Scene.Cursor.Last == Scene.Cursor.Position))
 		{
-			if (SelectedEntity)
+			if (SelectedEntity.IsValid())
 			{
 				// If an entity is currently selected, go back to the translate tool.
 				State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);
@@ -104,7 +104,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 		}
 
 		// Remove the old outline.
-		ECS.RemoveComponent<COutline>(SelectedEntity);
+		ECS.RemoveComponent<Outline>(SelectedEntity);
 
 		if (!Hits.empty())
 		{
@@ -177,14 +177,11 @@ void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
 {
 	auto& ECS = Scene.ECS;
 
-	if (!ECS.HasComponent<COutline>(Entity))
+	if (!ECS.HasComponent<Outline>(Entity))
 	{
-		ECS.AddComponent(Entity, COutline());
-
-		auto& TransformComponent = ECS.GetComponent<Transform>(Entity);
-
-		ECS.GetComponent<Transform>(TranslateAxis.X).SetParent(&TransformComponent);
-		ECS.GetComponent<Transform>(TranslateAxis.Y).SetParent(&TransformComponent);
-		ECS.GetComponent<Transform>(TranslateAxis.Z).SetParent(&TransformComponent);
+		ECS.AddComponent(Entity, Outline());
+		ECS.GetComponent<Transform>(TranslateAxis.X).SetParent(ECS, Entity);
+		ECS.GetComponent<Transform>(TranslateAxis.Y).SetParent(ECS, Entity);
+		ECS.GetComponent<Transform>(TranslateAxis.Z).SetParent(ECS, Entity);
 	}
 }

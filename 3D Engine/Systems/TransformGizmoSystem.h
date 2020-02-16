@@ -74,7 +74,7 @@ private:
 				}
 			}
 
-			Transform.Translate(Position);
+			Transform.Translate(ECS, Position);
 			Scene.Camera.bFreeze = true;
 		}
 		else if (Scene.Input.GetKeyUp(EKeyCode::MouseLeft))

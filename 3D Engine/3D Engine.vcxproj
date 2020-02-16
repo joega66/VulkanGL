@@ -87,7 +87,7 @@
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
     <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\Material.h" />
-    <ClInclude Include="Components\COutline.h" />
+    <ClInclude Include="Components\Outline.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
     <ClInclude Include="DRMDefinitions.h" />

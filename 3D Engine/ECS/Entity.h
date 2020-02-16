@@ -25,7 +25,7 @@ public:
 
 	uint32 GetEntityID() const;
 
-	explicit operator bool() const;
+	inline bool IsValid() const { return EntityID != InvalidID; }
 
 private:
 	friend class EntityManager; // So that only the entity manager can assign entity ids.
