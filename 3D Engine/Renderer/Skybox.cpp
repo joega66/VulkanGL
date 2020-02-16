@@ -58,6 +58,8 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	CmdList.BindPipeline(PSODesc);
 
+	const StaticMesh* Cube = Scene.Assets.GetStaticMesh("Cube");
+
 	for (const auto& Submesh : Cube->Submeshes)
 	{
 		CmdList.BindVertexBuffers(1, &Submesh.GetPositionBuffer());

@@ -58,6 +58,8 @@ public:
 
 	EntityManager& ECS;
 
+	AssetManager& Assets;
+
 	DescriptorSet<SkyboxDescriptors> SkyboxDescriptorSet;
 
 	DescriptorSet<SceneDescriptors> DescriptorSet;

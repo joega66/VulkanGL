@@ -53,8 +53,6 @@ private:
 
 	drm::Surface& Surface;
 
-	const StaticMesh* Cube;
-
 	drm::RenderPass DepthRP;
 
 	drm::RenderPass DepthVisualizationRP;

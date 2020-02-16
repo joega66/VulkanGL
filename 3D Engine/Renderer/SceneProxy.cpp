@@ -9,6 +9,7 @@
 SceneProxy::SceneProxy(DRMDevice& Device, Scene& Scene)
 	: Camera(Scene.Camera)
 	, ShaderMap(Scene.ShaderMap)
+	, Assets(Scene.Assets)
 	, ECS(Scene.ECS)
 	, SkyboxDescriptorSet(Device)
 	, DescriptorSet(Device)
