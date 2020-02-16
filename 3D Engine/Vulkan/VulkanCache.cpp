@@ -3,6 +3,8 @@
 
 VulkanCache::VulkanCache(VulkanDevice& Device)
 	: Device(Device)
+	, p_vkUpdateDescriptorSetWithTemplateKHR((PFN_vkUpdateDescriptorSetWithTemplateKHR)
+		vkGetInstanceProcAddr(Device.GetInstance(), "vkUpdateDescriptorSetWithTemplateKHR"))
 {
 }
 
@@ -21,6 +23,15 @@ VulkanCache::~VulkanCache()
 	for (const auto&[CacheInfo, RenderPass] : RenderPassCache)
 	{
 		vkDestroyRenderPass(Device, RenderPass, nullptr);
+	}
+
+	PFN_vkDestroyDescriptorUpdateTemplateKHR p_vkDestroyDescriptorUpdateTemplateKHR = 
+		(PFN_vkDestroyDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR");
+
+	for (const auto&[Bindings, DescriptorSetLayout, DescriptorUpdateTemplate] : DescriptorSetLayoutCache)
+	{
+		p_vkDestroyDescriptorUpdateTemplateKHR(Device, DescriptorUpdateTemplate, nullptr);
+		vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr);
 	}
 }
 

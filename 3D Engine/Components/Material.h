@@ -57,6 +57,8 @@ public:
 	static drm::ImageRef Black;
 	static drm::ImageRef Dummy;
 
+	static void CreateDebugMaterials(DRMDevice& Device);
+
 private:
 	EMaterialMode MaterialMode;
 	float Roughness = 0.0f;

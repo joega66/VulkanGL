@@ -26,11 +26,17 @@ public:
 
 	VkSampler GetSampler(const SamplerState& Sampler);
 
-	VkDescriptorSetLayout GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings);
+	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> 
+	GetDescriptorSetLayout(
+		const std::vector<VkDescriptorSetLayoutBinding>& Bindings,
+		const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
+	);
 
 	void FreeImage(class VulkanImage& Image);
 
 	void DestroyPipelinesWithShader(const drm::Shader* Shader);
+
+	void UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data);
 
 	static const char* GetVulkanErrorString(VkResult Result);
 
@@ -55,7 +61,9 @@ private:
 
 	SlowCache<VulkanPipelineHash, VkPipeline> PipelineCache;
 
-	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout> DescriptorSetLayoutCache;
+	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
+
+	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout, VkDescriptorUpdateTemplate> DescriptorSetLayoutCache;
 
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 

@@ -1,9 +1,12 @@
 #include "VulkanDescriptors.h"
 #include "VulkanDevice.h"
 
-VkDescriptorSetLayout VulkanCache::GetDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& Bindings)
+std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>  VulkanCache::GetDescriptorSetLayout(
+	const std::vector<VkDescriptorSetLayoutBinding>& Bindings,
+	const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
+)
 {
-	for (const auto& [CachedBindings, CachedDescriptorSetLayout] : DescriptorSetLayoutCache)
+	for (const auto& [CachedBindings, CachedDescriptorSetLayout, CachedDescriptorUpdateTemplate] : DescriptorSetLayoutCache)
 	{
 		if (std::equal(Bindings.begin(), Bindings.end(), CachedBindings.begin(), CachedBindings.end(), 
 			[](const VkDescriptorSetLayoutBinding& LHS, const VkDescriptorSetLayoutBinding& RHS)
@@ -14,7 +17,7 @@ VkDescriptorSetLayout VulkanCache::GetDescriptorSetLayout(const std::vector<VkDe
 					LHS.stageFlags == RHS.stageFlags;
 			}))
 		{
-			return CachedDescriptorSetLayout;
+			return { CachedDescriptorSetLayout, CachedDescriptorUpdateTemplate };
 		}
 	}
 
@@ -25,9 +28,26 @@ VkDescriptorSetLayout VulkanCache::GetDescriptorSetLayout(const std::vector<VkDe
 	VkDescriptorSetLayout DescriptorSetLayout;
 	vulkan(vkCreateDescriptorSetLayout(Device, &DescriptorSetLayoutInfo, nullptr, &DescriptorSetLayout));
 
-	DescriptorSetLayoutCache.push_back({ Bindings, DescriptorSetLayout });
+	VkDescriptorUpdateTemplateCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO };
+	CreateInfo.descriptorUpdateEntryCount = Entries.size();
+	CreateInfo.pDescriptorUpdateEntries = Entries.data();
+	CreateInfo.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET;
+	CreateInfo.descriptorSetLayout = DescriptorSetLayout;
 
-	return DescriptorSetLayout;
+	PFN_vkCreateDescriptorUpdateTemplateKHR p_vkCreateDescriptorUpdateTemplateKHR = 
+		(PFN_vkCreateDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkCreateDescriptorUpdateTemplateKHR");
+
+	VkDescriptorUpdateTemplate DescriptorUpdateTemplate;
+	p_vkCreateDescriptorUpdateTemplateKHR(Device, &CreateInfo, nullptr, &DescriptorUpdateTemplate);
+
+	DescriptorSetLayoutCache.push_back({ Bindings, DescriptorSetLayout, DescriptorUpdateTemplate });
+
+	return { DescriptorSetLayout, DescriptorUpdateTemplate };
+}
+
+void VulkanCache::UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data)
+{
+	p_vkUpdateDescriptorSetWithTemplateKHR(Device, DescriptorSet, DescriptorUpdateTemplate, Data);
 }
 
 VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device, const VkDescriptorPoolCreateInfo& CreateInfo)
@@ -170,18 +190,7 @@ VulkanDescriptorTemplate::VulkanDescriptorTemplate(
 		DescriptorSetLayoutBindings.push_back(DescriptorSetLayoutBinding);
 	}
 
-	DescriptorSetLayout = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings);
-	
-	VkDescriptorUpdateTemplateCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO };
-	CreateInfo.descriptorUpdateEntryCount = DescriptorUpdateTemplateEntries.size();
-	CreateInfo.pDescriptorUpdateEntries = DescriptorUpdateTemplateEntries.data();
-	CreateInfo.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET;
-	CreateInfo.descriptorSetLayout = DescriptorSetLayout;
-
-	p_vkCreateDescriptorUpdateTemplateKHR = (PFN_vkCreateDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkCreateDescriptorUpdateTemplateKHR");
-	p_vkCreateDescriptorUpdateTemplateKHR(Device, &CreateInfo, nullptr, &DescriptorTemplate);
-	p_vkUpdateDescriptorSetWithTemplateKHR = (PFN_vkUpdateDescriptorSetWithTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkUpdateDescriptorSetWithTemplateKHR");
-	p_vkDestroyDescriptorUpdateTemplateKHR = (PFN_vkDestroyDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR");
+	std::tie(DescriptorSetLayout, DescriptorUpdateTemplate) = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings, DescriptorUpdateTemplateEntries);
 
 	Data = new uint8[StructSize];
 }
@@ -249,11 +258,10 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 
 	VulkanDescriptorSetRef VulkanDescriptorSet = ResourceCast(DescriptorSet);
 	
-	p_vkUpdateDescriptorSetWithTemplateKHR(Device, VulkanDescriptorSet->GetVulkanHandle(), DescriptorTemplate, Data);
+	Device.GetCache().UpdateDescriptorSetWithTemplate(VulkanDescriptorSet->GetVulkanHandle(), DescriptorUpdateTemplate, Data);
 }
 
 VulkanDescriptorTemplate::~VulkanDescriptorTemplate()
 {
-	p_vkDestroyDescriptorUpdateTemplateKHR(Device, DescriptorTemplate, nullptr);
 	delete[] Data;
 }

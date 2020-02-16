@@ -78,13 +78,9 @@ public:
 private:
 	VulkanDevice& Device;
 	VkDescriptorSetLayout DescriptorSetLayout;
-	VkDescriptorUpdateTemplate DescriptorTemplate;
+	VkDescriptorUpdateTemplate DescriptorUpdateTemplate;
 	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
 	void* Data = nullptr;
-	
-	PFN_vkCreateDescriptorUpdateTemplateKHR p_vkCreateDescriptorUpdateTemplateKHR;
-	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
-	PFN_vkDestroyDescriptorUpdateTemplateKHR p_vkDestroyDescriptorUpdateTemplateKHR;
 };
 
 CLASS(VulkanDescriptorTemplate);
