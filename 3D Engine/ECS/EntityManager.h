@@ -53,22 +53,20 @@ public:
 	/** 
 	  * GetEntities
 	  * @return Entities with types ComponentTypes.
-	  * Entities are returned in sorted order for faster ranges operations.
+	  * @todo Allow tuples.
 	  */
-	template<typename ...ComponentTypes>
+	template<typename ComponentType>
 	std::vector<Entity> GetEntities()
 	{
-		std::vector<Entity> EntitiesWithComponents;
+		std::vector<Entity> EntitiesWithComponent;
+		EntitiesWithComponent.reserve(GetComponentArray<ComponentType>()->GetEntities().size());
 
-		for (auto Entity : Entities)
+		for (const auto& [Entity, ArrayIndex] : GetComponentArray<ComponentType>()->GetEntities())
 		{
-			if (EntityStatus[Entity.GetEntityID()] && EntityHasComponents<ComponentTypes...>(Entity))
-			{
-				EntitiesWithComponents.push_back(Entity);
-			}
+			EntitiesWithComponent.push_back(Entity);
 		}
 
-		return EntitiesWithComponents;
+		return EntitiesWithComponent;
 	}
 
 	/** Add a callback for when ComponentType is created. */

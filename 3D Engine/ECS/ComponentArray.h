@@ -39,6 +39,8 @@ public:
 	/** Remove component from an entity. */
 	virtual void RemoveComponent(Entity& Entity) final;
 
+	inline const std::unordered_map<uint32, uint32>& GetEntities() const { return EntityToArrayIndex; }
+
 private:
 	/** Component pool. */
 	std::vector<ComponentType> Components;
