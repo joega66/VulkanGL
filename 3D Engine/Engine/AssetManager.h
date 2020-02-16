@@ -6,7 +6,7 @@ class DRMDevice;
 
 class AssetManager
 {
-	friend class Scene;
+	friend class Engine;
 	AssetManager(DRMDevice& Device);
 
 public:

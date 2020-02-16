@@ -182,9 +182,6 @@
     <ClInclude Include="Vulkan\VulkanShaderMap.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="EngineMain.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanRenderPass.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -241,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="Components\Outline.h">
       <Filter>Source\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Engine.h">
+      <Filter>Source\Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -364,9 +364,6 @@
     <ClCompile Include="Vulkan\VulkanShaderMap.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="EngineMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Vulkan\VulkanSurface.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
@@ -408,6 +405,9 @@
     </ClCompile>
     <ClCompile Include="DRM.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Engine.cpp">
+      <Filter>Source\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

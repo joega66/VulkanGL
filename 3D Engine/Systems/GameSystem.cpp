@@ -2,16 +2,16 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 #include <Components/Light.h>
-#include <Engine/Scene.h>
+#include <Engine/Engine.h>
 #include <Engine/AssetManager.h>
 
-void GameSystem::Start(Scene& Scene)
+void GameSystem::Start(Engine& Engine)
 {
-	auto& ECS = Scene.ECS;
+	auto& ECS = Engine.ECS;
 
 	{
 		// Create the Sponza entities.
-		std::vector<const StaticMesh*> SponzaMeshes = Scene.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/Sponza.gltf", true);
+		std::vector<const StaticMesh*> SponzaMeshes = Engine.Assets.LoadStaticMesh("Sponza", "../Meshes/Sponza/Sponza.gltf", true);
 		for (auto StaticMesh : SponzaMeshes)
 		{
 			auto SponzaEntity = ECS.CreateEntity();
@@ -24,7 +24,7 @@ void GameSystem::Start(Scene& Scene)
 	}
 
 	{
-		std::vector<const StaticMesh*> HelmetMesh = Scene.Assets.LoadStaticMesh("DamagedHelmet", "../Meshes/DamagedHelmet/DamagedHelmet.gltf");
+		std::vector<const StaticMesh*> HelmetMesh = Engine.Assets.LoadStaticMesh("DamagedHelmet", "../Meshes/DamagedHelmet/DamagedHelmet.gltf");
 
 		auto HelmetEntity = ECS.CreateEntity();
 		ECS.AddComponent(HelmetEntity, StaticMeshComponent(HelmetMesh.front()));
@@ -52,11 +52,11 @@ void GameSystem::Start(Scene& Scene)
 	}
 }
 
-void GameSystem::Update(Scene& Scene)
+void GameSystem::Update(Engine& Engine)
 {
-	for (auto& Entity : Scene.ECS.GetEntities<DirectionalLight>())
+	for (auto& Entity : Engine.ECS.GetEntities<DirectionalLight>())
 	{
-		auto& DirectionalLight = Scene.ECS.GetComponent<struct DirectionalLight>(Entity);
+		auto& DirectionalLight = Engine.ECS.GetComponent<struct DirectionalLight>(Entity);
 		const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
 		const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
 		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);

@@ -1,5 +1,4 @@
-#include "EngineMain.h"
-#include <Platform/Platform.h>
+#include <Engine/Engine.h>
 #include <Vulkan/VulkanDevice.h>
 #include <Vulkan/VulkanShaderMap.h>
 #include <Vulkan/VulkanSurface.h>
@@ -30,8 +29,8 @@ int main(int argc, char* argv[])
 
 	Surface->Init(*Device);
 
-	EngineMain EngineMain;
-	EngineMain.Main(Platform, Cursor, Input, Screen, *Device, *ShaderMap, *Surface);
+	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderMap, *Surface);
+	Engine.Main();
 	
 	return 0;
 }

@@ -3,6 +3,7 @@
 #include "SceneRenderer.h"
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
+#include <ECS/EntityManager.h>
 
 template<EMeshType MeshType>
 class ShadowDepthVS : public MeshShader<MeshType>
@@ -48,7 +49,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToShadowDepthPass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToShadowDepthPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
@@ -145,8 +146,8 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 		PSODesc.Viewport.Height = ShadowMask->Height;
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
-		PSODesc.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
-		PSODesc.ShaderStages.Fragment = Scene.ShaderMap.FindShader<ShadowProjectionFS>();
+		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
+		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<ShadowProjectionFS>();
 
 		CmdList.BindPipeline(PSODesc);
 

@@ -1,5 +1,5 @@
 #include "RenderSystem.h"
-#include <Engine/Scene.h>
+#include <Engine/Engine.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 #include <Components/Light.h>
@@ -11,15 +11,18 @@ UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 	glm::mat4 Inverse;
 );
 
-RenderSystem::RenderSystem(DRMDevice& Device)
-	: MaterialTemplate(Device)
-	, StaticMeshTemplate(Device)
-	, ShadowTemplate(Device)
+RenderSystem::RenderSystem(Engine& Engine)
+	: MaterialTemplate(Engine.Device)
+	, StaticMeshTemplate(Engine.Device)
+	, ShadowTemplate(Engine.Device)
 {
 }
 
-void RenderSystem::Start(EntityManager& ECS, DRMDevice& Device)
+void RenderSystem::Start(Engine& Engine)
 {
+	auto& ECS = Engine.ECS;
+	auto& Device = Engine.Device;
+
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
@@ -45,8 +48,11 @@ void RenderSystem::Start(EntityManager& ECS, DRMDevice& Device)
 	});
 }
 
-void RenderSystem::Update(EntityManager& ECS, DRMDevice& Device)
+void RenderSystem::Update(Engine& Engine)
 {
+	auto& ECS = Engine.ECS;
+	auto& Device = Engine.Device;
+
 	for (auto& Entity : ECS.GetEntities<MeshProxy>())
 	{
 		MeshProxy& MeshProxy = ECS.GetComponent<class MeshProxy>(Entity);

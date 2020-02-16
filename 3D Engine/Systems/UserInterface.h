@@ -6,13 +6,13 @@
 class UserInterface : public IRenderSystem
 {
 public:
-	UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap& ShaderMap, class Screen& Screen);
+	UserInterface(class Engine& Engine);
 
 	~UserInterface();
 	
-	virtual void Start(class EntityManager& ECS, class DRMDevice& Device) override;
+	virtual void Start(class Engine& Engine) override;
 
-	virtual void Update(class EntityManager& ECS, class DRMDevice& Device) override;
+	virtual void Update(class Engine& Engine) override;
 
 	void Render(drm::CommandList& CmdList);
 

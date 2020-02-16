@@ -40,8 +40,8 @@ public:
 
 void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	const SkyboxVS* VertShader = Scene.ShaderMap.FindShader<SkyboxVS>();
-	const SkyboxFS* FragShader = Scene.ShaderMap.FindShader<SkyboxFS>();
+	const SkyboxVS* VertShader = ShaderMap.FindShader<SkyboxVS>();
+	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
 
 	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
 	{
@@ -57,8 +57,6 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
 
 	CmdList.BindPipeline(PSODesc);
-
-	const StaticMesh* Cube = Scene.Assets.GetStaticMesh("Cube");
 
 	for (const auto& Submesh : Cube->Submeshes)
 	{

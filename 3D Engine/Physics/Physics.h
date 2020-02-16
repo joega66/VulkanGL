@@ -51,19 +51,19 @@ struct Plane
 
 using FrustumPlanes = std::array<glm::vec4, 6>;
 
-class Scene;
+class EntityManager;
 
 class Physics
 {
 public:
 	/** Ray-box intersection. */
-	static bool Raycast(Scene& Scene, const Ray& Ray, Entity Entity, float& T);
+	static bool Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity, float& T);
 
 	/** Ray-box intersection. */
-	static bool Raycast(Scene& Scene, const Ray& Ray, Entity Entity);
+	static bool Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity);
 	
 	/** Ray-plane intersection. */
-	static bool Raycast(Scene& Scene, const Ray& Ray, const Plane& Plane, float& T);
+	static bool Raycast(EntityManager& ECS, const Ray& Ray, const Plane& Plane, float& T);
 
 	/** Test whether the bounding box is inside the frustum. */
 	static bool IsBoxInsideFrustum(const FrustumPlanes& FrustumPlanes, const BoundingBox& BB);

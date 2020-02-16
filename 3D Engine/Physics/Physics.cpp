@@ -1,5 +1,5 @@
 #include "Physics.h"
-#include <Engine/Scene.h>
+#include <ECS/EntityManager.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 
@@ -36,10 +36,8 @@ BoundingBox BoundingBox::Transform(const glm::mat4& M) const
 	return BoundingBox(OutMin, OutMax);
 }
 
-bool Physics::Raycast(Scene& Scene, const Ray& Ray, Entity Entity, float& T)
+bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity, float& T)
 {
-	auto& ECS = Scene.ECS;
-
 	const StaticMeshComponent& StaticMeshComponent = ECS.GetComponent<class StaticMeshComponent>(Entity);
 	const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
 	const BoundingBox Bounds = StaticMeshComponent.StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
@@ -76,13 +74,13 @@ bool Physics::Raycast(Scene& Scene, const Ray& Ray, Entity Entity, float& T)
 	return true;
 }
 
-bool Physics::Raycast(Scene& Scene, const Ray& Ray, Entity Entity)
+bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity)
 {
 	float T;
-	return Raycast(Scene, Ray, Entity, T);
+	return Raycast(ECS, Ray, Entity, T);
 }
 
-bool Physics::Raycast(Scene& Scene, const Ray& Ray, const Plane& Plane, float& T)
+bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, const Plane& Plane, float& T)
 {
 	check(Plane.Normal != glm::vec3(0.0f), "Plane should have non-zero normal.");
 

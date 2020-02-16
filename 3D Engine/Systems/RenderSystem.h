@@ -18,10 +18,10 @@ public:
 class RenderSystem : public IRenderSystem
 {
 public:
-	RenderSystem(DRMDevice& Device);
+	RenderSystem(class Engine& Engine);
 
-	virtual void Start(class EntityManager& ECS, DRMDevice& Device) override;
-	virtual void Update(class EntityManager& ECS, DRMDevice& Device) override;
+	virtual void Start(class Engine& Engine) override;
+	virtual void Update(class Engine& Engine) override;
 
 	DescriptorTemplate<MaterialDescriptors>	MaterialTemplate;
 

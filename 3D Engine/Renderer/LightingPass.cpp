@@ -46,7 +46,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToLightingPass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToLightingPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 

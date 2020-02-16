@@ -44,12 +44,14 @@ struct VoxelDescriptors
 class SceneRenderer
 {
 public:
-	SceneRenderer(DRMDevice& Device, drm::Surface& Surface, class Scene& Scene, class Screen& Screen);
+	SceneRenderer(class Engine& Engine);
 
 	void Render(class UserInterface& UserInterface, SceneProxy& Scene);
 
 private:
 	DRMDevice& Device;
+
+	DRMShaderMap& ShaderMap;
 
 	drm::Surface& Surface;
 
@@ -104,4 +106,6 @@ private:
 	void CreateLightingRP();
 
 	void CreateShadowMaskRP();
+
+	const StaticMesh* Cube;
 };

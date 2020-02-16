@@ -1,30 +1,28 @@
 #include "SceneProxy.h"
-#include <Engine/Scene.h>
 #include <Components/Light.h>
 #include <Components/Material.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
+#include <Engine/Engine.h>
 #include "ShadowProxy.h"
 
-SceneProxy::SceneProxy(DRMDevice& Device, Scene& Scene)
-	: Camera(Scene.Camera)
-	, ShaderMap(Scene.ShaderMap)
-	, Assets(Scene.Assets)
-	, ECS(Scene.ECS)
-	, SkyboxDescriptorSet(Device)
-	, DescriptorSet(Device)
+SceneProxy::SceneProxy(Engine& Engine)
+	: Camera(Engine.Camera)
+	, ECS(Engine.ECS)
+	, SkyboxDescriptorSet(Engine.Device)
+	, DescriptorSet(Engine.Device)
 {
-	InitView(Device);
-	InitLights(Device);
-	InitMeshDrawCommands(Device);
+	InitView(Engine);
+	InitLights(Engine);
+	InitMeshDrawCommands(Engine);
 	
 	DescriptorSet.Update();
 
-	SkyboxDescriptorSet.Skybox = Scene.Skybox;
+	SkyboxDescriptorSet.Skybox = Engine.Scene.Skybox;
 	SkyboxDescriptorSet.Update();
 }
 
-void SceneProxy::InitView(DRMDevice& Device)
+void SceneProxy::InitView(Engine& Engine)
 {
 	UNIFORM_STRUCT(CameraUniformBuffer,
 		glm::mat4 WorldToView;
@@ -51,16 +49,16 @@ void SceneProxy::InitView(DRMDevice& Device)
 		glm::vec2(GetWidth(), GetHeight())
 	};
 
-	DescriptorSet.CameraUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
+	DescriptorSet.CameraUniform = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
 }
 
-void SceneProxy::InitLights(DRMDevice& Device)
+void SceneProxy::InitLights(Engine& Engine)
 {
-	InitDirectionalLights(Device);
-	InitPointLights(Device);
+	InitDirectionalLights(Engine);
+	InitPointLights(Engine);
 }
 
-void SceneProxy::InitDirectionalLights(DRMDevice& Device)
+void SceneProxy::InitDirectionalLights(Engine& Engine)
 {
 	UNIFORM_STRUCT(DirectionalLightProxy,
 		glm::vec3 Color;
@@ -86,14 +84,14 @@ void SceneProxy::InitDirectionalLights(DRMDevice& Device)
 	glm::uvec4 NumDirectionalLights;
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
-	DescriptorSet.DirectionalLightBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	void* Data = Device.LockBuffer(DescriptorSet.DirectionalLightBuffer);
+	DescriptorSet.DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	void* Data = Engine.Device.LockBuffer(DescriptorSet.DirectionalLightBuffer);
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	Device.UnlockBuffer(DescriptorSet.DirectionalLightBuffer);
+	Engine.Device.UnlockBuffer(DescriptorSet.DirectionalLightBuffer);
 }
 
-void SceneProxy::InitPointLights(DRMDevice& Device)
+void SceneProxy::InitPointLights(Engine& Engine)
 {
 	UNIFORM_STRUCT(PointLightProxy,
 		glm::vec3 Position;
@@ -118,14 +116,14 @@ void SceneProxy::InitPointLights(DRMDevice& Device)
 	glm::uvec4 NumPointLights;
 	NumPointLights.x = PointLightProxies.size();
 
-	DescriptorSet.PointLightBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-	void* Data = Device.LockBuffer(DescriptorSet.PointLightBuffer);
+	DescriptorSet.PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
+	void* Data = Engine.Device.LockBuffer(DescriptorSet.PointLightBuffer);
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	Device.UnlockBuffer(DescriptorSet.PointLightBuffer);
+	Engine.Device.UnlockBuffer(DescriptorSet.PointLightBuffer);
 }
 
-void SceneProxy::InitMeshDrawCommands(DRMDevice& Device)
+void SceneProxy::InitMeshDrawCommands(Engine& Engine)
 {
 	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
 	
@@ -135,11 +133,11 @@ void SceneProxy::InitMeshDrawCommands(DRMDevice& Device)
 
 		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, MeshProxy.WorldSpaceBB))
 		{
-			AddToDepthPrepass(MeshProxy);
-			AddToLightingPass(MeshProxy);
+			AddToDepthPrepass(Engine.ShaderMap, MeshProxy);
+			AddToLightingPass(Engine.ShaderMap, MeshProxy);
 		}
 
-		AddToShadowDepthPass(MeshProxy);
-		AddToVoxelsPass(MeshProxy);
+		AddToShadowDepthPass(Engine.ShaderMap, MeshProxy);
+		AddToVoxelsPass(Engine.ShaderMap, MeshProxy);
 	}
 }

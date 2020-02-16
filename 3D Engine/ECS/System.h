@@ -5,15 +5,15 @@
 class ISystem
 {
 public:
-	virtual void Start(class Scene& Scene) {}
-	virtual void Update(class Scene& Scene) {}
+	virtual void Start(class Engine& Engine) {}
+	virtual void Update(class Engine& Engine) {}
 };
 
 class IRenderSystem
 {
 public:
-	virtual void Start(class EntityManager& ECS, class DRMDevice& Device) {}
-	virtual void Update(class EntityManager& ECS, class DRMDevice& Device) {}
+	virtual void Start(class Engine& Engine) {}
+	virtual void Update(class Engine& Engine) {}
 };
 
 class SystemsManager
@@ -22,10 +22,10 @@ public:
 	SystemsManager() = default;
 	void Register(ISystem& ISystem);
 	void Register(IRenderSystem& System);
-	void StartSystems(class Scene& Scene);
-	void UpdateSystems(class Scene& Scene);
-	void StartRenderSystems(class EntityManager& ECS, class DRMDevice& Device);
-	void UpdateRenderSystems(class EntityManager& ECS, class DRMDevice& Device);
+	void StartSystems(class Engine& Engine);
+	void UpdateSystems(class Engine& Engine);
+	void StartRenderSystems(class Engine& Engine);
+	void UpdateRenderSystems(class Engine& Engine);
 
 private:
 	std::vector<std::reference_wrapper<ISystem>> Systems;

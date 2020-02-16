@@ -4,8 +4,8 @@
 /** The EntityManager stores entities and performs component operations (Add, Get, Has, Remove) */
 class EntityManager
 {
-	/** Only Scene can construct the EntityManager. */
-	friend class Scene;
+	/** Only Engine can construct the EntityManager. */
+	friend class Engine;
 	EntityManager() = default;
 
 public:

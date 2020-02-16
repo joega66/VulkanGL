@@ -71,7 +71,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToVoxelsPass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToVoxelsPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
@@ -286,9 +286,9 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	PSODesc.Viewport.Height = Scene.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;
 	PSODesc.DepthStencilState.DepthWriteEnable = true;
-	PSODesc.ShaderStages.Vertex = Scene.ShaderMap.FindShader<DrawVoxelsVS>();
-	PSODesc.ShaderStages.Geometry = Scene.ShaderMap.FindShader<DrawVoxelsGS>();
-	PSODesc.ShaderStages.Fragment = Scene.ShaderMap.FindShader<DrawVoxelsFS>();
+	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
+	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
+	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.SpecializationInfo.Add(0, VoxelSize);
 

@@ -1,5 +1,5 @@
 #pragma once
-#include <Engine/Scene.h>
+#include <Engine/Camera.h>
 #include "MeshDrawCommand.h"
 
 namespace EStaticDrawListType
@@ -45,20 +45,18 @@ struct SkyboxDescriptors
 	}
 };
 
+class Engine;
+
 class SceneProxy : public Camera
 {
-	friend class EngineMain;
-	SceneProxy(DRMDevice& Device, Scene& Scene);
+	friend class Engine;
+	SceneProxy(Engine& Engine);
 
 public:
 	SceneProxy(const SceneProxy&) = delete;
 	SceneProxy& operator=(const SceneProxy&) = delete;
 
-	DRMShaderMap& ShaderMap;
-
-	EntityManager& ECS;
-
-	AssetManager& Assets;
+	class EntityManager& ECS;
 
 	DescriptorSet<SkyboxDescriptors> SkyboxDescriptorSet;
 
@@ -73,14 +71,14 @@ public:
 	std::array<std::vector<MeshDrawCommand>, EStaticDrawListType::Max> LightingPass;
 
 private:
-	void InitView(DRMDevice& Device);
-	void InitLights(DRMDevice& Device);
-	void InitDirectionalLights(DRMDevice& Device);
-	void InitPointLights(DRMDevice& Device);
-	void InitMeshDrawCommands(DRMDevice& Device);
+	void InitView(Engine& Engine);
+	void InitLights(Engine& Engine);
+	void InitDirectionalLights(Engine& Engine);
+	void InitPointLights(Engine& Engine);
+	void InitMeshDrawCommands(Engine& Engine);
 
-	void AddToDepthPrepass(const MeshProxy& MeshProxy);
-	void AddToShadowDepthPass(const MeshProxy& MeshProxy);
-	void AddToVoxelsPass(const MeshProxy& MeshProxy);
-	void AddToLightingPass(const MeshProxy& MeshProxy);
+	void AddToDepthPrepass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToShadowDepthPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToVoxelsPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToLightingPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
 };

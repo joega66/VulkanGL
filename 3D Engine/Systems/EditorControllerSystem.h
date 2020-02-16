@@ -5,6 +5,6 @@ class EditorControllerSystem : public ISystem
 {
 	SYSTEM(EditorControllerSystem);
 public:
-	virtual void Start(class Scene& Scene) override;
-	virtual void Update(class Scene& Scene) override;
+	virtual void Start(class Engine& Engine) override;
+	virtual void Update(class Engine& Engine) override;
 };

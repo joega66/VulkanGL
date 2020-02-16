@@ -3,9 +3,9 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/Outline.h>
 
-void TransformGizmoSystem::Start(Scene& Scene)
+void TransformGizmoSystem::Start(Engine& Engine)
 {
-	auto& ECS = Scene.ECS;
+	auto& ECS = Engine.ECS;
 
 	State = std::bind(&TransformGizmoSystem::Null, this, std::placeholders::_1);
 
@@ -29,7 +29,7 @@ void TransformGizmoSystem::Start(Scene& Scene)
 	ZAxis.Translate(ECS, glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(ECS, glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
-	auto TransformGizmo = Scene.Assets.GetStaticMesh("Transform_Gizmo");
+	auto TransformGizmo = Engine.Assets.GetStaticMesh("Transform_Gizmo");
 
 	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.X, TransformGizmo);
 	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Y, TransformGizmo);
@@ -45,33 +45,33 @@ void TransformGizmoSystem::Start(Scene& Scene)
 	MatZ.Descriptors.BaseColor = Material::Red;
 }
 
-void TransformGizmoSystem::Update(Scene& Scene)
+void TransformGizmoSystem::Update(Engine& Engine)
 {
-	State(Scene);
+	State(Engine);
 
 	if (SelectedEntity.IsValid())
 	{
-		DrawOutline(Scene, SelectedEntity);
+		DrawOutline(Engine, SelectedEntity);
 	}
 }
 
-void TransformGizmoSystem::Null(Scene& Scene)
+void TransformGizmoSystem::Null(Engine& Engine)
 {
-	if (Scene.Input.GetKeyDown(EKeyCode::MouseLeft))
+	if (Engine._Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		State = std::bind(&TransformGizmoSystem::Selection, this, std::placeholders::_1);
 	}
 }
 
-void TransformGizmoSystem::Selection(Scene& Scene)
+void TransformGizmoSystem::Selection(Engine& Engine)
 {
-	auto& ECS = Scene.ECS;
+	auto& ECS = Engine.ECS;
 
 	// Select on key up.
-	if (Scene.Input.GetKeyUp(EKeyCode::MouseLeft))
+	if (Engine._Input.GetKeyUp(EKeyCode::MouseLeft))
 	{
 		// Don't select while looking around.
-		if (!(Scene.Cursor.Last == Scene.Cursor.Position))
+		if (!(Engine._Cursor.Last == Engine._Cursor.Position))
 		{
 			if (SelectedEntity.IsValid())
 			{
@@ -85,7 +85,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 			return;
 		}
 
-		const Ray Ray = Scene.Camera.ScreenPointToRay(Scene.Cursor.Position);
+		const Ray Ray = Engine.Camera.ScreenPointToRay(Engine._Cursor.Position);
 
 		std::vector<Entity> Hits;
 
@@ -97,7 +97,7 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 				Entity.GetEntityID() == TranslateAxis.Z.GetEntityID())
 				continue;
 
-			if (Physics::Raycast(Scene, Ray, Entity))
+			if (Physics::Raycast(Engine.ECS, Ray, Entity))
 			{
 				Hits.push_back(Entity);
 			}
@@ -112,8 +112,8 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 			{
 				Transform& TransformA = ECS.GetComponent<Transform>(A);
 				Transform& TransformB = ECS.GetComponent<Transform>(B);
-				return glm::distance(TransformA.GetPosition(), Scene.Camera.GetPosition()) <
-					glm::distance(TransformB.GetPosition(), Scene.Camera.GetPosition());
+				return glm::distance(TransformA.GetPosition(), Engine.Camera.GetPosition()) <
+					glm::distance(TransformB.GetPosition(), Engine.Camera.GetPosition());
 			});
 
 			SelectedEntity = Hits.front();
@@ -129,11 +129,11 @@ void TransformGizmoSystem::Selection(Scene& Scene)
 	}
 }
 
-void TransformGizmoSystem::TranslateTool(Scene& Scene)
+void TransformGizmoSystem::TranslateTool(Engine& Engine)
 {
-	auto& ECS = Scene.ECS;
+	auto& ECS = Engine.ECS;
 
-	if (Scene.Input.GetKeyDown(EKeyCode::MouseLeft))
+	if (Engine._Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		// Check if we're grabbing an axis.
 		std::vector<Entity> Gizmo = { TranslateAxis.X, TranslateAxis.Y, TranslateAxis.Z };
@@ -142,10 +142,10 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 
 		std::for_each(Gizmo.begin(), Gizmo.end(), [&](auto& Entity)
 		{
-			if (Physics::Raycast(Scene, Scene.Camera.ScreenPointToRay(Scene.Cursor.Position), Entity))
+			if (Physics::Raycast(Engine.ECS, Engine.Camera.ScreenPointToRay(Engine._Cursor.Position), Entity))
 			{
 				Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-				if (const float NewDist = glm::distance(Transform.GetPosition(), Scene.Camera.GetPosition()); NewDist < Dist)
+				if (const float NewDist = glm::distance(Transform.GetPosition(), Engine.Camera.GetPosition()); NewDist < Dist)
 				{
 					ClosestHit = Entity;
 					Dist = NewDist;
@@ -173,9 +173,9 @@ void TransformGizmoSystem::TranslateTool(Scene& Scene)
 	}
 }
 
-void TransformGizmoSystem::DrawOutline(Scene& Scene, Entity& Entity)
+void TransformGizmoSystem::DrawOutline(Engine& Engine, Entity& Entity)
 {
-	auto& ECS = Scene.ECS;
+	auto& ECS = Engine.ECS;
 
 	if (!ECS.HasComponent<Outline>(Entity))
 	{

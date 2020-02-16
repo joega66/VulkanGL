@@ -10,34 +10,34 @@ void SystemsManager::Register(IRenderSystem& System)
 	RenderSystems.push_back(System);
 }
 
-void SystemsManager::StartSystems(Scene& Scene)
+void SystemsManager::StartSystems(class Engine& Engine)
 {
 	for (auto& System : Systems)
 	{
-		System.get().Start(Scene);
+		System.get().Start(Engine);
 	}
 }
 
-void SystemsManager::UpdateSystems(Scene& Scene)
+void SystemsManager::UpdateSystems(class Engine& Engine)
 {
 	for (auto& System : Systems)
 	{
-		System.get().Update(Scene);
+		System.get().Update(Engine);
 	}
 }
 
-void SystemsManager::StartRenderSystems(EntityManager& ECS, DRMDevice& Device)
+void SystemsManager::StartRenderSystems(class Engine& Engine)
 {
 	for (auto& System : RenderSystems)
 	{
-		System.get().Start(ECS, Device);
+		System.get().Start(Engine);
 	}
 }
 
-void SystemsManager::UpdateRenderSystems(EntityManager& ECS, DRMDevice& Device)
+void SystemsManager::UpdateRenderSystems(class Engine& Engine)
 {
 	for (auto& System : RenderSystems)
 	{
-		System.get().Update(ECS, Device);
+		System.get().Update(Engine);
 	}
 }

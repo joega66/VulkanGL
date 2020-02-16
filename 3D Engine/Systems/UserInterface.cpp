@@ -1,8 +1,8 @@
 #include "UserInterface.h"
+#include <Engine/Engine.h>
 #include <Engine/Screen.h>
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
-#include <DRMShader.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -42,19 +42,19 @@ public:
 	}
 };
 
-UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap& ShaderMap, Screen& Screen)
-	: Descriptors(Device)
+UserInterface::UserInterface(Engine& Engine)
+	: Descriptors(Engine.Device)
 {
 	ImGui::CreateContext();
 
-	ImGui_ImplGlfw_InitForVulkan(Platform.Window, true);
+	ImGui_ImplGlfw_InitForVulkan(Engine._Platform.Window, true);
 
 	ImGuiIO& ImGui = ImGui::GetIO();
 	ImGui.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
 	ImGui::StyleColorsDark();
 
-	CreateImGuiRenderResources(Device);
+	CreateImGuiRenderResources(Engine.Device);
 
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
@@ -67,8 +67,8 @@ UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap
 	PSODesc.DepthStencilState.DepthTestEnable = true;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<UserInterfaceVS>();
-	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<UserInterfaceFS>();
+	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<UserInterfaceVS>();
+	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
 	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
 	PSODesc.VertexAttributes = {
 		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) }, 
@@ -76,7 +76,7 @@ UserInterface::UserInterface(Platform& Platform, DRMDevice& Device, DRMShaderMap
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
 
-	Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
+	Engine._Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
 	{
 		ImGui.DisplaySize = ImVec2((float)Width, (float)Height);
 
@@ -90,11 +90,11 @@ UserInterface::~UserInterface()
 	ImGui::DestroyContext();
 }
 
-void UserInterface::Start(EntityManager& ECS, DRMDevice& Device)
+void UserInterface::Start(Engine& Engine)
 {
 }
 
-void UserInterface::Update(EntityManager& ECS, DRMDevice& Device)
+void UserInterface::Update(Engine& Engine)
 {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
@@ -106,7 +106,7 @@ void UserInterface::Update(EntityManager& ECS, DRMDevice& Device)
 	
 	ImGui::Render();
 
-	UploadImGuiDrawData(Device);
+	UploadImGuiDrawData(Engine.Device);
 }
 
 void UserInterface::Render(drm::CommandList& CmdList)

@@ -1,13 +1,8 @@
 #include "Scene.h"
+#include "Engine.h"
 #include "AssetManager.h"
-#include <DRM.h>
 
-Scene::Scene(DRMDevice& Device, DRMShaderMap& ShaderMap, class Cursor& Cursor, class Input& Input, class Screen& Screen)
-	: ShaderMap(ShaderMap)
-	, Cursor(Cursor)
-	, Input(Input)
-	, Assets(Device)
-	, Camera(Screen)
+Scene::Scene(Engine& Engine)
 {
-	Skybox = Assets.GetCubemap("Engine_Cubemap_Default");
+	Skybox = Engine.Assets.GetCubemap("Engine_Cubemap_Default");
 }

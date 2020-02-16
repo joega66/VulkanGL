@@ -1,20 +1,22 @@
 #include "SceneRenderer.h"
-#include "FullscreenQuad.h"
-#include "ShadowProxy.h"
 #include <DRMShader.h>
+#include <Engine/Engine.h>
 #include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 #include <Components/Transform.h>
 #include <Systems/UserInterface.h>
+#include "FullscreenQuad.h"
+#include "ShadowProxy.h"
 
-SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Scene, Screen& Screen)
-	: Device(Device)
-	, Surface(Surface)
-	, SceneTextures(Device)
-	, VoxelDescriptorSet(Device)
+SceneRenderer::SceneRenderer(Engine& Engine)
+	: Device(Engine.Device)
+	, ShaderMap(Engine.ShaderMap)
+	, Surface(Engine.Surface)
+	, SceneTextures(Engine.Device)
+	, VoxelDescriptorSet(Engine.Device)
 {
-	Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
+	Engine._Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
 	{
 		Surface.Resize(Device, Width, Height);
 
@@ -38,6 +40,8 @@ SceneRenderer::SceneRenderer(DRMDevice& Device, drm::Surface& Surface, Scene& Sc
 	VoxelDescriptorSet.VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
 
 	CreateVoxelRP();
+
+	Cube = Engine.Assets.GetStaticMesh("Cube");
 }
 
 void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
@@ -95,8 +99,8 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		PSODesc.Viewport.Height = SceneTextures.Depth->Height;
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
-		PSODesc.ShaderStages.Vertex = Scene.ShaderMap.FindShader<FullscreenVS>();
-		PSODesc.ShaderStages.Fragment = Scene.ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
+		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
+		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
 
 		CmdList.BindPipeline(PSODesc);
 

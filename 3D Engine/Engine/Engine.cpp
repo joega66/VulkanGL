@@ -1,16 +1,14 @@
-#include "EngineMain.h"
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/SceneProxy.h>
-#include <Engine/Scene.h>
-#include <Engine/AssetManager.h>
-#include <Engine/Screen.h>
-#include <Engine/Cursor.h>
-#include <Engine/Input.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 #include <Systems/RenderSystem.h>
 #include <Systems/UserInterface.h>
+#include <Engine/Screen.h>
+#include <Engine/Cursor.h>
+#include <Engine/Input.h>
+#include "Engine.h"
 
 static void CreateDebugMaterials(DRMDevice& Device)
 {
@@ -68,24 +66,36 @@ static void CreateDebugMaterials(DRMDevice& Device)
 	Device.SubmitCommands(CmdList);
 }
 
-void EngineMain::Main(
-	Platform& Platform,
-	Cursor& Cursor,
-	Input& Input,
-	Screen& Screen,
-	DRMDevice& Device,
-	DRMShaderMap& ShaderMap,
-	drm::Surface& Surface
-)
+Engine::Engine(
+	Platform& InPlatform, 
+	Cursor& InCursor,
+	Input& InInput,
+	Screen& InScreen,
+	DRMDevice& InDevice, 
+	DRMShaderMap& InShaderMap,
+	drm::Surface& InSurface
+) : _Platform(InPlatform)
+	, _Cursor(InCursor)
+	, _Input(InInput)
+	, _Screen(InScreen)
+	, Device(InDevice)
+	, ShaderMap(InShaderMap)
+	, Surface(InSurface)
+	, Assets(InDevice)
+	, Scene(*this)
+	, Camera(InScreen)
+{
+}
+
+void Engine::Main()
 {
 	CreateDebugMaterials(Device);
 
-	Scene Scene(Device, ShaderMap, Cursor, Input, Screen);
-	SceneRenderer SceneRenderer(Device, Surface, Scene, Screen);
+	SceneRenderer SceneRenderer(*this);
 
 	SystemsManager SystemsManager;
 
-	RenderSystem RenderSystem(Device);
+	RenderSystem RenderSystem(*this);
 	SystemsManager.Register(RenderSystem);
 
 	EditorControllerSystem EditorControllerSystem;
@@ -94,28 +104,28 @@ void EngineMain::Main(
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
-	UserInterface UserInterface(Platform, Device, ShaderMap, Screen);
+	UserInterface UserInterface(*this);
 	SystemsManager.Register(UserInterface);
 
-	SystemsManager.StartRenderSystems(Scene.ECS, Device);
-	SystemsManager.StartSystems(Scene);
+	SystemsManager.StartRenderSystems(*this);
+	SystemsManager.StartSystems(*this);
 
-	while (!Platform.WindowShouldClose())
+	while (!_Platform.WindowShouldClose())
 	{
-		Platform.PollEvents();
+		_Platform.PollEvents();
 
-		SystemsManager.UpdateSystems(Scene);
+		SystemsManager.UpdateSystems(*this);
 
-		Scene.ECS.NotifyComponentEvents();
+		ECS.NotifyComponentEvents();
 
-		SystemsManager.UpdateRenderSystems(Scene.ECS, Device);
+		SystemsManager.UpdateRenderSystems(*this);
 
-		SceneProxy SceneProxy(Device, Scene);
+		SceneProxy SceneProxy(*this);
 
 		SceneRenderer.Render(UserInterface, SceneProxy);
 
-		Cursor.Update(Platform);
+		_Cursor.Update(_Platform);
 
-		Input.Update(Platform);
+		_Input.Update(_Platform);
 	}
 }

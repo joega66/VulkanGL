@@ -46,7 +46,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToDepthPrepass(const MeshProxy& MeshProxy)
+void SceneProxy::AddToDepthPrepass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
