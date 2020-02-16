@@ -35,7 +35,7 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 		}
 	}();
 
-	for (VulkanMemoryRef& Memory : MemoryBuffers)
+	for (std::unique_ptr<VulkanMemory>& Memory : MemoryBuffers)
 	{
 		// Find a buffer with the same properties and usage
 		if (Memory->GetVulkanUsage() == VulkanUsage && Memory->GetProperties() == Properties)
@@ -54,7 +54,7 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 	}
 
 	// Buffer not found - Create a new one
-	MemoryBuffers.emplace_back(MakeRef<VulkanMemory>(CreateBuffer(Size, VulkanUsage, Properties)));
+	MemoryBuffers.emplace_back(std::make_unique<VulkanMemory>(AllocateMemory(Size, VulkanUsage, Properties)));
 
 	VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, AlignedSize, Usage);
 
@@ -95,7 +95,7 @@ void VulkanAllocator::UploadBufferData(const VulkanBuffer& Buffer, const void* D
 	UnlockBuffer(Buffer);
 }
 
-VulkanMemory VulkanAllocator::CreateBuffer(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties)
+VulkanMemory VulkanAllocator::AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties)
 {
 	VkBufferCreateInfo BufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	BufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -138,7 +138,7 @@ VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsage
 {
 }
 
-std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemory> Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
+std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::unique_ptr<VulkanMemory>& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
 {
 	for (auto Iter = Memory->FreeList.begin(); Iter != Memory->FreeList.end(); Iter++)
 	{
@@ -156,13 +156,13 @@ std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::shared_ptr<VulkanMemor
 				Memory->FreeList.erase(Iter);
 			}
 
-			return MakeRef<VulkanBuffer>(Memory, Size, AlignedSize, Offset, Usage);
+			return MakeRef<VulkanBuffer>(*Memory, Size, AlignedSize, Offset, Usage);
 		}
 	}
 
 	if (Memory->GetSizeRemaining() >= AlignedSize)
 	{
-		VulkanBufferRef VulkanBuffer = MakeRef<class VulkanBuffer>(Memory, Size, AlignedSize, Memory->Used, Usage);
+		VulkanBufferRef VulkanBuffer = MakeRef<class VulkanBuffer>(*Memory, Size, AlignedSize, Memory->Used, Usage);
 		Memory->Used += AlignedSize;
 		return VulkanBuffer;
 	}
@@ -199,5 +199,5 @@ void VulkanMemory::Free(const VulkanBuffer& Buffer)
 
 VulkanBuffer::~VulkanBuffer()
 {
-	Memory->Free(*this);
+	Memory.Free(*this);
 }
