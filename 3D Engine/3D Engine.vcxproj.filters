@@ -403,11 +403,11 @@
     <ClCompile Include="Systems\UserInterface.cpp">
       <Filter>Source\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="DRM.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Engine.cpp">
       <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="DRM.cpp">
+      <Filter>Source\DRM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

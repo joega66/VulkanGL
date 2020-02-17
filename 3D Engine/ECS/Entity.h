@@ -23,9 +23,10 @@ public:
 		return EntityID < Entity.GetEntityID();
 	}
 
-	uint32 GetEntityID() const;
-
-	inline bool IsValid() const { return EntityID != InvalidID; }
+	inline uint32 GetEntityID() const
+	{
+		return EntityID;
+	};
 
 private:
 	friend class EntityManager; // So that only the entity manager can assign entity ids.

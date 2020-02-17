@@ -49,7 +49,7 @@ void TransformGizmoSystem::Update(Engine& Engine)
 {
 	State(Engine);
 
-	if (SelectedEntity.IsValid())
+	if (Engine.ECS.IsValid(SelectedEntity))
 	{
 		DrawOutline(Engine, SelectedEntity);
 	}
@@ -73,7 +73,7 @@ void TransformGizmoSystem::Selection(Engine& Engine)
 		// Don't select while looking around.
 		if (!(Engine._Cursor.Last == Engine._Cursor.Position))
 		{
-			if (SelectedEntity.IsValid())
+			if (ECS.IsValid(SelectedEntity))
 			{
 				// If an entity is currently selected, go back to the translate tool.
 				State = std::bind(&TransformGizmoSystem::TranslateTool, this, std::placeholders::_1);

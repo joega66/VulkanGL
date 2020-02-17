@@ -77,6 +77,9 @@ public:
 		Array->NewComponentCallback(ComponentCallback);
 	}
 
+	/** Whether the entity is a valid one. */
+	inline bool IsValid(Entity Entity) { return Entity.GetEntityID() != Entity::InvalidID && EntityStatus[Entity.GetEntityID()]; }
+
 	/** Call component events. */
 	void NotifyComponentEvents();
 

@@ -306,42 +306,44 @@ void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
 			drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
 			drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
 
-			drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+			{
+				drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
-			uint32 SrcOffset = 0;
+				uint32 SrcOffset = 0;
 
-			// Create one big staging buffer for the upload, because why not.
-			drm::BufferRef StagingBuffer = Device.CreateBuffer(
-				EBufferUsage::Transfer,
-				IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
-			);
+				// Create one big staging buffer for the upload, because why not.
+				drm::BufferRef StagingBuffer = Device.CreateBuffer(
+					EBufferUsage::Transfer,
+					IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
+				);
 
-			uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
+				uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
 
-			Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
-			CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
-			Memmapped += IndexView.byteLength;
-			SrcOffset += IndexView.byteLength;
+				Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
+				CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
+				Memmapped += IndexView.byteLength;
+				SrcOffset += IndexView.byteLength;
 
-			Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
-			CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
-			Memmapped += PositionView.byteLength;
-			SrcOffset += PositionView.byteLength;
+				Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
+				CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
+				Memmapped += PositionView.byteLength;
+				SrcOffset += PositionView.byteLength;
 
-			Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
-			CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
-			Memmapped += UvView.byteLength;
-			SrcOffset += UvView.byteLength;
+				Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
+				CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
+				Memmapped += UvView.byteLength;
+				SrcOffset += UvView.byteLength;
 
-			Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
-			CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
-			Memmapped += NormalView.byteLength;
-			SrcOffset += NormalView.byteLength;
+				Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
+				CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
+				Memmapped += NormalView.byteLength;
+				SrcOffset += NormalView.byteLength;
 
-			Device.UnlockBuffer(StagingBuffer);
+				Device.UnlockBuffer(StagingBuffer);
 
-			Device.SubmitCommands(CmdList);
-
+				Device.SubmitCommands(CmdList);
+			}
+			
 			Submeshes.emplace_back(Submesh(
 				IndexAccessor.count
 				, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32

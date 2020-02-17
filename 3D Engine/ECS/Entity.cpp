@@ -10,8 +10,3 @@ Entity::Entity(uint32 EntityID)
 	: EntityID(EntityID)
 {
 }
-
-uint32 Entity::GetEntityID() const
-{
-	return EntityID;
-}

@@ -75,7 +75,7 @@ void Transform::Scale(EntityManager& ECS, const glm::vec3& InScale)
 
 void Transform::SetParent(EntityManager& ECS, Entity NewParent)
 {
-	if (Parent.IsValid())
+	if (ECS.IsValid(Parent))
 	{
 		Transform& ParentTransform = ECS.GetComponent<Transform>(Parent);
 		ParentTransform.RemoveChild(Owner);
@@ -104,7 +104,7 @@ void Transform::Clean(EntityManager& ECS)
 {
 	LocalToWorld = GetLocalToParent();
 
-	if (Parent.IsValid())
+	if (ECS.IsValid(Parent))
 	{
 		const Transform& ParentTransform = ECS.GetComponent<Transform>(Parent);
 		LocalToWorld = ParentTransform.GetLocalToWorld() * LocalToWorld;
