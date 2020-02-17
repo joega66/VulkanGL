@@ -161,7 +161,7 @@ void ProcessNode(DRMDevice& Device, StaticMesh* StaticMesh, const aiNode* AiNode
 	}
 }
 
-StaticMesh::StaticMesh(AssetManager& Assets, DRMDevice& Device, const std::string& FilenameStr)
+StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::string& FilenameStr)
 	: Filename(FilenameStr), Directory(FilenameStr.substr(0, FilenameStr.find_last_of("/")))
 {
 	if (Filename.extension() == ".obj")
@@ -170,7 +170,7 @@ StaticMesh::StaticMesh(AssetManager& Assets, DRMDevice& Device, const std::strin
 	}
 	else if (Filename.extension() == ".bin" || Filename.extension() == ".gltf")
 	{
-		GLTFLoad(Assets, Device);
+		GLTFLoad(AssetName, Assets, Device);
 	}
 
 	std::for_each(SubmeshBounds.begin(), SubmeshBounds.end(), [&] (const BoundingBox& SubmeshBounds)
@@ -224,6 +224,153 @@ void StaticMesh::AssimpLoad(DRMDevice& Device)
 
 tinygltf::TinyGLTF Loader;
 
+void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device)
+{
+	tinygltf::Model Model;
+	std::string Err;
+	std::string Warn;
+
+	Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Filename.generic_string());
+
+	if (!Err.empty())
+	{
+		LOG("TinyGLTF error: %s", Err.c_str());
+	}
+	if (!Warn.empty())
+	{
+		LOG("TinyGLTF warning: %s", Warn.c_str());
+	}
+
+	for (auto& Mesh : Model.meshes)
+	{
+		for (auto& Primitive : Mesh.primitives)
+		{
+			GLTFLoadGeometry(Model, Mesh, Primitive, Device);
+			GLTFLoadMaterial(AssetName, Assets, Model, Primitive, Device);
+			SubmeshNames.push_back(Mesh.name);
+		}
+	}
+}
+
+void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, DRMDevice& Device)
+{
+	auto& IndexAccessor = Model.accessors[Primitive.indices];
+	auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
+	auto& NormalAccessor = Model.accessors[Primitive.attributes["NORMAL"]];
+	auto& UvAccessor = Model.accessors[Primitive.attributes["TEXCOORD_0"]];
+
+	auto& IndexView = Model.bufferViews[IndexAccessor.bufferView];
+	auto& PositionView = Model.bufferViews[PositionAccessor.bufferView];
+	auto& NormalView = Model.bufferViews[NormalAccessor.bufferView];
+	auto& UvView = Model.bufferViews[UvAccessor.bufferView];
+
+	check(IndexView.byteStride == 0 && PositionView.byteStride == 0 && NormalView.byteStride == 0 && UvView.byteStride == 0,
+		"Need to add support for nonzero strides...");
+
+	auto& IndexData = Model.buffers[IndexView.buffer];
+	auto& PositionData = Model.buffers[PositionView.buffer];
+	auto& NormalData = Model.buffers[NormalView.buffer];
+	auto& UvData = Model.buffers[UvView.buffer];
+
+	drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
+	drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
+	drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
+	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
+
+	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+
+	uint32 SrcOffset = 0;
+
+	// Create one big staging buffer for the upload, because why not.
+	drm::BufferRef StagingBuffer = Device.CreateBuffer(
+		EBufferUsage::Transfer,
+		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
+	);
+
+	uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
+
+	Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
+	CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
+	Memmapped += IndexView.byteLength;
+	SrcOffset += IndexView.byteLength;
+
+	Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
+	CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
+	Memmapped += PositionView.byteLength;
+	SrcOffset += PositionView.byteLength;
+
+	Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
+	CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
+	Memmapped += UvView.byteLength;
+	SrcOffset += UvView.byteLength;
+
+	Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
+	CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
+	Memmapped += NormalView.byteLength;
+	SrcOffset += NormalView.byteLength;
+
+	Device.UnlockBuffer(StagingBuffer);
+
+	Device.SubmitCommands(CmdList);
+
+	Submeshes.emplace_back(Submesh(
+		IndexAccessor.count
+		, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
+		, IndexBuffer
+		, PositionBuffer
+		, TextureCoordinateBuffer
+		, NormalBuffer
+		, NormalBuffer) // @todo Generate tangents
+	);
+
+	const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);
+	const glm::vec3 Max(PositionAccessor.maxValues[0], PositionAccessor.maxValues[1], PositionAccessor.maxValues[2]);
+
+	SubmeshBounds.push_back(BoundingBox(Min, Max));
+}
+
+void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, DRMDevice& Device)
+{
+	auto& GLTFMaterial = Model.materials[Primitive.material];
+
+	const EMaterialMode MaterialMode = [] (const std::string& AlphaMode)
+	{
+		if (AlphaMode == "MASK")
+		{
+			return EMaterialMode::Masked;
+		}
+		else
+		{
+			return EMaterialMode::Opaque;
+		}
+	}(GLTFMaterial.alphaMode);
+
+	const std::string MaterialAssetName = AssetName + "_Material_" + std::to_string(Primitive.material);
+
+	const Material* Material = Assets.GetMaterial(MaterialAssetName);
+
+	if (!Material)
+	{
+		MaterialDescriptors Descriptors;
+		Descriptors.BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+		Descriptors.MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+
+		Material = Assets.LoadMaterial(
+			MaterialAssetName,
+			std::make_unique<class Material>
+			(
+				Device,
+				Descriptors,
+				MaterialMode,
+				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor),
+				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
+				)
+		);
+	}
+
+	Materials.push_back(*Material);
+}
+
 static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 {
 	if (PixelType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && Bits == 8 && Components == 4)
@@ -236,7 +383,7 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 	}
 }
 
-static drm::ImageRef LoadImageFromGLTF(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
+drm::ImageRef StaticMesh::GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
 	if (TextureIndex == -1)
 	{
@@ -253,141 +400,17 @@ static drm::ImageRef LoadImageFromGLTF(AssetManager& Assets, DRMDevice& Device, 
 		}
 		else
 		{
-			drm::ImageRef NewImage = Device.CreateImage(Image.width, Image.height, 1, GetFormat(Image.bits, Image.component, Image.pixel_type), EImageUsage::Sampled | EImageUsage::TransferDst);
-			drm::UploadImageData(Device, Image.image.data(), NewImage);
 #undef LoadImage
+			drm::ImageRef NewImage = Device.CreateImage(
+				Image.width, 
+				Image.height, 
+				1, 
+				GetFormat(Image.bits, Image.component, Image.pixel_type), 
+				EImageUsage::Sampled | EImageUsage::TransferDst
+			);
+			drm::UploadImageData(Device, Image.image.data(), NewImage);
 			Assets.LoadImage(Image.uri, NewImage);
 			return NewImage;
-		}
-	}
-}
-
-void StaticMesh::GLTFLoad(AssetManager& Assets, DRMDevice& Device)
-{
-	tinygltf::Model Model;
-	std::string Err;
-	std::string Warn;
-	
-	Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Filename.generic_string());
-
-	if (!Err.empty())
-	{
-		LOG("TinyGLTF error: %s", Err.c_str());
-	}
-	if (!Warn.empty())
-	{
-		LOG("TinyGLTF warning: %s", Warn.c_str());
-	}
-
-	for (auto& Mesh : Model.meshes)
-	{
-		for (auto& Primitive : Mesh.primitives)
-		{
-			auto& IndexAccessor = Model.accessors[Primitive.indices];
-			auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
-			auto& NormalAccessor = Model.accessors[Primitive.attributes["NORMAL"]];
-			auto& UvAccessor = Model.accessors[Primitive.attributes["TEXCOORD_0"]];
-
-			auto& IndexView = Model.bufferViews[IndexAccessor.bufferView];
-			auto& PositionView = Model.bufferViews[PositionAccessor.bufferView];
-			auto& NormalView = Model.bufferViews[NormalAccessor.bufferView];
-			auto& UvView = Model.bufferViews[UvAccessor.bufferView];
-
-			check(IndexView.byteStride == 0 && PositionView.byteStride == 0 && NormalView.byteStride == 0 && UvView.byteStride == 0,
-				"Need to add support for nonzero strides...");
-
-			auto& IndexData = Model.buffers[IndexView.buffer];
-			auto& PositionData = Model.buffers[PositionView.buffer];
-			auto& NormalData = Model.buffers[NormalView.buffer];
-			auto& UvData = Model.buffers[UvView.buffer];
-
-			drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
-			drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
-			drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
-			drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
-
-			{
-				drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
-
-				uint32 SrcOffset = 0;
-
-				// Create one big staging buffer for the upload, because why not.
-				drm::BufferRef StagingBuffer = Device.CreateBuffer(
-					EBufferUsage::Transfer,
-					IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
-				);
-
-				uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
-
-				Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
-				CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
-				Memmapped += IndexView.byteLength;
-				SrcOffset += IndexView.byteLength;
-
-				Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
-				CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
-				Memmapped += PositionView.byteLength;
-				SrcOffset += PositionView.byteLength;
-
-				Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
-				CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
-				Memmapped += UvView.byteLength;
-				SrcOffset += UvView.byteLength;
-
-				Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
-				CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
-				Memmapped += NormalView.byteLength;
-				SrcOffset += NormalView.byteLength;
-
-				Device.UnlockBuffer(StagingBuffer);
-
-				Device.SubmitCommands(CmdList);
-			}
-			
-			Submeshes.emplace_back(Submesh(
-				IndexAccessor.count
-				, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
-				, IndexBuffer
-				, PositionBuffer
-				, TextureCoordinateBuffer
-				, NormalBuffer
-				, NormalBuffer) // @todo Generate tangents
-			);
-
-			auto& GLTFMaterial = Model.materials[Primitive.material];
-
-			const EMaterialMode MaterialMode = [](const std::string& AlphaMode)
-			{
-				if (AlphaMode == "MASK")
-				{
-					return EMaterialMode::Masked;
-				}
-				else
-				{
-					return EMaterialMode::Opaque;
-				}
-			}(GLTFMaterial.alphaMode);
-
-			MaterialDescriptors Descriptors;
-			Descriptors.BaseColor = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-			Descriptors.MetallicRoughness = LoadImageFromGLTF(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
-
-			Material Material(
-				Device,
-				Descriptors,
-				MaterialMode,
-				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor), 
-				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
-			);
-
-			Materials.push_back(Material);
-
-			const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);
-			const glm::vec3 Max(PositionAccessor.maxValues[0], PositionAccessor.maxValues[1], PositionAccessor.maxValues[2]);
-			
-			SubmeshBounds.push_back(BoundingBox(Min, Max));
-			
-			SubmeshNames.push_back(Mesh.name);
 		}
 	}
 }

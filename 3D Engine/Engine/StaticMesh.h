@@ -1,8 +1,10 @@
 #pragma once
 #include <Components/Material.h>
-#include <DRM.h>
 #include <Physics/Physics.h>
+#include <DRM.h>
 #include <filesystem>
+
+class AssetManager;
 
 class Submesh
 {
@@ -47,6 +49,8 @@ private:
 	std::array<drm::BufferRef, NumLocations> VertexBuffers;
 };
 
+namespace tinygltf { class Model; struct Mesh; struct Primitive; }
+
 class StaticMesh
 {
 public:
@@ -66,12 +70,16 @@ public:
 	BoundingBox Bounds;
 
 	/** Load a static mesh from file. */
-	StaticMesh(class AssetManager& Assets, class DRMDevice& Device, const std::string& Filename);
+	StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::string& Filename);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
 	StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex);
 
 private:
-	void AssimpLoad(class DRMDevice& Device);
-	void GLTFLoad(class AssetManager& Assets, class DRMDevice& Device);
+	void AssimpLoad(DRMDevice& Device);
+
+	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device);
+	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, DRMDevice& Device);
+	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, DRMDevice& Device);
+	static drm::ImageRef GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex);
 };

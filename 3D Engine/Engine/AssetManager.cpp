@@ -19,7 +19,9 @@ AssetManager::AssetManager(DRMDevice& Device)
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File, bool Breakup)
 {
-	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(*this, Device, File);
+	check(StaticMeshes.find(Name) == StaticMeshes.end(), "Static mesh %s already exists.", Name.c_str());
+
+	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(Name, *this, Device, File);
 
 	// Add default engine materials if missing.
 	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
@@ -56,6 +58,8 @@ const StaticMesh* AssetManager::GetStaticMesh(const std::string& Name) const
 
 void AssetManager::LoadImage(const std::string& Name, const std::string& File, EFormat Format)
 {
+	check(Images.find(Name) == Images.end(), "Image %s already exists.", Name.c_str());
+
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform::LoadImage(File, Width, Height, Channels);
 
@@ -70,19 +74,25 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 
 void AssetManager::LoadImage(const std::filesystem::path& Path, drm::ImageRef Image)
 {
+	check(Images.find(Path.generic_string()) == Images.end(), "Image %s already exists.", Path.generic_string().c_str());
 	Images[Path.generic_string()] = Image;
 }
 
 drm::ImageRef AssetManager::GetImage(const std::string& Name) const
 {
-	if (auto Iter = Images.find(Name); Iter != Images.end())
-	{
-		return Iter->second;
-	}
-	else
-	{
-		return nullptr;
-	}
+	return Images.find(Name) == Images.end() ? nullptr : Images.at(Name);
+}
+
+const Material* AssetManager::LoadMaterial(const std::string& Name, std::unique_ptr<Material> Material)
+{
+	check(Materials.find(Name) == Materials.end(), "Material %s already exists.", Name.c_str());
+	Materials[Name] = std::move(Material);
+	return Materials[Name].get();
+}
+
+const Material* AssetManager::GetMaterial(const std::string& Name)
+{
+	return Materials.find(Name) == Materials.end() ? nullptr : Materials[Name].get();
 }
 
 void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format)
