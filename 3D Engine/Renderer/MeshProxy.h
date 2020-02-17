@@ -6,9 +6,8 @@ class MeshProxy
 {
 public:
 	MeshProxy(
-		DRMDevice& Device,
-		drm::DescriptorSetRef SurfaceSet,
 		const Material* Material,
+		drm::DescriptorSetRef SurfaceSet,
 		const std::vector<Submesh>& Submeshes,
 		const drm::BufferRef& LocalToWorldUniform
 	);

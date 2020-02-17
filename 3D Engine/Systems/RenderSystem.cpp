@@ -25,17 +25,16 @@ void RenderSystem::Start(Engine& Engine)
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
-		StaticMeshDescriptors StaticMeshDescriptors = { Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer)) };
+		StaticMeshDescriptors SurfaceDescriptors = { Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer)) };
 		drm::DescriptorSetRef SurfaceSet = StaticMeshTemplate.CreateDescriptorSet();
-		StaticMeshTemplate.UpdateDescriptorSet(SurfaceSet, StaticMeshDescriptors);
+		StaticMeshTemplate.UpdateDescriptorSet(SurfaceSet, SurfaceDescriptors);
 
 		ECS.AddComponent(Entity, 
 			MeshProxy(
-				Device, 
-				SurfaceSet, 
 				StaticMeshComponent.Material,
+				SurfaceSet,
 				StaticMesh->Submeshes,
-				StaticMeshDescriptors.LocalToWorldUniform)
+				SurfaceDescriptors.LocalToWorldUniform)
 			);
 	});
 
@@ -61,7 +60,7 @@ void RenderSystem::Update(Engine& Engine)
 		LocalToWorldUniformBuffer->Inverse = glm::inverse(Transform.GetLocalToWorld());
 		Device.UnlockBuffer(MeshProxy.LocalToWorldUniform);
 
-		MeshProxy.WorldSpaceBB = StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
+		MeshProxy.WorldSpaceBB = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 	}
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())

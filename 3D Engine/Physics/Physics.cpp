@@ -41,7 +41,7 @@ bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity, float& 
 {
 	const StaticMeshComponent& StaticMeshComponent = ECS.GetComponent<class StaticMeshComponent>(Entity);
 	const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-	const BoundingBox Bounds = StaticMeshComponent.StaticMesh->Bounds.Transform(Transform.GetLocalToWorld());
+	const BoundingBox Bounds = StaticMeshComponent.StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 	
 	glm::vec3 DirInv = glm::vec3(
 		1.0f / Ray.Direction.x,

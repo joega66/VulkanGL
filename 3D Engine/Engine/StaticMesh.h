@@ -54,11 +54,8 @@ namespace tinygltf { class Model; struct Mesh; struct Primitive; }
 class StaticMesh
 {
 public:
-	/** Filename of the static mesh. */
-	const std::filesystem::path Filename;
-
-	/** Directory the file is located in. */
-	const std::string Directory;
+	/** Path of the static mesh asset. */
+	const std::filesystem::path Path;
 
 	/** Submesh data. */
 	std::vector<Submesh> Submeshes;
@@ -66,16 +63,18 @@ public:
 	std::vector<BoundingBox> SubmeshBounds;
 	std::vector<std::string> SubmeshNames;
 
-	/** Local-space bounds of the mesh. */
-	BoundingBox Bounds;
-
 	/** Load a static mesh from file. */
-	StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::string& Filename);
+	StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
 	StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex);
 
+	inline const BoundingBox& GetBounds() const { return Bounds; }
+
 private:
+	/** Local-space bounds of the mesh. */
+	BoundingBox Bounds;
+
 	void AssimpLoad(AssetManager& Assets, DRMDevice& Device);
 
 	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device);

@@ -20,18 +20,18 @@ public:
 	 * @return Array of static mesh render resources. Size is 1 if Breakup is false.
 	 * @TODO Replace with std::span
 	*/
-	std::vector<const StaticMesh*> LoadStaticMesh(const std::string& Name, const std::string& File, bool Breakup = false);
-	const StaticMesh* GetStaticMesh(const std::string& Name) const;
+	std::vector<const StaticMesh*> LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup = false);
+	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
 
-	void LoadImage(const std::string& Name, const std::string& File, EFormat Format = EFormat::R8G8B8A8_UNORM);
+	void LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format = EFormat::R8G8B8A8_UNORM);
 	void LoadImage(const std::filesystem::path& Path, drm::ImageRef Image);
-	drm::ImageRef GetImage(const std::string& Name) const;
+	drm::ImageRef GetImage(const std::string& AssetName) const;
 
-	const Material* LoadMaterial(const std::string& Name, std::unique_ptr<Material> Material);
-	const Material* GetMaterial(const std::string& Name);
+	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
+	const Material* GetMaterial(const std::string& AssetName);
 
-	void LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);
-	drm::ImageRef GetCubemap(const std::string& Name) const;
+	void LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);
+	drm::ImageRef GetCubemap(const std::string& AssetName) const;
 
 private:
 	DRMDevice& Device;

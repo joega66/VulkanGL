@@ -51,7 +51,7 @@ static const Material* ProcessMaterials(const std::string& AssetName, AssetManag
 	{
 		MaterialDescriptors Descriptors;
 
-		if (drm::ImageRef BaseColor = LoadMaterials(Device, StaticMesh->Directory, AiMaterial, aiTextureType_DIFFUSE, TextureCache); BaseColor)
+		if (drm::ImageRef BaseColor = LoadMaterials(Device, StaticMesh->Path.root_directory().generic_string(), AiMaterial, aiTextureType_DIFFUSE, TextureCache); BaseColor)
 		{
 			Descriptors.BaseColor = BaseColor;
 		}
@@ -171,14 +171,14 @@ void ProcessNode(AssetManager& Assets, DRMDevice& Device, StaticMesh* StaticMesh
 	}
 }
 
-StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::string& FilenameStr)
-	: Filename(FilenameStr), Directory(FilenameStr.substr(0, FilenameStr.find_last_of("/")))
+StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path)
+	: Path(Path)
 {
-	if (Filename.extension() == ".obj")
+	if (Path.extension() == ".obj")
 	{
 		AssimpLoad(Assets, Device);
 	}
-	else if (Filename.extension() == ".bin" || Filename.extension() == ".gltf")
+	else if (Path.extension() == ".gltf")
 	{
 		GLTFLoad(AssetName, Assets, Device);
 	}
@@ -191,8 +191,7 @@ StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDe
 }
 
 StaticMesh::StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex)
-	: Filename(StaticMesh.Filename)
-	, Directory(StaticMesh.Directory)
+	: Path(StaticMesh.Path)
 	, Submeshes{ StaticMesh.Submeshes[SubmeshIndex] }
 	, Materials{ StaticMesh.Materials[SubmeshIndex] }
 	, SubmeshBounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
@@ -213,7 +212,7 @@ void StaticMesh::AssimpLoad(AssetManager& Assets, DRMDevice& Device)
 		| aiProcess_CalcTangentSpace;
 
 	Assimp::Importer Importer;
-	const aiScene* AiScene = Importer.ReadFile(Filename.generic_string(), AssimpLoadFlags);
+	const aiScene* AiScene = Importer.ReadFile(Path.generic_string(), AssimpLoadFlags);
 
 	if (!AiScene || AiScene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !AiScene->mRootNode)
 	{
@@ -240,7 +239,7 @@ void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, DR
 	std::string Err;
 	std::string Warn;
 
-	Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Filename.generic_string());
+	Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Path.generic_string());
 
 	if (!Err.empty())
 	{

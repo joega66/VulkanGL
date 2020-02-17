@@ -20,11 +20,11 @@ AssetManager::AssetManager(DRMDevice& Device)
 	LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 }
 
-std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& Name, const std::string& File, bool Breakup)
+std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup)
 {
-	check(StaticMeshes.find(Name) == StaticMeshes.end(), "Static mesh %s already exists.", Name.c_str());
+	check(StaticMeshes.find(AssetName) == StaticMeshes.end(), "Static mesh %s already exists.", AssetName.c_str());
 
-	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(Name, *this, Device, File);
+	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(AssetName, *this, Device, Path);
 
 	if (Breakup)
 	{
@@ -32,7 +32,7 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& N
 		OutStaticMeshes.reserve(StaticMesh->Submeshes.size());
 		for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
 		{
-			const std::string MadeUpSubmeshName = Name + std::to_string(SubmeshIndex);
+			const std::string MadeUpSubmeshName = AssetName + std::to_string(SubmeshIndex);
 			StaticMeshes[MadeUpSubmeshName] = std::make_unique<class StaticMesh>(*StaticMesh, SubmeshIndex);
 			OutStaticMeshes.push_back(StaticMeshes[MadeUpSubmeshName].get());
 		}
@@ -40,22 +40,22 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& N
 	}
 	else
 	{
-		StaticMeshes[Name] = std::move(StaticMesh);
-		return { StaticMeshes[Name].get() };
+		StaticMeshes[AssetName] = std::move(StaticMesh);
+		return { StaticMeshes[AssetName].get() };
 	}
 }
 
-const StaticMesh* AssetManager::GetStaticMesh(const std::string& Name) const
+const StaticMesh* AssetManager::GetStaticMesh(const std::string& AssetName) const
 {
-	return StaticMeshes.at(Name).get();
+	return StaticMeshes.at(AssetName).get();
 }
 
-void AssetManager::LoadImage(const std::string& Name, const std::string& File, EFormat Format)
+void AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format)
 {
-	check(Images.find(Name) == Images.end(), "Image %s already exists.", Name.c_str());
+	check(Images.find(AssetName) == Images.end(), "Image %s already exists.", AssetName.c_str());
 
 	int32 Width, Height, Channels;
-	uint8* Pixels = Platform::LoadImage(File, Width, Height, Channels);
+	uint8* Pixels = Platform::LoadImage(Path.generic_string(), Width, Height, Channels);
 
 	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
 
@@ -63,7 +63,7 @@ void AssetManager::LoadImage(const std::string& Name, const std::string& File, E
 
 	Platform::FreeImage(Pixels);
 
-	Images[Name] = Image;
+	Images[AssetName] = Image;
 }
 
 void AssetManager::LoadImage(const std::filesystem::path& Path, drm::ImageRef Image)
@@ -72,29 +72,29 @@ void AssetManager::LoadImage(const std::filesystem::path& Path, drm::ImageRef Im
 	Images[Path.generic_string()] = Image;
 }
 
-drm::ImageRef AssetManager::GetImage(const std::string& Name) const
+drm::ImageRef AssetManager::GetImage(const std::string& AssetName) const
 {
-	return Images.find(Name) == Images.end() ? nullptr : Images.at(Name);
+	return Images.find(AssetName) == Images.end() ? nullptr : Images.at(AssetName);
 }
 
-const Material* AssetManager::LoadMaterial(const std::string& Name, std::unique_ptr<Material> Material)
+const Material* AssetManager::LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material)
 {
-	check(Materials.find(Name) == Materials.end(), "Material %s already exists.", Name.c_str());
+	check(Materials.find(AssetName) == Materials.end(), "Material %s already exists.", AssetName.c_str());
 
 	Material->DescriptorSet = MaterialTemplate.CreateDescriptorSet();
 	MaterialTemplate.UpdateDescriptorSet(Material->DescriptorSet, Material->Descriptors);
 
-	Materials[Name] = std::move(Material);
+	Materials[AssetName] = std::move(Material);
 
-	return Materials[Name].get();
+	return Materials[AssetName].get();
 }
 
-const Material* AssetManager::GetMaterial(const std::string& Name)
+const Material* AssetManager::GetMaterial(const std::string& AssetName)
 {
-	return Materials.find(Name) == Materials.end() ? nullptr : Materials[Name].get();
+	return Materials.find(AssetName) == Materials.end() ? nullptr : Materials[AssetName].get();
 }
 
-void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::string, 6>& Files, EFormat Format)
+void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format)
 {
 	drm::ImageRef Image;
 	drm::BufferRef StagingBuffer;
@@ -144,10 +144,10 @@ void AssetManager::LoadCubemap(const std::string& Name, const std::array<std::st
 
 	Device.SubmitCommands(CmdList);
 
-	Cubemaps[Name] = Image;
+	Cubemaps[AssetName] = Image;
 }
 
-drm::ImageRef AssetManager::GetCubemap(const std::string& Name) const
+drm::ImageRef AssetManager::GetCubemap(const std::string& AssetName) const
 {
-	return Cubemaps.at(Name);
+	return Cubemaps.at(AssetName);
 }
