@@ -23,8 +23,6 @@ class ShadowProxy
 public:
 	static constexpr EFormat FORMAT = EFormat::D32_SFLOAT;
 
-	ShadowProxy() = default;
-
 	ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors>& ShadowTemplate, const struct DirectionalLight& DirectionalLight);
 
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);

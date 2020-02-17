@@ -5,8 +5,6 @@
 class MeshProxy
 {
 public:
-	MeshProxy() = default;
-
 	MeshProxy(
 		DRMDevice& Device,
 		drm::DescriptorSetRef SurfaceSet,
