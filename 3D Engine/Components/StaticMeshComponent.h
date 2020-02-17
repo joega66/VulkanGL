@@ -1,12 +1,13 @@
 #pragma once
-#include <Engine/StaticMesh.h>
+
+class StaticMesh;
+class Material;
 
 class StaticMeshComponent
 {
 public:
-	StaticMeshComponent() = default;
-
-	StaticMeshComponent(const StaticMesh* StaticMesh);
+	StaticMeshComponent(const StaticMesh* StaticMesh, const Material* Material);
 
 	const StaticMesh* StaticMesh = nullptr;
+	const Material* Material = nullptr;
 };

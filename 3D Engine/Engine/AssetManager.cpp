@@ -3,7 +3,10 @@
 
 AssetManager::AssetManager(DRMDevice& Device)
 	: Device(Device)
+	, MaterialTemplate(Device)
 {
+	Material::CreateDebugMaterials(Device);
+
 	std::array<std::string, 6> Cubemap =
 	{
 		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
@@ -22,15 +25,6 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& N
 	check(StaticMeshes.find(Name) == StaticMeshes.end(), "Static mesh %s already exists.", Name.c_str());
 
 	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(Name, *this, Device, File);
-
-	// Add default engine materials if missing.
-	for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
-	{
-		if (!StaticMesh->Materials[SubmeshIndex].Descriptors.BaseColor)
-		{
-			StaticMesh->Materials[SubmeshIndex].Descriptors.BaseColor = GetImage("Engine_BaseColor_Default");
-		}
-	}
 
 	if (Breakup)
 	{
@@ -86,7 +80,12 @@ drm::ImageRef AssetManager::GetImage(const std::string& Name) const
 const Material* AssetManager::LoadMaterial(const std::string& Name, std::unique_ptr<Material> Material)
 {
 	check(Materials.find(Name) == Materials.end(), "Material %s already exists.", Name.c_str());
+
+	Material->DescriptorSet = MaterialTemplate.CreateDescriptorSet();
+	MaterialTemplate.UpdateDescriptorSet(Material->DescriptorSet, Material->Descriptors);
+
 	Materials[Name] = std::move(Material);
+
 	return Materials[Name].get();
 }
 

@@ -15,8 +15,7 @@ void GameSystem::Start(Engine& Engine)
 		for (auto StaticMesh : SponzaMeshes)
 		{
 			auto SponzaEntity = ECS.CreateEntity();
-			ECS.AddComponent(SponzaEntity, StaticMeshComponent(StaticMesh));
-			ECS.AddComponent(SponzaEntity, Material(StaticMesh->Materials.front()));
+			ECS.AddComponent(SponzaEntity, StaticMeshComponent(StaticMesh, StaticMesh->Materials.front()));
 
 			auto& Transform = ECS.GetComponent<class Transform>(SponzaEntity);
 			Transform.Scale(ECS, glm::vec3(0.1f));
@@ -27,8 +26,7 @@ void GameSystem::Start(Engine& Engine)
 		std::vector<const StaticMesh*> HelmetMesh = Engine.Assets.LoadStaticMesh("DamagedHelmet", "../Meshes/DamagedHelmet/DamagedHelmet.gltf");
 
 		auto HelmetEntity = ECS.CreateEntity();
-		ECS.AddComponent(HelmetEntity, StaticMeshComponent(HelmetMesh.front()));
-		ECS.AddComponent(HelmetEntity, Material(HelmetMesh.front()->Materials.front()));
+		ECS.AddComponent(HelmetEntity, StaticMeshComponent(HelmetMesh.front(), HelmetMesh.front()->Materials.front()));
 
 		auto& Transform = ECS.GetComponent<class Transform>(HelmetEntity);
 		Transform.Scale(ECS, glm::vec3(2));

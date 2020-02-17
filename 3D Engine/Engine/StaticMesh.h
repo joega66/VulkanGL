@@ -1,7 +1,7 @@
 #pragma once
-#include <Components/Material.h>
 #include <Physics/Physics.h>
 #include <DRM.h>
+#include "Material.h"
 #include <filesystem>
 
 class AssetManager;
@@ -62,7 +62,7 @@ public:
 
 	/** Submesh data. */
 	std::vector<Submesh> Submeshes;
-	std::vector<Material> Materials;
+	std::vector<const Material*> Materials;
 	std::vector<BoundingBox> SubmeshBounds;
 	std::vector<std::string> SubmeshNames;
 
@@ -76,7 +76,7 @@ public:
 	StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex);
 
 private:
-	void AssimpLoad(DRMDevice& Device);
+	void AssimpLoad(AssetManager& Assets, DRMDevice& Device);
 
 	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device);
 	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, DRMDevice& Device);

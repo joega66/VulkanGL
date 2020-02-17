@@ -12,8 +12,7 @@ UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 );
 
 RenderSystem::RenderSystem(Engine& Engine)
-	: MaterialTemplate(Engine.Device)
-	, StaticMeshTemplate(Engine.Device)
+	: StaticMeshTemplate(Engine.Device)
 	, ShadowTemplate(Engine.Device)
 {
 }
@@ -26,25 +25,23 @@ void RenderSystem::Start(Engine& Engine)
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
-
 		StaticMeshDescriptors StaticMeshDescriptors = { Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer)) };
-
 		drm::DescriptorSetRef SurfaceSet = StaticMeshTemplate.CreateDescriptorSet();
-
 		StaticMeshTemplate.UpdateDescriptorSet(SurfaceSet, StaticMeshDescriptors);
 
-		Material& Material = ECS.GetComponent<class Material>(Entity);
-
-		drm::DescriptorSetRef MaterialSet = MaterialTemplate.CreateDescriptorSet();
-
-		MaterialTemplate.UpdateDescriptorSet(MaterialSet, Material.Descriptors);
-
-		ECS.AddComponent<MeshProxy>(Entity, MeshProxy(Device, SurfaceSet, Material, MaterialSet, StaticMesh->Submeshes, StaticMeshDescriptors.LocalToWorldUniform));
+		ECS.AddComponent(Entity, 
+			MeshProxy(
+				Device, 
+				SurfaceSet, 
+				StaticMeshComponent.Material,
+				StaticMesh->Submeshes,
+				StaticMeshDescriptors.LocalToWorldUniform)
+			);
 	});
 
 	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
 	{
-		ECS.AddComponent<ShadowProxy>(Entity, ShadowProxy(Device, ShadowTemplate, DirectionalLight));
+		ECS.AddComponent(Entity, ShadowProxy(Device, ShadowTemplate, DirectionalLight));
 	});
 }
 

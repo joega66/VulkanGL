@@ -170,9 +170,6 @@
     <ClInclude Include="Renderer\ShadowProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Components\Material.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Components\StaticMeshComponent.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
@@ -240,6 +237,9 @@
       <Filter>Source\Components</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Engine.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Material.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -352,9 +352,6 @@
     <ClCompile Include="Renderer\ShadowProxy.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Components\Material.cpp">
-      <Filter>Source\Components</Filter>
-    </ClCompile>
     <ClCompile Include="Components\StaticMeshComponent.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
@@ -408,6 +405,9 @@
     </ClCompile>
     <ClCompile Include="DRM.cpp">
       <Filter>Source\DRM</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Material.cpp">
+      <Filter>Source\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

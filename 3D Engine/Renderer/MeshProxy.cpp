@@ -3,13 +3,11 @@
 MeshProxy::MeshProxy(
 	DRMDevice& Device,
 	drm::DescriptorSetRef SurfaceSet,
-	const class Material& Material,
-	drm::DescriptorSetRef MaterialSet,
+	const class Material* Material,
 	const std::vector<Submesh>& Submeshes,
 	const drm::BufferRef& LocalToWorldUniform)
 	: SurfaceSet(SurfaceSet)
-	, Material(&Material)
-	, MaterialSet(MaterialSet)
+	, Material(Material)
 	, LocalToWorldUniform(LocalToWorldUniform)
 	, Submeshes(Submeshes)
 {

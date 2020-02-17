@@ -1,5 +1,6 @@
 #include "Physics.h"
 #include <ECS/EntityManager.h>
+#include <Engine/StaticMesh.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 

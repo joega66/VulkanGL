@@ -28,16 +28,7 @@ using uint64 = uint64_t;
 using float64 = double;
 
 template<typename T>
-using UniqueRef = std::unique_ptr<T>;
-
-template<typename T>
 using Ref = std::shared_ptr<T>;
-
-template<typename T, typename ...RefArgs>
-UniqueRef<T> MakeUniqueRef(RefArgs& ...Args)
-{
-	return std::make_unique<T>(Args...);
-}
 
 template<typename T, typename ...RefArgs>
 Ref<T> MakeRef(RefArgs&& ...Args)

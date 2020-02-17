@@ -1,6 +1,6 @@
 #pragma once
 #include <ECS/System.h>
-#include <Components/Material.h>
+#include <Engine/Material.h>
 #include <Renderer/ShadowProxy.h>
 
 class StaticMeshDescriptors
@@ -22,8 +22,6 @@ public:
 
 	virtual void Start(class Engine& Engine) override;
 	virtual void Update(class Engine& Engine) override;
-
-	DescriptorTemplate<MaterialDescriptors>	MaterialTemplate;
 
 	DescriptorTemplate<StaticMeshDescriptors> StaticMeshTemplate;
 

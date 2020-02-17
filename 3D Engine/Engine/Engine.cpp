@@ -33,8 +33,6 @@ Engine::Engine(
 
 void Engine::Main()
 {
-	Material::CreateDebugMaterials(Device);
-
 	SceneRenderer SceneRenderer(*this);
 
 	SystemsManager SystemsManager;

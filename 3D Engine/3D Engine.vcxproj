@@ -25,7 +25,6 @@
     <ClCompile Include="..\ThirdParty\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="Components\Material.cpp" />
     <ClCompile Include="Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="DRM.cpp" />
@@ -36,6 +35,7 @@
     <ClCompile Include="Engine\Cursor.cpp" />
     <ClCompile Include="Engine\Engine.cpp" />
     <ClCompile Include="Engine\Input.cpp" />
+    <ClCompile Include="Engine\Material.cpp" />
     <ClCompile Include="Engine\Scene.cpp" />
     <ClCompile Include="Engine\Screen.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
@@ -86,7 +86,6 @@
     <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h" />
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
     <ClInclude Include="Components\Light.h" />
-    <ClInclude Include="Components\Material.h" />
     <ClInclude Include="Components\Outline.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
@@ -99,6 +98,7 @@
     <ClInclude Include="Engine\Cursor.h" />
     <ClInclude Include="Engine\Engine.h" />
     <ClInclude Include="Engine\Input.h" />
+    <ClInclude Include="Engine\Material.h" />
     <ClInclude Include="Engine\Scene.h" />
     <ClInclude Include="Engine\Screen.h" />
     <ClInclude Include="Engine\StaticMesh.h" />

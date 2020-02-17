@@ -45,6 +45,8 @@ public:
 
 	MaterialDescriptors Descriptors;
 
+	drm::DescriptorSetRef DescriptorSet;
+
 	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };
 	inline float GetRoughness() const { return Roughness; }
 	inline float GetMetallicity() const { return Metallicity; }

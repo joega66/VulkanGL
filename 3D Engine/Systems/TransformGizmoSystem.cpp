@@ -29,20 +29,27 @@ void TransformGizmoSystem::Start(Engine& Engine)
 	ZAxis.Translate(ECS, glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(ECS, glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
+	MaterialDescriptors DescX;
+	DescX.BaseColor = Material::Green;
+	const Material* MaterialX = Engine.Assets.LoadMaterial("Engine_X_Axis",
+		std::make_unique<Material>(Engine.Device, DescX, EMaterialMode::Opaque, 0.0f, 0.0f)
+	);
+	MaterialDescriptors DescY;
+	DescY.BaseColor = Material::Blue;
+	const Material* MaterialY = Engine.Assets.LoadMaterial("Engine_Y_Axis",
+		std::make_unique<Material>(Engine.Device, DescY, EMaterialMode::Opaque, 0.0f, 0.0f)
+	);
+	MaterialDescriptors DescZ;
+	DescZ.BaseColor = Material::Red;
+	const Material* MaterialZ = Engine.Assets.LoadMaterial("Engine_Z_Axis",
+		std::make_unique<Material>(Engine.Device, DescZ, EMaterialMode::Opaque, 0.0f, 0.0f)
+	);
+
 	auto TransformGizmo = Engine.Assets.GetStaticMesh("Transform_Gizmo");
 
-	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.X, TransformGizmo);
-	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Y, TransformGizmo);
-	ECS.AddComponent<StaticMeshComponent>(TranslateAxis.Z, TransformGizmo);
-	
-	auto& MatX = ECS.AddComponent(TranslateAxis.X, Material());
-	MatX.Descriptors.BaseColor = Material::Green;
-
-	auto& MatY = ECS.AddComponent(TranslateAxis.Y, Material());
-	MatY.Descriptors.BaseColor = Material::Blue;
-
-	auto& MatZ = ECS.AddComponent(TranslateAxis.Z, Material());
-	MatZ.Descriptors.BaseColor = Material::Red;
+	ECS.AddComponent(TranslateAxis.X, StaticMeshComponent(TransformGizmo, MaterialX));
+	ECS.AddComponent(TranslateAxis.Y, StaticMeshComponent(TransformGizmo, MaterialY));
+	ECS.AddComponent(TranslateAxis.Z, StaticMeshComponent(TransformGizmo, MaterialZ));
 }
 
 void TransformGizmoSystem::Update(Engine& Engine)

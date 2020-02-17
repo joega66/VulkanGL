@@ -1,9 +1,9 @@
 #include "SceneProxy.h"
 #include <Components/Light.h>
-#include <Components/Material.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 #include <Engine/Engine.h>
+#include <Engine/Material.h>
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(Engine& Engine)

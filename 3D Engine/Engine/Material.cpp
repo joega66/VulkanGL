@@ -31,12 +31,6 @@ Material::Material(
 	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
 }
 
-MaterialDescriptors::MaterialDescriptors()
-	: BaseColor(Material::Dummy)
-	, MetallicRoughness(Material::Dummy)
-{
-}
-
 void Material::CreateDebugMaterials(DRMDevice& Device)
 {
 	std::vector<uint8> Colors =
@@ -91,4 +85,10 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
 
 	Device.SubmitCommands(CmdList);
+}
+
+MaterialDescriptors::MaterialDescriptors()
+	: BaseColor(Material::Dummy)
+	, MetallicRoughness(Material::Dummy)
+{
 }

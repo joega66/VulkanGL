@@ -124,7 +124,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	VoxelDescriptorSet.VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
+	VoxelDescriptorSet.VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::KeepCPUAccessible, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
 
 	VoxelDescriptorSet.Update();
 
