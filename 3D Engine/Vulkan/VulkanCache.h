@@ -18,11 +18,7 @@ public:
 
 	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts);
 
-	VkPipeline GetPipeline(
-		const PipelineStateDesc& PSODesc, 
-		VkPipelineLayout PipelineLayout, 
-		VkRenderPass RenderPass, 
-		uint32 NumRenderTargets);
+	VkPipeline GetPipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
 
 	VkSampler GetSampler(const SamplerState& Sampler);
 
@@ -51,10 +47,8 @@ private:
 	{
 		PipelineStateDesc PSODesc;
 		VkPipelineLayout PipelineLayout;
-		VkRenderPass RenderPass;
-		uint32 NumAttachments;
 
-		VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout, VkRenderPass RenderPass, uint32 NumRenderTargets);
+		VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
 		bool operator==(const VulkanPipelineHash& Other) const;
 		bool HasShader(const drm::Shader* Shader) const;
 	};
@@ -69,11 +63,7 @@ private:
 
 	[[nodiscard]] VkFramebuffer CreateFramebuffer(VkRenderPass RenderPass, const RenderPassDesc& RPDesc) const;
 
-	[[nodiscard]] VkPipeline CreatePipeline(
-		const PipelineStateDesc& PSODesc,
-		VkPipelineLayout PipelineLayout,
-		VkRenderPass RenderPass,
-		uint32 NumRenderTargets);
+	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
 
 	std::unordered_map<SamplerState, VkSampler, SamplerState::Hash> SamplerCache;
 };

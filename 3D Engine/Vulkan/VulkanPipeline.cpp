@@ -14,24 +14,17 @@ static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 	ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
 };
 
-VulkanCache::VulkanPipelineHash::VulkanPipelineHash(
-	const PipelineStateDesc& PSODesc, 
-	VkPipelineLayout PipelineLayout, 
-	VkRenderPass RenderPass, 
-	uint32 NumRenderTargets) : 
-	PSODesc(PSODesc), 
-	PipelineLayout(PipelineLayout), 
-	RenderPass(RenderPass), 
-	NumAttachments(NumRenderTargets)
+VulkanCache::VulkanPipelineHash::VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout) 
+	: PSODesc(PSODesc)
+	, PipelineLayout(PipelineLayout)
 {
 }
 
 bool VulkanCache::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other) const
 {
-	return PSODesc == Other.PSODesc
-		&& PipelineLayout == Other.PipelineLayout
-		&& RenderPass == Other.RenderPass
-		&& NumAttachments == Other.NumAttachments;
+	return PSODesc.RenderPass->GetRenderPass() == Other.PSODesc.RenderPass->GetRenderPass()
+		&& PSODesc == Other.PSODesc 
+		&& PipelineLayout == Other.PipelineLayout;
 }
 
 bool VulkanCache::VulkanPipelineHash::HasShader(const drm::Shader* Shader) const
@@ -57,11 +50,10 @@ bool VulkanCache::VulkanPipelineHash::HasShader(const drm::Shader* Shader) const
 
 VkPipeline VulkanCache::GetPipeline(
 	const PipelineStateDesc& PSODesc,
-	VkPipelineLayout PipelineLayout,
-	VkRenderPass RenderPass,
-	uint32 NumRenderTargets)
+	VkPipelineLayout PipelineLayout
+)
 {
-	VulkanPipelineHash PipelineHash(PSODesc, PipelineLayout, RenderPass, NumRenderTargets);
+	VulkanPipelineHash PipelineHash(PSODesc, PipelineLayout);
 
 	// Find or create the pipeline.
 	for (const auto& [OtherPipelineHash, CachedPipeline] : PipelineCache)
@@ -72,7 +64,7 @@ VkPipeline VulkanCache::GetPipeline(
 		}
 	}
 
-	VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout, RenderPass, NumRenderTargets);
+	VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
 	PipelineCache.push_back({ std::move(PipelineHash), Pipeline });
 	return Pipeline;
 }
@@ -163,7 +155,6 @@ static void CreateMultisampleState(const PipelineStateDesc& PSODesc, VkPipelineM
 
 static void CreateColorBlendState(
 	const PipelineStateDesc& PSODesc,
-	uint32 NumColorAttachments,
 	VkPipelineColorBlendStateCreateInfo& ColorBlendState,
 	std::vector<VkPipelineColorBlendAttachmentState>& ColorBlendAttachmentStates)
 {
@@ -225,10 +216,10 @@ static void CreateColorBlendState(
 		}
 	};
 
-	ColorBlendAttachmentStates.reserve(NumColorAttachments);
+	ColorBlendAttachmentStates.reserve(PSODesc.RenderPass->GetNumAttachments());
 	if (PSODesc.ColorBlendAttachmentStates.empty())
 	{
-		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(NumColorAttachments, ColorBlendAttachmentState{});
+		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(PSODesc.RenderPass->GetNumAttachments(), ColorBlendAttachmentState{});
 		ConvertColorBlendAttachmentStates(DefaultColorBlendAttachmentStates, ColorBlendAttachmentStates);
 	}
 	else
@@ -243,7 +234,7 @@ static void CreateColorBlendState(
 	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
 	ColorBlendState.logicOpEnable = false;
 	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
-	ColorBlendState.attachmentCount = NumColorAttachments;
+	ColorBlendState.attachmentCount = PSODesc.RenderPass->GetNumAttachments();
 }
 
 static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
@@ -421,11 +412,7 @@ static void CreateViewportState(const PipelineStateDesc& PSODesc, VkViewport& Vi
 	ViewportState.scissorCount = 1;
 }
 
-VkPipeline VulkanCache::CreatePipeline(
-	const PipelineStateDesc& PSODesc,
-	VkPipelineLayout PipelineLayout,
-	VkRenderPass RenderPass,
-	uint32 NumRenderTargets)
+VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout)
 {
 	VkPipelineDepthStencilStateCreateInfo DepthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	CreateDepthStencilState(PSODesc, DepthStencilState);
@@ -438,7 +425,7 @@ VkPipeline VulkanCache::CreatePipeline(
 
 	std::vector<VkPipelineColorBlendAttachmentState> ColorBlendAttachmentStates;
 	VkPipelineColorBlendStateCreateInfo ColorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-	CreateColorBlendState(PSODesc, NumRenderTargets, ColorBlendState, ColorBlendAttachmentStates);
+	CreateColorBlendState(PSODesc, ColorBlendState, ColorBlendAttachmentStates);
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageInfos;
 	CreateShaderStageInfos(PSODesc, ShaderStageInfos);
@@ -475,7 +462,7 @@ VkPipeline VulkanCache::CreatePipeline(
 	PipelineInfo.pColorBlendState = &ColorBlendState;
 	PipelineInfo.pDynamicState = &DynamicState;
 	PipelineInfo.layout = PipelineLayout;
-	PipelineInfo.renderPass = RenderPass;
+	PipelineInfo.renderPass = PSODesc.RenderPass->GetRenderPass();
 	PipelineInfo.subpass = 0;
 	PipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

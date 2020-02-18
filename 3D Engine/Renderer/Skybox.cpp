@@ -52,6 +52,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
 
 	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &LightingRP;
 	PSODesc.Viewport.Width = Scene.GetWidth();
 	PSODesc.Viewport.Height = Scene.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };

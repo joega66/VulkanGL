@@ -108,6 +108,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 		CmdList.BeginRenderPass(RenderPass);
 
 		PipelineStateDesc PSODesc = {};
+		PSODesc.RenderPass = &RenderPass;
 		PSODesc.Viewport.Width = ShadowMap->Width;
 		PSODesc.Viewport.Height = ShadowMap->Height;
 		PSODesc.RasterizationState.DepthBiasEnable = true;
@@ -142,6 +143,7 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 		CmdList.BindDescriptorSets(Descriptors.size(), Descriptors.data());
 
 		PipelineStateDesc PSODesc = {};
+		PSODesc.RenderPass = &ShadowMaskRP;
 		PSODesc.Viewport.Width = ShadowMask->Width;
 		PSODesc.Viewport.Height = ShadowMask->Height;
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;

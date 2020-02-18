@@ -36,9 +36,6 @@ void VulkanCommandList::BeginRenderPass(const VulkanRenderPass& RenderPass)
 	BeginInfo.clearValueCount = RenderPass.GetClearValues().size();
 
 	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	Pending.RenderPass = RenderPass.GetRenderPass();
-	Pending.NumRenderTargets = RenderPass.GetNumAttachments();
 }
 
 void VulkanCommandList::EndRenderPass()
@@ -48,15 +45,7 @@ void VulkanCommandList::EndRenderPass()
 
 void VulkanCommandList::BindPipeline(const PipelineStateDesc& PSODesc)
 {
-	const ShaderStages& PipelineState = PSODesc.ShaderStages;
-	// Validate gfx pipeline stages.
-	assert(PipelineState.Vertex && PipelineState.Vertex->CompilationInfo.Stage == EShaderStage::Vertex);
-	assert(!PipelineState.TessControl || (PipelineState.TessControl && PipelineState.TessControl->CompilationInfo.Stage == EShaderStage::TessControl));
-	assert(!PipelineState.TessEval || (PipelineState.TessEval && PipelineState.TessEval->CompilationInfo.Stage == EShaderStage::TessEvaluation));
-	assert(!PipelineState.Geometry || (PipelineState.Geometry && PipelineState.Geometry->CompilationInfo.Stage == EShaderStage::Geometry));
-	assert(!PipelineState.Fragment || (PipelineState.Fragment && PipelineState.Fragment->CompilationInfo.Stage == EShaderStage::Fragment));
-
-	VkPipeline Pipeline = Device.GetCache().GetPipeline(PSODesc, Pending.PipelineLayout, Pending.RenderPass, Pending.NumRenderTargets);
+	VkPipeline Pipeline = Device.GetCache().GetPipeline(PSODesc, Pending.PipelineLayout);
 	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
 }
 

@@ -90,6 +90,7 @@ struct LightingPassDescriptorSets
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &LightingRP;
 	PSODesc.Viewport.Width = SceneTextures.Depth->Width;
 	PSODesc.Viewport.Height = SceneTextures.Depth->Height;
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;

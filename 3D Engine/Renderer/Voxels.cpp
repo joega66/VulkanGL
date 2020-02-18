@@ -180,6 +180,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 	CmdList.BeginRenderPass(VoxelRP);
 
 	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &VoxelRP;
 	PSODesc.DepthStencilState.DepthTestEnable = false;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 	PSODesc.Viewport.Width = VoxelGridSize;
@@ -282,6 +283,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &VoxelVisualizationRP;
 	PSODesc.Viewport.Width = Scene.GetWidth();
 	PSODesc.Viewport.Height = Scene.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;

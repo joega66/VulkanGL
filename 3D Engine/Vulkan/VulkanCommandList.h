@@ -27,7 +27,7 @@ public:
 
 	void EndRenderPass();
 
-	void BindPipeline(const PipelineStateDesc& PSODesc);
+	void BindPipeline(const struct PipelineStateDesc& PSODesc);
 
 	void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets);
 
@@ -92,8 +92,6 @@ private:
 
 	struct PendingState
 	{
-		uint32 NumRenderTargets;
-		VkRenderPass RenderPass;
 		VkPipelineLayout PipelineLayout;
 	} Pending;
 };

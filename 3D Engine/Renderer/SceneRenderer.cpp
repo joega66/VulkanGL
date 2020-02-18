@@ -73,7 +73,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 			RenderSkybox(Scene, CmdList);
 
-			UserInterface.Render(CmdList);
+			UserInterface.Render(LightingRP, CmdList);
 
 			CmdList.EndRenderPass();
 		}
@@ -95,6 +95,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		CmdList.BindDescriptorSets(1, &ShadowProxy.GetDescriptorSet());
 
 		PipelineStateDesc PSODesc = {};
+		PSODesc.RenderPass = &DepthVisualizationRP;
 		PSODesc.Viewport.Width = SceneTextures.Depth->Width;
 		PSODesc.Viewport.Height = SceneTextures.Depth->Height;
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;

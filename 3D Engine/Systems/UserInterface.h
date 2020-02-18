@@ -14,7 +14,7 @@ public:
 
 	virtual void Update(class Engine& Engine) override;
 
-	void Render(drm::CommandList& CmdList);
+	void Render(const drm::RenderPass& RenderPass, drm::CommandList& CmdList);
 
 private:
 	void CreateImGuiRenderResources(DRMDevice& Device);

@@ -50,5 +50,3 @@ private:
 	/** Number of color attachments. */
 	uint32 NumAttachments;
 };
-
-CLASS(VulkanRenderPass);

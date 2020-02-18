@@ -101,7 +101,7 @@ void UserInterface::Update(Engine& Engine)
 
 	ImGui::ShowDemoWindow();
 	
-	ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+	ImGui::Begin("Hello, world!");
 	ImGui::End();
 	
 	ImGui::Render();
@@ -109,9 +109,11 @@ void UserInterface::Update(Engine& Engine)
 	UploadImGuiDrawData(Engine.Device);
 }
 
-void UserInterface::Render(drm::CommandList& CmdList)
+void UserInterface::Render(const drm::RenderPass& RenderPass, drm::CommandList& CmdList)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
+
+	PSODesc.RenderPass = &RenderPass;
 
 	if (DrawData->CmdListsCount > 0)
 	{
