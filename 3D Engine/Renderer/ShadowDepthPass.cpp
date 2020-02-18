@@ -109,8 +109,8 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 
 		PipelineStateDesc PSODesc = {};
 		PSODesc.RenderPass = &RenderPass;
-		PSODesc.Viewport.Width = ShadowMap.Width;
-		PSODesc.Viewport.Height = ShadowMap.Height;
+		PSODesc.Viewport.Width = ShadowMap.GetWidth();
+		PSODesc.Viewport.Height = ShadowMap.GetHeight();
 		PSODesc.RasterizationState.DepthBiasEnable = true;
 		PSODesc.RasterizationState.DepthBiasConstantFactor = ShadowProxy.GetDepthBiasConstantFactor();
 		PSODesc.RasterizationState.DepthBiasSlopeFactor = ShadowProxy.GetDepthBiasSlopeFactor();
@@ -144,8 +144,8 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 
 		PipelineStateDesc PSODesc = {};
 		PSODesc.RenderPass = &ShadowMaskRP;
-		PSODesc.Viewport.Width = ShadowMask.Width;
-		PSODesc.Viewport.Height = ShadowMask.Height;
+		PSODesc.Viewport.Width = ShadowMask.GetWidth();
+		PSODesc.Viewport.Height = ShadowMask.GetHeight();
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
 		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();

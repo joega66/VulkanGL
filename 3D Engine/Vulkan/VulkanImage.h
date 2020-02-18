@@ -4,7 +4,7 @@
 
 class VulkanDevice;
 
-class VulkanImage : public drm::__Image
+class VulkanImage : public drm::ImagePrivate
 {
 public:
 	VkImage Image = VK_NULL_HANDLE;

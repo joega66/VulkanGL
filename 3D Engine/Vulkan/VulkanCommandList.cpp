@@ -201,7 +201,7 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.subresourceRange.baseMipLevel = 0;
 		Barrier.subresourceRange.levelCount = 1;
 		Barrier.subresourceRange.baseArrayLayer = 0;
-		Barrier.subresourceRange.layerCount = Any(Image.Usage & EImageUsage::Cubemap) ? 6 : 1;
+		Barrier.subresourceRange.layerCount = Any(Image.GetUsage() & EImageUsage::Cubemap) ? 6 : 1;
 
 		VulkanImageBarriers.push_back(Barrier);
 	}
@@ -222,7 +222,7 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 	VulkanBufferRef VulkanBuffer = ResourceCast(SrcBuffer);
 	std::vector<VkBufferImageCopy> Regions;
 
-	if (Any(DstImage.Usage & EImageUsage::Cubemap))
+	if (Any(DstImage.GetUsage() & EImageUsage::Cubemap))
 	{
 		const uint32 FaceSize = DstImage.GetSize() / 6;
 
@@ -242,9 +242,9 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 			Region.imageSubresource.layerCount = 1;
 			Region.imageOffset = { 0, 0, 0 };
 			Region.imageExtent = {
-				DstImage.Width,
-				DstImage.Height,
-				DstImage.Depth
+				DstImage.GetWidth(),
+				DstImage.GetHeight(),
+				DstImage.GetDepth()
 			};
 		}
 	}
@@ -260,9 +260,9 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 		Region.imageSubresource.layerCount = 1;
 		Region.imageOffset = { 0, 0, 0 };
 		Region.imageExtent = {
-			DstImage.Width,
-			DstImage.Height,
-			DstImage.Depth
+			DstImage.GetWidth(),
+			DstImage.GetHeight(),
+			DstImage.GetDepth()
 		};
 
 		Regions.push_back(Region);
@@ -288,11 +288,11 @@ void VulkanCommandList::BlitImage(
 	Region.dstSubresource.mipLevel = 0;
 	Region.dstSubresource.baseArrayLayer = 0;
 	Region.dstSubresource.layerCount = 1;
-	Region.srcOffsets[1].x = SrcImage.Width;
-	Region.srcOffsets[1].y = SrcImage.Height;
+	Region.srcOffsets[1].x = SrcImage.GetWidth();
+	Region.srcOffsets[1].y = SrcImage.GetHeight();
 	Region.srcOffsets[1].z = 1;
-	Region.dstOffsets[1].x = DstImage.Width;
-	Region.dstOffsets[1].y = DstImage.Height;
+	Region.dstOffsets[1].x = DstImage.GetWidth();
+	Region.dstOffsets[1].y = DstImage.GetHeight();
 	Region.dstOffsets[1].z = 1;
 
 	vkCmdBlitImage(

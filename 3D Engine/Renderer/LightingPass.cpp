@@ -91,8 +91,8 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdL
 {
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = &LightingRP;
-	PSODesc.Viewport.Width = SceneTextures.Depth->Width;
-	PSODesc.Viewport.Height = SceneTextures.Depth->Height;
+	PSODesc.Viewport.Width = SceneDepth.GetWidth();
+	PSODesc.Viewport.Height = SceneDepth.GetHeight();
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 

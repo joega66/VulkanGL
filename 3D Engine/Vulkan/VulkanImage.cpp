@@ -84,17 +84,17 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	: Device(&Device)
 	, Image(Image)
 	, Memory(Memory)
-	, drm::__Image(Format, Width, Height, Depth, UsageFlags)
+	, drm::ImagePrivate(Format, Width, Height, Depth, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
-	ViewInfo.viewType = Any(Usage & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : (Depth > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D);
+	ViewInfo.viewType = Any(GetUsage() & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : (Depth > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D);
 	ViewInfo.format = GetVulkanFormat();
 	ViewInfo.subresourceRange.aspectMask = GetVulkanAspect();
 	ViewInfo.subresourceRange.baseMipLevel = 0;
 	ViewInfo.subresourceRange.levelCount = 1;
 	ViewInfo.subresourceRange.baseArrayLayer = 0;
-	ViewInfo.subresourceRange.layerCount = Any(Usage & EImageUsage::Cubemap) ? 6 : 1;
+	ViewInfo.subresourceRange.layerCount = Any(GetUsage() & EImageUsage::Cubemap) ? 6 : 1;
 	ViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
@@ -105,7 +105,7 @@ VulkanImage::VulkanImage(VulkanImage&& Other)
 	, ImageView(std::exchange(Other.ImageView, VK_NULL_HANDLE))
 	, Memory(std::exchange(Other.Memory, VK_NULL_HANDLE))
 	, Device(std::exchange(Other.Device, nullptr))
-	, __Image(Other)
+	, ImagePrivate(Other)
 {
 }
 
@@ -230,7 +230,7 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 
 VkFormat VulkanImage::GetVulkanFormat() const
 {
-	return GetValue(VulkanFormat, Format);
+	return GetValue(VulkanFormat, GetFormat());
 }
 
 VkImageAspectFlags VulkanImage::GetVulkanAspect() const

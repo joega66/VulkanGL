@@ -113,7 +113,7 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 			MemMapped = Device.LockBuffer(StagingBuffer);
 		}
 
-		check(Image->Width == Width && Image->Height == Height, "Cubemap faces must all be the same size.");
+		check(Image->GetWidth() == Width && Image->GetHeight() == Height, "Cubemap faces must all be the same size.");
 
 		Platform::Memcpy((uint8*)MemMapped + FaceIndex * (Image->GetSize() / 6), Pixels, (Image->GetSize() / 6));
 

@@ -257,43 +257,42 @@ namespace drm
 	
 	CLASS(Buffer);
 
-	class __Image
+	class ImagePrivate
 	{
 	public:
-		EFormat Format;
-		uint32 Width;
-		uint32 Height;
-		uint32 Depth;
-		EImageUsage Usage;
-
-		__Image() = default;
-		__Image(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
+		ImagePrivate() = default;
+		ImagePrivate(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
 			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
 		{
 		}
 
+		inline EFormat GetFormat() const { return Format; }
+		inline uint32 GetWidth() const { return Width; }
+		inline uint32 GetHeight() const { return Height; }
+		inline uint32 GetDepth() const { return Depth; }
+		inline EImageUsage GetUsage() const { return Usage; }
+
 		bool IsColor() const;
-
 		bool IsStencil() const;
-
 		bool IsDepthStencil() const;
-
 		bool IsDepth() const;
-
 		uint32 GetStrideInBytes() const;
-
 		inline float64 GetAspect() const { return static_cast<float64>(Width) / static_cast<float64>(Height); }
-
 		inline uint32 GetSize() const 
 		{ 
 			return Width * Height * Depth * GetStrideInBytes() * (Any(Usage & EImageUsage::Cubemap) ? 6 : 1); 
 		}
 
 		static bool IsDepthStencil(EFormat Format);
-
 		static bool IsDepth(EFormat Format);
-
 		static uint32 GetSize(EFormat Format);
+
+	protected:
+		EFormat Format;
+		uint32 Width;
+		uint32 Height;
+		uint32 Depth;
+		EImageUsage Usage;
 	};
 
 	class DescriptorSet

@@ -18,7 +18,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.Width, ShadowMap.Height) };
+	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
 
 	RenderPass = Device.CreateRenderPass(RPDesc);
 

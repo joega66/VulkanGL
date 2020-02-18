@@ -2,12 +2,12 @@
 
 namespace drm
 {
-	bool __Image::IsColor() const
+	bool ImagePrivate::IsColor() const
 	{
 		return !(IsDepth() || IsStencil() || Format == EFormat::UNDEFINED);
 	}
 
-	bool __Image::IsStencil() const
+	bool ImagePrivate::IsStencil() const
 	{
 		static const std::unordered_set<EFormat> StencilFormats =
 		{
@@ -16,7 +16,7 @@ namespace drm
 		return IsDepthStencil() || StencilFormats.find(Format) != StencilFormats.end();
 	}
 
-	bool __Image::IsDepthStencil(EFormat Format)
+	bool ImagePrivate::IsDepthStencil(EFormat Format)
 	{
 		static const std::unordered_set<EFormat> DepthFormats =
 		{
@@ -25,12 +25,12 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
-	bool __Image::IsDepthStencil() const
+	bool ImagePrivate::IsDepthStencil() const
 	{
 		return IsDepthStencil(Format);
 	}
 
-	bool __Image::IsDepth(EFormat Format)
+	bool ImagePrivate::IsDepth(EFormat Format)
 	{
 		static const std::unordered_set<EFormat> DepthFormats =
 		{
@@ -39,7 +39,7 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
-	uint32 __Image::GetSize(EFormat Format)
+	uint32 ImagePrivate::GetSize(EFormat Format)
 	{
 		static HashTable<EFormat, uint32> EngineFormatStrides =
 		{
@@ -56,12 +56,12 @@ namespace drm
 		return EngineFormatStrides[Format];
 	}
 
-	bool __Image::IsDepth() const
+	bool ImagePrivate::IsDepth() const
 	{
 		return IsDepth(Format);
 	}
 
-	uint32 __Image::GetStrideInBytes() const
+	uint32 ImagePrivate::GetStrideInBytes() const
 	{
 		return GetSize(Format);
 	}
