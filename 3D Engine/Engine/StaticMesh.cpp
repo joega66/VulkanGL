@@ -1,186 +1,16 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
-#include <assimp/scene.h>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-
-using TextureCache = HashTable<std::string, drm::ImageRef>;
-
-static drm::ImageRef LoadMaterials(DRMDevice& Device, const std::string& Directory, aiMaterial* AiMaterial, aiTextureType AiType, TextureCache& TextureCache)
-{
-	for (uint32 TextureIndex = 0; TextureIndex < AiMaterial->GetTextureCount(AiType); TextureIndex++)
-	{
-		aiString AssimpTexturePath;
-		AiMaterial->GetTexture(AiType, TextureIndex, &AssimpTexturePath);
-		std::string TexturePath(AssimpTexturePath.C_Str());
-
-		if (!TexturePath.empty())
-		{
-			if (Contains(TextureCache, TexturePath))
-			{
-				return TextureCache[TexturePath];
-			}
-
-			int32 Width, Height, NumChannels;
-			uint8* Pixels = Platform::LoadImage(Directory + "/" + TexturePath, Width, Height, NumChannels);
-			drm::ImageRef Material;
-
-			if (Pixels)
-			{
-				Material = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-
-				drm::UploadImageData(Device, Pixels, Material);
-			}
-
-			Platform::FreeImage(Pixels);
-
-			TextureCache[TexturePath] = Material;
-
-			return Material;
-		}
-	}
-
-	return nullptr;
-}
-
-static const Material* ProcessMaterials(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, StaticMesh* StaticMesh, aiMaterial* AiMaterial, TextureCache& TextureCache)
-{
-	const Material* Material = Assets.GetMaterial(AssetName);
-
-	if (!Material)
-	{
-		MaterialDescriptors Descriptors;
-
-		if (drm::ImageRef BaseColor = LoadMaterials(Device, StaticMesh->Path.root_directory().generic_string(), AiMaterial, aiTextureType_DIFFUSE, TextureCache); BaseColor)
-		{
-			Descriptors.BaseColor = BaseColor;
-		}
-
-		Material = Assets.LoadMaterial(
-			AssetName,
-			std::make_unique<class Material>(Device, Descriptors, EMaterialMode::Opaque, 0.0f, 0.0f)
-		);
-	}
-
-	return Material;
-}
-
-static void ProcessSubmesh(AssetManager& Assets, DRMDevice& Device, StaticMesh* StaticMesh, aiMesh* AiMesh, const aiScene* AiScene, TextureCache& TextureCache)
-{
-	check(AiMesh->mTextureCoords[0] > 0, "Static mesh is missing texture coordinates.");
-
-	const uint32 NumVertices = AiMesh->mNumVertices;
-	std::vector<glm::vec2> TextureCoordinates(NumVertices);
-	std::vector<uint32> Indices;
-
-	BoundingBox Bounds;
-
-	for (uint32 VertexIndex = 0; VertexIndex < NumVertices; VertexIndex++)
-	{
-		TextureCoordinates[VertexIndex] = glm::vec2(AiMesh->mTextureCoords[0][VertexIndex].x, AiMesh->mTextureCoords[0][VertexIndex].y);
-
-		const aiVector3D& AiPosition = AiMesh->mVertices[VertexIndex];
-		const glm::vec3 Position = glm::vec3(AiPosition.x, AiPosition.y, AiPosition.z);
-
-		Bounds.TestPoint(Position);
-	}
-
-	for (uint32 FaceIndex = 0; FaceIndex < AiMesh->mNumFaces; FaceIndex++)
-	{
-		const aiFace& Face = AiMesh->mFaces[FaceIndex];
-
-		for (uint32 j = 0; j < Face.mNumIndices; j++)
-		{
-			Indices.push_back(Face.mIndices[j]);
-		}
-	}
-
-
-	const std::string MaterialAssetName = std::string(AiMesh->mName.C_Str()) + "_Material_" + std::to_string(AiMesh->mMaterialIndex);
-	const Material* Material = ProcessMaterials(MaterialAssetName, Assets, Device, StaticMesh, AiScene->mMaterials[AiMesh->mMaterialIndex], TextureCache);
-
-	drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, Indices.size() * sizeof(uint32));
-	drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
-	drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, TextureCoordinates.size() * sizeof(glm::vec2));
-	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
-	drm::BufferRef TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, AiMesh->mNumVertices * sizeof(glm::vec3));
-
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
-
-	uint32 SrcOffset = 0;
-
-	drm::BufferRef StagingBuffer = Device.CreateBuffer(
-		EBufferUsage::Transfer, IndexBuffer->GetSize() + PositionBuffer->GetSize() + TextureCoordinateBuffer->GetSize() + NormalBuffer->GetSize() + TangentBuffer->GetSize()
-	);
-
-	uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
-
-	Platform::Memcpy(Memmapped, Indices.data(), Indices.size() * sizeof(uint32));
-	CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexBuffer->GetSize());
-	Memmapped += IndexBuffer->GetSize();
-	SrcOffset += IndexBuffer->GetSize();
-
-	Platform::Memcpy(Memmapped, AiMesh->mVertices, PositionBuffer->GetSize());
-	CmdList.CopyBuffer(StagingBuffer, PositionBuffer, SrcOffset, 0, PositionBuffer->GetSize());
-	Memmapped += PositionBuffer->GetSize();
-	SrcOffset += PositionBuffer->GetSize();
-
-	Platform::Memcpy(Memmapped, TextureCoordinates.data(), TextureCoordinateBuffer->GetSize());
-	CmdList.CopyBuffer(StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, TextureCoordinateBuffer->GetSize());
-	Memmapped += TextureCoordinateBuffer->GetSize();
-	SrcOffset += TextureCoordinateBuffer->GetSize();
-
-	Platform::Memcpy(Memmapped, AiMesh->mNormals, NormalBuffer->GetSize());
-	CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalBuffer->GetSize());
-	Memmapped += NormalBuffer->GetSize();
-	SrcOffset += NormalBuffer->GetSize();
-
-	Platform::Memcpy(Memmapped, AiMesh->mTangents, TangentBuffer->GetSize());
-	CmdList.CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, TangentBuffer->GetSize());
-	Memmapped += TangentBuffer->GetSize();
-	SrcOffset += TangentBuffer->GetSize();
-
-	Device.UnlockBuffer(StagingBuffer);
-
-	Device.SubmitCommands(CmdList);
-
-	StaticMesh->Submeshes.emplace_back(Submesh(
-		Indices.size()
-		, EIndexType::UINT32
-		, IndexBuffer
-		, PositionBuffer
-		, TextureCoordinateBuffer
-		, NormalBuffer
-		, TangentBuffer));
-	StaticMesh->Materials.push_back(Material);
-	StaticMesh->SubmeshBounds.push_back(Bounds);
-	StaticMesh->SubmeshNames.push_back(std::string(AiMesh->mName.C_Str()));
-}
-
-void ProcessNode(AssetManager& Assets, DRMDevice& Device, StaticMesh* StaticMesh, const aiNode* AiNode, const aiScene* AiScene, TextureCache& TextureCache)
-{
-	for (uint32 MeshIndex = 0; MeshIndex < AiNode->mNumMeshes; MeshIndex++)
-	{
-		aiMesh* AiMesh = AiScene->mMeshes[AiNode->mMeshes[MeshIndex]];
-		ProcessSubmesh(Assets, Device, StaticMesh, AiMesh, AiScene, TextureCache);
-	}
-
-	for (uint32 i = 0; i < AiNode->mNumChildren; i++)
-	{
-		ProcessNode(Assets, Device, StaticMesh, AiNode->mChildren[i], AiScene, TextureCache);
-	}
-}
 
 StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path)
 	: Path(Path)
 {
-	if (Path.extension() == ".obj")
-	{
-		AssimpLoad(Assets, Device);
-	}
-	else if (Path.extension() == ".gltf")
+	if (Path.extension() == ".gltf")
 	{
 		GLTFLoad(AssetName, Assets, Device);
+	}
+	else
+	{
+		signal_unimplemented();
 	}
 
 	std::for_each(SubmeshBounds.begin(), SubmeshBounds.end(), [&] (const BoundingBox& SubmeshBounds)
@@ -198,31 +28,6 @@ StaticMesh::StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex)
 	, SubmeshNames{ StaticMesh.SubmeshNames[SubmeshIndex] }
 	, Bounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
 {
-}
-
-void StaticMesh::AssimpLoad(AssetManager& Assets, DRMDevice& Device)
-{
-	uint32 AssimpLoadFlags = 0;
-
-	AssimpLoadFlags |= aiProcess_Triangulate
-		| aiProcess_JoinIdenticalVertices
-		| aiProcess_OptimizeMeshes
-		| aiProcess_OptimizeGraph
-		| aiProcess_FlipUVs
-		| aiProcess_CalcTangentSpace;
-
-	Assimp::Importer Importer;
-	const aiScene* AiScene = Importer.ReadFile(Path.generic_string(), AssimpLoadFlags);
-
-	if (!AiScene || AiScene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !AiScene->mRootNode)
-	{
-		std::string AssimpError = Importer.GetErrorString();
-		fail("Assimp error: %s", AssimpError.c_str());
-		return;
-	}
-
-	TextureCache TextureCache;
-	ProcessNode(Assets, Device, this, AiScene->mRootNode, AiScene, TextureCache);
 }
 
 #define TINYGLTF_IMPLEMENTATION
@@ -392,34 +197,33 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 	}
 }
 
-drm::ImageRef StaticMesh::GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
+const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
 	if (TextureIndex == -1)
 	{
-		return Material::Dummy;
+		return &Material::Dummy;
 	}
 	else
 	{
 		auto& Texture = Model.textures[TextureIndex];
 		auto& Image = Model.images[Texture.source];
 
-		if (drm::ImageRef LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
+		if (const drm::Image* LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
 		{
 			return LoadedImage;
 		}
 		else
 		{
 #undef LoadImage
-			drm::ImageRef NewImage = Device.CreateImage(
+			std::unique_ptr<drm::Image> NewImage = std::make_unique<drm::Image>(Device.CreateImage(
 				Image.width, 
 				Image.height, 
 				1, 
 				GetFormat(Image.bits, Image.component, Image.pixel_type), 
 				EImageUsage::Sampled | EImageUsage::TransferDst
-			);
-			drm::UploadImageData(Device, Image.image.data(), NewImage);
-			Assets.LoadImage(Image.uri, NewImage);
-			return NewImage;
+			));
+			drm::UploadImageData(Device, Image.image.data(), *NewImage);
+			return Assets.LoadImage(Image.uri, std::move(NewImage));
 		}
 	}
 }

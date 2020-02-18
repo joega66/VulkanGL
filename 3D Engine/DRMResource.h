@@ -257,7 +257,7 @@ namespace drm
 	
 	CLASS(Buffer);
 
-	class Image
+	class __Image
 	{
 	public:
 		EFormat Format;
@@ -266,14 +266,11 @@ namespace drm
 		uint32 Depth;
 		EImageUsage Usage;
 
-		Image(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
+		__Image() = default;
+		__Image(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
 			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
 		{
 		}
-
-		virtual ~Image() {}
-
-		virtual uint64 GetNativeHandle() = 0;
 
 		bool IsColor() const;
 
@@ -299,36 +296,6 @@ namespace drm
 		static uint32 GetSize(EFormat Format);
 	};
 
-	CLASS(Image);
-
-	class AttachmentView
-	{
-	public:
-		ImageRef Image = nullptr;
-		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
-		ELoadAction LoadAction = ELoadAction::DontCare;
-		EStoreAction StoreAction = EStoreAction::DontCare;
-		EImageLayout InitialLayout = EImageLayout::Undefined;
-		EImageLayout FinalLayout = EImageLayout::Undefined;
-
-		AttachmentView() = default;
-		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout);
-		AttachmentView(ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout InitialLayout, EImageLayout FinalLayout);
-
-		friend bool operator==(const AttachmentView& L, const AttachmentView& R)
-		{
-			return L.LoadAction == R.LoadAction
-				&& L.StoreAction == R.StoreAction
-				&& L.InitialLayout == R.InitialLayout
-				&& L.FinalLayout == R.FinalLayout;
-		}
-
-		friend bool operator!=(const AttachmentView& L, const AttachmentView& R)
-		{
-			return !(L == R);
-		}
-	};
-
 	class DescriptorSet
 	{
 	public:
@@ -347,43 +314,6 @@ namespace drm
 
 	CLASS(DescriptorTemplate);
 }
-
-/** drm::CommandList */
-struct RenderArea
-{
-	glm::ivec2 Offset;
-	glm::uvec2 Extent;
-};
-
-struct RenderPassDesc
-{
-	enum
-	{
-		MaxAttachments = 8
-	};
-
-	uint32 NumAttachments;
-	std::array<drm::AttachmentView, MaxAttachments> ColorAttachments;
-	drm::AttachmentView DepthAttachment;
-	RenderArea RenderArea;
-
-	friend bool operator==(const RenderPassDesc& L, const RenderPassDesc& R)
-	{
-		if (L.NumAttachments != R.NumAttachments)
-			return false;
-
-		if (L.DepthAttachment != R.DepthAttachment)
-			return false;
-
-		for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < L.NumAttachments; ColorAttachmentIndex++)
-		{
-			if (L.ColorAttachments[ColorAttachmentIndex] != R.ColorAttachments[ColorAttachmentIndex])
-				return false;
-		}
-
-		return true;
-	}
-};
 
 struct Viewport
 {
@@ -771,32 +701,6 @@ struct VertexBindingDescription
 	{
 		return L.Binding == R.Binding
 			&& L.Stride == R.Stride;
-	}
-};
-
-struct BufferMemoryBarrier
-{
-	drm::BufferRef Buffer;
-	EAccess SrcAccessMask;
-	EAccess DstAccessMask;
-
-	BufferMemoryBarrier(drm::BufferRef Buffer, EAccess SrcAccessMask, EAccess DstAccessMask)
-		: Buffer(Buffer), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask)
-	{
-	}
-};
-
-struct ImageMemoryBarrier
-{
-	drm::ImageRef Image;
-	EAccess SrcAccessMask;
-	EAccess DstAccessMask;
-	EImageLayout OldLayout;
-	EImageLayout NewLayout;
-
-	ImageMemoryBarrier(drm::ImageRef Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout OldLayout, EImageLayout NewLayout)
-		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), OldLayout(OldLayout), NewLayout(NewLayout)
-	{
 	}
 };
 

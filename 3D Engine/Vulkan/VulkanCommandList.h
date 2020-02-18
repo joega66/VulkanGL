@@ -1,9 +1,11 @@
 #pragma once
-#include "VulkanImage.h"
 #include "VulkanMemory.h"
 #include "VulkanDescriptors.h"
 
 class VulkanDevice;
+class VulkanImage;
+struct ImageMemoryBarrier;
+struct BufferMemoryBarrier;
 
 class VulkanCommandList
 {
@@ -17,9 +19,7 @@ public:
 	/** @begin drm::CommandList */
 
 	VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags);
-
 	~VulkanCommandList();
-
 	VulkanCommandList(const VulkanCommandList&) = delete;
 	VulkanCommandList& operator=(const VulkanCommandList&) = delete;
 
@@ -47,9 +47,9 @@ public:
 
 	void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount);
 
-	void ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color);
+	void ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color);
 
-	void ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);
+	void ClearDepthStencilImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);
 
 	void PipelineBarrier(
 		EPipelineStage SrcStageMask,
@@ -63,14 +63,14 @@ public:
 	void CopyBufferToImage(
 		drm::BufferRef SrcBuffer, 
 		uint32 BufferOffset, 
-		drm::ImageRef DstImage, 
+		const VulkanImage& DstImage,
 		EImageLayout DstImageLayout
 	);
 
 	void BlitImage(
-		drm::ImageRef SrcImage,
+		const VulkanImage& SrcImage,
 		EImageLayout SrcImageLayout,
-		drm::ImageRef DstImage, 
+		const VulkanImage& DstImage,
 		EImageLayout DstImageLayout,
 		EFilter Filter
 	);

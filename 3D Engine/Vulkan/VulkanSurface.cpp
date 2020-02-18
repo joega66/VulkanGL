@@ -250,20 +250,19 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 
 	for (auto& VulkanImage : VulkanImages)
 	{
-		Images.push_back(
-			MakeRef<class VulkanImage>(VulkanDevice
-				, VulkanImage
-				, VkDeviceMemory()
-				, VulkanImage::GetEngineFormat(SurfaceFormat.format)
-				, Extent.width
-				, Extent.height
-				, 1
-				, EImageUsage::Attachment | EImageUsage::TransferDst)
+		Images.push_back(drm::Image(VulkanDevice
+			, VulkanImage
+			, VkDeviceMemory()
+			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
+			, Extent.width
+			, Extent.height
+			, 1
+			, EImageUsage::Attachment | EImageUsage::TransferDst)
 		);
 	}
 }
 
-drm::ImageRef VulkanSurface::GetImage(uint32 ImageIndex)
+const drm::Image& VulkanSurface::GetImage(uint32 ImageIndex)
 {
 	return Images[ImageIndex];
 }

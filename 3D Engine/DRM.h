@@ -29,7 +29,7 @@ public:
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
 
 	/** Create an image resource. */
-	virtual drm::ImageRef CreateImage(
+	virtual drm::Image CreateImage(
 		uint32 Width,
 		uint32 Height,
 		uint32 Depth,
@@ -57,10 +57,10 @@ namespace drm
 		virtual uint32 AcquireNextImage(DRMDevice& Device) = 0;
 		virtual void Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandList& CmdList) = 0;
 		virtual void Resize(DRMDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight) = 0;
-		virtual drm::ImageRef GetImage(uint32 ImageIndex) = 0;
+		virtual const drm::Image& GetImage(uint32 ImageIndex) = 0;
 	};
 
-	void UploadImageData(DRMDevice& Device, const void* SrcPixels, drm::ImageRef DstImage);
+	void UploadImageData(DRMDevice& Device, const void* SrcPixels, const drm::Image& DstImage);
 }
 
 /** Descriptor set template helpers. */

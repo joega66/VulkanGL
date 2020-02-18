@@ -4,7 +4,7 @@
 struct ShadowDescriptors
 {
 	drm::BufferRef LightViewProjBuffer;
-	drm::ImageRef ShadowMap;
+	const drm::Image* ShadowMap;
 	SamplerState ShadowSampler;
 
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()
@@ -31,7 +31,7 @@ public:
 	inline float GetDepthBiasConstantFactor() const { return DepthBiasConstantFactor; }
 	inline float GetDepthBiasSlopeFactor() const { return DepthBiasSlopeFactor; }
 	inline const drm::RenderPass& GetRenderPass() const { return RenderPass; };
-	inline drm::ImageRef GetShadowMap() const { return ShadowMap; }
+	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
 	inline drm::DescriptorSetRef GetDescriptorSet() const { return DescriptorSet; }
 
 private:
@@ -39,6 +39,6 @@ private:
 	float DepthBiasConstantFactor = 0.0f;
 	float DepthBiasSlopeFactor = 0.0f;
 	drm::BufferRef LightViewProjBuffer;
-	drm::ImageRef ShadowMap;
+	drm::Image ShadowMap;
 	drm::DescriptorSetRef DescriptorSet;
 };

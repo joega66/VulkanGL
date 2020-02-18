@@ -90,9 +90,8 @@ void SceneProxy::AddToVoxelsPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshP
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	// Set the shadow mask to black so that voxels don't have shadows.
-	SceneTextures.ShadowMask = Material::Black;
+	SceneTextures.ShadowMask = &Material::Black;
 	SceneTextures.Update();
-	//CmdList.ClearColorImage(SceneTextures.ShadowMask, )
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 
@@ -159,7 +158,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 
 	ImageMemoryBarrier ImageMemoryBarrier(
-		VoxelDescriptorSet.VoxelColors,
+		VoxelColors,
 		EAccess::None, 
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
@@ -168,7 +167,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageMemoryBarrier);
 
-	CmdList.ClearColorImage(VoxelDescriptorSet.VoxelColors, EImageLayout::TransferDstOptimal, ClearColorValue{});
+	CmdList.ClearColorImage(VoxelColors, EImageLayout::TransferDstOptimal, ClearColorValue{});
 
 	ImageMemoryBarrier.SrcAccessMask = EAccess::TransferWrite;
 	ImageMemoryBarrier.DstAccessMask = EAccess::ShaderWrite;
@@ -261,7 +260,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 		{ VoxelDescriptorSet.VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
 	};
 
-	ImageMemoryBarrier ImageBarrier(VoxelDescriptorSet.VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General);
+	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General);
 
 	CmdList.PipelineBarrier(
 		EPipelineStage::FragmentShader, 

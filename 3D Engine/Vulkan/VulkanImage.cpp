@@ -81,10 +81,10 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, uint32 Height
 	, uint32 Depth
 	, EImageUsage UsageFlags)
-	: Device(Device)
+	: Device(&Device)
 	, Image(Image)
 	, Memory(Memory)
-	, drm::Image(Format, Width, Height, Depth, UsageFlags)
+	, drm::__Image(Format, Width, Height, Depth, UsageFlags)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
@@ -100,9 +100,35 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
 }
 
+VulkanImage::VulkanImage(VulkanImage&& Other)
+	: Image(std::exchange(Other.Image, VK_NULL_HANDLE))
+	, ImageView(std::exchange(Other.ImageView, VK_NULL_HANDLE))
+	, Memory(std::exchange(Other.Memory, VK_NULL_HANDLE))
+	, Device(std::exchange(Other.Device, nullptr))
+	, __Image(Other)
+{
+}
+
+VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
+{
+	Image = (std::exchange(Other.Image, VK_NULL_HANDLE));
+	ImageView = (std::exchange(Other.ImageView, VK_NULL_HANDLE));
+	Memory = (std::exchange(Other.Memory, VK_NULL_HANDLE));
+	Device = (std::exchange(Other.Device, nullptr));
+	Format = Other.Format;
+	Width = Other.Width;
+	Height = Other.Height;
+	Depth = Other.Depth;
+	Usage = Other.Usage;
+	return *this;
+}
+
 VulkanImage::~VulkanImage()
 {
-	Device.GetCache().FreeImage(*this);
+	if (Image != VK_NULL_HANDLE)
+	{
+		Device->GetCache().FreeImage(*this);
+	}
 }
 
 VulkanImage::operator VkImage() { return Image; }

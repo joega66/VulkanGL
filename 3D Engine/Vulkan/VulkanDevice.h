@@ -34,7 +34,7 @@ public:
 
 	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
 
-	virtual drm::ImageRef CreateImage(
+	virtual drm::Image CreateImage(
 		uint32 Width, 
 		uint32 Height, 
 		uint32 Depth, 
@@ -87,7 +87,6 @@ private:
 namespace
 {
 	CAST(drm::Buffer, VulkanBuffer);
-	CAST(drm::Image, VulkanImage);
 	CAST(drm::DescriptorSet, VulkanDescriptorSet);
 };
 

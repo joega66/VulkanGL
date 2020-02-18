@@ -1,12 +1,12 @@
 #include "Material.h"
 #include <DRM.h>
 
-drm::ImageRef Material::Red;
-drm::ImageRef Material::Green;
-drm::ImageRef Material::Blue;
-drm::ImageRef Material::White;
-drm::ImageRef Material::Black;
-drm::ImageRef Material::Dummy;
+drm::Image Material::Red;
+drm::Image Material::Green;
+drm::Image Material::Blue;
+drm::Image Material::White;
+drm::Image Material::Black;
+drm::Image Material::Dummy;
 
 Material::Material(
 	DRMDevice& Device,
@@ -27,7 +27,7 @@ Material::Material(
 
 	Descriptors.PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(PBRUniformData), &PBRUniformData);
 
-	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != Material::Dummy);
+	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != &Material::Dummy);
 	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
 }
 
@@ -55,17 +55,14 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> Barriers
-	(
-		Colors.size() / 4,
-		{ nullptr, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal }
-	);
-
-	Barriers[0].Image = Material::Red;
-	Barriers[1].Image = Material::Green;
-	Barriers[2].Image = Material::Blue;
-	Barriers[3].Image = Material::White;
-	Barriers[4].Image = Material::Black;
-	Barriers[5].Image = Material::Dummy;
+	{
+		ImageMemoryBarrier(Material::Red, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
+		ImageMemoryBarrier(Material::Green, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
+		ImageMemoryBarrier(Material::Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
+		ImageMemoryBarrier(Material::White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
+		ImageMemoryBarrier(Material::Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
+		ImageMemoryBarrier(Material::Dummy, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal)
+	};
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
 
@@ -88,7 +85,7 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 }
 
 MaterialDescriptors::MaterialDescriptors()
-	: BaseColor(Material::Dummy)
-	, MetallicRoughness(Material::Dummy)
+	: BaseColor(&Material::Dummy)
+	, MetallicRoughness(&Material::Dummy)
 {
 }

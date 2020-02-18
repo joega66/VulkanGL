@@ -48,10 +48,7 @@ bool VulkanCache::VulkanPipelineHash::HasShader(const drm::Shader* Shader) const
 	}
 }
 
-VkPipeline VulkanCache::GetPipeline(
-	const PipelineStateDesc& PSODesc,
-	VkPipelineLayout PipelineLayout
-)
+VkPipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout)
 {
 	VulkanPipelineHash PipelineHash(PSODesc, PipelineLayout);
 

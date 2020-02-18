@@ -16,8 +16,8 @@ AssetManager::AssetManager(DRMDevice& Device)
 
 	LoadCubemap("Engine_Cubemap_Default", Cubemap);
 	LoadImage("Engine_BaseColor_Default", "../Images/Frozen-Ice-Texture.jpg");
-	LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
-	LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
+	/*LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
+	LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");*/
 }
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup)
@@ -57,24 +57,25 @@ void AssetManager::LoadImage(const std::string& AssetName, const std::filesystem
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform::LoadImage(Path.generic_string(), Width, Height, Channels);
 
-	drm::ImageRef Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst);
+	std::unique_ptr<drm::Image> Image = std::make_unique<drm::Image>(Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst));
 
-	drm::UploadImageData(Device, Pixels, Image);
+	drm::UploadImageData(Device, Pixels, *Image);
 
 	Platform::FreeImage(Pixels);
 
-	Images[AssetName] = Image;
+	Images[AssetName] = std::move(Image);
 }
 
-void AssetManager::LoadImage(const std::filesystem::path& Path, drm::ImageRef Image)
+const drm::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<drm::Image> Image)
 {
 	check(Images.find(Path.generic_string()) == Images.end(), "Image %s already exists.", Path.generic_string().c_str());
-	Images[Path.generic_string()] = Image;
+	Images[Path.generic_string()] = std::move(Image);
+	return Images[Path.generic_string()].get();
 }
 
-drm::ImageRef AssetManager::GetImage(const std::string& AssetName) const
+const drm::Image* AssetManager::GetImage(const std::string& AssetName) const
 {
-	return Images.find(AssetName) == Images.end() ? nullptr : Images.at(AssetName);
+	return Images.find(AssetName) == Images.end() ? nullptr : Images.at(AssetName).get();
 }
 
 const Material* AssetManager::LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material)
@@ -96,7 +97,7 @@ const Material* AssetManager::GetMaterial(const std::string& AssetName)
 
 void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format)
 {
-	drm::ImageRef Image;
+	std::unique_ptr<drm::Image> Image;
 	drm::BufferRef StagingBuffer;
 	void* MemMapped = nullptr;
 
@@ -107,7 +108,7 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 
 		if (FaceIndex == 0)
 		{
-			Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
+			Image = std::make_unique<drm::Image>(Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst));
 			StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize());
 			MemMapped = Device.LockBuffer(StagingBuffer);
 		}
@@ -124,7 +125,7 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	ImageMemoryBarrier Barrier(
-		Image,
+		*Image,
 		EAccess::None,
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
@@ -133,7 +134,7 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
-	CmdList.CopyBufferToImage(StagingBuffer, 0, Image, EImageLayout::TransferDstOptimal);
+	CmdList.CopyBufferToImage(StagingBuffer, 0, *Image, EImageLayout::TransferDstOptimal);
 
 	Barrier.SrcAccessMask = EAccess::TransferWrite;
 	Barrier.DstAccessMask = EAccess::ShaderRead;
@@ -144,10 +145,10 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 
 	Device.SubmitCommands(CmdList);
 
-	Cubemaps[AssetName] = Image;
+	Cubemaps[AssetName] = std::move(Image);
 }
 
-drm::ImageRef AssetManager::GetCubemap(const std::string& AssetName) const
+const drm::Image* AssetManager::GetCubemap(const std::string& AssetName) const
 {
-	return Cubemaps.at(AssetName);
+	return Cubemaps.at(AssetName).get();
 }

@@ -46,7 +46,7 @@ drm::BufferRef VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const
 	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
 }
 
-drm::ImageRef VulkanDevice::CreateImage(
+drm::Image VulkanDevice::CreateImage(
 	uint32 Width, 
 	uint32 Height, 
 	uint32 Depth, 
@@ -105,16 +105,15 @@ drm::ImageRef VulkanDevice::CreateImage(
 	vulkan(vkAllocateMemory(Device, &MemInfo, nullptr, &Memory));
 	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
 
-	VulkanImageRef VulkanImage = MakeRef<class VulkanImage>(*this
+	return VulkanImage(*this
 		, Image
 		, Memory
 		, Format
 		, Width
 		, Height
 		, Depth
-		, UsageFlags);
-
-	return VulkanImage;
+		, UsageFlags
+	);
 }
 
 void* VulkanDevice::LockBuffer(drm::BufferRef Buffer)
@@ -163,7 +162,7 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	if (RPDesc.DepthAttachment.Image)
 	{
-		VulkanImageRef Image = ResourceCast(RPDesc.DepthAttachment.Image);
+		const drm::Image* Image = RPDesc.DepthAttachment.Image;
 
 		ClearValues[RPDesc.NumAttachments].depthStencil = { 0, 0 };
 

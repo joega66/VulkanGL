@@ -103,14 +103,14 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 	{
 		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 		const drm::RenderPass& RenderPass = ShadowProxy.GetRenderPass();
-		drm::ImageRef ShadowMap = ShadowProxy.GetShadowMap();
+		const drm::Image& ShadowMap = ShadowProxy.GetShadowMap();
 
 		CmdList.BeginRenderPass(RenderPass);
 
 		PipelineStateDesc PSODesc = {};
 		PSODesc.RenderPass = &RenderPass;
-		PSODesc.Viewport.Width = ShadowMap->Width;
-		PSODesc.Viewport.Height = ShadowMap->Height;
+		PSODesc.Viewport.Width = ShadowMap.Width;
+		PSODesc.Viewport.Height = ShadowMap.Height;
 		PSODesc.RasterizationState.DepthBiasEnable = true;
 		PSODesc.RasterizationState.DepthBiasConstantFactor = ShadowProxy.GetDepthBiasConstantFactor();
 		PSODesc.RasterizationState.DepthBiasSlopeFactor = ShadowProxy.GetDepthBiasSlopeFactor();
@@ -144,8 +144,8 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 
 		PipelineStateDesc PSODesc = {};
 		PSODesc.RenderPass = &ShadowMaskRP;
-		PSODesc.Viewport.Width = ShadowMask->Width;
-		PSODesc.Viewport.Height = ShadowMask->Height;
+		PSODesc.Viewport.Width = ShadowMask.Width;
+		PSODesc.Viewport.Height = ShadowMask.Height;
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
 		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();

@@ -22,7 +22,7 @@ public:
 	virtual void Resize(DRMDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight) override;
 
 	/** Get the swapchain image. */
-	virtual drm::ImageRef GetImage(uint32 ImageIndex) override;
+	virtual const drm::Image& GetImage(uint32 ImageIndex) override;
 
 	operator VkSurfaceKHR() { return Surface; }
 
@@ -40,7 +40,7 @@ private:
 	VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
 
 	/** Swapchain images. */
-	std::vector<VulkanImageRef> Images;
+	std::vector<drm::Image> Images;
 
 	/** @TODO Move me to the SceneRenderer. */
 	VkSemaphore ImageAvailableSem = VK_NULL_HANDLE;

@@ -2,12 +2,12 @@
 
 namespace drm
 {
-	bool Image::IsColor() const
+	bool __Image::IsColor() const
 	{
 		return !(IsDepth() || IsStencil() || Format == EFormat::UNDEFINED);
 	}
 
-	bool Image::IsStencil() const
+	bool __Image::IsStencil() const
 	{
 		static const std::unordered_set<EFormat> StencilFormats =
 		{
@@ -16,7 +16,7 @@ namespace drm
 		return IsDepthStencil() || StencilFormats.find(Format) != StencilFormats.end();
 	}
 
-	bool Image::IsDepthStencil(EFormat Format)
+	bool __Image::IsDepthStencil(EFormat Format)
 	{
 		static const std::unordered_set<EFormat> DepthFormats =
 		{
@@ -25,12 +25,12 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
-	bool Image::IsDepthStencil() const
+	bool __Image::IsDepthStencil() const
 	{
 		return IsDepthStencil(Format);
 	}
 
-	bool Image::IsDepth(EFormat Format)
+	bool __Image::IsDepth(EFormat Format)
 	{
 		static const std::unordered_set<EFormat> DepthFormats =
 		{
@@ -39,7 +39,7 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
-	uint32 Image::GetSize(EFormat Format)
+	uint32 __Image::GetSize(EFormat Format)
 	{
 		static HashTable<EFormat, uint32> EngineFormatStrides =
 		{
@@ -56,33 +56,13 @@ namespace drm
 		return EngineFormatStrides[Format];
 	}
 
-	bool Image::IsDepth() const
+	bool __Image::IsDepth() const
 	{
 		return IsDepth(Format);
 	}
 
-	uint32 Image::GetStrideInBytes() const
+	uint32 __Image::GetStrideInBytes() const
 	{
 		return GetSize(Format);
-	}
-
-	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout)
-		: Image(Image)
-		, LoadAction(LoadAction)
-		, StoreAction(StoreAction)
-		, ClearValue(ClearValue)
-		, InitialLayout(InitialLayout)
-		, FinalLayout(FinalLayout)
-	{
-	}
-
-	AttachmentView::AttachmentView(drm::ImageRef Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout InitialLayout, EImageLayout FinalLayout)
-		: Image(Image)
-		, LoadAction(LoadAction)
-		, StoreAction(StoreAction)
-		, ClearValue(DepthStencil)
-		, InitialLayout(InitialLayout)
-		, FinalLayout(FinalLayout)
-	{
 	}
 }

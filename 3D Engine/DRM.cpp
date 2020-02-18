@@ -1,8 +1,8 @@
 #include "DRM.h"
 
-void drm::UploadImageData(DRMDevice& Device, const void* SrcPixels, drm::ImageRef DstImage)
+void drm::UploadImageData(DRMDevice& Device, const void* SrcPixels, const drm::Image& DstImage)
 {
-	drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, DstImage->GetSize(), SrcPixels);
+	drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, DstImage.GetSize(), SrcPixels);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 

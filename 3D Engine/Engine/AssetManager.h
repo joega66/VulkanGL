@@ -24,14 +24,14 @@ public:
 	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
 
 	void LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format = EFormat::R8G8B8A8_UNORM);
-	void LoadImage(const std::filesystem::path& Path, drm::ImageRef Image);
-	drm::ImageRef GetImage(const std::string& AssetName) const;
+	const drm::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<drm::Image> Image);
+	const drm::Image* GetImage(const std::string& AssetName) const;
 
 	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
 	const Material* GetMaterial(const std::string& AssetName);
 
 	void LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);
-	drm::ImageRef GetCubemap(const std::string& AssetName) const;
+	const drm::Image* GetCubemap(const std::string& AssetName) const;
 
 private:
 	DRMDevice& Device;
@@ -40,6 +40,6 @@ private:
 
 	HashTable<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	HashTable<std::string, std::unique_ptr<Material>> Materials;
-	HashTable<std::string, drm::ImageRef> Images;
-	HashTable<std::string, drm::ImageRef> Cubemaps;
+	HashTable<std::string, std::unique_ptr<drm::Image>> Images;
+	HashTable<std::string, std::unique_ptr<drm::Image>> Cubemaps;
 };

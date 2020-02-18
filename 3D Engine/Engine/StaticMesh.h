@@ -75,10 +75,8 @@ private:
 	/** Local-space bounds of the mesh. */
 	BoundingBox Bounds;
 
-	void AssimpLoad(AssetManager& Assets, DRMDevice& Device);
-
 	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device);
 	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, DRMDevice& Device);
 	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, DRMDevice& Device);
-	static drm::ImageRef GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex);
+	const drm::Image* GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex);
 };

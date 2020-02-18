@@ -4,13 +4,14 @@
 
 class VulkanDevice;
 
-class VulkanImage : public drm::Image
+class VulkanImage : public drm::__Image
 {
 public:
-	VkImage Image;
-	VkImageView ImageView;
-	VkDeviceMemory Memory;
+	VkImage Image = VK_NULL_HANDLE;
+	VkImageView ImageView = VK_NULL_HANDLE;
+	VkDeviceMemory Memory = VK_NULL_HANDLE;
 
+	VulkanImage() = default;
 	VulkanImage(VulkanDevice& Device
 		, VkImage Image
 		, VkDeviceMemory Memory
@@ -19,10 +20,14 @@ public:
 		, uint32 Height
 		, uint32 Depth
 		, EImageUsage UsageFlags);
-	
-	virtual ~VulkanImage() override;
+	VulkanImage(VulkanImage&& Other);
+	VulkanImage& operator=(VulkanImage&& Other);
+	~VulkanImage();
 
-	virtual uint64 GetNativeHandle() override { return Image; }
+	VulkanImage(const VulkanImage&) = delete;
+	VulkanImage& operator=(const VulkanImage&) = delete;
+
+	inline uint64 GetNativeHandle() { return Image; }
 
 	operator VkImage();
 
@@ -45,7 +50,7 @@ public:
 	VkImageAspectFlags GetVulkanAspect() const;
 
 private:
-	VulkanDevice& Device;
+	VulkanDevice* Device;
 };
 
 CLASS(VulkanImage);

@@ -32,7 +32,7 @@ struct SceneDescriptors
 
 struct SkyboxDescriptors
 {
-	drm::ImageRef Skybox;
+	const drm::Image* Skybox;
 	SamplerState SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear };
 
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()

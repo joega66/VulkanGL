@@ -13,17 +13,17 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors
 
 	RenderPassDesc RPDesc = { 0 };
 	RPDesc.DepthAttachment = drm::AttachmentView(
-		ShadowMap,
+		&ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap->Width, ShadowMap->Height) };
+	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.Width, ShadowMap.Height) };
 
 	RenderPass = Device.CreateRenderPass(RPDesc);
 
 	ShadowDescriptors Descriptors;
-	Descriptors.ShadowMap = ShadowMap;
+	Descriptors.ShadowMap = &ShadowMap;
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
 
 	DescriptorSet = ShadowTemplate.CreateDescriptorSet();

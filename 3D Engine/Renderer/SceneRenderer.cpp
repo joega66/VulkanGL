@@ -20,10 +20,11 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	{
 		Surface.Resize(Device, Width, Height);
 
-		drm::ImageRef SwapchainImage = Surface.GetImage(0);
-		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage->Format, EImageUsage::Attachment | EImageUsage::TransferSrc);
+		const drm::Image& SwapchainImage = Surface.GetImage(0);
+		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage.Format, EImageUsage::Attachment | EImageUsage::TransferSrc);
 
-		SceneTextures.Depth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		SceneTextures.Depth = &SceneDepth;
 
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 		
@@ -36,12 +37,13 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
-	VoxelDescriptorSet.VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	VoxelDescriptorSet.VoxelColors = &VoxelColors;
 	VoxelDescriptorSet.VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
 
 	CreateVoxelRP();
 
-	Cube = Engine.Assets.GetStaticMesh("Cube");
+	//Cube = Engine.Assets.GetStaticMesh("Cube");
 }
 
 void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
@@ -54,7 +56,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 	}
 	else
 	{
-		SceneTextures.ShadowMask = ShadowMask;
+		SceneTextures.ShadowMask = &ShadowMask;
 		SceneTextures.Update();
 
 		RenderDepthPrepass(Scene, CmdList);
@@ -71,7 +73,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 			RenderLightingPass(Scene, CmdList);
 
-			RenderSkybox(Scene, CmdList);
+			//RenderSkybox(Scene, CmdList);
 
 			UserInterface.Render(LightingRP, CmdList);
 
@@ -114,7 +116,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 void SceneRenderer::Present(drm::CommandList& CmdList)
 {
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
-	drm::ImageRef PresentImage = Surface.GetImage(ImageIndex);
+	const drm::Image& PresentImage = Surface.GetImage(ImageIndex);
 
 	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
 
@@ -136,13 +138,13 @@ void SceneRenderer::CreateDepthRP()
 {
 	RenderPassDesc RPDesc = { 0 };
 	RPDesc.DepthAttachment = drm::AttachmentView(
-		SceneTextures.Depth,
+		&SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneTextures.Depth->Width, SceneTextures.Depth->Height) };
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.Width, SceneDepth.Height) };
 	DepthRP = Device.CreateRenderPass(RPDesc);
 }
 
@@ -158,29 +160,29 @@ void SceneRenderer::CreateVoxelVisualizationRP()
 {
 	RenderPassDesc RPDesc = { 1 };
 	RPDesc.ColorAttachments[0] = drm::AttachmentView(
-		SceneColor, 
+		&SceneColor, 
 		ELoadAction::DontCare, 
 		EStoreAction::Store,
 		ClearColorValue{},
 		EImageLayout::Undefined, 
 		EImageLayout::TransferSrcOptimal);
 	RPDesc.DepthAttachment = drm::AttachmentView(
-		SceneTextures.Depth,
+		&SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store, 
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthWriteStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneTextures.Depth->Width, SceneTextures.Depth->Height) };
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.Width, SceneDepth.Height) };
 	VoxelVisualizationRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateLightingRP()
 {
 	RenderPassDesc RPDesc = { 1 };
-	RPDesc.ColorAttachments[0] = drm::AttachmentView(SceneColor, ELoadAction::DontCare, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal);
-	RPDesc.DepthAttachment = drm::AttachmentView(SceneTextures.Depth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite, EImageLayout::DepthReadStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneTextures.Depth->Width, SceneTextures.Depth->Height) };
+	RPDesc.ColorAttachments[0] = drm::AttachmentView(&SceneColor, ELoadAction::DontCare, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal);
+	RPDesc.DepthAttachment = drm::AttachmentView(&SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite, EImageLayout::DepthReadStencilWrite);
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.Width, SceneDepth.Height) };
 	LightingRP = Device.CreateRenderPass(RPDesc);
 }
 
@@ -188,13 +190,13 @@ void SceneRenderer::CreateShadowMaskRP()
 {
 	RenderPassDesc RPDesc = { 1 };
 	RPDesc.ColorAttachments[0] = drm::AttachmentView(
-		ShadowMask,
+		&ShadowMask,
 		ELoadAction::Clear, 
 		EStoreAction::Store, 
 		ClearColorValue{},
 		EImageLayout::Undefined,
 		EImageLayout::ShaderReadOnlyOptimal);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask->Width, ShadowMask->Height) };
+	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask.Width, ShadowMask.Height) };
 	ShadowMaskRP = Device.CreateRenderPass(RPDesc);
 }
 
@@ -202,12 +204,12 @@ void SceneRenderer::CreateDepthVisualizationRP()
 {
 	RenderPassDesc RPDesc = { 1 };
 	RPDesc.ColorAttachments[0] = drm::AttachmentView(
-		SceneColor, 
+		&SceneColor, 
 		ELoadAction::DontCare, 
 		EStoreAction::Store, 
 		ClearColorValue{}, 
 		EImageLayout::Undefined,
 		EImageLayout::TransferSrcOptimal);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneColor->Width, SceneColor->Height) };
+	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneColor.Width, SceneColor.Height) };
 	DepthVisualizationRP = Device.CreateRenderPass(RPDesc);
 }

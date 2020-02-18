@@ -119,32 +119,28 @@ void VulkanCommandList::DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint3
 		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
 }
 
-void VulkanCommandList::ClearColorImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearColorValue& Color)
+void VulkanCommandList::ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color)
 {
-	const VulkanImageRef& VulkanImage = ResourceCast(Image);
-
 	VkImageSubresourceRange Range = {};
-	Range.aspectMask = VulkanImage->GetVulkanAspect();
+	Range.aspectMask = Image.GetVulkanAspect();
 	Range.baseArrayLayer = 0;
 	Range.baseMipLevel = 0;
 	Range.layerCount = 1;
 	Range.levelCount = 1;
 
-	vkCmdClearColorImage(CommandBuffer, VulkanImage->Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
+	vkCmdClearColorImage(CommandBuffer, Image.Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
 }
 
-void VulkanCommandList::ClearDepthStencilImage(drm::ImageRef Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue)
+void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue)
 {
-	const VulkanImageRef& VulkanImage = ResourceCast(Image);
-
 	VkImageSubresourceRange Range = {};
-	Range.aspectMask = VulkanImage->GetVulkanAspect();
+	Range.aspectMask = Image.GetVulkanAspect();
 	Range.baseArrayLayer = 0;
 	Range.baseMipLevel = 0;
 	Range.layerCount = 1;
 	Range.levelCount = 1;
 
-	vkCmdClearDepthStencilImage(CommandBuffer, VulkanImage->Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
+	vkCmdClearDepthStencilImage(CommandBuffer, Image.Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
 }
 
 static inline VkAccessFlags GetVulkanAccessFlags(EAccess Access)
@@ -191,7 +187,7 @@ void VulkanCommandList::PipelineBarrier(
 	for (uint32 BarrierIndex = 0; BarrierIndex < NumImageBarriers; BarrierIndex++)
 	{
 		const ImageMemoryBarrier& ImageBarrier = ImageBarriers[BarrierIndex];
-		const VulkanImageRef& VulkanImage = ResourceCast(ImageBarrier.Image);
+		const drm::Image& Image = ImageBarrier.Image;
 
 		VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.SrcAccessMask);
@@ -200,12 +196,12 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.NewLayout);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		Barrier.image = VulkanImage->Image;
-		Barrier.subresourceRange.aspectMask = VulkanImage->GetVulkanAspect();
+		Barrier.image = Image.Image;
+		Barrier.subresourceRange.aspectMask = Image.GetVulkanAspect();
 		Barrier.subresourceRange.baseMipLevel = 0;
 		Barrier.subresourceRange.levelCount = 1;
 		Barrier.subresourceRange.baseArrayLayer = 0;
-		Barrier.subresourceRange.layerCount = Any(VulkanImage->Usage & EImageUsage::Cubemap) ? 6 : 1;
+		Barrier.subresourceRange.layerCount = Any(Image.Usage & EImageUsage::Cubemap) ? 6 : 1;
 
 		VulkanImageBarriers.push_back(Barrier);
 	}
@@ -221,15 +217,14 @@ void VulkanCommandList::PipelineBarrier(
 	);
 }
 
-void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, drm::ImageRef DstImage, EImageLayout DstImageLayout)
+void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, const VulkanImage& DstImage, EImageLayout DstImageLayout)
 {
 	VulkanBufferRef VulkanBuffer = ResourceCast(SrcBuffer);
-	VulkanImageRef VulkanImage = ResourceCast(DstImage);
 	std::vector<VkBufferImageCopy> Regions;
 
-	if (Any(VulkanImage->Usage & EImageUsage::Cubemap))
+	if (Any(DstImage.Usage & EImageUsage::Cubemap))
 	{
-		const uint32 FaceSize = DstImage->GetSize() / 6;
+		const uint32 FaceSize = DstImage.GetSize() / 6;
 
 		Regions.resize(6, {});
 
@@ -241,15 +236,15 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 			Region.bufferOffset = LayerIndex * FaceSize + VulkanBuffer->GetOffset();
 			Region.bufferRowLength = 0;
 			Region.bufferImageHeight = 0;
-			Region.imageSubresource.aspectMask = VulkanImage->GetVulkanAspect();
+			Region.imageSubresource.aspectMask = DstImage.GetVulkanAspect();
 			Region.imageSubresource.mipLevel = 0;
 			Region.imageSubresource.baseArrayLayer = LayerIndex;
 			Region.imageSubresource.layerCount = 1;
 			Region.imageOffset = { 0, 0, 0 };
 			Region.imageExtent = {
-				VulkanImage->Width,
-				VulkanImage->Height,
-				VulkanImage->Depth
+				DstImage.Width,
+				DstImage.Height,
+				DstImage.Depth
 			};
 		}
 	}
@@ -259,55 +254,52 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 		Region.bufferOffset = BufferOffset + VulkanBuffer->GetOffset();
 		Region.bufferRowLength = 0;
 		Region.bufferImageHeight = 0;
-		Region.imageSubresource.aspectMask = VulkanImage->GetVulkanAspect();
+		Region.imageSubresource.aspectMask = DstImage.GetVulkanAspect();
 		Region.imageSubresource.mipLevel = 0;
 		Region.imageSubresource.baseArrayLayer = 0;
 		Region.imageSubresource.layerCount = 1;
 		Region.imageOffset = { 0, 0, 0 };
 		Region.imageExtent = {
-			VulkanImage->Width,
-			VulkanImage->Height,
-			VulkanImage->Depth
+			DstImage.Width,
+			DstImage.Height,
+			DstImage.Depth
 		};
 
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), VulkanImage->Image, VulkanImage::GetVulkanLayout(DstImageLayout), Regions.size(), Regions.data());
+	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), DstImage.Image, VulkanImage::GetVulkanLayout(DstImageLayout), Regions.size(), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
-	drm::ImageRef SrcImage,
+	const VulkanImage& SrcImage,
 	EImageLayout SrcImageLayout,
-	drm::ImageRef DstImage,
+	const VulkanImage& DstImage,
 	EImageLayout DstImageLayout,
 	EFilter Filter
 )
 {
-	const VulkanImageRef& SrcVkImage = ResourceCast(SrcImage);
-	const VulkanImageRef& DstVkImage = ResourceCast(DstImage);
-
 	VkImageBlit Region = {};
-	Region.srcSubresource.aspectMask = SrcVkImage->GetVulkanAspect();
+	Region.srcSubresource.aspectMask = SrcImage.GetVulkanAspect();
 	Region.srcSubresource.mipLevel = 0;
 	Region.srcSubresource.baseArrayLayer = 0;
 	Region.srcSubresource.layerCount = 1;
-	Region.dstSubresource.aspectMask = DstVkImage->GetVulkanAspect();
+	Region.dstSubresource.aspectMask = DstImage.GetVulkanAspect();
 	Region.dstSubresource.mipLevel = 0;
 	Region.dstSubresource.baseArrayLayer = 0;
 	Region.dstSubresource.layerCount = 1;
-	Region.srcOffsets[1].x = SrcImage->Width;
-	Region.srcOffsets[1].y = SrcImage->Height;
+	Region.srcOffsets[1].x = SrcImage.Width;
+	Region.srcOffsets[1].y = SrcImage.Height;
 	Region.srcOffsets[1].z = 1;
-	Region.dstOffsets[1].x = DstImage->Width;
-	Region.dstOffsets[1].y = DstImage->Height;
+	Region.dstOffsets[1].x = DstImage.Width;
+	Region.dstOffsets[1].y = DstImage.Height;
 	Region.dstOffsets[1].z = 1;
 
 	vkCmdBlitImage(
 		CommandBuffer,
-		SrcVkImage->Image,
+		SrcImage.Image,
 		VulkanImage::GetVulkanLayout(SrcImageLayout),
-		DstVkImage->Image,
+		DstImage.Image,
 		VulkanImage::GetVulkanLayout(DstImageLayout),
 		1,
 		&Region,

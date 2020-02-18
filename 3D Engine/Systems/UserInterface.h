@@ -21,24 +21,11 @@ private:
 
 	void UploadImGuiDrawData(DRMDevice& Device);
 
-	struct ImGuiDescriptors
-	{
-		drm::ImageRef FontImage;
-		SamplerState Sampler;
-		drm::BufferRef ImguiUniform;
+	drm::Image FontImage;
+	drm::BufferRef ImguiUniform;
 
-		static const std::vector<DescriptorTemplateEntry>& GetEntries()
-		{
-			static const std::vector<DescriptorTemplateEntry> Entries = 
-			{ 
-				{ 0, 1, EDescriptorType::SampledImage },
-				{ 1, 1, EDescriptorType::UniformBuffer }
-			};
-			return Entries;
-		}
-	};
-
-	DescriptorSet<ImGuiDescriptors> Descriptors;
+	drm::DescriptorSetRef DescriptorSet;
+	drm::DescriptorTemplateRef DescriptorTemplate;
 
 	drm::BufferRef VertexBuffer;
 	drm::BufferRef IndexBuffer;

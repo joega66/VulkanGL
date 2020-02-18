@@ -5,9 +5,9 @@
 
 struct SceneTexturesDescriptors
 {
-	drm::ImageRef Depth;
+	const drm::Image* Depth;
 	SamplerState DepthSampler{ EFilter::Nearest };
-	drm::ImageRef ShadowMask;
+	const drm::Image* ShadowMask;
 	SamplerState ShadowMaskSampler{ EFilter::Nearest };
 
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()
@@ -24,7 +24,7 @@ struct SceneTexturesDescriptors
 struct VoxelDescriptors
 {
 	drm::BufferRef WorldToVoxelBuffer;
-	drm::ImageRef VoxelColors;
+	const drm::Image* VoxelColors;
 	drm::BufferRef VoxelPositions;
 	drm::BufferRef VoxelIndirectBuffer;
 
@@ -67,13 +67,17 @@ private:
 
 	drm::RenderPass ShadowMaskRP;
 
-	drm::ImageRef ShadowMask;
+	drm::Image SceneDepth;
+
+	drm::Image ShadowMask;
 
 	DescriptorSet<SceneTexturesDescriptors> SceneTextures;
 
+	drm::Image VoxelColors;
+
 	DescriptorSet<VoxelDescriptors> VoxelDescriptorSet;
 
-	drm::ImageRef SceneColor;
+	drm::Image SceneColor;
 
 	void RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList);
 

@@ -203,7 +203,6 @@ drm::DescriptorSetRef VulkanDescriptorTemplate::CreateDescriptorSet()
 void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, void* Struct)
 {
 	uint32 DataOffset = 0;
-	uint32 StructOffset = 0;
 
 	for (auto& DescriptorUpdateTemplateEntry : DescriptorUpdateTemplateEntries)
 	{
@@ -211,11 +210,10 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 			DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
 		{
 			// Get the buffer from the struct ptr.
-			drm::BufferRef* Buffer = reinterpret_cast<drm::BufferRef*>(static_cast<uint8*>(Struct) + StructOffset);
+			drm::BufferRef* Buffer = static_cast<drm::BufferRef*>(Struct);
 			VulkanBufferRef& VulkanBuffer = *reinterpret_cast<VulkanBufferRef*>(Buffer);
 
-			// Increment the offset into the struct.
-			StructOffset += sizeof(drm::BufferRef);
+			Struct = static_cast<uint8*>(Struct) + sizeof(drm::BufferRef);
 
 			VkDescriptorBufferInfo* BufferInfoPtr = reinterpret_cast<VkDescriptorBufferInfo*>(static_cast<uint8*>(Data) + DataOffset);
 			*BufferInfoPtr = { VulkanBuffer->GetVulkanHandle(), VulkanBuffer->GetOffset(), VulkanBuffer->GetSize() };
@@ -226,21 +224,19 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 		else
 		{
 			// Get the image from the struct ptr.
-			drm::ImageRef* Image = reinterpret_cast<drm::ImageRef*>(static_cast<uint8*>(Struct) + StructOffset);
-			VulkanImageRef& VulkanImage = *reinterpret_cast<VulkanImageRef*>(Image);
+			const drm::Image* Image = *static_cast<const drm::Image**>(Struct);
 
-			// Increment the offset into the struct;
-			StructOffset += sizeof(drm::ImageRef);
+			Struct = static_cast<uint8*>(Struct) + sizeof(const drm::Image*);
 
 			// Find what the image layout should be.
 			const VkImageLayout ImageLayout = 
 				DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ?
-				(VulkanImage->IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
+				(Image->IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
 				: VK_IMAGE_LAYOUT_GENERAL;
 
 			// Get the image info from the data ptr.
 			VkDescriptorImageInfo* ImageInfoPtr = reinterpret_cast<VkDescriptorImageInfo*>(static_cast<uint8*>(Data) + DataOffset);
-			*ImageInfoPtr = VkDescriptorImageInfo{ VK_NULL_HANDLE, VulkanImage->ImageView, ImageLayout };
+			*ImageInfoPtr = VkDescriptorImageInfo{ VK_NULL_HANDLE, Image->ImageView, ImageLayout };
 
 			// Increment the offset into the data ptr.
 			DataOffset += sizeof(VkDescriptorImageInfo);
@@ -248,8 +244,8 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 			if (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 			{
 				// Get the sampler from the struct and increment the offset into the struct.
-				const SamplerState& SamplerDesc = *reinterpret_cast<const SamplerState*>(static_cast<uint8*>(Struct) + StructOffset);
-				StructOffset += sizeof(SamplerState);
+				const SamplerState& SamplerDesc = *static_cast<const SamplerState*>(Struct);
+				Struct = static_cast<uint8*>(Struct) + sizeof(SamplerState);
 				const VkSampler VulkanSampler = Device.GetCache().GetSampler(SamplerDesc);
 				ImageInfoPtr->sampler = VulkanSampler;
 			}

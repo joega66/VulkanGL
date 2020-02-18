@@ -1,12 +1,12 @@
 #pragma once
-#include <DRMResource.h>
+#include <DRMDefinitions.h>
 #include <DRMShader.h>
 
 struct MaterialDescriptors
 {
-	drm::ImageRef BaseColor;
+	const drm::Image* BaseColor;
 	SamplerState BaseColorSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	drm::ImageRef MetallicRoughness;
+	const drm::Image* MetallicRoughness;
 	SamplerState MetallicRoughnessSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	drm::BufferRef PBRUniform;
 
@@ -52,12 +52,12 @@ public:
 	inline float GetMetallicity() const { return Metallicity; }
 	inline const SpecializationInfo& GetSpecializationInfo() const { return SpecializationInfo; }
 
-	static drm::ImageRef Red;
-	static drm::ImageRef Green;
-	static drm::ImageRef Blue;
-	static drm::ImageRef White;
-	static drm::ImageRef Black;
-	static drm::ImageRef Dummy;
+	static drm::Image Red;
+	static drm::Image Green;
+	static drm::Image Blue;
+	static drm::Image White;
+	static drm::Image Black;
+	static drm::Image Dummy;
 
 	static void CreateDebugMaterials(DRMDevice& Device);
 

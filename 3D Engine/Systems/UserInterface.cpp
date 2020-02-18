@@ -43,7 +43,6 @@ public:
 };
 
 UserInterface::UserInterface(Engine& Engine)
-	: Descriptors(Engine.Device)
 {
 	ImGui::CreateContext();
 
@@ -117,8 +116,6 @@ void UserInterface::Render(const drm::RenderPass& RenderPass, drm::CommandList& 
 
 	if (DrawData->CmdListsCount > 0)
 	{
-		drm::DescriptorSetRef DescriptorSet = Descriptors;
-
 		CmdList.BindDescriptorSets(1, &DescriptorSet);
 
 		CmdList.BindPipeline(PSODesc);
@@ -170,13 +167,38 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 	int32 Width, Height;
 	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
 
-	Descriptors.ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(glm::mat4));
-	Descriptors.FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	Descriptors.Update();
+	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(glm::mat4));
 
-	drm::UploadImageData(Device, Pixels, Descriptors.FontImage);
+	struct ImGuiDescriptors
+	{
+		const drm::Image* FontImage;
+		SamplerState Sampler;
+		drm::BufferRef ImguiUniform;
+
+		static const std::vector<DescriptorTemplateEntry>& GetEntries()
+		{
+			static const std::vector<DescriptorTemplateEntry> Entries =
+			{
+				{ 0, 1, EDescriptorType::SampledImage },
+				{ 1, 1, EDescriptorType::UniformBuffer }
+			};
+			return Entries;
+		}
+	};
+
+	DescriptorTemplate = Device.CreateDescriptorTemplate(ImGuiDescriptors::GetEntries().size(), ImGuiDescriptors::GetEntries().data());
+	DescriptorSet = DescriptorTemplate->CreateDescriptorSet();
+
+	ImGuiDescriptors Descriptors;
+	Descriptors.FontImage = &FontImage;
+	Descriptors.ImguiUniform = ImguiUniform;
+
+	DescriptorTemplate->UpdateDescriptorSet(DescriptorSet, &Descriptors);
 	
-	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)Descriptors.FontImage->GetNativeHandle();
+	drm::UploadImageData(Device, Pixels, FontImage);
+	
+	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)FontImage.GetNativeHandle();
 }
 
 void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
@@ -217,10 +239,10 @@ void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
 	Device.UnlockBuffer(IndexBuffer);
 
 	ImGuiIO& ImGui = ImGui::GetIO();
-	glm::vec4* ImGuiData = static_cast<glm::vec4*>(Device.LockBuffer(Descriptors.ImguiUniform));
+	glm::vec4* ImGuiData = static_cast<glm::vec4*>(Device.LockBuffer(ImguiUniform));
 	ImGuiData->x = 2.0f / ImGui.DisplaySize.x;
 	ImGuiData->y = 2.0f / ImGui.DisplaySize.y;
 	ImGuiData->z = -1.0f - DrawData->DisplayPos.x * ImGuiData->x;
 	ImGuiData->w = -1.0f - DrawData->DisplayPos.y * ImGuiData->y;
-	Device.UnlockBuffer(Descriptors.ImguiUniform);
+	Device.UnlockBuffer(ImguiUniform);
 }
