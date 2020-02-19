@@ -16,8 +16,8 @@ AssetManager::AssetManager(DRMDevice& Device)
 
 	LoadCubemap("Engine_Cubemap_Default", Cubemap);
 	LoadImage("Engine_BaseColor_Default", "../Images/Frozen-Ice-Texture.jpg");
-	/*LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.obj");
-	LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");*/
+	LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.gltf");
+	//LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
 }
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup)

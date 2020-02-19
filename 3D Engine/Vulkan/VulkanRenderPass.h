@@ -21,6 +21,7 @@ public:
 	VulkanRenderPass(VulkanRenderPass&& Other);
 	VulkanRenderPass& operator=(VulkanRenderPass&& Other);
 	VulkanRenderPass(const VulkanRenderPass&) = delete;
+	VulkanRenderPass& operator=(const VulkanRenderPass&) = delete;
 
 	inline VkRenderPass GetRenderPass() const { return RenderPass; }
 	inline VkFramebuffer GetFramebuffer() const { return Framebuffer; }

@@ -1,10 +1,15 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBI_MSC_SECURE_CRT
+#include <tiny_gltf.h>
 
 StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path)
 	: Path(Path)
 {
-	if (Path.extension() == ".gltf")
+	if (Path.extension() == ".gltf" || Path.extension() == ".glb")
 	{
 		GLTFLoad(AssetName, Assets, Device);
 	}
@@ -30,12 +35,6 @@ StaticMesh::StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex)
 {
 }
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#define STBI_MSC_SECURE_CRT
-#include <tiny_gltf.h>
-
 tinygltf::TinyGLTF Loader;
 
 void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device)
@@ -44,7 +43,14 @@ void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, DR
 	std::string Err;
 	std::string Warn;
 
-	Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Path.generic_string());
+	if (Path.extension() == ".gltf")
+	{
+		Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Path.generic_string());
+	}
+	else
+	{
+		Loader.LoadBinaryFromFile(&Model, &Err, &Warn, Path.generic_string());
+	}
 
 	if (!Err.empty())
 	{
@@ -77,9 +83,6 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	auto& PositionView = Model.bufferViews[PositionAccessor.bufferView];
 	auto& NormalView = Model.bufferViews[NormalAccessor.bufferView];
 	auto& UvView = Model.bufferViews[UvAccessor.bufferView];
-
-	check(IndexView.byteStride == 0 && PositionView.byteStride == 0 && NormalView.byteStride == 0 && UvView.byteStride == 0,
-		"Need to add support for nonzero strides...");
 
 	auto& IndexData = Model.buffers[IndexView.buffer];
 	auto& PositionData = Model.buffers[PositionView.buffer];

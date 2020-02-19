@@ -43,7 +43,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 	CreateVoxelRP();
 
-	//Cube = Engine.Assets.GetStaticMesh("Cube");
+	Cube = Engine.Assets.GetStaticMesh("Cube");
 }
 
 void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
@@ -73,7 +73,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 			RenderLightingPass(Scene, CmdList);
 
-			//RenderSkybox(Scene, CmdList);
+			RenderSkybox(Scene, CmdList);
 
 			UserInterface.Render(LightingRP, CmdList);
 
@@ -180,7 +180,7 @@ void SceneRenderer::CreateVoxelVisualizationRP()
 void SceneRenderer::CreateLightingRP()
 {
 	RenderPassDesc RPDesc = { 1 };
-	RPDesc.ColorAttachments[0] = drm::AttachmentView(&SceneColor, ELoadAction::DontCare, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal);
+	RPDesc.ColorAttachments[0] = drm::AttachmentView(&SceneColor, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal);
 	RPDesc.DepthAttachment = drm::AttachmentView(&SceneDepth, ELoadAction::Load, EStoreAction::DontCare, ClearDepthStencilValue{}, EImageLayout::DepthReadStencilWrite, EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
 	LightingRP = Device.CreateRenderPass(RPDesc);
