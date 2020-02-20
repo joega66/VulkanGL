@@ -10,13 +10,13 @@ SceneProxy::SceneProxy(Engine& Engine)
 	: Camera(Engine.Camera)
 	, ECS(Engine.ECS)
 	, SkyboxDescriptorSet(Engine.Device)
-	, DescriptorSet(Engine.Device)
+	, CameraDescriptorSet(Engine.Device)
 {
 	InitView(Engine);
 	InitLights(Engine);
 	InitMeshDrawCommands(Engine);
 	
-	DescriptorSet.Update();
+	CameraDescriptorSet.Update();
 
 	SkyboxDescriptorSet.Skybox = Engine.Scene.Skybox;
 	SkyboxDescriptorSet.Update();
@@ -49,7 +49,8 @@ void SceneProxy::InitView(Engine& Engine)
 		glm::vec2(GetWidth(), GetHeight())
 	};
 
-	DescriptorSet.CameraUniform = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
+	CameraUniform = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
+	CameraDescriptorSet.CameraUniform = &CameraUniform;
 }
 
 void SceneProxy::InitLights(Engine& Engine)
@@ -84,11 +85,12 @@ void SceneProxy::InitDirectionalLights(Engine& Engine)
 	glm::uvec4 NumDirectionalLights;
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
-	DescriptorSet.DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	void* Data = Engine.Device.LockBuffer(DescriptorSet.DirectionalLightBuffer);
+	DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
+	CameraDescriptorSet.DirectionalLightBuffer = &DirectionalLightBuffer;
+	void* Data = Engine.Device.LockBuffer(DirectionalLightBuffer);
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	Engine.Device.UnlockBuffer(DescriptorSet.DirectionalLightBuffer);
+	Engine.Device.UnlockBuffer(DirectionalLightBuffer);
 }
 
 void SceneProxy::InitPointLights(Engine& Engine)
@@ -116,11 +118,13 @@ void SceneProxy::InitPointLights(Engine& Engine)
 	glm::uvec4 NumPointLights;
 	NumPointLights.x = PointLightProxies.size();
 
-	DescriptorSet.PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-	void* Data = Engine.Device.LockBuffer(DescriptorSet.PointLightBuffer);
+	PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::KeepCPUAccessible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
+	CameraDescriptorSet.PointLightBuffer = &PointLightBuffer;
+
+	void* Data = Engine.Device.LockBuffer(PointLightBuffer);
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	Engine.Device.UnlockBuffer(DescriptorSet.PointLightBuffer);
+	Engine.Device.UnlockBuffer(PointLightBuffer);
 }
 
 void SceneProxy::InitMeshDrawCommands(Engine& Engine)

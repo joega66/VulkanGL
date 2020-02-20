@@ -41,9 +41,11 @@ struct PipelineStateDesc
 };
 
 #include "Vulkan/VulkanImage.h"
+#include "Vulkan/VulkanMemory.h"
 
 namespace drm
 {
+	using Buffer = VulkanBuffer;
 	using Image = VulkanImage;
 
 	class AttachmentView
@@ -95,11 +97,11 @@ namespace drm
 
 struct BufferMemoryBarrier
 {
-	drm::BufferRef Buffer;
+	const drm::Buffer& Buffer;
 	EAccess SrcAccessMask;
 	EAccess DstAccessMask;
 
-	BufferMemoryBarrier(drm::BufferRef Buffer, EAccess SrcAccessMask, EAccess DstAccessMask)
+	BufferMemoryBarrier(const drm::Buffer& Buffer, EAccess SrcAccessMask, EAccess DstAccessMask)
 		: Buffer(Buffer), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask)
 	{
 	}

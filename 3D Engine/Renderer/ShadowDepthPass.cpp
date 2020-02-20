@@ -135,7 +135,7 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 
 		std::array<drm::DescriptorSetRef, 3> Descriptors =
 		{
-			Scene.DescriptorSet,
+			Scene.CameraDescriptorSet,
 			SceneTextures,
 			ShadowProxy.GetDescriptorSet()
 		};

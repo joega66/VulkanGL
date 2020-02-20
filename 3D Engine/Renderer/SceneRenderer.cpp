@@ -39,7 +39,8 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
 	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
 	VoxelDescriptorSet.VoxelColors = &VoxelColors;
-	VoxelDescriptorSet.VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
+	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
+	VoxelDescriptorSet.VoxelPositions = &VoxelPositions;
 
 	CreateVoxelRP();
 

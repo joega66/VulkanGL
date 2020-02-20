@@ -1,6 +1,7 @@
 #pragma once
 #include <DRMResource.h>
 #include <vulkan/vulkan.h>
+#include <optional>
 
 class VulkanDevice;
 
@@ -10,7 +11,7 @@ class VulkanMemory
 public:
 	VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
 
-	static std::shared_ptr<class VulkanBuffer> Allocate(
+	static std::optional<class VulkanBuffer> Allocate(
 		std::unique_ptr<VulkanMemory>& Memory,
 		VkDeviceSize Size,
 		VkDeviceSize AlignedSize,
@@ -43,14 +44,38 @@ private:
 	void Free(const class VulkanBuffer& Buffer);
 };
 
+class VulkanBuffer : public drm::BufferPrivate
+{
+public:
+	VulkanBuffer() = default;
+	VulkanBuffer(VulkanMemory& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, VkDeviceSize Offset, EBufferUsage Usage)
+		: Memory(&Memory), AlignedSize(AlignedSize), Offset(Offset), drm::BufferPrivate(Usage, static_cast<uint32>(Size)) {}
+	VulkanBuffer(VulkanBuffer&& Other);
+	VulkanBuffer& operator=(VulkanBuffer&& Other);
+	~VulkanBuffer();
+	VulkanBuffer(const VulkanBuffer&) = delete;
+	VulkanBuffer& operator=(const VulkanBuffer&) = delete;
+
+	inline VkBuffer GetVulkanHandle() const { return Memory->Buffer; }
+	inline VkDeviceMemory GetMemoryHandle() const { return Memory->Memory; }
+	inline VkDeviceSize GetAlignedSize() const { return AlignedSize; }
+	inline VkDeviceSize GetOffset() const { return Offset; }
+	inline VkMemoryPropertyFlags GetProperties() const { return Memory->Properties; }
+
+private:
+	VulkanMemory* Memory;		// The backing memory.
+	VkDeviceSize AlignedSize;	// The aligned size of the buffer.
+	VkDeviceSize Offset;		// Offset into the memory buffer.
+};
+
 class VulkanAllocator
 {
 public:
 	VulkanAllocator(VulkanDevice& Device);
 
-	std::shared_ptr<class VulkanBuffer> Allocate(
-		VkDeviceSize Size, 
-		VkBufferUsageFlags VulkanUsage, 
+	VulkanBuffer Allocate(
+		VkDeviceSize Size,
+		VkBufferUsageFlags VulkanUsage,
 		EBufferUsage Usage,
 		const void* Data = nullptr);
 
@@ -69,29 +94,3 @@ private:
 
 	[[nodiscard]] VulkanMemory AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
 };
-
-class VulkanBuffer : public drm::Buffer
-{
-public:
-	VulkanBuffer(VulkanMemory& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, VkDeviceSize Offset, EBufferUsage Usage)
-		: Memory(Memory), Size(Size), AlignedSize(AlignedSize), Offset(Offset), drm::Buffer(Usage, static_cast<uint32>(Size))
-	{
-	}
-
-	virtual ~VulkanBuffer() override;
-
-	inline VkBuffer GetVulkanHandle() const { return Memory.Buffer; }
-	inline VkDeviceMemory GetMemoryHandle() const { return Memory.Memory; }
-	inline VkDeviceSize GetSize() const { return Size; }
-	inline VkDeviceSize GetAlignedSize() const { return AlignedSize; }
-	inline VkDeviceSize GetOffset() const { return Offset; }
-	inline VkMemoryPropertyFlags GetProperties() const { return Memory.Properties; }
-	
-private:
-	VulkanMemory& Memory;		// The backing memory.
-	VkDeviceSize Size;			// The requested size of the buffer.
-	VkDeviceSize AlignedSize;	// The aligned size of the buffer.
-	VkDeviceSize Offset;		// Offset into the memory buffer.
-};
-
-CLASS(VulkanBuffer);

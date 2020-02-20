@@ -8,7 +8,7 @@ struct MaterialDescriptors
 	SamplerState BaseColorSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
 	const drm::Image* MetallicRoughness;
 	SamplerState MetallicRoughnessSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
-	drm::BufferRef PBRUniform;
+	const drm::Buffer* PBRUniform;
 
 	MaterialDescriptors();
 
@@ -62,6 +62,7 @@ public:
 	static void CreateDebugMaterials(DRMDevice& Device);
 
 private:
+	drm::Buffer PBRUniform;
 	EMaterialMode MaterialMode;
 	float Roughness = 0.0f;
 	float Metallicity = 0.0f;

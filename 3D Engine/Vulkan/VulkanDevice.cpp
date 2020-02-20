@@ -32,7 +32,7 @@ drm::DescriptorTemplateRef VulkanDevice::CreateDescriptorTemplate(uint32 NumEntr
 	return MakeRef<VulkanDescriptorTemplate>(*this, NumEntries, Entries);
 }
 
-drm::BufferRef VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
+VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
 {
 	VkBufferUsageFlags VulkanUsage = 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
@@ -116,16 +116,14 @@ drm::Image VulkanDevice::CreateImage(
 	);
 }
 
-void* VulkanDevice::LockBuffer(drm::BufferRef Buffer)
+void* VulkanDevice::LockBuffer(const drm::Buffer& Buffer)
 {
-	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
-	return Allocator.LockBuffer(*VulkanBuffer);
+	return Allocator.LockBuffer(Buffer);
 }
 
-void VulkanDevice::UnlockBuffer(drm::BufferRef Buffer)
+void VulkanDevice::UnlockBuffer(const drm::Buffer& Buffer)
 {
-	VulkanBufferRef VulkanBuffer = ResourceCast(Buffer);
-	Allocator.UnlockBuffer(*VulkanBuffer);
+	Allocator.UnlockBuffer(Buffer);
 }
 
 drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)

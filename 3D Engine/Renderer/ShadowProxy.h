@@ -3,7 +3,7 @@
 
 struct ShadowDescriptors
 {
-	drm::BufferRef LightViewProjBuffer;
+	const drm::Buffer* LightViewProjBuffer;
 	const drm::Image* ShadowMap;
 	SamplerState ShadowSampler;
 
@@ -38,7 +38,7 @@ private:
 	drm::RenderPass RenderPass;
 	float DepthBiasConstantFactor = 0.0f;
 	float DepthBiasSlopeFactor = 0.0f;
-	drm::BufferRef LightViewProjBuffer;
+	drm::Buffer LightViewProjBuffer;
 	drm::Image ShadowMap;
 	drm::DescriptorSetRef DescriptorSet;
 };

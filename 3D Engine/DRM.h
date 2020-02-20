@@ -26,7 +26,7 @@ public:
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) = 0;
 
 	/** Create a buffer resource. */
-	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
+	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
 
 	/** Create an image resource. */
 	virtual drm::Image CreateImage(
@@ -39,10 +39,10 @@ public:
 	) = 0;
 
 	/** Map a buffer into host memory. */
-	virtual void* LockBuffer(drm::BufferRef Buffer) = 0;
+	virtual void* LockBuffer(const drm::Buffer& Buffer) = 0;
 
 	/** Unmap a buffer from host memory. */
-	virtual void UnlockBuffer(drm::BufferRef Buffer) = 0;
+	virtual void UnlockBuffer(const drm::Buffer& Buffer) = 0;
 
 	/** Create a render pass resource. */
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;

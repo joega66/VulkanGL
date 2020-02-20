@@ -25,14 +25,14 @@ StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDe
 	});
 }
 
-StaticMesh::StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex)
+StaticMesh::StaticMesh(StaticMesh& StaticMesh, uint32 SubmeshIndex)
 	: Path(StaticMesh.Path)
-	, Submeshes{ StaticMesh.Submeshes[SubmeshIndex] }
 	, Materials{ StaticMesh.Materials[SubmeshIndex] }
 	, SubmeshBounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
 	, SubmeshNames{ StaticMesh.SubmeshNames[SubmeshIndex] }
 	, Bounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
 {
+	Submeshes.emplace_back(std::move(StaticMesh.Submeshes[SubmeshIndex]));
 }
 
 tinygltf::TinyGLTF Loader;
@@ -89,17 +89,18 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	auto& NormalData = Model.buffers[NormalView.buffer];
 	auto& UvData = Model.buffers[UvView.buffer];
 
-	drm::BufferRef IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
-	drm::BufferRef PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
-	drm::BufferRef TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
-	drm::BufferRef NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
+	drm::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
+	drm::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
+	drm::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
+	drm::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
+	drm::Buffer TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	uint32 SrcOffset = 0;
 
 	// Create one big staging buffer for the upload, because why not.
-	drm::BufferRef StagingBuffer = Device.CreateBuffer(
+	drm::Buffer StagingBuffer = Device.CreateBuffer(
 		EBufferUsage::Transfer,
 		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
 	);
@@ -123,6 +124,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 
 	Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
 	CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
+	CmdList.CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, NormalView.byteLength); // @todo Generate tangents
 	Memmapped += NormalView.byteLength;
 	SrcOffset += NormalView.byteLength;
 
@@ -133,11 +135,11 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	Submeshes.emplace_back(Submesh(
 		IndexAccessor.count
 		, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
-		, IndexBuffer
-		, PositionBuffer
-		, TextureCoordinateBuffer
-		, NormalBuffer
-		, NormalBuffer) // @todo Generate tangents
+		, std::move(IndexBuffer)
+		, std::move(PositionBuffer)
+		, std::move(TextureCoordinateBuffer)
+		, std::move(NormalBuffer)
+		, std::move(TangentBuffer))
 	);
 
 	const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);

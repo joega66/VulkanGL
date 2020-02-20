@@ -32,7 +32,7 @@ public:
 
 	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) override;
 
-	virtual drm::BufferRef CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
+	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
 
 	virtual drm::Image CreateImage(
 		uint32 Width, 
@@ -43,9 +43,9 @@ public:
 		EImageLayout InitialLayout = EImageLayout::Undefined
 	) override;
 
-	virtual void* LockBuffer(drm::BufferRef Buffer) override;
+	virtual void* LockBuffer(const drm::Buffer& Buffer) override;
 
-	virtual void UnlockBuffer(drm::BufferRef Buffer) override;
+	virtual void UnlockBuffer(const drm::Buffer& Buffer) override;
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
@@ -86,7 +86,6 @@ private:
 
 namespace
 {
-	CAST(drm::Buffer, VulkanBuffer);
 	CAST(drm::DescriptorSet, VulkanDescriptorSet);
 };
 

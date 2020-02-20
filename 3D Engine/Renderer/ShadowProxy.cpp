@@ -24,7 +24,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors
 
 	ShadowDescriptors Descriptors;
 	Descriptors.ShadowMap = &ShadowMap;
-	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
+	Descriptors.LightViewProjBuffer = &LightViewProjBuffer;
 
 	DescriptorSet = ShadowTemplate.CreateDescriptorSet();
 	ShadowTemplate.UpdateDescriptorSet(DescriptorSet, Descriptors);

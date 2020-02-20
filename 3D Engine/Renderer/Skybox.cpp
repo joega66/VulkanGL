@@ -45,7 +45,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	std::array<drm::DescriptorSetRef, 2> DescriptorSets =
 	{
-		Scene.DescriptorSet,
+		Scene.CameraDescriptorSet,
 		Scene.SkyboxDescriptorSet
 	};
 

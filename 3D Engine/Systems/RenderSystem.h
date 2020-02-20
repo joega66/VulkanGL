@@ -6,7 +6,7 @@
 class StaticMeshDescriptors
 {
 public:
-	drm::BufferRef LocalToWorldUniform;
+	const drm::Buffer* LocalToWorldUniform;
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()
 	{
 		static const std::vector<DescriptorTemplateEntry> Entries = { { 0, 1, UniformBuffer }, };

@@ -25,7 +25,8 @@ Material::Material(
 		float Metallicity;
 	} PBRUniformData = { Roughness, Metallicity };
 
-	Descriptors.PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(PBRUniformData), &PBRUniformData);
+	PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(PBRUniformData), &PBRUniformData);
+	Descriptors.PBRUniform = &PBRUniform;
 
 	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != &Material::Dummy);
 	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
@@ -43,7 +44,7 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 		234, 115, 79, 0 // Dummy
 	};
 
-	drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
+	drm::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
 
 	Material::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);

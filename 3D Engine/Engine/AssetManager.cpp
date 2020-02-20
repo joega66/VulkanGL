@@ -98,7 +98,7 @@ const Material* AssetManager::GetMaterial(const std::string& AssetName)
 void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format)
 {
 	std::unique_ptr<drm::Image> Image;
-	drm::BufferRef StagingBuffer;
+	drm::Buffer StagingBuffer;
 	void* MemMapped = nullptr;
 
 	for (uint32 FaceIndex = 0; FaceIndex < Files.size(); FaceIndex++)

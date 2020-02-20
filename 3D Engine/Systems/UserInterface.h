@@ -22,13 +22,13 @@ private:
 	void UploadImGuiDrawData(DRMDevice& Device);
 
 	drm::Image FontImage;
-	drm::BufferRef ImguiUniform;
+	drm::Buffer ImguiUniform;
 
 	drm::DescriptorSetRef DescriptorSet;
 	drm::DescriptorTemplateRef DescriptorTemplate;
 
-	drm::BufferRef VertexBuffer;
-	drm::BufferRef IndexBuffer;
+	drm::Buffer VertexBuffer;
+	drm::Buffer IndexBuffer;
 
 	PipelineStateDesc PSODesc;
 };

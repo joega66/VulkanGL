@@ -174,7 +174,7 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 	{
 		const drm::Image* FontImage;
 		SamplerState Sampler;
-		drm::BufferRef ImguiUniform;
+		const drm::Buffer* ImguiUniform;
 
 		static const std::vector<DescriptorTemplateEntry>& GetEntries()
 		{
@@ -192,7 +192,7 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 
 	ImGuiDescriptors Descriptors;
 	Descriptors.FontImage = &FontImage;
-	Descriptors.ImguiUniform = ImguiUniform;
+	Descriptors.ImguiUniform = &ImguiUniform;
 
 	DescriptorTemplate->UpdateDescriptorSet(DescriptorSet, &Descriptors);
 	

@@ -31,10 +31,10 @@ public:
 
 	void BindDescriptorSets(uint32 NumDescriptorSets, const drm::DescriptorSetRef* DescriptorSets);
 
-	void BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers);
+	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 
 	void DrawIndexed(
-		drm::BufferRef IndexBuffer, 
+		const VulkanBuffer& IndexBuffer,
 		uint32 IndexCount, 
 		uint32 InstanceCount, 
 		uint32 FirstIndex, 
@@ -45,7 +45,7 @@ public:
 
 	void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);
 
-	void DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount);
+	void DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, uint32 DrawCount);
 
 	void ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color);
 
@@ -61,7 +61,7 @@ public:
 	);
 
 	void CopyBufferToImage(
-		drm::BufferRef SrcBuffer, 
+		const VulkanBuffer& SrcBuffer, 
 		uint32 BufferOffset, 
 		const VulkanImage& DstImage,
 		EImageLayout DstImageLayout
@@ -78,8 +78,8 @@ public:
 	void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors);
 
 	void CopyBuffer(
-		drm::BufferRef SrcBuffer,
-		drm::BufferRef DstBuffer,
+		const VulkanBuffer& SrcBuffer,
+		const VulkanBuffer& DstBuffer,
 		uint32 SrcOffset,
 		uint32 DstOffset,
 		uint32 Size

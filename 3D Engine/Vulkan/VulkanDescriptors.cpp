@@ -210,13 +210,12 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 			DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
 		{
 			// Get the buffer from the struct ptr.
-			drm::BufferRef* Buffer = static_cast<drm::BufferRef*>(Struct);
-			VulkanBufferRef& VulkanBuffer = *reinterpret_cast<VulkanBufferRef*>(Buffer);
+			const drm::Buffer* Buffer = *static_cast<const drm::Buffer**>(Struct);
 
-			Struct = static_cast<uint8*>(Struct) + sizeof(drm::BufferRef);
+			Struct = static_cast<uint8*>(Struct) + sizeof(Buffer);
 
 			VkDescriptorBufferInfo* BufferInfoPtr = reinterpret_cast<VkDescriptorBufferInfo*>(static_cast<uint8*>(Data) + DataOffset);
-			*BufferInfoPtr = { VulkanBuffer->GetVulkanHandle(), VulkanBuffer->GetOffset(), VulkanBuffer->GetSize() };
+			*BufferInfoPtr = { Buffer->GetVulkanHandle(), Buffer->GetOffset(), Buffer->GetSize() };
 
 			// Increment the offset into the data ptr.
 			DataOffset += sizeof(VkDescriptorBufferInfo);
@@ -226,7 +225,7 @@ void VulkanDescriptorTemplate::UpdateDescriptorSet(drm::DescriptorSetRef Descrip
 			// Get the image from the struct ptr.
 			const drm::Image* Image = *static_cast<const drm::Image**>(Struct);
 
-			Struct = static_cast<uint8*>(Struct) + sizeof(const drm::Image*);
+			Struct = static_cast<uint8*>(Struct) + sizeof(Image);
 
 			// Find what the image layout should be.
 			const VkImageLayout ImageLayout = 

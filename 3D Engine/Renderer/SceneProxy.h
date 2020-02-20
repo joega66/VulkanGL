@@ -12,11 +12,11 @@ namespace EStaticDrawListType
 	};
 };
 
-struct SceneDescriptors
+struct CameraDescriptors
 {
-	drm::BufferRef CameraUniform;
-	drm::BufferRef DirectionalLightBuffer;
-	drm::BufferRef PointLightBuffer;
+	const drm::Buffer* CameraUniform;
+	const drm::Buffer* DirectionalLightBuffer;
+	const drm::Buffer* PointLightBuffer;
 
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()
 	{
@@ -58,9 +58,13 @@ public:
 
 	class EntityManager& ECS;
 
+	drm::Buffer CameraUniform;
+	drm::Buffer DirectionalLightBuffer;
+	drm::Buffer PointLightBuffer;
+
 	DescriptorSet<SkyboxDescriptors> SkyboxDescriptorSet;
 
-	DescriptorSet<SceneDescriptors> DescriptorSet;
+	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
 
 	std::vector<MeshDrawCommand> DepthPrepass;
 

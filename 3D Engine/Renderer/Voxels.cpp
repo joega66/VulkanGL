@@ -115,7 +115,8 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	VoxelDescriptorSet.WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
+	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
+	VoxelDescriptorSet.WorldToVoxelBuffer = &WorldToVoxelBuffer;
 
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;
@@ -123,7 +124,8 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	VoxelDescriptorSet.VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::KeepCPUAccessible, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
+	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::KeepCPUAccessible, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
+	VoxelDescriptorSet.VoxelIndirectBuffer = &VoxelIndirectBuffer;
 
 	VoxelDescriptorSet.Update();
 
@@ -185,7 +187,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 	PSODesc.Viewport.Width = VoxelGridSize;
 	PSODesc.Viewport.Height = VoxelGridSize;
 
-	VoxelizationPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures, VoxelDescriptorSet };
+	VoxelizationPassDescriptorSets DescriptorSets = { Scene.CameraDescriptorSet, SceneTextures, VoxelDescriptorSet };
 
 	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList, DescriptorSets, PSODesc);
 
@@ -256,8 +258,8 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 {
 	std::vector<BufferMemoryBarrier> Barriers = 
 	{
-		{ VoxelDescriptorSet.VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
-		{ VoxelDescriptorSet.VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
+		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
+		{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
 	};
 
 	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General);
@@ -273,7 +275,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	const std::vector<drm::DescriptorSetRef> DescriptorSets =
 	{
-		Scene.DescriptorSet,
+		Scene.CameraDescriptorSet,
 		VoxelDescriptorSet
 	};
 
@@ -295,7 +297,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.BindPipeline(PSODesc);
 
-	CmdList.DrawIndirect(VoxelDescriptorSet.VoxelIndirectBuffer, 0, 1);
+	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 
 	CmdList.EndRenderPass();
 }

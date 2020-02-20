@@ -4,17 +4,17 @@ MeshProxy::MeshProxy(
 	const class Material* Material,
 	drm::DescriptorSetRef SurfaceSet,
 	const std::vector<Submesh>& Submeshes,
-	const drm::BufferRef& LocalToWorldUniform)
+	drm::Buffer&& LocalToWorldUniform)
 	: Material(Material)
 	, SurfaceSet(SurfaceSet)
-	, Submeshes(Submeshes)
-	, LocalToWorldUniform(LocalToWorldUniform)
+	, Submeshes(&Submeshes)
+	, LocalToWorldUniform(std::move(LocalToWorldUniform))
 {
 }
 
 void MeshProxy::DrawElements(drm::CommandList& CmdList) const
 {
-	std::for_each(Submeshes.begin(), Submeshes.end(),
+	std::for_each(Submeshes->begin(), Submeshes->end(),
 		[&] (const Submesh& Submesh)
 	{
 		CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());

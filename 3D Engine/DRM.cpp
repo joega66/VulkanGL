@@ -2,7 +2,7 @@
 
 void drm::UploadImageData(DRMDevice& Device, const void* SrcPixels, const drm::Image& DstImage)
 {
-	drm::BufferRef StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, DstImage.GetSize(), SrcPixels);
+	drm::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, DstImage.GetSize(), SrcPixels);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 

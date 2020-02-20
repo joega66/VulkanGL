@@ -74,23 +74,22 @@ void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const drm::
 		nullptr);
 }
 
-void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const drm::BufferRef* VertexBuffers)
+void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers)
 {
 	std::vector<VkDeviceSize> Offsets(NumVertexBuffers);
 	std::vector<VkBuffer> Buffers(NumVertexBuffers);
 
 	for (uint32 Location = 0; Location < NumVertexBuffers; Location++)
 	{
-		VulkanBufferRef VulkanVertexBuffer = ResourceCast(VertexBuffers[Location]);
-		Offsets[Location] = VulkanVertexBuffer->GetOffset();
-		Buffers[Location] = VulkanVertexBuffer->GetVulkanHandle();
+		Offsets[Location] = VertexBuffers[Location].GetOffset();
+		Buffers[Location] = VertexBuffers[Location].GetVulkanHandle();
 	}
 
 	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
 }
 
 void VulkanCommandList::DrawIndexed(
-	drm::BufferRef IndexBuffer, 
+	const VulkanBuffer& IndexBuffer, 
 	uint32 IndexCount, 
 	uint32 InstanceCount, 
 	uint32 FirstIndex, 
@@ -98,8 +97,7 @@ void VulkanCommandList::DrawIndexed(
 	uint32 FirstInstance,
 	EIndexType IndexType)
 {
-	VulkanBufferRef VulkanIndexBuffer = ResourceCast(IndexBuffer);
-	vkCmdBindIndexBuffer(CommandBuffer, VulkanIndexBuffer->GetVulkanHandle(), VulkanIndexBuffer->GetOffset(), IndexType == EIndexType::UINT32 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(CommandBuffer, IndexBuffer.GetVulkanHandle(), IndexBuffer.GetOffset(), IndexType == EIndexType::UINT32 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
@@ -108,13 +106,12 @@ void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 Fi
 	vkCmdDraw(CommandBuffer, VertexCount, InstanceCount, FirstVertex, FirstInstance);
 }
 
-void VulkanCommandList::DrawIndirect(drm::BufferRef Buffer, uint32 Offset, uint32 DrawCount)
+void VulkanCommandList::DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, uint32 DrawCount)
 {
-	const VulkanBufferRef& VulkanBuffer = ResourceCast(Buffer);
 	vkCmdDrawIndirect(
 		CommandBuffer,
-		VulkanBuffer->GetVulkanHandle(),
-		VulkanBuffer->GetOffset() + Offset,
+		Buffer.GetVulkanHandle(),
+		Buffer.GetOffset() + Offset,
 		DrawCount,
 		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
 }
@@ -167,16 +164,16 @@ void VulkanCommandList::PipelineBarrier(
 	for (uint32 BarrierIndex = 0; BarrierIndex < NumBufferBarriers; BarrierIndex++)
 	{
 		const BufferMemoryBarrier& BufferBarrier = BufferBarriers[BarrierIndex];
-		const VulkanBufferRef& VulkanBuffer = ResourceCast(BufferBarrier.Buffer);
+		const VulkanBuffer& Buffer = BufferBarrier.Buffer;
 
 		VkBufferMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
 		Barrier.srcAccessMask = GetVulkanAccessFlags(BufferBarrier.SrcAccessMask);
 		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.DstAccessMask);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		Barrier.buffer = VulkanBuffer->GetVulkanHandle();
-		Barrier.offset = VulkanBuffer->GetOffset();
-		Barrier.size = VulkanBuffer->GetSize();
+		Barrier.buffer = Buffer.GetVulkanHandle();
+		Barrier.offset = Buffer.GetOffset();
+		Barrier.size = Buffer.GetSize();
 
 		VulkanBufferBarriers.push_back(Barrier);
 	}
@@ -217,9 +214,8 @@ void VulkanCommandList::PipelineBarrier(
 	);
 }
 
-void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 BufferOffset, const VulkanImage& DstImage, EImageLayout DstImageLayout)
+void VulkanCommandList::CopyBufferToImage(const VulkanBuffer& SrcBuffer, uint32 BufferOffset, const VulkanImage& DstImage, EImageLayout DstImageLayout)
 {
-	VulkanBufferRef VulkanBuffer = ResourceCast(SrcBuffer);
 	std::vector<VkBufferImageCopy> Regions;
 
 	if (Any(DstImage.GetUsage() & EImageUsage::Cubemap))
@@ -233,7 +229,7 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 			// VkImageSubresourceRange(3) Manual Page:
 			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
 			VkBufferImageCopy& Region = Regions[LayerIndex];
-			Region.bufferOffset = LayerIndex * FaceSize + VulkanBuffer->GetOffset();
+			Region.bufferOffset = LayerIndex * FaceSize + SrcBuffer.GetOffset();
 			Region.bufferRowLength = 0;
 			Region.bufferImageHeight = 0;
 			Region.imageSubresource.aspectMask = DstImage.GetVulkanAspect();
@@ -251,7 +247,7 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 	else
 	{
 		VkBufferImageCopy Region = {};
-		Region.bufferOffset = BufferOffset + VulkanBuffer->GetOffset();
+		Region.bufferOffset = BufferOffset + SrcBuffer.GetOffset();
 		Region.bufferRowLength = 0;
 		Region.bufferImageHeight = 0;
 		Region.imageSubresource.aspectMask = DstImage.GetVulkanAspect();
@@ -268,7 +264,7 @@ void VulkanCommandList::CopyBufferToImage(drm::BufferRef SrcBuffer, uint32 Buffe
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, VulkanBuffer->GetVulkanHandle(), DstImage.Image, VulkanImage::GetVulkanLayout(DstImageLayout), Regions.size(), Regions.data());
+	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstImage.Image, VulkanImage::GetVulkanLayout(DstImageLayout), Regions.size(), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
@@ -313,14 +309,14 @@ void VulkanCommandList::SetScissor(uint32 ScissorCount, const ScissorDesc* Sciss
 	vkCmdSetScissor(CommandBuffer, 0, ScissorCount, reinterpret_cast<const VkRect2D*>(Scissors));
 }
 
-void VulkanCommandList::CopyBuffer(drm::BufferRef SrcBuffer, drm::BufferRef DstBuffer, uint32 SrcOffset, uint32 DstOffset, uint32 Size)
+void VulkanCommandList::CopyBuffer(const VulkanBuffer& SrcBuffer, const VulkanBuffer& DstBuffer, uint32 SrcOffset, uint32 DstOffset, uint32 Size)
 {
 	const VkBufferCopy Region = 
 	{ 
-		ResourceCast(SrcBuffer)->GetOffset() + SrcOffset, 
-		ResourceCast(DstBuffer)->GetOffset() + DstOffset,
+		SrcBuffer.GetOffset() + SrcOffset, 
+		DstBuffer.GetOffset() + DstOffset,
 		Size 
 	};
 
-	vkCmdCopyBuffer(CommandBuffer, ResourceCast(SrcBuffer)->GetVulkanHandle(), ResourceCast(DstBuffer)->GetVulkanHandle(), 1, &Region);
+	vkCmdCopyBuffer(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstBuffer.GetVulkanHandle(), 1, &Region);
 }

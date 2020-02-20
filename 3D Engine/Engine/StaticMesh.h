@@ -21,32 +21,47 @@ public:
 	Submesh(
 		uint32 IndexCount
 		, EIndexType IndexType
-		, drm::BufferRef IndexBuffer
-		, drm::BufferRef PositionBuffer
-		, drm::BufferRef TextureCoordinateBuffer
-		, drm::BufferRef NormalBuffer
-		, drm::BufferRef TangentBuffer)
+		, drm::Buffer&& IndexBuffer
+		, drm::Buffer&& PositionBuffer
+		, drm::Buffer&& TextureCoordinateBuffer
+		, drm::Buffer&& NormalBuffer
+		, drm::Buffer&& TangentBuffer)
 		: IndexCount(IndexCount)
 		, IndexType(IndexType)
-		, IndexBuffer(IndexBuffer)
+		, IndexBuffer(std::move(IndexBuffer))
 	{
-		VertexBuffers[Positions] = PositionBuffer;
-		VertexBuffers[TextureCoordinates] = TextureCoordinateBuffer;
-		VertexBuffers[Normals] = NormalBuffer;
-		VertexBuffers[Tangents] = TangentBuffer;
+		VertexBuffers[Positions] = std::move(PositionBuffer);
+		VertexBuffers[TextureCoordinates] = std::move(TextureCoordinateBuffer);
+		VertexBuffers[Normals] = std::move(NormalBuffer);
+		VertexBuffers[Tangents] = std::move(TangentBuffer);
+	}
+
+	Submesh(Submesh&& Other)
+		: IndexCount(Other.IndexCount)
+		, IndexType(Other.IndexType)
+		, IndexBuffer(std::move(Other.IndexBuffer))
+		, VertexBuffers(std::move(Other.VertexBuffers))
+	{}
+
+	Submesh& operator=(Submesh&& Other)
+	{
+		IndexCount = Other.IndexCount;
+		IndexType = Other.IndexType;
+		IndexBuffer = std::move(Other.IndexBuffer);
+		VertexBuffers = std::move(Other.VertexBuffers);
 	}
 
 	inline uint32 GetIndexCount() const { return IndexCount; }
 	inline EIndexType GetIndexType() const { return IndexType; }
-	inline drm::BufferRef GetIndexBuffer() const { return IndexBuffer; }
-	inline const std::array<drm::BufferRef, NumLocations>& GetVertexBuffers() const { return VertexBuffers; }
-	inline drm::BufferRef GetPositionBuffer() const { return VertexBuffers[Positions]; }
+	inline const drm::Buffer& GetIndexBuffer() const { return IndexBuffer; }
+	inline const std::array<drm::Buffer, NumLocations>& GetVertexBuffers() const { return VertexBuffers; }
+	inline const drm::Buffer& GetPositionBuffer() const { return VertexBuffers[Positions]; }
 
 private:
-	const uint32 IndexCount;
-	const EIndexType IndexType;
-	drm::BufferRef IndexBuffer;
-	std::array<drm::BufferRef, NumLocations> VertexBuffers;
+	uint32 IndexCount;
+	EIndexType IndexType;
+	drm::Buffer IndexBuffer;
+	std::array<drm::Buffer, NumLocations> VertexBuffers;
 };
 
 namespace tinygltf { class Model; struct Mesh; struct Primitive; }
@@ -67,7 +82,7 @@ public:
 	StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
-	StaticMesh(const StaticMesh& StaticMesh, uint32 SubmeshIndex);
+	StaticMesh(StaticMesh& StaticMesh, uint32 SubmeshIndex);
 
 	inline const BoundingBox& GetBounds() const { return Bounds; }
 

@@ -23,10 +23,10 @@ struct SceneTexturesDescriptors
 
 struct VoxelDescriptors
 {
-	drm::BufferRef WorldToVoxelBuffer;
+	const drm::Buffer* WorldToVoxelBuffer;
 	const drm::Image* VoxelColors;
-	drm::BufferRef VoxelPositions;
-	drm::BufferRef VoxelIndirectBuffer;
+	const drm::Buffer* VoxelPositions;
+	const drm::Buffer* VoxelIndirectBuffer;
 
 	static const std::vector<DescriptorTemplateEntry>& GetEntries()
 	{
@@ -73,7 +73,10 @@ private:
 
 	DescriptorSet<SceneTexturesDescriptors> SceneTextures;
 
+	drm::Buffer WorldToVoxelBuffer;
 	drm::Image VoxelColors;
+	drm::Buffer VoxelPositions;
+	drm::Buffer VoxelIndirectBuffer;
 
 	DescriptorSet<VoxelDescriptors> VoxelDescriptorSet;
 

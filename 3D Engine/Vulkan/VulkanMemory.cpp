@@ -12,7 +12,7 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 {
 }
 
-VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
+VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
 {
 	VkMemoryPropertyFlags Properties = Any(Usage & (EBufferUsage::KeepCPUAccessible | EBufferUsage::Transfer)) ?
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -40,15 +40,15 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 		// Find a buffer with the same properties and usage
 		if (Memory->GetVulkanUsage() == VulkanUsage && Memory->GetProperties() == Properties)
 		{
-			VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(Memory, Size, AlignedSize, Usage);
+			std::optional<VulkanBuffer> Buffer = VulkanMemory::Allocate(Memory, Size, AlignedSize, Usage);
 
-			if (VulkanBuffer)
+			if (Buffer)
 			{
 				if (Data)
 				{
-					UploadBufferData(*VulkanBuffer, Data);
+					UploadBufferData(*Buffer, Data);
 				}
-				return VulkanBuffer;
+				return std::move(Buffer.value());
 			}
 		}
 	}
@@ -56,14 +56,14 @@ VulkanBufferRef VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags 
 	// Buffer not found - Create a new one
 	MemoryBuffers.emplace_back(std::make_unique<VulkanMemory>(AllocateMemory(Size, VulkanUsage, Properties)));
 
-	VulkanBufferRef VulkanBuffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, AlignedSize, Usage);
+	std::optional<VulkanBuffer> Buffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, AlignedSize, Usage);
 
 	if (Data)
 	{
-		UploadBufferData(*VulkanBuffer, Data);
+		UploadBufferData(Buffer.value(), Data);
 	}
 
-	return VulkanBuffer;
+	return std::move(Buffer.value());
 }
 
 uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemoryPropertyFlags RequiredProperties) const
@@ -138,7 +138,7 @@ VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsage
 {
 }
 
-std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::unique_ptr<VulkanMemory>& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
+std::optional<VulkanBuffer> VulkanMemory::Allocate(std::unique_ptr<VulkanMemory>& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
 {
 	for (auto Iter = Memory->FreeList.begin(); Iter != Memory->FreeList.end(); Iter++)
 	{
@@ -156,18 +156,18 @@ std::shared_ptr<VulkanBuffer> VulkanMemory::Allocate(std::unique_ptr<VulkanMemor
 				Memory->FreeList.erase(Iter);
 			}
 
-			return MakeRef<VulkanBuffer>(*Memory, Size, AlignedSize, Offset, Usage);
+			return VulkanBuffer(*Memory, Size, AlignedSize, Offset, Usage);
 		}
 	}
 
 	if (Memory->GetSizeRemaining() >= AlignedSize)
 	{
-		VulkanBufferRef VulkanBuffer = MakeRef<class VulkanBuffer>(*Memory, Size, AlignedSize, Memory->Used, Usage);
+		VulkanBuffer Buffer = VulkanBuffer(*Memory, Size, AlignedSize, Memory->Used, Usage);
 		Memory->Used += AlignedSize;
-		return VulkanBuffer;
+		return Buffer;
 	}
 
-	return nullptr;
+	return std::nullopt;
 }
 
 void VulkanMemory::Free(const VulkanBuffer& Buffer)
@@ -197,7 +197,28 @@ void VulkanMemory::Free(const VulkanBuffer& Buffer)
 	FreeList.push_back(New);
 }
 
+VulkanBuffer::VulkanBuffer(VulkanBuffer&& Other)
+	: Memory(std::exchange(Other.Memory, nullptr))
+	, AlignedSize(Other.AlignedSize)
+	, Offset(Other.Offset)
+	, drm::BufferPrivate(Other.Usage, Other.GetSize())
+{
+}
+
+VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& Other)
+{
+	Memory = std::exchange(Other.Memory, nullptr);
+	AlignedSize = Other.AlignedSize;
+	Offset = Other.Offset;
+	Usage = Other.Usage;
+	Size = Other.Size;
+	return *this;
+}
+
 VulkanBuffer::~VulkanBuffer()
 {
-	Memory.Free(*this);
+	if (Memory)
+	{
+		Memory->Free(*this);
+	}
 }

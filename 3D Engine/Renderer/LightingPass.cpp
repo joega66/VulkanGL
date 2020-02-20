@@ -96,7 +96,7 @@ void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdL
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 
-	LightingPassDescriptorSets DescriptorSets = { Scene.DescriptorSet, SceneTextures };
+	LightingPassDescriptorSets DescriptorSets = { Scene.CameraDescriptorSet, SceneTextures };
 
 	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList, DescriptorSets, PSODesc);
 	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList, DescriptorSets, PSODesc);

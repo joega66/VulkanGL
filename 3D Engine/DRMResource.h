@@ -235,27 +235,23 @@ struct DescriptorTemplateEntry
 
 namespace drm
 {
-	class Buffer
+	class BufferPrivate
 	{
 	public:
 		EBufferUsage Usage;
 
-		Buffer(EBufferUsage Usage, uint32 Size)
+		BufferPrivate() = default;
+		BufferPrivate(EBufferUsage Usage, uint32 Size)
 			: Usage(Usage)
 			, Size(Size)
 		{
 		}
 
-		virtual ~Buffer() {}
-
 		inline uint32 GetSize() const { return Size; }
 
-	private:
+	protected:
 		uint32 Size;
-
 	};
-	
-	CLASS(Buffer);
 
 	class ImagePrivate
 	{

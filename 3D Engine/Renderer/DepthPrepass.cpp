@@ -88,7 +88,7 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdL
 	PSODesc.Viewport.Width = SceneDepth.GetWidth();
 	PSODesc.Viewport.Height = SceneDepth.GetHeight();
 
-	DepthPrepassDescriptorSets DescriptorSets = { Scene.DescriptorSet };
+	DepthPrepassDescriptorSets DescriptorSets = { Scene.CameraDescriptorSet };
 
 	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList, DescriptorSets, PSODesc);
 
