@@ -7,14 +7,14 @@ struct ShadowDescriptors
 	const drm::Image* ShadowMap;
 	SamplerState ShadowSampler;
 
-	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static std::vector<DescriptorTemplateEntry> Entries =
+		static std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, UniformBuffer },
 			{ 1, 1, SampledImage },
 		};
-		return Entries;
+		return Bindings;
 	}
 };
 
@@ -23,7 +23,7 @@ class ShadowProxy
 public:
 	static constexpr EFormat FORMAT = EFormat::D32_SFLOAT;
 
-	ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors>& ShadowTemplate, const struct DirectionalLight& DirectionalLight);
+	ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
 
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
 
@@ -32,7 +32,7 @@ public:
 	inline float GetDepthBiasSlopeFactor() const { return DepthBiasSlopeFactor; }
 	inline const drm::RenderPass& GetRenderPass() const { return RenderPass; };
 	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
-	inline drm::DescriptorSetRef GetDescriptorSet() const { return DescriptorSet; }
+	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 
 private:
 	drm::RenderPass RenderPass;
@@ -40,5 +40,5 @@ private:
 	float DepthBiasSlopeFactor = 0.0f;
 	drm::Buffer LightViewProjBuffer;
 	drm::Image ShadowMap;
-	drm::DescriptorSetRef DescriptorSet;
+	drm::DescriptorSet DescriptorSet;
 };

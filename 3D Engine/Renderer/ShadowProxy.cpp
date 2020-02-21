@@ -2,7 +2,7 @@
 #include <Components/Light.h>
 #include <ECS/EntityManager.h>
 
-ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors>& ShadowTemplate, const DirectionalLight& DirectionalLight)
+ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 {
 	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(glm::mat4));
 
@@ -26,8 +26,8 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorTemplate<ShadowDescriptors
 	Descriptors.ShadowMap = &ShadowMap;
 	Descriptors.LightViewProjBuffer = &LightViewProjBuffer;
 
-	DescriptorSet = ShadowTemplate.CreateDescriptorSet();
-	ShadowTemplate.UpdateDescriptorSet(DescriptorSet, Descriptors);
+	DescriptorSet = ShadowLayout.CreateDescriptorSet();
+	ShadowLayout.UpdateDescriptorSet(DescriptorSet, Descriptors);
 }
 
 void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalLight)

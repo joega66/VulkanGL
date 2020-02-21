@@ -116,7 +116,9 @@ void UserInterface::Render(const drm::RenderPass& RenderPass, drm::CommandList& 
 
 	if (DrawData->CmdListsCount > 0)
 	{
-		CmdList.BindDescriptorSets(1, &DescriptorSet);
+		const drm::DescriptorSet* DescriptorSets[] = { &DescriptorSet };
+
+		CmdList.BindDescriptorSets(1, DescriptorSets);
 
 		CmdList.BindPipeline(PSODesc);
 
@@ -176,25 +178,25 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 		SamplerState Sampler;
 		const drm::Buffer* ImguiUniform;
 
-		static const std::vector<DescriptorTemplateEntry>& GetEntries()
+		static const std::vector<DescriptorBinding>& GetBindings()
 		{
-			static const std::vector<DescriptorTemplateEntry> Entries =
+			static const std::vector<DescriptorBinding> Bindings =
 			{
 				{ 0, 1, EDescriptorType::SampledImage },
 				{ 1, 1, EDescriptorType::UniformBuffer }
 			};
-			return Entries;
+			return Bindings;
 		}
 	};
 
-	DescriptorTemplate = Device.CreateDescriptorTemplate(ImGuiDescriptors::GetEntries().size(), ImGuiDescriptors::GetEntries().data());
-	DescriptorSet = DescriptorTemplate->CreateDescriptorSet();
+	DescriptorSetLayout = Device.CreateDescriptorSetLayout(ImGuiDescriptors::GetBindings().size(), ImGuiDescriptors::GetBindings().data());
+	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
 
 	ImGuiDescriptors Descriptors;
 	Descriptors.FontImage = &FontImage;
 	Descriptors.ImguiUniform = &ImguiUniform;
 
-	DescriptorTemplate->UpdateDescriptorSet(DescriptorSet, &Descriptors);
+	DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
 	
 	drm::UploadImageData(Device, Pixels, FontImage);
 	

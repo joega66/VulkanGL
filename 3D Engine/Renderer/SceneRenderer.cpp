@@ -91,11 +91,13 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 {
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
-		auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
+		const auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
 		CmdList.BeginRenderPass(DepthVisualizationRP);
 
-		CmdList.BindDescriptorSets(1, &ShadowProxy.GetDescriptorSet());
+		const drm::DescriptorSet* DescriptorSets[] = { &ShadowProxy.GetDescriptorSet() };
+
+		CmdList.BindDescriptorSets(1, DescriptorSets);
 
 		PipelineStateDesc PSODesc = {};
 		PSODesc.RenderPass = &DepthVisualizationRP;

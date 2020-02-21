@@ -18,15 +18,15 @@ struct CameraDescriptors
 	const drm::Buffer* DirectionalLightBuffer;
 	const drm::Buffer* PointLightBuffer;
 
-	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static std::vector<DescriptorTemplateEntry> Entries =
+		static std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, UniformBuffer },
 			{ 1, 1, StorageBuffer },
 			{ 2, 1, StorageBuffer },
 		};
-		return Entries;
+		return Bindings;
 	}
 };
 
@@ -35,13 +35,13 @@ struct SkyboxDescriptors
 	const drm::Image* Skybox;
 	SamplerState SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear };
 
-	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static std::vector<DescriptorTemplateEntry> Entries =
+		static std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, SampledImage }
 		};
-		return Entries;
+		return Bindings;
 	}
 };
 

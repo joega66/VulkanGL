@@ -12,15 +12,15 @@ struct MaterialDescriptors
 
 	MaterialDescriptors();
 
-	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static const std::vector<DescriptorTemplateEntry> Entries =
+		static const std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, SampledImage },
 			{ 1, 1, SampledImage },
 			{ 2, 1, UniformBuffer },
 		};
-		return Entries;
+		return Bindings;
 	}
 };
 
@@ -45,7 +45,7 @@ public:
 
 	MaterialDescriptors Descriptors;
 
-	drm::DescriptorSetRef DescriptorSet;
+	drm::DescriptorSet DescriptorSet;
 
 	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };
 	inline float GetRoughness() const { return Roughness; }

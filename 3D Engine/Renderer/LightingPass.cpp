@@ -70,16 +70,16 @@ void SceneProxy::AddToLightingPass(DRMShaderMap& ShaderMap, const MeshProxy& Mes
 
 struct LightingPassDescriptorSets
 {
-	drm::DescriptorSetRef Scene;
-	drm::DescriptorSetRef SceneTextures;
+	const drm::DescriptorSet* Scene;
+	const drm::DescriptorSet* SceneTextures;
 
 	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
 	{
-		const std::array<drm::DescriptorSetRef, 4> DescriptorSets =
+		std::array<const drm::DescriptorSet*, 4> DescriptorSets =
 		{
 			Scene,
-			MeshProxy.GetSurfaceSet(),
-			MeshProxy.GetMaterialSet(),
+			&MeshProxy.GetSurfaceSet(),
+			&MeshProxy.GetMaterialSet(),
 			SceneTextures
 		};
 

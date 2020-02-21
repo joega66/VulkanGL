@@ -64,15 +64,15 @@ void SceneProxy::AddToDepthPrepass(DRMShaderMap& ShaderMap, const MeshProxy& Mes
 
 struct DepthPrepassDescriptorSets
 {
-	drm::DescriptorSetRef SceneDescriptorSet;
+	const drm::DescriptorSet* SceneDescriptorSet;
 
 	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
 	{
-		std::array<drm::DescriptorSetRef, 3> DescriptorSets =
+		std::array<const drm::DescriptorSet*, 3> DescriptorSets =
 		{
 			SceneDescriptorSet,
-			MeshProxy.GetSurfaceSet(),
-			MeshProxy.GetMaterialSet()
+			&MeshProxy.GetSurfaceSet(),
+			&MeshProxy.GetMaterialSet()
 		};
 
 		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());

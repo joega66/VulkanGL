@@ -27,9 +27,9 @@ drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 	return VulkanCommandList(*this, QueueFlags);
 }
 
-drm::DescriptorTemplateRef VulkanDevice::CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries)
+drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries)
 {
-	return MakeRef<VulkanDescriptorTemplate>(*this, NumEntries, Entries);
+	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);
 }
 
 VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)

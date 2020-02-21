@@ -4,27 +4,30 @@
 
 class VulkanDevice;
 
-class VulkanDescriptorSet : public drm::DescriptorSet
+class VulkanDescriptorSet
 {
 public:
+	VulkanDescriptorSet() = default;
+
 	VulkanDescriptorSet(
 		class VulkanDescriptorPool& DescriptorPool,
 		VkDescriptorSetLayout Layout,
 		VkDescriptorSet DescriptorSet
 	);
-
-	virtual ~VulkanDescriptorSet() override;
+	VulkanDescriptorSet(VulkanDescriptorSet&& Other);
+	VulkanDescriptorSet& operator=(VulkanDescriptorSet&& Other);
+	VulkanDescriptorSet(const VulkanDescriptorSet&) = delete;
+	VulkanDescriptorSet& operator=(const VulkanDescriptorSet&) = delete;
+	~VulkanDescriptorSet();
 
 	inline VkDescriptorSet GetVulkanHandle() const { return DescriptorSet; }
 	inline VkDescriptorSetLayout GetLayout() const { return Layout; }
 
 private:
-	VulkanDescriptorPool& DescriptorPool;
-	const VkDescriptorSetLayout Layout;
-	const VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
+	VulkanDescriptorPool* DescriptorPool = nullptr;
+	VkDescriptorSetLayout Layout = VK_NULL_HANDLE;
+	VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
 };
-
-CLASS(VulkanDescriptorSet);
 
 /** Spawns descriptor sets and zerglings. */
 class VulkanDescriptorPool
@@ -54,7 +57,7 @@ public:
 
 	VulkanDescriptorPoolManager();
 
-	VulkanDescriptorSetRef Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
+	VulkanDescriptorSet Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
 
 	void DeferredFree(VulkanDevice& Device);
 
@@ -64,23 +67,25 @@ private:
 	VkDescriptorPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 };
 
-class VulkanDescriptorTemplate : public drm::DescriptorTemplate
+class VulkanDescriptorSetLayout
 {
 public:
-	VulkanDescriptorTemplate(VulkanDevice& Device, uint32 NumEntries, const DescriptorTemplateEntry* Entries);
-	
-	virtual ~VulkanDescriptorTemplate() override;
+	VulkanDescriptorSetLayout() = default;
+	VulkanDescriptorSetLayout(VulkanDevice& Device, uint32 NumEntries, const DescriptorBinding* Entries);
+	VulkanDescriptorSetLayout(VulkanDescriptorSetLayout&& Other);
+	VulkanDescriptorSetLayout& operator=(VulkanDescriptorSetLayout&& Other);
+	VulkanDescriptorSetLayout(const VulkanDescriptorSetLayout&) = delete;
+	VulkanDescriptorSetLayout& operator=(const VulkanDescriptorSetLayout&) = delete;
+	~VulkanDescriptorSetLayout();
 
-	virtual drm::DescriptorSetRef CreateDescriptorSet() override;
+	VulkanDescriptorSet CreateDescriptorSet();
 
-	virtual void UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, void* Data) override;
+	void UpdateDescriptorSet(const VulkanDescriptorSet& DescriptorSet, void* Data);
 
 private:
-	VulkanDevice& Device;
-	VkDescriptorSetLayout DescriptorSetLayout;
-	VkDescriptorUpdateTemplate DescriptorUpdateTemplate;
+	VulkanDevice* Device = nullptr;
+	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
+	VkDescriptorUpdateTemplate DescriptorUpdateTemplate = VK_NULL_HANDLE;
 	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
 	void* Data = nullptr;
 };
-
-CLASS(VulkanDescriptorTemplate);

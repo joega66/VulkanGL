@@ -3,7 +3,7 @@
 
 AssetManager::AssetManager(DRMDevice& Device)
 	: Device(Device)
-	, MaterialTemplate(Device)
+	, MaterialLayout(Device)
 {
 	Material::CreateDebugMaterials(Device);
 
@@ -82,8 +82,8 @@ const Material* AssetManager::LoadMaterial(const std::string& AssetName, std::un
 {
 	check(Materials.find(AssetName) == Materials.end(), "Material %s already exists.", AssetName.c_str());
 
-	Material->DescriptorSet = MaterialTemplate.CreateDescriptorSet();
-	MaterialTemplate.UpdateDescriptorSet(Material->DescriptorSet, Material->Descriptors);
+	Material->DescriptorSet = MaterialLayout.CreateDescriptorSet();
+	MaterialLayout.UpdateDescriptorSet(Material->DescriptorSet, Material->Descriptors);
 
 	Materials[AssetName] = std::move(Material);
 

@@ -24,8 +24,8 @@ private:
 	drm::Image FontImage;
 	drm::Buffer ImguiUniform;
 
-	drm::DescriptorSetRef DescriptorSet;
-	drm::DescriptorTemplateRef DescriptorTemplate;
+	drm::DescriptorSet DescriptorSet;
+	drm::DescriptorSetLayout DescriptorSetLayout;
 
 	drm::Buffer VertexBuffer;
 	drm::Buffer IndexBuffer;

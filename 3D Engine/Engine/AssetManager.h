@@ -36,7 +36,7 @@ public:
 private:
 	DRMDevice& Device;
 
-	DescriptorTemplate<MaterialDescriptors>	MaterialTemplate;
+	DescriptorSetLayout<MaterialDescriptors> MaterialLayout;
 
 	HashTable<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	HashTable<std::string, std::unique_ptr<Material>> Materials;

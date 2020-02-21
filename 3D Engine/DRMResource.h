@@ -226,7 +226,7 @@ enum EDescriptorType
 	StorageBuffer,
 };
 
-struct DescriptorTemplateEntry
+struct DescriptorBinding
 {
 	uint32 Binding;
 	uint32 DescriptorCount;
@@ -290,24 +290,6 @@ namespace drm
 		uint32 Depth;
 		EImageUsage Usage;
 	};
-
-	class DescriptorSet
-	{
-	public:
-		virtual ~DescriptorSet() {}
-	};
-
-	CLASS(DescriptorSet);
-
-	class DescriptorTemplate
-	{
-	public:
-		virtual ~DescriptorTemplate() {}
-		virtual drm::DescriptorSetRef CreateDescriptorSet() = 0;
-		virtual void UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, void* Data) = 0;
-	};
-
-	CLASS(DescriptorTemplate);
 }
 
 struct Viewport

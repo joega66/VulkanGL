@@ -23,7 +23,7 @@ public:
 	virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
 
 	/** Create a descriptor template. */
-	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) = 0;
+	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumBindings, const DescriptorBinding* Bindings) = 0;
 
 	/** Create a buffer resource. */
 	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
@@ -63,51 +63,51 @@ namespace drm
 	void UploadImageData(DRMDevice& Device, const void* SrcPixels, const drm::Image& DstImage);
 }
 
-/** Descriptor set template helpers. */
+/** Descriptor set layout helpers. */
 
 template<typename DescriptorSetType>
-class DescriptorTemplate
+class DescriptorSetLayout
 {
 private:
-	drm::DescriptorTemplateRef DescriptorUpdateTemplate;
+	drm::DescriptorSetLayout _DescriptorSetLayout;
 
 public:
-	DescriptorTemplate(DRMDevice& Device)
+	DescriptorSetLayout(DRMDevice& Device)
 	{
-		DescriptorUpdateTemplate = Device.CreateDescriptorTemplate(DescriptorSetType::GetEntries().size(), DescriptorSetType::GetEntries().data());
+		_DescriptorSetLayout = Device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
 	}
 
-	inline drm::DescriptorSetRef CreateDescriptorSet() 
+	inline drm::DescriptorSet CreateDescriptorSet() 
 	{ 
-		return DescriptorUpdateTemplate->CreateDescriptorSet();
+		return _DescriptorSetLayout.CreateDescriptorSet();
 	}
 
-	inline void UpdateDescriptorSet(drm::DescriptorSetRef DescriptorSet, DescriptorSetType& DescriptorWrite) 
+	inline void UpdateDescriptorSet(const drm::DescriptorSet& DescriptorSet, DescriptorSetType& DescriptorWrite) 
 	{ 
-		DescriptorUpdateTemplate->UpdateDescriptorSet(DescriptorSet, &DescriptorWrite);
+		_DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &DescriptorWrite);
 	}
 
-	inline operator drm::DescriptorTemplateRef() { return DescriptorUpdateTemplate; }
+	inline operator const drm::DescriptorSetLayout&() { return _DescriptorSetLayout; }
 };
 
 template<typename DescriptorSetType>
 class DescriptorSet : public DescriptorSetType
 {
 private:
-	drm::DescriptorTemplateRef DescriptorTemplate;
-	drm::DescriptorSetRef _DescriptorSet;
+	drm::DescriptorSetLayout DescriptorSetLayout;
+	drm::DescriptorSet _DescriptorSet;
 
 public:
 	DescriptorSet(DRMDevice& Device)
 	{
-		DescriptorTemplate = Device.CreateDescriptorTemplate(DescriptorSetType::GetEntries().size(), DescriptorSetType::GetEntries().data());
-		_DescriptorSet = DescriptorTemplate->CreateDescriptorSet();
+		DescriptorSetLayout = Device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
+		_DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
 	}
 
 	inline void Update() 
 	{ 
-		DescriptorTemplate->UpdateDescriptorSet(_DescriptorSet, this);
+		DescriptorSetLayout.UpdateDescriptorSet(_DescriptorSet, this);
 	}
 
-	inline operator drm::DescriptorSetRef() const { return _DescriptorSet; }
+	inline operator const drm::DescriptorSet*() const { return &_DescriptorSet; }
 };

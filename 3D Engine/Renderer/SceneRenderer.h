@@ -10,14 +10,14 @@ struct SceneTexturesDescriptors
 	const drm::Image* ShadowMask;
 	SamplerState ShadowMaskSampler{ EFilter::Nearest };
 
-	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static const std::vector<DescriptorTemplateEntry> Entries = 
+		static const std::vector<DescriptorBinding> Bindings =
 		{ 
 			{ 0, 1, SampledImage },
 			{ 1, 1, SampledImage },
 		};
-		return Entries;
+		return Bindings;
 	}
 };
 
@@ -28,16 +28,16 @@ struct VoxelDescriptors
 	const drm::Buffer* VoxelPositions;
 	const drm::Buffer* VoxelIndirectBuffer;
 
-	static const std::vector<DescriptorTemplateEntry>& GetEntries()
+	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static const std::vector<DescriptorTemplateEntry> Entries =
+		static const std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, UniformBuffer },
 			{ 1, 1, StorageImage },
 			{ 2, 1, StorageBuffer },
 			{ 3, 1, StorageBuffer },
 		};
-		return Entries;
+		return Bindings;
 	}
 };
 

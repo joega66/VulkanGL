@@ -42,11 +42,14 @@ struct PipelineStateDesc
 
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanMemory.h"
+#include "Vulkan/VulkanDescriptors.h"
 
 namespace drm
 {
 	using Buffer = VulkanBuffer;
 	using Image = VulkanImage;
+	using DescriptorSet = VulkanDescriptorSet;
+	using DescriptorSetLayout = VulkanDescriptorSetLayout;
 
 	class AttachmentView
 	{

@@ -12,8 +12,8 @@ UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 );
 
 RenderSystem::RenderSystem(Engine& Engine)
-	: StaticMeshTemplate(Engine.Device)
-	, ShadowTemplate(Engine.Device)
+	: StaticMeshLayout(Engine.Device)
+	, ShadowLayout(Engine.Device)
 {
 }
 
@@ -27,13 +27,13 @@ void RenderSystem::Start(Engine& Engine)
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
 		drm::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer));
 		StaticMeshDescriptors SurfaceDescriptors = { &LocalToWorldUniform };
-		drm::DescriptorSetRef SurfaceSet = StaticMeshTemplate.CreateDescriptorSet();
-		StaticMeshTemplate.UpdateDescriptorSet(SurfaceSet, SurfaceDescriptors);
+		drm::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet();
+		StaticMeshLayout.UpdateDescriptorSet(SurfaceSet, SurfaceDescriptors);
 
 		ECS.AddComponent(Entity, 
 			MeshProxy(
 				StaticMeshComponent.Material,
-				SurfaceSet,
+				std::move(SurfaceSet),
 				StaticMesh->Submeshes,
 				std::move(LocalToWorldUniform))
 			);
@@ -41,7 +41,7 @@ void RenderSystem::Start(Engine& Engine)
 
 	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
 	{
-		ECS.AddComponent(Entity, ShadowProxy(Device, ShadowTemplate, DirectionalLight));
+		ECS.AddComponent(Entity, ShadowProxy(Device, ShadowLayout, DirectionalLight));
 	});
 }
 

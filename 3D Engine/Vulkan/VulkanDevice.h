@@ -30,7 +30,7 @@ public:
 
 	virtual drm::CommandList CreateCommandList(EQueue Queue) override;
 
-	virtual drm::DescriptorTemplateRef CreateDescriptorTemplate(uint32 NumEntries, const DescriptorTemplateEntry* Entries) override;
+	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries) override;
 
 	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
 
@@ -82,11 +82,6 @@ private:
 	VkDevice Device;
 
 	VulkanDescriptorPoolManager DescriptorPoolManager;
-};
-
-namespace
-{
-	CAST(drm::DescriptorSet, VulkanDescriptorSet);
 };
 
 #define vulkan(Result) \

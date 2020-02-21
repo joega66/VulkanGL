@@ -82,15 +82,15 @@ public:
 
 struct ShadowDepthPassDescriptorSets
 {
-	drm::DescriptorSetRef ShadowProxyDescriptorSet;
+	const drm::DescriptorSet* ShadowProxyDescriptorSet;
 
 	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
 	{
-		std::array<drm::DescriptorSetRef, 3> DescriptorSets =
+		std::array<const drm::DescriptorSet*, 3> DescriptorSets =
 		{
 			ShadowProxyDescriptorSet,
-			MeshProxy.GetSurfaceSet(),
-			MeshProxy.GetMaterialSet()
+			&MeshProxy.GetSurfaceSet(),
+			&MeshProxy.GetMaterialSet()
 		};
 
 		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
@@ -115,7 +115,7 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 		PSODesc.RasterizationState.DepthBiasConstantFactor = ShadowProxy.GetDepthBiasConstantFactor();
 		PSODesc.RasterizationState.DepthBiasSlopeFactor = ShadowProxy.GetDepthBiasSlopeFactor();
 
-		ShadowDepthPassDescriptorSets DescriptorSets = { ShadowProxy.GetDescriptorSet() };
+		ShadowDepthPassDescriptorSets DescriptorSets = { &ShadowProxy.GetDescriptorSet() };
 
 		MeshDrawCommand::Draw(Scene.ShadowDepthPass, CmdList, DescriptorSets, PSODesc);
 
@@ -133,11 +133,11 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 	{
 		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
-		std::array<drm::DescriptorSetRef, 3> Descriptors =
+		std::array<const drm::DescriptorSet*, 3> Descriptors =
 		{
 			Scene.CameraDescriptorSet,
 			SceneTextures,
-			ShadowProxy.GetDescriptorSet()
+			&ShadowProxy.GetDescriptorSet()
 		};
 
 		CmdList.BindDescriptorSets(Descriptors.size(), Descriptors.data());

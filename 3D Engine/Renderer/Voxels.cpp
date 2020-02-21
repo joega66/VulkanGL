@@ -136,17 +136,17 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 
 struct VoxelizationPassDescriptorSets
 {
-	drm::DescriptorSetRef Scene;
-	drm::DescriptorSetRef SceneTextures;
-	drm::DescriptorSetRef Voxels;
+	const drm::DescriptorSet* Scene;
+	const drm::DescriptorSet* SceneTextures;
+	const drm::DescriptorSet* Voxels;
 
 	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
 	{
-		const std::array<drm::DescriptorSetRef, 5> DescriptorSets =
+		std::array<const drm::DescriptorSet*, 5> DescriptorSets =
 		{
 			Scene,
-			MeshProxy.GetSurfaceSet(),
-			MeshProxy.GetMaterialSet(),
+			&MeshProxy.GetSurfaceSet(),
+			&MeshProxy.GetMaterialSet(),
 			SceneTextures,
 			Voxels
 		};
@@ -273,7 +273,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.BeginRenderPass(VoxelVisualizationRP);
 
-	const std::vector<drm::DescriptorSetRef> DescriptorSets =
+	std::vector<const drm::DescriptorSet*> DescriptorSets =
 	{
 		Scene.CameraDescriptorSet,
 		VoxelDescriptorSet
