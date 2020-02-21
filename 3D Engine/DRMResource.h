@@ -198,22 +198,22 @@ enum class EFilter
 	Cubic
 };
 
-struct SamplerState
+struct SamplerDesc
 {
 	EFilter Filter = EFilter::Linear;
 	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToEdge;
 	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
 
-	bool operator==(const SamplerState& Other) const
+	bool operator==(const SamplerDesc& Other) const
 	{
 		return Filter == Other.Filter && SAM == Other.SAM && SMM == Other.SMM;
 	}
 
 	struct Hash
 	{
-		size_t operator()(const SamplerState& SamplerState) const
+		size_t operator()(const SamplerDesc& SamplerDesc) const
 		{
-			return ((uint32)SamplerState.Filter * 31) + ((uint32)SamplerState.SAM * 37) + ((uint32)SamplerState.SMM * 41);
+			return ((uint32)SamplerDesc.Filter * 31) + ((uint32)SamplerDesc.SAM * 37) + ((uint32)SamplerDesc.SMM * 41);
 		}
 	};
 };

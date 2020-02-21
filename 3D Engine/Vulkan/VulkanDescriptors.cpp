@@ -280,10 +280,9 @@ void VulkanDescriptorSetLayout::UpdateDescriptorSet(const VulkanDescriptorSet& D
 			if (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 			{
 				// Get the sampler from the struct and increment the offset into the struct.
-				const SamplerState& SamplerDesc = *static_cast<const SamplerState*>(Struct);
-				Struct = static_cast<uint8*>(Struct) + sizeof(SamplerState);
-				const VkSampler VulkanSampler = Device->GetCache().GetSampler(SamplerDesc);
-				ImageInfoPtr->sampler = VulkanSampler;
+				const drm::Sampler* Sampler = *static_cast<const drm::Sampler**>(Struct);
+				ImageInfoPtr->sampler = Sampler->GetHandle();
+				Struct = static_cast<uint8*>(Struct) + sizeof(Sampler);
 			}
 		}
 	}

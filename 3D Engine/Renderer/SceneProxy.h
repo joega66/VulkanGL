@@ -33,7 +33,7 @@ struct CameraDescriptors
 struct SkyboxDescriptors
 {
 	const drm::Image* Skybox;
-	SamplerState SamplerState{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear };
+	const drm::Sampler* Sampler;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{

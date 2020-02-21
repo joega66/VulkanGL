@@ -49,6 +49,7 @@ namespace drm
 {
 	using Buffer = VulkanBuffer;
 	using Image = VulkanImage;
+	using Sampler = VulkanSampler;
 	using DescriptorSet = VulkanDescriptorSet;
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;
 

@@ -27,6 +27,8 @@ Material::Material(
 
 	PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(PBRUniformData), &PBRUniformData);
 	Descriptors.PBRUniform = &PBRUniform;
+	Descriptors.BaseColorSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
+	Descriptors.MetallicRoughnessSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
 	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != &Material::Dummy);
 	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);

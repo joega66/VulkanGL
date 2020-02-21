@@ -20,7 +20,7 @@ public:
 
 	VkPipeline GetPipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
 
-	VkSampler GetSampler(const SamplerState& Sampler);
+	const drm::Sampler* GetSampler(const SamplerDesc& SamplerDesc);
 
 	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> 
 	GetDescriptorSetLayout(
@@ -65,5 +65,5 @@ private:
 
 	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
 
-	std::unordered_map<SamplerState, VkSampler, SamplerState::Hash> SamplerCache;
+	std::unordered_map<SamplerDesc, drm::Sampler, SamplerDesc::Hash> SamplerCache;
 };

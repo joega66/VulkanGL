@@ -6,9 +6,9 @@
 struct SceneTexturesDescriptors
 {
 	const drm::Image* Depth;
-	SamplerState DepthSampler{ EFilter::Nearest };
+	const drm::Sampler* DepthSampler;
 	const drm::Image* ShadowMask;
-	SamplerState ShadowMaskSampler{ EFilter::Nearest };
+	const drm::Sampler* ShadowMaskSampler;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{

@@ -116,6 +116,11 @@ drm::Image VulkanDevice::CreateImage(
 	);
 }
 
+const drm::Sampler* VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
+{
+	return GetCache().GetSampler(SamplerDesc);
+}
+
 void* VulkanDevice::LockBuffer(const drm::Buffer& Buffer)
 {
 	return Allocator.LockBuffer(Buffer);

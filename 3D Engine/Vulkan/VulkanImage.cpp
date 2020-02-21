@@ -173,21 +173,20 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 	return VulkanFilters[(uint32)Filter];
 }
 
-VkSampler VulkanCache::GetSampler(const SamplerState& SamplerState)
+const drm::Sampler* VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
 {
-	if (auto SamplerIter = SamplerCache.find(SamplerState); SamplerIter != SamplerCache.end())
+	if (auto SamplerIter = SamplerCache.find(SamplerDesc); SamplerIter != SamplerCache.end())
 	{
-		return SamplerIter->second;
+		return &SamplerIter->second;
 	}
 	else
 	{
-		VkSampler Sampler = VulkanImage::CreateSampler(Device, SamplerState);
-		SamplerCache.emplace(SamplerState, Sampler);
-		return Sampler;
+		SamplerCache.emplace(SamplerDesc, VulkanSampler(VulkanImage::CreateSampler(Device, SamplerDesc)));
+		return &SamplerCache.at(SamplerDesc);
 	}
 }
 
-VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& SamplerState)
+VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc)
 {
 	static const VkSamplerMipmapMode VulkanMipmapModes[] =
 	{
@@ -204,9 +203,9 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerState& S
 		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 	};
 
-	VkFilter Filter = GetVulkanFilter(SamplerState.Filter);
-	VkSamplerMipmapMode SMM = VulkanMipmapModes[(uint32)SamplerState.SMM];
-	VkSamplerAddressMode SAM = VulkanAddressModes[(uint32)SamplerState.SAM];
+	VkFilter Filter = GetVulkanFilter(SamplerDesc.Filter);
+	VkSamplerMipmapMode SMM = VulkanMipmapModes[(uint32)SamplerDesc.SMM];
+	VkSamplerAddressMode SAM = VulkanAddressModes[(uint32)SamplerDesc.SAM];
 
 	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	SamplerInfo.magFilter = Filter;
@@ -308,4 +307,9 @@ void VulkanCache::FreeImage(VulkanImage& Image)
 	vkDestroyImage(Device, Image.Image, nullptr);
 	vkDestroyImageView(Device, Image.ImageView, nullptr);
 	vkFreeMemory(Device, Image.Memory, nullptr);
+}
+
+VulkanSampler::VulkanSampler(VkSampler Sampler)
+	: Sampler(Sampler)
+{
 }

@@ -43,7 +43,7 @@ public:
 
 	static VkFilter GetVulkanFilter(EFilter Filter);
 
-	[[nodiscard]] static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerState& SamplerState);
+	[[nodiscard]] static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerDesc& SamplerDesc);
 
 	VkFormat GetVulkanFormat() const;
 
@@ -51,4 +51,15 @@ public:
 
 private:
 	VulkanDevice* Device;
+};
+
+class VulkanSampler
+{
+public:
+	VulkanSampler() = default;
+	VulkanSampler(VkSampler Sampler);
+	inline VkSampler GetHandle() const { return Sampler; }
+
+private:
+	VkSampler Sampler = VK_NULL_HANDLE;
 };

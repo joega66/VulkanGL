@@ -5,7 +5,7 @@ struct ShadowDescriptors
 {
 	const drm::Buffer* LightViewProjBuffer;
 	const drm::Image* ShadowMap;
-	SamplerState ShadowSampler;
+	const drm::Sampler* ShadowSampler;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{

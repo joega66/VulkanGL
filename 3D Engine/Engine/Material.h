@@ -5,9 +5,9 @@
 struct MaterialDescriptors
 {
 	const drm::Image* BaseColor;
-	SamplerState BaseColorSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	const drm::Sampler* BaseColorSampler;
 	const drm::Image* MetallicRoughness;
-	SamplerState MetallicRoughnessSampler = { EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear };
+	const drm::Sampler* MetallicRoughnessSampler;
 	const drm::Buffer* PBRUniform;
 
 	MaterialDescriptors();

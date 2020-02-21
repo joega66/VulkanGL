@@ -25,9 +25,11 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 		SceneTextures.Depth = &SceneDepth;
-
+		SceneTextures.DepthSampler = Device.CreateSampler({ EFilter::Nearest });
+	
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
-		
+		SceneTextures.ShadowMaskSampler = Device.CreateSampler({ EFilter::Nearest });
+
 		CreateDepthRP();
 		CreateDepthVisualizationRP();
 		CreateVoxelVisualizationRP();

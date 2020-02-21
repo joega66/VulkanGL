@@ -43,6 +43,8 @@ public:
 		EImageLayout InitialLayout = EImageLayout::Undefined
 	) override;
 
+	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) override;
+
 	virtual void* LockBuffer(const drm::Buffer& Buffer) override;
 
 	virtual void UnlockBuffer(const drm::Buffer& Buffer) override;

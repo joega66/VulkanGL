@@ -38,6 +38,9 @@ public:
 		EImageLayout InitialLayout = EImageLayout::Undefined
 	) = 0;
 
+	/** Create a sampler resource. */
+	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) = 0;
+
 	/** Map a buffer into host memory. */
 	virtual void* LockBuffer(const drm::Buffer& Buffer) = 0;
 

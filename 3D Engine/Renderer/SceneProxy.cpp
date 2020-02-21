@@ -19,6 +19,7 @@ SceneProxy::SceneProxy(Engine& Engine)
 	CameraDescriptorSet.Update();
 
 	SkyboxDescriptorSet.Skybox = Engine.Scene.Skybox;
+	SkyboxDescriptorSet.Sampler = Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 	SkyboxDescriptorSet.Update();
 }
 
