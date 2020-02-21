@@ -40,7 +40,7 @@ VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const v
 	VulkanUsage |= Any(Usage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::Index) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::Uniform) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
-	VulkanUsage |= !Any(Usage & EBufferUsage::KeepCPUAccessible) && !Any(Usage & EBufferUsage::Transfer) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
+	VulkanUsage |= !Any(Usage & EBufferUsage::HostVisible) && !Any(Usage & EBufferUsage::Transfer) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::Transfer) ? VK_BUFFER_USAGE_TRANSFER_SRC_BIT : 0;
 
 	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
@@ -143,14 +143,14 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	if (RPDesc.DepthAttachment.Image)
 	{
-		ClearValues.resize(RPDesc.NumAttachments + 1);
+		ClearValues.resize(RPDesc.ColorAttachments.size() + 1);
 	}
 	else
 	{
-		ClearValues.resize(RPDesc.NumAttachments);
+		ClearValues.resize(RPDesc.ColorAttachments.size());
 	}
 
-	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPDesc.NumAttachments; ColorTargetIndex++)
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPDesc.ColorAttachments.size(); ColorTargetIndex++)
 	{
 		const auto& ClearValue = std::get<ClearColorValue>(RPDesc.ColorAttachments[ColorTargetIndex].ClearValue);
 		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
@@ -162,20 +162,20 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	{
 		const drm::Image* Image = RPDesc.DepthAttachment.Image;
 
-		ClearValues[RPDesc.NumAttachments].depthStencil = { 0, 0 };
+		ClearValues[RPDesc.ColorAttachments.size()].depthStencil = { 0, 0 };
 
 		if (Image->IsDepth())
 		{
-			ClearValues[RPDesc.NumAttachments].depthStencil.depth = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).DepthClear;
+			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.depth = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).DepthClear;
 		}
 
 		if (Image->IsStencil())
 		{
-			ClearValues[RPDesc.NumAttachments].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).StencilClear;
+			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).StencilClear;
 		}
 	}
 
-	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.NumAttachments);
+	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.ColorAttachments.size());
 }
 
 void VulkanDevice::CreateLogicalDevice()

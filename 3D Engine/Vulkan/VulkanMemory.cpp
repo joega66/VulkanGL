@@ -14,7 +14,7 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 
 VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
 {
-	VkMemoryPropertyFlags Properties = Any(Usage & (EBufferUsage::KeepCPUAccessible | EBufferUsage::Transfer)) ?
+	VkMemoryPropertyFlags Properties = Any(Usage & (EBufferUsage::HostVisible | EBufferUsage::Transfer)) ?
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 	check((!Data) || (Data && Properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT), "Buffer needs to be host visible!");

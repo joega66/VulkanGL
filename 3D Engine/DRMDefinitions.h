@@ -1,5 +1,6 @@
 #pragma once
 #include <DRMResource.h>
+
 #include "Vulkan/VulkanRenderPass.h"
 
 namespace drm
@@ -132,25 +133,19 @@ struct RenderArea
 
 struct RenderPassDesc
 {
-	enum
-	{
-		MaxAttachments = 8
-	};
-
-	uint32 NumAttachments;
-	std::array<drm::AttachmentView, MaxAttachments> ColorAttachments; // @todo vector
+	std::vector<drm::AttachmentView> ColorAttachments;
 	drm::AttachmentView DepthAttachment;
 	RenderArea RenderArea;
 
 	friend bool operator==(const RenderPassDesc& L, const RenderPassDesc& R)
 	{
-		if (L.NumAttachments != R.NumAttachments)
+		if (L.ColorAttachments.size() != R.ColorAttachments.size())
 			return false;
 
 		if (L.DepthAttachment != R.DepthAttachment)
 			return false;
 
-		for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < L.NumAttachments; ColorAttachmentIndex++)
+		for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < L.ColorAttachments.size(); ColorAttachmentIndex++)
 		{
 			if (L.ColorAttachments[ColorAttachmentIndex] != R.ColorAttachments[ColorAttachmentIndex])
 				return false;

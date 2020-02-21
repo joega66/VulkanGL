@@ -25,7 +25,7 @@ Material::Material(
 		float Metallicity;
 	} PBRUniformData = { Roughness, Metallicity };
 
-	PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(PBRUniformData), &PBRUniformData);
+	PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(PBRUniformData), &PBRUniformData);
 	Descriptors.PBRUniform = &PBRUniform;
 
 	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != &Material::Dummy);

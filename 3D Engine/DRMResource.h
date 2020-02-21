@@ -115,7 +115,7 @@ enum class EBufferUsage
 {
 	None,
 	Indirect = 1 << 0,
-	KeepCPUAccessible = 1 << 1,
+	HostVisible = 1 << 1,
 	Vertex = 1 << 2,
 	Storage = 1 << 3,
 	Index = 1 << 4,

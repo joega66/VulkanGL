@@ -27,20 +27,6 @@ using int64 = int64_t;
 using uint64 = uint64_t;
 using float64 = double;
 
-template<typename T>
-using Ref = std::shared_ptr<T>;
-
-template<typename T, typename ...RefArgs>
-Ref<T> MakeRef(RefArgs&& ...Args)
-{
-	return std::make_shared<T>(Args...);
-}
-
-#define CLASS(Class) \
-	using Class ## Ref = Ref<Class>;
-
-#define CAST(FromType, ToType) ToType ## Ref ResourceCast(FromType ## Ref From) { return std::static_pointer_cast<ToType>(From); }
-
 struct RID
 {
 	unsigned long  Data1;

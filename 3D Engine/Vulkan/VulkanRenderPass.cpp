@@ -60,25 +60,22 @@ static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction StoreAction)
 
 VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 {
-	check(RPDesc.NumAttachments < RenderPassDesc::MaxAttachments, "Trying to set too many render targets.");
-
 	std::vector<VkAttachmentDescription> Descriptions;
-
 	std::vector<VkAttachmentReference> ColorRefs;
-	ColorRefs.reserve(RPDesc.NumAttachments);
+	ColorRefs.reserve(RPDesc.ColorAttachments.size());
 
 	VkAttachmentReference DepthRef = {};
 
 	if (RPDesc.DepthAttachment.Image)
 	{
-		Descriptions.reserve(RPDesc.NumAttachments + 1);
+		Descriptions.reserve(RPDesc.ColorAttachments.size() + 1);
 	}
 	else
 	{
-		Descriptions.reserve(RPDesc.NumAttachments);
+		Descriptions.reserve(RPDesc.ColorAttachments.size());
 	}
 
-	for (uint32 AttachmentIndex = 0; AttachmentIndex < RPDesc.NumAttachments; AttachmentIndex++)
+	for (uint32 AttachmentIndex = 0; AttachmentIndex < RPDesc.ColorAttachments.size(); AttachmentIndex++)
 	{
 		const drm::AttachmentView& ColorAttachment = RPDesc.ColorAttachments[AttachmentIndex];
 		const drm::Image* Image = ColorAttachment.Image;
@@ -121,7 +118,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 		DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPDesc.DepthAttachment.FinalLayout);
 		Descriptions.push_back(DepthDescription);
 
-		DepthRef.attachment = RPDesc.NumAttachments;
+		DepthRef.attachment = RPDesc.ColorAttachments.size();
 		DepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	}
 
@@ -169,14 +166,14 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const Rend
 
 	if (RPDesc.DepthAttachment.Image)
 	{
-		AttachmentViews.reserve(RPDesc.NumAttachments + 1);
+		AttachmentViews.reserve(RPDesc.ColorAttachments.size() + 1);
 	}
 	else
 	{
-		AttachmentViews.reserve(RPDesc.NumAttachments);
+		AttachmentViews.reserve(RPDesc.ColorAttachments.size());
 	}
 
-	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.NumAttachments; ColorAttachmentIndex++)
+	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.ColorAttachments.size(); ColorAttachmentIndex++)
 	{
 		const drm::Image* Image = RPDesc.ColorAttachments[ColorAttachmentIndex].Image;
 		AttachmentViews.push_back(Image->ImageView);

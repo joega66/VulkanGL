@@ -115,7 +115,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
+	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
 	VoxelDescriptorSet.WorldToVoxelBuffer = &WorldToVoxelBuffer;
 
 	DrawIndirectCommand DrawIndirectCommand;
@@ -124,7 +124,7 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::KeepCPUAccessible, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
+	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
 	VoxelDescriptorSet.VoxelIndirectBuffer = &VoxelIndirectBuffer;
 
 	VoxelDescriptorSet.Update();

@@ -1,9 +1,9 @@
 #pragma once
+#include <DRMResource.h>
 #include <vulkan/vulkan.h>
-#include "VulkanMemory.h" // @todo Remove me
-#include "VulkanDescriptors.h"
 
 class VulkanDevice;
+class VulkanBuffer;
 class VulkanImage;
 struct ImageMemoryBarrier;
 struct BufferMemoryBarrier;
@@ -30,7 +30,7 @@ public:
 
 	void BindPipeline(const struct PipelineStateDesc& PSODesc);
 
-	void BindDescriptorSets(uint32 NumDescriptorSets, const VulkanDescriptorSet** DescriptorSets);
+	void BindDescriptorSets(uint32 NumDescriptorSets, const class VulkanDescriptorSet** DescriptorSets);
 
 	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 
@@ -96,5 +96,3 @@ private:
 		VkPipelineLayout PipelineLayout;
 	} Pending;
 };
-
-CLASS(VulkanCommandList);

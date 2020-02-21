@@ -4,14 +4,14 @@
 
 ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 {
-	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(glm::mat4));
+	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
 
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
 
 	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-	RenderPassDesc RPDesc = { 0 };
+	RenderPassDesc RPDesc = {};
 	RPDesc.DepthAttachment = drm::AttachmentView(
 		&ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,

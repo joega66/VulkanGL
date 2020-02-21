@@ -25,7 +25,7 @@ void RenderSystem::Start(Engine& Engine)
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
-		drm::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(LocalToWorldUniformBuffer));
+		drm::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniformBuffer));
 		StaticMeshDescriptors SurfaceDescriptors = { &LocalToWorldUniform };
 		drm::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet();
 		StaticMeshLayout.UpdateDescriptorSet(SurfaceSet, SurfaceDescriptors);

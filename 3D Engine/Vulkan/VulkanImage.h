@@ -52,5 +52,3 @@ public:
 private:
 	VulkanDevice* Device;
 };
-
-CLASS(VulkanImage);

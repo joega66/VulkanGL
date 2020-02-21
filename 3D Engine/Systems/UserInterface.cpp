@@ -170,7 +170,7 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
 
 	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::KeepCPUAccessible, sizeof(glm::mat4));
+	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
 
 	struct ImGuiDescriptors
 	{
@@ -216,7 +216,7 @@ void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
 
 	// Upload ImGui vertex/index buffer data.
 
-	VertexBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::KeepCPUAccessible, VertexBufferSize);
+	VertexBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::HostVisible, VertexBufferSize);
 	ImDrawVert* VertexData = static_cast<ImDrawVert*>(Device.LockBuffer(VertexBuffer));
 
 	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
@@ -228,7 +228,7 @@ void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
 
 	Device.UnlockBuffer(VertexBuffer);
 
-	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::KeepCPUAccessible, IndexBufferSize);
+	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::HostVisible, IndexBufferSize);
 	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(Device.LockBuffer(IndexBuffer));
 
 	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
