@@ -9,7 +9,7 @@ public:
 		DRMDevice& Device,
 		const MeshProxy& MeshProxy,
 		PipelineStateDesc& PSODesc)
-		: MeshProxy(MeshProxy)
+		: Submeshes(MeshProxy.GetSubmeshes())
 		, DescriptorSets(PSODesc.DescriptorSets)
 	{
 		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
@@ -19,8 +19,15 @@ public:
 	void Draw(drm::CommandList& CmdList)
 	{
 		CmdList.BindPipeline(Pipeline);
+
 		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
-		MeshProxy.DrawElements(CmdList);
+
+		std::for_each(Submeshes.begin(), Submeshes.end(),
+			[&] (const Submesh& Submesh)
+		{
+			CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
+			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
+		});
 	}
 
 	static void Draw(drm::CommandList& CmdList, std::vector<MeshDrawCommand>& MeshDrawCommands)
@@ -35,7 +42,7 @@ public:
 	}
 
 private:
-	const MeshProxy& MeshProxy;
 	drm::Pipeline Pipeline;
 	std::vector<const drm::DescriptorSet*> DescriptorSets;
+	const std::vector<Submesh>& Submeshes;
 };

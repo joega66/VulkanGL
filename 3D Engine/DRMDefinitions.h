@@ -21,7 +21,7 @@ namespace drm
 	class AttachmentView
 	{
 	public:
-		const drm::Image* Image = nullptr; // @todo ref
+		const drm::Image* Image = nullptr;
 		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
 		ELoadAction LoadAction = ELoadAction::DontCare;
 		EStoreAction StoreAction = EStoreAction::DontCare;
@@ -57,13 +57,27 @@ namespace drm
 				&& L.InitialLayout == R.InitialLayout
 				&& L.FinalLayout == R.FinalLayout;
 		}
-
-		friend bool operator!=(const AttachmentView& L, const AttachmentView& R)
-		{
-			return !(L == R);
-		}
 	};
 }
+
+struct RenderArea
+{
+	glm::ivec2 Offset;
+	glm::uvec2 Extent;
+};
+
+struct RenderPassDesc
+{
+	std::vector<drm::AttachmentView> ColorAttachments;
+	drm::AttachmentView DepthAttachment;
+	RenderArea RenderArea;
+
+	friend bool operator==(const RenderPassDesc& L, const RenderPassDesc& R)
+	{
+		return L.DepthAttachment == R.DepthAttachment
+			&& L.ColorAttachments == R.ColorAttachments;
+	}
+};
 
 struct PipelineStateDesc
 {
@@ -141,36 +155,6 @@ struct ImageMemoryBarrier
 	ImageMemoryBarrier(const drm::Image& Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout OldLayout, EImageLayout NewLayout)
 		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), OldLayout(OldLayout), NewLayout(NewLayout)
 	{
-	}
-};
-
-struct RenderArea
-{
-	glm::ivec2 Offset;
-	glm::uvec2 Extent;
-};
-
-struct RenderPassDesc
-{
-	std::vector<drm::AttachmentView> ColorAttachments;
-	drm::AttachmentView DepthAttachment;
-	RenderArea RenderArea;
-
-	friend bool operator==(const RenderPassDesc& L, const RenderPassDesc& R)
-	{
-		if (L.ColorAttachments.size() != R.ColorAttachments.size())
-			return false;
-
-		if (L.DepthAttachment != R.DepthAttachment)
-			return false;
-
-		for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < L.ColorAttachments.size(); ColorAttachmentIndex++)
-		{
-			if (L.ColorAttachments[ColorAttachmentIndex] != R.ColorAttachments[ColorAttachmentIndex])
-				return false;
-		}
-
-		return true;
 	}
 };
 

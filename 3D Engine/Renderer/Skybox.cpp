@@ -45,10 +45,10 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = &LightingRP;
-	PSODesc.Viewport.Width = Scene.GetWidth();
-	PSODesc.Viewport.Height = Scene.GetHeight();
+	PSODesc.Viewport.Width = SceneColor.GetWidth();
+	PSODesc.Viewport.Height = SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.DescriptorSets = { Scene.CameraDescriptorSet, Scene.SkyboxDescriptorSet };
+	PSODesc.DescriptorSets = { CameraDescriptorSet, SkyboxDescriptorSet };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 

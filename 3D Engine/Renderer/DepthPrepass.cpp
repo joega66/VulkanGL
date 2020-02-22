@@ -52,7 +52,7 @@ void SceneProxy::AddToDepthPrepass(SceneRenderer& SceneRenderer, DRMDevice& Devi
 
 	std::vector<const drm::DescriptorSet*> DescriptorSets =
 	{
-		CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet()
+		SceneRenderer.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet()
 	};
 
 	PipelineStateDesc PSODesc = {};

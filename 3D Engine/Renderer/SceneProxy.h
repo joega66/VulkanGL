@@ -1,5 +1,4 @@
 #pragma once
-#include <Engine/Camera.h>
 #include "MeshDrawCommand.h"
 
 namespace EStaticDrawListType
@@ -46,11 +45,13 @@ struct SkyboxDescriptors
 };
 
 class Engine;
+class SceneRenderer;
 
-class SceneProxy : public Camera
+class SceneProxy
 {
 	friend class Engine;
-	SceneProxy(Engine& Engine, class SceneRenderer& SceneRenderer);
+
+	SceneProxy(Engine& Engine, SceneRenderer& SceneRenderer);
 
 public:
 	SceneProxy(const SceneProxy&) = delete;
@@ -62,23 +63,15 @@ public:
 	drm::Buffer DirectionalLightBuffer;
 	drm::Buffer PointLightBuffer;
 
-	DescriptorSet<SkyboxDescriptors> SkyboxDescriptorSet;
-
-	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
-
 	std::vector<MeshDrawCommand> DepthPrepass;
-
-	std::vector<MeshDrawCommand> ShadowDepthPass;
-
 	std::vector<MeshDrawCommand> VoxelsPass;
-
 	std::array<std::vector<MeshDrawCommand>, EStaticDrawListType::Max> LightingPass;
 
 private:
-	void InitView(Engine& Engine);
-	void InitLights(Engine& Engine);
-	void InitDirectionalLights(Engine& Engine);
-	void InitPointLights(Engine& Engine);
+	void InitView(Engine& Engine, SceneRenderer& SceneRenderer);
+	void InitLights(Engine& Engine, SceneRenderer& SceneRenderer);
+	void InitDirectionalLights(Engine& Engine, SceneRenderer& SceneRenderer);
+	void InitPointLights(Engine& Engine, SceneRenderer& SceneRenderer);
 	void InitMeshDrawCommands(Engine& Engine, SceneRenderer& SceneRenderer);
 
 	void AddToDepthPrepass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);

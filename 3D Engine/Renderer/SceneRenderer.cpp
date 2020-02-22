@@ -13,7 +13,9 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	: Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
 	, Surface(Engine.Surface)
-	, SceneTextures(Engine.Device)
+	, CameraDescriptorSet(Engine.Device)
+	, SkyboxDescriptorSet(Engine.Device)
+	, SceneTexturesDescriptorSet(Engine.Device)
 	, VoxelDescriptorSet(Engine.Device)
 {
 	Engine._Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
@@ -24,11 +26,11 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage.GetFormat(), EImageUsage::Attachment | EImageUsage::TransferSrc);
 
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-		SceneTextures.Depth = &SceneDepth;
-		SceneTextures.DepthSampler = Device.CreateSampler({ EFilter::Nearest });
+		SceneTexturesDescriptorSet.Depth = &SceneDepth;
+		SceneTexturesDescriptorSet.DepthSampler = Device.CreateSampler({ EFilter::Nearest });
 	
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
-		SceneTextures.ShadowMaskSampler = Device.CreateSampler({ EFilter::Nearest });
+		SceneTexturesDescriptorSet.ShadowMaskSampler = Device.CreateSampler({ EFilter::Nearest });
 
 		CreateDepthRP();
 		CreateDepthVisualizationRP();
@@ -39,10 +41,17 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
+
+	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
 	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelDescriptorSet.VoxelColors = &VoxelColors;
 	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
+	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
+
+	VoxelDescriptorSet.WorldToVoxelBuffer = &WorldToVoxelBuffer;
+	VoxelDescriptorSet.VoxelColors = &VoxelColors;
 	VoxelDescriptorSet.VoxelPositions = &VoxelPositions;
+	VoxelDescriptorSet.VoxelIndirectBuffer = &VoxelIndirectBuffer;
+	VoxelDescriptorSet.Update();
 
 	CreateVoxelRP();
 
@@ -59,8 +68,8 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 	}
 	else
 	{
-		SceneTextures.ShadowMask = &ShadowMask;
-		SceneTextures.Update();
+		SceneTexturesDescriptorSet.ShadowMask = &ShadowMask;
+		SceneTexturesDescriptorSet.Update();
 
 		RenderDepthPrepass(Scene, CmdList);
 

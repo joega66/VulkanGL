@@ -12,13 +12,11 @@ public:
 		drm::Buffer&& LocalToWorldUniform
 	);
 
-	void DrawElements(drm::CommandList& CmdList) const;
-
+	inline const std::vector<Submesh>& GetSubmeshes() const { return *Submeshes; }
 	inline const Material* GetMaterial() const { return Material; }
 	inline const drm::DescriptorSet& GetSurfaceSet() const { return SurfaceSet; }
 	inline const drm::DescriptorSet& GetMaterialSet() const { return Material->DescriptorSet; }
 	inline const SpecializationInfo& GetSpecializationInfo() const { return Material->GetSpecializationInfo(); }
-	inline const std::vector<Submesh>& GetSubmeshes() const { return *Submeshes; }
 
 	/** World-space bounding box. */
 	BoundingBox WorldSpaceBB;
@@ -27,9 +25,7 @@ public:
 	drm::Buffer LocalToWorldUniform;
 
 private:
-	const Material* Material;
-
-	drm::DescriptorSet SurfaceSet;
-
 	const std::vector<Submesh>* Submeshes;
+	const Material* Material;
+	drm::DescriptorSet SurfaceSet;
 };

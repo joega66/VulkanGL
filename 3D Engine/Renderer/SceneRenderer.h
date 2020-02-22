@@ -21,6 +21,11 @@ struct SceneTexturesDescriptors
 	}
 };
 
+UNIFORM_STRUCT(WorldToVoxelUniform,
+	glm::mat4 WorldToVoxel;
+	glm::mat4 WorldToVoxelInv;
+);
+
 struct VoxelDescriptors
 {
 	const drm::Buffer* WorldToVoxelBuffer;
@@ -41,6 +46,7 @@ struct VoxelDescriptors
 	}
 };
 
+/** The Scene Renderer renders camera views and holds persistent render resources. */
 class SceneRenderer
 {
 public:
@@ -48,7 +54,9 @@ public:
 
 	void Render(class UserInterface& UserInterface, SceneProxy& Scene);
 
-	DescriptorSet<SceneTexturesDescriptors> SceneTextures;
+	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
+	DescriptorSet<SkyboxDescriptors> SkyboxDescriptorSet;
+	DescriptorSet<SceneTexturesDescriptors> SceneTexturesDescriptorSet;
 	DescriptorSet<VoxelDescriptors> VoxelDescriptorSet;
 
 	drm::RenderPass DepthRP;

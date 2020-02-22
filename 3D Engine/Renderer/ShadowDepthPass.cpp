@@ -47,8 +47,8 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
 		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<ShadowProjectionFS>();
 		PSODesc.DescriptorSets = {
-			Scene.CameraDescriptorSet,
-			SceneTextures,
+			CameraDescriptorSet,
+			SceneTexturesDescriptorSet,
 			&ShadowProxy.GetDescriptorSet()
 		};
 

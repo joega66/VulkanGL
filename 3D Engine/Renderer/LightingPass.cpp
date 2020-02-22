@@ -58,7 +58,7 @@ void SceneProxy::AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Devi
 	PSODesc.Viewport.Height = SceneRenderer.SceneDepth.GetHeight();
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.DescriptorSets = { CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTextures };
+	PSODesc.DescriptorSets = { SceneRenderer.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTexturesDescriptorSet };
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
 		MeshProxy.GetMaterial()->IsMasked() ?

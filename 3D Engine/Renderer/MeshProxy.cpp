@@ -11,13 +11,3 @@ MeshProxy::MeshProxy(
 	, LocalToWorldUniform(std::move(LocalToWorldUniform))
 {
 }
-
-void MeshProxy::DrawElements(drm::CommandList& CmdList) const
-{
-	std::for_each(Submeshes->begin(), Submeshes->end(),
-		[&] (const Submesh& Submesh)
-	{
-		CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
-		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
-	});
-}

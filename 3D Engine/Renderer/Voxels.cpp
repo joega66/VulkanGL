@@ -84,7 +84,7 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 	PSODesc.Viewport.Width = SceneRenderer.VoxelColors.GetWidth();
 	PSODesc.Viewport.Height = SceneRenderer.VoxelColors.GetHeight();
-	PSODesc.DescriptorSets = { CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTextures, SceneRenderer.VoxelDescriptorSet };
+	PSODesc.DescriptorSets = { SceneRenderer.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTexturesDescriptorSet, SceneRenderer.VoxelDescriptorSet };
 
 	VoxelsPass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
 }
@@ -92,33 +92,26 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	// Set the shadow mask to black so that voxels don't have shadows.
-	SceneTextures.ShadowMask = &Material::Black;
-	SceneTextures.Update();
+	SceneTexturesDescriptorSet.ShadowMask = &Material::Black;
+	SceneTexturesDescriptorSet.Update();
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
+	const glm::vec3 VoxelProbeCenter(
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f));
+	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	glm::mat4 OrthoProj = glm::ortho(-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, -(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, 0.0f, (float)VoxelGridSize);
 	OrthoProj[1][1] *= -1;
 
-	struct WorldToVoxelUniform
-	{
-		glm::mat4 WorldToVoxel;
-		glm::mat4 WorldToVoxelInv;
-	} WorldToVoxelUniform;
-
-	const glm::vec3 VoxelProbeCenter(
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f)
-	);
-
-	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
-
+	WorldToVoxelUniform WorldToVoxelUniform;
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform), &WorldToVoxelUniform);
-	VoxelDescriptorSet.WorldToVoxelBuffer = &WorldToVoxelBuffer;
+	void* WorldToVoxelBufferPtr = Device.LockBuffer(WorldToVoxelBuffer);
+	Platform::Memcpy(WorldToVoxelBufferPtr, &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
+	Device.UnlockBuffer(WorldToVoxelBuffer);
 
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;
@@ -126,10 +119,9 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand), &DrawIndirectCommand);
-	VoxelDescriptorSet.VoxelIndirectBuffer = &VoxelIndirectBuffer;
-
-	VoxelDescriptorSet.Update();
+	void* VoxelIndirectBufferPtr = Device.LockBuffer(VoxelIndirectBuffer);
+	Platform::Memcpy(VoxelIndirectBufferPtr, &DrawIndirectCommand, sizeof(DrawIndirectCommand));
+	Device.UnlockBuffer(VoxelIndirectBuffer);
 
 	RenderVoxelization(Scene, CmdList);
 
@@ -247,8 +239,8 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = &VoxelVisualizationRP;
-	PSODesc.Viewport.Width = Scene.GetWidth();
-	PSODesc.Viewport.Height = Scene.GetHeight();
+	PSODesc.Viewport.Width = SceneColor.GetWidth();
+	PSODesc.Viewport.Height = SceneColor.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;
 	PSODesc.DepthStencilState.DepthWriteEnable = true;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
@@ -256,7 +248,7 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.SpecializationInfo.Add(0, VoxelSize);
-	PSODesc.DescriptorSets = { Scene.CameraDescriptorSet, VoxelDescriptorSet };
+	PSODesc.DescriptorSets = { CameraDescriptorSet, VoxelDescriptorSet };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 

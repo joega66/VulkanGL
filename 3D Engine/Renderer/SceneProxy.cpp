@@ -8,23 +8,20 @@
 #include "ShadowProxy.h"
 
 SceneProxy::SceneProxy(Engine& Engine, SceneRenderer& SceneRenderer)
-	: Camera(Engine.Camera)
-	, ECS(Engine.ECS)
-	, SkyboxDescriptorSet(Engine.Device)
-	, CameraDescriptorSet(Engine.Device)
+	: ECS(Engine.ECS)
 {
-	InitView(Engine);
-	InitLights(Engine);
+	InitView(Engine, SceneRenderer);
+	InitLights(Engine, SceneRenderer);
 	InitMeshDrawCommands(Engine, SceneRenderer);
-	
-	CameraDescriptorSet.Update();
 
-	SkyboxDescriptorSet.Skybox = Engine.Scene.Skybox;
-	SkyboxDescriptorSet.Sampler = Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
-	SkyboxDescriptorSet.Update();
+	SceneRenderer.CameraDescriptorSet.Update();
+
+	SceneRenderer.SkyboxDescriptorSet.Skybox = Engine.Scene.Skybox;
+	SceneRenderer.SkyboxDescriptorSet.Sampler = Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
+	SceneRenderer.SkyboxDescriptorSet.Update();
 }
 
-void SceneProxy::InitView(Engine& Engine)
+void SceneProxy::InitView(Engine& Engine, SceneRenderer& SceneRenderer)
 {
 	UNIFORM_STRUCT(CameraUniformBuffer,
 		glm::mat4 WorldToView;
@@ -38,30 +35,32 @@ void SceneProxy::InitView(Engine& Engine)
 		glm::vec2 ScreenDims;
 	);
 
+	const Camera& Camera = Engine.Camera;
+
 	const CameraUniformBuffer CameraUniformBuffer =
 	{
-		GetWorldToView(),
-		GetViewToClip(),
-		GetWorldToClip(),
-		glm::inverse(GetWorldToClip()),
-		GetPosition(),
+		Camera.GetWorldToView(),
+		Camera.GetViewToClip(),
+		Camera.GetWorldToClip(),
+		glm::inverse(Camera.GetWorldToClip()),
+		Camera.GetPosition(),
 		0.0f,
-		GetAspectRatio(),
-		GetFOV(),
-		glm::vec2(GetWidth(), GetHeight())
+		Camera.GetAspectRatio(),
+		Camera.GetFOV(),
+		glm::vec2(Camera.GetWidth(), Camera.GetHeight())
 	};
 
 	CameraUniform = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
-	CameraDescriptorSet.CameraUniform = &CameraUniform;
+	SceneRenderer.CameraDescriptorSet.CameraUniform = &CameraUniform;
 }
 
-void SceneProxy::InitLights(Engine& Engine)
+void SceneProxy::InitLights(Engine& Engine, SceneRenderer& SceneRenderer)
 {
-	InitDirectionalLights(Engine);
-	InitPointLights(Engine);
+	InitDirectionalLights(Engine, SceneRenderer);
+	InitPointLights(Engine, SceneRenderer);
 }
 
-void SceneProxy::InitDirectionalLights(Engine& Engine)
+void SceneProxy::InitDirectionalLights(Engine& Engine, SceneRenderer& SceneRenderer)
 {
 	UNIFORM_STRUCT(DirectionalLightProxy,
 		glm::vec3 Color;
@@ -88,14 +87,14 @@ void SceneProxy::InitDirectionalLights(Engine& Engine)
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
 	DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	CameraDescriptorSet.DirectionalLightBuffer = &DirectionalLightBuffer;
+	SceneRenderer.CameraDescriptorSet.DirectionalLightBuffer = &DirectionalLightBuffer;
 	void* Data = Engine.Device.LockBuffer(DirectionalLightBuffer);
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	Engine.Device.UnlockBuffer(DirectionalLightBuffer);
 }
 
-void SceneProxy::InitPointLights(Engine& Engine)
+void SceneProxy::InitPointLights(Engine& Engine, SceneRenderer& SceneRenderer)
 {
 	UNIFORM_STRUCT(PointLightProxy,
 		glm::vec3 Position;
@@ -121,7 +120,7 @@ void SceneProxy::InitPointLights(Engine& Engine)
 	NumPointLights.x = PointLightProxies.size();
 
 	PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-	CameraDescriptorSet.PointLightBuffer = &PointLightBuffer;
+	SceneRenderer.CameraDescriptorSet.PointLightBuffer = &PointLightBuffer;
 
 	void* Data = Engine.Device.LockBuffer(PointLightBuffer);
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
@@ -131,7 +130,7 @@ void SceneProxy::InitPointLights(Engine& Engine)
 
 void SceneProxy::InitMeshDrawCommands(Engine& Engine, SceneRenderer& SceneRenderer)
 {
-	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
+	const FrustumPlanes ViewFrustumPlanes = Engine.Camera.GetFrustumPlanes();
 	
 	for (auto Entity : ECS.GetEntities<MeshProxy>())
 	{
