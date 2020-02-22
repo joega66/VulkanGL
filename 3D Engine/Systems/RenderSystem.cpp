@@ -50,11 +50,18 @@ void RenderSystem::Update(Engine& Engine)
 	auto& ECS = Engine.ECS;
 	auto& Device = Engine.Device;
 
+	for (auto Entity : ECS.GetEntities<ShadowProxy>())
+	{
+		auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
+		auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
+		ShadowProxy.Update(Device, DirectionalLight);
+	}
+
 	for (auto& Entity : ECS.GetEntities<MeshProxy>())
 	{
-		MeshProxy& MeshProxy = ECS.GetComponent<class MeshProxy>(Entity);
-		const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-		const StaticMesh* StaticMesh = ECS.GetComponent<class StaticMeshComponent>(Entity).StaticMesh;
+		auto& MeshProxy = ECS.GetComponent<class MeshProxy>(Entity);
+		const auto& Transform = ECS.GetComponent<class Transform>(Entity);
+		const auto* StaticMesh = ECS.GetComponent<class StaticMeshComponent>(Entity).StaticMesh;
 
 		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(Device.LockBuffer(MeshProxy.LocalToWorldUniform));
 		LocalToWorldUniformBuffer->Transform = Transform.GetLocalToWorld();
@@ -62,12 +69,12 @@ void RenderSystem::Update(Engine& Engine)
 		Device.UnlockBuffer(MeshProxy.LocalToWorldUniform);
 
 		MeshProxy.WorldSpaceBB = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
-	}
 
-	for (auto Entity : ECS.GetEntities<ShadowProxy>())
-	{
-		auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
-		auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
-		ShadowProxy.Update(Device, DirectionalLight);
+		// Add to the light's shadow depth rendering.
+		for (auto Entity : ECS.GetEntities<ShadowProxy>())
+		{
+			auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
+			ShadowProxy.AddMesh(Engine.Device, Engine.ShaderMap, MeshProxy);
+		}
 	}
 }

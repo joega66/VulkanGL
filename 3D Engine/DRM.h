@@ -22,6 +22,9 @@ public:
 	/** Create a command list. */
 	virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
 
+	/** Create a graphics pipeline. */
+	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
+
 	/** Create a descriptor template. */
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumBindings, const DescriptorBinding* Bindings) = 0;
 

@@ -78,7 +78,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 			RenderSkybox(Scene, CmdList);
 
-			UserInterface.Render(LightingRP, CmdList);
+			UserInterface.Render(Device, LightingRP, CmdList);
 
 			CmdList.EndRenderPass();
 		}
@@ -95,12 +95,6 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 	{
 		const auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
-		CmdList.BeginRenderPass(DepthVisualizationRP);
-
-		const drm::DescriptorSet* DescriptorSets[] = { &ShadowProxy.GetDescriptorSet() };
-
-		CmdList.BindDescriptorSets(1, DescriptorSets);
-
 		PipelineStateDesc PSODesc = {};
 		PSODesc.RenderPass = &DepthVisualizationRP;
 		PSODesc.Viewport.Width = SceneDepth.GetWidth();
@@ -109,8 +103,15 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
 		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
 		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
+		PSODesc.DescriptorSets = { &ShadowProxy.GetDescriptorSet() };
 
-		CmdList.BindPipeline(PSODesc);
+		drm::Pipeline DepthVisualizationPipeline = Device.CreatePipeline(PSODesc);
+
+		CmdList.BeginRenderPass(DepthVisualizationRP);
+
+		CmdList.BindPipeline(DepthVisualizationPipeline);
+
+		CmdList.BindDescriptorSets(DepthVisualizationPipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
 
 		CmdList.Draw(3, 1, 0, 0);
 

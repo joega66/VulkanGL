@@ -71,20 +71,22 @@ public:
 	}
 };
 
-void SceneProxy::AddToVoxelsPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	ShaderStages ShaderStages =
-	{
-		ShaderMap.FindShader<VoxelsVS<MeshType>>(),
-		nullptr,
-		nullptr,
-		ShaderMap.FindShader<VoxelsGS<MeshType>>(),
-		ShaderMap.FindShader<VoxelsFS<MeshType>>()
-	};
+	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &SceneRenderer.VoxelRP;
+	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<VoxelsVS<MeshType>>();
+	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<VoxelsGS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<VoxelsFS<MeshType>>();
+	PSODesc.DepthStencilState.DepthTestEnable = false;
+	PSODesc.DepthStencilState.DepthWriteEnable = false;
+	PSODesc.Viewport.Width = SceneRenderer.VoxelColors.GetWidth();
+	PSODesc.Viewport.Height = SceneRenderer.VoxelColors.GetHeight();
+	PSODesc.DescriptorSets = { CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTextures, SceneRenderer.VoxelDescriptorSet };
 
-	VoxelsPass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
+	VoxelsPass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
 }
 
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -134,31 +136,8 @@ void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 	RenderVoxelVisualization(Scene, CmdList);
 }
 
-struct VoxelizationPassDescriptorSets
-{
-	const drm::DescriptorSet* Scene;
-	const drm::DescriptorSet* SceneTextures;
-	const drm::DescriptorSet* Voxels;
-
-	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
-	{
-		std::array<const drm::DescriptorSet*, 5> DescriptorSets =
-		{
-			Scene,
-			&MeshProxy.GetSurfaceSet(),
-			&MeshProxy.GetMaterialSet(),
-			SceneTextures,
-			Voxels
-		};
-
-		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-	}
-};
-
 void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-
 	ImageMemoryBarrier ImageMemoryBarrier(
 		VoxelColors,
 		EAccess::None, 
@@ -180,16 +159,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 
 	CmdList.BeginRenderPass(VoxelRP);
 
-	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &VoxelRP;
-	PSODesc.DepthStencilState.DepthTestEnable = false;
-	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.Viewport.Width = VoxelGridSize;
-	PSODesc.Viewport.Height = VoxelGridSize;
-
-	VoxelizationPassDescriptorSets DescriptorSets = { Scene.CameraDescriptorSet, SceneTextures, VoxelDescriptorSet };
-
-	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList, DescriptorSets, PSODesc);
+	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList);
 
 	CmdList.EndRenderPass();
 }
@@ -273,14 +243,6 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 
 	CmdList.BeginRenderPass(VoxelVisualizationRP);
 
-	std::vector<const drm::DescriptorSet*> DescriptorSets =
-	{
-		Scene.CameraDescriptorSet,
-		VoxelDescriptorSet
-	};
-
-	CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-
 	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	PipelineStateDesc PSODesc = {};
@@ -294,8 +256,13 @@ void SceneRenderer::RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.SpecializationInfo.Add(0, VoxelSize);
+	PSODesc.DescriptorSets = { Scene.CameraDescriptorSet, VoxelDescriptorSet };
 
-	CmdList.BindPipeline(PSODesc);
+	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+
+	CmdList.BindPipeline(Pipeline);
+
+	CmdList.BindDescriptorSets(Pipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 

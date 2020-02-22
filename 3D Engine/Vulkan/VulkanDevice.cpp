@@ -27,6 +27,12 @@ drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 	return VulkanCommandList(*this, QueueFlags);
 }
 
+drm::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
+{
+	const auto [Pipeline, PipelineLayout] = GetCache().GetPipeline(PSODesc);
+	return drm::Pipeline(Pipeline, PipelineLayout);
+}
+
 drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries)
 {
 	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);

@@ -30,6 +30,8 @@ public:
 
 	virtual drm::CommandList CreateCommandList(EQueue Queue) override;
 
+	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
+
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries) override;
 
 	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
@@ -80,7 +82,6 @@ private:
 
 	VulkanCache VulkanCache;
 
-	/** The logical device. */
 	VkDevice Device;
 
 	VulkanDescriptorPoolManager DescriptorPoolManager;

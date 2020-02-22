@@ -15,7 +15,7 @@ VulkanCache::~VulkanCache()
 		vkDestroyPipelineLayout(Device, PipelineLayout, nullptr);
 	}
 
-	for (const auto&[PipelineHash, Pipeline] : PipelineCache)
+	for (const auto&[PSODesc, Pipeline, PipelineLayout] : PipelineCache)
 	{
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}

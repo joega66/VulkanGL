@@ -1,6 +1,5 @@
 #pragma once
 #include <ECS/System.h>
-#include <DRMShader.h>
 #include <DRM.h>
 
 class UserInterface : public IRenderSystem
@@ -14,7 +13,7 @@ public:
 
 	virtual void Update(class Engine& Engine) override;
 
-	void Render(const drm::RenderPass& RenderPass, drm::CommandList& CmdList);
+	void Render(DRMDevice& Device, const drm::RenderPass& RenderPass, drm::CommandList& CmdList);
 
 private:
 	void CreateImGuiRenderResources(DRMDevice& Device);

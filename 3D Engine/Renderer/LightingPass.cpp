@@ -46,58 +46,29 @@ public:
 	}
 };
 
-void SceneProxy::AddToLightingPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	ShaderStages ShaderStages =
-	{
-		ShaderMap.FindShader<LightingPassVS<MeshType>>(),
-		nullptr,
-		nullptr,
-		nullptr,
-		ShaderMap.FindShader<LightingPassFS<MeshType>>()
-	};
+	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &SceneRenderer.LightingRP;
+	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<LightingPassVS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<LightingPassFS<MeshType>>();
+	PSODesc.Viewport.Width = SceneRenderer.SceneDepth.GetWidth();
+	PSODesc.Viewport.Height = SceneRenderer.SceneDepth.GetHeight();
+	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
+	PSODesc.DepthStencilState.DepthWriteEnable = false;
+	PSODesc.DescriptorSets = { CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTextures };
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
 		MeshProxy.GetMaterial()->IsMasked() ?
 		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
 
-	LightingPass[StaticDrawListType].push_back(
-		MeshDrawCommand(std::move(ShaderStages), MeshProxy)
-	);
+	LightingPass[StaticDrawListType].push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
 }
-
-struct LightingPassDescriptorSets
-{
-	const drm::DescriptorSet* Scene;
-	const drm::DescriptorSet* SceneTextures;
-
-	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
-	{
-		std::array<const drm::DescriptorSet*, 4> DescriptorSets =
-		{
-			Scene,
-			&MeshProxy.GetSurfaceSet(),
-			&MeshProxy.GetMaterialSet(),
-			SceneTextures
-		};
-
-		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-	}
-};
 
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &LightingRP;
-	PSODesc.Viewport.Width = SceneDepth.GetWidth();
-	PSODesc.Viewport.Height = SceneDepth.GetHeight();
-	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
-	PSODesc.DepthStencilState.DepthWriteEnable = false;
-
-	LightingPassDescriptorSets DescriptorSets = { Scene.CameraDescriptorSet, SceneTextures };
-
-	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList, DescriptorSets, PSODesc);
-	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList, DescriptorSets, PSODesc);
+	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList);
+	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList);
 }

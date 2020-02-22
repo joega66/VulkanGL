@@ -1,5 +1,6 @@
 #pragma once
 #include <DRM.h>
+#include "MeshDrawCommand.h"
 
 struct ShadowDescriptors
 {
@@ -27,11 +28,12 @@ public:
 
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
 
-	/** Accessors */
-	inline float GetDepthBiasConstantFactor() const { return DepthBiasConstantFactor; }
-	inline float GetDepthBiasSlopeFactor() const { return DepthBiasSlopeFactor; }
-	inline const drm::RenderPass& GetRenderPass() const { return RenderPass; };
-	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
+	/** Add a mesh that should be included in the light's shadow depth rendering. */
+	void AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+
+	/** Render shadow depths. */
+	void Render(drm::CommandList& CmdList);
+
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 
 private:
@@ -41,4 +43,5 @@ private:
 	drm::Buffer LightViewProjBuffer;
 	drm::Image ShadowMap;
 	drm::DescriptorSet DescriptorSet;
+	std::vector<MeshDrawCommand> MeshDrawCommands;
 };

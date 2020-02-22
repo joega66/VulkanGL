@@ -5,45 +5,37 @@
 class MeshDrawCommand
 {
 public:
-	template<typename DescriptorSetsType>
-	static void Draw(const std::vector<MeshDrawCommand>& MeshDrawCommands, 
-		drm::CommandList& CmdList,
-		const DescriptorSetsType& DescriptorSets,
-		PipelineStateDesc& PSODesc
-		)
+	MeshDrawCommand(
+		DRMDevice& Device,
+		const MeshProxy& MeshProxy,
+		PipelineStateDesc& PSODesc)
+		: MeshProxy(MeshProxy)
+		, DescriptorSets(PSODesc.DescriptorSets)
+	{
+		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
+		Pipeline = Device.CreatePipeline(PSODesc);
+	}
+
+	void Draw(drm::CommandList& CmdList)
+	{
+		CmdList.BindPipeline(Pipeline);
+		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+		MeshProxy.DrawElements(CmdList);
+	}
+
+	static void Draw(std::vector<MeshDrawCommand>& MeshDrawCommands, drm::CommandList& CmdList)
 	{
 		std::for_each(
 			MeshDrawCommands.begin(),
 			MeshDrawCommands.end(),
-			[&] (const MeshDrawCommand& MeshDrawCommand)
+			[&] (MeshDrawCommand& MeshDrawCommand)
 		{
-			MeshDrawCommand.Draw(CmdList, DescriptorSets, PSODesc);
+			MeshDrawCommand.Draw(CmdList);
 		});
-	}
-
-	MeshDrawCommand(
-		ShaderStages&& ShaderStages,
-		const MeshProxy& MeshProxy)
-		: ShaderStages(std::move(ShaderStages))
-		, MeshProxy(MeshProxy)
-	{
-	}
-
-	template<typename DescriptorSetsType>
-	void Draw(drm::CommandList& CmdList, const DescriptorSetsType& DescriptorSets, PipelineStateDesc& PSODesc) const
-	{
-		DescriptorSets.Set(CmdList, MeshProxy);
-
-		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
-
-		PSODesc.ShaderStages = ShaderStages;
-
-		CmdList.BindPipeline(PSODesc);
-
-		MeshProxy.DrawElements(CmdList);
 	}
 
 private:
 	const MeshProxy& MeshProxy;
-	ShaderStages ShaderStages;
+	drm::Pipeline Pipeline;
+	std::vector<const drm::DescriptorSet*> DescriptorSets;
 };

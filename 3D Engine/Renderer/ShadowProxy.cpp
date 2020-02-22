@@ -1,6 +1,7 @@
 #include "ShadowProxy.h"
 #include <Components/Light.h>
 #include <ECS/EntityManager.h>
+#include "MaterialShader.h"
 
 ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 {
@@ -48,4 +49,77 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	glm::mat4* LightViewProjMatrixPtr = static_cast<glm::mat4*>(Device.LockBuffer(LightViewProjBuffer));
 	*LightViewProjMatrixPtr = LightViewProjMatrix;
 	Device.UnlockBuffer(LightViewProjBuffer);
+}
+
+template<EMeshType MeshType>
+class ShadowDepthVS : public MeshShader<MeshType>
+{
+	using Base = MeshShader<MeshType>;
+public:
+	ShadowDepthVS(const ShaderCompilationInfo& CompilationInfo)
+		: Base(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Base::SetEnvironmentVariables(Worker);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/ShadowDepthVS.glsl", "main", EShaderStage::Vertex };
+		return BaseInfo;
+	}
+};
+
+template<EMeshType MeshType>
+class ShadowDepthFS : public MeshShader<MeshType>
+{
+	using Base = MeshShader<MeshType>;
+public:
+	ShadowDepthFS(const ShaderCompilationInfo& CompilationInfo)
+		: Base(CompilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Base::SetEnvironmentVariables(Worker);
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment };
+		return BaseInfo;
+	}
+};
+
+void ShadowProxy::AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+{
+	constexpr EMeshType MeshType = EMeshType::StaticMesh;
+
+	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &RenderPass;
+	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<ShadowDepthVS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<ShadowDepthFS<MeshType>>();
+	PSODesc.Viewport.Width = ShadowMap.GetWidth();
+	PSODesc.Viewport.Height = ShadowMap.GetHeight();
+	PSODesc.RasterizationState.DepthBiasEnable = true;
+	PSODesc.RasterizationState.DepthBiasConstantFactor = DepthBiasConstantFactor;
+	PSODesc.RasterizationState.DepthBiasSlopeFactor = DepthBiasSlopeFactor;
+	PSODesc.DescriptorSets = { &DescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet() };
+
+	MeshDrawCommands.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
+}
+
+void ShadowProxy::Render(drm::CommandList& CmdList)
+{
+	CmdList.BeginRenderPass(RenderPass);
+
+	MeshDrawCommand::Draw(MeshDrawCommands, CmdList);
+
+	CmdList.EndRenderPass();
+
+	MeshDrawCommands.clear();
 }

@@ -48,70 +48,46 @@ public:
 
 	void Render(class UserInterface& UserInterface, SceneProxy& Scene);
 
-private:
-	DRMDevice& Device;
-
-	DRMShaderMap& ShaderMap;
-
-	drm::Surface& Surface;
+	DescriptorSet<SceneTexturesDescriptors> SceneTextures;
+	DescriptorSet<VoxelDescriptors> VoxelDescriptorSet;
 
 	drm::RenderPass DepthRP;
-
 	drm::RenderPass DepthVisualizationRP;
-
 	drm::RenderPass VoxelRP;
-
 	drm::RenderPass VoxelVisualizationRP;
-
 	drm::RenderPass LightingRP;
-
 	drm::RenderPass ShadowMaskRP;
 
 	drm::Image SceneDepth;
-
 	drm::Image ShadowMask;
-
-	DescriptorSet<SceneTexturesDescriptors> SceneTextures;
+	drm::Image SceneColor;
 
 	drm::Buffer WorldToVoxelBuffer;
 	drm::Image VoxelColors;
 	drm::Buffer VoxelPositions;
 	drm::Buffer VoxelIndirectBuffer;
 
-	DescriptorSet<VoxelDescriptors> VoxelDescriptorSet;
-
-	drm::Image SceneColor;
+private:
+	DRMDevice& Device;
+	DRMShaderMap& ShaderMap;
+	drm::Surface& Surface;
 
 	void RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderVoxelVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	void Present(drm::CommandList& CmdList);
 
 	void CreateDepthRP();
-
 	void CreateDepthVisualizationRP();
-
 	void CreateVoxelRP();
-
 	void CreateVoxelVisualizationRP();
-
 	void CreateLightingRP();
-
 	void CreateShadowMaskRP();
 
 	const StaticMesh* Cube;

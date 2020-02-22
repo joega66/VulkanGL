@@ -9,9 +9,8 @@ class VulkanDescriptorSet
 public:
 	VulkanDescriptorSet() = default;
 
-	VulkanDescriptorSet(
-		class VulkanDescriptorPool& DescriptorPool,
-		VkDescriptorSetLayout Layout,
+	VulkanDescriptorSet(class VulkanDescriptorPool& DescriptorPool, 
+		VkDescriptorSetLayout Layout, 
 		VkDescriptorSet DescriptorSet
 	);
 	VulkanDescriptorSet(VulkanDescriptorSet&& Other);
@@ -81,6 +80,8 @@ public:
 	VulkanDescriptorSet CreateDescriptorSet();
 
 	void UpdateDescriptorSet(const VulkanDescriptorSet& DescriptorSet, void* Data);
+
+	inline VkDescriptorSetLayout GetNativeHandle() const { return DescriptorSetLayout; }
 
 private:
 	VulkanDevice* Device = nullptr;

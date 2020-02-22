@@ -4,9 +4,10 @@
 #include <Components/Transform.h>
 #include <Engine/Engine.h>
 #include <Engine/Material.h>
+#include "SceneRenderer.h"
 #include "ShadowProxy.h"
 
-SceneProxy::SceneProxy(Engine& Engine)
+SceneProxy::SceneProxy(Engine& Engine, SceneRenderer& SceneRenderer)
 	: Camera(Engine.Camera)
 	, ECS(Engine.ECS)
 	, SkyboxDescriptorSet(Engine.Device)
@@ -14,7 +15,7 @@ SceneProxy::SceneProxy(Engine& Engine)
 {
 	InitView(Engine);
 	InitLights(Engine);
-	InitMeshDrawCommands(Engine);
+	InitMeshDrawCommands(Engine, SceneRenderer);
 	
 	CameraDescriptorSet.Update();
 
@@ -128,7 +129,7 @@ void SceneProxy::InitPointLights(Engine& Engine)
 	Engine.Device.UnlockBuffer(PointLightBuffer);
 }
 
-void SceneProxy::InitMeshDrawCommands(Engine& Engine)
+void SceneProxy::InitMeshDrawCommands(Engine& Engine, SceneRenderer& SceneRenderer)
 {
 	const FrustumPlanes ViewFrustumPlanes = GetFrustumPlanes();
 	
@@ -138,11 +139,10 @@ void SceneProxy::InitMeshDrawCommands(Engine& Engine)
 
 		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, MeshProxy.WorldSpaceBB))
 		{
-			AddToDepthPrepass(Engine.ShaderMap, MeshProxy);
-			AddToLightingPass(Engine.ShaderMap, MeshProxy);
+			AddToDepthPrepass(SceneRenderer, Engine.Device, Engine.ShaderMap, MeshProxy);
+			AddToLightingPass(SceneRenderer, Engine.Device, Engine.ShaderMap, MeshProxy);
 		}
 
-		AddToShadowDepthPass(Engine.ShaderMap, MeshProxy);
-		AddToVoxelsPass(Engine.ShaderMap, MeshProxy);
+		AddToVoxelsPass(SceneRenderer, Engine.Device, Engine.ShaderMap, MeshProxy);
 	}
 }

@@ -150,7 +150,7 @@ VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& Other)
 VulkanDescriptorSet& VulkanDescriptorSet::operator=(VulkanDescriptorSet&& Other)
 {
 	DescriptorPool = Other.DescriptorPool;
-	Layout = Other.Layout;
+	Layout = std::exchange(Other.Layout, VK_NULL_HANDLE);
 	DescriptorSet = std::exchange(Other.DescriptorSet, VK_NULL_HANDLE);
 	return *this;
 }

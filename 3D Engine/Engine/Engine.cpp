@@ -62,7 +62,7 @@ void Engine::Main()
 
 		SystemsManager.UpdateRenderSystems(*this);
 
-		SceneProxy SceneProxy(*this);
+		SceneProxy SceneProxy(*this, SceneRenderer);
 
 		SceneRenderer.Render(UserInterface, SceneProxy);
 

@@ -50,7 +50,7 @@ class Engine;
 class SceneProxy : public Camera
 {
 	friend class Engine;
-	SceneProxy(Engine& Engine);
+	SceneProxy(Engine& Engine, class SceneRenderer& SceneRenderer);
 
 public:
 	SceneProxy(const SceneProxy&) = delete;
@@ -79,10 +79,9 @@ private:
 	void InitLights(Engine& Engine);
 	void InitDirectionalLights(Engine& Engine);
 	void InitPointLights(Engine& Engine);
-	void InitMeshDrawCommands(Engine& Engine);
+	void InitMeshDrawCommands(Engine& Engine, SceneRenderer& SceneRenderer);
 
-	void AddToDepthPrepass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToShadowDepthPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToVoxelsPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToLightingPass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToDepthPrepass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
 };

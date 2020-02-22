@@ -46,51 +46,31 @@ public:
 	}
 };
 
-void SceneProxy::AddToDepthPrepass(DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToDepthPrepass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	ShaderStages ShaderStages =
+	std::vector<const drm::DescriptorSet*> DescriptorSets =
 	{
-		ShaderMap.FindShader<DepthPrepassVS<MeshType>>(),
-		nullptr,
-		nullptr,
-		nullptr,
-		MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr
+		CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet()
 	};
 
-	DepthPrepass.push_back(MeshDrawCommand(std::move(ShaderStages), MeshProxy));
+	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &SceneRenderer.DepthRP;
+	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DepthPrepassVS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr;
+	PSODesc.Viewport.Width = SceneRenderer.SceneDepth.GetWidth();
+	PSODesc.Viewport.Height = SceneRenderer.SceneDepth.GetHeight();
+	PSODesc.DescriptorSets = DescriptorSets;
+
+	DepthPrepass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
 }
-
-struct DepthPrepassDescriptorSets
-{
-	const drm::DescriptorSet* SceneDescriptorSet;
-
-	void Set(drm::CommandList& CmdList, const MeshProxy& MeshProxy) const
-	{
-		std::array<const drm::DescriptorSet*, 3> DescriptorSets =
-		{
-			SceneDescriptorSet,
-			&MeshProxy.GetSurfaceSet(),
-			&MeshProxy.GetMaterialSet()
-		};
-
-		CmdList.BindDescriptorSets(DescriptorSets.size(), DescriptorSets.data());
-	}
-};
 
 void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	CmdList.BeginRenderPass(DepthRP);
 
-	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &DepthRP;
-	PSODesc.Viewport.Width = SceneDepth.GetWidth();
-	PSODesc.Viewport.Height = SceneDepth.GetHeight();
-
-	DepthPrepassDescriptorSets DescriptorSets = { Scene.CameraDescriptorSet };
-
-	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList, DescriptorSets, PSODesc);
+	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList);
 
 	CmdList.EndRenderPass();
 }

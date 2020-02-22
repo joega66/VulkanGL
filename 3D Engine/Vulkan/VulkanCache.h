@@ -16,9 +16,7 @@ public:
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassDesc& RPDesc);
 
-	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts);
-
-	VkPipeline GetPipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
+	std::pair<VkPipeline, VkPipelineLayout> GetPipeline(const PipelineStateDesc& PSODesc);
 
 	const drm::Sampler* GetSampler(const SamplerDesc& SamplerDesc);
 
@@ -43,21 +41,13 @@ private:
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 
-	struct VulkanPipelineHash
-	{
-		PipelineStateDesc PSODesc;
-		VkPipelineLayout PipelineLayout;
-
-		VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
-		bool operator==(const VulkanPipelineHash& Other) const;
-		bool HasShader(const drm::Shader* Shader) const;
-	};
-
-	SlowCache<VulkanPipelineHash, VkPipeline> PipelineCache;
+	SlowCache<PipelineStateDesc, VkPipeline, VkPipelineLayout> PipelineCache;
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 
 	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout, VkDescriptorUpdateTemplate> DescriptorSetLayoutCache;
+
+	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts);
 
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 

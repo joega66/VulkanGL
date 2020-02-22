@@ -1,69 +1,35 @@
 #include "VulkanCache.h"
 #include "VulkanDevice.h"
 #include <DRMShader.h>
+#include "VulkanPipeline.h"
 
-static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
+std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
-	ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
-	ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
-	ENTRY(EDepthCompareTest::Equal, VK_COMPARE_OP_EQUAL)
-	ENTRY(EDepthCompareTest::LEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
-	ENTRY(EDepthCompareTest::Greater, VK_COMPARE_OP_GREATER)
-	ENTRY(EDepthCompareTest::NEqual, VK_COMPARE_OP_NOT_EQUAL)
-	ENTRY(EDepthCompareTest::GEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
-	ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
-};
+	// Get the pipeline layout.
+	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
+	DescriptorSetLayouts.reserve(PSODesc.DescriptorSets.size());
 
-VulkanCache::VulkanPipelineHash::VulkanPipelineHash(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout) 
-	: PSODesc(PSODesc)
-	, PipelineLayout(PipelineLayout)
-{
-}
-
-bool VulkanCache::VulkanPipelineHash::operator==(const VulkanPipelineHash& Other) const
-{
-	return PSODesc.RenderPass->GetRenderPass() == Other.PSODesc.RenderPass->GetRenderPass()
-		&& PSODesc == Other.PSODesc 
-		&& PipelineLayout == Other.PipelineLayout;
-}
-
-bool VulkanCache::VulkanPipelineHash::HasShader(const drm::Shader* Shader) const
-{
-	const ShaderStages& ShaderStages = PSODesc.ShaderStages;
-
-	switch (Shader->CompilationInfo.Stage)
+	for (const drm::DescriptorSet* DescriptorSet : PSODesc.DescriptorSets)
 	{
-	case EShaderStage::Vertex:
-		return ShaderStages.Vertex == Shader;
-	case EShaderStage::TessControl:
-		return ShaderStages.TessControl == Shader;
-	case EShaderStage::TessEvaluation:
-		return ShaderStages.TessEval == Shader;
-	case EShaderStage::Geometry:
-		return ShaderStages.Geometry == Shader;
-	case EShaderStage::Fragment:
-		return ShaderStages.Fragment == Shader;
-	default:
-		fail("Shader stage %u not implemented.", (uint32)Shader->CompilationInfo.Stage);
+		DescriptorSetLayouts.push_back(DescriptorSet->GetLayout());
 	}
-}
 
-VkPipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout)
-{
-	VulkanPipelineHash PipelineHash(PSODesc, PipelineLayout);
+	VkPipelineLayout PipelineLayout = GetPipelineLayout(DescriptorSetLayouts);
 
 	// Find or create the pipeline.
-	for (const auto& [OtherPipelineHash, CachedPipeline] : PipelineCache)
+	for (const auto& [CachedPSODesc, CachedPipeline, CachedPipelineLayout] : PipelineCache)
 	{
-		if (PipelineHash == OtherPipelineHash)
+		if (PSODesc == CachedPSODesc &&
+			PSODesc.RenderPass->GetRenderPass() == CachedPSODesc.RenderPass->GetRenderPass() &&
+			PipelineLayout == CachedPipelineLayout)
 		{
-			return CachedPipeline;
+			return { CachedPipeline, CachedPipelineLayout };
 		}
 	}
 
 	VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
-	PipelineCache.push_back({ std::move(PipelineHash), Pipeline });
-	return Pipeline;
+	PipelineCache.push_back({ PSODesc, Pipeline, PipelineLayout});
+	return { Pipeline, PipelineLayout };
 }
 
 static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipelineDepthStencilStateCreateInfo& DepthStencilState)
@@ -85,6 +51,18 @@ static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipeline
 		ENTRY(ECompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL)
 		ENTRY(ECompareOp::GreaterOrEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
 		ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
+	};
+
+	static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
+	{
+		ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
+		ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
+		ENTRY(EDepthCompareTest::Equal, VK_COMPARE_OP_EQUAL)
+		ENTRY(EDepthCompareTest::LEqual, VK_COMPARE_OP_LESS_OR_EQUAL)
+		ENTRY(EDepthCompareTest::Greater, VK_COMPARE_OP_GREATER)
+		ENTRY(EDepthCompareTest::NEqual, VK_COMPARE_OP_NOT_EQUAL)
+		ENTRY(EDepthCompareTest::GEqual, VK_COMPARE_OP_GREATER_OR_EQUAL)
+		ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
 	};
 
 	const auto& In = PSODesc.DepthStencilState;
@@ -501,12 +479,18 @@ void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 		PipelineCache.end(),
 		[&] (const auto& Iter)
 	{
-		const auto& [PipelineHash, Pipeline] = Iter;
-		if (PipelineHash.HasShader(Shader))
+		const auto& [PSODesc, Pipeline, PipelineLayout] = Iter;
+		if (PSODesc.HasShader(Shader))
 		{
 			vkDestroyPipeline(Device, Pipeline, nullptr);
 			return true;
 		}
 		return false;
 	}), PipelineCache.end());
+}
+
+VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout)
+	: Pipeline(Pipeline)
+	, PipelineLayout(PipelineLayout)
+{
 }

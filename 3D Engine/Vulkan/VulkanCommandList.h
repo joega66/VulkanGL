@@ -7,6 +7,7 @@ class VulkanBuffer;
 class VulkanImage;
 struct ImageMemoryBarrier;
 struct BufferMemoryBarrier;
+class VulkanPipeline;
 
 class VulkanCommandList
 {
@@ -28,9 +29,9 @@ public:
 
 	void EndRenderPass();
 
-	void BindPipeline(const struct PipelineStateDesc& PSODesc);
+	void BindPipeline(const VulkanPipeline& Pipeline);
 
-	void BindDescriptorSets(uint32 NumDescriptorSets, const class VulkanDescriptorSet** DescriptorSets);
+	void BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const class VulkanDescriptorSet** DescriptorSets);
 
 	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 
@@ -90,9 +91,4 @@ public:
 
 private:
 	VulkanDevice& Device;
-
-	struct PendingState
-	{
-		VkPipelineLayout PipelineLayout;
-	} Pending;
 };

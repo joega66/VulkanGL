@@ -108,19 +108,20 @@ void UserInterface::Update(Engine& Engine)
 	UploadImGuiDrawData(Engine.Device);
 }
 
-void UserInterface::Render(const drm::RenderPass& RenderPass, drm::CommandList& CmdList)
+void UserInterface::Render(DRMDevice& Device, const drm::RenderPass& RenderPass, drm::CommandList& CmdList)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 
 	PSODesc.RenderPass = &RenderPass;
+	PSODesc.DescriptorSets = { &DescriptorSet };
 
 	if (DrawData->CmdListsCount > 0)
 	{
-		const drm::DescriptorSet* DescriptorSets[] = { &DescriptorSet };
+		drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
-		CmdList.BindDescriptorSets(1, DescriptorSets);
+		CmdList.BindPipeline(Pipeline);
 
-		CmdList.BindPipeline(PSODesc);
+		CmdList.BindDescriptorSets(Pipeline, 1, PSODesc.DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
 

@@ -43,13 +43,12 @@ void VulkanCommandList::EndRenderPass()
 	vkCmdEndRenderPass(CommandBuffer);
 }
 
-void VulkanCommandList::BindPipeline(const PipelineStateDesc& PSODesc)
+void VulkanCommandList::BindPipeline(const VulkanPipeline& Pipeline)
 {
-	VkPipeline Pipeline = Device.GetCache().GetPipeline(PSODesc, Pending.PipelineLayout);
-	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
+	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipeline());
 }
 
-void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const VulkanDescriptorSet** DescriptorSets)
+void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VulkanDescriptorSet** DescriptorSets)
 {
 	std::vector<VkDescriptorSet> VulkanDescriptorSets(NumDescriptorSets);
 	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts(NumDescriptorSets);
@@ -60,12 +59,10 @@ void VulkanCommandList::BindDescriptorSets(uint32 NumDescriptorSets, const Vulka
 		DescriptorSetLayouts[SetIndex] = DescriptorSets[SetIndex]->GetLayout();
 	}
 
-	Pending.PipelineLayout = Device.GetCache().GetPipelineLayout(DescriptorSetLayouts);
-
 	vkCmdBindDescriptorSets(
 		CommandBuffer,
 		VK_PIPELINE_BIND_POINT_GRAPHICS,
-		Pending.PipelineLayout,
+		Pipeline.GetPipelineLayout(),
 		0,
 		VulkanDescriptorSets.size(),
 		VulkanDescriptorSets.data(),

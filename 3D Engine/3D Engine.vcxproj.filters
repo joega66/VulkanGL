@@ -242,6 +242,9 @@
     <ClInclude Include="Engine\Material.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanPipeline.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

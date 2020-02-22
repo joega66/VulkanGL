@@ -1,49 +1,12 @@
 #pragma once
 #include <DRMResource.h>
+#include <DRMShader.h>
 
 #include "Vulkan/VulkanRenderPass.h"
-
-namespace drm
-{
-	using RenderPass = VulkanRenderPass;
-}
-
-struct PipelineStateDesc
-{
-	const drm::RenderPass* RenderPass;
-	ScissorDesc Scissor;
-	Viewport Viewport;
-	DepthStencilState DepthStencilState;
-	RasterizationState RasterizationState;
-	MultisampleState MultisampleState;
-	std::vector<ColorBlendAttachmentState> ColorBlendAttachmentStates;
-	InputAssemblyState InputAssemblyState;
-	ShaderStages ShaderStages;
-	SpecializationInfo SpecializationInfo;
-	std::vector<EDynamicState> DynamicStates;
-	std::vector<VertexAttributeDescription> VertexAttributes;
-	std::vector<VertexBindingDescription> VertexBindings;
-
-	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
-	{
-		return L.Scissor == R.Scissor
-			&& L.Viewport == R.Viewport
-			&& L.DepthStencilState == R.DepthStencilState
-			&& L.RasterizationState == R.RasterizationState
-			&& L.MultisampleState == R.MultisampleState
-			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
-			&& L.InputAssemblyState == R.InputAssemblyState
-			&& L.ShaderStages == R.ShaderStages
-			&& L.SpecializationInfo == R.SpecializationInfo
-			&& L.DynamicStates == R.DynamicStates
-			&& L.VertexAttributes == R.VertexAttributes
-			&& L.VertexBindings == R.VertexBindings;
-	}
-};
-
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanMemory.h"
 #include "Vulkan/VulkanDescriptors.h"
+#include "Vulkan/VulkanPipeline.h"
 
 namespace drm
 {
@@ -52,6 +15,8 @@ namespace drm
 	using Sampler = VulkanSampler;
 	using DescriptorSet = VulkanDescriptorSet;
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;
+	using Pipeline = VulkanPipeline;
+	using RenderPass = VulkanRenderPass;
 
 	class AttachmentView
 	{
@@ -99,6 +64,59 @@ namespace drm
 		}
 	};
 }
+
+struct PipelineStateDesc
+{
+	const drm::RenderPass* RenderPass;
+	ScissorDesc Scissor;
+	Viewport Viewport;
+	DepthStencilState DepthStencilState;
+	RasterizationState RasterizationState;
+	MultisampleState MultisampleState;
+	std::vector<ColorBlendAttachmentState> ColorBlendAttachmentStates;
+	InputAssemblyState InputAssemblyState;
+	ShaderStages ShaderStages;
+	SpecializationInfo SpecializationInfo;
+	std::vector<EDynamicState> DynamicStates;
+	std::vector<VertexAttributeDescription> VertexAttributes;
+	std::vector<VertexBindingDescription> VertexBindings;
+	std::vector<const drm::DescriptorSet*> DescriptorSets;
+
+	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
+	{
+		return L.Scissor == R.Scissor
+			&& L.Viewport == R.Viewport
+			&& L.DepthStencilState == R.DepthStencilState
+			&& L.RasterizationState == R.RasterizationState
+			&& L.MultisampleState == R.MultisampleState
+			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
+			&& L.InputAssemblyState == R.InputAssemblyState
+			&& L.ShaderStages == R.ShaderStages
+			&& L.SpecializationInfo == R.SpecializationInfo
+			&& L.DynamicStates == R.DynamicStates
+			&& L.VertexAttributes == R.VertexAttributes
+			&& L.VertexBindings == R.VertexBindings;
+	}
+
+	bool HasShader(const drm::Shader* Shader) const
+	{
+		switch (Shader->CompilationInfo.Stage)
+		{
+		case EShaderStage::Vertex:
+			return ShaderStages.Vertex == Shader;
+		case EShaderStage::TessControl:
+			return ShaderStages.TessControl == Shader;
+		case EShaderStage::TessEvaluation:
+			return ShaderStages.TessEval == Shader;
+		case EShaderStage::Geometry:
+			return ShaderStages.Geometry == Shader;
+		case EShaderStage::Fragment:
+			return ShaderStages.Fragment == Shader;
+		default:
+			fail("Shader stage %u not implemented.", (uint32)Shader->CompilationInfo.Stage);
+		}
+	}
+};
 
 struct BufferMemoryBarrier
 {
