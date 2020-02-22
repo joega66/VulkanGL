@@ -159,7 +159,7 @@ void SceneRenderer::RenderVoxelization(SceneProxy& Scene, drm::CommandList& CmdL
 
 	CmdList.BeginRenderPass(VoxelRP);
 
-	MeshDrawCommand::Draw(Scene.VoxelsPass, CmdList);
+	MeshDrawCommand::Draw(CmdList, Scene.VoxelsPass);
 
 	CmdList.EndRenderPass();
 }

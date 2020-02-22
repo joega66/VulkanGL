@@ -70,7 +70,7 @@ void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdL
 {
 	CmdList.BeginRenderPass(DepthRP);
 
-	MeshDrawCommand::Draw(Scene.DepthPrepass, CmdList);
+	MeshDrawCommand::Draw(CmdList, Scene.DepthPrepass);
 
 	CmdList.EndRenderPass();
 }

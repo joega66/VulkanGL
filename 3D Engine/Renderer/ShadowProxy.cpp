@@ -117,7 +117,7 @@ void ShadowProxy::Render(drm::CommandList& CmdList)
 {
 	CmdList.BeginRenderPass(RenderPass);
 
-	MeshDrawCommand::Draw(MeshDrawCommands, CmdList);
+	MeshDrawCommand::Draw(CmdList, MeshDrawCommands);
 
 	CmdList.EndRenderPass();
 

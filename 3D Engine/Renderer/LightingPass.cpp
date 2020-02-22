@@ -69,6 +69,6 @@ void SceneProxy::AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Devi
 
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Opaque], CmdList);
-	MeshDrawCommand::Draw(Scene.LightingPass[EStaticDrawListType::Masked], CmdList);
+	MeshDrawCommand::Draw(CmdList, Scene.LightingPass[EStaticDrawListType::Opaque]);
+	MeshDrawCommand::Draw(CmdList, Scene.LightingPass[EStaticDrawListType::Masked]);
 }

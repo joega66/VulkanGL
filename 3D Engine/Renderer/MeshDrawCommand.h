@@ -23,7 +23,7 @@ public:
 		MeshProxy.DrawElements(CmdList);
 	}
 
-	static void Draw(std::vector<MeshDrawCommand>& MeshDrawCommands, drm::CommandList& CmdList)
+	static void Draw(drm::CommandList& CmdList, std::vector<MeshDrawCommand>& MeshDrawCommands)
 	{
 		std::for_each(
 			MeshDrawCommands.begin(),
