@@ -296,7 +296,7 @@ void VCTLightingCache::CreateVoxelVisualizationRP(const drm::Image& SceneColor, 
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments.push_back(drm::AttachmentView(
 		&SceneColor,
-		ELoadAction::DontCare,
+		ELoadAction::Clear,
 		EStoreAction::Store,
 		ClearColorValue{},
 		EImageLayout::Undefined,

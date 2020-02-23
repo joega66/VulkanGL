@@ -172,7 +172,7 @@ ShaderCompilationInfo VulkanShaderMap::CompileShader(
 
 	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
-
+	
 	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = 
 		Stage == EShaderStage::Vertex ? ParseVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
 
@@ -187,9 +187,9 @@ void VulkanShaderMap::RecompileShaders()
 
 		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.Filename);
 
-		if (LastWriteTime > CompileInfo.LastWriteTime)
+		//if (LastWriteTime > CompileInfo.LastWriteTime)
 		{
-			LOG("Recompiling shader %s", CompileInfo.Filename.c_str());
+			//LOG("Recompiling shader %s", CompileInfo.Filename.c_str());
 
 			// Destroy the old shader module.
 			vkDestroyShaderModule(Device, CompileInfo.Module, nullptr);
