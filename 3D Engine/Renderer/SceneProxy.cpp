@@ -16,8 +16,7 @@ SceneProxy::SceneProxy(Engine& Engine, SceneRenderer& SceneRenderer)
 
 	SceneRenderer.CameraDescriptorSet.Update();
 
-	SceneRenderer.SkyboxDescriptorSet.Skybox = Engine.Scene.Skybox;
-	SceneRenderer.SkyboxDescriptorSet.Sampler = Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
+	SceneRenderer.SkyboxDescriptorSet.Skybox = drm::ImageView(*Engine.Scene.Skybox, Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }));
 	SceneRenderer.SkyboxDescriptorSet.Update();
 }
 
@@ -51,7 +50,7 @@ void SceneProxy::InitView(Engine& Engine, SceneRenderer& SceneRenderer)
 	};
 
 	CameraUniform = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBuffer), &CameraUniformBuffer);
-	SceneRenderer.CameraDescriptorSet.CameraUniform = &CameraUniform;
+	SceneRenderer.CameraDescriptorSet.CameraUniform = CameraUniform;
 }
 
 void SceneProxy::InitLights(Engine& Engine, SceneRenderer& SceneRenderer)
@@ -87,7 +86,7 @@ void SceneProxy::InitDirectionalLights(Engine& Engine, SceneRenderer& SceneRende
 	NumDirectionalLights.x = DirectionalLightProxies.size();
 
 	DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	SceneRenderer.CameraDescriptorSet.DirectionalLightBuffer = &DirectionalLightBuffer;
+	SceneRenderer.CameraDescriptorSet.DirectionalLightBuffer = DirectionalLightBuffer;
 	void* Data = Engine.Device.LockBuffer(DirectionalLightBuffer);
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
@@ -120,7 +119,7 @@ void SceneProxy::InitPointLights(Engine& Engine, SceneRenderer& SceneRenderer)
 	NumPointLights.x = PointLightProxies.size();
 
 	PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
-	SceneRenderer.CameraDescriptorSet.PointLightBuffer = &PointLightBuffer;
+	SceneRenderer.CameraDescriptorSet.PointLightBuffer = PointLightBuffer;
 
 	void* Data = Engine.Device.LockBuffer(PointLightBuffer);
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));

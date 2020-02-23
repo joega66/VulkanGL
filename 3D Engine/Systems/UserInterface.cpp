@@ -175,9 +175,8 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 
 	struct ImGuiDescriptors
 	{
-		const drm::Image* FontImage;
-		const drm::Sampler* Sampler;
-		const drm::Buffer* ImguiUniform;
+		drm::ImageView FontImage;
+		drm::BufferView ImguiUniform;
 
 		static const std::vector<DescriptorBinding>& GetBindings()
 		{
@@ -194,9 +193,8 @@ void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
 	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
 
 	ImGuiDescriptors Descriptors;
-	Descriptors.FontImage = &FontImage;
-	Descriptors.Sampler = Device.CreateSampler({});
-	Descriptors.ImguiUniform = &ImguiUniform;
+	Descriptors.FontImage = drm::ImageView(FontImage, Device.CreateSampler({}));
+	Descriptors.ImguiUniform = ImguiUniform;
 
 	DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
 	

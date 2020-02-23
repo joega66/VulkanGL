@@ -26,11 +26,10 @@ Material::Material(
 	} PBRUniformData = { Roughness, Metallicity };
 
 	PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(PBRUniformData), &PBRUniformData);
-	Descriptors.PBRUniform = &PBRUniform;
-	Descriptors.BaseColorSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
-	Descriptors.MetallicRoughnessSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
-	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != &Material::Dummy);
+	Descriptors.PBRUniform = PBRUniform;
+
+	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != Material::Dummy);
 	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
 }
 
@@ -87,8 +86,8 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 	Device.SubmitCommands(CmdList);
 }
 
-MaterialDescriptors::MaterialDescriptors()
-	: BaseColor(&Material::Dummy)
-	, MetallicRoughness(&Material::Dummy)
+MaterialDescriptors::MaterialDescriptors(DRMDevice& Device)
+	: BaseColor(Material::Dummy, Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear }))
+	, MetallicRoughness(Material::Dummy, Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear }))
 {
 }

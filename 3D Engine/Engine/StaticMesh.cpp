@@ -170,9 +170,9 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 
 	if (!Material)
 	{
-		MaterialDescriptors Descriptors;
-		Descriptors.BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-		Descriptors.MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+		MaterialDescriptors Descriptors(Device);
+		Descriptors.BaseColor.SetImage(*GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index));
+		Descriptors.MetallicRoughness.SetImage(*GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index));
 
 		Material = Assets.LoadMaterial(
 			MaterialAssetName,

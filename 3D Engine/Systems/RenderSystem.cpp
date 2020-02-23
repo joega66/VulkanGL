@@ -26,7 +26,7 @@ void RenderSystem::Start(Engine& Engine)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
 		drm::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniformBuffer));
-		StaticMeshDescriptors SurfaceDescriptors = { &LocalToWorldUniform };
+		StaticMeshDescriptors SurfaceDescriptors = { LocalToWorldUniform };
 		drm::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet();
 		StaticMeshLayout.UpdateDescriptorSet(SurfaceSet, SurfaceDescriptors);
 

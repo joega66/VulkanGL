@@ -313,3 +313,30 @@ VulkanSampler::VulkanSampler(VkSampler Sampler)
 	: Sampler(Sampler)
 {
 }
+
+VulkanImageView::VulkanImageView(const VulkanImage& Image, const VulkanSampler* Sampler)
+{
+	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : VK_NULL_HANDLE;
+	DescriptorImageInfo.imageView = Image.ImageView;
+	DescriptorImageInfo.imageLayout = Sampler ? 
+		(Image.IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
+		: VK_IMAGE_LAYOUT_GENERAL;
+}
+
+void VulkanImageView::SetImage(const VulkanImage& Image)
+{
+	DescriptorImageInfo.imageView = Image.ImageView;
+	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler != VK_NULL_HANDLE ?
+		(Image.IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		: VK_IMAGE_LAYOUT_GENERAL;
+}
+
+bool VulkanImageView::operator==(const VulkanImage& Image)
+{
+	return DescriptorImageInfo.imageView == Image.ImageView;
+}
+
+bool VulkanImageView::operator!=(const VulkanImage& Image)
+{
+	return !(*this == Image);
+}

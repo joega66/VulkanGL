@@ -68,6 +68,16 @@ private:
 	VkDeviceSize Offset;		// Offset into the memory buffer.
 };
 
+class VulkanBufferView
+{
+public:
+	VulkanBufferView() = default;
+	VulkanBufferView(const VulkanBuffer& Buffer);
+
+private:
+	VkDescriptorBufferInfo DescriptorBufferInfo;
+};
+
 class VulkanAllocator
 {
 public:

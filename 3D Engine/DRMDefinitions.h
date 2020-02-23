@@ -11,7 +11,9 @@
 namespace drm
 {
 	using Buffer = VulkanBuffer;
+	using BufferView = VulkanBufferView;
 	using Image = VulkanImage;
+	using ImageView = VulkanImageView;
 	using Sampler = VulkanSampler;
 	using DescriptorSet = VulkanDescriptorSet;
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;

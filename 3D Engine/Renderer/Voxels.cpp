@@ -92,7 +92,7 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 void SceneRenderer::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	// Set the shadow mask to black so that voxels don't have shadows.
-	SceneTexturesDescriptorSet.ShadowMask = &Material::Black;
+	SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(Material::Black, Device.CreateSampler({ EFilter::Nearest }));
 	SceneTexturesDescriptorSet.Update();
 
 	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);

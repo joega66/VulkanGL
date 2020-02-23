@@ -29,18 +29,18 @@ void TransformGizmoSystem::Start(Engine& Engine)
 	ZAxis.Translate(ECS, glm::vec3(0.0f, -1.0f, 1.0f));
 	ZAxis.Rotate(ECS, glm::vec3(1.0f, 0.0f, 0.0f), 90.0f);
 
-	MaterialDescriptors DescX;
-	DescX.BaseColor = &Material::Green;
+	MaterialDescriptors DescX(Engine.Device);
+	DescX.BaseColor.SetImage(Material::Green);
 	const Material* MaterialX = Engine.Assets.LoadMaterial("Engine_X_Axis",
 		std::make_unique<Material>(Engine.Device, DescX, EMaterialMode::Opaque, 0.0f, 0.0f)
 	);
-	MaterialDescriptors DescY;
-	DescY.BaseColor = &Material::Blue;
+	MaterialDescriptors DescY(Engine.Device);
+	DescY.BaseColor.SetImage(Material::Blue);
 	const Material* MaterialY = Engine.Assets.LoadMaterial("Engine_Y_Axis",
 		std::make_unique<Material>(Engine.Device, DescY, EMaterialMode::Opaque, 0.0f, 0.0f)
 	);
-	MaterialDescriptors DescZ;
-	DescZ.BaseColor = &Material::Red;
+	MaterialDescriptors DescZ(Engine.Device);
+	DescZ.BaseColor.SetImage(Material::Red);
 	const Material* MaterialZ = Engine.Assets.LoadMaterial("Engine_Z_Axis",
 		std::make_unique<Material>(Engine.Device, DescZ, EMaterialMode::Opaque, 0.0f, 0.0f)
 	);

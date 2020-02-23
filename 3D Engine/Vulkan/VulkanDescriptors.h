@@ -75,7 +75,6 @@ public:
 	VulkanDescriptorSetLayout& operator=(VulkanDescriptorSetLayout&& Other);
 	VulkanDescriptorSetLayout(const VulkanDescriptorSetLayout&) = delete;
 	VulkanDescriptorSetLayout& operator=(const VulkanDescriptorSetLayout&) = delete;
-	~VulkanDescriptorSetLayout();
 
 	VulkanDescriptorSet CreateDescriptorSet();
 
@@ -88,5 +87,4 @@ private:
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 	VkDescriptorUpdateTemplate DescriptorUpdateTemplate = VK_NULL_HANDLE;
 	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
-	void* Data = nullptr;
 };

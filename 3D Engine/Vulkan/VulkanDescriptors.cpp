@@ -209,8 +209,6 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 	}
 
 	std::tie(DescriptorSetLayout, DescriptorUpdateTemplate) = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings, DescriptorUpdateTemplateEntries);
-
-	Data = new uint8[StructSize];
 }
 
 VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanDescriptorSetLayout&& Other)
@@ -218,7 +216,6 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanDescriptorSetLayout&&
 	, DescriptorSetLayout(Other.DescriptorSetLayout)
 	, DescriptorUpdateTemplate(Other.DescriptorUpdateTemplate)
 	, DescriptorUpdateTemplateEntries(std::move(Other.DescriptorUpdateTemplateEntries))
-	, Data(Other.Data)
 {
 }
 
@@ -228,7 +225,6 @@ VulkanDescriptorSetLayout& VulkanDescriptorSetLayout::operator=(VulkanDescriptor
 	DescriptorSetLayout = Other.DescriptorSetLayout;
 	DescriptorUpdateTemplate = Other.DescriptorUpdateTemplate;
 	DescriptorUpdateTemplateEntries = std::move(Other.DescriptorUpdateTemplateEntries);
-	Data = Other.Data;
 	return *this;
 }
 
@@ -239,61 +235,5 @@ VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet()
 
 void VulkanDescriptorSetLayout::UpdateDescriptorSet(const VulkanDescriptorSet& DescriptorSet, void* Struct)
 {
-	uint32 DataOffset = 0;
-
-	for (auto& DescriptorUpdateTemplateEntry : DescriptorUpdateTemplateEntries)
-	{
-		if (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
-			DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
-		{
-			// Get the buffer from the struct ptr.
-			const drm::Buffer* Buffer = *static_cast<const drm::Buffer**>(Struct);
-
-			Struct = static_cast<uint8*>(Struct) + sizeof(Buffer);
-
-			VkDescriptorBufferInfo* BufferInfoPtr = reinterpret_cast<VkDescriptorBufferInfo*>(static_cast<uint8*>(Data) + DataOffset);
-			*BufferInfoPtr = { Buffer->GetVulkanHandle(), Buffer->GetOffset(), Buffer->GetSize() };
-
-			// Increment the offset into the data ptr.
-			DataOffset += sizeof(VkDescriptorBufferInfo);
-		}
-		else
-		{
-			// Get the image from the struct ptr.
-			const drm::Image* Image = *static_cast<const drm::Image**>(Struct);
-
-			Struct = static_cast<uint8*>(Struct) + sizeof(Image);
-
-			// Find what the image layout should be.
-			const VkImageLayout ImageLayout = 
-				DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ?
-				(Image->IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
-				: VK_IMAGE_LAYOUT_GENERAL;
-
-			// Get the image info from the data ptr.
-			VkDescriptorImageInfo* ImageInfoPtr = reinterpret_cast<VkDescriptorImageInfo*>(static_cast<uint8*>(Data) + DataOffset);
-			*ImageInfoPtr = VkDescriptorImageInfo{ VK_NULL_HANDLE, Image->ImageView, ImageLayout };
-
-			// Increment the offset into the data ptr.
-			DataOffset += sizeof(VkDescriptorImageInfo);
-
-			if (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
-			{
-				// Get the sampler from the struct and increment the offset into the struct.
-				const drm::Sampler* Sampler = *static_cast<const drm::Sampler**>(Struct);
-				ImageInfoPtr->sampler = Sampler->GetHandle();
-				Struct = static_cast<uint8*>(Struct) + sizeof(Sampler);
-			}
-		}
-	}
-
-	Device->GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetVulkanHandle(), DescriptorUpdateTemplate, Data);
-}
-
-VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout()
-{
-	if (Device)
-	{
-		delete[] Data;
-	}
+	Device->GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetVulkanHandle(), DescriptorUpdateTemplate, Struct);
 }

@@ -222,3 +222,10 @@ VulkanBuffer::~VulkanBuffer()
 		Memory->Free(*this);
 	}
 }
+
+VulkanBufferView::VulkanBufferView(const VulkanBuffer& Buffer)
+{
+	DescriptorBufferInfo.buffer = Buffer.GetVulkanHandle();
+	DescriptorBufferInfo.offset = Buffer.GetOffset();
+	DescriptorBufferInfo.range = Buffer.GetSize();
+}

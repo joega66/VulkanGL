@@ -5,10 +5,8 @@
 
 struct SceneTexturesDescriptors
 {
-	const drm::Image* Depth;
-	const drm::Sampler* DepthSampler;
-	const drm::Image* ShadowMask;
-	const drm::Sampler* ShadowMaskSampler;
+	drm::ImageView Depth;
+	drm::ImageView ShadowMask;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -28,10 +26,10 @@ UNIFORM_STRUCT(WorldToVoxelUniform,
 
 struct VoxelDescriptors
 {
-	const drm::Buffer* WorldToVoxelBuffer;
-	const drm::Image* VoxelColors;
-	const drm::Buffer* VoxelPositions;
-	const drm::Buffer* VoxelIndirectBuffer;
+	drm::BufferView WorldToVoxelBuffer;
+	drm::ImageView VoxelColors;
+	drm::BufferView VoxelPositions;
+	drm::BufferView VoxelIndirectBuffer;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{

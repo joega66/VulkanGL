@@ -63,3 +63,19 @@ public:
 private:
 	VkSampler Sampler = VK_NULL_HANDLE;
 };
+
+class VulkanImageView
+{
+public:
+	VulkanImageView() = default;
+	VulkanImageView(const VulkanImage& Image, const VulkanSampler* Sampler = nullptr);
+
+	void SetImage(const VulkanImage& Image);
+
+	/** Whether the image view is here. */
+	bool operator==(const VulkanImage& Image);
+	bool operator!=(const VulkanImage& Image);
+
+private:
+	VkDescriptorImageInfo DescriptorImageInfo = { VK_NULL_HANDLE };
+};

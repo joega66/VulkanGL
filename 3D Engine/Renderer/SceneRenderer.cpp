@@ -26,11 +26,10 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage.GetFormat(), EImageUsage::Attachment | EImageUsage::TransferSrc);
 
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-		SceneTexturesDescriptorSet.Depth = &SceneDepth;
-		SceneTexturesDescriptorSet.DepthSampler = Device.CreateSampler({ EFilter::Nearest });
-	
+
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
-		SceneTexturesDescriptorSet.ShadowMaskSampler = Device.CreateSampler({ EFilter::Nearest });
+
+		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
 
 		CreateDepthRP();
 		CreateDepthVisualizationRP();
@@ -47,10 +46,10 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
 	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
 
-	VoxelDescriptorSet.WorldToVoxelBuffer = &WorldToVoxelBuffer;
-	VoxelDescriptorSet.VoxelColors = &VoxelColors;
-	VoxelDescriptorSet.VoxelPositions = &VoxelPositions;
-	VoxelDescriptorSet.VoxelIndirectBuffer = &VoxelIndirectBuffer;
+	VoxelDescriptorSet.WorldToVoxelBuffer = WorldToVoxelBuffer;
+	VoxelDescriptorSet.VoxelColors = VoxelColors;
+	VoxelDescriptorSet.VoxelPositions = VoxelPositions;
+	VoxelDescriptorSet.VoxelIndirectBuffer = VoxelIndirectBuffer;
 	VoxelDescriptorSet.Update();
 
 	CreateVoxelRP();
@@ -68,7 +67,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 	}
 	else
 	{
-		SceneTexturesDescriptorSet.ShadowMask = &ShadowMask;
+		SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(ShadowMask, Device.CreateSampler({ EFilter::Nearest }));
 		SceneTexturesDescriptorSet.Update();
 
 		RenderDepthPrepass(Scene, CmdList);

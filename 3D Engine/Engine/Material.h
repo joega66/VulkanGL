@@ -2,15 +2,15 @@
 #include <DRMDefinitions.h>
 #include <DRMShader.h>
 
+class DRMDevice;
+
 struct MaterialDescriptors
 {
-	const drm::Image* BaseColor;
-	const drm::Sampler* BaseColorSampler;
-	const drm::Image* MetallicRoughness;
-	const drm::Sampler* MetallicRoughnessSampler;
-	const drm::Buffer* PBRUniform;
+	drm::ImageView BaseColor;
+	drm::ImageView MetallicRoughness;
+	drm::BufferView PBRUniform;
 
-	MaterialDescriptors();
+	MaterialDescriptors(DRMDevice& Device);
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -36,7 +36,7 @@ public:
 	Material() = default;
 
 	Material(
-		class DRMDevice& Device,
+		DRMDevice& Device,
 		const MaterialDescriptors& Descriptors,
 		EMaterialMode MaterialMode,
 		float Roughness,

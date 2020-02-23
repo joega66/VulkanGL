@@ -13,9 +13,9 @@ namespace EStaticDrawListType
 
 struct CameraDescriptors
 {
-	const drm::Buffer* CameraUniform;
-	const drm::Buffer* DirectionalLightBuffer;
-	const drm::Buffer* PointLightBuffer;
+	drm::BufferView CameraUniform;
+	drm::BufferView DirectionalLightBuffer;
+	drm::BufferView PointLightBuffer;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -31,8 +31,7 @@ struct CameraDescriptors
 
 struct SkyboxDescriptors
 {
-	const drm::Image* Skybox;
-	const drm::Sampler* Sampler;
+	drm::ImageView Skybox;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
