@@ -5,6 +5,42 @@
 #include "Voxels.h"
 #include <Engine/Engine.h>
 
+struct VoxelDescriptors
+{
+	drm::BufferView WorldToVoxelBuffer;
+	drm::ImageView VoxelColors;
+
+	static const std::vector<DescriptorBinding>& GetBindings()
+	{
+		static const std::vector<DescriptorBinding> Bindings =
+		{
+			{ 0, 1, UniformBuffer },
+			{ 1, 1, StorageImage },
+		};
+		return Bindings;
+	}
+};
+
+struct DebugVoxelsDescriptors : public VoxelDescriptors
+{
+	drm::BufferView VoxelPositions;
+	drm::BufferView VoxelIndirectBuffer;
+
+	static std::vector<DescriptorBinding> GetBindings()
+	{
+		auto Bindings = VoxelDescriptors::GetBindings();
+		Bindings.push_back({ 2, 1, StorageBuffer });
+		Bindings.push_back({ 3, 1, StorageBuffer });
+		return Bindings;
+	}
+};
+
+static void SetVoxelEnvironmentVariables(ShaderCompilerWorker& Worker)
+{
+	Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
+	Worker.SetDefine("DEBUG_VOXELS", Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false));
+}
+
 template<EMeshType MeshType>
 class VoxelsVS : public MeshShader<MeshType>
 {
@@ -18,6 +54,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
+		SetVoxelEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -40,7 +77,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
+		SetVoxelEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -63,6 +100,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
+		SetVoxelEnvironmentVariables(Worker);
 		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
@@ -92,7 +130,7 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 		SceneRenderer.CameraDescriptorSet,
 		&MeshProxy.GetSurfaceSet(), 
 		&MeshProxy.GetMaterialSet(),
-		VCTLightingCache.GetDescriptorSet()
+		&VCTLightingCache.GetDescriptorSet()
 	};
 
 	VoxelsPass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
@@ -108,7 +146,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
+		SetVoxelEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -128,7 +166,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
+		SetVoxelEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -148,7 +186,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
+		SetVoxelEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -165,22 +203,39 @@ UNIFORM_STRUCT(WorldToVoxelUniform,
 
 VCTLightingCache::VCTLightingCache(Engine& Engine)
 	: VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
+	, DebugVoxels(Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false))
 	, Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
-	, VoxelDescriptorSet(Engine.Device)
 {
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
 
 	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
 	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
-	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
 
-	VoxelDescriptorSet.WorldToVoxelBuffer = WorldToVoxelBuffer;
-	VoxelDescriptorSet.VoxelColors = VoxelColors;
-	VoxelDescriptorSet.VoxelPositions = VoxelPositions;
-	VoxelDescriptorSet.VoxelIndirectBuffer = VoxelIndirectBuffer;
-	VoxelDescriptorSet.Update();
+	auto Bindings = DebugVoxels ? DebugVoxelsDescriptors::GetBindings() : VoxelDescriptors::GetBindings();
+
+	DescriptorSetLayout = Device.CreateDescriptorSetLayout(Bindings.size(), Bindings.data());
+	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
+
+	if (DebugVoxels)
+	{
+		VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
+		VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
+
+		DebugVoxelsDescriptors Descriptors;
+		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
+		Descriptors.VoxelColors = VoxelColors;
+		Descriptors.VoxelPositions = VoxelPositions;
+		Descriptors.VoxelIndirectBuffer = VoxelIndirectBuffer;
+		DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
+	}
+	else
+	{
+		VoxelDescriptors Descriptors;
+		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
+		Descriptors.VoxelColors = VoxelColors;
+		DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
+	}
 
 	CreateVoxelRP();
 }
@@ -207,22 +262,7 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 	Platform::Memcpy(WorldToVoxelBufferPtr, &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
 	Device.UnlockBuffer(WorldToVoxelBuffer);
 
-	DrawIndirectCommand DrawIndirectCommand;
-	DrawIndirectCommand.VertexCount = 0;
-	DrawIndirectCommand.InstanceCount = 1;
-	DrawIndirectCommand.FirstVertex = 0;
-	DrawIndirectCommand.FirstInstance = 0;
-
-	void* VoxelIndirectBufferPtr = Device.LockBuffer(VoxelIndirectBuffer);
-	Platform::Memcpy(VoxelIndirectBufferPtr, &DrawIndirectCommand, sizeof(DrawIndirectCommand));
-	Device.UnlockBuffer(VoxelIndirectBuffer);
-
 	RenderVoxels(Scene, CmdList);
-}
-
-void VCTLightingCache::Resize(const drm::Image& SceneColor, const drm::Image& SceneDepth, const drm::DescriptorSet* CameraDescriptorSet)
-{
-	CreateVoxelVisualizationRP(SceneColor, SceneDepth, CameraDescriptorSet);
 }
 
 void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -255,6 +295,16 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 
 void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::CommandList& CmdList)
 {
+	DrawIndirectCommand DrawIndirectCommand;
+	DrawIndirectCommand.VertexCount = 0;
+	DrawIndirectCommand.InstanceCount = 1;
+	DrawIndirectCommand.FirstVertex = 0;
+	DrawIndirectCommand.FirstInstance = 0;
+
+	void* VoxelIndirectBufferPtr = Device.LockBuffer(VoxelIndirectBuffer);
+	Platform::Memcpy(VoxelIndirectBufferPtr, &DrawIndirectCommand, sizeof(DrawIndirectCommand));
+	Device.UnlockBuffer(VoxelIndirectBuffer);
+
 	std::vector<BufferMemoryBarrier> Barriers =
 	{
 		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
@@ -270,27 +320,35 @@ void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::Co
 		1, &ImageBarrier
 	);
 
-	CmdList.BeginRenderPass(VoxelVisualizationRP);
+	CmdList.BeginRenderPass(DebugRP);
 
-	CmdList.BindPipeline(VoxelVisualizationPipeline);
+	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
-	std::vector<const drm::DescriptorSet*> DescriptorSets = { SceneRenderer.CameraDescriptorSet, VoxelDescriptorSet };
+	PipelineStateDesc PSODesc = {};
+	PSODesc.RenderPass = &DebugRP;
+	PSODesc.Viewport.Width = SceneRenderer.SceneColor.GetWidth();
+	PSODesc.Viewport.Height = SceneRenderer.SceneColor.GetHeight();
+	PSODesc.DepthStencilState.DepthTestEnable = true;
+	PSODesc.DepthStencilState.DepthWriteEnable = true;
+	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
+	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
+	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
+	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
+	PSODesc.SpecializationInfo.Add(0, VoxelSize);
+	PSODesc.DescriptorSets = { SceneRenderer.CameraDescriptorSet, &DescriptorSet };
 
-	CmdList.BindDescriptorSets(VoxelVisualizationPipeline, DescriptorSets.size(), DescriptorSets.data());
+	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+
+	CmdList.BindPipeline(Pipeline);
+
+	CmdList.BindDescriptorSets(Pipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 
 	CmdList.EndRenderPass();
 }
 
-void VCTLightingCache::CreateVoxelRP()
-{
-	RenderPassDesc RPDesc = {}; // Disable ROP
-	RPDesc.RenderArea.Extent = glm::uvec2(GetVoxelGridSize());
-	VoxelRP = Device.CreateRenderPass(RPDesc);
-}
-
-void VCTLightingCache::CreateVoxelVisualizationRP(const drm::Image& SceneColor, const drm::Image& SceneDepth, const drm::DescriptorSet* CameraDescriptorSet)
+void VCTLightingCache::CreateDebugRenderPass(const drm::Image& SceneColor, const drm::Image& SceneDepth)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments.push_back(drm::AttachmentView(
@@ -308,22 +366,12 @@ void VCTLightingCache::CreateVoxelVisualizationRP(const drm::Image& SceneColor, 
 		EImageLayout::Undefined,
 		EImageLayout::DepthWriteStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
-	VoxelVisualizationRP = Device.CreateRenderPass(RPDesc);
+	DebugRP = Device.CreateRenderPass(RPDesc);
+}
 
-	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
-
-	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &VoxelVisualizationRP;
-	PSODesc.Viewport.Width = SceneColor.GetWidth();
-	PSODesc.Viewport.Height = SceneColor.GetHeight();
-	PSODesc.DepthStencilState.DepthTestEnable = true;
-	PSODesc.DepthStencilState.DepthWriteEnable = true;
-	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
-	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
-	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
-	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
-	PSODesc.SpecializationInfo.Add(0, VoxelSize);
-	PSODesc.DescriptorSets = { CameraDescriptorSet, VoxelDescriptorSet };
-
-	VoxelVisualizationPipeline = Device.CreatePipeline(PSODesc);
+void VCTLightingCache::CreateVoxelRP()
+{
+	RenderPassDesc RPDesc = {}; // Disable ROP
+	RPDesc.RenderArea.Extent = glm::uvec2(GetVoxelGridSize());
+	VoxelRP = Device.CreateRenderPass(RPDesc);
 }

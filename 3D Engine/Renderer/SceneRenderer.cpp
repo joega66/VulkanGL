@@ -19,7 +19,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	, VCTLightingCache(Engine)
 {
 	class VCTLightingCache* VCTLightingCachePtr = &VCTLightingCache;
-	Engine._Screen.ScreenResizeEvent([&, VCTLightingCachePtr](int32 Width, int32 Height)
+	Engine._Screen.ScreenResizeEvent([this, VCTLightingCachePtr](int32 Width, int32 Height)
 	{
 		Surface.Resize(Device, Width, Height);
 
@@ -34,12 +34,15 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 		SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(ShadowMask, Device.CreateSampler({ EFilter::Nearest }));
 		SceneTexturesDescriptorSet.Update();
 
-		VCTLightingCachePtr->Resize(SceneColor, SceneDepth, CameraDescriptorSet);
-
 		CreateDepthRP();
 		CreateDepthVisualizationRP();
 		CreateLightingRP();
 		CreateShadowMaskRP();
+
+		if (VCTLightingCachePtr->IsDebuggingEnabled())
+		{
+			VCTLightingCachePtr->CreateDebugRenderPass(SceneColor, SceneDepth);
+		}
 	});
 
 	Cube = Engine.Assets.GetStaticMesh("Cube");
@@ -51,7 +54,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 	VCTLightingCache.Render(Scene, CmdList);
 
-	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
+	if (Platform::GetBool("Engine.ini", "Voxels", "DrawVoxels", false) && VCTLightingCache.IsDebuggingEnabled())
 	{
 		VCTLightingCache.RenderVisualization(*this, CmdList);
 	}

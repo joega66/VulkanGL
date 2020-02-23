@@ -17,16 +17,6 @@ layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 
 layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelDiffuseGI;
 
-layout(binding = 2, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
-{
-	int VoxelPositions[];
-};
-
-layout(binding = 3, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
-{
-	DrawIndirectCommand VoxelDrawIndirect;
-};
-
 vec3 TransformWorldToVoxel(vec3 WorldPosition)
 {
 	vec4 VoxelPosition = WorldToVoxel * vec4(WorldPosition.xyz, 1);
@@ -42,6 +32,18 @@ vec3 TransformVoxelToWorld(vec3 VoxelPosition)
 	return WorldPosition;
 }
 
+#if DEBUG_VOXELS
+
+layout(binding = 2, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
+{
+	int VoxelPositions[];
+};
+
+layout(binding = 3, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
+{
+	DrawIndirectCommand VoxelDrawIndirect;
+};
+
 int EncodeVoxelPosition(ivec3 VoxelPosition)
 {
 	return (VoxelPosition.z << 20) | (VoxelPosition.y << 10) | (VoxelPosition.x << 0);
@@ -50,7 +52,9 @@ int EncodeVoxelPosition(ivec3 VoxelPosition)
 ivec3 DecodeVoxelPosition(int VoxelPosition)
 {
 	const int Mask = 0x000003FF;
-	return ivec3((VoxelPosition >> 0) & Mask, (VoxelPosition >> 10) & Mask, (VoxelPosition >> 20) & Mask);
+	return ivec3((VoxelPosition >> 0)& Mask, (VoxelPosition >> 10)& Mask, (VoxelPosition >> 20)& Mask);
 }
+
+#endif
 
 #endif
