@@ -16,9 +16,10 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	, CameraDescriptorSet(Engine.Device)
 	, SkyboxDescriptorSet(Engine.Device)
 	, SceneTexturesDescriptorSet(Engine.Device)
-	, VoxelDescriptorSet(Engine.Device)
+	, VCTLightingCache(Engine)
 {
-	Engine._Screen.ScreenResizeEvent([&](int32 Width, int32 Height)
+	class VCTLightingCache* VCTLightingCachePtr = &VCTLightingCache;
+	Engine._Screen.ScreenResizeEvent([&, VCTLightingCachePtr](int32 Width, int32 Height)
 	{
 		Surface.Resize(Device, Width, Height);
 
@@ -31,28 +32,13 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
 
+		VCTLightingCachePtr->Resize(SceneColor, SceneDepth, CameraDescriptorSet);
+
 		CreateDepthRP();
 		CreateDepthVisualizationRP();
-		CreateVoxelVisualizationRP();
 		CreateLightingRP();
 		CreateShadowMaskRP();
 	});
-
-	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
-
-	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
-	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
-	VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
-	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
-
-	VoxelDescriptorSet.WorldToVoxelBuffer = WorldToVoxelBuffer;
-	VoxelDescriptorSet.VoxelColors = VoxelColors;
-	VoxelDescriptorSet.VoxelPositions = VoxelPositions;
-	VoxelDescriptorSet.VoxelIndirectBuffer = VoxelIndirectBuffer;
-	VoxelDescriptorSet.Update();
-
-	CreateVoxelRP();
 
 	Cube = Engine.Assets.GetStaticMesh("Cube");
 }
@@ -62,8 +48,13 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
 	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
-	{
-		RenderVoxels(Scene, CmdList);
+	{	
+		// @temp Set the shadow mask to black so that voxels don't have shadows.
+		SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(Material::Black, Device.CreateSampler({ EFilter::Nearest }));
+		SceneTexturesDescriptorSet.Update();
+
+		VCTLightingCache.Render(Scene, CmdList);
+		VCTLightingCache.RenderVisualization(*this, CmdList);
 	}
 	else
 	{
@@ -160,36 +151,6 @@ void SceneRenderer::CreateDepthRP()
 		EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
 	DepthRP = Device.CreateRenderPass(RPDesc);
-}
-
-void SceneRenderer::CreateVoxelRP()
-{
-	const uint32 VoxelGridSize = Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256);
-	RenderPassDesc RPDesc = {}; // Disable ROP
-	RPDesc.RenderArea.Extent = glm::uvec2(VoxelGridSize);
-	VoxelRP = Device.CreateRenderPass(RPDesc);
-}
-
-void SceneRenderer::CreateVoxelVisualizationRP()
-{
-	RenderPassDesc RPDesc = {};
-	RPDesc.ColorAttachments.push_back(drm::AttachmentView(
-		&SceneColor, 
-		ELoadAction::DontCare, 
-		EStoreAction::Store,
-		ClearColorValue{},
-		EImageLayout::Undefined, 
-		EImageLayout::TransferSrcOptimal)
-	);
-	RPDesc.DepthAttachment = drm::AttachmentView(
-		&SceneDepth,
-		ELoadAction::Clear,
-		EStoreAction::Store, 
-		ClearDepthStencilValue{},
-		EImageLayout::Undefined,
-		EImageLayout::DepthWriteStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
-	VoxelVisualizationRP = Device.CreateRenderPass(RPDesc);
 }
 
 void SceneRenderer::CreateLightingRP()

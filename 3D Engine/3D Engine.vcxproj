@@ -117,6 +117,7 @@
     <ClInclude Include="Renderer\MeshProxy.h" />
     <ClInclude Include="Renderer\SceneProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
+    <ClInclude Include="Renderer\Voxels.h" />
     <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
     <ClInclude Include="SPIRV-Cross\spirv.hpp" />
     <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp" />
