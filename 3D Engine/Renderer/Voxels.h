@@ -15,9 +15,11 @@ public:
 
 	inline uint32 GetVoxelGridSize() const { return VoxelGridSize; }
 	inline const drm::RenderPass& GetRenderPass() const { return VoxelRP; }
+	inline const drm::RenderPass& GetDebugRenderPass() const { return DebugRP; }
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 	inline bool IsDebuggingEnabled() const { return DebugVoxels; }
 
+	/** Create the render pass used for debugging. */
 	void CreateDebugRenderPass(const drm::Image& SceneColor, const drm::Image& SceneDepth);
 
 private:

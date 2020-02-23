@@ -46,7 +46,7 @@ void Engine::Main()
 	GameSystem GameSystem;
 	SystemsManager.Register(GameSystem);
 
-	UserInterface UserInterface(*this);
+	UserInterface UserInterface;
 	SystemsManager.Register(UserInterface);
 
 	SystemsManager.StartRenderSystems(*this);

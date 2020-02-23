@@ -4,7 +4,7 @@
 #include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
-#include <Components/Transform.h>
+#include <Components/RenderSettings.h>
 #include <Systems/UserInterface.h>
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
@@ -13,6 +13,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	: Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
 	, Surface(Engine.Surface)
+	, ECS(Engine.ECS)
 	, CameraDescriptorSet(Engine.Device)
 	, SkyboxDescriptorSet(Engine.Device)
 	, SceneTexturesDescriptorSet(Engine.Device)
@@ -25,9 +26,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 		const drm::Image& SwapchainImage = Surface.GetImage(0);
 		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage.GetFormat(), EImageUsage::Attachment | EImageUsage::TransferSrc);
-
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
@@ -54,7 +53,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 	VCTLightingCache.Render(Scene, CmdList);
 
-	if (Platform::GetBool("Engine.ini", "Voxels", "DrawVoxels", false) && VCTLightingCache.IsDebuggingEnabled())
+	if (ECS.GetSingletonComponent<RenderSettings>().DrawVoxels && VCTLightingCache.IsDebuggingEnabled())
 	{
 		VCTLightingCache.RenderVisualization(*this, CmdList);
 	}
@@ -66,57 +65,18 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 		RenderShadowMask(Scene, CmdList);
 
-		if (Platform::GetBool("Engine.ini", "Shadows", "Visualize", false))
-		{
-			RenderDepthVisualization(Scene, CmdList);
-		}
-		else
-		{
-			CmdList.BeginRenderPass(LightingRP);
+		RenderLightingPass(Scene, CmdList);
 
-			RenderLightingPass(Scene, CmdList);
-
-			RenderSkybox(Scene, CmdList);
-
-			UserInterface.Render(Device, LightingRP, CmdList);
-
-			CmdList.EndRenderPass();
-		}
+		RenderSkybox(Scene, CmdList);
 	}
+
+	UserInterface.Render(Device, LightingRP, CmdList);
+
+	CmdList.EndRenderPass();
 
 	Present(CmdList);
 
 	Device.EndFrame();
-}
-
-void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
-{
-	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
-	{
-		const auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
-
-		PipelineStateDesc PSODesc = {};
-		PSODesc.RenderPass = &DepthVisualizationRP;
-		PSODesc.Viewport.Width = SceneDepth.GetWidth();
-		PSODesc.Viewport.Height = SceneDepth.GetHeight();
-		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-		PSODesc.DepthStencilState.DepthWriteEnable = false;
-		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
-		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
-		PSODesc.DescriptorSets = { &ShadowProxy.GetDescriptorSet() };
-
-		drm::Pipeline DepthVisualizationPipeline = Device.CreatePipeline(PSODesc);
-
-		CmdList.BeginRenderPass(DepthVisualizationRP);
-
-		CmdList.BindPipeline(DepthVisualizationPipeline);
-
-		CmdList.BindDescriptorSets(DepthVisualizationPipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
-
-		CmdList.Draw(3, 1, 0, 0);
-
-		CmdList.EndRenderPass();
-	}
 }
 
 void SceneRenderer::Present(drm::CommandList& CmdList)
@@ -172,8 +132,7 @@ void SceneRenderer::CreateShadowMaskRP()
 		EStoreAction::Store, 
 		ClearColorValue{},
 		EImageLayout::Undefined,
-		EImageLayout::ShaderReadOnlyOptimal)
-	);
+		EImageLayout::ShaderReadOnlyOptimal));
 	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMask.GetWidth(), ShadowMask.GetHeight()) };
 	ShadowMaskRP = Device.CreateRenderPass(RPDesc);
 }
@@ -187,8 +146,7 @@ void SceneRenderer::CreateDepthVisualizationRP()
 		EStoreAction::Store, 
 		ClearColorValue{}, 
 		EImageLayout::Undefined,
-		EImageLayout::TransferSrcOptimal)
-	);
+		EImageLayout::TransferSrcOptimal));
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneColor.GetWidth(), SceneColor.GetHeight()) };
 	DepthVisualizationRP = Device.CreateRenderPass(RPDesc);
 }

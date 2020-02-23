@@ -3,6 +3,7 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 #include <Components/Light.h>
+#include <Components/RenderSettings.h>
 #include <Renderer/MeshProxy.h>
 #include <Renderer/ShadowProxy.h>
 
@@ -21,6 +22,8 @@ void RenderSystem::Start(Engine& Engine)
 {
 	auto& ECS = Engine.ECS;
 	auto& Device = Engine.Device;
+
+	ECS.AddSingletonComponent(RenderSettings());
 
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{

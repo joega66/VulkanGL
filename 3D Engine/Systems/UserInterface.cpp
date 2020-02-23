@@ -3,6 +3,7 @@
 #include <Engine/Screen.h>
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
+#include <Components/RenderSettings.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -42,7 +43,12 @@ public:
 	}
 };
 
-UserInterface::UserInterface(Engine& Engine)
+UserInterface::~UserInterface()
+{
+	ImGui::DestroyContext();
+}
+
+void UserInterface::Start(Engine& Engine)
 {
 	ImGui::CreateContext();
 
@@ -70,7 +76,7 @@ UserInterface::UserInterface(Engine& Engine)
 	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
 	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
 	PSODesc.VertexAttributes = {
-		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) }, 
+		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
@@ -84,28 +90,40 @@ UserInterface::UserInterface(Engine& Engine)
 	});
 }
 
-UserInterface::~UserInterface()
-{
-	ImGui::DestroyContext();
-}
-
-void UserInterface::Start(Engine& Engine)
-{
-}
-
 void UserInterface::Update(Engine& Engine)
 {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	ShowUI(Engine);
+
 	ImGui::ShowDemoWindow();
-	
-	ImGui::Begin("Hello, world!");
-	ImGui::End();
-	
+
 	ImGui::Render();
 
 	UploadImGuiDrawData(Engine.Device);
+}
+
+void UserInterface::ShowUI(Engine& Engine)
+{
+	ShowRenderSettings(Engine);
+}
+
+void UserInterface::ShowRenderSettings(Engine& Engine)
+{
+	auto& ECS = Engine.ECS;
+	
+	if (!ImGui::Begin("Render Settings"))
+	{
+		ImGui::End();
+		return;
+	}
+
+	auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
+
+	ImGui::Checkbox("DrawVoxels", &RenderSettings.DrawVoxels);
+
+	ImGui::End();
 }
 
 void UserInterface::Render(DRMDevice& Device, const drm::RenderPass& RenderPass, drm::CommandList& CmdList)

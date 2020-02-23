@@ -50,6 +50,43 @@ public:
 		return Array->RemoveComponent(Entity);
 	}
 
+	template<typename ComponentType>
+	ComponentType& AddSingletonComponent(ComponentType&& Component)
+	{
+		uint32 ArrayIndex;
+
+		if (FreeSingletonComponentArrayIndices.size())
+		{
+			ArrayIndex = FreeSingletonComponentArrayIndices.front();
+			FreeSingletonComponentArrayIndices.pop_front();
+		}
+		else
+		{
+			SingletonComponentsArray.push_back(nullptr);
+			ArrayIndex = SingletonComponentsArray.size() - 1;
+		}
+
+		SingletonComponentsArray[ArrayIndex] = std::make_shared<ComponentType>(std::move(Component));
+		SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))] = ArrayIndex;
+		return *std::static_pointer_cast<ComponentType>(SingletonComponentsArray.back());
+	}
+
+	template<typename ComponentType>
+	ComponentType& GetSingletonComponent()
+	{
+		const uint32 ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
+		return *std::static_pointer_cast<ComponentType>(SingletonComponentsArray[ArrayIndex]);
+	}
+
+	template<typename ComponentType>
+	void RemoveSingletonComponent()
+	{
+		const uint32 ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
+		SingletonComponentsArray[ArrayIndex] = nullptr;
+		FreeSingletonComponentArrayIndices.push_back(ArrayIndex);
+		SingletonTypeToArrayIndex.erase(std::type_index(typeid(ComponentType)));
+	}
+
 	/** 
 	  * GetEntities
 	  * @return Entities with types ComponentTypes.
@@ -104,6 +141,15 @@ private:
 
 	/** Map of a component's type to its component array. */
 	HashTable<std::type_index, std::unique_ptr<IComponentArray>> ComponentArrays;
+
+	/** Array of singleton components. */
+	std::vector<std::shared_ptr<void>> SingletonComponentsArray;
+
+	/** Singleton type index to its array index. */
+	HashTable<std::type_index, uint32> SingletonTypeToArrayIndex;
+
+	/** Free indices in the singleton component array. */
+	std::list<uint32> FreeSingletonComponentArrayIndices;
 
 	template<typename ComponentType>
 	ComponentArray<ComponentType>* GetComponentArray()

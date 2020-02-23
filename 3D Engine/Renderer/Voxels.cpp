@@ -101,7 +101,6 @@ public:
 	{
 		Base::SetEnvironmentVariables(Worker);
 		SetVoxelEnvironmentVariables(Worker);
-		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -344,8 +343,6 @@ void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::Co
 	CmdList.BindDescriptorSets(Pipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
-
-	CmdList.EndRenderPass();
 }
 
 void VCTLightingCache::CreateDebugRenderPass(const drm::Image& SceneColor, const drm::Image& SceneDepth)

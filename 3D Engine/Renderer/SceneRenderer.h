@@ -47,6 +47,7 @@ private:
 	DRMDevice& Device;
 	DRMShaderMap& ShaderMap;
 	drm::Surface& Surface;
+	EntityManager& ECS;
 
 	void RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList);
 	void RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList);
