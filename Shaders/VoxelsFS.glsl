@@ -3,20 +3,12 @@
 #include "MeshCommon.glsl"
 #include "MaterialCommon.glsl"
 #include "LightingCommon.glsl"
-#define VOXEL_SET 4
+#define VOXEL_SET 3
 #include "VoxelsCommon.glsl"
-
-layout(location = 4) in vec4 TriangleAABB;
 
 void main()
 {
 	vec2 NDCPosition = vec2(gl_FragCoord.xy / vec2(VOXEL_GRID_SIZE)) * 2.0f - 1.0f;
-
-	if (!( NDCPosition.x >= TriangleAABB.x && NDCPosition.x <= TriangleAABB.z 
-		&& NDCPosition.y >= TriangleAABB.y && NDCPosition.y <= TriangleAABB.w ))
-	{
-		discard;
-	}
 
 	SurfaceData Surface = Surface_Get();
 

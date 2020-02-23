@@ -31,6 +31,8 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 		ShadowMask = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
+		SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(ShadowMask, Device.CreateSampler({ EFilter::Nearest }));
+		SceneTexturesDescriptorSet.Update();
 
 		VCTLightingCachePtr->Resize(SceneColor, SceneDepth, CameraDescriptorSet);
 
@@ -47,23 +49,19 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 {
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
-	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
-	{	
-		// @temp Set the shadow mask to black so that voxels don't have shadows.
-		SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(Material::Black, Device.CreateSampler({ EFilter::Nearest }));
-		SceneTexturesDescriptorSet.Update();
+	VCTLightingCache.Render(Scene, CmdList);
 
-		VCTLightingCache.Render(Scene, CmdList);
+	if (Platform::GetBool("Engine.ini", "Voxels", "RenderVoxels", false))
+	{
 		VCTLightingCache.RenderVisualization(*this, CmdList);
 	}
 	else
 	{
-		SceneTexturesDescriptorSet.ShadowMask = drm::ImageView(ShadowMask, Device.CreateSampler({ EFilter::Nearest }));
-		SceneTexturesDescriptorSet.Update();
-
 		RenderDepthPrepass(Scene, CmdList);
 
 		RenderShadowDepths(Scene, CmdList);
+
+		RenderShadowMask(Scene, CmdList);
 
 		if (Platform::GetBool("Engine.ini", "Shadows", "Visualize", false))
 		{

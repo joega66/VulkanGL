@@ -89,10 +89,9 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 	PSODesc.Viewport.Width = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.Viewport.Height = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.DescriptorSets = {
-		SceneRenderer.CameraDescriptorSet, 
+		SceneRenderer.CameraDescriptorSet,
 		&MeshProxy.GetSurfaceSet(), 
-		&MeshProxy.GetMaterialSet(), 
-		SceneRenderer.SceneTexturesDescriptorSet, 
+		&MeshProxy.GetMaterialSet(),
 		VCTLightingCache.GetDescriptorSet()
 	};
 

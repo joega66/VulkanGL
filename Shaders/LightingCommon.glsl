@@ -4,9 +4,9 @@
 const float PI = 3.14159265;
 const float AMBIENT = 0.01f;
 
-#define SCENE_TEXTURES_SET 3
-
+#ifdef SCENE_TEXTURES_SET
 #include "SceneTexturesCommon.glsl"
+#endif
 
 struct LightParams
 {
@@ -104,9 +104,14 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 		Light.L = DirectionalLights[LightIndex].Direction;
 		Light.Radiance = DirectionalLights[LightIndex].Intensity * DirectionalLights[LightIndex].Color;
 
-		float ShadowFactor = texture(ShadowMask, ScreenUV).r;
+		vec3 Radiance = DirectLighting(V, Light, Surface, Material, R0);
 
-		Lo += DirectLighting(V, Light, Surface, Material, R0) * ( 1.0 - ShadowFactor );
+#ifdef SCENE_TEXTURES_SET
+		float ShadowFactor = texture(ShadowMask, ScreenUV).r;
+		Radiance *= (1.0 - ShadowFactor);
+#endif
+
+		Lo += Radiance;
 	}
 
 	// Point lights

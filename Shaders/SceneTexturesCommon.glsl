@@ -1,3 +1,5 @@
+#ifndef SCENE_TEXTURES_COMMON
+#define SCENE_TEXTURES_COMMON
 
 layout(binding = 0, set = SCENE_TEXTURES_SET) uniform sampler2D SceneDepth;
 layout(binding = 1, set = SCENE_TEXTURES_SET) uniform sampler2D ShadowMask;
@@ -11,3 +13,5 @@ vec3 ScreenToWorld(vec2 UV)
 	WorldSpace.xyz /= WorldSpace.w;
 	return WorldSpace.xyz;
 }
+
+#endif

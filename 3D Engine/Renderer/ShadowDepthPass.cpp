@@ -11,8 +11,6 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 		ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 		ShadowProxy.Render(CmdList);
 	}
-
-	RenderShadowMask(Scene, CmdList);
 }
 
 class ShadowProjectionFS : public drm::Shader

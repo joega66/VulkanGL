@@ -3,10 +3,8 @@ layout(triangle_strip, max_vertices = 3) out;
 
 #include "MeshCommon.glsl"
 #include "SceneCommon.glsl"
-#define VOXEL_SET 4
+#define VOXEL_SET 3
 #include "VoxelsCommon.glsl"
-
-layout(location = 4) out vec4 OutTriangleAABB;
 
 void main()
 {
@@ -18,7 +16,6 @@ void main()
 	Axis = FaceNormal.z > FaceNormal[Axis] ? 2 : Axis;
 
 	vec3 ClipSpacePositions[3];
-	vec4 TriangleAABB = vec4(1.0f, 1.0f, -1.0f, -1.0f);
 
 	for (uint i = 0; i < 3; i++)
 	{
@@ -32,16 +29,7 @@ void main()
 		{
 			ClipSpacePositions[i].xyz = ClipSpacePositions[i].xzy;
 		}
-
-		TriangleAABB.xy = min(TriangleAABB.xy, ClipSpacePositions[i].xy);
-		TriangleAABB.zw = max(TriangleAABB.zw, ClipSpacePositions[i].xy);
 	};
-
-	TriangleAABB.xy -= HALF_VOXEL_SIZE;
-	TriangleAABB.zw += HALF_VOXEL_SIZE;
-
-	//OutTriangleAABB = TriangleAABB;
-	OutTriangleAABB = vec4(-1.0f, -1.0f, 1.0f, 1.0f);
 
 	/* 2. Conservative rasterization (GPU Gems 2: Chapter 42) */
 

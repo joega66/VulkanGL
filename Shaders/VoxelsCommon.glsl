@@ -1,3 +1,5 @@
+#ifndef VOXELS_COMMON
+#define VOXELS_COMMON
 #include "Common.glsl"
 
 #ifndef VOXEL_GRID_SIZE
@@ -50,3 +52,5 @@ ivec3 DecodeVoxelPosition(int VoxelPosition)
 	const int Mask = 0x000003FF;
 	return ivec3((VoxelPosition >> 0) & Mask, (VoxelPosition >> 10) & Mask, (VoxelPosition >> 20) & Mask);
 }
+
+#endif
