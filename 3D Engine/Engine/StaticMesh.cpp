@@ -225,8 +225,7 @@ const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, DRMDevice& Dev
 				Image.height, 
 				1, 
 				GetFormat(Image.bits, Image.component, Image.pixel_type), 
-				EImageUsage::Sampled | EImageUsage::TransferDst
-			));
+				EImageUsage::Sampled | EImageUsage::TransferDst));
 			drm::UploadImageData(Device, Image.image.data(), *NewImage);
 			return Assets.LoadImage(Image.uri, std::move(NewImage));
 		}

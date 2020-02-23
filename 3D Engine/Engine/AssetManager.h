@@ -18,7 +18,7 @@ public:
 	 * @param File Filename to load the mesh from.
 	 * @param Breakup Whether to divide the submeshes into their own meshes.
 	 * @return Array of static mesh render resources. Size is 1 if Breakup is false.
-	 * @TODO Replace with std::span
+	 * @todo Replace with std::span
 	*/
 	std::vector<const StaticMesh*> LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup = false);
 	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;

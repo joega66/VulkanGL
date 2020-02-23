@@ -38,14 +38,10 @@ private:
 	/** The Vulkan framebuffer. */
 	VkFramebuffer Framebuffer;
 
-	/** 
-	  * Yeah, render area is in RenderPassBeginInfo, but I don't allow 
-	  * specifying a render area smaller than the framebuffer because it's really not
-	  * optimal on mobile.
-	  */
+	/** Render area. */
 	VkRect2D RenderArea;
 
-	/** Clear values to be used. @todo Make these public in RenderPass. */
+	/** Clear values to be used. */
 	std::vector<VkClearValue> ClearValues;
 
 	/** Number of color attachments. */

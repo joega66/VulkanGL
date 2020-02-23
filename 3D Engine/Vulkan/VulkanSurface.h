@@ -42,7 +42,7 @@ private:
 	/** Swapchain images. */
 	std::vector<drm::Image> Images;
 
-	/** @TODO Move me to the SceneRenderer. */
+	/** @todo Move me to the SceneRenderer. */
 	VkSemaphore ImageAvailableSem = VK_NULL_HANDLE;
 	VkSemaphore RenderEndSem = VK_NULL_HANDLE;
 
