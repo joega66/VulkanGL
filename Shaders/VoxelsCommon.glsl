@@ -15,7 +15,7 @@ layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 	mat4 WorldToVoxelInv;
 };
 
-layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelDiffuseGI;
+layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelBaseColor;
 
 vec3 TransformWorldToVoxel(vec3 WorldPosition)
 {

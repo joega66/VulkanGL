@@ -36,7 +36,7 @@ private:
 	drm::DescriptorSetLayout DescriptorSetLayout;
 
 	drm::Buffer WorldToVoxelBuffer;
-	drm::Image VoxelColors;
+	drm::Image VoxelBaseColor;
 
 	drm::Buffer VoxelPositions;
 	drm::Buffer VoxelIndirectBuffer;

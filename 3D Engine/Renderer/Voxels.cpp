@@ -8,7 +8,7 @@
 struct VoxelDescriptors
 {
 	drm::BufferView WorldToVoxelBuffer;
-	drm::ImageView VoxelColors;
+	drm::ImageView VoxelBaseColor;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -209,7 +209,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
 
 	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
-	VoxelColors = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage);
+	VoxelBaseColor = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage | EImageUsage::Sampled);
 
 	auto Bindings = DebugVoxels ? DebugVoxelsDescriptors::GetBindings() : VoxelDescriptors::GetBindings();
 
@@ -223,7 +223,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 
 		DebugVoxelsDescriptors Descriptors;
 		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
-		Descriptors.VoxelColors = VoxelColors;
+		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelPositions = VoxelPositions;
 		Descriptors.VoxelIndirectBuffer = VoxelIndirectBuffer;
 		DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
@@ -232,7 +232,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	{
 		VoxelDescriptors Descriptors;
 		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
-		Descriptors.VoxelColors = VoxelColors;
+		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
 	}
 
@@ -248,8 +248,8 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	glm::mat4 OrthoProj = glm::ortho(
-		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, 
-		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f, 
+		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
+		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
 		0.0f, (float)VoxelGridSize);
 	OrthoProj[1][1] *= -1;
 
@@ -267,7 +267,7 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	ImageMemoryBarrier ImageMemoryBarrier(
-		VoxelColors,
+		VoxelBaseColor,
 		EAccess::None,
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
@@ -276,7 +276,7 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageMemoryBarrier);
 
-	CmdList.ClearColorImage(VoxelColors, EImageLayout::TransferDstOptimal, ClearColorValue{});
+	CmdList.ClearColorImage(VoxelBaseColor, EImageLayout::TransferDstOptimal, ClearColorValue{});
 
 	ImageMemoryBarrier.SrcAccessMask = EAccess::TransferWrite;
 	ImageMemoryBarrier.DstAccessMask = EAccess::ShaderWrite;
@@ -310,7 +310,7 @@ void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::Co
 		{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
 	};
 
-	ImageMemoryBarrier ImageBarrier(VoxelColors, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General);
+	ImageMemoryBarrier ImageBarrier(VoxelBaseColor, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General);
 
 	CmdList.PipelineBarrier(
 		EPipelineStage::FragmentShader,

@@ -2,7 +2,6 @@
 #include "SceneCommon.glsl"
 #include "MeshCommon.glsl"
 #include "MaterialCommon.glsl"
-#include "LightingCommon.glsl"
 #define VOXEL_SET 3
 #include "VoxelsCommon.glsl"
 
@@ -16,13 +15,11 @@ void main()
 
 	MaterialData Material = Material_Get(Surface);
 
-	vec4 Color = Shade(Surface, Material);
-
 	vec3 VoxelTexCoord = TransformWorldToVoxel(Surface.WorldPosition);
 	VoxelTexCoord.xy = VoxelTexCoord.xy / 2.0 + 0.5;
 	VoxelTexCoord *= VOXEL_GRID_SIZE;
 
-	imageStore(VoxelDiffuseGI, ivec3(VoxelTexCoord), vec4(Color));
+	imageStore(VoxelBaseColor, ivec3(VoxelTexCoord), vec4(Material.BaseColor, 1.0f));
 
 #if DEBUG_VOXELS
 	uint VoxelIndex = atomicAdd(VoxelDrawIndirect.VertexCount, 1);
