@@ -19,6 +19,7 @@ namespace drm
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;
 	using Pipeline = VulkanPipeline;
 	using RenderPass = VulkanRenderPass;
+	using RenderPassView = VulkanRenderPassView;
 
 	class AttachmentView
 	{
@@ -83,7 +84,7 @@ struct RenderPassDesc
 
 struct PipelineStateDesc
 {
-	const drm::RenderPass* RenderPass;
+	drm::RenderPassView RenderPass;
 	ScissorDesc Scissor;
 	Viewport Viewport;
 	DepthStencilState DepthStencilState;
@@ -100,7 +101,8 @@ struct PipelineStateDesc
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
-		return L.Scissor == R.Scissor
+		return L.RenderPass == R.RenderPass
+			&& L.Scissor == R.Scissor
 			&& L.Viewport == R.Viewport
 			&& L.DepthStencilState == R.DepthStencilState
 			&& L.RasterizationState == R.RasterizationState

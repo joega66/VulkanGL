@@ -56,7 +56,7 @@ void SceneProxy::AddToDepthPrepass(SceneRenderer& SceneRenderer, DRMDevice& Devi
 	};
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &SceneRenderer.DepthRP;
+	PSODesc.RenderPass = SceneRenderer.DepthRP;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DepthPrepassVS<MeshType>>();
 	PSODesc.ShaderStages.Fragment = MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr;
 	PSODesc.Viewport.Width = SceneRenderer.SceneDepth.GetWidth();

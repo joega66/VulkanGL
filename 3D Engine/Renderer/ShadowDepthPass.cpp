@@ -37,7 +37,7 @@ void SceneRenderer::RenderShadowMask(SceneProxy& Scene, drm::CommandList& CmdLis
 		const ShadowProxy& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
 		PipelineStateDesc PSODesc = {};
-		PSODesc.RenderPass = &ShadowMaskRP;
+		PSODesc.RenderPass = ShadowMaskRP;
 		PSODesc.Viewport.Width = ShadowMask.GetWidth();
 		PSODesc.Viewport.Height = ShadowMask.GetHeight();
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
@@ -69,7 +69,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		const auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
 		PipelineStateDesc PSODesc = {};
-		PSODesc.RenderPass = &DepthVisualizationRP;
+		PSODesc.RenderPass = DepthVisualizationRP;
 		PSODesc.Viewport.Width = SceneDepth.GetWidth();
 		PSODesc.Viewport.Height = SceneDepth.GetHeight();
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;

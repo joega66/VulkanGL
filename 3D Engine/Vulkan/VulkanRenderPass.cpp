@@ -243,3 +243,9 @@ VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& Other)
 	NumAttachments = Other.NumAttachments;
 	return *this;
 }
+
+VulkanRenderPassView::VulkanRenderPassView(const VulkanRenderPass& RenderPass)
+	: RenderPass(RenderPass.GetRenderPass())
+	, NumAttachments(RenderPass.GetNumAttachments())
+{
+}

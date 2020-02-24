@@ -51,7 +51,7 @@ void SceneProxy::AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Devi
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &SceneRenderer.LightingRP;
+	PSODesc.RenderPass = SceneRenderer.LightingRP;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<LightingPassVS<MeshType>>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<LightingPassFS<MeshType>>();
 	PSODesc.Viewport.Width = SceneRenderer.SceneDepth.GetWidth();

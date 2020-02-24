@@ -130,7 +130,7 @@ void UserInterface::Render(DRMDevice& Device, const drm::RenderPass& RenderPass,
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 
-	PSODesc.RenderPass = &RenderPass;
+	PSODesc.RenderPass = RenderPass;
 	PSODesc.DescriptorSets = { &DescriptorSet };
 
 	if (DrawData->CmdListsCount > 0)

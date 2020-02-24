@@ -117,7 +117,7 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 	VCTLightingCache& VCTLightingCache = SceneRenderer.VCTLightingCache;
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &VCTLightingCache.GetRenderPass();
+	PSODesc.RenderPass = VCTLightingCache.GetRenderPass();
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<VoxelsVS<MeshType>>();
 	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<VoxelsGS<MeshType>>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<VoxelsFS<MeshType>>();
@@ -324,7 +324,7 @@ void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::Co
 	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &DebugRP;
+	PSODesc.RenderPass = DebugRP;
 	PSODesc.Viewport.Width = SceneRenderer.SceneColor.GetWidth();
 	PSODesc.Viewport.Height = SceneRenderer.SceneColor.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;

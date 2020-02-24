@@ -19,9 +19,7 @@ std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineS
 	// Find or create the pipeline.
 	for (const auto& [CachedPSODesc, CachedPipeline, CachedPipelineLayout] : PipelineCache)
 	{
-		if (PSODesc == CachedPSODesc &&
-			PSODesc.RenderPass->GetRenderPass() == CachedPSODesc.RenderPass->GetRenderPass() &&
-			PipelineLayout == CachedPipelineLayout)
+		if (PSODesc == CachedPSODesc && PipelineLayout == CachedPipelineLayout)
 		{
 			return { CachedPipeline, CachedPipelineLayout };
 		}
@@ -191,10 +189,10 @@ static void CreateColorBlendState(
 		}
 	};
 
-	ColorBlendAttachmentStates.reserve(PSODesc.RenderPass->GetNumAttachments());
+	ColorBlendAttachmentStates.reserve(PSODesc.RenderPass.GetNumAttachments());
 	if (PSODesc.ColorBlendAttachmentStates.empty())
 	{
-		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(PSODesc.RenderPass->GetNumAttachments(), ColorBlendAttachmentState{});
+		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(PSODesc.RenderPass.GetNumAttachments(), ColorBlendAttachmentState{});
 		ConvertColorBlendAttachmentStates(DefaultColorBlendAttachmentStates, ColorBlendAttachmentStates);
 	}
 	else
@@ -209,7 +207,7 @@ static void CreateColorBlendState(
 	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
 	ColorBlendState.logicOpEnable = false;
 	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
-	ColorBlendState.attachmentCount = PSODesc.RenderPass->GetNumAttachments();
+	ColorBlendState.attachmentCount = PSODesc.RenderPass.GetNumAttachments();
 }
 
 static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
@@ -437,7 +435,7 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipel
 	PipelineInfo.pColorBlendState = &ColorBlendState;
 	PipelineInfo.pDynamicState = &DynamicState;
 	PipelineInfo.layout = PipelineLayout;
-	PipelineInfo.renderPass = PSODesc.RenderPass->GetRenderPass();
+	PipelineInfo.renderPass = PSODesc.RenderPass.GetRenderPass();
 	PipelineInfo.subpass = 0;
 	PipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

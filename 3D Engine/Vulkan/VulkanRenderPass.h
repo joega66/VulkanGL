@@ -47,3 +47,23 @@ private:
 	/** Number of color attachments. */
 	uint32 NumAttachments;
 };
+
+/** 
+  * Since the API couples the render pass and framebuffer for convenience, 
+  * but PipelineStateDesc just needs the render pass, the API needs to offer
+  * a view into the render pass.
+  */
+class VulkanRenderPassView
+{
+public:
+	VulkanRenderPassView() = default;
+	VulkanRenderPassView(const VulkanRenderPass& RenderPass);
+	inline VkRenderPass GetRenderPass() const { return RenderPass; }
+	inline uint32 GetNumAttachments() const { return NumAttachments; }
+
+	inline bool operator==(const VulkanRenderPassView& Other) const { return RenderPass == Other.RenderPass; }
+
+private:
+	VkRenderPass RenderPass = VK_NULL_HANDLE;
+	uint32 NumAttachments;
+};

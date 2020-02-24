@@ -44,7 +44,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = &LightingRP;
+	PSODesc.RenderPass = LightingRP;
 	PSODesc.Viewport.Width = SceneColor.GetWidth();
 	PSODesc.Viewport.Height = SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
