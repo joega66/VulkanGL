@@ -32,6 +32,8 @@ public:
 
 	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
 
+	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
+
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries) override;
 
 	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;

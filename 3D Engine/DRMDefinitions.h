@@ -136,6 +136,19 @@ struct PipelineStateDesc
 	}
 };
 
+struct ComputePipelineDesc
+{
+	const drm::Shader* ComputeShader;
+	SpecializationInfo SpecializationInfo;
+	std::vector<const drm::DescriptorSet*> DescriptorSets;
+
+	inline bool operator==(const ComputePipelineDesc& Other) const
+	{
+		return ComputeShader == Other.ComputeShader
+			&& SpecializationInfo == Other.SpecializationInfo;
+	}
+};
+
 struct BufferMemoryBarrier
 {
 	const drm::Buffer& Buffer;

@@ -33,6 +33,12 @@ drm::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
 	return drm::Pipeline(Pipeline, PipelineLayout);
 }
 
+drm::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
+{
+	const auto [Pipeline, PipelineLayout] = GetCache().GetPipeline(ComputePipelineDesc);
+	return drm::Pipeline(Pipeline, PipelineLayout);
+}
+
 drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries)
 {
 	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);

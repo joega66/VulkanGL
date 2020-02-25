@@ -5,19 +5,9 @@
 
 std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
-	// Get the pipeline layout.
-	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
-	DescriptorSetLayouts.reserve(PSODesc.DescriptorSets.size());
+	VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.DescriptorSets);
 
-	for (const drm::DescriptorSet* DescriptorSet : PSODesc.DescriptorSets)
-	{
-		DescriptorSetLayouts.push_back(DescriptorSet->GetLayout());
-	}
-
-	VkPipelineLayout PipelineLayout = GetPipelineLayout(DescriptorSetLayouts);
-
-	// Find or create the pipeline.
-	for (const auto& [CachedPSODesc, CachedPipeline, CachedPipelineLayout] : PipelineCache)
+	for (const auto& [CachedPSODesc, CachedPipeline, CachedPipelineLayout] : GraphicsPipelineCache)
 	{
 		if (PSODesc == CachedPSODesc && PipelineLayout == CachedPipelineLayout)
 		{
@@ -26,7 +16,24 @@ std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineS
 	}
 
 	VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
-	PipelineCache.push_back({ PSODesc, Pipeline, PipelineLayout});
+	GraphicsPipelineCache.push_back({ PSODesc, Pipeline, PipelineLayout});
+	return { Pipeline, PipelineLayout };
+}
+
+std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputePipelineDesc)
+{
+	VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputePipelineDesc.DescriptorSets);
+
+	for (const auto& [CachedComputePipelineDesc, CachedPipeline, CachedPipelineLayout] : ComputePipelineCache)
+	{
+		if (ComputePipelineDesc == CachedComputePipelineDesc && PipelineLayout == CachedPipelineLayout)
+		{
+			return { CachedPipeline, CachedPipelineLayout };
+		}
+	}
+
+	VkPipeline Pipeline = CreatePipeline(ComputePipelineDesc, PipelineLayout);
+	ComputePipelineCache.push_back({ ComputePipelineDesc, Pipeline, PipelineLayout });
 	return { Pipeline, PipelineLayout };
 }
 
@@ -385,7 +392,7 @@ static void CreateViewportState(const PipelineStateDesc& PSODesc, VkViewport& Vi
 	ViewportState.scissorCount = 1;
 }
 
-VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout)
+VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout) const
 {
 	VkPipelineDepthStencilStateCreateInfo DepthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	CreateDepthStencilState(PSODesc, DepthStencilState);
@@ -445,8 +452,50 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipel
 	return Pipeline;
 }
 
-VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts)
+VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc, VkPipelineLayout PipelineLayout) const
 {
+	VkComputePipelineCreateInfo ComputePipelineCreateInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+	ComputePipelineCreateInfo.layout = PipelineLayout;
+	ComputePipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+	const drm::Shader* ComputeShader = ComputePipelineDesc.ComputeShader;
+
+	VkPipelineShaderStageCreateInfo& PipelineShaderStageCreateInfo = ComputePipelineCreateInfo.stage;
+	PipelineShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+	PipelineShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+	PipelineShaderStageCreateInfo.module = ComputeShader->CompilationInfo.Module;
+	PipelineShaderStageCreateInfo.pName = ComputeShader->CompilationInfo.Entrypoint.data();
+
+	VkSpecializationInfo SpecializationInfo;
+	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = ComputePipelineDesc.SpecializationInfo.GetMapEntries();
+	
+	if (MapEntries.size() > 0)
+	{
+		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
+		const std::vector<uint8>& Data = ComputePipelineDesc.SpecializationInfo.GetData();
+		SpecializationInfo.mapEntryCount = MapEntries.size();
+		SpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
+		SpecializationInfo.dataSize = Data.size();
+		SpecializationInfo.pData = Data.data();
+		PipelineShaderStageCreateInfo.pSpecializationInfo = &SpecializationInfo;
+	}
+
+	VkPipeline Pipeline;
+	vulkan(vkCreateComputePipelines(Device, VK_NULL_HANDLE, 1, &ComputePipelineCreateInfo, nullptr, &Pipeline));
+
+	return Pipeline;
+}
+
+VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<const VulkanDescriptorSet*>& DescriptorSets)
+{
+	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
+	DescriptorSetLayouts.reserve(DescriptorSets.size());
+
+	for (const drm::DescriptorSet* DescriptorSet : DescriptorSets)
+	{
+		DescriptorSetLayouts.push_back(DescriptorSet->GetLayout());
+	}
+
 	for (const auto&[CachedDescriptorSetLayouts, CachedPipelineLayout] : PipelineLayoutCache)
 	{
 		if (std::equal(
@@ -472,9 +521,9 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSe
 
 void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 {
-	PipelineCache.erase(std::remove_if(
-		PipelineCache.begin(),
-		PipelineCache.end(),
+	GraphicsPipelineCache.erase(std::remove_if(
+		GraphicsPipelineCache.begin(),
+		GraphicsPipelineCache.end(),
 		[&] (const auto& Iter)
 	{
 		const auto& [PSODesc, Pipeline, PipelineLayout] = Iter;
@@ -484,7 +533,7 @@ void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 			return true;
 		}
 		return false;
-	}), PipelineCache.end());
+	}), GraphicsPipelineCache.end());
 }
 
 VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout)

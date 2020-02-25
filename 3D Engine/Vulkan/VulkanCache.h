@@ -18,6 +18,8 @@ public:
 
 	std::pair<VkPipeline, VkPipelineLayout> GetPipeline(const PipelineStateDesc& PSODesc);
 
+	std::pair<VkPipeline, VkPipelineLayout> GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
+
 	const drm::Sampler* GetSampler(const SamplerDesc& SamplerDesc);
 
 	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> 
@@ -41,19 +43,23 @@ private:
 
 	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
 
-	SlowCache<PipelineStateDesc, VkPipeline, VkPipelineLayout> PipelineCache;
+	SlowCache<PipelineStateDesc, VkPipeline, VkPipelineLayout> GraphicsPipelineCache;
+
+	SlowCache<ComputePipelineDesc, VkPipeline, VkPipelineLayout> ComputePipelineCache;
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 
 	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout, VkDescriptorUpdateTemplate> DescriptorSetLayoutCache;
 
-	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& DescriptorSetLayouts);
+	VkPipelineLayout GetPipelineLayout(const std::vector<const class VulkanDescriptorSet*>& DescriptorSets);
 
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 
 	[[nodiscard]] VkFramebuffer CreateFramebuffer(VkRenderPass RenderPass, const RenderPassDesc& RPDesc) const;
 
-	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout);
+	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout) const;
+
+	[[nodiscard]] VkPipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc, VkPipelineLayout PipelineLayout) const;
 
 	std::unordered_map<SamplerDesc, drm::Sampler, SamplerDesc::Hash> SamplerCache;
 };

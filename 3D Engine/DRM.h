@@ -25,6 +25,9 @@ public:
 	/** Create a graphics pipeline. */
 	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
 
+	/** Create a compute pipeline. */
+	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
+
 	/** Create a descriptor template. */
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumBindings, const DescriptorBinding* Bindings) = 0;
 
