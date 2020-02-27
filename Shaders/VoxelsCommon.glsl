@@ -17,10 +17,22 @@ layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 
 layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelBaseColor;
 
-vec3 TransformWorldToVoxel(vec3 WorldPosition)
+layout(binding = 2, set = VOXEL_SET, rgba16f) uniform image3D VoxelNormal;
+
+layout(binding = 3, set = VOXEL_SET, rgba8) uniform image3D VoxelRadiance;
+
+vec3 TransformWorldToVoxel(in vec3 WorldPosition)
 {
 	vec4 VoxelPosition = WorldToVoxel * vec4(WorldPosition.xyz, 1);
 	return VoxelPosition.xyz;
+}
+
+ivec3 TransformWorldToVoxelGridCoord(in vec3 WorldPosition)
+{
+	vec3 VoxelGridCoord = TransformWorldToVoxel(WorldPosition);
+	VoxelGridCoord.xy = VoxelGridCoord.xy / 2.0 + 0.5;
+	VoxelGridCoord *= VOXEL_GRID_SIZE;
+	return ivec3(VoxelGridCoord);
 }
 
 vec3 TransformVoxelToWorld(vec3 VoxelPosition)
@@ -34,12 +46,12 @@ vec3 TransformVoxelToWorld(vec3 VoxelPosition)
 
 #if DEBUG_VOXELS
 
-layout(binding = 2, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
+layout(binding = 4, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
 {
 	int VoxelPositions[];
 };
 
-layout(binding = 3, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
+layout(binding = 5, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
 {
 	DrawIndirectCommand VoxelDrawIndirect;
 };

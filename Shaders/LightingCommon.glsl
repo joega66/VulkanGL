@@ -95,8 +95,6 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 	vec3 R0 = vec3(0.04);
 	R0 = mix(R0, Material.BaseColor, Material.Roughness);
 
-	vec2 ScreenUV = gl_FragCoord.xy / Camera.ScreenDims;
-
 	// Directional lights
 	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
 	{
@@ -105,11 +103,6 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 		Light.Radiance = DirectionalLights[LightIndex].Intensity * DirectionalLights[LightIndex].Color;
 
 		vec3 Radiance = DirectLighting(V, Light, Surface, Material, R0);
-
-#ifdef SCENE_TEXTURES_SET
-		float ShadowFactor = texture(ShadowMask, ScreenUV).r;
-		Radiance *= (1.0 - ShadowFactor);
-#endif
 
 		Lo += Radiance;
 	}
@@ -127,10 +120,6 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 
 		Lo += DirectLighting(V, Light, Surface, Material, R0);
 	}
-
-	// Ambient
-	vec3 Ambient = vec3(AMBIENT) * Material.BaseColor; // * AO
-	Lo += Ambient;
 
 	// Gamma
 	Lo = Lo / (Lo + vec3(1.0));

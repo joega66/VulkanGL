@@ -3,6 +3,7 @@
 layout(binding = 0, set = 0) uniform LightViewProjBuffer
 {
 	mat4 LightViewProj;
+	mat4 InvLightViewProj;
 };
 
 void main()

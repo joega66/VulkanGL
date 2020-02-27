@@ -45,7 +45,7 @@ void VulkanCommandList::EndRenderPass()
 
 void VulkanCommandList::BindPipeline(const VulkanPipeline& Pipeline)
 {
-	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipeline());
+	vkCmdBindPipeline(CommandBuffer, Pipeline.GetPipelineBindPoint(), Pipeline.GetPipeline());
 }
 
 void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VulkanDescriptorSet** DescriptorSets)
@@ -61,7 +61,7 @@ void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint3
 
 	vkCmdBindDescriptorSets(
 		CommandBuffer,
-		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		Pipeline.GetPipelineBindPoint(),
 		Pipeline.GetPipelineLayout(),
 		0,
 		VulkanDescriptorSets.size(),
@@ -110,6 +110,11 @@ void VulkanCommandList::DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, 
 		Buffer.GetOffset() + Offset,
 		DrawCount,
 		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
+}
+
+void VulkanCommandList::Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ)
+{
+	vkCmdDispatch(CommandBuffer, GroupCountX, GroupCountY, GroupCountZ);
 }
 
 void VulkanCommandList::ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color)

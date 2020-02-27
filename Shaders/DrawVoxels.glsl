@@ -17,7 +17,7 @@ void main()
 	ivec3 VoxelPosition = DecodeVoxelPosition(VoxelPositions[gl_VertexIndex]);
 	OutPosition = TransformVoxelToWorld(VoxelPosition);
 
-	OutVoxelColor = imageLoad(VoxelBaseColor, VoxelPosition);
+	OutVoxelColor = imageLoad(VoxelRadiance, VoxelPosition);
 
 	gl_Position = vec4(OutPosition, 1);
 }

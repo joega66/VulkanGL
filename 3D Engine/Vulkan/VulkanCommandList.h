@@ -49,6 +49,8 @@ public:
 
 	void DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, uint32 DrawCount);
 
+	void Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ);
+
 	void ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color);
 
 	void ClearDepthStencilImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);

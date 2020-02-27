@@ -99,3 +99,9 @@ inline bool Any(EnumClass EnumTrait)
 {
 	return EnumTrait != EnumClass::None;
 }
+
+template<typename T>
+inline T DivideAndRoundUp(const T& Num, const T& Denom)
+{
+	return (Num + Denom - 1) / Denom;
+}

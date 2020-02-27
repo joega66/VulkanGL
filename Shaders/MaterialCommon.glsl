@@ -1,6 +1,6 @@
 #ifndef MATERIAL_COMMON
 #define MATERIAL_COMMON
-
+#include "MaterialInterface.glsl"
 #define MATERIAL_SET 2
 
 layout(binding = 0, set = MATERIAL_SET) uniform sampler2D BaseColorTexture;
@@ -13,14 +13,6 @@ layout(binding = 2, set = MATERIAL_SET) uniform PBRUniformBuffer
 
 layout(constant_id = 0) const bool HasMetallicRoughnessTexture = false;
 layout(constant_id = 1) const bool IsMasked = false;
-
-struct MaterialData
-{
-	vec3 BaseColor;
-	float Alpha;
-	float Roughness;
-	float Metallicity;
-};
 
 MaterialData Material_Get(in SurfaceData Surface)
 {

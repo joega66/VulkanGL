@@ -153,7 +153,9 @@
     <None Include="..\Shaders\LightingCommon.glsl" />
     <None Include="..\Shaders\LightingPassFS.glsl" />
     <None Include="..\Shaders\LightingPassVS.glsl" />
+    <None Include="..\Shaders\LightInjectionCS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
+    <None Include="..\Shaders\MaterialInterface.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />
     <None Include="..\Shaders\SceneCommon.glsl" />
     <None Include="..\Shaders\SceneTexturesCommon.glsl" />

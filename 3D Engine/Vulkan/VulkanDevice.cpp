@@ -30,13 +30,13 @@ drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 drm::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
 {
 	const auto [Pipeline, PipelineLayout] = GetCache().GetPipeline(PSODesc);
-	return drm::Pipeline(Pipeline, PipelineLayout);
+	return drm::Pipeline(Pipeline, PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 }
 
 drm::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
 {
 	const auto [Pipeline, PipelineLayout] = GetCache().GetPipeline(ComputePipelineDesc);
-	return drm::Pipeline(Pipeline, PipelineLayout);
+	return drm::Pipeline(Pipeline, PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
 }
 
 drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries)

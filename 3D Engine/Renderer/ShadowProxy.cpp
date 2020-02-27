@@ -3,14 +3,19 @@
 #include <ECS/EntityManager.h>
 #include "MaterialShader.h"
 
+UNIFORM_STRUCT(LightViewProjUniformData,
+	glm::mat4 LightViewProj;
+	glm::mat4 InvLightViewProj;
+);
+
 ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 {
-	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
+	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightViewProjUniformData));
 
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
 
-	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled);
+	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled | EImageUsage::Storage);
 
 	RenderPassDesc RPDesc = {};
 	RPDesc.DepthAttachment = drm::AttachmentView(
@@ -18,7 +23,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
-		EImageLayout::DepthReadStencilWrite);
+		EImageLayout::General);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
 
 	RenderPass = Device.CreateRenderPass(RPDesc);
@@ -44,9 +49,10 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	LightProjMatrix[1][1] *= -1;
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
-	
-	glm::mat4* LightViewProjMatrixPtr = static_cast<glm::mat4*>(Device.LockBuffer(LightViewProjBuffer));
-	*LightViewProjMatrixPtr = LightViewProjMatrix;
+
+	LightViewProjUniformData* LightViewProjMatrixPtr = static_cast<LightViewProjUniformData*>(Device.LockBuffer(LightViewProjBuffer));
+	LightViewProjMatrixPtr->LightViewProj = LightViewProjMatrix;
+	LightViewProjMatrixPtr->InvLightViewProj = glm::inverse(LightViewProjMatrix);
 	Device.UnlockBuffer(LightViewProjBuffer);
 }
 

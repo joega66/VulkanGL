@@ -33,6 +33,8 @@ public:
 	/** Render shadow depths. */
 	void Render(drm::CommandList& CmdList);
 
+	inline const drm::Buffer& GetLightViewProjBuffer() const { return LightViewProjBuffer; }
+	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 
 private:

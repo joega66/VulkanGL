@@ -521,23 +521,31 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<const VulkanDe
 
 void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 {
-	GraphicsPipelineCache.erase(std::remove_if(
-		GraphicsPipelineCache.begin(),
-		GraphicsPipelineCache.end(),
-		[&] (const auto& Iter)
+	if (Shader->CompilationInfo.Stage == EShaderStage::Compute)
 	{
-		const auto& [PSODesc, Pipeline, PipelineLayout] = Iter;
-		if (PSODesc.HasShader(Shader))
+		// @todo
+	}
+	else
+	{
+		GraphicsPipelineCache.erase(std::remove_if(
+			GraphicsPipelineCache.begin(),
+			GraphicsPipelineCache.end(),
+			[&] (const auto& Iter)
 		{
-			vkDestroyPipeline(Device, Pipeline, nullptr);
-			return true;
-		}
-		return false;
-	}), GraphicsPipelineCache.end());
+			const auto& [PSODesc, Pipeline, PipelineLayout] = Iter;
+			if (PSODesc.HasShader(Shader))
+			{
+				vkDestroyPipeline(Device, Pipeline, nullptr);
+				return true;
+			}
+			return false;
+		}), GraphicsPipelineCache.end());
+	}
 }
 
-VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout)
+VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint)
 	: Pipeline(Pipeline)
 	, PipelineLayout(PipelineLayout)
+	, PipelineBindPoint(PipelineBindPoint)
 {
 }

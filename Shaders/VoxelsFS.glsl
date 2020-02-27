@@ -15,14 +15,13 @@ void main()
 
 	MaterialData Material = Material_Get(Surface);
 
-	vec3 VoxelTexCoord = TransformWorldToVoxel(Surface.WorldPosition);
-	VoxelTexCoord.xy = VoxelTexCoord.xy / 2.0 + 0.5;
-	VoxelTexCoord *= VOXEL_GRID_SIZE;
+	ivec3 VoxelGridCoord = TransformWorldToVoxelGridCoord(Surface.WorldPosition);
 
-	imageStore(VoxelBaseColor, ivec3(VoxelTexCoord), vec4(Material.BaseColor, 1.0f));
+	imageStore(VoxelBaseColor, VoxelGridCoord, vec4(Material.BaseColor, Material.Alpha));
+	imageStore(VoxelNormal, VoxelGridCoord, vec4(Surface.WorldNormal, 1.0f));
 
 #if DEBUG_VOXELS
 	uint VoxelIndex = atomicAdd(VoxelDrawIndirect.VertexCount, 1);
-	VoxelPositions[VoxelIndex] = EncodeVoxelPosition(ivec3(VoxelTexCoord));
+	VoxelPositions[VoxelIndex] = EncodeVoxelPosition(ivec3(VoxelGridCoord));
 #endif
 }

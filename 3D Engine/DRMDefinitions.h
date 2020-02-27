@@ -128,10 +128,8 @@ struct PipelineStateDesc
 			return ShaderStages.TessEval == Shader;
 		case EShaderStage::Geometry:
 			return ShaderStages.Geometry == Shader;
-		case EShaderStage::Fragment:
+		default: // EShaderStage::Fragment
 			return ShaderStages.Fragment == Shader;
-		default:
-			fail("Shader stage %u not implemented.", (uint32)Shader->CompilationInfo.Stage);
 		}
 	}
 };
@@ -171,6 +169,11 @@ struct ImageMemoryBarrier
 
 	ImageMemoryBarrier(const drm::Image& Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout OldLayout, EImageLayout NewLayout)
 		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), OldLayout(OldLayout), NewLayout(NewLayout)
+	{
+	}
+
+	ImageMemoryBarrier(const ImageMemoryBarrier& Other)
+		: Image(Other.Image), SrcAccessMask(Other.SrcAccessMask), DstAccessMask(Other.DstAccessMask), OldLayout(Other.OldLayout), NewLayout(Other.NewLayout)
 	{
 	}
 };
