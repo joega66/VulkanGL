@@ -13,21 +13,6 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 	}
 }
 
-class ShadowProjectionFS : public drm::Shader
-{
-public:
-	ShadowProjectionFS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
-	{
-	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo BaseInfo = { "../Shaders/ShadowProjectionFS.glsl", "main", EShaderStage::Fragment };
-		return BaseInfo;
-	}
-};
-
 void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())

@@ -161,7 +161,6 @@
     <None Include="..\Shaders\SceneTexturesCommon.glsl" />
     <None Include="..\Shaders\ShadowDepthFS.glsl" />
     <None Include="..\Shaders\ShadowDepthVS.glsl" />
-    <None Include="..\Shaders\ShadowProjectionFS.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
     <None Include="..\Shaders\StaticMeshCommon.glsl" />

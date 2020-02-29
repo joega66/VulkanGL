@@ -523,7 +523,19 @@ void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 {
 	if (Shader->CompilationInfo.Stage == EShaderStage::Compute)
 	{
-		// @todo
+		ComputePipelineCache.erase(std::remove_if(
+			ComputePipelineCache.begin(),
+			ComputePipelineCache.end(),
+			[&] (const auto& Iter)
+		{
+			const auto&[ComputeDesc, Pipeline, PipelineLayout] = Iter;
+			if (ComputeDesc.ComputeShader == Shader)
+			{
+				vkDestroyPipeline(Device, Pipeline, nullptr);
+				return true;
+			}
+			return false;
+		}), ComputePipelineCache.end());
 	}
 	else
 	{

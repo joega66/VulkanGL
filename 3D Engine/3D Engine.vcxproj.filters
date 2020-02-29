@@ -489,9 +489,6 @@
     <None Include="..\Shaders\ShadowDepthFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\ShadowProjectionFS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\SceneTexturesCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
