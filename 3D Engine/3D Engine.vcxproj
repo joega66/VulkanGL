@@ -46,6 +46,7 @@
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
     <ClCompile Include="Renderer\DepthPrepass.cpp" />
+    <ClCompile Include="Renderer\GlobalRenderResources.cpp" />
     <ClCompile Include="Renderer\ShadowProxy.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\MeshProxy.cpp" />
@@ -111,6 +112,7 @@
     <ClInclude Include="DRMShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
+    <ClInclude Include="Renderer\GlobalRenderResources.h" />
     <ClInclude Include="Renderer\MeshDrawCommand.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\ShadowProxy.h" />

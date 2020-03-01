@@ -28,6 +28,7 @@ public:
 
 	void Main();
 
+	/** @todo ALL of these (except ECS ofc) should be a singleton component. */
 	/** Platform implementations. */
 	Platform& _Platform;
 	Cursor& _Cursor;

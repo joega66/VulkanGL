@@ -31,6 +31,6 @@ int main(int argc, char* argv[])
 
 	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderMap, *Surface);
 	Engine.Main();
-	
+
 	return 0;
 }

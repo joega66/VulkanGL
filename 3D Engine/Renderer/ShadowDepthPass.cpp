@@ -2,6 +2,7 @@
 #include "SceneRenderer.h"
 #include "ShadowProxy.h"
 #include "FullscreenQuad.h"
+#include "GlobalRenderResources.h"
 #include <ECS/EntityManager.h>
 
 void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -15,14 +16,16 @@ void SceneRenderer::RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdL
 
 void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
+	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+
 	for (auto Entity : Scene.ECS.GetEntities<ShadowProxy>())
 	{
 		const auto& ShadowProxy = Scene.ECS.GetComponent<class ShadowProxy>(Entity);
 
 		PipelineStateDesc PSODesc = {};
-		PSODesc.RenderPass = DepthVisualizationRP;
-		PSODesc.Viewport.Width = SceneDepth.GetWidth();
-		PSODesc.Viewport.Height = SceneDepth.GetHeight();
+		PSODesc.RenderPass = GlobalResources.DepthVisualizationRP;
+		PSODesc.Viewport.Width = GlobalResources.SceneDepth.GetWidth();
+		PSODesc.Viewport.Height = GlobalResources.SceneDepth.GetHeight();
 		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
 		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
@@ -31,7 +34,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 
 		drm::Pipeline DepthVisualizationPipeline = Device.CreatePipeline(PSODesc);
 
-		CmdList.BeginRenderPass(DepthVisualizationRP);
+		CmdList.BeginRenderPass(GlobalResources.DepthVisualizationRP);
 
 		CmdList.BindPipeline(DepthVisualizationPipeline);
 

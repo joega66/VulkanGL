@@ -1,5 +1,6 @@
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/SceneProxy.h>
+#include <Renderer/GlobalRenderResources.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/GameSystem.h>
 #include <Systems/TransformGizmoSystem.h>
@@ -33,7 +34,7 @@ Engine::Engine(
 
 void Engine::Main()
 {
-	SceneRenderer SceneRenderer(*this);
+	ECS.AddSingletonComponent<GlobalRenderResources>(*this);
 
 	SystemsManager SystemsManager;
 
@@ -62,7 +63,8 @@ void Engine::Main()
 
 		SystemsManager.UpdateRenderSystems(*this);
 
-		SceneProxy SceneProxy(*this, SceneRenderer);
+		SceneProxy SceneProxy(*this);
+		SceneRenderer SceneRenderer(*this);
 
 		SceneRenderer.Render(UserInterface, SceneProxy);
 

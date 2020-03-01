@@ -13,10 +13,8 @@ public:
 
 	virtual void Update(Engine& Engine) override;
 
-	/** Main entrypoint of UI logic. */
 	void ShowUI(Engine& Engine);
 
-	/** Show the Render Settings. */
 	void ShowRenderSettings(Engine& Engine);
 
 	/** Called in the scene renderer to display the UI. */

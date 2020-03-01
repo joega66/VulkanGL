@@ -1,6 +1,8 @@
 #pragma once
 #include <DRM.h>
 
+class SceneProxy;
+
 /** Voxel cone tracing lighting cache. */
 class VCTLightingCache
 {
@@ -8,13 +10,13 @@ public:
 	VCTLightingCache(class Engine& Engine);
 
 	/** Voxelize the scene. */
-	void Render(SceneRenderer& SceneRenderer, SceneProxy& Scene, drm::CommandList& CmdList);
+	void Render(SceneProxy& Scene, drm::CommandList& CmdList);
 
 	/** Inject light into the voxel field. */
-	void ComputeLightInjection(SceneRenderer& SceneRenderer, SceneProxy& SceneProxy, drm::CommandList& CmdList);
+	void ComputeLightInjection(SceneProxy& Scene, drm::CommandList& CmdList);
 
 	/** Visualize the voxels. */
-	void RenderVisualization(SceneRenderer& SceneRenderer, drm::CommandList& CmdList);
+	void RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
 
 	inline uint32 GetVoxelGridSize() const { return VoxelGridSize; }
 	inline const drm::Image& GetVoxelRadiance() const { return VoxelRadiance; }

@@ -4,6 +4,7 @@
 #include "MeshProxy.h"
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
+#include "GlobalRenderResources.h"
 #include <Engine/Engine.h>
 
 struct VoxelDescriptors
@@ -115,11 +116,13 @@ public:
 	}
 };
 
-void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
+	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	VCTLightingCache& VCTLightingCache = SceneRenderer.VCTLightingCache;
+	VCTLightingCache& VCTLightingCache = GlobalResources.VCTLightingCache;
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = VCTLightingCache.GetRenderPass();
@@ -131,7 +134,7 @@ void SceneProxy::AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device
 	PSODesc.Viewport.Width = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.Viewport.Height = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.DescriptorSets = {
-		SceneRenderer.CameraDescriptorSet,
+		GlobalResources.CameraDescriptorSet,
 		&MeshProxy.GetSurfaceSet(), 
 		&MeshProxy.GetMaterialSet(),
 		&VCTLightingCache.GetDescriptorSet()
@@ -271,7 +274,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	CreateVoxelRP();
 }
 
-void VCTLightingCache::Render(SceneRenderer& SceneRenderer, SceneProxy& Scene, drm::CommandList& CmdList)
+void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	const glm::vec3 VoxelProbeCenter(
 		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
@@ -295,7 +298,7 @@ void VCTLightingCache::Render(SceneRenderer& SceneRenderer, SceneProxy& Scene, d
 
 	RenderVoxels(Scene, CmdList);
 
-	ComputeLightInjection(SceneRenderer, Scene, CmdList);
+	ComputeLightInjection(Scene, CmdList);
 }
 
 void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -328,7 +331,7 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 	CmdList.EndRenderPass();
 }
 
-void VCTLightingCache::ComputeLightInjection(SceneRenderer& SceneRenderer, SceneProxy& SceneProxy, drm::CommandList& CmdList)
+void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::CommandList& CmdList)
 {
 	auto& ECS = SceneProxy.ECS;
 
@@ -348,6 +351,8 @@ void VCTLightingCache::ComputeLightInjection(SceneRenderer& SceneRenderer, Scene
 		}
 	};
 
+	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
 		const auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
@@ -360,7 +365,7 @@ void VCTLightingCache::ComputeLightInjection(SceneRenderer& SceneRenderer, Scene
 
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
-		ComputeDesc.DescriptorSets = { SceneRenderer.CameraDescriptorSet, &VoxelDescriptorSet, LightInjectionSet };
+		ComputeDesc.DescriptorSets = { GlobalResources.CameraDescriptorSet, &VoxelDescriptorSet, LightInjectionSet };
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -374,7 +379,7 @@ void VCTLightingCache::ComputeLightInjection(SceneRenderer& SceneRenderer, Scene
 	}
 }
 
-void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::CommandList& CmdList)
+void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	DrawIndirectCommand DrawIndirectCommand;
 	DrawIndirectCommand.VertexCount = 0;
@@ -413,10 +418,12 @@ void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::Co
 
 	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
 
+	auto& GlobalResources = Scene.ECS.GetSingletonComponent<GlobalRenderResources>();
+
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = DebugRP;
-	PSODesc.Viewport.Width = SceneRenderer.SceneColor.GetWidth();
-	PSODesc.Viewport.Height = SceneRenderer.SceneColor.GetHeight();
+	PSODesc.Viewport.Width = GlobalResources.SceneColor.GetWidth();
+	PSODesc.Viewport.Height = GlobalResources.SceneColor.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;
 	PSODesc.DepthStencilState.DepthWriteEnable = true;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
@@ -424,7 +431,7 @@ void VCTLightingCache::RenderVisualization(SceneRenderer& SceneRenderer, drm::Co
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.SpecializationInfo.Add(0, VoxelSize);
-	PSODesc.DescriptorSets = { SceneRenderer.CameraDescriptorSet, &VoxelDescriptorSet };
+	PSODesc.DescriptorSets = { GlobalResources.CameraDescriptorSet, &VoxelDescriptorSet };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 

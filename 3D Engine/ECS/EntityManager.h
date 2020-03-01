@@ -50,8 +50,8 @@ public:
 		return Array->RemoveComponent(Entity);
 	}
 
-	template<typename ComponentType>
-	ComponentType& AddSingletonComponent(ComponentType&& Component)
+	template<typename ComponentType, typename ...ComponentArgs>
+	ComponentType& AddSingletonComponent(ComponentArgs&& ...Args)
 	{
 		uint32 ArrayIndex;
 
@@ -66,7 +66,7 @@ public:
 			ArrayIndex = SingletonComponentsArray.size() - 1;
 		}
 
-		SingletonComponentsArray[ArrayIndex] = std::make_shared<ComponentType>(std::move(Component));
+		SingletonComponentsArray[ArrayIndex] = std::make_shared<ComponentType>(Args...);
 		SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))] = ArrayIndex;
 		return *std::static_pointer_cast<ComponentType>(SingletonComponentsArray.back());
 	}

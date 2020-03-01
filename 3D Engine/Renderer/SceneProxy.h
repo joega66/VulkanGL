@@ -11,46 +11,13 @@ namespace EStaticDrawListType
 	};
 };
 
-struct CameraDescriptors
-{
-	drm::BufferView CameraUniform;
-	drm::BufferView DirectionalLightBuffer;
-	drm::BufferView PointLightBuffer;
-
-	static const std::vector<DescriptorBinding>& GetBindings()
-	{
-		static std::vector<DescriptorBinding> Bindings =
-		{
-			{ 0, 1, UniformBuffer },
-			{ 1, 1, StorageBuffer },
-			{ 2, 1, StorageBuffer },
-		};
-		return Bindings;
-	}
-};
-
-struct SkyboxDescriptors
-{
-	drm::ImageView Skybox;
-
-	static const std::vector<DescriptorBinding>& GetBindings()
-	{
-		static std::vector<DescriptorBinding> Bindings =
-		{
-			{ 0, 1, SampledImage }
-		};
-		return Bindings;
-	}
-};
-
 class Engine;
-class SceneRenderer;
 
 class SceneProxy
 {
 	friend class Engine;
 
-	SceneProxy(Engine& Engine, SceneRenderer& SceneRenderer);
+	SceneProxy(Engine& Engine);
 
 public:
 	SceneProxy(const SceneProxy&) = delete;
@@ -67,13 +34,13 @@ public:
 	std::array<std::vector<MeshDrawCommand>, EStaticDrawListType::Max> LightingPass;
 
 private:
-	void InitView(Engine& Engine, SceneRenderer& SceneRenderer);
-	void InitLights(Engine& Engine, SceneRenderer& SceneRenderer);
-	void InitDirectionalLights(Engine& Engine, SceneRenderer& SceneRenderer);
-	void InitPointLights(Engine& Engine, SceneRenderer& SceneRenderer);
-	void InitMeshDrawCommands(Engine& Engine, SceneRenderer& SceneRenderer);
+	void InitView(Engine& Engine);
+	void InitLights(Engine& Engine);
+	void InitDirectionalLights(Engine& Engine);
+	void InitPointLights(Engine& Engine);
+	void InitMeshDrawCommands(Engine& Engine);
 
-	void AddToDepthPrepass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToVoxelsPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
 };

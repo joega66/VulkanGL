@@ -251,6 +251,9 @@
     <ClInclude Include="Components\RenderSettings.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\GlobalRenderResources.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -417,6 +420,9 @@
     </ClCompile>
     <ClCompile Include="Engine\Material.cpp">
       <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GlobalRenderResources.cpp">
+      <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

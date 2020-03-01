@@ -23,7 +23,7 @@ void RenderSystem::Start(Engine& Engine)
 	auto& ECS = Engine.ECS;
 	auto& Device = Engine.Device;
 
-	ECS.AddSingletonComponent(RenderSettings());
+	ECS.AddSingletonComponent<RenderSettings>();
 
 	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{

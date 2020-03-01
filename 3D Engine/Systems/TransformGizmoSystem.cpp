@@ -95,8 +95,6 @@ void TransformGizmoSystem::Selection(Engine& Engine)
 		const Ray Ray = Engine.Camera.ScreenPointToRay(Engine._Cursor.Position);
 
 		std::vector<Entity> Hits;
-
-		// @todo Wrap this in a helper for just returning the closest hit entity.
 		for (auto Entity : ECS.GetEntities<StaticMeshComponent>())
 		{
 			if (Entity.GetEntityID() == TranslateAxis.X.GetEntityID() ||

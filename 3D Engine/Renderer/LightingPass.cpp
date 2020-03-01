@@ -1,6 +1,8 @@
 #include "MaterialShader.h"
 #include "SceneProxy.h"
 #include "SceneRenderer.h"
+#include "GlobalRenderResources.h"
+#include <ECS/EntityManager.h>
 
 template<EMeshType MeshType>
 class LightingPassVS : public MeshShader<MeshType>
@@ -46,19 +48,21 @@ public:
 	}
 };
 
-void SceneProxy::AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
+	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = SceneRenderer.LightingRP;
+	PSODesc.RenderPass = GlobalResources.LightingRP;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<LightingPassVS<MeshType>>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<LightingPassFS<MeshType>>();
-	PSODesc.Viewport.Width = SceneRenderer.SceneDepth.GetWidth();
-	PSODesc.Viewport.Height = SceneRenderer.SceneDepth.GetHeight();
+	PSODesc.Viewport.Width = GlobalResources.SceneDepth.GetWidth();
+	PSODesc.Viewport.Height = GlobalResources.SceneDepth.GetHeight();
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.DescriptorSets = { SceneRenderer.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), SceneRenderer.SceneTexturesDescriptorSet };
+	PSODesc.DescriptorSets = { GlobalResources.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), GlobalResources.SceneTexturesDescriptorSet };
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
 		MeshProxy.GetMaterial()->IsMasked() ?
@@ -69,7 +73,9 @@ void SceneProxy::AddToLightingPass(SceneRenderer& SceneRenderer, DRMDevice& Devi
 
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	CmdList.BeginRenderPass(LightingRP);
+	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+
+	CmdList.BeginRenderPass(GlobalResources.LightingRP);
 
 	MeshDrawCommand::Draw(CmdList, Scene.LightingPass[EStaticDrawListType::Opaque]);
 	MeshDrawCommand::Draw(CmdList, Scene.LightingPass[EStaticDrawListType::Masked]);
