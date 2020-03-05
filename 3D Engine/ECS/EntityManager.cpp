@@ -36,9 +36,12 @@ Entity EntityManager::CreateEntity()
 
 void EntityManager::Destroy(Entity& Entity)
 {
-	for (auto& ComponentArray : ComponentArrays)
+	for (auto& [Type, ComponentArray] : ComponentArrays)
 	{
-		ComponentArray.second.get()->RemoveComponent(Entity);
+		if (ComponentArray.get()->HasComponent(Entity))
+		{
+			ComponentArray.get()->RemoveComponent(Entity);
+		}
 	}
 
 	DeadEntities.push_back(Entity);

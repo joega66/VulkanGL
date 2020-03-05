@@ -22,23 +22,19 @@ public:
 
 		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
 
-		std::for_each(Submeshes.begin(), Submeshes.end(),
-			[&] (const Submesh& Submesh)
+		for (const auto& Submesh : Submeshes)
 		{
 			CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
 			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
-		});
+		}
 	}
 
 	static void Draw(drm::CommandList& CmdList, std::vector<MeshDrawCommand>& MeshDrawCommands)
 	{
-		std::for_each(
-			MeshDrawCommands.begin(),
-			MeshDrawCommands.end(),
-			[&] (MeshDrawCommand& MeshDrawCommand)
+		for (auto& MeshDrawCommand : MeshDrawCommands)
 		{
 			MeshDrawCommand.Draw(CmdList);
-		});
+		}
 	}
 
 private:

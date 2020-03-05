@@ -1,5 +1,6 @@
 #pragma once
 #include <Engine/Types.h>
+#include <filesystem>
 
 enum class EMBType
 {
@@ -57,6 +58,12 @@ public:
 
 	static void Exit();
 	static EMBReturn DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality = EMBModality::TASKMODAL);
+
+	/** 
+	  * Display the underlying operating system's file explorer.
+	  * @return Path to the file, or empty if the user cancels. 
+	  */
+	std::filesystem::path DisplayFileExplorer();
 
 	// File I/O
 	static std::string FileRead(const std::string& Filename);

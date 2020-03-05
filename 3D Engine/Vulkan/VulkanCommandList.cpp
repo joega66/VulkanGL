@@ -51,12 +51,10 @@ void VulkanCommandList::BindPipeline(const VulkanPipeline& Pipeline)
 void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VulkanDescriptorSet** DescriptorSets)
 {
 	std::vector<VkDescriptorSet> VulkanDescriptorSets(NumDescriptorSets);
-	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts(NumDescriptorSets);
 
 	for (uint32 SetIndex = 0; SetIndex < NumDescriptorSets; SetIndex++)
 	{
 		VulkanDescriptorSets[SetIndex] = DescriptorSets[SetIndex]->GetVulkanHandle();
-		DescriptorSetLayouts[SetIndex] = DescriptorSets[SetIndex]->GetLayout();
 	}
 
 	vkCmdBindDescriptorSets(

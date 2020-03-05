@@ -20,7 +20,7 @@ public:
 	 * @return Array of static mesh render resources. Size is 1 if Breakup is false.
 	 * @todo Replace with std::span
 	*/
-	std::vector<const StaticMesh*> LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup = false);
+	std::vector<const StaticMesh*> LoadStaticMesh(const std::filesystem::path& Path, bool Breakup = false);
 	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
 
 	void LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format = EFormat::R8G8B8A8_UNORM);

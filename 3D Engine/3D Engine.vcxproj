@@ -59,7 +59,7 @@
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
-    <ClCompile Include="Systems\GameSystem.cpp" />
+    <ClCompile Include="Systems\SceneSystem.cpp" />
     <ClCompile Include="Systems\RenderSystem.cpp" />
     <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
     <ClCompile Include="Systems\UserInterface.cpp" />
@@ -128,7 +128,7 @@
     <ClInclude Include="SPIRV-Cross\spirv_cross.hpp" />
     <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
-    <ClInclude Include="Systems\GameSystem.h" />
+    <ClInclude Include="Systems\SceneSystem.h" />
     <ClInclude Include="Systems\RenderSystem.h" />
     <ClInclude Include="Systems\TransformGizmoSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />

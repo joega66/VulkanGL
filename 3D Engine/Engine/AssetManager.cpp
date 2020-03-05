@@ -16,13 +16,12 @@ AssetManager::AssetManager(DRMDevice& Device)
 
 	LoadCubemap("Engine_Cubemap_Default", Cubemap);
 	LoadImage("Engine_BaseColor_Default", "../Images/Frozen-Ice-Texture.jpg");
-	LoadStaticMesh("Cube", "../Meshes/Primitives/Cube.gltf");
-	//LoadStaticMesh("Transform_Gizmo", "../Meshes/Primitives/TransformGizmo/TransformGizmo.obj");
+	LoadStaticMesh("../Meshes/Primitives/Cube.gltf");
 }
 
-std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::string& AssetName, const std::filesystem::path& Path, bool Breakup)
+std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesystem::path& Path, bool Breakup)
 {
-	check(StaticMeshes.find(AssetName) == StaticMeshes.end(), "Static mesh %s already exists.", AssetName.c_str());
+	const std::string AssetName = Path.stem().generic_string();
 
 	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(AssetName, *this, Device, Path);
 

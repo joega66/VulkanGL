@@ -13,10 +13,6 @@ public:
 
 	virtual void Update(Engine& Engine) override;
 
-	void ShowUI(Engine& Engine);
-
-	void ShowRenderSettings(Engine& Engine);
-
 	/** Called in the scene renderer to display the UI. */
 	void Render(DRMDevice& Device, const drm::RenderPass& RenderPass, drm::CommandList& CmdList);
 
@@ -35,4 +31,10 @@ private:
 	drm::Buffer IndexBuffer;
 
 	PipelineStateDesc PSODesc;
+
+	void ShowUI(Engine& Engine);
+
+	void ShowMainMenu(Engine& Engine);
+
+	void ShowRenderSettings(Engine& Engine);
 };

@@ -2,7 +2,7 @@
 #include <Renderer/SceneProxy.h>
 #include <Renderer/GlobalRenderResources.h>
 #include <Systems/EditorControllerSystem.h>
-#include <Systems/GameSystem.h>
+#include <Systems/SceneSystem.h>
 #include <Systems/TransformGizmoSystem.h>
 #include <Systems/RenderSystem.h>
 #include <Systems/UserInterface.h>
@@ -44,8 +44,8 @@ void Engine::Main()
 	EditorControllerSystem EditorControllerSystem;
 	SystemsManager.Register(EditorControllerSystem);
 
-	GameSystem GameSystem;
-	SystemsManager.Register(GameSystem);
+	SceneSystem SceneSystem;
+	SystemsManager.Register(SceneSystem);
 
 	UserInterface UserInterface;
 	SystemsManager.Register(UserInterface);
@@ -57,9 +57,9 @@ void Engine::Main()
 	{
 		_Platform.PollEvents();
 
-		SystemsManager.UpdateSystems(*this);
-
 		ECS.NotifyComponentEvents();
+
+		SystemsManager.UpdateSystems(*this);
 
 		SystemsManager.UpdateRenderSystems(*this);
 

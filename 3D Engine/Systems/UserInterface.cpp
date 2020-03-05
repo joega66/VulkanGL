@@ -4,6 +4,7 @@
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <Components/RenderSettings.h>
+#include <Systems/SceneSystem.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -107,6 +108,27 @@ void UserInterface::Update(Engine& Engine)
 void UserInterface::ShowUI(Engine& Engine)
 {
 	ShowRenderSettings(Engine);
+	ShowMainMenu(Engine);
+}
+
+void UserInterface::ShowMainMenu(Engine& Engine)
+{
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Open"))
+			{
+				if (const std::filesystem::path FilePath = Engine._Platform.DisplayFileExplorer(); !FilePath.empty())
+				{
+					auto Message = Engine.ECS.CreateEntity();
+					Engine.ECS.AddComponent(Message, SceneLoadRequest{ FilePath, true });
+				}
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
 }
 
 void UserInterface::ShowRenderSettings(Engine& Engine)

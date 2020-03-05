@@ -11,7 +11,10 @@
 
 #define WINDOWS_MEAN_AND_LEAN
 #include <Windows.h>
+#include <shlobj.h>
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 
 WindowsPlatform::WindowsPlatform(int32 Width, int32 Height)
 {
@@ -297,4 +300,34 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 	);
 
 	return WindowsMBReturn.at(MessageBoxID);
+}
+
+std::filesystem::path WindowsPlatform::DisplayFileExplorer()
+{
+	const HWND Hwnd = glfwGetWin32Window(Window);
+
+	OPENFILENAME OFN;
+	std::array<char, 1024> File;
+
+	ZeroMemory(&OFN, sizeof(OFN));
+	OFN.lStructSize = sizeof(OFN);
+	OFN.hwndOwner = Hwnd;
+	OFN.lpstrFile = File.data();
+	OFN.lpstrFile[0] = '\0';
+	OFN.nMaxFile = File.size();
+	OFN.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
+	OFN.nFilterIndex = 1;
+	OFN.lpstrFileTitle = NULL;
+	OFN.nMaxFileTitle = 0;
+	OFN.lpstrInitialDir = NULL;
+	OFN.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+	if (GetOpenFileName(&OFN) == TRUE)
+	{
+		return { OFN.lpstrFile };
+	}
+	else
+	{
+		return {};
+	}
 }

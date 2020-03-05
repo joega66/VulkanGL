@@ -10,7 +10,7 @@ inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entit
 	{
 		ArrayIndex = FreeList.front();
 		FreeList.pop_front();
-		Components.emplace(Components.begin() + ArrayIndex, std::move(Component));
+		Components[ArrayIndex] = std::move(Component);
 	}
 	else
 	{
@@ -70,7 +70,6 @@ template<typename ComponentType>
 inline void ComponentArray<ComponentType>::RemoveComponent(Entity& Entity)
 {
 	const uint32 ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
-	Components[ArrayIndex].ComponentType::~ComponentType();
 	FreeList.push_back(ArrayIndex);
 	EntityToArrayIndex.erase(Entity.GetEntityID());
 }
