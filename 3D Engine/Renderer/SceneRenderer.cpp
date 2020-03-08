@@ -8,7 +8,7 @@
 #include <Systems/UserInterface.h>
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
-#include "GlobalRenderResources.h"
+#include "GlobalRenderData.h"
 
 SceneRenderer::SceneRenderer(Engine& Engine)
 	: Device(Engine.Device)
@@ -18,9 +18,9 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 {
 }
 
-void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
+void SceneRenderer::Render(SceneProxy& Scene)
 {
-	GlobalRenderResources& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+	GlobalRenderData& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
@@ -28,7 +28,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 	RenderShadowDepths(Scene, CmdList);
 
-	VCTLightingCache& VCTLightingCache = GlobalResources.VCTLightingCache;
+	VCTLightingCache& VCTLightingCache = GlobalData.VCTLightingCache;
 	VCTLightingCache.Render(Scene, CmdList);
 
 	if (ECS.GetSingletonComponent<RenderSettings>().DrawVoxels && VCTLightingCache.IsDebuggingEnabled())
@@ -42,7 +42,7 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 	
 	RenderSkybox(Scene, CmdList);
 
-	UserInterface.Render(Device, GlobalResources.LightingRP, CmdList);
+	ECS.GetSingletonComponent<ImGuiRenderData>().Render(CmdList);
 
 	CmdList.EndRenderPass();
 
@@ -53,16 +53,16 @@ void SceneRenderer::Render(UserInterface& UserInterface, SceneProxy& Scene)
 
 void SceneRenderer::Present(drm::CommandList& CmdList)
 {
-	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
-	const uint32 ImageIndex = ECS.GetSingletonComponent<GlobalRenderResources>().Surface.AcquireNextImage(Device);
-	const drm::Image& PresentImage = GlobalResources.Surface.GetImage(ImageIndex);
+	const uint32 ImageIndex = ECS.GetSingletonComponent<GlobalRenderData>().Surface.AcquireNextImage(Device);
+	const drm::Image& PresentImage = GlobalData.Surface.GetImage(ImageIndex);
 
 	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 
-	CmdList.BlitImage(GlobalResources.SceneColor, EImageLayout::TransferSrcOptimal, PresentImage, EImageLayout::TransferDstOptimal, EFilter::Nearest);
+	CmdList.BlitImage(GlobalData.SceneColor, EImageLayout::TransferSrcOptimal, PresentImage, EImageLayout::TransferDstOptimal, EFilter::Nearest);
 
 	Barrier.SrcAccessMask = EAccess::TransferWrite;
 	Barrier.DstAccessMask = EAccess::MemoryRead;
@@ -71,5 +71,5 @@ void SceneRenderer::Present(drm::CommandList& CmdList)
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &Barrier);
 
-	GlobalResources.Surface.Present(Device, ImageIndex, CmdList);
+	GlobalData.Surface.Present(Device, ImageIndex, CmdList);
 }

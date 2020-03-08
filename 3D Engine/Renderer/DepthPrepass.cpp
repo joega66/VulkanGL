@@ -1,7 +1,7 @@
 #include "MaterialShader.h"
 #include "SceneProxy.h"
 #include "SceneRenderer.h"
-#include "GlobalRenderResources.h"
+#include "GlobalRenderData.h"
 #include <ECS/EntityManager.h>
 
 template<EMeshType MeshType>
@@ -50,21 +50,21 @@ public:
 
 void SceneProxy::AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
-	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
 	std::vector<const drm::DescriptorSet*> DescriptorSets =
 	{
-		GlobalResources.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet()
+		GlobalData.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet()
 	};
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = GlobalResources.DepthRP;
+	PSODesc.RenderPass = GlobalData.DepthRP;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DepthPrepassVS<MeshType>>();
 	PSODesc.ShaderStages.Fragment = MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr;
-	PSODesc.Viewport.Width = GlobalResources.SceneDepth.GetWidth();
-	PSODesc.Viewport.Height = GlobalResources.SceneDepth.GetHeight();
+	PSODesc.Viewport.Width = GlobalData.SceneDepth.GetWidth();
+	PSODesc.Viewport.Height = GlobalData.SceneDepth.GetHeight();
 	PSODesc.DescriptorSets = DescriptorSets;
 
 	DepthPrepass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc));
@@ -72,9 +72,9 @@ void SceneProxy::AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 
 void SceneRenderer::RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
-	CmdList.BeginRenderPass(GlobalResources.DepthRP);
+	CmdList.BeginRenderPass(GlobalData.DepthRP);
 
 	MeshDrawCommand::Draw(CmdList, Scene.DepthPrepass);
 

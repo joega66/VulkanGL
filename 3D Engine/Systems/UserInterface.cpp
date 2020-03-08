@@ -5,6 +5,7 @@
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <Components/RenderSettings.h>
 #include <Systems/SceneSystem.h>
+#include <Renderer/GlobalRenderData.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -60,8 +61,11 @@ void UserInterface::Start(Engine& Engine)
 
 	ImGui::StyleColorsDark();
 
-	CreateImGuiRenderResources(Engine.Device);
+	ImGuiRenderData& RenderData = Engine.ECS.AddSingletonComponent<ImGuiRenderData>(Engine.Device);
 
+	auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
+
+	PipelineStateDesc PSODesc;
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
 	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
@@ -81,13 +85,15 @@ void UserInterface::Start(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
+	PSODesc.DescriptorSets = { &RenderData.DescriptorSet };
+	PSODesc.RenderPass = GlobalData.LightingRP;
 
-	Engine._Screen.ScreenResizeEvent([&] (int32 Width, int32 Height)
+	Engine._Screen.ScreenResizeEvent([&Engine, &ImGui, &RenderData, PSODesc] (int32 Width, int32 Height) mutable
 	{
-		ImGui.DisplaySize = ImVec2((float)Width, (float)Height);
-
+		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
 		PSODesc.Viewport.Width = Width;
 		PSODesc.Viewport.Height = Height;
+		RenderData.Pipeline = Engine.Device.CreatePipeline(PSODesc);
 	});
 }
 
@@ -102,7 +108,7 @@ void UserInterface::Update(Engine& Engine)
 
 	ImGui::Render();
 
-	UploadImGuiDrawData(Engine.Device);
+	Engine.ECS.GetSingletonComponent<ImGuiRenderData>().Update(Engine.Device);
 }
 
 void UserInterface::ShowUI(Engine& Engine)
@@ -148,20 +154,57 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 	ImGui::End();
 }
 
-void UserInterface::Render(DRMDevice& Device, const drm::RenderPass& RenderPass, drm::CommandList& CmdList)
+ImGuiRenderData::ImGuiRenderData(DRMDevice& Device)
+{
+	ImGuiIO& Imgui = ImGui::GetIO();
+
+	unsigned char* Pixels;
+	int32 Width, Height;
+	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
+
+	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
+
+	struct ImGuiDescriptors
+	{
+		drm::ImageView FontImage;
+		drm::BufferView ImguiUniform;
+
+		static const std::vector<DescriptorBinding>& GetBindings()
+		{
+			static const std::vector<DescriptorBinding> Bindings =
+			{
+				{ 0, 1, EDescriptorType::SampledImage },
+				{ 1, 1, EDescriptorType::UniformBuffer }
+			};
+			return Bindings;
+		}
+	};
+
+	DescriptorSetLayout = Device.CreateDescriptorSetLayout(ImGuiDescriptors::GetBindings().size(), ImGuiDescriptors::GetBindings().data());
+	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
+
+	ImGuiDescriptors Descriptors;
+	Descriptors.FontImage = drm::ImageView(FontImage, Device.CreateSampler({}));
+	Descriptors.ImguiUniform = ImguiUniform;
+
+	DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
+
+	drm::UploadImageData(Device, Pixels, FontImage);
+
+	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)FontImage.GetNativeHandle();
+}
+
+void ImGuiRenderData::Render(drm::CommandList& CmdList)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 
-	PSODesc.RenderPass = RenderPass;
-	PSODesc.DescriptorSets = { &DescriptorSet };
-
 	if (DrawData->CmdListsCount > 0)
 	{
-		drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
-
 		CmdList.BindPipeline(Pipeline);
 
-		CmdList.BindDescriptorSets(Pipeline, 1, PSODesc.DescriptorSets.data());
+		std::vector<const drm::DescriptorSet*> DescriptorSets = { &DescriptorSet };
+		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
 
@@ -202,48 +245,7 @@ void UserInterface::Render(DRMDevice& Device, const drm::RenderPass& RenderPass,
 	}
 }
 
-void UserInterface::CreateImGuiRenderResources(DRMDevice& Device)
-{
-	ImGuiIO& Imgui = ImGui::GetIO();
-
-	unsigned char* Pixels;
-	int32 Width, Height;
-	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
-
-	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
-
-	struct ImGuiDescriptors
-	{
-		drm::ImageView FontImage;
-		drm::BufferView ImguiUniform;
-
-		static const std::vector<DescriptorBinding>& GetBindings()
-		{
-			static const std::vector<DescriptorBinding> Bindings =
-			{
-				{ 0, 1, EDescriptorType::SampledImage },
-				{ 1, 1, EDescriptorType::UniformBuffer }
-			};
-			return Bindings;
-		}
-	};
-
-	DescriptorSetLayout = Device.CreateDescriptorSetLayout(ImGuiDescriptors::GetBindings().size(), ImGuiDescriptors::GetBindings().data());
-	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
-
-	ImGuiDescriptors Descriptors;
-	Descriptors.FontImage = drm::ImageView(FontImage, Device.CreateSampler({}));
-	Descriptors.ImguiUniform = ImguiUniform;
-
-	DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
-	
-	drm::UploadImageData(Device, Pixels, FontImage);
-	
-	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)FontImage.GetNativeHandle();
-}
-
-void UserInterface::UploadImGuiDrawData(DRMDevice& Device)
+void ImGuiRenderData::Update(DRMDevice& Device)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 	const uint32 VertexBufferSize = DrawData->TotalVtxCount * sizeof(ImDrawVert);

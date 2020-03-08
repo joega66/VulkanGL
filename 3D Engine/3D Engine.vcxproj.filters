@@ -248,11 +248,11 @@
     <ClInclude Include="Components\RenderSettings.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\GlobalRenderResources.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Systems\SceneSystem.h">
       <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GlobalRenderData.h">
+      <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -418,11 +418,11 @@
     <ClCompile Include="Engine\Material.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\GlobalRenderResources.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Systems\SceneSystem.cpp">
       <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GlobalRenderData.cpp">
+      <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

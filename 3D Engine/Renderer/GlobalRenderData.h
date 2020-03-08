@@ -47,11 +47,11 @@ struct SkyboxDescriptors
 	}
 };
 
-/** Render resources, typically bound to set #0, visible to all passes. */
-class GlobalRenderResources
+/** Global render data, typically bound to set #0, visible to all passes. */
+class GlobalRenderData
 {
 public:
-	GlobalRenderResources(class Engine& Engine);
+	GlobalRenderData(class Engine& Engine);
 
 	DRMDevice& Device;
 	drm::Surface& Surface;

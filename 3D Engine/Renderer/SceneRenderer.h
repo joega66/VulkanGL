@@ -9,7 +9,7 @@ class SceneRenderer
 public:
 	SceneRenderer(class Engine& Engine);
 
-	void Render(class UserInterface& UserInterface, SceneProxy& Scene);
+	void Render(SceneProxy& Scene);
 
 private:
 	DRMDevice& Device;

@@ -1,8 +1,8 @@
-#include "GlobalRenderResources.h"
+#include "GlobalRenderData.h"
 #include <Engine/Engine.h>
 #include <Engine/Screen.h>
 
-GlobalRenderResources::GlobalRenderResources(Engine& Engine)
+GlobalRenderData::GlobalRenderData(Engine& Engine)
 	: Device(Engine.Device)
 	, Surface(Engine.Surface)
 	, CameraDescriptorSet(Engine.Device)
@@ -33,7 +33,7 @@ GlobalRenderResources::GlobalRenderResources(Engine& Engine)
 	});
 }
 
-void GlobalRenderResources::CreateDepthRP(DRMDevice& Device)
+void GlobalRenderData::CreateDepthRP(DRMDevice& Device)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.DepthAttachment = drm::AttachmentView(
@@ -47,7 +47,7 @@ void GlobalRenderResources::CreateDepthRP(DRMDevice& Device)
 	DepthRP = Device.CreateRenderPass(RPDesc);
 }
 
-void GlobalRenderResources::CreateLightingRP(DRMDevice& Device)
+void GlobalRenderData::CreateLightingRP(DRMDevice& Device)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments.push_back(drm::AttachmentView(&SceneColor, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::TransferSrcOptimal));
@@ -56,7 +56,7 @@ void GlobalRenderResources::CreateLightingRP(DRMDevice& Device)
 	LightingRP = Device.CreateRenderPass(RPDesc);
 }
 
-void GlobalRenderResources::CreateDepthVisualizationRP(DRMDevice& Device)
+void GlobalRenderData::CreateDepthVisualizationRP(DRMDevice& Device)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments.push_back(drm::AttachmentView(

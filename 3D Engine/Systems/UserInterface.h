@@ -4,23 +4,8 @@
 
 class Engine;
 
-class UserInterface : public IRenderSystem
+struct ImGuiRenderData
 {
-public:
-	~UserInterface();
-	
-	virtual void Start(Engine& Engine) override;
-
-	virtual void Update(Engine& Engine) override;
-
-	/** Called in the scene renderer to display the UI. */
-	void Render(DRMDevice& Device, const drm::RenderPass& RenderPass, drm::CommandList& CmdList);
-
-private:
-	void CreateImGuiRenderResources(DRMDevice& Device);
-
-	void UploadImGuiDrawData(DRMDevice& Device);
-
 	drm::Image FontImage;
 	drm::Buffer ImguiUniform;
 
@@ -30,8 +15,25 @@ private:
 	drm::Buffer VertexBuffer;
 	drm::Buffer IndexBuffer;
 
-	PipelineStateDesc PSODesc;
+	drm::Pipeline Pipeline;
 
+	ImGuiRenderData(DRMDevice& Device);
+
+	void Render(drm::CommandList& CmdList);
+
+	void Update(DRMDevice& Device);
+};
+
+class UserInterface : public IRenderSystem
+{
+public:
+	~UserInterface();
+	
+	virtual void Start(Engine& Engine) override;
+
+	virtual void Update(Engine& Engine) override;
+
+private:
 	void ShowUI(Engine& Engine);
 
 	void ShowMainMenu(Engine& Engine);

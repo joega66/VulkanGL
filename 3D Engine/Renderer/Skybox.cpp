@@ -1,7 +1,7 @@
 #include "SceneRenderer.h"
 #include <ECS/EntityManager.h>
 #include <Engine/AssetManager.h>
-#include "GlobalRenderResources.h"
+#include "GlobalRenderData.h"
 
 class SkyboxVS : public drm::Shader
 {
@@ -43,17 +43,17 @@ public:
 
 void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	auto& GlobalResources = ECS.GetSingletonComponent<GlobalRenderResources>();
+	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
 	const SkyboxVS* VertShader = ShaderMap.FindShader<SkyboxVS>();
 	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = GlobalResources.LightingRP;
-	PSODesc.Viewport.Width = GlobalResources.SceneColor.GetWidth();
-	PSODesc.Viewport.Height = GlobalResources.SceneColor.GetHeight();
+	PSODesc.RenderPass = GlobalData.LightingRP;
+	PSODesc.Viewport.Width = GlobalData.SceneColor.GetWidth();
+	PSODesc.Viewport.Height = GlobalData.SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.DescriptorSets = { GlobalResources.CameraDescriptorSet, GlobalResources.SkyboxDescriptorSet };
+	PSODesc.DescriptorSets = { GlobalData.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 

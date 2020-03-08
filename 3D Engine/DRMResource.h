@@ -578,11 +578,11 @@ namespace drm { class Shader; }
 
 struct ShaderStages
 {
-	const drm::Shader* Vertex;
-	const drm::Shader* TessControl;
-	const drm::Shader* TessEval;
-	const drm::Shader* Geometry;
-	const drm::Shader* Fragment;
+	const drm::Shader* Vertex = nullptr;
+	const drm::Shader* TessControl = nullptr;
+	const drm::Shader* TessEval = nullptr;
+	const drm::Shader* Geometry = nullptr;
+	const drm::Shader* Fragment = nullptr;
 
 	friend bool operator==(const ShaderStages& L, const ShaderStages& R)
 	{
