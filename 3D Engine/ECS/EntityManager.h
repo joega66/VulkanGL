@@ -121,9 +121,6 @@ public:
 	void NotifyComponentEvents();
 
 private:
-	/** Next entity id to be allocated. */
-	uint32 NextEntityID = 0;
-
 	/** Map of prefab names to prefab entities. */
 	HashTable<std::string, Entity> Prefabs;
 

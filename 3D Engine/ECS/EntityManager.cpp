@@ -24,7 +24,7 @@ Entity EntityManager::CreateEntity()
 		else
 		{
 			EntityStatus.push_back(true);
-			return Entities.emplace_back(Entity{ NextEntityID++ });
+			return Entities.emplace_back(Entity{ Entities.size() });
 		}
 	}();
 	
