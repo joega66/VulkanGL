@@ -60,11 +60,11 @@ void SceneProxy::AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 	PSODesc.ShaderStages.Fragment = MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr;
 	PSODesc.Viewport.Width = GlobalData.SceneDepth.GetWidth();
 	PSODesc.Viewport.Height = GlobalData.SceneDepth.GetHeight();
-	PSODesc.Layouts = { GlobalData.CameraDescriptorSet, MeshProxy.GetSurfaceSet(), MeshProxy.GetMaterialSet() };
+	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), MeshProxy.GetMaterialSet().GetLayout() };
 
-	std::vector<const drm::DescriptorSet*> DescriptorSets =
+	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
-		GlobalData.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet()
+		GlobalData.CameraDescriptorSet, MeshProxy.GetSurfaceSet(), MeshProxy.GetMaterialSet()
 	};
 
 	DepthPrepass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));

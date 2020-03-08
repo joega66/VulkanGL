@@ -85,7 +85,7 @@ void UserInterface::Start(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { RenderData.DescriptorSet };
+	PSODesc.Layouts = { RenderData.DescriptorSet.GetLayout() };
 	PSODesc.RenderPass = GlobalData.LightingRP;
 
 	Engine._Screen.ScreenResizeEvent([&Engine, &ImGui, &RenderData, PSODesc] (int32 Width, int32 Height) mutable
@@ -203,8 +203,7 @@ void ImGuiRenderData::Render(drm::CommandList& CmdList)
 	{
 		CmdList.BindPipeline(Pipeline);
 
-		std::vector<const drm::DescriptorSet*> DescriptorSets = { &DescriptorSet };
-		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+		CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetNativeHandle());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
 

@@ -62,14 +62,25 @@ void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 	PSODesc.Viewport.Height = GlobalData.SceneDepth.GetHeight();
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.Layouts = { GlobalData.CameraDescriptorSet, MeshProxy.GetSurfaceSet(), MeshProxy.GetMaterialSet(), GlobalData.SceneTexturesDescriptorSet };
+	PSODesc.Layouts = 
+	{
+		GlobalData.CameraDescriptorSet.GetLayout(), 
+		MeshProxy.GetSurfaceSet().GetLayout(), 
+		MeshProxy.GetMaterialSet().GetLayout(), 
+		GlobalData.SceneTexturesDescriptorSet.GetLayout() 
+	};
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
 		MeshProxy.GetMaterial()->IsMasked() ?
 		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
 
-	std::vector<const drm::DescriptorSet*> DescriptorSets =
-	{ GlobalData.CameraDescriptorSet, &MeshProxy.GetSurfaceSet(), &MeshProxy.GetMaterialSet(), GlobalData.SceneTexturesDescriptorSet };
+	const std::vector<VkDescriptorSet> DescriptorSets = 
+	{
+		GlobalData.CameraDescriptorSet, 
+		MeshProxy.GetSurfaceSet(), 
+		MeshProxy.GetMaterialSet(), 
+		GlobalData.SceneTexturesDescriptorSet 
+	};
 
 	LightingPass[StaticDrawListType].push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
 }

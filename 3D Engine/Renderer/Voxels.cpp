@@ -134,18 +134,18 @@ void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, con
 	PSODesc.Viewport.Width = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.Viewport.Height = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.Layouts = {
-		GlobalData.CameraDescriptorSet,
-		MeshProxy.GetSurfaceSet(), 
-		MeshProxy.GetMaterialSet(),
-		VCTLightingCache.GetDescriptorSet()
+		GlobalData.CameraDescriptorSet.GetLayout(),
+		MeshProxy.GetSurfaceSet().GetLayout(),
+		MeshProxy.GetMaterialSet().GetLayout(),
+		VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
 
-	std::vector<const drm::DescriptorSet*> DescriptorSets =
+	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
 		GlobalData.CameraDescriptorSet,
-		&MeshProxy.GetSurfaceSet(),
-		&MeshProxy.GetMaterialSet(),
-		&VCTLightingCache.GetDescriptorSet()
+		MeshProxy.GetSurfaceSet(),
+		MeshProxy.GetMaterialSet(),
+		VCTLightingCache.GetDescriptorSet()
 	};
 
 	VoxelsPass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
@@ -372,17 +372,13 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
-		ComputeDesc.Layouts = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet, LightInjectionSet };
+		ComputeDesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), LightInjectionSet.GetLayout() };
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
-		std::vector<const drm::DescriptorSet*> DescriptorSets =
-		{
-			GlobalData.CameraDescriptorSet, &VoxelDescriptorSet, LightInjectionSet
-		};
-
+		const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet, LightInjectionSet };
 		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
 		
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);
@@ -442,13 +438,13 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.SpecializationInfo.Add(0, VoxelSize);
-	PSODesc.Layouts = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet };
+	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout() };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 
-	std::vector<const drm::DescriptorSet*> DescriptorSets = { GlobalData.CameraDescriptorSet, &VoxelDescriptorSet };
+	const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet };
 	CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);

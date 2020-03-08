@@ -218,5 +218,5 @@ VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet(DRMDevice& De
 
 void VulkanDescriptorSetLayout::UpdateDescriptorSet(DRMDevice& Device, const VulkanDescriptorSet& DescriptorSet, void* Struct)
 {
-	static_cast<VulkanDevice&>(Device).GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetVulkanHandle(), DescriptorUpdateTemplate, Struct);
+	static_cast<VulkanDevice&>(Device).GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetNativeHandle(), DescriptorUpdateTemplate, Struct);
 }

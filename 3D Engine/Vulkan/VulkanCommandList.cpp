@@ -48,24 +48,18 @@ void VulkanCommandList::BindPipeline(const VulkanPipeline& Pipeline)
 	vkCmdBindPipeline(CommandBuffer, Pipeline.GetPipelineBindPoint(), Pipeline.GetPipeline());
 }
 
-void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VulkanDescriptorSet** DescriptorSets)
+void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets)
 {
-	std::vector<VkDescriptorSet> VulkanDescriptorSets(NumDescriptorSets);
-
-	for (uint32 SetIndex = 0; SetIndex < NumDescriptorSets; SetIndex++)
-	{
-		VulkanDescriptorSets[SetIndex] = DescriptorSets[SetIndex]->GetVulkanHandle();
-	}
-
 	vkCmdBindDescriptorSets(
 		CommandBuffer,
 		Pipeline.GetPipelineBindPoint(),
 		Pipeline.GetPipelineLayout(),
 		0,
-		VulkanDescriptorSets.size(),
-		VulkanDescriptorSets.data(),
+		NumDescriptorSets,
+		DescriptorSets,
 		0,
-		nullptr);
+		nullptr
+	);
 }
 
 void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers)
@@ -107,7 +101,8 @@ void VulkanCommandList::DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, 
 		Buffer.GetVulkanHandle(),
 		Buffer.GetOffset() + Offset,
 		DrawCount,
-		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0);
+		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0
+	);
 }
 
 void VulkanCommandList::Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ)

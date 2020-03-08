@@ -16,8 +16,8 @@ public:
 	VulkanDescriptorSet& operator=(const VulkanDescriptorSet&) = delete;
 	~VulkanDescriptorSet();
 
-	inline VkDescriptorSet GetVulkanHandle() const { return DescriptorSet; }
-	inline operator VkDescriptorSetLayout() const { return Layout; }
+	inline operator VkDescriptorSet() const { return DescriptorSet; }
+	inline const VkDescriptorSet& GetNativeHandle() const { return DescriptorSet; }
 	inline VkDescriptorSetLayout GetLayout() const { return Layout; }
 
 private:
