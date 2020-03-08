@@ -97,7 +97,7 @@ struct PipelineStateDesc
 	std::vector<EDynamicState> DynamicStates;
 	std::vector<VertexAttributeDescription> VertexAttributes;
 	std::vector<VertexBindingDescription> VertexBindings;
-	std::vector<const drm::DescriptorSet*> DescriptorSets;
+	std::vector<VkDescriptorSetLayout> Layouts;
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
@@ -138,7 +138,7 @@ struct ComputePipelineDesc
 {
 	const drm::Shader* ComputeShader;
 	SpecializationInfo SpecializationInfo;
-	std::vector<const drm::DescriptorSet*> DescriptorSets;
+	std::vector<VkDescriptorSetLayout> Layouts;
 
 	inline bool operator==(const ComputePipelineDesc& Other) const
 	{

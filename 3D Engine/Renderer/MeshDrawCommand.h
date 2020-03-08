@@ -8,9 +8,10 @@ public:
 	MeshDrawCommand(
 		DRMDevice& Device,
 		const MeshProxy& MeshProxy,
-		PipelineStateDesc& PSODesc)
+		PipelineStateDesc& PSODesc,
+		const std::vector<const drm::DescriptorSet*>& DescriptorSets)
 		: Submeshes(MeshProxy.GetSubmeshes())
-		, DescriptorSets(PSODesc.DescriptorSets)
+		, DescriptorSets(DescriptorSets)
 	{
 		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
 		Pipeline = Device.CreatePipeline(PSODesc);

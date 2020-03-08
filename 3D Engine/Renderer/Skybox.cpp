@@ -53,13 +53,14 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	PSODesc.Viewport.Width = GlobalData.SceneColor.GetWidth();
 	PSODesc.Viewport.Height = GlobalData.SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.DescriptorSets = { GlobalData.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
+	PSODesc.Layouts = { GlobalData.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 
-	CmdList.BindDescriptorSets(Pipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
+	std::vector<const drm::DescriptorSet*> DescriptorSets = { GlobalData.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
+	CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
 
 	const StaticMesh* Cube = Assets.GetStaticMesh("Cube");
 	for (const auto& Submesh : Cube->Submeshes)

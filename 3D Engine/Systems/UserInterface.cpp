@@ -85,7 +85,7 @@ void UserInterface::Start(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.DescriptorSets = { &RenderData.DescriptorSet };
+	PSODesc.Layouts = { RenderData.DescriptorSet };
 	PSODesc.RenderPass = GlobalData.LightingRP;
 
 	Engine._Screen.ScreenResizeEvent([&Engine, &ImGui, &RenderData, PSODesc] (int32 Width, int32 Height) mutable

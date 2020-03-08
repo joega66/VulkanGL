@@ -22,8 +22,7 @@ public:
 
 	const drm::Sampler* GetSampler(const SamplerDesc& SamplerDesc);
 
-	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> 
-	GetDescriptorSetLayout(
+	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> GetDescriptorSetLayout(
 		const std::vector<VkDescriptorSetLayoutBinding>& Bindings,
 		const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
 	);
@@ -51,7 +50,7 @@ private:
 
 	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout, VkDescriptorUpdateTemplate> DescriptorSetLayoutCache;
 
-	VkPipelineLayout GetPipelineLayout(const std::vector<const class VulkanDescriptorSet*>& DescriptorSets);
+	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts);
 
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 

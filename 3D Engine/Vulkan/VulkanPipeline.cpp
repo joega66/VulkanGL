@@ -5,7 +5,7 @@
 
 std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
-	VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.DescriptorSets);
+	VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts);
 
 	for (const auto& [CachedPSODesc, CachedPipeline, CachedPipelineLayout] : GraphicsPipelineCache)
 	{
@@ -22,7 +22,7 @@ std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineS
 
 std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputePipelineDesc)
 {
-	VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputePipelineDesc.DescriptorSets);
+	VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputePipelineDesc.Layouts);
 
 	for (const auto& [CachedComputePipelineDesc, CachedPipeline, CachedPipelineLayout] : ComputePipelineCache)
 	{
@@ -486,21 +486,13 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	return Pipeline;
 }
 
-VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<const VulkanDescriptorSet*>& DescriptorSets)
+VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts)
 {
-	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
-	DescriptorSetLayouts.reserve(DescriptorSets.size());
-
-	for (const drm::DescriptorSet* DescriptorSet : DescriptorSets)
-	{
-		DescriptorSetLayouts.push_back(DescriptorSet->GetLayout());
-	}
-
 	for (const auto&[CachedDescriptorSetLayouts, CachedPipelineLayout] : PipelineLayoutCache)
 	{
 		if (std::equal(
 			CachedDescriptorSetLayouts.begin(), CachedDescriptorSetLayouts.end(), 
-			DescriptorSetLayouts.begin(), DescriptorSetLayouts.end())
+			Layouts.begin(), Layouts.end())
 			)
 		{
 			return CachedPipelineLayout;
@@ -508,13 +500,13 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<const VulkanDe
 	}
 
 	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-	PipelineLayoutInfo.setLayoutCount = DescriptorSetLayouts.size();
-	PipelineLayoutInfo.pSetLayouts = DescriptorSetLayouts.data();
+	PipelineLayoutInfo.setLayoutCount = Layouts.size();
+	PipelineLayoutInfo.pSetLayouts = Layouts.data();
 
 	VkPipelineLayout PipelineLayout;
 	vulkan(vkCreatePipelineLayout(Device, &PipelineLayoutInfo, nullptr, &PipelineLayout));
 
-	PipelineLayoutCache.push_back({ DescriptorSetLayouts, PipelineLayout });
+	PipelineLayoutCache.push_back({ Layouts, PipelineLayout });
 
 	return PipelineLayout;
 }

@@ -9,10 +9,7 @@ class VulkanDescriptorSet
 public:
 	VulkanDescriptorSet() = default;
 
-	VulkanDescriptorSet(class VulkanDescriptorPool& DescriptorPool, 
-		VkDescriptorSetLayout Layout, 
-		VkDescriptorSet DescriptorSet
-	);
+	VulkanDescriptorSet(class VulkanDescriptorPool& DescriptorPool, VkDescriptorSetLayout Layout, VkDescriptorSet DescriptorSet);
 	VulkanDescriptorSet(VulkanDescriptorSet&& Other);
 	VulkanDescriptorSet& operator=(VulkanDescriptorSet&& Other);
 	VulkanDescriptorSet(const VulkanDescriptorSet&) = delete;
@@ -20,6 +17,7 @@ public:
 	~VulkanDescriptorSet();
 
 	inline VkDescriptorSet GetVulkanHandle() const { return DescriptorSet; }
+	inline operator VkDescriptorSetLayout() const { return Layout; }
 	inline VkDescriptorSetLayout GetLayout() const { return Layout; }
 
 private:
@@ -81,6 +79,7 @@ public:
 	/** Update a descriptor set from a descriptor update template. */
 	void UpdateDescriptorSet(DRMDevice& Device, const VulkanDescriptorSet& DescriptorSet, void* Data);
 
+	inline operator VkDescriptorSetLayout() const { return DescriptorSetLayout; }
 	inline VkDescriptorSetLayout GetNativeHandle() const { return DescriptorSetLayout; }
 
 private:

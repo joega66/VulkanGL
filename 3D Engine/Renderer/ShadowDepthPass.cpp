@@ -30,7 +30,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		PSODesc.DepthStencilState.DepthWriteEnable = false;
 		PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<FullscreenVS>();
 		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
-		PSODesc.DescriptorSets = { &ShadowProxy.GetDescriptorSet() };
+		PSODesc.Layouts = { ShadowProxy.GetDescriptorSet() };
 
 		drm::Pipeline DepthVisualizationPipeline = Device.CreatePipeline(PSODesc);
 
@@ -38,7 +38,8 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 
 		CmdList.BindPipeline(DepthVisualizationPipeline);
 
-		CmdList.BindDescriptorSets(DepthVisualizationPipeline, PSODesc.DescriptorSets.size(), PSODesc.DescriptorSets.data());
+		std::vector<const drm::DescriptorSet*> DescriptorSets = { &ShadowProxy.GetDescriptorSet() };
+		CmdList.BindDescriptorSets(DepthVisualizationPipeline, DescriptorSets.size(), DescriptorSets.data());
 
 		CmdList.Draw(3, 1, 0, 0);
 

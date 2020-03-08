@@ -90,6 +90,7 @@ public:
 		_DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &DescriptorWrite);
 	}
 
+	inline operator VkDescriptorSetLayout() const { return _DescriptorSetLayout; }
 	inline operator const drm::DescriptorSetLayout&() { return _DescriptorSetLayout; }
 };
 
@@ -112,5 +113,6 @@ public:
 		DescriptorSetLayout.UpdateDescriptorSet(Device, _DescriptorSet, this);
 	}
 
+	inline operator VkDescriptorSetLayout() const { return DescriptorSetLayout; }
 	inline operator const drm::DescriptorSet*() const { return &_DescriptorSet; }
 };
