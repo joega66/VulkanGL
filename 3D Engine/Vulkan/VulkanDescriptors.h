@@ -66,25 +66,24 @@ private:
 	VkDescriptorPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 };
 
+class DRMDevice;
+
 class VulkanDescriptorSetLayout
 {
 public:
 	VulkanDescriptorSetLayout() = default;
+
 	VulkanDescriptorSetLayout(VulkanDevice& Device, uint32 NumEntries, const DescriptorBinding* Entries);
-	VulkanDescriptorSetLayout(VulkanDescriptorSetLayout&& Other);
-	VulkanDescriptorSetLayout& operator=(VulkanDescriptorSetLayout&& Other);
-	VulkanDescriptorSetLayout(const VulkanDescriptorSetLayout&) = delete;
-	VulkanDescriptorSetLayout& operator=(const VulkanDescriptorSetLayout&) = delete;
 
-	VulkanDescriptorSet CreateDescriptorSet();
+	/** Create a descriptor set with this layout. */
+	VulkanDescriptorSet CreateDescriptorSet(DRMDevice& Device);
 
-	void UpdateDescriptorSet(const VulkanDescriptorSet& DescriptorSet, void* Data);
+	/** Update a descriptor set from a descriptor update template. */
+	void UpdateDescriptorSet(DRMDevice& Device, const VulkanDescriptorSet& DescriptorSet, void* Data);
 
 	inline VkDescriptorSetLayout GetNativeHandle() const { return DescriptorSetLayout; }
 
 private:
-	VulkanDevice* Device = nullptr;
 	VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 	VkDescriptorUpdateTemplate DescriptorUpdateTemplate = VK_NULL_HANDLE;
-	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
 };

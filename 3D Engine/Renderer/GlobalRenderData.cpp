@@ -20,7 +20,7 @@ GlobalRenderData::GlobalRenderData(Engine& Engine)
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
-		SceneTexturesDescriptorSet.Update();
+		SceneTexturesDescriptorSet.Update(Device);
 
 		CreateDepthRP(Device);
 		CreateDepthVisualizationRP(Device);

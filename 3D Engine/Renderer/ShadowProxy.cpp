@@ -32,8 +32,8 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 	Descriptors.ShadowMap = drm::ImageView(ShadowMap, Device.CreateSampler({}));
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
 
-	DescriptorSet = ShadowLayout.CreateDescriptorSet();
-	ShadowLayout.UpdateDescriptorSet(DescriptorSet, Descriptors);
+	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
+	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
 }
 
 void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalLight)

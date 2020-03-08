@@ -16,10 +16,10 @@ SceneProxy::SceneProxy(Engine& Engine)
 	InitMeshDrawCommands(Engine);
 
 	GlobalRenderData& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
-	GlobalData.CameraDescriptorSet.Update();
+	GlobalData.CameraDescriptorSet.Update(Engine.Device);
 
 	GlobalData.SkyboxDescriptorSet.Skybox = drm::ImageView(*Engine.Scene.Skybox, Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }));
-	GlobalData.SkyboxDescriptorSet.Update();
+	GlobalData.SkyboxDescriptorSet.Update(Engine.Device);
 }
 
 void SceneProxy::InitView(Engine& Engine)

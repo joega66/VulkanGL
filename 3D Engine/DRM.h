@@ -80,14 +80,14 @@ public:
 		_DescriptorSetLayout = Device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
 	}
 
-	inline drm::DescriptorSet CreateDescriptorSet() 
+	inline drm::DescriptorSet CreateDescriptorSet(DRMDevice& Device) 
 	{ 
-		return _DescriptorSetLayout.CreateDescriptorSet();
+		return _DescriptorSetLayout.CreateDescriptorSet(Device);
 	}
 
-	inline void UpdateDescriptorSet(const drm::DescriptorSet& DescriptorSet, DescriptorSetType& DescriptorWrite) 
+	inline void UpdateDescriptorSet(DRMDevice& Device, const drm::DescriptorSet& DescriptorSet, DescriptorSetType& DescriptorWrite)
 	{ 
-		_DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &DescriptorWrite);
+		_DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &DescriptorWrite);
 	}
 
 	inline operator const drm::DescriptorSetLayout&() { return _DescriptorSetLayout; }
@@ -104,12 +104,12 @@ public:
 	DescriptorSet(DRMDevice& Device)
 	{
 		DescriptorSetLayout = Device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
-		_DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
+		_DescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
 	}
 
-	inline void Update() 
+	inline void Update(DRMDevice& Device)
 	{ 
-		DescriptorSetLayout.UpdateDescriptorSet(_DescriptorSet, this);
+		DescriptorSetLayout.UpdateDescriptorSet(Device, _DescriptorSet, this);
 	}
 
 	inline operator const drm::DescriptorSet*() const { return &_DescriptorSet; }

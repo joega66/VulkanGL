@@ -167,7 +167,6 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 	VulkanDevice& Device,
 	uint32 NumBindings,
 	const DescriptorBinding* Bindings)
-	: Device(&Device)
 {
 	static const VkDescriptorType DescriptorTypes[] =
 	{
@@ -177,6 +176,7 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 	};
 
+	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
 	DescriptorUpdateTemplateEntries.reserve(NumBindings);
 
 	std::vector<VkDescriptorSetLayoutBinding> DescriptorSetLayoutBindings;
@@ -211,29 +211,12 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 	std::tie(DescriptorSetLayout, DescriptorUpdateTemplate) = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings, DescriptorUpdateTemplateEntries);
 }
 
-VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanDescriptorSetLayout&& Other)
-	: Device(std::exchange(Other.Device, nullptr))
-	, DescriptorSetLayout(Other.DescriptorSetLayout)
-	, DescriptorUpdateTemplate(Other.DescriptorUpdateTemplate)
-	, DescriptorUpdateTemplateEntries(std::move(Other.DescriptorUpdateTemplateEntries))
+VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet(DRMDevice& Device)
 {
+	return static_cast<VulkanDevice&>(Device).GetDescriptorPoolManager().Allocate(static_cast<VulkanDevice&>(Device), DescriptorSetLayout);
 }
 
-VulkanDescriptorSetLayout& VulkanDescriptorSetLayout::operator=(VulkanDescriptorSetLayout&& Other)
+void VulkanDescriptorSetLayout::UpdateDescriptorSet(DRMDevice& Device, const VulkanDescriptorSet& DescriptorSet, void* Struct)
 {
-	Device = std::exchange(Other.Device, nullptr);
-	DescriptorSetLayout = Other.DescriptorSetLayout;
-	DescriptorUpdateTemplate = Other.DescriptorUpdateTemplate;
-	DescriptorUpdateTemplateEntries = std::move(Other.DescriptorUpdateTemplateEntries);
-	return *this;
-}
-
-VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet()
-{
-	return Device->GetDescriptorPoolManager().Allocate(*Device, DescriptorSetLayout);
-}
-
-void VulkanDescriptorSetLayout::UpdateDescriptorSet(const VulkanDescriptorSet& DescriptorSet, void* Struct)
-{
-	Device->GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetVulkanHandle(), DescriptorUpdateTemplate, Struct);
+	static_cast<VulkanDevice&>(Device).GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetVulkanHandle(), DescriptorUpdateTemplate, Struct);
 }

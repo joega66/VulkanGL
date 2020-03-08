@@ -245,7 +245,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	auto Bindings = DebugVoxels ? DebugVoxelsDescriptors::GetBindings() : VoxelDescriptors::GetBindings();
 
 	DescriptorSetLayout = Device.CreateDescriptorSetLayout(Bindings.size(), Bindings.data());
-	VoxelDescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
+	VoxelDescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
 
 	if (DebugVoxels)
 	{
@@ -259,7 +259,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		Descriptors.VoxelRadiance = VoxelRadiance;
 		Descriptors.VoxelPositions = VoxelPositions;
 		Descriptors.VoxelIndirectBuffer = VoxelIndirectBuffer;
-		DescriptorSetLayout.UpdateDescriptorSet(VoxelDescriptorSet, &Descriptors);
+		DescriptorSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
 	}
 	else
 	{
@@ -268,7 +268,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelNormal = VoxelNormal;
 		Descriptors.VoxelRadiance = VoxelRadiance;
-		DescriptorSetLayout.UpdateDescriptorSet(VoxelDescriptorSet, &Descriptors);
+		DescriptorSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
 	}
 
 	CreateVoxelRP();
@@ -360,7 +360,7 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 		DescriptorSet<LightInjectionDescriptors> LightInjectionSet(Device);
 		LightInjectionSet.ShadowMap = ShadowMap;
 		LightInjectionSet.LightProjBuffer = ShadowProxy.GetLightViewProjBuffer();
-		LightInjectionSet.Update();
+		LightInjectionSet.Update(Device);
 
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();

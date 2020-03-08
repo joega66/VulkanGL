@@ -182,13 +182,13 @@ ImGuiRenderData::ImGuiRenderData(DRMDevice& Device)
 	};
 
 	DescriptorSetLayout = Device.CreateDescriptorSetLayout(ImGuiDescriptors::GetBindings().size(), ImGuiDescriptors::GetBindings().data());
-	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet();
+	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
 
 	ImGuiDescriptors Descriptors;
 	Descriptors.FontImage = drm::ImageView(FontImage, Device.CreateSampler({}));
 	Descriptors.ImguiUniform = ImguiUniform;
 
-	DescriptorSetLayout.UpdateDescriptorSet(DescriptorSet, &Descriptors);
+	DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
 
 	drm::UploadImageData(Device, Pixels, FontImage);
 
