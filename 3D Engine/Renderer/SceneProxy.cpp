@@ -89,10 +89,9 @@ void SceneProxy::InitDirectionalLights(Engine& Engine)
 
 	DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	ECS.GetSingletonComponent<GlobalRenderData>().CameraDescriptorSet.DirectionalLightBuffer = DirectionalLightBuffer;
-	void* Data = Engine.Device.LockBuffer(DirectionalLightBuffer);
+	void* Data = DirectionalLightBuffer.GetData();
 	Platform::Memcpy(Data, &NumDirectionalLights.x, sizeof(NumDirectionalLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumDirectionalLights), DirectionalLightProxies.data(), sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
-	Engine.Device.UnlockBuffer(DirectionalLightBuffer);
 }
 
 void SceneProxy::InitPointLights(Engine& Engine)
@@ -123,10 +122,9 @@ void SceneProxy::InitPointLights(Engine& Engine)
 	PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
 	ECS.GetSingletonComponent<GlobalRenderData>().CameraDescriptorSet.PointLightBuffer = PointLightBuffer;
 
-	void* Data = Engine.Device.LockBuffer(PointLightBuffer);
+	void* Data = PointLightBuffer.GetData();
 	Platform::Memcpy(Data, &NumPointLights.x, sizeof(NumPointLights.x));
 	Platform::Memcpy((uint8*)Data + sizeof(NumPointLights), PointLightProxies.data(), sizeof(PointLightProxy) * PointLightProxies.size());
-	Engine.Device.UnlockBuffer(PointLightBuffer);
 }
 
 void SceneProxy::InitMeshDrawCommands(Engine& Engine)

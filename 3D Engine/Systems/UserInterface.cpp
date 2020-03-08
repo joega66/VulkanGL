@@ -256,37 +256,24 @@ void ImGuiRenderData::Update(DRMDevice& Device)
 		return;
 	}
 
-	// Upload ImGui vertex/index buffer data.
-
 	VertexBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::HostVisible, VertexBufferSize);
-	ImDrawVert* VertexData = static_cast<ImDrawVert*>(Device.LockBuffer(VertexBuffer));
+	ImDrawVert* VertexData = static_cast<ImDrawVert*>(VertexBuffer.GetData());
+	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::HostVisible, IndexBufferSize);
+	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(IndexBuffer.GetData());
 
 	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
 	{
 		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
 		Platform::Memcpy(VertexData, DrawList->VtxBuffer.Data, DrawList->VtxBuffer.Size * sizeof(ImDrawVert));
-		VertexData += DrawList->VtxBuffer.Size;
-	}
-
-	Device.UnlockBuffer(VertexBuffer);
-
-	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::HostVisible, IndexBufferSize);
-	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(Device.LockBuffer(IndexBuffer));
-
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
-	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
 		Platform::Memcpy(IndexData, DrawList->IdxBuffer.Data, DrawList->IdxBuffer.Size * sizeof(ImDrawIdx));
+		VertexData += DrawList->VtxBuffer.Size;
 		IndexData += DrawList->IdxBuffer.Size;
 	}
 
-	Device.UnlockBuffer(IndexBuffer);
-
 	ImGuiIO& ImGui = ImGui::GetIO();
-	glm::vec4* ImGuiData = static_cast<glm::vec4*>(Device.LockBuffer(ImguiUniform));
+	glm::vec4* ImGuiData = static_cast<glm::vec4*>(ImguiUniform.GetData());
 	ImGuiData->x = 2.0f / ImGui.DisplaySize.x;
 	ImGuiData->y = 2.0f / ImGui.DisplaySize.y;
 	ImGuiData->z = -1.0f - DrawData->DisplayPos.x * ImGuiData->x;
 	ImGuiData->w = -1.0f - DrawData->DisplayPos.y * ImGuiData->y;
-	Device.UnlockBuffer(ImguiUniform);
 }

@@ -105,7 +105,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
 	);
 
-	uint8* Memmapped = static_cast<uint8*>(Device.LockBuffer(StagingBuffer));
+	uint8* Memmapped = static_cast<uint8*>(StagingBuffer.GetData());
 
 	Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
 	CmdList.CopyBuffer(StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
@@ -127,8 +127,6 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	CmdList.CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, NormalView.byteLength); // @todo Generate tangents
 	Memmapped += NormalView.byteLength;
 	SrcOffset += NormalView.byteLength;
-
-	Device.UnlockBuffer(StagingBuffer);
 
 	Device.SubmitCommands(CmdList);
 

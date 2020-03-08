@@ -9,14 +9,15 @@ class VulkanMemory
 {
 	friend class VulkanBuffer;
 public:
-	VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
+	VulkanMemory(VulkanDevice& Device, VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size);
 
-	static std::optional<class VulkanBuffer> Allocate(
-		std::unique_ptr<VulkanMemory>& Memory,
-		VkDeviceSize Size,
-		VkDeviceSize AlignedSize,
-		EBufferUsage Usage
-	);
+	~VulkanMemory();
+
+	/** Suballocate a VulkanBuffer region. */
+	std::optional<class VulkanBuffer> Suballocate(VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage);
+
+	/** Upload a chunk of data to the VulkanBuffer region. */
+	void UploadBufferData(VulkanBuffer& Buffer, const void* Data);
 
 	inline VkBuffer GetVulkanHandle() const { return Buffer; }
 	inline VkDeviceMemory GetMemoryHandle() const { return Memory; }
@@ -24,14 +25,17 @@ public:
 	inline VkMemoryPropertyFlags GetProperties() const { return Properties; }
 	inline VkDeviceSize GetSize() const { return Size; }
 	inline VkDeviceSize GetSizeRemaining() const { return Size - Used; };
+	inline void* GetData() { return Data; }
 
 private:
+	VulkanDevice& Device;
 	VkBuffer Buffer;
 	VkDeviceMemory Memory;
 	VkBufferUsageFlags Usage;
 	VkMemoryPropertyFlags Properties;
 	VkDeviceSize Size;
 	VkDeviceSize Used;
+	void* Data = nullptr;
 
 	struct Slot
 	{
@@ -56,8 +60,9 @@ public:
 	VulkanBuffer(const VulkanBuffer&) = delete;
 	VulkanBuffer& operator=(const VulkanBuffer&) = delete;
 
+	inline void* GetData() { return static_cast<uint8*>(Memory->GetData()) + GetOffset(); }
 	inline VkBuffer GetVulkanHandle() const { return Memory->Buffer; }
-	inline VkDeviceMemory GetMemoryHandle() const { return Memory->Memory; }
+	inline VulkanMemory& GetMemory() const { return *Memory; }
 	inline VkDeviceSize GetAlignedSize() const { return AlignedSize; }
 	inline VkDeviceSize GetOffset() const { return Offset; }
 	inline VkMemoryPropertyFlags GetProperties() const { return Memory->Properties; }
@@ -90,12 +95,6 @@ public:
 		const void* Data = nullptr);
 
 	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
-
-	void UploadBufferData(const class VulkanBuffer& Buffer, const void* Data);
-
-	void* LockBuffer(const class VulkanBuffer& Buffer);
-
-	void UnlockBuffer(const class VulkanBuffer& Buffer);
 
 private:
 	VulkanDevice& Device;

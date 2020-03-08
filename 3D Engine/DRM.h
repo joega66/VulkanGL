@@ -47,12 +47,6 @@ public:
 	/** Create a sampler resource. */
 	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) = 0;
 
-	/** Map a buffer into host memory. */
-	virtual void* LockBuffer(const drm::Buffer& Buffer) = 0;
-
-	/** Unmap a buffer from host memory. */
-	virtual void UnlockBuffer(const drm::Buffer& Buffer) = 0;
-
 	/** Create a render pass resource. */
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
 };

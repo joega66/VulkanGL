@@ -109,7 +109,7 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 		{
 			Image = std::make_unique<drm::Image>(Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst));
 			StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize());
-			MemMapped = Device.LockBuffer(StagingBuffer);
+			MemMapped = StagingBuffer.GetData();
 		}
 
 		check(Image->GetWidth() == Width && Image->GetHeight() == Height, "Cubemap faces must all be the same size.");
@@ -118,8 +118,6 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 
 		Platform::FreeImage(Pixels);
 	}
-
-	Device.UnlockBuffer(StagingBuffer);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 

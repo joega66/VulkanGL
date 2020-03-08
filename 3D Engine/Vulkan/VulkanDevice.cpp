@@ -132,16 +132,6 @@ const drm::Sampler* VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
 	return GetCache().GetSampler(SamplerDesc);
 }
 
-void* VulkanDevice::LockBuffer(const drm::Buffer& Buffer)
-{
-	return Allocator.LockBuffer(Buffer);
-}
-
-void VulkanDevice::UnlockBuffer(const drm::Buffer& Buffer)
-{
-	Allocator.UnlockBuffer(Buffer);
-}
-
 drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 {
 	const auto[RenderPass, Framebuffer] = VulkanCache.GetRenderPass(RPDesc);

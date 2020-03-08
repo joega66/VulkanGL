@@ -40,13 +40,13 @@ VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags Vul
 		// Find a buffer with the same properties and usage
 		if (Memory->GetVulkanUsage() == VulkanUsage && Memory->GetProperties() == Properties)
 		{
-			std::optional<VulkanBuffer> Buffer = VulkanMemory::Allocate(Memory, Size, AlignedSize, Usage);
+			std::optional<VulkanBuffer> Buffer = Memory->Suballocate(Size, AlignedSize, Usage);
 
 			if (Buffer)
 			{
 				if (Data)
 				{
-					UploadBufferData(*Buffer, Data);
+					Memory->UploadBufferData(*Buffer, Data);
 				}
 				return std::move(Buffer.value());
 			}
@@ -54,13 +54,13 @@ VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags Vul
 	}
 
 	// Buffer not found - Create a new one
-	MemoryBuffers.emplace_back(std::make_unique<VulkanMemory>(AllocateMemory(Size, VulkanUsage, Properties)));
+	std::unique_ptr<VulkanMemory>& Memory = MemoryBuffers.emplace_back(std::make_unique<VulkanMemory>(AllocateMemory(Size, VulkanUsage, Properties)));
 
-	std::optional<VulkanBuffer> Buffer = VulkanMemory::Allocate(MemoryBuffers.back(), Size, AlignedSize, Usage);
+	std::optional<VulkanBuffer> Buffer = Memory->Suballocate(Size, AlignedSize, Usage);
 
 	if (Data)
 	{
-		UploadBufferData(Buffer.value(), Data);
+		Memory->UploadBufferData(Buffer.value(), Data);
 	}
 
 	return std::move(Buffer.value());
@@ -88,13 +88,6 @@ uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemor
 	fail("Suitable memory not found.");
 }
 
-void VulkanAllocator::UploadBufferData(const VulkanBuffer& Buffer, const void* Data)
-{
-	void* MemMapped = LockBuffer(Buffer);
-	Platform::Memcpy(MemMapped, Data, (size_t)Buffer.GetSize());
-	UnlockBuffer(Buffer);
-}
-
 VulkanMemory VulkanAllocator::AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties)
 {
 	VkBufferCreateInfo BufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -116,31 +109,29 @@ VulkanMemory VulkanAllocator::AllocateMemory(VkDeviceSize Size, VkBufferUsageFla
 	vulkan(vkAllocateMemory(Device, &MemoryInfo, nullptr, &Memory));
 	vkBindBufferMemory(Device, Buffer, Memory, 0);
 
-	return VulkanMemory(Buffer, Memory, Usage, Properties, BufferInfo.size);
+	return VulkanMemory(Device, Buffer, Memory, Usage, Properties, BufferInfo.size);
 }
 
-void* VulkanAllocator::LockBuffer(const VulkanBuffer& Buffer)
+VulkanMemory::VulkanMemory(VulkanDevice& Device, VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size)
+	: Device(Device), Buffer(Buffer), Memory(Memory), Usage(Usage), Properties(Properties), Size(Size), Used(0)
 {
-	check(Buffer.GetProperties() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, "Buffer must be host-visible...");
-	void* MemMapped = nullptr;
-	vulkan(vkMapMemory(Device, Buffer.GetMemoryHandle(), Buffer.GetOffset(), Buffer.GetSize(), 0, &MemMapped));
-	return MemMapped;
+	if (Properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+	{
+		vkMapMemory(Device, Memory, 0, Size, 0, &Data);
+	}
 }
 
-void VulkanAllocator::UnlockBuffer(const VulkanBuffer& Buffer)
+VulkanMemory::~VulkanMemory()
 {
-	check(Buffer.GetProperties() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, "Buffer must be host-visible...");
-	vkUnmapMemory(Device, Buffer.GetMemoryHandle());
+	if (Properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+	{
+		vkUnmapMemory(Device, Memory);
+	}
 }
 
-VulkanMemory::VulkanMemory(VkBuffer Buffer, VkDeviceMemory Memory, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties, VkDeviceSize Size)
-	: Buffer(Buffer), Memory(Memory), Usage(Usage), Properties(Properties), Size(Size), Used(0)
+std::optional<VulkanBuffer> VulkanMemory::Suballocate(VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
 {
-}
-
-std::optional<VulkanBuffer> VulkanMemory::Allocate(std::unique_ptr<VulkanMemory>& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, EBufferUsage Usage)
-{
-	for (auto Iter = Memory->FreeList.begin(); Iter != Memory->FreeList.end(); Iter++)
+	for (auto Iter = FreeList.begin(); Iter != FreeList.end(); Iter++)
 	{
 		if (Iter->Size >= AlignedSize)
 		{
@@ -153,21 +144,26 @@ std::optional<VulkanBuffer> VulkanMemory::Allocate(std::unique_ptr<VulkanMemory>
 			}
 			else
 			{
-				Memory->FreeList.erase(Iter);
+				FreeList.erase(Iter);
 			}
 
-			return VulkanBuffer(*Memory, Size, AlignedSize, Offset, Usage);
+			return VulkanBuffer(*this, Size, AlignedSize, Offset, Usage);
 		}
 	}
 
-	if (Memory->GetSizeRemaining() >= AlignedSize)
+	if (GetSizeRemaining() >= AlignedSize)
 	{
-		VulkanBuffer Buffer = VulkanBuffer(*Memory, Size, AlignedSize, Memory->Used, Usage);
-		Memory->Used += AlignedSize;
+		VulkanBuffer Buffer = VulkanBuffer(*this, Size, AlignedSize, Used, Usage);
+		Used += AlignedSize;
 		return Buffer;
 	}
 
 	return std::nullopt;
+}
+
+void VulkanMemory::UploadBufferData(VulkanBuffer& Buffer, const void* InData)
+{
+	Platform::Memcpy(static_cast<uint8*>(Data) + Buffer.GetOffset(), InData, static_cast<size_t>(Buffer.GetSize()));
 }
 
 void VulkanMemory::Free(const VulkanBuffer& Buffer)

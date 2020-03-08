@@ -66,10 +66,9 @@ void RenderSystem::Update(Engine& Engine)
 		const auto& Transform = ECS.GetComponent<class Transform>(Entity);
 		const auto* StaticMesh = ECS.GetComponent<class StaticMeshComponent>(Entity).StaticMesh;
 
-		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(Device.LockBuffer(MeshProxy.LocalToWorldUniform));
+		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(MeshProxy.LocalToWorldUniform.GetData());
 		LocalToWorldUniformBuffer->Transform = Transform.GetLocalToWorld();
 		LocalToWorldUniformBuffer->Inverse = glm::inverse(Transform.GetLocalToWorld());
-		Device.UnlockBuffer(MeshProxy.LocalToWorldUniform);
 
 		MeshProxy.WorldSpaceBB = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 

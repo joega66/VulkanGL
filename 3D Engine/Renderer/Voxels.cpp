@@ -292,9 +292,8 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	void* WorldToVoxelBufferPtr = Device.LockBuffer(WorldToVoxelBuffer);
+	void* WorldToVoxelBufferPtr = WorldToVoxelBuffer.GetData();
 	Platform::Memcpy(WorldToVoxelBufferPtr, &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
-	Device.UnlockBuffer(WorldToVoxelBuffer);
 
 	RenderVoxels(Scene, CmdList);
 
@@ -387,9 +386,8 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	void* VoxelIndirectBufferPtr = Device.LockBuffer(VoxelIndirectBuffer);
+	void* VoxelIndirectBufferPtr = VoxelIndirectBuffer.GetData();
 	Platform::Memcpy(VoxelIndirectBufferPtr, &DrawIndirectCommand, sizeof(DrawIndirectCommand));
-	Device.UnlockBuffer(VoxelIndirectBuffer);
 
 	std::vector<BufferMemoryBarrier> BufferBarriers =
 	{
