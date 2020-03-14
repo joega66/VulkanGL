@@ -34,14 +34,14 @@ public:
 
 	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
 
-	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries) override;
+	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
 
-	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) override;
+	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) override;
 
 	virtual drm::Image CreateImage(
-		uint32 Width, 
-		uint32 Height, 
-		uint32 Depth, 
+		uint32 Width,
+		uint32 Height,
+		uint32 Depth,
 		EFormat Format, 
 		EImageUsage UsageFlags,
 		EImageLayout InitialLayout = EImageLayout::Undefined

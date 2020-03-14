@@ -2,7 +2,7 @@
 #include <Platform/Platform.h>
 
 using Crc = uint32;
-Crc CalculateCrc(const void* Message, int nBytes);
+Crc CalculateCrc(const void* Message, std::size_t nBytes);
 
 enum class EFormat
 {
@@ -216,7 +216,7 @@ struct SamplerDesc
 	{
 		size_t operator()(const SamplerDesc& SamplerDesc) const
 		{
-			return ((uint32)SamplerDesc.Filter * 31) + ((uint32)SamplerDesc.SAM * 37) + ((uint32)SamplerDesc.SMM * 41);
+			return (static_cast<std::size_t>(SamplerDesc.Filter) * 31llu) + (static_cast<std::size_t>(SamplerDesc.SAM) * 37llu) + (static_cast<std::size_t>(SamplerDesc.SMM) * 41llu);
 		}
 	};
 };
@@ -634,7 +634,7 @@ public:
 	template<typename SpecializationConstantType>
 	void Add(uint32 ConstantID, const SpecializationConstantType& Constant)
 	{
-		const uint32 Offset = Data.size();
+		const uint32 Offset = (uint32)Data.size();
 		Data.resize(Offset + sizeof(Constant));
 		memcpy(Data.data() + Offset, &Constant, sizeof(Constant));
 		const SpecializationMapEntry MapEntry = { ConstantID, Offset, sizeof(Constant) };

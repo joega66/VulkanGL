@@ -53,7 +53,7 @@ public:
 	template<typename ComponentType, typename ...ComponentArgs>
 	ComponentType& AddSingletonComponent(ComponentArgs&& ...Args)
 	{
-		uint32 ArrayIndex;
+		std::size_t ArrayIndex;
 
 		if (FreeSingletonComponentArrayIndices.size())
 		{
@@ -74,7 +74,7 @@ public:
 	template<typename ComponentType>
 	ComponentType& GetSingletonComponent()
 	{
-		const uint32 ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
+		const std::size_t ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
 		return *std::static_pointer_cast<ComponentType>(SingletonComponentsArray[ArrayIndex]);
 	}
 
@@ -143,10 +143,10 @@ private:
 	std::vector<std::shared_ptr<void>> SingletonComponentsArray;
 
 	/** Singleton type index to its array index. */
-	HashTable<std::type_index, uint32> SingletonTypeToArrayIndex;
+	HashTable<std::type_index, std::size_t> SingletonTypeToArrayIndex;
 
 	/** Free indices in the singleton component array. */
-	std::list<uint32> FreeSingletonComponentArrayIndices;
+	std::list<std::size_t> FreeSingletonComponentArrayIndices;
 
 	template<typename ComponentType>
 	ComponentArray<ComponentType>* GetComponentArray()

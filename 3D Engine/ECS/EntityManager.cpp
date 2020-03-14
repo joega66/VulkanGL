@@ -24,7 +24,7 @@ Entity EntityManager::CreateEntity()
 		else
 		{
 			EntityStatus.push_back(true);
-			return Entities.emplace_back(Entity{ Entities.size() });
+			return Entities.emplace_back(Entity{ static_cast<uint32>(Entities.size()) }); // @todo Use 64-bit entity id handles.
 		}
 	}();
 	

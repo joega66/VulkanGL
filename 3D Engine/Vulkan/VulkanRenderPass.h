@@ -64,6 +64,6 @@ public:
 	inline bool operator==(const VulkanRenderPassView& Other) const { return RenderPass == Other.RenderPass; }
 
 private:
-	VkRenderPass RenderPass = VK_NULL_HANDLE;
+	VkRenderPass RenderPass = nullptr;
 	uint32 NumAttachments;
 };

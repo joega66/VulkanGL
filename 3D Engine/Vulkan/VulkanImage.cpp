@@ -101,9 +101,9 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 }
 
 VulkanImage::VulkanImage(VulkanImage&& Other)
-	: Image(std::exchange(Other.Image, VK_NULL_HANDLE))
-	, ImageView(std::exchange(Other.ImageView, VK_NULL_HANDLE))
-	, Memory(std::exchange(Other.Memory, VK_NULL_HANDLE))
+	: Image(std::exchange(Other.Image, nullptr))
+	, ImageView(std::exchange(Other.ImageView, nullptr))
+	, Memory(std::exchange(Other.Memory, nullptr))
 	, Device(std::exchange(Other.Device, nullptr))
 	, ImagePrivate(Other)
 {
@@ -111,9 +111,9 @@ VulkanImage::VulkanImage(VulkanImage&& Other)
 
 VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 {
-	Image = (std::exchange(Other.Image, VK_NULL_HANDLE));
-	ImageView = (std::exchange(Other.ImageView, VK_NULL_HANDLE));
-	Memory = (std::exchange(Other.Memory, VK_NULL_HANDLE));
+	Image = (std::exchange(Other.Image, nullptr));
+	ImageView = (std::exchange(Other.ImageView, nullptr));
+	Memory = (std::exchange(Other.Memory, nullptr));
 	Device = (std::exchange(Other.Device, nullptr));
 	Format = Other.Format;
 	Width = Other.Width;
@@ -125,7 +125,7 @@ VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 
 VulkanImage::~VulkanImage()
 {
-	if (Image != VK_NULL_HANDLE)
+	if (Image != nullptr)
 	{
 		Device->GetCache().FreeImage(*this);
 	}
@@ -316,7 +316,7 @@ VulkanSampler::VulkanSampler(VkSampler Sampler)
 
 VulkanImageView::VulkanImageView(const VulkanImage& Image, const VulkanSampler* Sampler)
 {
-	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : VK_NULL_HANDLE;
+	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
 	DescriptorImageInfo.imageView = Image.ImageView;
 	DescriptorImageInfo.imageLayout = Sampler ? 
 		(Image.IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
@@ -326,7 +326,7 @@ VulkanImageView::VulkanImageView(const VulkanImage& Image, const VulkanSampler* 
 void VulkanImageView::SetImage(const VulkanImage& Image)
 {
 	DescriptorImageInfo.imageView = Image.ImageView;
-	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler != VK_NULL_HANDLE ?
+	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler != nullptr ?
 		(Image.IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 		: VK_IMAGE_LAYOUT_GENERAL;
 }

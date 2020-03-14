@@ -269,12 +269,12 @@ static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector
 
 	ShaderStageInfos.resize(ShaderStages.size(), { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO });
 
-	for (uint32 StageIndex = 0; StageIndex < ShaderStageInfos.size(); StageIndex++)
+	for (std::size_t StageIndex = 0; StageIndex < ShaderStageInfos.size(); StageIndex++)
 	{
 		const drm::Shader* Shader = ShaderStages[StageIndex];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
 		ShaderStage.stage = VulkanStages.at(Shader->CompilationInfo.Stage);
-		ShaderStage.module = Shader->CompilationInfo.Module;
+		ShaderStage.module = static_cast<VkShaderModule>(Shader->CompilationInfo.Module);
 		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
 	}
 }
@@ -291,7 +291,7 @@ static void CreateSpecializationInfo(
 		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
 
 		const std::vector<uint8>& Data = PSODesc.SpecializationInfo.GetData();
-		SpecializationInfo.mapEntryCount = MapEntries.size();
+		SpecializationInfo.mapEntryCount = static_cast<uint32>(MapEntries.size());
 		SpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
 		SpecializationInfo.dataSize = Data.size();
 		SpecializationInfo.pData = Data.data();
@@ -357,9 +357,9 @@ static void CreateVertexInputState(
 		}
 	}
 
-	VertexInputState.vertexBindingDescriptionCount = VertexBindings.size();
+	VertexInputState.vertexBindingDescriptionCount = static_cast<uint32>(VertexBindings.size());
 	VertexInputState.pVertexBindingDescriptions = VertexBindings.data();
-	VertexInputState.vertexAttributeDescriptionCount = VulkanVertexAttributes.size();
+	VertexInputState.vertexAttributeDescriptionCount = static_cast<uint32>(VulkanVertexAttributes.size());
 	VertexInputState.pVertexAttributeDescriptions = VulkanVertexAttributes.data();
 }
 
@@ -444,11 +444,11 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipel
 	CreateViewportState(PSODesc, Viewport, Scissor, ViewportState);
 
 	VkPipelineDynamicStateCreateInfo DynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-	DynamicState.dynamicStateCount = PSODesc.DynamicStates.size();
+	DynamicState.dynamicStateCount = static_cast<uint32>(PSODesc.DynamicStates.size());
 	DynamicState.pDynamicStates = reinterpret_cast<const VkDynamicState*>(PSODesc.DynamicStates.data());
 
 	VkGraphicsPipelineCreateInfo PipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	PipelineInfo.stageCount = ShaderStageInfos.size();
+	PipelineInfo.stageCount = static_cast<uint32>(ShaderStageInfos.size());
 	PipelineInfo.pStages = ShaderStageInfos.data();
 	PipelineInfo.pVertexInputState = &VertexInputState;
 	PipelineInfo.pInputAssemblyState = &InputAssemblyState;
@@ -480,7 +480,7 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	VkPipelineShaderStageCreateInfo& PipelineShaderStageCreateInfo = ComputePipelineCreateInfo.stage;
 	PipelineShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	PipelineShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-	PipelineShaderStageCreateInfo.module = ComputeShader->CompilationInfo.Module;
+	PipelineShaderStageCreateInfo.module = static_cast<VkShaderModule>(ComputeShader->CompilationInfo.Module);
 	PipelineShaderStageCreateInfo.pName = ComputeShader->CompilationInfo.Entrypoint.data();
 
 	VkSpecializationInfo SpecializationInfo;
@@ -490,7 +490,7 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	{
 		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
 		const std::vector<uint8>& Data = ComputePipelineDesc.SpecializationInfo.GetData();
-		SpecializationInfo.mapEntryCount = MapEntries.size();
+		SpecializationInfo.mapEntryCount = static_cast<uint32>(MapEntries.size());
 		SpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
 		SpecializationInfo.dataSize = Data.size();
 		SpecializationInfo.pData = Data.data();
@@ -514,7 +514,7 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSe
 	}
 
 	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-	PipelineLayoutInfo.setLayoutCount = Layouts.size();
+	PipelineLayoutInfo.setLayoutCount = static_cast<uint32>(Layouts.size());
 	PipelineLayoutInfo.pSetLayouts = Layouts.data();
 
 	VkPipelineLayout PipelineLayout;

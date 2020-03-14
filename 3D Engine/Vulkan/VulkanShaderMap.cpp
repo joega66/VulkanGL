@@ -192,7 +192,7 @@ void VulkanShaderMap::RecompileShaders()
 			//LOG("Recompiling shader %s", CompileInfo.Filename.c_str());
 
 			// Destroy the old shader module.
-			vkDestroyShaderModule(Device, CompileInfo.Module, nullptr);
+			vkDestroyShaderModule(Device, static_cast<VkShaderModule>(CompileInfo.Module), nullptr);
 
 			const ShaderCompilationInfo NewCompilationInfo = CompileShader(
 				CompileInfo.Worker,

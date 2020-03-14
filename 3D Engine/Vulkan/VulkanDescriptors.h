@@ -22,8 +22,8 @@ public:
 
 private:
 	VulkanDescriptorPool* DescriptorPool = nullptr;
-	VkDescriptorSetLayout Layout = VK_NULL_HANDLE;
-	VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
+	VkDescriptorSetLayout Layout = nullptr;
+	VkDescriptorSet DescriptorSet = nullptr;
 };
 
 /** Spawns descriptor sets and zerglings. */
@@ -71,7 +71,7 @@ class VulkanDescriptorSetLayout
 public:
 	VulkanDescriptorSetLayout() = default;
 
-	VulkanDescriptorSetLayout(VulkanDevice& Device, uint32 NumEntries, const DescriptorBinding* Entries);
+	VulkanDescriptorSetLayout(VulkanDevice& Device, std::size_t NumEntries, const DescriptorBinding* Entries);
 
 	/** Create a descriptor set with this layout. */
 	VulkanDescriptorSet CreateDescriptorSet(DRMDevice& Device);

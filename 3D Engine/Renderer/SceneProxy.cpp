@@ -85,7 +85,7 @@ void SceneProxy::InitDirectionalLights(Engine& Engine)
 	}
 
 	glm::uvec4 NumDirectionalLights;
-	NumDirectionalLights.x = DirectionalLightProxies.size();
+	NumDirectionalLights.x = (uint32)DirectionalLightProxies.size();
 
 	DirectionalLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumDirectionalLights) + sizeof(DirectionalLightProxy) * DirectionalLightProxies.size());
 	ECS.GetSingletonComponent<GlobalRenderData>().CameraDescriptorSet.DirectionalLightBuffer = DirectionalLightBuffer;
@@ -117,7 +117,7 @@ void SceneProxy::InitPointLights(Engine& Engine)
 	}
 
 	glm::uvec4 NumPointLights;
-	NumPointLights.x = PointLightProxies.size();
+	NumPointLights.x = (uint32)PointLightProxies.size();
 
 	PointLightBuffer = Engine.Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::HostVisible, sizeof(NumPointLights) + sizeof(PointLightProxy) * PointLightProxies.size());
 	ECS.GetSingletonComponent<GlobalRenderData>().CameraDescriptorSet.PointLightBuffer = PointLightBuffer;

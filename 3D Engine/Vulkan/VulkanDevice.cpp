@@ -39,12 +39,12 @@ drm::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePip
 	return drm::Pipeline(Pipeline, PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
 }
 
-drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(uint32 NumEntries, const DescriptorBinding* Entries)
+drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries)
 {
 	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);
 }
 
-VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data)
+VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data)
 {
 	VkBufferUsageFlags VulkanUsage = 0;
 	VulkanUsage |= Any(Usage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
@@ -59,9 +59,9 @@ VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint32 Size, const v
 }
 
 drm::Image VulkanDevice::CreateImage(
-	uint32 Width, 
-	uint32 Height, 
-	uint32 Depth, 
+	uint32 Width,
+	uint32 Height,
+	uint32 Depth,
 	EFormat Format, 
 	EImageUsage UsageFlags, 
 	EImageLayout InitialLayout
@@ -181,7 +181,7 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 		}
 	}
 
-	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, RPDesc.ColorAttachments.size());
+	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.ColorAttachments.size()));
 }
 
 void VulkanDevice::CreateLogicalDevice()

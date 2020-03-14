@@ -29,10 +29,10 @@ public:
 	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
 
 	/** Create a descriptor template. */
-	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(uint32 NumBindings, const DescriptorBinding* Bindings) = 0;
+	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumBindings, const DescriptorBinding* Bindings) = 0;
 
 	/** Create a buffer resource. */
-	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint32 Size, const void* Data = nullptr) = 0;
+	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) = 0;
 
 	/** Create an image resource. */
 	virtual drm::Image CreateImage(

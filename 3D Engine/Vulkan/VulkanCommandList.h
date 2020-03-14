@@ -58,9 +58,9 @@ public:
 	void PipelineBarrier(
 		EPipelineStage SrcStageMask,
 		EPipelineStage DstStageMask,
-		uint32 NumBufferBarriers,
+		std::size_t NumBufferBarriers,
 		const BufferMemoryBarrier* BufferBarriers,
-		uint32 NumImageBarriers,
+		std::size_t NumImageBarriers,
 		const ImageMemoryBarrier* ImageBarriers
 	);
 
@@ -84,9 +84,9 @@ public:
 	void CopyBuffer(
 		const VulkanBuffer& SrcBuffer,
 		const VulkanBuffer& DstBuffer,
-		uint32 SrcOffset,
-		uint32 DstOffset,
-		uint32 Size
+		uint64 SrcOffset,
+		uint64 DstOffset,
+		uint64 Size
 	);
 
 	/** @end */

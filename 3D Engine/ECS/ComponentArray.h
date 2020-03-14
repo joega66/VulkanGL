@@ -39,17 +39,17 @@ public:
 	/** Remove component from an entity. */
 	virtual void RemoveComponent(Entity& Entity) final;
 
-	inline const std::unordered_map<uint32, uint32>& GetEntities() const { return EntityToArrayIndex; }
+	inline const std::unordered_map<uint32, std::size_t>& GetEntities() const { return EntityToArrayIndex; }
 
 private:
 	/** Component pool. */
 	std::vector<ComponentType> Components;
 
 	/** List of free indices in the component array. */
-	std::list<uint32> FreeList;
+	std::list<std::size_t> FreeList;
 
 	/** Maps an entity to its array index. */
-	std::unordered_map<uint32, uint32> EntityToArrayIndex;
+	std::unordered_map<uint32, std::size_t> EntityToArrayIndex;
 
 	/** Component created events. */
 	std::vector<ComponentCallback<ComponentType>> ComponentCreatedCallbacks;

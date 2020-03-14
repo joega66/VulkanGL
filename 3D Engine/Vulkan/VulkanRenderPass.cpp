@@ -123,7 +123,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 		DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPDesc.DepthAttachment.FinalLayout);
 		Descriptions.push_back(DepthDescription);
 
-		DepthRef.attachment = RPDesc.ColorAttachments.size();
+		DepthRef.attachment = static_cast<uint32>(RPDesc.ColorAttachments.size());
 		DepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	}
 
@@ -193,7 +193,7 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const Rend
 	VkFramebufferCreateInfo FramebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 	FramebufferInfo.renderPass = RenderPass;
 	FramebufferInfo.pAttachments = AttachmentViews.data();
-	FramebufferInfo.attachmentCount = AttachmentViews.size();
+	FramebufferInfo.attachmentCount = static_cast<uint32>(AttachmentViews.size());
 	FramebufferInfo.width = RPDesc.RenderArea.Extent.x;
 	FramebufferInfo.height = RPDesc.RenderArea.Extent.y;
 	FramebufferInfo.layers = 1;
@@ -230,8 +230,8 @@ VulkanRenderPass::~VulkanRenderPass()
 
 VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& Other)
 	: Device(std::exchange(Other.Device, nullptr))
-	, RenderPass(std::exchange(Other.RenderPass, VK_NULL_HANDLE))
-	, Framebuffer(std::exchange(Other.Framebuffer, VK_NULL_HANDLE))
+	, RenderPass(std::exchange(Other.RenderPass, nullptr))
+	, Framebuffer(std::exchange(Other.Framebuffer, nullptr))
 	, RenderArea(Other.RenderArea)
 	, ClearValues(std::move(Other.ClearValues))
 	, NumAttachments(Other.NumAttachments)
@@ -241,8 +241,8 @@ VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& Other)
 VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& Other)
 {
 	Device = std::exchange(Other.Device, nullptr);
-	RenderPass = std::exchange(Other.RenderPass, VK_NULL_HANDLE);
-	Framebuffer = std::exchange(Other.Framebuffer, VK_NULL_HANDLE);
+	RenderPass = std::exchange(Other.RenderPass, nullptr);
+	Framebuffer = std::exchange(Other.Framebuffer, nullptr);
 	RenderArea = Other.RenderArea;
 	ClearValues = std::move(Other.ClearValues);
 	NumAttachments = Other.NumAttachments;

@@ -60,7 +60,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	CmdList.BindPipeline(Pipeline);
 
 	const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
-	CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	const StaticMesh* Cube = Assets.GetStaticMesh("Cube");
 	for (const auto& Submesh : Cube->Submeshes)

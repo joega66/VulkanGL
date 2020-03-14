@@ -7,9 +7,9 @@ class VulkanDevice;
 class VulkanImage : public drm::ImagePrivate
 {
 public:
-	VkImage Image = VK_NULL_HANDLE;
-	VkImageView ImageView = VK_NULL_HANDLE;
-	VkDeviceMemory Memory = VK_NULL_HANDLE;
+	VkImage Image = nullptr;
+	VkImageView ImageView = nullptr;
+	VkDeviceMemory Memory = nullptr;
 
 	VulkanImage() = default;
 	VulkanImage(VulkanDevice& Device
@@ -27,7 +27,7 @@ public:
 	VulkanImage(const VulkanImage&) = delete;
 	VulkanImage& operator=(const VulkanImage&) = delete;
 
-	inline uint64 GetNativeHandle() { return Image; }
+	inline void* GetNativeHandle() { return Image; }
 
 	operator VkImage();
 
@@ -61,7 +61,7 @@ public:
 	inline VkSampler GetHandle() const { return Sampler; }
 
 private:
-	VkSampler Sampler = VK_NULL_HANDLE;
+	VkSampler Sampler = nullptr;
 };
 
 class VulkanImageView
@@ -77,5 +77,5 @@ public:
 	bool operator!=(const VulkanImage& Image);
 
 private:
-	VkDescriptorImageInfo DescriptorImageInfo = { VK_NULL_HANDLE };
+	VkDescriptorImageInfo DescriptorImageInfo = { nullptr };
 };

@@ -33,7 +33,7 @@ void VulkanCommandList::BeginRenderPass(const VulkanRenderPass& RenderPass)
 	BeginInfo.framebuffer = RenderPass.GetFramebuffer();
 	BeginInfo.renderArea = RenderPass.GetRenderArea();
 	BeginInfo.pClearValues = RenderPass.GetClearValues().data();
-	BeginInfo.clearValueCount = RenderPass.GetClearValues().size();
+	BeginInfo.clearValueCount = static_cast<uint32>(RenderPass.GetClearValues().size());
 
 	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
@@ -73,7 +73,7 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const VulkanB
 		Buffers[Location] = VertexBuffers[Location].GetVulkanHandle();
 	}
 
-	vkCmdBindVertexBuffers(CommandBuffer, 0, Buffers.size(), Buffers.data(), Offsets.data());
+	vkCmdBindVertexBuffers(CommandBuffer, 0, static_cast<uint32>(Buffers.size()), Buffers.data(), Offsets.data());
 }
 
 void VulkanCommandList::DrawIndexed(
@@ -147,15 +147,15 @@ static inline VkPipelineStageFlags GetVulkanPipelineStageFlags(EPipelineStage Pi
 void VulkanCommandList::PipelineBarrier(
 	EPipelineStage SrcStageMask,
 	EPipelineStage DstStageMask,
-	uint32 NumBufferBarriers,
+	std::size_t NumBufferBarriers,
 	const BufferMemoryBarrier* BufferBarriers,
-	uint32 NumImageBarriers,
+	std::size_t NumImageBarriers,
 	const ImageMemoryBarrier* ImageBarriers)
 {
 	std::vector<VkBufferMemoryBarrier> VulkanBufferBarriers;
 	VulkanBufferBarriers.reserve(NumBufferBarriers);
 
-	for (uint32 BarrierIndex = 0; BarrierIndex < NumBufferBarriers; BarrierIndex++)
+	for (std::size_t BarrierIndex = 0; BarrierIndex < NumBufferBarriers; BarrierIndex++)
 	{
 		const BufferMemoryBarrier& BufferBarrier = BufferBarriers[BarrierIndex];
 		const VulkanBuffer& Buffer = BufferBarrier.Buffer;
@@ -175,7 +175,7 @@ void VulkanCommandList::PipelineBarrier(
 	std::vector<VkImageMemoryBarrier> VulkanImageBarriers;
 	VulkanImageBarriers.reserve(NumImageBarriers);
 
-	for (uint32 BarrierIndex = 0; BarrierIndex < NumImageBarriers; BarrierIndex++)
+	for (std::size_t BarrierIndex = 0; BarrierIndex < NumImageBarriers; BarrierIndex++)
 	{
 		const ImageMemoryBarrier& ImageBarrier = ImageBarriers[BarrierIndex];
 		const drm::Image& Image = ImageBarrier.Image;
@@ -203,12 +203,17 @@ void VulkanCommandList::PipelineBarrier(
 		GetVulkanPipelineStageFlags(DstStageMask),
 		0,
 		0, nullptr,
-		VulkanBufferBarriers.size(), VulkanBufferBarriers.data(),
-		VulkanImageBarriers.size(), VulkanImageBarriers.data()
+		static_cast<uint32>(VulkanBufferBarriers.size()), VulkanBufferBarriers.data(),
+		static_cast<uint32>(VulkanImageBarriers.size()), VulkanImageBarriers.data()
 	);
 }
 
-void VulkanCommandList::CopyBufferToImage(const VulkanBuffer& SrcBuffer, uint32 BufferOffset, const VulkanImage& DstImage, EImageLayout DstImageLayout)
+void VulkanCommandList::CopyBufferToImage(
+	const VulkanBuffer& SrcBuffer, 
+	uint32 BufferOffset, 
+	const VulkanImage& DstImage, 
+	EImageLayout DstImageLayout
+)
 {
 	std::vector<VkBufferImageCopy> Regions;
 
@@ -258,7 +263,7 @@ void VulkanCommandList::CopyBufferToImage(const VulkanBuffer& SrcBuffer, uint32 
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstImage.Image, VulkanImage::GetVulkanLayout(DstImageLayout), Regions.size(), Regions.data());
+	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstImage.Image, VulkanImage::GetVulkanLayout(DstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
@@ -303,7 +308,13 @@ void VulkanCommandList::SetScissor(uint32 ScissorCount, const ScissorDesc* Sciss
 	vkCmdSetScissor(CommandBuffer, 0, ScissorCount, reinterpret_cast<const VkRect2D*>(Scissors));
 }
 
-void VulkanCommandList::CopyBuffer(const VulkanBuffer& SrcBuffer, const VulkanBuffer& DstBuffer, uint32 SrcOffset, uint32 DstOffset, uint32 Size)
+void VulkanCommandList::CopyBuffer(
+	const VulkanBuffer& SrcBuffer, 
+	const VulkanBuffer& DstBuffer, 
+	uint64 SrcOffset, 
+	uint64 DstOffset, 
+	uint64 Size
+)
 {
 	const VkBufferCopy Region = 
 	{ 

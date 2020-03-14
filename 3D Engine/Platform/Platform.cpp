@@ -238,7 +238,7 @@ std::string WindowsPlatform::GetString(const std::string& Filename, const std::s
 
 	std::array<char, 256> ReturnedString;
 
-	GetPrivateProfileStringA(Section.c_str(), Key.c_str(), Default.c_str(), ReturnedString.data(), ReturnedString.size(), Path.c_str());
+	GetPrivateProfileStringA(Section.c_str(), Key.c_str(), Default.c_str(), ReturnedString.data(), static_cast<DWORD>(ReturnedString.size()), Path.c_str());
 
 	return std::string(ReturnedString.data());
 }
@@ -314,7 +314,7 @@ std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 	OFN.hwndOwner = Hwnd;
 	OFN.lpstrFile = File.data();
 	OFN.lpstrFile[0] = '\0';
-	OFN.nMaxFile = File.size();
+	OFN.nMaxFile = static_cast<DWORD>(File.size());
 	OFN.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
 	OFN.nFilterIndex = 1;
 	OFN.lpstrFileTitle = NULL;

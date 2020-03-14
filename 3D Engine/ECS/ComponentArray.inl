@@ -4,7 +4,7 @@
 template<typename ComponentType>
 inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, ComponentType&& Component)
 {
-	uint32 ArrayIndex = -1;
+	std::size_t ArrayIndex = -1;
 
 	if (!FreeList.empty())
 	{
@@ -35,7 +35,7 @@ inline ComponentArray<ComponentType>::ComponentArray()
 template<typename ComponentType>
 inline ComponentType & ComponentArray<ComponentType>::GetComponent(Entity& Entity)
 {
-	const uint32 ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
+	const std::size_t ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
 	return Components[ArrayIndex];
 }
 
@@ -69,7 +69,7 @@ inline bool ComponentArray<ComponentType>::HasComponent(Entity& Entity) const
 template<typename ComponentType>
 inline void ComponentArray<ComponentType>::RemoveComponent(Entity& Entity)
 {
-	const uint32 ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
+	const std::size_t ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
 	FreeList.push_back(ArrayIndex);
 	EntityToArrayIndex.erase(Entity.GetEntityID());
 }

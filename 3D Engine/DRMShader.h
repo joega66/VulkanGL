@@ -56,7 +56,7 @@ public:
 	std::string Filename;
 	uint64 LastWriteTime;
 	ShaderCompilerWorker Worker;
-	uint64 Module;
+	void* Module;
 	std::vector<VertexAttributeDescription> VertexAttributeDescriptions;
 
 	ShaderCompilationInfo(
@@ -66,7 +66,7 @@ public:
 		const std::string& Filename,
 		uint64 LastWriteTime,
 		const ShaderCompilerWorker& Worker,
-		uint64 Module,
+		void* Module,
 		const std::vector<VertexAttributeDescription>& VertexAttributeDescriptions)
 		: Type(Type)
 		, Stage(Stage)

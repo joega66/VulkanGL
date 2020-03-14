@@ -99,7 +99,7 @@ static std::array<Crc, 256> GetCrcTable()
 	return CrcTable;
 }
 
-Crc CalculateCrc(const void* Message, int nBytes)
+Crc CalculateCrc(const void* Message, std::size_t nBytes)
 {
 	static std::array<Crc, 256> CrcTable = GetCrcTable();
 	const uint8* ByteMessage = static_cast<const uint8*>(Message);

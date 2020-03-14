@@ -21,11 +21,11 @@ public:
 	{
 		CmdList.BindPipeline(Pipeline);
 
-		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+		CmdList.BindDescriptorSets(Pipeline, (uint32)DescriptorSets.size(), DescriptorSets.data());
 
 		for (const auto& Submesh : Submeshes)
 		{
-			CmdList.BindVertexBuffers(Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
+			CmdList.BindVertexBuffers((uint32)Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
 
 			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
 		}

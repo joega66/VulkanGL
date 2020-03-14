@@ -1,5 +1,5 @@
-#include "SceneRenderer.h"
 #include "Voxels.h"
+#include "SceneRenderer.h"
 #include "MaterialShader.h"
 #include "MeshProxy.h"
 #include "FullscreenQuad.h"
@@ -379,7 +379,7 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 		CmdList.BindPipeline(Pipeline);
 
 		const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet, LightInjectionSet };
-		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 		
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);
 		const uint32 GroupCountY = DivideAndRoundUp(ShadowMap.GetHeight(), 8U);
@@ -445,7 +445,7 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	CmdList.BindPipeline(Pipeline);
 
 	const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet };
-	CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 }

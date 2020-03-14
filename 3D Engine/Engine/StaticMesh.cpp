@@ -97,7 +97,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
-	uint32 SrcOffset = 0;
+	uint64 SrcOffset = 0;
 
 	// Create one big staging buffer for the upload, because why not.
 	drm::Buffer StagingBuffer = Device.CreateBuffer(
@@ -131,7 +131,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	Device.SubmitCommands(CmdList);
 
 	Submeshes.emplace_back(Submesh(
-		IndexAccessor.count
+		static_cast<uint32>(IndexAccessor.count)
 		, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
 		, std::move(IndexBuffer)
 		, std::move(PositionBuffer)
