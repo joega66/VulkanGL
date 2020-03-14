@@ -77,11 +77,11 @@ static std::array<Crc, 256> GetCrcTable()
 	std::array<Crc, 256> CrcTable;
 	Crc Remainder = 0;
 
-	for (int Dividend = 0; Dividend < 256; ++Dividend)
+	for (uint32 Dividend = 0; Dividend < 256; ++Dividend)
 	{
 		Remainder = Dividend << (WIDTH - 8);
 
-		for (uint8_t bit = 8; bit > 0; --bit)
+		for (uint32 Bit = 8; Bit > 0; --Bit)
 		{
 			if (Remainder & TOPBIT)
 			{
@@ -107,7 +107,7 @@ Crc CalculateCrc(const void* Message, std::size_t nBytes)
 	uint8 Data;
 	Crc Remainder = 0;
 
-	for (int Byte = 0; Byte < nBytes; ++Byte)
+	for (std::size_t Byte = 0; Byte < nBytes; ++Byte)
 	{
 		Data = ByteMessage[Byte] ^ (Remainder >> (WIDTH - 8));
 		Remainder = CrcTable[Data] ^ (Remainder << 8);

@@ -45,7 +45,8 @@ private:
 	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
 	
 	SlowCache<PipelineStateDesc, VkPipeline> GraphicsPipelineCache;
-
+	//std::unordered_map<PipelineStateDesc, VkPipeline> GraphicsPipelineCache;
+	
 	std::unordered_map<Crc, VkPipeline> ComputePipelineCache;
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;

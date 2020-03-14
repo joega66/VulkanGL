@@ -14,10 +14,19 @@ std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineS
 			return { Pipeline, PipelineLayout };
 		}
 	}
-	
+
 	const VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
 	GraphicsPipelineCache.push_back({ PSODesc, Pipeline });
 	return { Pipeline, PipelineLayout };
+
+	/*if (const auto Iter = GraphicsPipelineCache.find(PSODesc); Iter != GraphicsPipelineCache.end())
+	{
+		return { Iter->second, PipelineLayout };
+	}
+	
+	const VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
+	GraphicsPipelineCache.emplace(PSODesc, Pipeline);
+	return { Pipeline, PipelineLayout };*/
 }
 
 std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
