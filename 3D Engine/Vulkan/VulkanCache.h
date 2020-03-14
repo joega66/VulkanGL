@@ -38,17 +38,17 @@ public:
 private:
 	VulkanDevice& Device;
 
-	SlowCache<RenderPassDesc, VkRenderPass> RenderPassCache;
+	std::unordered_map<std::size_t, VkRenderPass> RenderPassCache;
 
-	SlowCache<std::vector<VkDescriptorSetLayout>, VkPipelineLayout> PipelineLayoutCache;
+	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> SetLayoutCache;
 
-	SlowCache<PipelineStateDesc, VkPipeline, VkPipelineLayout> GraphicsPipelineCache;
+	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
+	
+	SlowCache<PipelineStateDesc, VkPipeline> GraphicsPipelineCache;
 
-	SlowCache<ComputePipelineDesc, VkPipeline, VkPipelineLayout> ComputePipelineCache;
+	std::unordered_map<Crc, VkPipeline> ComputePipelineCache;
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
-
-	SlowCache<std::vector<VkDescriptorSetLayoutBinding>, VkDescriptorSetLayout, VkDescriptorUpdateTemplate> DescriptorSetLayoutCache;
 
 	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts);
 

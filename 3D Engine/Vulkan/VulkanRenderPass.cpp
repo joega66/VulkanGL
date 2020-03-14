@@ -3,30 +3,35 @@
 
 std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPassDesc& RPDesc)
 {
+	std::size_t Seed;
+
+	for (const auto& ColorAttachment : RPDesc.ColorAttachments)
+	{
+		HashCombine(Seed, ColorAttachment.InitialLayout);
+		HashCombine(Seed, ColorAttachment.FinalLayout);
+		HashCombine(Seed, ColorAttachment.LoadAction);
+		HashCombine(Seed, ColorAttachment.StoreAction);
+	}
+
+	HashCombine(Seed, RPDesc.DepthAttachment.InitialLayout);
+	HashCombine(Seed, RPDesc.DepthAttachment.FinalLayout);
+	HashCombine(Seed, RPDesc.DepthAttachment.LoadAction);
+	HashCombine(Seed, RPDesc.DepthAttachment.StoreAction);
+
 	VkRenderPass RenderPass = VK_NULL_HANDLE;
 
-	for (const auto&[CachedRPDesc, CachedRenderPass] : RenderPassCache)
+	if (auto Iter = RenderPassCache.find(Seed); Iter != RenderPassCache.end())
 	{
-		if (RPDesc == CachedRPDesc)
-		{
-			RenderPass = CachedRenderPass;
-			break;
-		}
+		RenderPass = Iter->second;
 	}
 
 	if (RenderPass == VK_NULL_HANDLE)
 	{
 		RenderPass = CreateRenderPass(RPDesc);
-
-		RenderPassDesc CachedRPDesc = RPDesc;
-		std::for_each(CachedRPDesc.ColorAttachments.begin(), CachedRPDesc.ColorAttachments.end(), [] (auto& View) { View.Image = nullptr; });
-		CachedRPDesc.DepthAttachment.Image = nullptr;
-
-		RenderPassCache.push_back({ CachedRPDesc, RenderPass });
+		RenderPassCache.emplace(Seed, RenderPass);
 	}
 
-	VkFramebuffer Framebuffer = CreateFramebuffer(RenderPass, RPDesc);
-
+	const VkFramebuffer Framebuffer = CreateFramebuffer(RenderPass, RPDesc);
 	return { RenderPass, Framebuffer };
 }
 

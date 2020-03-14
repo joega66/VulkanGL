@@ -10,22 +10,22 @@ VulkanCache::VulkanCache(VulkanDevice& Device)
 
 VulkanCache::~VulkanCache()
 {
-	for (const auto&[DescriptorSetLayouts, PipelineLayout] : PipelineLayoutCache)
+	for (const auto&[Crc, PipelineLayout] : PipelineLayoutCache)
 	{
 		vkDestroyPipelineLayout(Device, PipelineLayout, nullptr);
 	}
 
-	for (const auto&[PSODesc, Pipeline, PipelineLayout] : GraphicsPipelineCache)
+	for (const auto&[PSODesc, Pipeline] : GraphicsPipelineCache)
 	{
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}
 
-	for (const auto&[ComputePipelineDesc, Pipeline, PipelineLayout] : ComputePipelineCache)
+	for (const auto&[Crc, Pipeline] : ComputePipelineCache)
 	{
 		vkDestroyPipeline(Device, Pipeline, nullptr);
 	}
 
-	for (const auto&[CacheInfo, RenderPass] : RenderPassCache)
+	for (const auto&[Crc, RenderPass] : RenderPassCache)
 	{
 		vkDestroyRenderPass(Device, RenderPass, nullptr);
 	}
@@ -33,10 +33,11 @@ VulkanCache::~VulkanCache()
 	PFN_vkDestroyDescriptorUpdateTemplateKHR p_vkDestroyDescriptorUpdateTemplateKHR = 
 		(PFN_vkDestroyDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR");
 
-	for (const auto&[Bindings, DescriptorSetLayout, DescriptorUpdateTemplate] : DescriptorSetLayoutCache)
+	for (const auto&[Crc, SetLayoutPair] : SetLayoutCache)
 	{
+		const auto& [SetLayout, DescriptorUpdateTemplate] = SetLayoutPair;
 		p_vkDestroyDescriptorUpdateTemplateKHR(Device, DescriptorUpdateTemplate, nullptr);
-		vkDestroyDescriptorSetLayout(Device, DescriptorSetLayout, nullptr);
+		vkDestroyDescriptorSetLayout(Device, SetLayout, nullptr);
 	}
 }
 

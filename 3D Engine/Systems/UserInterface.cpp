@@ -65,7 +65,7 @@ void UserInterface::Start(Engine& Engine)
 
 	auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
 
-	PipelineStateDesc PSODesc;
+	PipelineStateDesc PSODesc = {};
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
 	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;

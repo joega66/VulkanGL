@@ -158,7 +158,7 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPDesc.ColorAttachments.size(); ColorTargetIndex++)
 	{
-		const auto& ClearValue = std::get<ClearColorValue>(RPDesc.ColorAttachments[ColorTargetIndex].ClearValue);
+		const auto& ClearValue = RPDesc.ColorAttachments[ColorTargetIndex].ClearColor;
 		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
 		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
 		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
@@ -172,12 +172,12 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 		if (Image->IsDepth())
 		{
-			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.depth = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).DepthClear;
+			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.depth = RPDesc.DepthAttachment.ClearDepthStencil.DepthClear;
 		}
 
 		if (Image->IsStencil())
 		{
-			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.stencil = std::get<ClearDepthStencilValue>(RPDesc.DepthAttachment.ClearValue).StencilClear;
+			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.stencil = RPDesc.DepthAttachment.ClearDepthStencil.StencilClear;
 		}
 	}
 

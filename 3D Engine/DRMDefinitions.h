@@ -25,7 +25,8 @@ namespace drm
 	{
 	public:
 		const drm::Image* Image = nullptr;
-		std::variant<ClearColorValue, ClearDepthStencilValue> ClearValue;
+		ClearColorValue ClearColor = {};
+		ClearDepthStencilValue ClearDepthStencil = {};
 		ELoadAction LoadAction = ELoadAction::DontCare;
 		EStoreAction StoreAction = EStoreAction::DontCare;
 		EImageLayout InitialLayout = EImageLayout::Undefined;
@@ -35,30 +36,22 @@ namespace drm
 
 		AttachmentView(const drm::Image* Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout)
 			: Image(Image)
+			, ClearColor(ClearValue)
 			, LoadAction(LoadAction)
 			, StoreAction(StoreAction)
-			, ClearValue(ClearValue)
 			, InitialLayout(InitialLayout)
 			, FinalLayout(FinalLayout)
 		{
 		}
 
-		AttachmentView(const drm::Image* Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& DepthStencil, EImageLayout InitialLayout, EImageLayout FinalLayout)
+		AttachmentView(const drm::Image* Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout)
 			: Image(Image)
+			, ClearDepthStencil(ClearValue)
 			, LoadAction(LoadAction)
 			, StoreAction(StoreAction)
-			, ClearValue(DepthStencil)
 			, InitialLayout(InitialLayout)
 			, FinalLayout(FinalLayout)
 		{
-		}
-
-		friend bool operator==(const AttachmentView& L, const AttachmentView& R)
-		{
-			return L.LoadAction == R.LoadAction
-				&& L.StoreAction == R.StoreAction
-				&& L.InitialLayout == R.InitialLayout
-				&& L.FinalLayout == R.FinalLayout;
 		}
 	};
 }
@@ -74,12 +67,6 @@ struct RenderPassDesc
 	std::vector<drm::AttachmentView> ColorAttachments;
 	drm::AttachmentView DepthAttachment;
 	RenderArea RenderArea;
-
-	friend bool operator==(const RenderPassDesc& L, const RenderPassDesc& R)
-	{
-		return L.DepthAttachment == R.DepthAttachment
-			&& L.ColorAttachments == R.ColorAttachments;
-	}
 };
 
 struct PipelineStateDesc
@@ -90,10 +77,10 @@ struct PipelineStateDesc
 	DepthStencilState DepthStencilState;
 	RasterizationState RasterizationState;
 	MultisampleState MultisampleState;
-	std::vector<ColorBlendAttachmentState> ColorBlendAttachmentStates;
 	InputAssemblyState InputAssemblyState;
 	ShaderStages ShaderStages;
 	SpecializationInfo SpecializationInfo;
+	std::vector<ColorBlendAttachmentState> ColorBlendAttachmentStates;
 	std::vector<EDynamicState> DynamicStates;
 	std::vector<VertexAttributeDescription> VertexAttributes;
 	std::vector<VertexBindingDescription> VertexBindings;
@@ -107,13 +94,14 @@ struct PipelineStateDesc
 			&& L.DepthStencilState == R.DepthStencilState
 			&& L.RasterizationState == R.RasterizationState
 			&& L.MultisampleState == R.MultisampleState
-			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
 			&& L.InputAssemblyState == R.InputAssemblyState
 			&& L.ShaderStages == R.ShaderStages
 			&& L.SpecializationInfo == R.SpecializationInfo
+			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
 			&& L.DynamicStates == R.DynamicStates
 			&& L.VertexAttributes == R.VertexAttributes
-			&& L.VertexBindings == R.VertexBindings;
+			&& L.VertexBindings == R.VertexBindings
+			&& L.Layouts == R.Layouts;
 	}
 
 	bool HasShader(const drm::Shader* Shader) const
@@ -134,9 +122,36 @@ struct PipelineStateDesc
 	}
 };
 
+namespace std
+{
+	template<> struct hash<PipelineStateDesc>
+	{
+		std::size_t operator()(PipelineStateDesc const& PSODesc) const noexcept
+		{
+			std::size_t Seed;
+			HashCombine(Seed, PSODesc.RenderPass.GetRenderPass());
+			HashCombine(Seed, CalculateCrc(&PSODesc.Scissor, sizeof(PSODesc.Scissor)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.Viewport, sizeof(PSODesc.Viewport)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.DepthStencilState, sizeof(PSODesc.DepthStencilState)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.RasterizationState, sizeof(PSODesc.RasterizationState)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.MultisampleState, sizeof(PSODesc.MultisampleState)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.InputAssemblyState, sizeof(PSODesc.InputAssemblyState)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.ShaderStages, sizeof(PSODesc.ShaderStages)));
+			HashCombine(Seed, CalculateCrc(PSODesc.SpecializationInfo.GetMapEntries().data(), PSODesc.SpecializationInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
+			HashCombine(Seed, CalculateCrc(PSODesc.SpecializationInfo.GetData().data(), PSODesc.SpecializationInfo.GetData().size()));
+			HashCombine(Seed, CalculateCrc(PSODesc.ColorBlendAttachmentStates.data(), PSODesc.ColorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
+			HashCombine(Seed, CalculateCrc(PSODesc.DynamicStates.data(), PSODesc.DynamicStates.size() * sizeof(EDynamicState)));
+			HashCombine(Seed, CalculateCrc(PSODesc.VertexAttributes.data(), PSODesc.VertexAttributes.size() * sizeof(VertexAttributeDescription)));
+			HashCombine(Seed, CalculateCrc(PSODesc.VertexBindings.data(), PSODesc.VertexBindings.size() * sizeof(VertexBindingDescription)));
+			HashCombine(Seed, CalculateCrc(PSODesc.Layouts.data(), PSODesc.Layouts.size() * sizeof(VkDescriptorSetLayout)));
+			return Seed;
+		}
+	};
+}
+
 struct ComputePipelineDesc
 {
-	const drm::Shader* ComputeShader;
+	const drm::Shader* ComputeShader = nullptr;
 	SpecializationInfo SpecializationInfo;
 	std::vector<VkDescriptorSetLayout> Layouts;
 

@@ -1,24 +1,16 @@
 #include "VulkanDescriptors.h"
 #include "VulkanDevice.h"
 
-std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>  VulkanCache::GetDescriptorSetLayout(
+std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> VulkanCache::GetDescriptorSetLayout(
 	const std::vector<VkDescriptorSetLayoutBinding>& Bindings,
 	const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
 )
 {
-	for (const auto& [CachedBindings, CachedDescriptorSetLayout, CachedDescriptorUpdateTemplate] : DescriptorSetLayoutCache)
+	const Crc Crc = CalculateCrc(Bindings.data(), Bindings.size() * sizeof(Bindings.front()));
+
+	if (auto Iter = SetLayoutCache.find(Crc); Iter != SetLayoutCache.end())
 	{
-		if (std::equal(Bindings.begin(), Bindings.end(), CachedBindings.begin(), CachedBindings.end(), 
-			[](const VkDescriptorSetLayoutBinding& LHS, const VkDescriptorSetLayoutBinding& RHS)
-			{
-				return LHS.binding == RHS.binding &&
-					LHS.descriptorCount == RHS.descriptorCount &&
-					LHS.descriptorType == RHS.descriptorType &&
-					LHS.stageFlags == RHS.stageFlags;
-			}))
-		{
-			return { CachedDescriptorSetLayout, CachedDescriptorUpdateTemplate };
-		}
+		return Iter->second;
 	}
 
 	VkDescriptorSetLayoutCreateInfo DescriptorSetLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -40,9 +32,9 @@ std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>  VulkanCache::GetDe
 	VkDescriptorUpdateTemplate DescriptorUpdateTemplate;
 	p_vkCreateDescriptorUpdateTemplateKHR(Device, &CreateInfo, nullptr, &DescriptorUpdateTemplate);
 
-	DescriptorSetLayoutCache.push_back({ Bindings, DescriptorSetLayout, DescriptorUpdateTemplate });
+	SetLayoutCache[Crc] = { DescriptorSetLayout, DescriptorUpdateTemplate };
 
-	return { DescriptorSetLayout, DescriptorUpdateTemplate };
+	return SetLayoutCache[Crc];
 }
 
 void VulkanCache::UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data)

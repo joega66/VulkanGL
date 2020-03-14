@@ -38,6 +38,14 @@ struct RID
 template<typename K, typename V>
 using HashTable = std::unordered_map<K, V>;
 
+// Reference: boost::hash_combine
+template<typename SeedType, typename T>
+inline void HashCombine(SeedType& Seed, const T& V)
+{
+	std::hash<T> Hasher;
+	Seed ^= Hasher(V) + 0x9e3779b9 + (Seed << 6) + (Seed >> 2);
+}
+
 template<typename K, typename V>
 const K& GetKey(const HashTable<K, V>& HashTable, const V& Value)
 {

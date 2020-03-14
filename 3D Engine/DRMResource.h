@@ -1,6 +1,9 @@
 #pragma once
 #include <Platform/Platform.h>
 
+using Crc = uint32;
+Crc CalculateCrc(const void* Message, int nBytes);
+
 enum class EFormat
 {
 	UNDEFINED,

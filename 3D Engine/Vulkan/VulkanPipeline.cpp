@@ -5,35 +5,52 @@
 
 std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
-	VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts);
-
-	for (const auto& [CachedPSODesc, CachedPipeline, CachedPipelineLayout] : GraphicsPipelineCache)
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts);
+	 
+	for (const auto& [OtherPSODesc, Pipeline] : GraphicsPipelineCache)
 	{
-		if (PSODesc == CachedPSODesc && PipelineLayout == CachedPipelineLayout)
+		if (PSODesc == OtherPSODesc)
 		{
-			return { CachedPipeline, CachedPipelineLayout };
+			return { Pipeline, PipelineLayout };
 		}
 	}
-
-	VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
-	GraphicsPipelineCache.push_back({ PSODesc, Pipeline, PipelineLayout});
+	
+	const VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
+	GraphicsPipelineCache.push_back({ PSODesc, Pipeline });
 	return { Pipeline, PipelineLayout };
 }
 
-std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputePipelineDesc)
+std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 {
-	VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputePipelineDesc.Layouts);
+	auto& MapEntries = ComputeDesc.SpecializationInfo.GetMapEntries();
+	auto& Data = ComputeDesc.SpecializationInfo.GetData();
+	auto& SetLayouts = ComputeDesc.Layouts;
 
-	for (const auto& [CachedComputePipelineDesc, CachedPipeline, CachedPipelineLayout] : ComputePipelineCache)
+	struct ComputePipelineHash
 	{
-		if (ComputePipelineDesc == CachedComputePipelineDesc && PipelineLayout == CachedPipelineLayout)
-		{
-			return { CachedPipeline, CachedPipelineLayout };
-		}
+		Crc ComputeShaderCrc;
+		Crc MapEntriesCrc;
+		Crc MapDataCrc;
+		Crc SetLayoutsCrc;
+	};
+
+	ComputePipelineHash ComputeHash;
+	ComputeHash.ComputeShaderCrc = CalculateCrc(ComputeDesc.ComputeShader, sizeof(ComputeDesc.ComputeShader));
+	ComputeHash.MapEntriesCrc = CalculateCrc(MapEntries.data(), MapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry));
+	ComputeHash.MapDataCrc = CalculateCrc(Data.data(), Data.size());
+	ComputeHash.SetLayoutsCrc = CalculateCrc(SetLayouts.data(), SetLayouts.size() * sizeof(VkDescriptorSetLayout));
+
+	const Crc Crc = CalculateCrc(&ComputeHash, sizeof(ComputeHash));
+
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts);
+
+	if (auto Iter = ComputePipelineCache.find(Crc); Iter != ComputePipelineCache.end())
+	{
+		return { Iter->second, PipelineLayout };
 	}
 
-	VkPipeline Pipeline = CreatePipeline(ComputePipelineDesc, PipelineLayout);
-	ComputePipelineCache.push_back({ ComputePipelineDesc, Pipeline, PipelineLayout });
+	const VkPipeline Pipeline = CreatePipeline(ComputeDesc, PipelineLayout);
+	ComputePipelineCache[Crc] = Pipeline;
 	return { Pipeline, PipelineLayout };
 }
 
@@ -488,15 +505,12 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 
 VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts)
 {
-	for (const auto&[CachedDescriptorSetLayouts, CachedPipelineLayout] : PipelineLayoutCache)
+	const Crc Crc = CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
+
+	if (auto Iter = PipelineLayoutCache.find(Crc); Iter != PipelineLayoutCache.end())
 	{
-		if (std::equal(
-			CachedDescriptorSetLayouts.begin(), CachedDescriptorSetLayouts.end(), 
-			Layouts.begin(), Layouts.end())
-			)
-		{
-			return CachedPipelineLayout;
-		}
+		const auto& [CachedCrc, CachedPipelineLayout] = *Iter;
+		return CachedPipelineLayout;
 	}
 
 	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -506,45 +520,47 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSe
 	VkPipelineLayout PipelineLayout;
 	vulkan(vkCreatePipelineLayout(Device, &PipelineLayoutInfo, nullptr, &PipelineLayout));
 
-	PipelineLayoutCache.push_back({ Layouts, PipelineLayout });
+	PipelineLayoutCache[Crc] = PipelineLayout;
 
 	return PipelineLayout;
 }
 
 void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 {
-	if (Shader->CompilationInfo.Stage == EShaderStage::Compute)
+	/*if (Shader->CompilationInfo.Stage == EShaderStage::Compute)
 	{
 		ComputePipelineCache.erase(std::remove_if(
 			ComputePipelineCache.begin(),
 			ComputePipelineCache.end(),
 			[&] (const auto& Iter)
 		{
-			const auto&[ComputeDesc, Pipeline, PipelineLayout] = Iter;
+			const auto&[ComputeDesc, CachedObjects] = Iter;
 			if (ComputeDesc.ComputeShader == Shader)
 			{
-				vkDestroyPipeline(Device, Pipeline, nullptr);
+				vkDestroyPipeline(Device, CachedObjects.first, nullptr);
 				return true;
 			}
 			return false;
 		}), ComputePipelineCache.end());
 	}
 	else
+	{*/
+
+	/*auto Iter = std::find_if(GraphicsPipelineCache.begin(), GraphicsPipelineCache.end(), [&] (const auto& Iter)
 	{
-		GraphicsPipelineCache.erase(std::remove_if(
-			GraphicsPipelineCache.begin(),
-			GraphicsPipelineCache.end(),
-			[&] (const auto& Iter)
+		const auto& [PSODesc, Pipeline] = Iter;
+		if (PSODesc.HasShader(Shader))
 		{
-			const auto& [PSODesc, Pipeline, PipelineLayout] = Iter;
-			if (PSODesc.HasShader(Shader))
-			{
-				vkDestroyPipeline(Device, Pipeline, nullptr);
-				return true;
-			}
-			return false;
-		}), GraphicsPipelineCache.end());
-	}
+			vkDestroyPipeline(Device, Pipeline, nullptr);
+			return true;
+		}
+		return false;
+	});
+
+	if (Iter != GraphicsPipelineCache.end())
+	{
+		GraphicsPipelineCache.erase(Iter);
+	}*/
 }
 
 VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint)
