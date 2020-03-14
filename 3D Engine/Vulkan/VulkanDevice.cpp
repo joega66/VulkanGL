@@ -108,12 +108,7 @@ drm::Image VulkanDevice::CreateImage(
 	VkMemoryRequirements MemRequirements = {};
 	vkGetImageMemoryRequirements(Device, Image, &MemRequirements);
 
-	VkMemoryAllocateInfo MemInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-	MemInfo.allocationSize = MemRequirements.size;
-	MemInfo.memoryTypeIndex = Allocator.FindMemoryType(MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	VkDeviceMemory Memory;
-	vulkan(vkAllocateMemory(Device, &MemInfo, nullptr, &Memory));
+	const VkDeviceMemory Memory = Allocator.AllocateMemory(MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemRequirements.size);
 	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
 
 	return VulkanImage(*this

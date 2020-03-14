@@ -10,6 +10,7 @@ VulkanAllocator::VulkanAllocator(VulkanDevice& Device)
 	: Device(Device)
 	, BufferAllocationSize(20 * (1 << 20))
 {
+	vkGetPhysicalDeviceMemoryProperties(Device.GetPhysicalDevice(), &MemoryProperties);
 }
 
 VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags VulkanUsage, EBufferUsage Usage, const void* Data)
@@ -66,22 +67,32 @@ VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags Vul
 	return std::move(Buffer.value());
 }
 
-uint32 VulkanAllocator::FindMemoryType(uint32 MemoryTypeBitsRequirement, VkMemoryPropertyFlags RequiredProperties) const
+VkDeviceMemory VulkanAllocator::AllocateMemory(uint32 RequiredMemoryTypeBits, VkMemoryPropertyFlags RequiredProperties, VkDeviceSize RequiredSize)
 {
-	VkPhysicalDeviceMemoryProperties MemProperties;
-	vkGetPhysicalDeviceMemoryProperties(Device.GetPhysicalDevice(), &MemProperties);
-
-	const uint32 MemoryCount = MemProperties.memoryTypeCount;
-	for (uint32 MemoryIndex = 0; MemoryIndex < MemoryCount; ++MemoryIndex)
+	for (uint32 MemoryIndex = 0; MemoryIndex < MemoryProperties.memoryTypeCount; ++MemoryIndex)
 	{
 		const uint32 MemoryTypeBits = (1 << MemoryIndex);
-		const bool IsRequiredMemoryType = MemoryTypeBitsRequirement & MemoryTypeBits;
-		const VkMemoryPropertyFlags Properties = MemProperties.memoryTypes[MemoryIndex].propertyFlags;
-		const bool HasRequiredProperties = (Properties & RequiredProperties) == RequiredProperties;
+		const bool IsRequiredMemoryType = RequiredMemoryTypeBits & MemoryTypeBits;
+		const VkMemoryType& MemoryType = MemoryProperties.memoryTypes[MemoryIndex];
+		const bool HasRequiredProperties = (MemoryType.propertyFlags & RequiredProperties) == RequiredProperties;
 
 		if (IsRequiredMemoryType && HasRequiredProperties)
 		{
-			return MemoryIndex;
+			VkMemoryAllocateInfo MemoryInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+			MemoryInfo.allocationSize = RequiredSize;
+			MemoryInfo.memoryTypeIndex = MemoryIndex;
+
+			VkDeviceMemory Memory;
+			const VkResult Result = vkAllocateMemory(Device, &MemoryInfo, nullptr, &Memory);
+
+			if (Result == VK_ERROR_OUT_OF_DEVICE_MEMORY || Result == VK_ERROR_OUT_OF_HOST_MEMORY)
+			{
+				continue;
+			}
+
+			vulkan(Result);
+
+			return Memory;
 		}
 	}
 
@@ -101,12 +112,7 @@ VulkanMemory VulkanAllocator::AllocateMemory(VkDeviceSize Size, VkBufferUsageFla
 	VkMemoryRequirements MemRequirements;
 	vkGetBufferMemoryRequirements(Device, Buffer, &MemRequirements);
 
-	VkMemoryAllocateInfo MemoryInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-	MemoryInfo.allocationSize = MemRequirements.size;
-	MemoryInfo.memoryTypeIndex = FindMemoryType(MemRequirements.memoryTypeBits, Properties);
-
-	VkDeviceMemory Memory;
-	vulkan(vkAllocateMemory(Device, &MemoryInfo, nullptr, &Memory));
+	const VkDeviceMemory Memory = AllocateMemory(MemRequirements.memoryTypeBits, Properties, MemRequirements.size);
 	vkBindBufferMemory(Device, Buffer, Memory, 0);
 
 	return VulkanMemory(Device, Buffer, Memory, Usage, Properties, BufferInfo.size);

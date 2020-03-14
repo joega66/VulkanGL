@@ -94,12 +94,14 @@ public:
 		EBufferUsage Usage,
 		const void* Data = nullptr);
 
-	uint32 FindMemoryType(uint32 TypeFilter, VkMemoryPropertyFlags Properties) const;
+	[[nodiscard]] VkDeviceMemory AllocateMemory(uint32 RequiredMemoryTypeBits, VkMemoryPropertyFlags RequiredProperties, VkDeviceSize RequiredSize);
 
 private:
 	VulkanDevice& Device;
+	VkPhysicalDeviceMemoryProperties MemoryProperties;
 	const VkDeviceSize BufferAllocationSize;
 	std::vector<std::unique_ptr<VulkanMemory>> MemoryBuffers;
 
+	
 	[[nodiscard]] VulkanMemory AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
 };
