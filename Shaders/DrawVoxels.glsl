@@ -41,7 +41,7 @@ void main()
 		for (uint i = 0; i < 14; i++)
 		{
 			vec3 VoxelPosition = InVoxelPosition[0];
-			vec3 CubePosition = CreateCube(i) * VOXEL_SIZE;
+			vec3 CubePosition = CreateCube(i) * float(VOXEL_SCALE);
 			VoxelPosition += vec3(CubePosition.x, -CubePosition.y, -CubePosition.z);
 			OutVoxelColor = InVoxelColor[0];
 			gl_Position = Camera.WorldToClip * vec4(VoxelPosition.xyz, 1);

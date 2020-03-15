@@ -43,17 +43,17 @@ void VulkanCommandList::EndRenderPass()
 	vkCmdEndRenderPass(CommandBuffer);
 }
 
-void VulkanCommandList::BindPipeline(const VulkanPipeline& Pipeline)
+void VulkanCommandList::BindPipeline(const std::shared_ptr<VulkanPipeline>& Pipeline)
 {
-	vkCmdBindPipeline(CommandBuffer, Pipeline.GetPipelineBindPoint(), Pipeline.GetPipeline());
+	vkCmdBindPipeline(CommandBuffer, Pipeline->GetPipelineBindPoint(), Pipeline->GetPipeline());
 }
 
-void VulkanCommandList::BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets)
+void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets)
 {
 	vkCmdBindDescriptorSets(
 		CommandBuffer,
-		Pipeline.GetPipelineBindPoint(),
-		Pipeline.GetPipelineLayout(),
+		Pipeline->GetPipelineBindPoint(),
+		Pipeline->GetPipelineLayout(),
 		0,
 		NumDescriptorSets,
 		DescriptorSets,

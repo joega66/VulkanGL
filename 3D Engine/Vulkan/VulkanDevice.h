@@ -30,9 +30,9 @@ public:
 
 	virtual drm::CommandList CreateCommandList(EQueue Queue) override;
 
-	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
+	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const PipelineStateDesc& PSODesc) override;
 
-	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
+	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
 
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
 

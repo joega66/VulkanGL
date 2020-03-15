@@ -16,9 +16,9 @@ public:
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassDesc& RPDesc);
 
-	std::pair<VkPipeline, VkPipelineLayout> GetPipeline(const PipelineStateDesc& PSODesc);
+	std::shared_ptr<drm::Pipeline> GetPipeline(const PipelineStateDesc& PSODesc);
 
-	std::pair<VkPipeline, VkPipelineLayout> GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
+	std::shared_ptr<drm::Pipeline> GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
 
 	const drm::Sampler* GetSampler(const SamplerDesc& SamplerDesc);
 
@@ -29,9 +29,10 @@ public:
 
 	void FreeImage(class VulkanImage& Image);
 
-	void DestroyPipelinesWithShader(const drm::Shader* Shader);
-
 	void UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data);
+
+	/** Brute-force pipeline recompilation after a shader recompilation. */
+	void RecompilePipelines();
 
 	static const char* GetVulkanErrorString(VkResult Result);
 
@@ -43,11 +44,11 @@ private:
 	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> SetLayoutCache;
 
 	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
-	
-	SlowCache<PipelineStateDesc, VkPipeline> GraphicsPipelineCache;
-	//std::unordered_map<PipelineStateDesc, VkPipeline> GraphicsPipelineCache;
-	
-	std::unordered_map<Crc, VkPipeline> ComputePipelineCache;
+
+	SlowCache<PipelineStateDesc, std::shared_ptr<drm::Pipeline>> GraphicsPipelineCache;
+
+	std::unordered_map<Crc, std::shared_ptr<drm::Pipeline>> ComputePipelineCache;
+	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 

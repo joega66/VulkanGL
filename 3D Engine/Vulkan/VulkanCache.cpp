@@ -15,16 +15,6 @@ VulkanCache::~VulkanCache()
 		vkDestroyPipelineLayout(Device, PipelineLayout, nullptr);
 	}
 
-	for (const auto&[PSODesc, Pipeline] : GraphicsPipelineCache)
-	{
-		vkDestroyPipeline(Device, Pipeline, nullptr);
-	}
-
-	for (const auto&[Crc, Pipeline] : ComputePipelineCache)
-	{
-		vkDestroyPipeline(Device, Pipeline, nullptr);
-	}
-
 	for (const auto&[Crc, RenderPass] : RenderPassCache)
 	{
 		vkDestroyRenderPass(Device, RenderPass, nullptr);
@@ -38,6 +28,21 @@ VulkanCache::~VulkanCache()
 		const auto& [SetLayout, DescriptorUpdateTemplate] = SetLayoutPair;
 		p_vkDestroyDescriptorUpdateTemplateKHR(Device, DescriptorUpdateTemplate, nullptr);
 		vkDestroyDescriptorSetLayout(Device, SetLayout, nullptr);
+	}
+}
+
+void VulkanCache::RecompilePipelines()
+{
+	for (auto& [PSODesc, Pipeline] : GraphicsPipelineCache)
+	{
+		vkDestroyPipeline(Device, Pipeline->Pipeline, nullptr);
+		Pipeline->Pipeline = CreatePipeline(PSODesc, Pipeline->PipelineLayout);
+	}
+
+	for (auto& [Crc, Pipeline] : ComputePipelineCache)
+	{
+		vkDestroyPipeline(Device, Pipeline->Pipeline, nullptr);
+		Pipeline->Pipeline = CreatePipeline(CrcToComputeDesc[Crc], Pipeline->PipelineLayout);
 	}
 }
 

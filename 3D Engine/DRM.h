@@ -23,10 +23,10 @@ public:
 	virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
 
 	/** Create a graphics pipeline. */
-	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
+	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
 
 	/** Create a compute pipeline. */
-	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
+	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
 
 	/** Create a descriptor template. */
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumBindings, const DescriptorBinding* Bindings) = 0;

@@ -368,7 +368,7 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
 		ComputeDesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), LightInjectionSet.GetLayout() };
 
-		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
+		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
@@ -431,7 +431,7 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout() };
 
-	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 

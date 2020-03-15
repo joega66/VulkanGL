@@ -32,7 +32,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<FullscreenFS<EVisualize::Depth>>();
 		PSODesc.Layouts = { ShadowProxy.GetDescriptorSet().GetLayout() };
 
-		drm::Pipeline DepthVisualizationPipeline = Device.CreatePipeline(PSODesc);
+		std::shared_ptr<drm::Pipeline> DepthVisualizationPipeline = Device.CreatePipeline(PSODesc);
 
 		CmdList.BeginRenderPass(GlobalData.DepthVisualizationRP);
 

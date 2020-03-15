@@ -15,7 +15,7 @@ struct ImGuiRenderData
 	drm::Buffer VertexBuffer;
 	drm::Buffer IndexBuffer;
 
-	drm::Pipeline Pipeline;
+	std::shared_ptr<drm::Pipeline> Pipeline;
 
 	ImGuiRenderData(DRMDevice& Device);
 

@@ -55,7 +55,7 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
 	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), GlobalData.SkyboxDescriptorSet.GetLayout() };
 
-	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 

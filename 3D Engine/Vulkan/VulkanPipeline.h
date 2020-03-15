@@ -3,8 +3,11 @@
 
 class VulkanPipeline
 {
+	friend class VulkanCache;
 public:
-	VulkanPipeline() = default;
+	VulkanPipeline() = delete;
+	VulkanPipeline(const VulkanPipeline&) = delete;
+	VulkanPipeline& operator=(const VulkanPipeline&) = delete;
 	VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint);
 
 	inline VkPipeline GetPipeline() const { return Pipeline; }

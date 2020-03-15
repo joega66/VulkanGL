@@ -27,16 +27,14 @@ drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 	return VulkanCommandList(*this, QueueFlags);
 }
 
-drm::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
+std::shared_ptr<drm::Pipeline> VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
 {
-	const auto [Pipeline, PipelineLayout] = GetCache().GetPipeline(PSODesc);
-	return drm::Pipeline(Pipeline, PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
+	return VulkanCache.GetPipeline(PSODesc);
 }
 
-drm::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
+std::shared_ptr<drm::Pipeline> VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
 {
-	const auto [Pipeline, PipelineLayout] = GetCache().GetPipeline(ComputePipelineDesc);
-	return drm::Pipeline(Pipeline, PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
+	return VulkanCache.GetPipeline(ComputePipelineDesc);
 }
 
 drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries)

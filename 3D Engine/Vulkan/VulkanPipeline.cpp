@@ -3,7 +3,7 @@
 #include <DRMShader.h>
 #include "VulkanPipeline.h"
 
-std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
+std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
 	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts);
 	 
@@ -11,25 +11,16 @@ std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const PipelineS
 	{
 		if (PSODesc == OtherPSODesc)
 		{
-			return { Pipeline, PipelineLayout };
+			return Pipeline;
 		}
 	}
 
-	const VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
+	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	GraphicsPipelineCache.push_back({ PSODesc, Pipeline });
-	return { Pipeline, PipelineLayout };
-
-	/*if (const auto Iter = GraphicsPipelineCache.find(PSODesc); Iter != GraphicsPipelineCache.end())
-	{
-		return { Iter->second, PipelineLayout };
-	}
-	
-	const VkPipeline Pipeline = CreatePipeline(PSODesc, PipelineLayout);
-	GraphicsPipelineCache.emplace(PSODesc, Pipeline);
-	return { Pipeline, PipelineLayout };*/
+	return Pipeline;
 }
 
-std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
+std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 {
 	auto& MapEntries = ComputeDesc.SpecializationInfo.GetMapEntries();
 	auto& Data = ComputeDesc.SpecializationInfo.GetData();
@@ -55,12 +46,13 @@ std::pair<VkPipeline, VkPipelineLayout> VulkanCache::GetPipeline(const ComputePi
 
 	if (auto Iter = ComputePipelineCache.find(Crc); Iter != ComputePipelineCache.end())
 	{
-		return { Iter->second, PipelineLayout };
+		return Iter->second;
 	}
 
-	const VkPipeline Pipeline = CreatePipeline(ComputeDesc, PipelineLayout);
+	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
 	ComputePipelineCache[Crc] = Pipeline;
-	return { Pipeline, PipelineLayout };
+	CrcToComputeDesc[Crc] = ComputeDesc;
+	return Pipeline;
 }
 
 static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipelineDepthStencilStateCreateInfo& DepthStencilState)
@@ -532,44 +524,6 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSe
 	PipelineLayoutCache[Crc] = PipelineLayout;
 
 	return PipelineLayout;
-}
-
-void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
-{
-	/*if (Shader->CompilationInfo.Stage == EShaderStage::Compute)
-	{
-		ComputePipelineCache.erase(std::remove_if(
-			ComputePipelineCache.begin(),
-			ComputePipelineCache.end(),
-			[&] (const auto& Iter)
-		{
-			const auto&[ComputeDesc, CachedObjects] = Iter;
-			if (ComputeDesc.ComputeShader == Shader)
-			{
-				vkDestroyPipeline(Device, CachedObjects.first, nullptr);
-				return true;
-			}
-			return false;
-		}), ComputePipelineCache.end());
-	}
-	else
-	{*/
-
-	auto Iter = std::find_if(GraphicsPipelineCache.begin(), GraphicsPipelineCache.end(), [&] (const auto& Iter)
-	{
-		const auto& [PSODesc, Pipeline] = Iter;
-		if (PSODesc.HasShader(Shader))
-		{
-			vkDestroyPipeline(Device, Pipeline, nullptr);
-			return true;
-		}
-		return false;
-	});
-
-	if (Iter != GraphicsPipelineCache.end())
-	{
-		GraphicsPipelineCache.erase(Iter);
-	}
 }
 
 VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint)

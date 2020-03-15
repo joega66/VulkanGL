@@ -184,13 +184,10 @@ void VulkanShaderMap::RecompileShaders()
 	for (const auto& [ShaderType, Shader] : Shaders)
 	{
 		const ShaderCompilationInfo& CompileInfo = Shader->CompilationInfo;
-
 		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.Filename);
 
 		//if (LastWriteTime > CompileInfo.LastWriteTime)
 		{
-			//LOG("Recompiling shader %s", CompileInfo.Filename.c_str());
-
 			// Destroy the old shader module.
 			vkDestroyShaderModule(Device, static_cast<VkShaderModule>(CompileInfo.Module), nullptr);
 
@@ -203,9 +200,8 @@ void VulkanShaderMap::RecompileShaders()
 			);
 
 			Shader->CompilationInfo = NewCompilationInfo;
-
-			// Destroy cached pipelines with this shader.
-			Device.GetCache().DestroyPipelinesWithShader(Shader.get());
 		}
 	}
+
+	Device.GetCache().RecompilePipelines();
 }

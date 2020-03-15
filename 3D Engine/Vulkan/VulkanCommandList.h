@@ -29,9 +29,9 @@ public:
 
 	void EndRenderPass();
 
-	void BindPipeline(const VulkanPipeline& Pipeline);
+	void BindPipeline(const std::shared_ptr<VulkanPipeline>& Pipeline);
 
-	void BindDescriptorSets(const VulkanPipeline& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets);
+	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets);
 
 	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 
