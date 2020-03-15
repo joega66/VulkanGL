@@ -19,9 +19,6 @@ GlobalRenderData::GlobalRenderData(Engine& Engine)
 		SceneColor = Device.CreateImage(Width, Height, 1, SwapchainImage.GetFormat(), EImageUsage::Attachment | EImageUsage::TransferSrc);
 		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
-		SceneTexturesDescriptorSet.Update(Device);
-
 		CreateDepthRP(Device);
 		CreateDepthVisualizationRP(Device);
 		CreateLightingRP(Device);
@@ -30,6 +27,10 @@ GlobalRenderData::GlobalRenderData(Engine& Engine)
 		{
 			VCTLightingCachePtr->CreateDebugRenderPass(SceneColor, SceneDepth);
 		}
+
+		SceneTexturesDescriptorSet.Depth = drm::ImageView(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
+		SceneTexturesDescriptorSet.RadianceVolume = drm::ImageView(VCTLightingCache.GetVoxelRadiance(), Device.CreateSampler({ EFilter::Linear }));
+		SceneTexturesDescriptorSet.Update(Device);
 	});
 }
 

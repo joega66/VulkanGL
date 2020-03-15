@@ -17,6 +17,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -39,6 +40,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -67,19 +69,21 @@ void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 		GlobalData.CameraDescriptorSet.GetLayout(), 
 		MeshProxy.GetSurfaceSet().GetLayout(), 
 		MeshProxy.GetMaterialSet().GetLayout(), 
-		GlobalData.SceneTexturesDescriptorSet.GetLayout() 
+		GlobalData.SceneTexturesDescriptorSet.GetLayout(),
+		GlobalData.VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
 
 	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
 		MeshProxy.GetMaterial()->IsMasked() ?
 		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
 
-	const std::vector<VkDescriptorSet> DescriptorSets = 
+	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
-		GlobalData.CameraDescriptorSet, 
-		MeshProxy.GetSurfaceSet(), 
-		MeshProxy.GetMaterialSet(), 
-		GlobalData.SceneTexturesDescriptorSet 
+		GlobalData.CameraDescriptorSet,
+		MeshProxy.GetSurfaceSet(),
+		MeshProxy.GetMaterialSet(),
+		GlobalData.SceneTexturesDescriptorSet,
+		GlobalData.VCTLightingCache.GetDescriptorSet()
 	};
 
 	LightingPass[StaticDrawListType].push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
@@ -88,6 +92,10 @@ void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
+	auto& VCTLighting = GlobalData.VCTLightingCache;
+
+	ImageMemoryBarrier ImageBarrier(VCTLighting.GetVoxelRadiance(), EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal);
+	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageBarrier);
 
 	CmdList.BeginRenderPass(GlobalData.LightingRP);
 

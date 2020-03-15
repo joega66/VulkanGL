@@ -3,6 +3,17 @@
 
 class SceneProxy;
 
+class VoxelShader
+{
+public:
+	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	{
+		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
+		Worker.SetDefine("DEBUG_VOXELS", Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false));
+		Worker.SetDefine("VOXEL_SCALE", static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f)));
+	}
+};
+
 /** Voxel cone tracing lighting cache. */
 class VCTLightingCache
 {
@@ -29,6 +40,7 @@ public:
 	void CreateDebugRenderPass(const drm::Image& SceneColor, const drm::Image& SceneDepth);
 
 private:
+	const float VoxelSize;
 	const uint32 VoxelGridSize;
 	const bool DebugVoxels;
 

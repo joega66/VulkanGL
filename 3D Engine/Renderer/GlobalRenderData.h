@@ -22,12 +22,14 @@ struct CameraDescriptors
 struct SceneTexturesDescriptors
 {
 	drm::ImageView Depth;
+	drm::ImageView RadianceVolume;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
 		static const std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, SampledImage },
+			{ 1, 1, SampledImage },
 		};
 		return Bindings;
 	}

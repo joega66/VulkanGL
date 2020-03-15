@@ -8,6 +8,39 @@ const float AMBIENT = 0.01f;
 #include "SceneTexturesCommon.glsl"
 #endif
 
+#ifdef TRACE_SHADOW_CONE
+#include "VoxelsCommon.glsl"
+float TraceShadowCone(in vec3 WorldPosition, in vec3 WorldNormal, in vec3 LightDir)
+{
+	return texture(RadianceVolume, TransformWorldToVoxelUVW(WorldPosition + WorldNormal * VOXEL_SIZE)).a;
+	//const float Aperture = 0.03f;
+	//const float SamplingFactor = 0.5f;
+	//const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
+
+	//vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+
+	//float Occlusion = 0.0;
+	//float Dist = VOXEL_SIZE;
+
+	//while (Occlusion < 1.0 && Dist < 1.0)
+	//{
+	//	const float Diameter = 2.0f * Aperture * Dist;
+	//	Occlusion += texture(RadianceVolume, VolumeUV + LightDir * Dist).a;
+	//	Dist += VOXEL_SIZE;
+	//	//Dist += Diameter * SamplingFactor;
+	//}
+
+	//return clamp(Occlusion, 0.0f, 1.0f);
+}
+#endif
+
+vec3 ApplyGammaCorrection(in vec3 Color)
+{
+	Color = Color / (Color + vec3(1.0));
+	Color = pow(Color, vec3(1.0 / 2.2));
+	return Color;
+}
+
 struct LightParams
 {
 	vec3 L;
@@ -104,7 +137,11 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 
 		vec3 Radiance = DirectLighting(V, Light, Surface, Material, R0);
 
+#ifdef TRACE_SHADOW_CONE
+		Lo += Radiance * TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
+#else
 		Lo += Radiance;
+#endif
 	}
 
 	// Point lights
@@ -120,10 +157,6 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 
 		Lo += DirectLighting(V, Light, Surface, Material, R0);
 	}
-
-	// Gamma
-	Lo = Lo / (Lo + vec3(1.0));
-	Lo = pow(Lo, vec3(1.0 / 2.2));
 
 	return vec4(Lo, Material.Alpha);
 }

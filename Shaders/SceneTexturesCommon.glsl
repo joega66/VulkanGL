@@ -3,6 +3,8 @@
 
 layout(binding = 0, set = SCENE_TEXTURES_SET) uniform sampler2D SceneDepth;
 
+layout(binding = 1, set = SCENE_TEXTURES_SET) uniform sampler3D RadianceVolume;
+
 vec3 ScreenToWorld(vec2 UV)
 {
 	float Depth = texture(SceneDepth, UV).r;

@@ -2,13 +2,6 @@
 #define VOXELS_COMMON
 #include "Common.glsl"
 
-#ifndef VOXEL_GRID_SIZE
-#define VOXEL_GRID_SIZE 512
-#endif
-
-const float VOXEL_GRID_SIZE_INV = 1.0f / float(VOXEL_GRID_SIZE);
-const vec2 HALF_VOXEL_SIZE = vec2(VOXEL_GRID_SIZE_INV / 2.0f);
-
 layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 {
 	mat4 WorldToVoxel;
@@ -21,18 +14,27 @@ layout(binding = 2, set = VOXEL_SET, rgba16f) uniform image3D VoxelNormal;
 
 layout(binding = 3, set = VOXEL_SET, rgba8) uniform image3D VoxelRadiance;
 
+const float VOXEL_SIZE = 1.0f / (float(VOXEL_GRID_SIZE) * float(VOXEL_SCALE));
+const vec2 HALF_VOXEL_SIZE = vec2(VOXEL_SIZE / 2.0f);
+
 vec3 TransformWorldToVoxel(in vec3 WorldPosition)
 {
 	vec4 VoxelPosition = WorldToVoxel * vec4(WorldPosition.xyz, 1);
 	return VoxelPosition.xyz;
 }
 
+vec3 TransformWorldToVoxelUVW(in vec3 WorldPosition)
+{
+	vec3 VoxelUVW = TransformWorldToVoxel(WorldPosition);
+	VoxelUVW.xy = VoxelUVW.xy / 2.0 + 0.5;
+	return VoxelUVW;
+}
+
 ivec3 TransformWorldToVoxelGridCoord(in vec3 WorldPosition)
 {
-	vec3 VoxelGridCoord = TransformWorldToVoxel(WorldPosition);
-	VoxelGridCoord.xy = VoxelGridCoord.xy / 2.0 + 0.5;
-	VoxelGridCoord *= VOXEL_GRID_SIZE;
-	return ivec3(VoxelGridCoord);
+	vec3 VoxelUVW = TransformWorldToVoxelUVW(WorldPosition);
+	VoxelUVW *= VOXEL_GRID_SIZE;
+	return ivec3(VoxelUVW);
 }
 
 vec3 TransformVoxelToWorld(vec3 VoxelPosition)

@@ -41,12 +41,6 @@ struct DebugVoxelsDescriptors : public VoxelDescriptors
 	}
 };
 
-static void SetVoxelEnvironmentVariables(ShaderCompilerWorker& Worker)
-{
-	Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
-	Worker.SetDefine("DEBUG_VOXELS", Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false));
-}
-
 template<EMeshType MeshType>
 class VoxelsVS : public MeshShader<MeshType>
 {
@@ -60,7 +54,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -83,7 +77,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -106,7 +100,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		Base::SetEnvironmentVariables(Worker);
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -161,7 +155,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -181,7 +175,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -201,7 +195,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -221,7 +215,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		SetVoxelEnvironmentVariables(Worker);
+		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -237,13 +231,14 @@ UNIFORM_STRUCT(WorldToVoxelUniform,
 );
 
 VCTLightingCache::VCTLightingCache(Engine& Engine)
-	: VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
+	: VoxelSize(static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f)))
+	, VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
 	, DebugVoxels(Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false))
 	, Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
 {
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
-
+	
 	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
 
 	VoxelBaseColor = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage | EImageUsage::Sampled);
@@ -288,8 +283,7 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
 		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
 		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f));
-	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
-
+	
 	glm::mat4 OrthoProj = glm::ortho(
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
@@ -423,8 +417,6 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 
 	CmdList.BeginRenderPass(DebugRP);
 
-	const float VoxelSize = static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f));
-
 	auto& GlobalData = Scene.ECS.GetSingletonComponent<GlobalRenderData>();
 
 	PipelineStateDesc PSODesc = {};
@@ -437,7 +429,6 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
-	PSODesc.SpecializationInfo.Add(0, VoxelSize);
 	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout() };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);

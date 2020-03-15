@@ -555,7 +555,7 @@ void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 	else
 	{*/
 
-	/*auto Iter = std::find_if(GraphicsPipelineCache.begin(), GraphicsPipelineCache.end(), [&] (const auto& Iter)
+	auto Iter = std::find_if(GraphicsPipelineCache.begin(), GraphicsPipelineCache.end(), [&] (const auto& Iter)
 	{
 		const auto& [PSODesc, Pipeline] = Iter;
 		if (PSODesc.HasShader(Shader))
@@ -569,7 +569,7 @@ void VulkanCache::DestroyPipelinesWithShader(const drm::Shader* Shader)
 	if (Iter != GraphicsPipelineCache.end())
 	{
 		GraphicsPipelineCache.erase(Iter);
-	}*/
+	}
 }
 
 VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint)
