@@ -57,7 +57,7 @@ static VkInstance CreateInstance(const std::vector<const char*>& ValidationLayer
 	ApplicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	ApplicationInfo.pEngineName = "No Engine";
 	ApplicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	ApplicationInfo.apiVersion = VK_API_VERSION_1_0;
+	ApplicationInfo.apiVersion = VK_API_VERSION_1_1;
 
 	auto Extensions = GetRequiredExtensions(bUseValidationLayers);
 	Extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);

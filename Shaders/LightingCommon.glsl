@@ -10,36 +10,27 @@ const float AMBIENT = 0.01f;
 
 #ifdef TRACE_SHADOW_CONE
 #include "VoxelsCommon.glsl"
+
 float TraceShadowCone(in vec3 WorldPosition, in vec3 WorldNormal, in vec3 LightDir)
 {
-	return texture(RadianceVolume, TransformWorldToVoxelUVW(WorldPosition + WorldNormal * VOXEL_SIZE)).a;
-	//const float Aperture = 0.03f;
-	//const float SamplingFactor = 0.5f;
-	//const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
+	const float ConeAngle = 60.0;
+	const float Aperture = tan(radians(ConeAngle / 2.0));
+	const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
+	vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+	float Visibility = 0.0;
+	float Dist = VOXEL_SIZE;
 
-	//vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+	while (Visibility < 1.0 && Dist < 1.0)
+	{
+		const float Diameter = 2.0 * Aperture * Dist;
+		const float Visibility2 = texture(RadianceVolume, VolumeUV + LightDir * Dist).a;
+		Visibility += (1.0 - Visibility) * Visibility2; // alpha = alpha + (1 - alpha)alpha2
+		Dist += Diameter;
+	}
 
-	//float Occlusion = 0.0;
-	//float Dist = VOXEL_SIZE;
-
-	//while (Occlusion < 1.0 && Dist < 1.0)
-	//{
-	//	const float Diameter = 2.0f * Aperture * Dist;
-	//	Occlusion += texture(RadianceVolume, VolumeUV + LightDir * Dist).a;
-	//	Dist += VOXEL_SIZE;
-	//	//Dist += Diameter * SamplingFactor;
-	//}
-
-	//return clamp(Occlusion, 0.0f, 1.0f);
+	return Visibility;
 }
 #endif
-
-vec3 ApplyGammaCorrection(in vec3 Color)
-{
-	Color = Color / (Color + vec3(1.0));
-	Color = pow(Color, vec3(1.0 / 2.2));
-	return Color;
-}
 
 struct LightParams
 {

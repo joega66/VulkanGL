@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Config\Engine.ini" />
+    <None Include="..\Shaders\DownsampleVolumeCS.glsl" />
     <None Include="..\Shaders\Common.glsl" />
     <None Include="..\Shaders\DepthPassVS.glsl" />
     <None Include="..\Shaders\DepthPrepass.glsl" />

@@ -314,21 +314,37 @@ VulkanSampler::VulkanSampler(VkSampler Sampler)
 {
 }
 
+static VkImageLayout ChooseImageLayout(const VulkanImage& Image)
+{
+	if (Image.IsColor())
+	{
+		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	}
+	else if (Image.IsDepthStencil())
+	{
+		return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	}
+	else if (Image.IsDepth())
+	{
+		return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+	}
+	else // Image.IsStencil()
+	{
+		return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+	}
+}
+
 VulkanImageView::VulkanImageView(const VulkanImage& Image, const VulkanSampler* Sampler)
 {
 	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
 	DescriptorImageInfo.imageView = Image.ImageView;
-	DescriptorImageInfo.imageLayout = Sampler ? 
-		(Image.IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
-		: VK_IMAGE_LAYOUT_GENERAL;
+	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(Image) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
 void VulkanImageView::SetImage(const VulkanImage& Image)
 {
 	DescriptorImageInfo.imageView = Image.ImageView;
-	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler != nullptr ?
-		(Image.IsDepth() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-		: VK_IMAGE_LAYOUT_GENERAL;
+	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler ? ChooseImageLayout(Image) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
 bool VulkanImageView::operator==(const VulkanImage& Image)

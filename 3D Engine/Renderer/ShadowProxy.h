@@ -6,6 +6,7 @@ struct ShadowDescriptors
 {
 	drm::BufferView LightViewProjBuffer;
 	drm::ImageView ShadowMap;
+	drm::BufferView ShadowMapSizeBuffer;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -13,6 +14,7 @@ struct ShadowDescriptors
 		{
 			{ 0, 1, UniformBuffer },
 			{ 1, 1, SampledImage },
+			{ 2, 1, UniformBuffer }
 		};
 		return Bindings;
 	}
@@ -21,8 +23,6 @@ struct ShadowDescriptors
 class ShadowProxy
 {
 public:
-	static constexpr EFormat FORMAT = EFormat::D32_SFLOAT;
-
 	ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
 
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
@@ -33,7 +33,6 @@ public:
 	/** Render shadow depths. */
 	void Render(drm::CommandList& CmdList);
 
-	inline const drm::Buffer& GetLightViewProjBuffer() const { return LightViewProjBuffer; }
 	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 
@@ -43,6 +42,7 @@ private:
 	float DepthBiasSlopeFactor = 0.0f;
 	drm::Buffer LightViewProjBuffer;
 	drm::Image ShadowMap;
+	drm::Buffer ShadowMapSizeBuffer;
 	drm::DescriptorSet DescriptorSet;
 	std::vector<MeshDrawCommand> MeshDrawCommands;
 };

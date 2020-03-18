@@ -122,7 +122,7 @@ drm::Image VulkanDevice::CreateImage(
 
 const drm::Sampler* VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
 {
-	return GetCache().GetSampler(SamplerDesc);
+	return VulkanCache.GetSampler(SamplerDesc);
 }
 
 drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)

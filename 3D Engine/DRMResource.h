@@ -158,9 +158,9 @@ struct ClearDepthStencilValue
 
 struct ClearColorValue
 {
-	float	Float32[4];
-	int32	Int32[4];
-	uint32	Uint32[4];
+	float	Float32[4]	= { 0.0f, 0.0f, 0.0f, 0.0f };
+	int32	Int32[4]	= { 0, 0, 0, 0 };
+	uint32	Uint32[4]	= { 0, 0, 0, 0 };
 };
 
 enum class EImageLayout

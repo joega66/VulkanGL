@@ -336,22 +336,6 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 {
 	auto& ECS = SceneProxy.ECS;
 
-	struct LightInjectionDescriptors
-	{
-		drm::ImageView ShadowMap;
-		drm::BufferView LightProjBuffer;
-
-		static const auto& GetBindings()
-		{
-			static const std::vector<DescriptorBinding> Bindings =
-			{
-				{ 0, 1, StorageImage },
-				{ 1, 1, UniformBuffer },
-			};
-			return Bindings;
-		}
-	};
-
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
@@ -359,20 +343,15 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 		const auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
 		const drm::Image& ShadowMap = ShadowProxy.GetShadowMap();
 
-		DescriptorSet<LightInjectionDescriptors> LightInjectionSet(Device);
-		LightInjectionSet.ShadowMap = ShadowMap;
-		LightInjectionSet.LightProjBuffer = ShadowProxy.GetLightViewProjBuffer();
-		LightInjectionSet.Update(Device);
-
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
-		ComputeDesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), LightInjectionSet.GetLayout() };
+		ComputeDesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), ShadowProxy.GetDescriptorSet().GetLayout() };
 
 		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet, LightInjectionSet };
+		const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet, ShadowProxy.GetDescriptorSet() };
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 		
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);

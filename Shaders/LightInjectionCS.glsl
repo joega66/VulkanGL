@@ -6,25 +6,28 @@
 #include "LightingCommon.glsl"
 
 #define LIGHT_SET 2
-layout(binding = 0, set = LIGHT_SET, r32f) uniform readonly image2D ShadowMap;
-layout(binding = 1, set = LIGHT_SET) uniform LightViewProjBuffer
+layout(binding = 0, set = LIGHT_SET) uniform LightViewProjUniform
 {
 	mat4 LightViewProj;
 	mat4 InvLightViewProj;
+};
+layout(binding = 1, set = LIGHT_SET) uniform sampler2D ShadowMap;
+layout(binding = 2, set = LIGHT_SET) uniform ShadowMapSizeUniform
+{
+	ivec4 ShadowMapSize;
 };
 
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	ivec2 ShadowMapSize = imageSize(ShadowMap);
-	if (gl_GlobalInvocationID.x >= ShadowMapSize.x * ShadowMapSize.y)
+	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, ShadowMapSize.xy)))
 		return;
 
 	// @todo Reproject(InvMatrix, UV, Depth)...
 
 	// 1. Project light depth into the volume.
-	float LightDepth = imageLoad(ShadowMap, ivec2(gl_GlobalInvocationID.xy)).r;
-	vec2 ClipSpace = vec2(gl_GlobalInvocationID.xy) / ShadowMapSize;
+	float LightDepth = texelFetch(ShadowMap, ivec2(gl_GlobalInvocationID.xy), 0).r;
+	vec2 ClipSpace = vec2(gl_GlobalInvocationID.xy) / ShadowMapSize.xy;
 	ClipSpace = (ClipSpace - 0.5f) * 2.0f;
 	vec4 ClipSpaceH = vec4(ClipSpace, LightDepth, 1.0f);
 	vec4 WorldPosition = InvLightViewProj * ClipSpaceH;

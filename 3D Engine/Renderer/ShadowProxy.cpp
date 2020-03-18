@@ -15,7 +15,10 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
 	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
 
-	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, FORMAT, EImageUsage::Attachment | EImageUsage::Sampled | EImageUsage::Storage);
+	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+
+	glm::ivec4 ShadowMapSize = glm::ivec4(ShadowMapRes, 0, 0);
+	ShadowMapSizeBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(ShadowMapSize), &ShadowMapSize);
 
 	RenderPassDesc RPDesc = {};
 	RPDesc.DepthAttachment = drm::AttachmentView(
@@ -23,15 +26,15 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
-		EImageLayout::General);
+		EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
 
 	RenderPass = Device.CreateRenderPass(RPDesc);
 
 	ShadowDescriptors Descriptors;
-	Descriptors.ShadowMap = drm::ImageView(ShadowMap, Device.CreateSampler({}));
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
-
+	Descriptors.ShadowMap = drm::ImageView(ShadowMap, Device.CreateSampler({}));
+	Descriptors.ShadowMapSizeBuffer = ShadowMapSizeBuffer;
 	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
 }

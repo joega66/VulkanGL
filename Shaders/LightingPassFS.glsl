@@ -8,6 +8,13 @@
 
 layout(location = 0) out vec4 OutColor;
 
+vec3 ApplyGammaCorrection(in vec3 Color)
+{
+	Color = Color / (Color + vec3(1.0));
+	Color = pow(Color, vec3(1.0 / 2.2));
+	return Color;
+}
+
 void main()
 {
 	SurfaceData Surface = Surface_Get();
