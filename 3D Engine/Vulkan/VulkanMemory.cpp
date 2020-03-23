@@ -225,7 +225,7 @@ VulkanBuffer::~VulkanBuffer()
 	}
 }
 
-VulkanBufferView::VulkanBufferView(const VulkanBuffer& Buffer)
+VulkanDescriptorBufferInfo::VulkanDescriptorBufferInfo(const VulkanBuffer& Buffer)
 {
 	DescriptorBufferInfo.buffer = Buffer.GetVulkanHandle();
 	DescriptorBufferInfo.offset = Buffer.GetOffset();

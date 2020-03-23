@@ -6,7 +6,7 @@ void drm::UploadImageData(DRMDevice& Device, const void* SrcPixels, const drm::I
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
-	ImageMemoryBarrier Barrier(DstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
+	ImageMemoryBarrier Barrier{ DstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 

@@ -23,9 +23,6 @@ public:
 	/** Voxelize the scene. */
 	void Render(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	/** Inject light into the voxel field. */
-	void ComputeLightInjection(SceneProxy& Scene, drm::CommandList& CmdList);
-
 	/** Visualize the voxels. */
 	void RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
 
@@ -51,17 +48,45 @@ private:
 	drm::RenderPass DebugRP;
 
 	drm::DescriptorSet VoxelDescriptorSet;
-	drm::DescriptorSetLayout DescriptorSetLayout;
+	drm::DescriptorSetLayout VoxelSetLayout;
 
 	drm::Buffer WorldToVoxelBuffer;
 	drm::Image VoxelBaseColor;
 	drm::Image VoxelNormal;
 	drm::Image VoxelRadiance;
+	drm::ImageView VoxelRadianceMipMap;
 
 	drm::Buffer VoxelPositions;
 	drm::Buffer VoxelIndirectBuffer;
 
+	struct DownsampleVolumeDescriptors
+	{
+		drm::DescriptorBufferInfo DownsampleVolumeUniform;
+		drm::DescriptorImageInfo SrcVolume;
+		drm::DescriptorImageInfo DstVolume;
+
+		static const auto GetBindings()
+		{
+			static const std::vector<DescriptorBinding> Bindings =
+			{
+				{ 0, 1, UniformBuffer },
+				{ 1, 1, SampledImage },
+				{ 2, 1, StorageImage }
+			};
+
+			return Bindings;
+		}
+	};
+
+	drm::Buffer DownsampleVolumeUniform;
+
+	DescriptorSetLayout<DownsampleVolumeDescriptors> DownsampleVolumeSetLayout;
+
 	void RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList);
+
+	void ComputeLightInjection(SceneProxy& Scene, drm::CommandList& CmdList);
+
+	void ComputeVolumetricDownsample(drm::CommandList& CmdList);
 
 	void CreateVoxelRP();
 };

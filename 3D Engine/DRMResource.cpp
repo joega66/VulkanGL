@@ -2,18 +2,28 @@
 
 namespace drm
 {
-	bool ImagePrivate::IsColor() const
+	bool ImagePrivate::IsColor(EFormat Format)
 	{
-		return !(IsDepth() || IsStencil() || Format == EFormat::UNDEFINED);
+		return !(IsDepth(Format) || IsStencil(Format) || Format == EFormat::UNDEFINED);
 	}
 
-	bool ImagePrivate::IsStencil() const
+	bool ImagePrivate::IsColor() const
+	{
+		return IsColor(Format);
+	}
+
+	bool ImagePrivate::IsStencil(EFormat Format)
 	{
 		static const std::unordered_set<EFormat> StencilFormats =
 		{
 			EFormat::S8_UINT
 		};
-		return IsDepthStencil() || StencilFormats.find(Format) != StencilFormats.end();
+		return IsDepthStencil(Format) || StencilFormats.find(Format) != StencilFormats.end();
+	}
+
+	bool ImagePrivate::IsStencil() const
+	{
+		return IsStencil(Format);
 	}
 
 	bool ImagePrivate::IsDepthStencil(EFormat Format)
@@ -39,6 +49,11 @@ namespace drm
 		return DepthFormats.find(Format) != DepthFormats.end();
 	}
 
+	bool ImagePrivate::IsDepth() const
+	{
+		return IsDepth(Format);
+	}
+
 	uint32 ImagePrivate::GetSize(EFormat Format)
 	{
 		static HashTable<EFormat, uint32> EngineFormatStrides =
@@ -54,11 +69,6 @@ namespace drm
 		};
 
 		return EngineFormatStrides[Format];
-	}
-
-	bool ImagePrivate::IsDepth() const
-	{
-		return IsDepth(Format);
 	}
 
 	uint32 ImagePrivate::GetStrideInBytes() const

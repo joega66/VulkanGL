@@ -260,8 +260,8 @@ namespace drm
 	{
 	public:
 		ImagePrivate() = default;
-		ImagePrivate(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags)
-			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags)
+		ImagePrivate(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags, uint32 MipLevels)
+			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags), MipLevels(MipLevels)
 		{
 		}
 
@@ -270,6 +270,7 @@ namespace drm
 		inline uint32 GetHeight() const { return Height; }
 		inline uint32 GetDepth() const { return Depth; }
 		inline EImageUsage GetUsage() const { return Usage; }
+		inline uint32 GetMipLevels() const { return MipLevels; }
 
 		bool IsColor() const;
 		bool IsStencil() const;
@@ -282,6 +283,8 @@ namespace drm
 			return Width * Height * Depth * GetStrideInBytes() * (Any(Usage & EImageUsage::Cubemap) ? 6 : 1); 
 		}
 
+		static bool IsColor(EFormat Format);
+		static bool IsStencil(EFormat Format);
 		static bool IsDepthStencil(EFormat Format);
 		static bool IsDepth(EFormat Format);
 		static uint32 GetSize(EFormat Format);
@@ -292,6 +295,7 @@ namespace drm
 		uint32 Height;
 		uint32 Depth;
 		EImageUsage Usage;
+		uint32 MipLevels;
 	};
 }
 

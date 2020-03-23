@@ -6,7 +6,7 @@
 class StaticMeshDescriptors
 {
 public:
-	drm::BufferView LocalToWorldUniform;
+	drm::DescriptorBufferInfo LocalToWorldUniform;
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
 		static const std::vector<DescriptorBinding> Bindings = { { 0, 1, UniformBuffer }, };

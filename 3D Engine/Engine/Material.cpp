@@ -58,12 +58,12 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 
 	std::vector<ImageMemoryBarrier> Barriers
 	{
-		ImageMemoryBarrier(Material::Red, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
-		ImageMemoryBarrier(Material::Green, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
-		ImageMemoryBarrier(Material::Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
-		ImageMemoryBarrier(Material::White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
-		ImageMemoryBarrier(Material::Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal),
-		ImageMemoryBarrier(Material::Dummy, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal)
+		ImageMemoryBarrier{ Material::Red, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ Material::Green, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ Material::Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ Material::White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ Material::Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ Material::Dummy, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal }
 	};
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());

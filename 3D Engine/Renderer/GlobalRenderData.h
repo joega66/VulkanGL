@@ -3,9 +3,9 @@
 
 struct CameraDescriptors
 {
-	drm::BufferView CameraUniform;
-	drm::BufferView DirectionalLightBuffer;
-	drm::BufferView PointLightBuffer;
+	drm::DescriptorBufferInfo CameraUniform;
+	drm::DescriptorBufferInfo DirectionalLightBuffer;
+	drm::DescriptorBufferInfo PointLightBuffer;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -21,8 +21,8 @@ struct CameraDescriptors
 
 struct SceneTexturesDescriptors
 {
-	drm::ImageView Depth;
-	drm::ImageView RadianceVolume;
+	drm::DescriptorImageInfo Depth;
+	drm::DescriptorImageInfo RadianceVolume;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -37,7 +37,7 @@ struct SceneTexturesDescriptors
 
 struct SkyboxDescriptors
 {
-	drm::ImageView Skybox;
+	drm::DescriptorImageInfo Skybox;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{

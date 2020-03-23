@@ -80,11 +80,12 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, uint32 Width
 	, uint32 Height
 	, uint32 Depth
-	, EImageUsage UsageFlags)
-	: Device(&Device)
+	, EImageUsage UsageFlags
+	, uint32 MipLevels
+) : Device(&Device)
 	, Image(Image)
 	, Memory(Memory)
-	, drm::ImagePrivate(Format, Width, Height, Depth, UsageFlags)
+	, drm::ImagePrivate(Format, Width, Height, Depth, UsageFlags, MipLevels)
 {
 	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	ViewInfo.image = Image;
@@ -120,6 +121,7 @@ VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 	Height = Other.Height;
 	Depth = Other.Depth;
 	Usage = Other.Usage;
+	MipLevels = Other.MipLevels;
 	return *this;
 }
 
@@ -302,6 +304,36 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
+VulkanImageView::VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format)
+	: Device(&Device)
+	, ImageView(ImageView)
+	, Format(Format)
+{
+}
+
+VulkanImageView::VulkanImageView(VulkanImageView&& Other)
+	: Device(Other.Device)
+	, ImageView(std::exchange(Other.ImageView, nullptr))
+	, Format(Other.Format)
+{
+}
+
+VulkanImageView& VulkanImageView::operator=(VulkanImageView&& Other)
+{
+	Device = std::exchange(Other.Device, nullptr);
+	ImageView = std::exchange(Other.ImageView, nullptr);
+	Format = Other.Format;
+	return *this;
+}
+
+VulkanImageView::~VulkanImageView()
+{
+	if (ImageView)
+	{
+		vkDestroyImageView(*Device, ImageView, nullptr);
+	}
+}
+
 void VulkanCache::FreeImage(VulkanImage& Image)
 {
 	vkDestroyImage(Device, Image.Image, nullptr);
@@ -314,17 +346,17 @@ VulkanSampler::VulkanSampler(VkSampler Sampler)
 {
 }
 
-static VkImageLayout ChooseImageLayout(const VulkanImage& Image)
+static VkImageLayout ChooseImageLayout(EFormat Format)
 {
-	if (Image.IsColor())
+	if (drm::ImagePrivate::IsColor(Format))
 	{
 		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
-	else if (Image.IsDepthStencil())
+	else if (drm::ImagePrivate::IsDepthStencil(Format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 	}
-	else if (Image.IsDepth())
+	else if (drm::ImagePrivate::IsDepth(Format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 	}
@@ -334,25 +366,32 @@ static VkImageLayout ChooseImageLayout(const VulkanImage& Image)
 	}
 }
 
-VulkanImageView::VulkanImageView(const VulkanImage& Image, const VulkanSampler* Sampler)
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler* Sampler)
+{
+	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
+	DescriptorImageInfo.imageView = ImageView.GetNativeHandle();
+	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(ImageView.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
+}
+
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler* Sampler)
 {
 	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
 	DescriptorImageInfo.imageView = Image.ImageView;
-	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(Image) : VK_IMAGE_LAYOUT_GENERAL;
+	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(Image.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
-void VulkanImageView::SetImage(const VulkanImage& Image)
+void VulkanDescriptorImageInfo::SetImage(const VulkanImage& Image)
 {
 	DescriptorImageInfo.imageView = Image.ImageView;
-	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler ? ChooseImageLayout(Image) : VK_IMAGE_LAYOUT_GENERAL;
+	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler ? ChooseImageLayout(Image.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
-bool VulkanImageView::operator==(const VulkanImage& Image)
+bool VulkanDescriptorImageInfo::operator==(const VulkanImage& Image)
 {
 	return DescriptorImageInfo.imageView == Image.ImageView;
 }
 
-bool VulkanImageView::operator!=(const VulkanImage& Image)
+bool VulkanDescriptorImageInfo::operator!=(const VulkanImage& Image)
 {
 	return !(*this == Image);
 }

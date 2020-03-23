@@ -41,7 +41,16 @@ public:
 		uint32 Depth,
 		EFormat Format,
 		EImageUsage UsageFlags,
-		EImageLayout InitialLayout = EImageLayout::Undefined
+		uint32 MipLevels = 1
+	) = 0;
+
+	/** Create an image view. */
+	virtual drm::ImageView CreateImageView(
+		const drm::Image& Image,
+		uint32 BaseMipLevel,
+		uint32 LevelCount,
+		uint32 BaseArrayLayer,
+		uint32 LayerCount
 	) = 0;
 
 	/** Create a sampler resource. */

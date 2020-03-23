@@ -61,38 +61,40 @@ void UserInterface::Start(Engine& Engine)
 
 	ImGui::StyleColorsDark();
 
-	ImGuiRenderData& RenderData = Engine.ECS.AddSingletonComponent<ImGuiRenderData>(Engine.Device);
+	Engine.ECS.AddSingletonComponent<ImGuiRenderData>(Engine.Device);
 
-	auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
-
-	PipelineStateDesc PSODesc = {};
-	PSODesc.ColorBlendAttachmentStates.resize(1, {});
-	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
-	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
-	PSODesc.ColorBlendAttachmentStates[0].DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	PSODesc.ColorBlendAttachmentStates[0].ColorBlendOp = EBlendOp::ADD;
-	PSODesc.ColorBlendAttachmentStates[0].SrcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
-	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
-	PSODesc.DepthStencilState.DepthTestEnable = true;
-	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<UserInterfaceVS>();
-	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
-	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
-	PSODesc.VertexAttributes = {
-		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
-		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
-		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
-	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { RenderData.DescriptorSet.GetLayout() };
-	PSODesc.RenderPass = GlobalData.LightingRP;
-
-	Engine._Screen.ScreenResizeEvent([&Engine, &ImGui, &RenderData, PSODesc] (int32 Width, int32 Height) mutable
+	Engine._Screen.ScreenResizeEvent([&Engine, &ImGui] (int32 Width, int32 Height)
 	{
 		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
+
+		auto& RenderData = Engine.ECS.GetSingletonComponent<ImGuiRenderData>();
+		auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
+
+		PipelineStateDesc PSODesc = {};
+		PSODesc.RenderPass = GlobalData.LightingRP;
 		PSODesc.Viewport.Width = Width;
 		PSODesc.Viewport.Height = Height;
+		PSODesc.DepthStencilState.DepthTestEnable = true;
+		PSODesc.DepthStencilState.DepthWriteEnable = false;
+		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
+		PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<UserInterfaceVS>();
+		PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
+		PSODesc.ColorBlendAttachmentStates.resize(1, {});
+		PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
+		PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
+		PSODesc.ColorBlendAttachmentStates[0].DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+		PSODesc.ColorBlendAttachmentStates[0].ColorBlendOp = EBlendOp::ADD;
+		PSODesc.ColorBlendAttachmentStates[0].SrcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+		PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
+		PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
+		PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
+		PSODesc.VertexAttributes = {
+			{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
+			{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
+			{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
+		PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
+		PSODesc.Layouts = { RenderData.DescriptorSet.GetLayout() };
+		
 		RenderData.Pipeline = Engine.Device.CreatePipeline(PSODesc);
 	});
 }
@@ -167,8 +169,8 @@ ImGuiRenderData::ImGuiRenderData(DRMDevice& Device)
 
 	struct ImGuiDescriptors
 	{
-		drm::ImageView FontImage;
-		drm::BufferView ImguiUniform;
+		drm::DescriptorImageInfo FontImage;
+		drm::DescriptorBufferInfo ImguiUniform;
 
 		static const std::vector<DescriptorBinding>& GetBindings()
 		{
@@ -185,7 +187,7 @@ ImGuiRenderData::ImGuiRenderData(DRMDevice& Device)
 	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
 
 	ImGuiDescriptors Descriptors;
-	Descriptors.FontImage = drm::ImageView(FontImage, Device.CreateSampler({}));
+	Descriptors.FontImage = drm::DescriptorImageInfo(FontImage, Device.CreateSampler({}));
 	Descriptors.ImguiUniform = ImguiUniform;
 
 	DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);

@@ -257,8 +257,9 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 			, Extent.width
 			, Extent.height
 			, 1
-			, EImageUsage::Attachment | EImageUsage::TransferDst)
-		);
+			, EImageUsage::Attachment | EImageUsage::TransferDst,
+			1
+		));
 	}
 }
 

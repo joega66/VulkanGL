@@ -114,10 +114,10 @@ void VulkanCommandList::ClearColorImage(const VulkanImage& Image, EImageLayout I
 {
 	VkImageSubresourceRange Range = {};
 	Range.aspectMask = Image.GetVulkanAspect();
-	Range.baseArrayLayer = 0;
 	Range.baseMipLevel = 0;
+	Range.levelCount = Image.GetMipLevels();
+	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
-	Range.levelCount = 1;
 
 	vkCmdClearColorImage(CommandBuffer, Image.Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
 }
@@ -126,11 +126,11 @@ void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& Image, EImageL
 {
 	VkImageSubresourceRange Range = {};
 	Range.aspectMask = Image.GetVulkanAspect();
-	Range.baseArrayLayer = 0;
 	Range.baseMipLevel = 0;
-	Range.layerCount = 1;
 	Range.levelCount = 1;
-
+	Range.baseArrayLayer = 0;
+	Range.layerCount = 1;
+	
 	vkCmdClearDepthStencilImage(CommandBuffer, Image.Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
 }
 
@@ -189,14 +189,14 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.image = Image.Image;
 		Barrier.subresourceRange.aspectMask = Image.GetVulkanAspect();
-		Barrier.subresourceRange.baseMipLevel = 0;
-		Barrier.subresourceRange.levelCount = 1;
+		Barrier.subresourceRange.baseMipLevel = ImageBarrier.BaseMipLevel;
+		Barrier.subresourceRange.levelCount = ImageBarrier.LevelCount;
 		Barrier.subresourceRange.baseArrayLayer = 0;
 		Barrier.subresourceRange.layerCount = Any(Image.GetUsage() & EImageUsage::Cubemap) ? 6 : 1;
 
 		VulkanImageBarriers.push_back(Barrier);
 	}
-
+	
 	vkCmdPipelineBarrier(
 		CommandBuffer,
 		GetVulkanPipelineStageFlags(SrcStageMask),

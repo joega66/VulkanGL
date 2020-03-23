@@ -121,13 +121,13 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
-	ImageMemoryBarrier Barrier(
+	ImageMemoryBarrier Barrier{
 		*Image,
 		EAccess::None,
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
 		EImageLayout::TransferDstOptimal
-	);
+	};
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 

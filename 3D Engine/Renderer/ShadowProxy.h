@@ -4,9 +4,9 @@
 
 struct ShadowDescriptors
 {
-	drm::BufferView LightViewProjBuffer;
-	drm::ImageView ShadowMap;
-	drm::BufferView ShadowMapSizeBuffer;
+	drm::DescriptorBufferInfo LightViewProjBuffer;
+	drm::DescriptorImageInfo ShadowMap;
+	drm::DescriptorBufferInfo ShadowMapSizeBuffer;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{

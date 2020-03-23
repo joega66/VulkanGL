@@ -1,9 +1,9 @@
 layout(binding = 0, set = 0) uniform DownsampleVolumeUniform
 {
-	vec4 Scale;
-}
+	vec4 Scale; // Same meaning as vkCmdBlitImage.
+};
 layout(binding = 1, set = 0) uniform sampler3D SrcVolume;
-layout(binding = 2, set = 0, rga8) uniform writeonly image3D DstVolume;
+layout(binding = 2, set = 0, rgba8) uniform writeonly image3D DstVolume;
 
 const ivec3 SampleOffsets[] = ivec3[8]
 (
@@ -32,16 +32,13 @@ void main()
 	if (any(greaterThanEqual(gl_GlobalInvocationID, DstVolumeSize)))
 		return;
 
-	const ivec3 BaseUVW = vec3(gl_GlobalInvocationID.xyz) + 0.5f;
-	const ivec3 ScaledUVW = BaseUVW * Scale.xyz;
+	const ivec3 BaseUVW = ivec3(vec3(gl_GlobalInvocationID.xyz) + 0.5f);
+	const ivec3 ScaledUVW = ivec3(BaseUVW * Scale.xyz);
 
 	vec4 Voxels[8];
 	SampleVolume(ScaledUVW, Voxels);
 
-	imageStore(
-		DstVolume,
-		BaseUVW,
-		(Voxels[0] + Voxels[1] + Voxels[2] + Voxels[3] +
-		Voxels[4] + Voxels[5] + Voxels[6] + Voxels[7]) / 8.0f;
-	);
+	const vec4 VoxelAvg = (Voxels[0] + Voxels[1] + Voxels[2] + Voxels[3] + Voxels[4] + Voxels[5] + Voxels[6] + Voxels[7]) / 8.0f;
+
+	imageStore(DstVolume, BaseUVW, VoxelAvg);
 }

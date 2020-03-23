@@ -58,7 +58,7 @@ void SceneRenderer::Present(drm::CommandList& CmdList)
 	const uint32 ImageIndex = ECS.GetSingletonComponent<GlobalRenderData>().Surface.AcquireNextImage(Device);
 	const drm::Image& PresentImage = GlobalData.Surface.GetImage(ImageIndex);
 
-	ImageMemoryBarrier Barrier(PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal);
+	ImageMemoryBarrier Barrier{ PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
 

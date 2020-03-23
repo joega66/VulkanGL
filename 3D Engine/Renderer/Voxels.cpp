@@ -6,13 +6,14 @@
 #include "ShadowProxy.h"
 #include "GlobalRenderData.h"
 #include <Engine/Engine.h>
+#include <Components/RenderSettings.h>
 
 struct VoxelDescriptors
 {
-	drm::BufferView WorldToVoxelBuffer;
-	drm::ImageView VoxelBaseColor;
-	drm::ImageView VoxelNormal;
-	drm::ImageView VoxelRadiance;
+	drm::DescriptorBufferInfo WorldToVoxelBuffer;
+	drm::DescriptorImageInfo VoxelBaseColor;
+	drm::DescriptorImageInfo VoxelNormal;
+	drm::DescriptorImageInfo VoxelRadiance;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -29,8 +30,8 @@ struct VoxelDescriptors
 
 struct DebugVoxelsDescriptors : public VoxelDescriptors
 {
-	drm::BufferView VoxelPositions;
-	drm::BufferView VoxelIndirectBuffer;
+	drm::DescriptorBufferInfo VoxelPositions;
+	drm::DescriptorBufferInfo VoxelIndirectBuffer;
 
 	static std::vector<DescriptorBinding> GetBindings()
 	{
@@ -225,6 +226,21 @@ public:
 	}
 };
 
+class DownsampleVolumeCS : public drm::Shader
+{
+public:
+	DownsampleVolumeCS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
+	{
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo BaseInfo = { "../Shaders/DownsampleVolumeCS.glsl", "main", EShaderStage::Compute };
+		return BaseInfo;
+	}
+};
+
 UNIFORM_STRUCT(WorldToVoxelUniform,
 	glm::mat4 WorldToVoxel;
 	glm::mat4 WorldToVoxelInv;
@@ -236,6 +252,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	, DebugVoxels(Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false))
 	, Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
+	, DownsampleVolumeSetLayout(Engine.Device)
 {
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
 	
@@ -243,16 +260,22 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 
 	VoxelBaseColor = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage | EImageUsage::Sampled);
 	VoxelNormal = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage | EImageUsage::Sampled);
-	VoxelRadiance = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage | EImageUsage::Sampled | EImageUsage::TransferDst);
+	VoxelRadiance = Device.CreateImage(
+		VoxelGridSize, VoxelGridSize, VoxelGridSize, 
+		EFormat::R8G8B8A8_UNORM, 
+		EImageUsage::Storage | EImageUsage::Sampled | EImageUsage::TransferDst,
+		2
+	);
+	VoxelRadianceMipMap = Device.CreateImageView(VoxelRadiance, 1, 1, 0, 1);
 
 	auto Bindings = DebugVoxels ? DebugVoxelsDescriptors::GetBindings() : VoxelDescriptors::GetBindings();
 
-	DescriptorSetLayout = Device.CreateDescriptorSetLayout(Bindings.size(), Bindings.data());
-	VoxelDescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
+	VoxelSetLayout = Device.CreateDescriptorSetLayout(Bindings.size(), Bindings.data());
+	VoxelDescriptorSet = VoxelSetLayout.CreateDescriptorSet(Device);
 
 	if (DebugVoxels)
 	{
-		VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, VoxelGridSize * VoxelGridSize * VoxelGridSize * sizeof(int32));
+		VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, uint64(VoxelGridSize) * uint64(VoxelGridSize) * uint64(VoxelGridSize) * sizeof(int32));
 		VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
 
 		DebugVoxelsDescriptors Descriptors;
@@ -262,7 +285,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		Descriptors.VoxelRadiance = VoxelRadiance;
 		Descriptors.VoxelPositions = VoxelPositions;
 		Descriptors.VoxelIndirectBuffer = VoxelIndirectBuffer;
-		DescriptorSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
+		VoxelSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
 	}
 	else
 	{
@@ -271,7 +294,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelNormal = VoxelNormal;
 		Descriptors.VoxelRadiance = VoxelRadiance;
-		DescriptorSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
+		VoxelSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
 	}
 
 	CreateVoxelRP();
@@ -294,23 +317,26 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
-	void* WorldToVoxelBufferPtr = WorldToVoxelBuffer.GetData();
-	Platform::Memcpy(WorldToVoxelBufferPtr, &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
+	Platform::Memcpy(WorldToVoxelBuffer.GetData(), &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
 
 	RenderVoxels(Scene, CmdList);
 
 	ComputeLightInjection(Scene, CmdList);
+
+	ComputeVolumetricDownsample(CmdList);
 }
 
 void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	ImageMemoryBarrier ImageBarrier(
+	ImageMemoryBarrier ImageBarrier{
 		VoxelRadiance,
 		EAccess::None,
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
-		EImageLayout::TransferDstOptimal
-	);
+		EImageLayout::TransferDstOptimal,
+		0,
+		VoxelRadiance.GetMipLevels()
+	};
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageBarrier);
 
@@ -318,9 +344,9 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 
 	const std::vector<ImageMemoryBarrier> ImageBarriers =
 	{
-		{ VoxelRadiance, EAccess::TransferWrite, EAccess::ShaderWrite, EImageLayout::TransferDstOptimal, EImageLayout::General },
 		{ VoxelBaseColor, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General },
-		{ VoxelNormal, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General }
+		{ VoxelNormal, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General },
+		{ VoxelRadiance, EAccess::TransferWrite, EAccess::ShaderWrite, EImageLayout::TransferDstOptimal, EImageLayout::General, 0, VoxelRadiance.GetMipLevels() },
 	};
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, ImageBarriers.size(), ImageBarriers.data());
@@ -335,7 +361,6 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::CommandList& CmdList)
 {
 	auto& ECS = SceneProxy.ECS;
-
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
@@ -358,6 +383,61 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 		const uint32 GroupCountY = DivideAndRoundUp(ShadowMap.GetHeight(), 8U);
 		CmdList.Dispatch(GroupCountX, GroupCountY, 1);
 	}
+
+	const auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
+
+	const ImageMemoryBarrier ImageBarrier{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal };
+
+	CmdList.PipelineBarrier(
+		EPipelineStage::ComputeShader, 
+		RenderSettings.DrawVoxels ? EPipelineStage::FragmentShader : EPipelineStage::ComputeShader, 
+		0, nullptr, 1, 
+		&ImageBarrier
+	);
+}
+
+void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList)
+{
+	const glm::vec4 Scale(2);
+	DownsampleVolumeUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(Scale), &Scale);
+	
+	drm::DescriptorSet DescriptorSet = DownsampleVolumeSetLayout.CreateDescriptorSet(Device);
+
+	DownsampleVolumeDescriptors Descriptors;
+	Descriptors.DownsampleVolumeUniform = DownsampleVolumeUniform;
+	Descriptors.SrcVolume = drm::DescriptorImageInfo(VoxelRadiance, Device.CreateSampler({ EFilter::Nearest }));
+	Descriptors.DstVolume = drm::DescriptorImageInfo(VoxelRadianceMipMap);
+
+	DownsampleVolumeSetLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
+
+	ComputePipelineDesc ComputeDesc = {};
+	ComputeDesc.ComputeShader = ShaderMap.FindShader<DownsampleVolumeCS>();
+	ComputeDesc.Layouts = { DownsampleVolumeSetLayout };
+
+	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
+
+	CmdList.BindPipeline(Pipeline);
+
+	std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet };
+
+	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+
+	const glm::uvec3 GroupCounts(
+		DivideAndRoundUp(VoxelRadiance.GetWidth() / 2, 8u),
+		DivideAndRoundUp(VoxelRadiance.GetHeight() / 2, 8u),
+		DivideAndRoundUp(VoxelRadiance.GetDepth() / 2, 8u));
+
+	CmdList.Dispatch(GroupCounts.x, GroupCounts.y, GroupCounts.z);
+
+	ImageMemoryBarrier ImageBarrier{ VoxelRadiance };
+	ImageBarrier.SrcAccessMask = EAccess::ShaderWrite;
+	ImageBarrier.DstAccessMask = EAccess::ShaderRead;
+	ImageBarrier.OldLayout = EImageLayout::General;
+	ImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	ImageBarrier.BaseMipLevel = 1;
+	ImageBarrier.LevelCount = 1;
+
+	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageBarrier);
 }
 
 void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -368,8 +448,7 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	DrawIndirectCommand.FirstVertex = 0;
 	DrawIndirectCommand.FirstInstance = 0;
 
-	void* VoxelIndirectBufferPtr = VoxelIndirectBuffer.GetData();
-	Platform::Memcpy(VoxelIndirectBufferPtr, &DrawIndirectCommand, sizeof(DrawIndirectCommand));
+	Platform::Memcpy(VoxelIndirectBuffer.GetData(), &DrawIndirectCommand, sizeof(DrawIndirectCommand));
 
 	std::vector<BufferMemoryBarrier> BufferBarriers =
 	{
@@ -377,15 +456,12 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 		{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
 	};
 
-	std::vector<const drm::Image*> Images = { &VoxelBaseColor, &VoxelNormal };
-	std::vector<ImageMemoryBarrier> ImageBarriers;
-
-	for (auto Image : Images)
+	std::vector<ImageMemoryBarrier> ImageBarriers =
 	{
-		ImageBarriers.push_back({ *Image, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General });
-	}
-
-	ImageBarriers.push_back(ImageMemoryBarrier(VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General));
+		{ VoxelBaseColor, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
+		{ VoxelNormal, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
+		{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::ShaderReadOnlyOptimal, EImageLayout::General }
+	};
 
 	CmdList.PipelineBarrier(
 		EPipelineStage::FragmentShader | EPipelineStage::ComputeShader,

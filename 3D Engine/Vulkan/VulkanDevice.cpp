@@ -60,9 +60,9 @@ drm::Image VulkanDevice::CreateImage(
 	uint32 Width,
 	uint32 Height,
 	uint32 Depth,
-	EFormat Format, 
-	EImageUsage UsageFlags, 
-	EImageLayout InitialLayout
+	EFormat Format,
+	EImageUsage UsageFlags,
+	uint32 MipLevels
 )
 {
 	if (drm::Image::IsDepth(Format))
@@ -75,11 +75,11 @@ drm::Image VulkanDevice::CreateImage(
 	Info.extent.width = Width;
 	Info.extent.height = Height;
 	Info.extent.depth = Depth;
-	Info.mipLevels = 1;
+	Info.mipLevels = MipLevels;
 	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
 	Info.format = VulkanImage::GetVulkanFormat(Format);
 	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	Info.initialLayout = VulkanImage::GetVulkanLayout(InitialLayout);
+	Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	Info.usage = [&] ()
 	{
 		VkFlags Usage = 0;
@@ -117,7 +117,33 @@ drm::Image VulkanDevice::CreateImage(
 		, Height
 		, Depth
 		, UsageFlags
+		, MipLevels
 	);
+}
+
+drm::ImageView VulkanDevice::CreateImageView(
+	const drm::Image& Image, 
+	uint32 BaseMipLevel, 
+	uint32 LevelCount, 
+	uint32 BaseArrayLayer, 
+	uint32 LayerCount
+)
+{
+	VkImageViewCreateInfo ImageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+	ImageViewCreateInfo.image = Image.Image;
+	ImageViewCreateInfo.viewType = Any(Image.GetUsage() & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : (Image.GetDepth() > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D);
+	ImageViewCreateInfo.format = Image.GetVulkanFormat();
+	ImageViewCreateInfo.subresourceRange.aspectMask = Image.GetVulkanAspect();
+	ImageViewCreateInfo.subresourceRange.baseMipLevel = BaseMipLevel;
+	ImageViewCreateInfo.subresourceRange.levelCount = LevelCount;
+	ImageViewCreateInfo.subresourceRange.baseArrayLayer = BaseArrayLayer;
+	ImageViewCreateInfo.subresourceRange.layerCount = LayerCount;
+	ImageViewCreateInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+
+	VkImageView ImageView;
+	vulkan(vkCreateImageView(Device, &ImageViewCreateInfo, nullptr, &ImageView));
+
+	return VulkanImageView(*this, ImageView, Image.GetFormat());
 }
 
 const drm::Sampler* VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)

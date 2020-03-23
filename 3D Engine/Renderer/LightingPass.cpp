@@ -92,10 +92,6 @@ void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
-	auto& VCTLighting = GlobalData.VCTLightingCache;
-
-	ImageMemoryBarrier ImageBarrier(VCTLighting.GetVoxelRadiance(), EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal);
-	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageBarrier);
 
 	CmdList.BeginRenderPass(GlobalData.LightingRP);
 

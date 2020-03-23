@@ -19,7 +19,9 @@ public:
 		, uint32 Width
 		, uint32 Height
 		, uint32 Depth
-		, EImageUsage UsageFlags);
+		, EImageUsage UsageFlags
+		, uint32 MipLevels
+	);
 	VulkanImage(VulkanImage&& Other);
 	VulkanImage& operator=(VulkanImage&& Other);
 	~VulkanImage();
@@ -50,7 +52,25 @@ public:
 	VkImageAspectFlags GetVulkanAspect() const;
 
 private:
-	VulkanDevice* Device;
+	VulkanDevice* Device = nullptr;
+};
+
+class VulkanImageView
+{
+public:
+	VulkanImageView() = default;
+	VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format);
+	VulkanImageView(VulkanImageView&& Other);
+	VulkanImageView& operator=(VulkanImageView&& Other);
+	~VulkanImageView();
+
+	inline VkImageView GetNativeHandle() const { return ImageView; }
+	inline EFormat GetFormat() const { return Format; }
+
+private:
+	VulkanDevice* Device = nullptr;
+	VkImageView ImageView = nullptr;
+	EFormat Format;
 };
 
 class VulkanSampler
@@ -64,11 +84,12 @@ private:
 	VkSampler Sampler = nullptr;
 };
 
-class VulkanImageView
+class VulkanDescriptorImageInfo
 {
 public:
-	VulkanImageView() = default;
-	VulkanImageView(const VulkanImage& Image, const VulkanSampler* Sampler = nullptr);
+	VulkanDescriptorImageInfo() = default;
+	VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler* Sampler = nullptr);
+	VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler* Sampler = nullptr);
 
 	void SetImage(const VulkanImage& Image);
 

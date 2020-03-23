@@ -73,11 +73,11 @@ private:
 	VkDeviceSize Offset;		// Offset into the memory buffer.
 };
 
-class VulkanBufferView
+class VulkanDescriptorBufferInfo
 {
 public:
-	VulkanBufferView() = default;
-	VulkanBufferView(const VulkanBuffer& Buffer);
+	VulkanDescriptorBufferInfo() = default;
+	VulkanDescriptorBufferInfo(const VulkanBuffer& Buffer);
 
 private:
 	VkDescriptorBufferInfo DescriptorBufferInfo;
@@ -102,6 +102,5 @@ private:
 	const VkDeviceSize BufferAllocationSize;
 	std::vector<std::unique_ptr<VulkanMemory>> MemoryBuffers;
 
-	
 	[[nodiscard]] VulkanMemory AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
 };

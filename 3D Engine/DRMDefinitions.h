@@ -11,9 +11,10 @@
 namespace drm
 {
 	using Buffer = VulkanBuffer;
-	using BufferView = VulkanBufferView;
+	using DescriptorBufferInfo = VulkanDescriptorBufferInfo;
 	using Image = VulkanImage;
 	using ImageView = VulkanImageView;
+	using DescriptorImageInfo = VulkanDescriptorImageInfo;
 	using Sampler = VulkanSampler;
 	using DescriptorSet = VulkanDescriptorSet;
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;
@@ -167,11 +168,6 @@ struct BufferMemoryBarrier
 	const drm::Buffer& Buffer;
 	EAccess SrcAccessMask;
 	EAccess DstAccessMask;
-
-	BufferMemoryBarrier(const drm::Buffer& Buffer, EAccess SrcAccessMask, EAccess DstAccessMask)
-		: Buffer(Buffer), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask)
-	{
-	}
 };
 
 struct ImageMemoryBarrier
@@ -181,16 +177,8 @@ struct ImageMemoryBarrier
 	EAccess DstAccessMask;
 	EImageLayout OldLayout;
 	EImageLayout NewLayout;
-
-	ImageMemoryBarrier(const drm::Image& Image, EAccess SrcAccessMask, EAccess DstAccessMask, EImageLayout OldLayout, EImageLayout NewLayout)
-		: Image(Image), SrcAccessMask(SrcAccessMask), DstAccessMask(DstAccessMask), OldLayout(OldLayout), NewLayout(NewLayout)
-	{
-	}
-
-	ImageMemoryBarrier(const ImageMemoryBarrier& Other)
-		: Image(Other.Image), SrcAccessMask(Other.SrcAccessMask), DstAccessMask(Other.DstAccessMask), OldLayout(Other.OldLayout), NewLayout(Other.NewLayout)
-	{
-	}
+	uint32 BaseMipLevel = 0;
+	uint32 LevelCount = 1;
 };
 
 #include "Vulkan/VulkanCommandList.h"

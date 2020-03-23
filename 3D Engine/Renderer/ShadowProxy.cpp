@@ -13,11 +13,11 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightViewProjUniformData));
 
 	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
-	const glm::ivec2 ShadowMapRes = glm::ivec2(Resolution);
+	const glm::ivec2 ShadowMapRes(Resolution);
 
 	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-	glm::ivec4 ShadowMapSize = glm::ivec4(ShadowMapRes, 0, 0);
+	const glm::ivec4 ShadowMapSize(ShadowMapRes, 0, 0);
 	ShadowMapSizeBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(ShadowMapSize), &ShadowMapSize);
 
 	RenderPassDesc RPDesc = {};
@@ -33,7 +33,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 
 	ShadowDescriptors Descriptors;
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
-	Descriptors.ShadowMap = drm::ImageView(ShadowMap, Device.CreateSampler({}));
+	Descriptors.ShadowMap = drm::DescriptorImageInfo(ShadowMap, Device.CreateSampler({}));
 	Descriptors.ShadowMapSizeBuffer = ShadowMapSizeBuffer;
 	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);

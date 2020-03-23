@@ -42,9 +42,17 @@ public:
 		uint32 Width,
 		uint32 Height,
 		uint32 Depth,
-		EFormat Format, 
+		EFormat Format,
 		EImageUsage UsageFlags,
-		EImageLayout InitialLayout = EImageLayout::Undefined
+		uint32 MipLevels
+	) override;
+
+	virtual drm::ImageView CreateImageView(
+		const drm::Image& Image,
+		uint32 BaseMipLevel,
+		uint32 LevelCount,
+		uint32 BaseArrayLayer,
+		uint32 LayerCount
 	) override;
 
 	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) override;

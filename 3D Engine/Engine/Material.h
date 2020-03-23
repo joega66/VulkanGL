@@ -6,9 +6,9 @@ class DRMDevice;
 
 struct MaterialDescriptors
 {
-	drm::ImageView BaseColor;
-	drm::ImageView MetallicRoughness;
-	drm::BufferView PBRUniform;
+	drm::DescriptorImageInfo BaseColor;
+	drm::DescriptorImageInfo MetallicRoughness;
+	drm::DescriptorBufferInfo PBRUniform;
 
 	MaterialDescriptors(DRMDevice& Device);
 
