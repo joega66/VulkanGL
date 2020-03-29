@@ -221,7 +221,7 @@ struct SamplerDesc
 	};
 };
 
-enum EDescriptorType
+enum class EDescriptorType
 {
 	SampledImage,
 	StorageImage,

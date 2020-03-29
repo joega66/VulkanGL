@@ -11,9 +11,9 @@ struct CameraDescriptors
 	{
 		static std::vector<DescriptorBinding> Bindings =
 		{
-			{ 0, 1, UniformBuffer },
-			{ 1, 1, StorageBuffer },
-			{ 2, 1, StorageBuffer },
+			{ 0, 1, EDescriptorType::UniformBuffer },
+			{ 1, 1, EDescriptorType::StorageBuffer },
+			{ 2, 1, EDescriptorType::StorageBuffer },
 		};
 		return Bindings;
 	}
@@ -28,8 +28,8 @@ struct SceneTexturesDescriptors
 	{
 		static const std::vector<DescriptorBinding> Bindings =
 		{
-			{ 0, 1, SampledImage },
-			{ 1, 1, SampledImage },
+			{ 0, 1, EDescriptorType::SampledImage },
+			{ 1, 1, EDescriptorType::SampledImage },
 		};
 		return Bindings;
 	}
@@ -43,7 +43,7 @@ struct SkyboxDescriptors
 	{
 		static std::vector<DescriptorBinding> Bindings =
 		{
-			{ 0, 1, SampledImage }
+			{ 0, 1, EDescriptorType::SampledImage }
 		};
 		return Bindings;
 	}

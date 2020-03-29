@@ -87,23 +87,12 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, Memory(Memory)
 	, drm::ImagePrivate(Format, Width, Height, Depth, UsageFlags, MipLevels)
 {
-	VkImageViewCreateInfo ViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	ViewInfo.image = Image;
-	ViewInfo.viewType = Any(GetUsage() & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : (Depth > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D);
-	ViewInfo.format = GetVulkanFormat();
-	ViewInfo.subresourceRange.aspectMask = GetVulkanAspect();
-	ViewInfo.subresourceRange.baseMipLevel = 0;
-	ViewInfo.subresourceRange.levelCount = 1;
-	ViewInfo.subresourceRange.baseArrayLayer = 0;
-	ViewInfo.subresourceRange.layerCount = Any(GetUsage() & EImageUsage::Cubemap) ? 6 : 1;
-	ViewInfo.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
-
-	vulkan(vkCreateImageView(Device, &ViewInfo, nullptr, &ImageView));
+	ImageView = Device.CreateImageView(*this, 0, MipLevels, 0, Any(GetUsage() & EImageUsage::Cubemap) ? 6 : 1);
 }
 
 VulkanImage::VulkanImage(VulkanImage&& Other)
 	: Image(std::exchange(Other.Image, nullptr))
-	, ImageView(std::exchange(Other.ImageView, nullptr))
+	, ImageView(std::exchange(Other.ImageView, VulkanImageView()))
 	, Memory(std::exchange(Other.Memory, nullptr))
 	, Device(std::exchange(Other.Device, nullptr))
 	, ImagePrivate(Other)
@@ -113,7 +102,7 @@ VulkanImage::VulkanImage(VulkanImage&& Other)
 VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 {
 	Image = (std::exchange(Other.Image, nullptr));
-	ImageView = (std::exchange(Other.ImageView, nullptr));
+	ImageView = (std::exchange(Other.ImageView, VulkanImageView()));
 	Memory = (std::exchange(Other.Memory, nullptr));
 	Device = (std::exchange(Other.Device, nullptr));
 	Format = Other.Format;
@@ -337,7 +326,6 @@ VulkanImageView::~VulkanImageView()
 void VulkanCache::FreeImage(VulkanImage& Image)
 {
 	vkDestroyImage(Device, Image.Image, nullptr);
-	vkDestroyImageView(Device, Image.ImageView, nullptr);
 	vkFreeMemory(Device, Image.Memory, nullptr);
 }
 
@@ -376,19 +364,19 @@ VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& Imag
 VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler* Sampler)
 {
 	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
-	DescriptorImageInfo.imageView = Image.ImageView;
-	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(Image.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
+	DescriptorImageInfo.imageView = Image.ImageView.GetNativeHandle();
+	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(Image.ImageView.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
 void VulkanDescriptorImageInfo::SetImage(const VulkanImage& Image)
 {
-	DescriptorImageInfo.imageView = Image.ImageView;
+	DescriptorImageInfo.imageView = Image.ImageView.GetNativeHandle();
 	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler ? ChooseImageLayout(Image.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
 bool VulkanDescriptorImageInfo::operator==(const VulkanImage& Image)
 {
-	return DescriptorImageInfo.imageView == Image.ImageView;
+	return DescriptorImageInfo.imageView == Image.ImageView.GetNativeHandle();
 }
 
 bool VulkanDescriptorImageInfo::operator!=(const VulkanImage& Image)

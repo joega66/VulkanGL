@@ -12,9 +12,9 @@ struct ShadowDescriptors
 	{
 		static std::vector<DescriptorBinding> Bindings =
 		{
-			{ 0, 1, UniformBuffer },
-			{ 1, 1, SampledImage },
-			{ 2, 1, UniformBuffer }
+			{ 0, 1, EDescriptorType::UniformBuffer },
+			{ 1, 1, EDescriptorType::SampledImage },
+			{ 2, 1, EDescriptorType::UniformBuffer }
 		};
 		return Bindings;
 	}

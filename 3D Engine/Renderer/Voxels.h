@@ -54,6 +54,7 @@ private:
 	drm::Image VoxelBaseColor;
 	drm::Image VoxelNormal;
 	drm::Image VoxelRadiance;
+	drm::ImageView VoxelRadianceBaseMipMap;
 	drm::ImageView VoxelRadianceMipMap;
 
 	drm::Buffer VoxelPositions;
@@ -69,9 +70,9 @@ private:
 		{
 			static const std::vector<DescriptorBinding> Bindings =
 			{
-				{ 0, 1, UniformBuffer },
-				{ 1, 1, SampledImage },
-				{ 2, 1, StorageImage }
+				{ 0, 1, EDescriptorType::UniformBuffer },
+				{ 1, 1, EDescriptorType::SampledImage },
+				{ 2, 1, EDescriptorType::StorageImage }
 			};
 
 			return Bindings;

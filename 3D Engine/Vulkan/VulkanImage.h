@@ -4,11 +4,29 @@
 
 class VulkanDevice;
 
+class VulkanImageView
+{
+public:
+	VulkanImageView() = default;
+	VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format);
+	VulkanImageView(VulkanImageView&& Other);
+	VulkanImageView& operator=(VulkanImageView&& Other);
+	~VulkanImageView();
+
+	inline VkImageView GetNativeHandle() const { return ImageView; }
+	inline EFormat GetFormat() const { return Format; }
+
+private:
+	VulkanDevice* Device = nullptr;
+	VkImageView ImageView = nullptr;
+	EFormat Format;
+};
+
 class VulkanImage : public drm::ImagePrivate
 {
 public:
 	VkImage Image = nullptr;
-	VkImageView ImageView = nullptr;
+	VulkanImageView ImageView;
 	VkDeviceMemory Memory = nullptr;
 
 	VulkanImage() = default;
@@ -53,24 +71,6 @@ public:
 
 private:
 	VulkanDevice* Device = nullptr;
-};
-
-class VulkanImageView
-{
-public:
-	VulkanImageView() = default;
-	VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format);
-	VulkanImageView(VulkanImageView&& Other);
-	VulkanImageView& operator=(VulkanImageView&& Other);
-	~VulkanImageView();
-
-	inline VkImageView GetNativeHandle() const { return ImageView; }
-	inline EFormat GetFormat() const { return Format; }
-
-private:
-	VulkanDevice* Device = nullptr;
-	VkImageView ImageView = nullptr;
-	EFormat Format;
 };
 
 class VulkanSampler

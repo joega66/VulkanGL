@@ -9,7 +9,7 @@ public:
 	drm::DescriptorBufferInfo LocalToWorldUniform;
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static const std::vector<DescriptorBinding> Bindings = { { 0, 1, UniformBuffer }, };
+		static const std::vector<DescriptorBinding> Bindings = { { 0, 1, EDescriptorType::UniformBuffer }, };
 		return Bindings;
 	}
 };

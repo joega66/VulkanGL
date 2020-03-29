@@ -181,13 +181,13 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const Rend
 	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.ColorAttachments.size(); ColorAttachmentIndex++)
 	{
 		const drm::Image* Image = RPDesc.ColorAttachments[ColorAttachmentIndex].Image;
-		AttachmentViews.push_back(Image->ImageView);
+		AttachmentViews.push_back(Image->ImageView.GetNativeHandle());
 	}
 
 	if (RPDesc.DepthAttachment.Image)
 	{
 		const drm::Image* Image = RPDesc.DepthAttachment.Image;
-		AttachmentViews.push_back(Image->ImageView);
+		AttachmentViews.push_back(Image->ImageView.GetNativeHandle());
 	}
 
 	VkFramebufferCreateInfo FramebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };

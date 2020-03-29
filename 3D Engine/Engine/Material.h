@@ -16,9 +16,9 @@ struct MaterialDescriptors
 	{
 		static const std::vector<DescriptorBinding> Bindings =
 		{
-			{ 0, 1, SampledImage },
-			{ 1, 1, SampledImage },
-			{ 2, 1, UniformBuffer },
+			{ 0, 1, EDescriptorType::SampledImage },
+			{ 1, 1, EDescriptorType::SampledImage },
+			{ 2, 1, EDescriptorType::UniformBuffer },
 		};
 		return Bindings;
 	}
