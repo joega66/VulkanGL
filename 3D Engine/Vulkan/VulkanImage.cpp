@@ -166,14 +166,16 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 
 const drm::Sampler* VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
 {
-	if (auto SamplerIter = SamplerCache.find(SamplerDesc); SamplerIter != SamplerCache.end())
+	const Crc Crc = CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
+
+	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
 	{
 		return &SamplerIter->second;
 	}
 	else
 	{
-		SamplerCache.emplace(SamplerDesc, VulkanSampler(VulkanImage::CreateSampler(Device, SamplerDesc)));
-		return &SamplerCache.at(SamplerDesc);
+		SamplerCache.emplace(Crc, VulkanSampler(VulkanImage::CreateSampler(Device, SamplerDesc)));
+		return &SamplerCache.at(Crc);
 	}
 }
 
@@ -195,8 +197,8 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerDesc& Sa
 	};
 
 	VkFilter Filter = GetVulkanFilter(SamplerDesc.Filter);
-	VkSamplerMipmapMode SMM = VulkanMipmapModes[(uint32)SamplerDesc.SMM];
-	VkSamplerAddressMode SAM = VulkanAddressModes[(uint32)SamplerDesc.SAM];
+	VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.SMM)];
+	VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.SAM)];
 
 	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	SamplerInfo.magFilter = Filter;
@@ -211,6 +213,8 @@ VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerDesc& Sa
 	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
 	SamplerInfo.compareEnable = VK_FALSE;
 	SamplerInfo.compareOp = VK_COMPARE_OP_NEVER;
+	SamplerInfo.minLod = SamplerDesc.MinLod;
+	SamplerInfo.maxLod = SamplerDesc.MaxLod;
 
 	VkSampler Sampler;
 	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));

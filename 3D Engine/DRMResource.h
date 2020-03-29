@@ -206,19 +206,8 @@ struct SamplerDesc
 	EFilter Filter = EFilter::Linear;
 	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToEdge;
 	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
-
-	bool operator==(const SamplerDesc& Other) const
-	{
-		return Filter == Other.Filter && SAM == Other.SAM && SMM == Other.SMM;
-	}
-
-	struct Hash
-	{
-		size_t operator()(const SamplerDesc& SamplerDesc) const
-		{
-			return (static_cast<std::size_t>(SamplerDesc.Filter) * 31llu) + (static_cast<std::size_t>(SamplerDesc.SAM) * 37llu) + (static_cast<std::size_t>(SamplerDesc.SMM) * 41llu);
-		}
-	};
+	float MinLod = 0.0f;
+	float MaxLod = 0.0f;
 };
 
 enum class EDescriptorType

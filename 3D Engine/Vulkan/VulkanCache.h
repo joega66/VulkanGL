@@ -50,6 +50,8 @@ private:
 	std::unordered_map<Crc, std::shared_ptr<drm::Pipeline>> ComputePipelineCache;
 	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
 
+	std::unordered_map<Crc, drm::Sampler> SamplerCache;
+
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 
 	VkPipelineLayout GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts);
@@ -61,6 +63,4 @@ private:
 	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout) const;
 
 	[[nodiscard]] VkPipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc, VkPipelineLayout PipelineLayout) const;
-
-	std::unordered_map<SamplerDesc, drm::Sampler, SamplerDesc::Hash> SamplerCache;
 };

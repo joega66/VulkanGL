@@ -29,7 +29,7 @@ GlobalRenderData::GlobalRenderData(Engine& Engine)
 		}
 
 		SceneTexturesDescriptorSet.Depth = drm::DescriptorImageInfo(SceneDepth, Device.CreateSampler({ EFilter::Nearest }));
-		SceneTexturesDescriptorSet.RadianceVolume = drm::DescriptorImageInfo(VCTLightingCache.GetVoxelRadiance(), Device.CreateSampler({ EFilter::Linear }));
+		SceneTexturesDescriptorSet.RadianceVolume = drm::DescriptorImageInfo(VCTLightingCache.GetVoxelRadiance(), VCTLightingCache.GetVoxelRadianceSampler());
 		SceneTexturesDescriptorSet.Update(Device);
 	});
 }

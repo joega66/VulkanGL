@@ -28,6 +28,7 @@ public:
 
 	inline uint32 GetVoxelGridSize() const { return VoxelGridSize; }
 	inline const drm::Image& GetVoxelRadiance() const { return VoxelRadiance; }
+	inline const drm::Sampler* GetVoxelRadianceSampler() const { return VoxelRadianceSampler; }
 	inline const drm::RenderPass& GetRenderPass() const { return VoxelRP; }
 	inline const drm::RenderPass& GetDebugRenderPass() const { return DebugRP; }
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return VoxelDescriptorSet; }
@@ -54,6 +55,8 @@ private:
 	drm::Image VoxelBaseColor;
 	drm::Image VoxelNormal;
 	drm::Image VoxelRadiance;
+
+	const drm::Sampler* VoxelRadianceSampler;
 
 	std::vector<drm::ImageView> VoxelRadianceMipMaps;
 

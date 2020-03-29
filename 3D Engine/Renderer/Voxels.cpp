@@ -265,9 +265,10 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		EFormat::R8G8B8A8_UNORM, 
 		EImageUsage::Storage | EImageUsage::Sampled | EImageUsage::TransferDst,
 		Platform::GetInt("Engine.ini", "Voxels", "MipLevels", 3));
+	VoxelRadianceSampler = Device.CreateSampler(
+		{ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Nearest, 0.0f, static_cast<float>(VoxelRadiance.GetMipLevels()) });
 
 	VoxelRadianceMipMaps.reserve(VoxelRadiance.GetMipLevels());
-
 	for (uint32 LevelIndex = 0; LevelIndex < VoxelRadiance.GetMipLevels(); LevelIndex++)
 	{
 		VoxelRadianceMipMaps.push_back(Device.CreateImageView(VoxelRadiance, LevelIndex, 1, 0, 1));
