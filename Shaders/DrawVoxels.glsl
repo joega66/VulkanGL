@@ -65,7 +65,7 @@ layout(location = 0) out vec4 OutColor;
 
 void main()
 {
-	OutColor = vec4(InVoxelColor);
+	OutColor = vec4(InVoxelColor.rgb, 0.5);
 }
 
 #endif
