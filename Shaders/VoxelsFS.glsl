@@ -17,7 +17,7 @@ void main()
 
 	ivec3 VoxelGridCoord = TransformWorldToVoxelGridCoord(Surface.WorldPosition);
 
-	imageStore(VoxelBaseColor, VoxelGridCoord, vec4(Material.BaseColor, Material.Alpha));
+	imageStore(VoxelBaseColor, VoxelGridCoord, vec4(Material.BaseColor, 1.0f));
 	imageStore(VoxelNormal, VoxelGridCoord, vec4(Surface.WorldNormal, 1.0f));
 
 #if DEBUG_VOXELS

@@ -257,6 +257,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
 	
 	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
+	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
 
 	VoxelBaseColor = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage | EImageUsage::Sampled);
 	VoxelNormal = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage | EImageUsage::Sampled);
@@ -282,8 +283,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	if (DebugVoxels)
 	{
 		VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, uint64(VoxelGridSize) * uint64(VoxelGridSize) * uint64(VoxelGridSize) * sizeof(int32));
-		VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
-
+		
 		DebugVoxelsDescriptors Descriptors;
 		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
@@ -333,6 +333,14 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
 
 	Platform::Memcpy(WorldToVoxelBuffer.GetData(), &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
+
+	DrawIndirectCommand DrawIndirectCommand;
+	DrawIndirectCommand.VertexCount = 0;
+	DrawIndirectCommand.InstanceCount = 1;
+	DrawIndirectCommand.FirstVertex = 0;
+	DrawIndirectCommand.FirstInstance = 0;
+
+	Platform::Memcpy(VoxelIndirectBuffer.GetData(), &DrawIndirectCommand, sizeof(DrawIndirectCommand));
 
 	RenderVoxels(Scene, CmdList);
 
@@ -453,14 +461,6 @@ void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, co
 
 void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	DrawIndirectCommand DrawIndirectCommand;
-	DrawIndirectCommand.VertexCount = 0;
-	DrawIndirectCommand.InstanceCount = 1;
-	DrawIndirectCommand.FirstVertex = 0;
-	DrawIndirectCommand.FirstInstance = 0;
-
-	Platform::Memcpy(VoxelIndirectBuffer.GetData(), &DrawIndirectCommand, sizeof(DrawIndirectCommand));
-
 	std::vector<BufferMemoryBarrier> BufferBarriers =
 	{
 		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
