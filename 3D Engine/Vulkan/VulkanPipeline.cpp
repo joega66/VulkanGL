@@ -5,8 +5,6 @@
 
 std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts);
-	 
 	for (const auto& [OtherPSODesc, Pipeline] : GraphicsPipelineCache)
 	{
 		if (PSODesc == OtherPSODesc)
@@ -15,7 +13,8 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const PipelineStateDesc&
 		}
 	}
 
-	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
+	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(PSODesc.Layouts, PSODesc.PushConstantRange);
+	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, PushConstantRange);
 	GraphicsPipelineCache.push_back({ PSODesc, Pipeline });
 	return Pipeline;
 }
@@ -42,14 +41,13 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDes
 
 	const Crc Crc = CalculateCrc(&ComputeHash, sizeof(ComputeHash));
 
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts);
-
 	if (auto Iter = ComputePipelineCache.find(Crc); Iter != ComputePipelineCache.end())
 	{
 		return Iter->second;
 	}
 
-	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
+	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(ComputeDesc.Layouts, ComputeDesc.PushConstantRange);
+	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE, PushConstantRange);
 	ComputePipelineCache[Crc] = Pipeline;
 	CrcToComputeDesc[Crc] = ComputeDesc;
 	return Pipeline;
@@ -504,31 +502,59 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	return Pipeline;
 }
 
-VkPipelineLayout VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts)
+static VkPushConstantRange CreatePushConstantRange(const PushConstantRange& PushConstantRange)
 {
-	const Crc Crc = CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
+	VkPushConstantRange VulkanPushConstantRange = {};
+	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+	VulkanPushConstantRange.offset = 0;
+	VulkanPushConstantRange.size = PushConstantRange.Size;
+	return VulkanPushConstantRange;
+}
+
+std::pair<VkPipelineLayout, VkPushConstantRange> VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange)
+{
+	const Crc Crc0 = CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
+	const Crc Crc1 = CalculateCrc(&PushConstantRange, sizeof(PushConstantRange));
+
+	Crc Crc = 0;
+	HashCombine(Crc, Crc0);
+	HashCombine(Crc, Crc1);
+
+	const VkPushConstantRange VulkanPushConstantRange = CreatePushConstantRange(PushConstantRange);
 
 	if (auto Iter = PipelineLayoutCache.find(Crc); Iter != PipelineLayoutCache.end())
 	{
 		const auto& [CachedCrc, CachedPipelineLayout] = *Iter;
-		return CachedPipelineLayout;
+		return { CachedPipelineLayout, VulkanPushConstantRange };
 	}
 
 	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 	PipelineLayoutInfo.setLayoutCount = static_cast<uint32>(Layouts.size());
 	PipelineLayoutInfo.pSetLayouts = Layouts.data();
 
+	if (PushConstantRange.Size > 0)
+	{
+		PipelineLayoutInfo.pushConstantRangeCount = 1;
+		PipelineLayoutInfo.pPushConstantRanges = &VulkanPushConstantRange;
+	}
+
 	VkPipelineLayout PipelineLayout;
 	vulkan(vkCreatePipelineLayout(Device, &PipelineLayoutInfo, nullptr, &PipelineLayout));
 
 	PipelineLayoutCache[Crc] = PipelineLayout;
 
-	return PipelineLayout;
+	return { PipelineLayout, VulkanPushConstantRange };
 }
 
-VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint)
+VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint, const VkPushConstantRange& PushConstantRange)
 	: Pipeline(Pipeline)
 	, PipelineLayout(PipelineLayout)
 	, PipelineBindPoint(PipelineBindPoint)
+	, PushConstantRange(PushConstantRange)
 {
 }

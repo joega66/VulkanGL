@@ -70,6 +70,18 @@ struct RenderPassDesc
 	RenderArea RenderArea;
 };
 
+struct PushConstantRange
+{
+	EShaderStage StageFlags = EShaderStage::All;
+	uint32 Size = 0;
+
+	bool operator==(const PushConstantRange& Other) const
+	{
+		return StageFlags == Other.StageFlags
+			&& Size == Other.Size;
+	}
+};
+
 struct PipelineStateDesc
 {
 	drm::RenderPassView RenderPass;
@@ -86,6 +98,7 @@ struct PipelineStateDesc
 	std::vector<VertexAttributeDescription> VertexAttributes;
 	std::vector<VertexBindingDescription> VertexBindings;
 	std::vector<VkDescriptorSetLayout> Layouts;
+	PushConstantRange PushConstantRange;
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
@@ -102,7 +115,8 @@ struct PipelineStateDesc
 			&& L.DynamicStates == R.DynamicStates
 			&& L.VertexAttributes == R.VertexAttributes
 			&& L.VertexBindings == R.VertexBindings
-			&& L.Layouts == R.Layouts;
+			&& L.Layouts == R.Layouts
+			&& L.PushConstantRange == R.PushConstantRange;
 	}
 
 	bool HasShader(const drm::Shader* Shader) const
@@ -129,7 +143,7 @@ namespace std
 	{
 		std::size_t operator()(PipelineStateDesc const& PSODesc) const noexcept
 		{
-			std::size_t Seed;
+			std::size_t Seed = 0;
 			HashCombine(Seed, PSODesc.RenderPass.GetRenderPass());
 			HashCombine(Seed, CalculateCrc(&PSODesc.Scissor, sizeof(PSODesc.Scissor)));
 			HashCombine(Seed, CalculateCrc(&PSODesc.Viewport, sizeof(PSODesc.Viewport)));
@@ -145,6 +159,7 @@ namespace std
 			HashCombine(Seed, CalculateCrc(PSODesc.VertexAttributes.data(), PSODesc.VertexAttributes.size() * sizeof(VertexAttributeDescription)));
 			HashCombine(Seed, CalculateCrc(PSODesc.VertexBindings.data(), PSODesc.VertexBindings.size() * sizeof(VertexBindingDescription)));
 			HashCombine(Seed, CalculateCrc(PSODesc.Layouts.data(), PSODesc.Layouts.size() * sizeof(VkDescriptorSetLayout)));
+			HashCombine(Seed, CalculateCrc(&PSODesc.PushConstantRange, sizeof(PSODesc.PushConstantRange)));
 			return Seed;
 		}
 	};
@@ -155,11 +170,14 @@ struct ComputePipelineDesc
 	const drm::Shader* ComputeShader = nullptr;
 	SpecializationInfo SpecializationInfo;
 	std::vector<VkDescriptorSetLayout> Layouts;
+	PushConstantRange PushConstantRange;
 
 	inline bool operator==(const ComputePipelineDesc& Other) const
 	{
 		return ComputeShader == Other.ComputeShader
-			&& SpecializationInfo == Other.SpecializationInfo;
+			&& SpecializationInfo == Other.SpecializationInfo
+			&& Layouts == Other.Layouts
+			&& PushConstantRange == Other.PushConstantRange;
 	}
 };
 

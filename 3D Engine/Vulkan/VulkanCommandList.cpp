@@ -62,6 +62,18 @@ void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>
 	);
 }
 
+void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const void* Values)
+{
+	vkCmdPushConstants(
+		CommandBuffer,
+		Pipeline->GetPipelineLayout(),
+		Pipeline->GetPushConstantRange().stageFlags,
+		Pipeline->GetPushConstantRange().offset,
+		Pipeline->GetPushConstantRange().size,
+		Values
+	);
+}
+
 void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers)
 {
 	std::vector<VkDeviceSize> Offsets(NumVertexBuffers);

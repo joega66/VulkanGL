@@ -33,6 +33,8 @@ public:
 
 	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets);
 
+	void PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const void* Values);
+
 	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 
 	void DrawIndexed(

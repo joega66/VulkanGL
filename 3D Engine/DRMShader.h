@@ -4,13 +4,15 @@
 
 enum class EShaderStage
 {
-	Vertex,
-	TessControl,
-	TessEvaluation,
-	Geometry,
-	Fragment,
-	Compute,
-	//All = Vertex | TessControl | TessEvaluation | Geometry | Fragment | Compute
+	None = 0,
+	Vertex = 1 << 0,
+	TessControl = 1 << 1,
+	TessEvaluation = 1 << 2,
+	Geometry = 1 << 3,
+	Fragment = 1 << 4,
+	Compute = 1 << 5,
+	AllGraphics = Vertex | TessControl | TessEvaluation | Geometry | Fragment,
+	All = AllGraphics | Compute
 };
 
 class ShaderCompilerWorker
