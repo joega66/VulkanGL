@@ -21,6 +21,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 void SceneRenderer::Render(SceneProxy& Scene)
 {
 	GlobalRenderData& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
+	VCTLightingCache& VCTLightingCache = GlobalData.VCTLightingCache;
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
@@ -28,7 +29,6 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 	RenderShadowDepths(Scene, CmdList);
 
-	VCTLightingCache& VCTLightingCache = GlobalData.VCTLightingCache;
 	VCTLightingCache.Render(Scene, CmdList);
 
 	if (ECS.GetSingletonComponent<RenderSettings>().DrawVoxels && VCTLightingCache.IsDebuggingEnabled())

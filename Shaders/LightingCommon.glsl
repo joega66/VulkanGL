@@ -26,7 +26,7 @@ float TraceShadowCone(in vec3 WorldPosition, in vec3 WorldNormal, in vec3 LightD
 	while (Visibility < 1.0 && Dist < 1.0)
 	{
 		const float Diameter = 2.0 * Aperture * Dist;
-		const float MipLevel = log2(Diameter * VOXEL_SIZE);
+		const float MipLevel = log2(Diameter / VOXEL_SIZE);
 		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, MipLevel).a;
 		Visibility += (1.0 - Visibility) * VisibilitySample; // alpha = alpha + (1 - alpha)alpha2
 		Dist += Diameter;
