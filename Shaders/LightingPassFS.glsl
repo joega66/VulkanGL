@@ -4,6 +4,7 @@
 #define SCENE_TEXTURES_SET 3
 #define VOXEL_SET 4
 #define TRACE_SHADOW_CONE
+#define TRACE_DIFFUSE_CONES
 #include "LightingCommon.glsl"
 
 layout(location = 0) out vec4 OutColor;

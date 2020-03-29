@@ -54,8 +54,8 @@ private:
 	drm::Image VoxelBaseColor;
 	drm::Image VoxelNormal;
 	drm::Image VoxelRadiance;
-	drm::ImageView VoxelRadianceBaseMipMap;
-	drm::ImageView VoxelRadianceMipMap;
+
+	std::vector<drm::ImageView> VoxelRadianceMipMaps;
 
 	drm::Buffer VoxelPositions;
 	drm::Buffer VoxelIndirectBuffer;
@@ -83,11 +83,13 @@ private:
 
 	DescriptorSetLayout<DownsampleVolumeDescriptors> DownsampleVolumeSetLayout;
 
+	std::shared_ptr<drm::Pipeline> DownsampleVolumePipeline;
+
 	void RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList);
 
 	void ComputeLightInjection(SceneProxy& Scene, drm::CommandList& CmdList);
 
-	void ComputeVolumetricDownsample(drm::CommandList& CmdList);
+	void ComputeVolumetricDownsample(drm::CommandList& CmdList, const drm::ImageView& SrcVolume, const drm::ImageView& DstVolume, const glm::uvec3& DstVolumeDimensions);
 
 	void CreateVoxelRP();
 };

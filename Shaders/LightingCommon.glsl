@@ -8,28 +8,57 @@ const float AMBIENT = 0.01f;
 #include "SceneTexturesCommon.glsl"
 #endif
 
-#ifdef TRACE_SHADOW_CONE
+#if defined(TRACE_SHADOW_CONE) || defined(TRACE_DIFFUSE_CONES)
 #include "VoxelsCommon.glsl"
+#endif
 
+#ifdef TRACE_SHADOW_CONE
 float TraceShadowCone(in vec3 WorldPosition, in vec3 WorldNormal, in vec3 LightDir)
 {
 	const float ConeAngle = 60.0;
-	const float Aperture = tan(radians(ConeAngle / 2.0));
+	const float Aperture = atan(radians(ConeAngle / 2.0));
 	const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
-	vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
-	float Visibility = 0.0;
+	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+
 	float Dist = VOXEL_SIZE;
+	float Visibility = 0.0;
 
 	while (Visibility < 1.0 && Dist < 1.0)
 	{
 		const float Diameter = 2.0 * Aperture * Dist;
-		const float MipLevel = log2(Diameter / VOXEL_SIZE);
-		const float Visibility2 = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, MipLevel).a;
-		Visibility += (1.0 - Visibility) * Visibility2; // alpha = alpha + (1 - alpha)alpha2
+		const float MipLevel = log2(Diameter * VOXEL_SIZE);
+		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, MipLevel).a;
+		Visibility += (1.0 - Visibility) * VisibilitySample; // alpha = alpha + (1 - alpha)alpha2
 		Dist += Diameter;
 	}
 
 	return Visibility;
+}
+#endif
+
+#ifdef TRACE_DIFFUSE_CONES
+vec3 TraceDiffuseGI(vec3 WorldPosition, vec3 WorldNormal)
+{
+	const float ConeAngle = 60.0;
+	const float Aperture = atan(radians(ConeAngle / 2.0));
+	const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
+	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+
+	float Dist = VOXEL_SIZE;
+	vec3 DiffuseGI = vec3(0.0);
+	float Alpha = 0.0;
+
+	while (Alpha < 1.0 && Dist < 1.0)
+	{
+		const float Diameter = 2.0 * Aperture * Dist;
+		const float MipLevel = log2(Diameter * VOXEL_SIZE);
+		const vec4 RadianceSample = textureLod(RadianceVolume, VolumeUV + WorldNormal * Dist, MipLevel).rgba;
+		DiffuseGI = Alpha * DiffuseGI + (1.0 - Alpha) * RadianceSample.a * RadianceSample.rgb; // c = a * c + (1 - a)a2 * c
+		Alpha += (1.0 - Alpha) * RadianceSample.a; // alpha = alpha + (1 - alpha)alpha2
+		Dist += Diameter;
+	}
+
+	return DiffuseGI;
 }
 #endif
 
@@ -149,6 +178,10 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 
 		Lo += DirectLighting(V, Light, Surface, Material, R0);
 	}
+
+#ifdef TRACE_DIFFUSE_CONES
+	//Lo += TraceDiffuseGI(Surface.WorldPosition, Surface.WorldNormal);
+#endif
 
 	return vec4(Lo, Material.Alpha);
 }

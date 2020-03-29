@@ -264,9 +264,14 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		VoxelGridSize, VoxelGridSize, VoxelGridSize, 
 		EFormat::R8G8B8A8_UNORM, 
 		EImageUsage::Storage | EImageUsage::Sampled | EImageUsage::TransferDst,
-		2);
-	VoxelRadianceBaseMipMap = Device.CreateImageView(VoxelRadiance, 0, 1, 0, 1);
-	VoxelRadianceMipMap = Device.CreateImageView(VoxelRadiance, 1, 1, 0, 1);
+		Platform::GetInt("Engine.ini", "Voxels", "MipLevels", 3));
+
+	VoxelRadianceMipMaps.reserve(VoxelRadiance.GetMipLevels());
+
+	for (uint32 LevelIndex = 0; LevelIndex < VoxelRadiance.GetMipLevels(); LevelIndex++)
+	{
+		VoxelRadianceMipMaps.push_back(Device.CreateImageView(VoxelRadiance, LevelIndex, 1, 0, 1));
+	}
 
 	auto Bindings = DebugVoxels ? DebugVoxelsDescriptors::GetBindings() : VoxelDescriptors::GetBindings();
 
@@ -298,6 +303,15 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	}
 
 	CreateVoxelRP();
+
+	ComputePipelineDesc ComputeDesc = {};
+	ComputeDesc.ComputeShader = ShaderMap.FindShader<DownsampleVolumeCS>();
+	ComputeDesc.Layouts = { DownsampleVolumeSetLayout };
+
+	DownsampleVolumePipeline = Device.CreatePipeline(ComputeDesc);
+
+	const glm::vec4 Scale(2);
+	DownsampleVolumeUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(Scale), &Scale);
 }
 
 void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -323,7 +337,29 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	ComputeLightInjection(Scene, CmdList);
 
-	ComputeVolumetricDownsample(CmdList);
+	if (VoxelRadiance.GetMipLevels() > 1)
+	{
+		for (uint32 Level = 1; Level < VoxelRadianceMipMaps.size(); Level++)
+		{
+			const uint32 DownsampleFactor = 1 << (Level);
+
+			ComputeVolumetricDownsample(
+				CmdList,
+				VoxelRadianceMipMaps[Level - 1], VoxelRadianceMipMaps[Level],
+				glm::uvec3(VoxelRadiance.GetWidth(), VoxelRadiance.GetHeight(), VoxelRadiance.GetDepth()) / DownsampleFactor
+			);
+
+			ImageMemoryBarrier ImageBarrier{ VoxelRadiance };
+			ImageBarrier.SrcAccessMask = EAccess::ShaderWrite;
+			ImageBarrier.DstAccessMask = EAccess::ShaderRead;
+			ImageBarrier.OldLayout = EImageLayout::General;
+			ImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+			ImageBarrier.BaseMipLevel = Level;
+			ImageBarrier.LevelCount = 1;
+
+			CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
+		}
+	}
 }
 
 void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -352,7 +388,7 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, ImageBarriers.size(), ImageBarriers.data());
 
 	CmdList.BeginRenderPass(VoxelRP);
-
+	
 	MeshDrawCommand::Draw(CmdList, Scene.VoxelsPass);
 
 	CmdList.EndRenderPass();
@@ -389,48 +425,29 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 }
 
-void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList)
+void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, const drm::ImageView& SrcVolume, const drm::ImageView& DstVolume, const glm::uvec3& DstVolumeDimensions)
 {
-	const glm::vec4 Scale(2);
-	DownsampleVolumeUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(Scale), &Scale);
-	
 	drm::DescriptorSet DescriptorSet = DownsampleVolumeSetLayout.CreateDescriptorSet(Device);
 
 	DownsampleVolumeDescriptors Descriptors;
 	Descriptors.DownsampleVolumeUniform = DownsampleVolumeUniform;
-	Descriptors.SrcVolume = drm::DescriptorImageInfo(VoxelRadianceBaseMipMap, Device.CreateSampler({ EFilter::Nearest }));
-	Descriptors.DstVolume = drm::DescriptorImageInfo(VoxelRadianceMipMap);
+	Descriptors.SrcVolume = drm::DescriptorImageInfo(SrcVolume, Device.CreateSampler({ EFilter::Nearest }));
+	Descriptors.DstVolume = drm::DescriptorImageInfo(DstVolume);
 
 	DownsampleVolumeSetLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
 
-	ComputePipelineDesc ComputeDesc = {};
-	ComputeDesc.ComputeShader = ShaderMap.FindShader<DownsampleVolumeCS>();
-	ComputeDesc.Layouts = { DownsampleVolumeSetLayout };
-
-	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
-
-	CmdList.BindPipeline(Pipeline);
+	CmdList.BindPipeline(DownsampleVolumePipeline);
 
 	std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet };
 
-	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+	CmdList.BindDescriptorSets(DownsampleVolumePipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	const glm::uvec3 GroupCounts(
-		DivideAndRoundUp(VoxelRadiance.GetWidth() / 2, 8u),
-		DivideAndRoundUp(VoxelRadiance.GetHeight() / 2, 8u),
-		DivideAndRoundUp(VoxelRadiance.GetDepth() / 2, 8u));
+		DivideAndRoundUp(DstVolumeDimensions.x / 2, 8u),
+		DivideAndRoundUp(DstVolumeDimensions.y / 2, 8u),
+		DivideAndRoundUp(DstVolumeDimensions.z / 2, 8u));
 
 	CmdList.Dispatch(GroupCounts.x, GroupCounts.y, GroupCounts.z);
-
-	ImageMemoryBarrier ImageBarrier{ VoxelRadiance };
-	ImageBarrier.SrcAccessMask = EAccess::ShaderWrite;
-	ImageBarrier.DstAccessMask = EAccess::ShaderRead;
-	ImageBarrier.OldLayout = EImageLayout::General;
-	ImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
-	ImageBarrier.BaseMipLevel = 1;
-	ImageBarrier.LevelCount = 1;
-
-	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageBarrier);
 }
 
 void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
