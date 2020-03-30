@@ -8,6 +8,16 @@ VulkanCache::VulkanCache(VulkanDevice& Device)
 {
 }
 
+void VulkanCache::EndFrame()
+{
+	for (auto& Pipeline : PipelinesToDestroy)
+	{
+		vkDestroyPipeline(Device, Pipeline, nullptr);
+	}
+
+	PipelinesToDestroy.clear();
+}
+
 VulkanCache::~VulkanCache()
 {
 	for (const auto&[Crc, PipelineLayout] : PipelineLayoutCache)

@@ -5,6 +5,7 @@
 void VulkanDevice::EndFrame()
 {
 	DescriptorPoolManager.DeferredFree(*this);
+	VulkanCache.EndFrame();
 }
 
 void VulkanDevice::SubmitCommands(drm::CommandList& CmdList)

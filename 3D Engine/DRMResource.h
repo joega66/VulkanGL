@@ -380,8 +380,8 @@ struct DepthStencilState
 	EDepthCompareTest DepthCompareTest = EDepthCompareTest::LEqual;
 	bool DepthBoundsTestEnable = false;
 	bool StencilTestEnable = false;
-	StencilOpState Front;
-	StencilOpState Back;
+	StencilOpState Front = {};
+	StencilOpState Back = {};
 	float MinDepthBounds = 0.0f;
 	float MaxDepthBounds = 0.0f;
 

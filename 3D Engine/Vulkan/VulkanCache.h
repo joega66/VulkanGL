@@ -16,6 +16,8 @@ public:
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassDesc& RPDesc);
 
+	std::pair<VkPipelineLayout, VkPushConstantRange> GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange);
+
 	std::shared_ptr<drm::Pipeline> GetPipeline(const PipelineStateDesc& PSODesc);
 
 	std::shared_ptr<drm::Pipeline> GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
@@ -27,11 +29,14 @@ public:
 		const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
 	);
 
+	inline void Destroy(VkPipeline Pipeline) { PipelinesToDestroy.push_back(Pipeline); }
+
+	void EndFrame();
+
 	void FreeImage(class VulkanImage& Image);
 
 	void UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data);
 
-	/** Brute-force pipeline recompilation after a shader recompilation. */
 	void RecompilePipelines();
 
 	static const char* GetVulkanErrorString(VkResult Result);
@@ -45,7 +50,7 @@ private:
 
 	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
 
-	SlowCache<PipelineStateDesc, std::shared_ptr<drm::Pipeline>> GraphicsPipelineCache;
+	std::unordered_map<PipelineStateDesc, std::shared_ptr<drm::Pipeline>> GraphicsPipelineCache;
 
 	std::unordered_map<Crc, std::shared_ptr<drm::Pipeline>> ComputePipelineCache;
 	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
@@ -54,8 +59,6 @@ private:
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 
-	std::pair<VkPipelineLayout, VkPushConstantRange> GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange);
-
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 
 	[[nodiscard]] VkFramebuffer CreateFramebuffer(VkRenderPass RenderPass, const RenderPassDesc& RPDesc) const;
@@ -63,4 +66,6 @@ private:
 	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& PSODesc, VkPipelineLayout PipelineLayout) const;
 
 	[[nodiscard]] VkPipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc, VkPipelineLayout PipelineLayout) const;
+
+	std::vector<VkPipeline> PipelinesToDestroy;
 };

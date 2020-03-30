@@ -5,17 +5,14 @@
 
 std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
-	for (const auto& [OtherPSODesc, Pipeline] : GraphicsPipelineCache)
+	if (auto Iter = GraphicsPipelineCache.find(PSODesc); Iter != GraphicsPipelineCache.end())
 	{
-		if (PSODesc == OtherPSODesc)
-		{
-			return Pipeline;
-		}
+		return Iter->second;
 	}
 
 	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(PSODesc.Layouts, PSODesc.PushConstantRange);
-	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, PushConstantRange);
-	GraphicsPipelineCache.push_back({ PSODesc, Pipeline });
+	auto Pipeline = std::make_shared<drm::Pipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, PushConstantRange);
+	GraphicsPipelineCache[PSODesc] = Pipeline;
 	return Pipeline;
 }
 
@@ -47,7 +44,7 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDes
 	}
 
 	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(ComputeDesc.Layouts, ComputeDesc.PushConstantRange);
-	auto Pipeline = std::make_shared<drm::Pipeline>(CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE, PushConstantRange);
+	auto Pipeline = std::make_shared<drm::Pipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE, PushConstantRange);
 	ComputePipelineCache[Crc] = Pipeline;
 	CrcToComputeDesc[Crc] = ComputeDesc;
 	return Pipeline;
@@ -461,6 +458,7 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipel
 	PipelineInfo.renderPass = PSODesc.RenderPass.GetRenderPass();
 	PipelineInfo.subpass = 0;
 	PipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+	PipelineInfo.basePipelineIndex = -1;
 
 	VkPipeline Pipeline;
 	vulkan(vkCreateGraphicsPipelines(Device, VK_NULL_HANDLE, 1, &PipelineInfo, nullptr, &Pipeline));
@@ -551,10 +549,20 @@ std::pair<VkPipelineLayout, VkPushConstantRange> VulkanCache::GetPipelineLayout(
 	return { PipelineLayout, VulkanPushConstantRange };
 }
 
-VulkanPipeline::VulkanPipeline(VkPipeline Pipeline, VkPipelineLayout PipelineLayout, VkPipelineBindPoint PipelineBindPoint, const VkPushConstantRange& PushConstantRange)
-	: Pipeline(Pipeline)
+VulkanPipeline::VulkanPipeline(VulkanDevice& Device, 
+	VkPipeline Pipeline, 
+	VkPipelineLayout PipelineLayout, 
+	VkPipelineBindPoint PipelineBindPoint, 
+	const VkPushConstantRange& PushConstantRange)
+	: Device(Device)
+	, Pipeline(Pipeline)
 	, PipelineLayout(PipelineLayout)
 	, PipelineBindPoint(PipelineBindPoint)
 	, PushConstantRange(PushConstantRange)
 {
+}
+
+VulkanPipeline::~VulkanPipeline()
+{
+	Device.GetCache().Destroy(Pipeline);
 }

@@ -13,28 +13,20 @@ class DRMDevice
 public:
 	virtual ~DRMDevice() {}
 
-	/** Needs to be called at the end of each frame to reset per-frame resources. */
 	virtual void EndFrame() = 0;
 
-	/** Submit a command list to the GPU. */
 	virtual void SubmitCommands(drm::CommandList& CmdList) = 0;
 
-	/** Create a command list. */
 	virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
 
-	/** Create a graphics pipeline. */
 	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
 
-	/** Create a compute pipeline. */
 	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
 
-	/** Create a descriptor template. */
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumBindings, const DescriptorBinding* Bindings) = 0;
 
-	/** Create a buffer resource. */
 	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) = 0;
 
-	/** Create an image resource. */
 	virtual drm::Image CreateImage(
 		uint32 Width,
 		uint32 Height,
@@ -44,7 +36,6 @@ public:
 		uint32 MipLevels = 1
 	) = 0;
 
-	/** Create an image view. */
 	virtual drm::ImageView CreateImageView(
 		const drm::Image& Image,
 		uint32 BaseMipLevel,
@@ -53,10 +44,8 @@ public:
 		uint32 LayerCount
 	) = 0;
 
-	/** Create a sampler resource. */
 	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) = 0;
 
-	/** Create a render pass resource. */
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
 };
 
