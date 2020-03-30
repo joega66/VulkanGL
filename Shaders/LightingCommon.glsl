@@ -13,7 +13,7 @@ const float AMBIENT = 0.01f;
 #endif
 
 #ifdef TRACE_SHADOW_CONE
-float TraceShadowCone(in vec3 WorldPosition, in vec3 WorldNormal, in vec3 LightDir)
+float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
 {
 	const float ConeAngle = 60.0;
 	const float Aperture = atan(radians(ConeAngle / 2.0));
@@ -74,9 +74,9 @@ struct LightParams
  * Approximates the Fresnel effect, the increase in reflectance at glancing
  * angles.
  */
-vec3 FresnelSchlick(float NdotL, vec3 R0)
+vec3 FresnelSchlick(vec3 SpecularColor, float NdotL)
 {
-	return R0 + (1.0 - R0) * pow(1.0 - NdotL, 5.0);
+	return SpecularColor + (1.0 - SpecularColor) * pow(1.0 - NdotL, 5.0);
 }
 
 /* 
@@ -118,7 +118,7 @@ float SmithGF(float NdotV, float NdotL, float Roughness)
 	return Geom1 * Geom2;
 }
 
-vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in MaterialData Material, in vec3 R0)
+vec3 DirectLighting(vec3 V, LightParams Light, SurfaceData Surface, MaterialData Material)
 {
 	float NdotV = max(dot(Surface.WorldNormal, V), 0.0);
 	vec3 H = normalize(Light.L + V);
@@ -126,7 +126,7 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in 
 	float NdotL = max(dot(Surface.WorldNormal, Light.L), 0.0);
 	float NdotH = max(dot(Surface.WorldNormal, H), 0.0);
 
-	vec3 Fresnel = FresnelSchlick(NdotL, R0);
+	vec3 Fresnel = FresnelSchlick(Material.SpecularColor, NdotL);
 	float NDF = TrowbridgeReitzNDF(NdotH, Material.Roughness);
 	float G = SmithGF(NdotV, NdotL, Material.Roughness);
 
@@ -139,12 +139,10 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in 
 	return Lo;
 }
 
-vec4 Shade(in SurfaceData Surface, in MaterialData Material)
+vec4 Shade(SurfaceData Surface, MaterialData Material)
 {
 	vec3 Lo = vec3(0.0);
 	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
-	vec3 R0 = vec3(0.04);
-	R0 = mix(R0, Material.BaseColor, Material.Metallicity);
 
 	// Directional lights
 	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
@@ -153,7 +151,7 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 		Light.L = DirectionalLights[LightIndex].Direction;
 		Light.Radiance = DirectionalLights[LightIndex].Intensity * DirectionalLights[LightIndex].Color;
 
-		vec3 Radiance = DirectLighting(V, Light, Surface, Material, R0);
+		vec3 Radiance = DirectLighting(V, Light, Surface, Material);
 
 #ifdef TRACE_SHADOW_CONE
 		Lo += Radiance * TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
@@ -173,7 +171,7 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 		Light.L = normalize(FragToLight);
 		Light.Radiance = PointLights[LightIndex].Intensity * PointLights[LightIndex].Color * Attenuation;
 
-		Lo += DirectLighting(V, Light, Surface, Material, R0);
+		Lo += DirectLighting(V, Light, Surface, Material);
 	}
 
 #ifdef TRACE_DIFFUSE_CONES

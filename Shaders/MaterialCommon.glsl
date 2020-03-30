@@ -20,7 +20,7 @@ MaterialData Material_Get(in SurfaceData Surface)
 	
 	MaterialData Material;
 	Material.BaseColor = BaseColor.rgb;
-	
+
 	if (HasMetallicRoughnessTexture)
 	{
 		vec2 MetallicRoughness = texture(MetallicRoughnessTexture, Surface.UV).gb;
@@ -41,6 +41,8 @@ MaterialData Material_Get(in SurfaceData Surface)
 	{
 		Material.Alpha = 1.0f;
 	}
+
+	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallicity);
 
 	return Material;
 }
