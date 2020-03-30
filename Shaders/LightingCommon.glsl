@@ -134,10 +134,7 @@ vec3 DirectLighting(in vec3 V, in LightParams Light, in SurfaceData Surface, in 
 	float Denom = 4.0 * NdotV * NdotL;
 	vec3 Specular = Nom / max(Denom, 0.001);
 
-	vec3 Kd = vec3(1.0) - Fresnel;
-	Kd *= 1.0 - Material.Metallicity;
-
-	vec3 Lo = (Kd * Material.BaseColor / PI + Specular) * Light.Radiance * NdotL;
+	vec3 Lo = (Material.BaseColor / PI + Specular) * Light.Radiance * NdotL;
 
 	return Lo;
 }
@@ -147,7 +144,7 @@ vec4 Shade(in SurfaceData Surface, in MaterialData Material)
 	vec3 Lo = vec3(0.0);
 	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 	vec3 R0 = vec3(0.04);
-	R0 = mix(R0, Material.BaseColor, Material.Roughness);
+	R0 = mix(R0, Material.BaseColor, Material.Metallicity);
 
 	// Directional lights
 	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
