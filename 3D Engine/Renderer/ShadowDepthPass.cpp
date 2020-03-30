@@ -39,7 +39,7 @@ void SceneRenderer::RenderDepthVisualization(SceneProxy& Scene, drm::CommandList
 		CmdList.BindPipeline(DepthVisualizationPipeline);
 
 		const std::vector<VkDescriptorSet> DescriptorSets = {  };
-		CmdList.BindDescriptorSets(DepthVisualizationPipeline, 1, &ShadowProxy.GetDescriptorSet().GetNativeHandle());
+		CmdList.BindDescriptorSets(DepthVisualizationPipeline, 1, &ShadowProxy.GetDescriptorSet().GetHandle());
 
 		CmdList.Draw(3, 1, 0, 0);
 

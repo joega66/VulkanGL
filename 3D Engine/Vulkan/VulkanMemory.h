@@ -51,18 +51,18 @@ private:
 class VulkanBuffer : public drm::BufferPrivate
 {
 public:
+	VulkanBuffer(const VulkanBuffer&) = delete;
+	VulkanBuffer& operator=(const VulkanBuffer&) = delete;
+
 	VulkanBuffer() = default;
 	VulkanBuffer(VulkanMemory& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, VkDeviceSize Offset, EBufferUsage Usage)
 		: Memory(&Memory), AlignedSize(AlignedSize), Offset(Offset), drm::BufferPrivate(Usage, static_cast<uint32>(Size)) {}
 	VulkanBuffer(VulkanBuffer&& Other);
 	VulkanBuffer& operator=(VulkanBuffer&& Other);
 	~VulkanBuffer();
-	VulkanBuffer(const VulkanBuffer&) = delete;
-	VulkanBuffer& operator=(const VulkanBuffer&) = delete;
-
+	
 	inline void* GetData() { return static_cast<uint8*>(Memory->GetData()) + GetOffset(); }
-	inline VkBuffer GetVulkanHandle() const { return Memory->Buffer; }
-	inline VulkanMemory& GetMemory() const { return *Memory; }
+	inline VkBuffer GetHandle() const { return Memory->Buffer; }
 	inline VkDeviceSize GetAlignedSize() const { return AlignedSize; }
 	inline VkDeviceSize GetOffset() const { return Offset; }
 	inline VkMemoryPropertyFlags GetProperties() const { return Memory->Properties; }

@@ -190,7 +190,7 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 		VK_FILTER_CUBIC_IMG
 	};
 
-	return VulkanFilters[(uint32)Filter];
+	return VulkanFilters[static_cast<uint32>(Filter)];
 }
 
 VkFormat VulkanImage::GetVulkanFormat() const

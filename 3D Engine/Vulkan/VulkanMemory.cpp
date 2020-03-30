@@ -227,7 +227,7 @@ VulkanBuffer::~VulkanBuffer()
 
 VulkanDescriptorBufferInfo::VulkanDescriptorBufferInfo(const VulkanBuffer& Buffer)
 {
-	DescriptorBufferInfo.buffer = Buffer.GetVulkanHandle();
+	DescriptorBufferInfo.buffer = Buffer.GetHandle();
 	DescriptorBufferInfo.offset = Buffer.GetOffset();
 	DescriptorBufferInfo.range = Buffer.GetSize();
 }

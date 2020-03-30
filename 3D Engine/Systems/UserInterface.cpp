@@ -205,7 +205,7 @@ void ImGuiRenderData::Render(drm::CommandList& CmdList)
 	{
 		CmdList.BindPipeline(Pipeline);
 
-		CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetNativeHandle());
+		CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetHandle());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
 

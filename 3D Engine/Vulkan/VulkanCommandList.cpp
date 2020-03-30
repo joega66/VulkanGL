@@ -82,7 +82,7 @@ void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const VulkanB
 	for (uint32 Location = 0; Location < NumVertexBuffers; Location++)
 	{
 		Offsets[Location] = VertexBuffers[Location].GetOffset();
-		Buffers[Location] = VertexBuffers[Location].GetVulkanHandle();
+		Buffers[Location] = VertexBuffers[Location].GetHandle();
 	}
 
 	vkCmdBindVertexBuffers(CommandBuffer, 0, static_cast<uint32>(Buffers.size()), Buffers.data(), Offsets.data());
@@ -97,7 +97,7 @@ void VulkanCommandList::DrawIndexed(
 	uint32 FirstInstance,
 	EIndexType IndexType)
 {
-	vkCmdBindIndexBuffer(CommandBuffer, IndexBuffer.GetVulkanHandle(), IndexBuffer.GetOffset(), IndexType == EIndexType::UINT32 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(CommandBuffer, IndexBuffer.GetHandle(), IndexBuffer.GetOffset(), IndexType == EIndexType::UINT32 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 
@@ -110,7 +110,7 @@ void VulkanCommandList::DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, 
 {
 	vkCmdDrawIndirect(
 		CommandBuffer,
-		Buffer.GetVulkanHandle(),
+		Buffer.GetHandle(),
 		Buffer.GetOffset() + Offset,
 		DrawCount,
 		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0
@@ -177,7 +177,7 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.DstAccessMask);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		Barrier.buffer = Buffer.GetVulkanHandle();
+		Barrier.buffer = Buffer.GetHandle();
 		Barrier.offset = Buffer.GetOffset();
 		Barrier.size = Buffer.GetSize();
 
@@ -275,7 +275,7 @@ void VulkanCommandList::CopyBufferToImage(
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstImage, VulkanImage::GetVulkanLayout(DstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
+	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetHandle(), DstImage, VulkanImage::GetVulkanLayout(DstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
@@ -335,5 +335,5 @@ void VulkanCommandList::CopyBuffer(
 		Size 
 	};
 
-	vkCmdCopyBuffer(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstBuffer.GetVulkanHandle(), 1, &Region);
+	vkCmdCopyBuffer(CommandBuffer, SrcBuffer.GetHandle(), DstBuffer.GetHandle(), 1, &Region);
 }
