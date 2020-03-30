@@ -44,7 +44,7 @@ public:
 		uint32 LayerCount
 	) = 0;
 
-	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) = 0;
+	virtual drm::Sampler CreateSampler(const SamplerDesc& SamplerDesc) = 0;
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
 };

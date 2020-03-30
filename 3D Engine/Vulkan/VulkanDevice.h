@@ -55,7 +55,7 @@ public:
 		uint32 LayerCount
 	) override;
 
-	virtual const drm::Sampler* CreateSampler(const SamplerDesc& SamplerDesc) override;
+	virtual drm::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 

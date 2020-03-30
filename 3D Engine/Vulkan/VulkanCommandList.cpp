@@ -131,7 +131,7 @@ void VulkanCommandList::ClearColorImage(const VulkanImage& Image, EImageLayout I
 	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
 
-	vkCmdClearColorImage(CommandBuffer, Image.Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
+	vkCmdClearColorImage(CommandBuffer, Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
 }
 
 void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue)
@@ -143,7 +143,7 @@ void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& Image, EImageL
 	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
 	
-	vkCmdClearDepthStencilImage(CommandBuffer, Image.Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
+	vkCmdClearDepthStencilImage(CommandBuffer, Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
 }
 
 static inline VkAccessFlags GetVulkanAccessFlags(EAccess Access)
@@ -199,7 +199,7 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.NewLayout);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		Barrier.image = Image.Image;
+		Barrier.image = Image;
 		Barrier.subresourceRange.aspectMask = Image.GetVulkanAspect();
 		Barrier.subresourceRange.baseMipLevel = ImageBarrier.BaseMipLevel;
 		Barrier.subresourceRange.levelCount = ImageBarrier.LevelCount;
@@ -275,7 +275,7 @@ void VulkanCommandList::CopyBufferToImage(
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstImage.Image, VulkanImage::GetVulkanLayout(DstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
+	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetVulkanHandle(), DstImage, VulkanImage::GetVulkanLayout(DstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
@@ -304,9 +304,9 @@ void VulkanCommandList::BlitImage(
 
 	vkCmdBlitImage(
 		CommandBuffer,
-		SrcImage.Image,
+		SrcImage,
 		VulkanImage::GetVulkanLayout(SrcImageLayout),
-		DstImage.Image,
+		DstImage,
 		VulkanImage::GetVulkanLayout(DstImageLayout),
 		1,
 		&Region,

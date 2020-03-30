@@ -16,11 +16,11 @@ public:
 	VulkanImageView& operator=(VulkanImageView&& Other);
 	~VulkanImageView();
 
-	inline VkImageView GetNativeHandle() const { return ImageView; }
+	inline VkImageView GetHandle() const { return ImageView; }
 	inline EFormat GetFormat() const { return Format; }
 
 private:
-	VulkanDevice* Device = nullptr;
+	VkDevice Device = VK_NULL_HANDLE;
 	VkImageView ImageView = nullptr;
 	EFormat Format;
 };
@@ -28,9 +28,8 @@ private:
 class VulkanImage : public drm::ImagePrivate
 {
 public:
-	VkImage Image = nullptr;
-	VulkanImageView ImageView;
-	VkDeviceMemory Memory = nullptr;
+	VulkanImage(const VulkanImage&) = delete;
+	VulkanImage& operator=(const VulkanImage&) = delete;
 
 	VulkanImage() = default;
 	VulkanImage(VulkanDevice& Device
@@ -47,38 +46,31 @@ public:
 	VulkanImage& operator=(VulkanImage&& Other);
 	~VulkanImage();
 
-	VulkanImage(const VulkanImage&) = delete;
-	VulkanImage& operator=(const VulkanImage&) = delete;
-
 	inline void* GetNativeHandle() { return Image; }
-
-	operator VkImage();
-
+	inline operator VkImage() const { return Image; }
+	inline VkImage GetHandle() const { return Image; }
+	inline const VulkanImageView& GetImageView() const { return ImageView; }
+	VkFormat GetVulkanFormat() const;
+	VkImageAspectFlags GetVulkanAspect() const;
+	
 	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);
-
 	static VkFormat GetVulkanFormat(EFormat Format);
-
 	static EFormat GetEngineFormat(VkFormat Format);
-
 	static VkImageLayout GetVulkanLayout(EImageLayout Layout);
-
 	static bool IsDepthLayout(VkImageLayout Layout);
-
 	static VkFilter GetVulkanFilter(EFilter Filter);
 
-	VkFormat GetVulkanFormat() const;
-
-	VkImageAspectFlags GetVulkanAspect() const;
-
 private:
-	VkDevice Device;
+	VkDevice Device = VK_NULL_HANDLE;
+	VkImage Image = nullptr;
+	VulkanImageView ImageView = {};
+	VkDeviceMemory Memory = nullptr;
 };
 
 class VulkanSampler
 {
 public:
 	VulkanSampler() = default;
-
 	VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc);
 
 	inline VkSampler GetHandle() const { return Sampler; }
@@ -91,12 +83,13 @@ class VulkanDescriptorImageInfo
 {
 public:
 	VulkanDescriptorImageInfo() = default;
-	VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler* Sampler = nullptr);
-	VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler* Sampler = nullptr);
+	VulkanDescriptorImageInfo(const VulkanImageView& ImageView);
+	VulkanDescriptorImageInfo(const VulkanImage& Image);
+	VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler& Sampler);
+	VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler& Sampler);
 
 	void SetImage(const VulkanImage& Image);
 
-	/** Whether the image view is here. */
 	bool operator==(const VulkanImage& Image);
 	bool operator!=(const VulkanImage& Image);
 

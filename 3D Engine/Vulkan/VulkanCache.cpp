@@ -8,6 +8,21 @@ VulkanCache::VulkanCache(VulkanDevice& Device)
 {
 }
 
+drm::Sampler VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
+{
+	const Crc Crc = CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
+
+	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
+	{
+		return SamplerIter->second;
+	}
+	else
+	{
+		SamplerCache.emplace(Crc, VulkanSampler(Device, SamplerDesc));
+		return SamplerCache.at(Crc);
+	}
+}
+
 void VulkanCache::EndFrame()
 {
 	for (auto& Pipeline : PipelinesToDestroy)

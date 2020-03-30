@@ -131,7 +131,7 @@ drm::ImageView VulkanDevice::CreateImageView(
 )
 {
 	VkImageViewCreateInfo ImageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	ImageViewCreateInfo.image = Image.Image;
+	ImageViewCreateInfo.image = Image;
 	ImageViewCreateInfo.viewType = Any(Image.GetUsage() & EImageUsage::Cubemap) ? VK_IMAGE_VIEW_TYPE_CUBE : (Image.GetDepth() > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D);
 	ImageViewCreateInfo.format = Image.GetVulkanFormat();
 	ImageViewCreateInfo.subresourceRange.aspectMask = Image.GetVulkanAspect();
@@ -147,7 +147,7 @@ drm::ImageView VulkanDevice::CreateImageView(
 	return VulkanImageView(*this, ImageView, Image.GetFormat());
 }
 
-const drm::Sampler* VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
+drm::Sampler VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
 {
 	return VulkanCache.GetSampler(SamplerDesc);
 }

@@ -22,7 +22,7 @@ public:
 
 	std::shared_ptr<drm::Pipeline> GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
 
-	const drm::Sampler* GetSampler(const SamplerDesc& SamplerDesc);
+	drm::Sampler GetSampler(const SamplerDesc& SamplerDesc);
 
 	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> GetDescriptorSetLayout(
 		const std::vector<VkDescriptorSetLayoutBinding>& Bindings,

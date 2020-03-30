@@ -58,7 +58,7 @@ static const HashTable<EFormat, VkFormat> VulkanFormat =
 };
 
 VulkanImageView::VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format)
-	: Device(&Device)
+	: Device(Device)
 	, ImageView(ImageView)
 	, Format(Format)
 {
@@ -73,7 +73,7 @@ VulkanImageView::VulkanImageView(VulkanImageView&& Other)
 
 VulkanImageView& VulkanImageView::operator=(VulkanImageView&& Other)
 {
-	Device = std::exchange(Other.Device, nullptr);
+	Device = Other.Device;
 	ImageView = std::exchange(Other.ImageView, nullptr);
 	Format = Other.Format;
 	return *this;
@@ -83,7 +83,7 @@ VulkanImageView::~VulkanImageView()
 {
 	if (ImageView)
 	{
-		vkDestroyImageView(*Device, ImageView, nullptr);
+		vkDestroyImageView(Device, ImageView, nullptr);
 	}
 }
 
@@ -136,8 +136,6 @@ VulkanImage::~VulkanImage()
 		vkFreeMemory(Device, Memory, nullptr);
 	}
 }
-
-VulkanImage::operator VkImage() { return Image; }
 
 VkFormat VulkanImage::GetVulkanFormat(EFormat Format)
 {
@@ -270,21 +268,6 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-const drm::Sampler* VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
-{
-	const Crc Crc = CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
-
-	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
-	{
-		return &SamplerIter->second;
-	}
-	else
-	{
-		SamplerCache.emplace(Crc, VulkanSampler(Device, SamplerDesc));
-		return &SamplerCache.at(Crc);
-	}
-}
-
 VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc)
 {
 	static const VkSamplerMipmapMode VulkanMipmapModes[] =
@@ -345,29 +328,39 @@ static VkImageLayout ChooseImageLayout(EFormat Format)
 	}
 }
 
-VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler* Sampler)
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& ImageView)
 {
-	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
-	DescriptorImageInfo.imageView = ImageView.GetNativeHandle();
-	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(ImageView.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
+	DescriptorImageInfo.sampler = nullptr;
+	DescriptorImageInfo.imageView = ImageView.GetHandle();
+	DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 }
 
-VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler* Sampler)
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image) 
+	: VulkanDescriptorImageInfo(Image.GetImageView()) 
 {
-	DescriptorImageInfo.sampler = Sampler ? Sampler->GetHandle() : nullptr;
-	DescriptorImageInfo.imageView = Image.ImageView.GetNativeHandle();
-	DescriptorImageInfo.imageLayout = Sampler ? ChooseImageLayout(Image.ImageView.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
+}
+
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler& Sampler)
+{
+	DescriptorImageInfo.sampler = Sampler.GetHandle();
+	DescriptorImageInfo.imageView = ImageView.GetHandle();
+	DescriptorImageInfo.imageLayout = ChooseImageLayout(ImageView.GetFormat());
+}
+
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler& Sampler) 
+	: VulkanDescriptorImageInfo(Image.GetImageView(), Sampler)
+{
 }
 
 void VulkanDescriptorImageInfo::SetImage(const VulkanImage& Image)
 {
-	DescriptorImageInfo.imageView = Image.ImageView.GetNativeHandle();
+	DescriptorImageInfo.imageView = Image.GetImageView().GetHandle();
 	DescriptorImageInfo.imageLayout = DescriptorImageInfo.sampler ? ChooseImageLayout(Image.GetFormat()) : VK_IMAGE_LAYOUT_GENERAL;
 }
 
 bool VulkanDescriptorImageInfo::operator==(const VulkanImage& Image)
 {
-	return DescriptorImageInfo.imageView == Image.ImageView.GetNativeHandle();
+	return DescriptorImageInfo.imageView == Image.GetImageView().GetHandle();
 }
 
 bool VulkanDescriptorImageInfo::operator!=(const VulkanImage& Image)
