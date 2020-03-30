@@ -33,8 +33,6 @@ public:
 
 	void EndFrame();
 
-	void FreeImage(class VulkanImage& Image);
-
 	void UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data);
 
 	void RecompilePipelines();

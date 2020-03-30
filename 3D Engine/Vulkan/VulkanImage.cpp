@@ -57,21 +57,35 @@ static const HashTable<EFormat, VkFormat> VulkanFormat =
 	ENTRY(EFormat::BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
 
-static const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
+VulkanImageView::VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format)
+	: Device(&Device)
+	, ImageView(ImageView)
+	, Format(Format)
 {
-	ENTRY(EImageLayout::Undefined, VK_IMAGE_LAYOUT_UNDEFINED)
-	ENTRY(EImageLayout::General, VK_IMAGE_LAYOUT_GENERAL)
-	ENTRY(EImageLayout::ColorAttachmentOptimal, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-	ENTRY(EImageLayout::DepthWriteStencilWrite, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	ENTRY(EImageLayout::DepthReadStencilRead, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
-	ENTRY(EImageLayout::ShaderReadOnlyOptimal, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	ENTRY(EImageLayout::TransferSrcOptimal, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
-	ENTRY(EImageLayout::TransferDstOptimal, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	ENTRY(EImageLayout::Preinitialized, VK_IMAGE_LAYOUT_PREINITIALIZED)
-	ENTRY(EImageLayout::DepthReadStencilWrite, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL)
-	ENTRY(EImageLayout::DepthWriteStencilRead, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
-	ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-};
+}
+
+VulkanImageView::VulkanImageView(VulkanImageView&& Other)
+	: Device(Other.Device)
+	, ImageView(std::exchange(Other.ImageView, nullptr))
+	, Format(Other.Format)
+{
+}
+
+VulkanImageView& VulkanImageView::operator=(VulkanImageView&& Other)
+{
+	Device = std::exchange(Other.Device, nullptr);
+	ImageView = std::exchange(Other.ImageView, nullptr);
+	Format = Other.Format;
+	return *this;
+}
+
+VulkanImageView::~VulkanImageView()
+{
+	if (ImageView)
+	{
+		vkDestroyImageView(*Device, ImageView, nullptr);
+	}
+}
 
 VulkanImage::VulkanImage(VulkanDevice& Device
 	, VkImage Image
@@ -81,8 +95,8 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, uint32 Height
 	, uint32 Depth
 	, EImageUsage UsageFlags
-	, uint32 MipLevels
-) : Device(&Device)
+	, uint32 MipLevels) 
+	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
 	, drm::ImagePrivate(Format, Width, Height, Depth, UsageFlags, MipLevels)
@@ -92,19 +106,19 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 
 VulkanImage::VulkanImage(VulkanImage&& Other)
 	: Image(std::exchange(Other.Image, nullptr))
-	, ImageView(std::exchange(Other.ImageView, VulkanImageView()))
-	, Memory(std::exchange(Other.Memory, nullptr))
-	, Device(std::exchange(Other.Device, nullptr))
+	, ImageView(std::move(Other.ImageView))
+	, Memory(Other.Memory)
+	, Device(Other.Device)
 	, ImagePrivate(Other)
 {
 }
 
 VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 {
-	Image = (std::exchange(Other.Image, nullptr));
-	ImageView = (std::exchange(Other.ImageView, VulkanImageView()));
-	Memory = (std::exchange(Other.Memory, nullptr));
-	Device = (std::exchange(Other.Device, nullptr));
+	Image = std::exchange(Other.Image, nullptr);
+	ImageView = std::move(Other.ImageView);
+	Memory = Other.Memory;
+	Device = Other.Device;
 	Format = Other.Format;
 	Width = Other.Width;
 	Height = Other.Height;
@@ -118,7 +132,8 @@ VulkanImage::~VulkanImage()
 {
 	if (Image != nullptr)
 	{
-		Device->GetCache().FreeImage(*this);
+		vkDestroyImage(Device, Image, nullptr);
+		vkFreeMemory(Device, Memory, nullptr);
 	}
 }
 
@@ -136,12 +151,28 @@ EFormat VulkanImage::GetEngineFormat(VkFormat Format)
 
 VkImageLayout VulkanImage::GetVulkanLayout(EImageLayout Layout)
 {
+	static const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
+	{
+		ENTRY(EImageLayout::Undefined, VK_IMAGE_LAYOUT_UNDEFINED)
+		ENTRY(EImageLayout::General, VK_IMAGE_LAYOUT_GENERAL)
+		ENTRY(EImageLayout::ColorAttachmentOptimal, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+		ENTRY(EImageLayout::DepthWriteStencilWrite, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		ENTRY(EImageLayout::DepthReadStencilRead, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
+		ENTRY(EImageLayout::ShaderReadOnlyOptimal, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		ENTRY(EImageLayout::TransferSrcOptimal, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+		ENTRY(EImageLayout::TransferDstOptimal, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+		ENTRY(EImageLayout::Preinitialized, VK_IMAGE_LAYOUT_PREINITIALIZED)
+		ENTRY(EImageLayout::DepthReadStencilWrite, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL)
+		ENTRY(EImageLayout::DepthWriteStencilRead, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+		ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+	};
+
 	return GetValue(VulkanLayout, Layout);
 }
 
 bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
 {
-	std::unordered_set<VkImageLayout> VulkanDepthLayouts =
+	static const std::unordered_set<VkImageLayout> VulkanDepthLayouts =
 	{
 		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 		, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
@@ -162,64 +193,6 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 	};
 
 	return VulkanFilters[(uint32)Filter];
-}
-
-const drm::Sampler* VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
-{
-	const Crc Crc = CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
-
-	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
-	{
-		return &SamplerIter->second;
-	}
-	else
-	{
-		SamplerCache.emplace(Crc, VulkanSampler(VulkanImage::CreateSampler(Device, SamplerDesc)));
-		return &SamplerCache.at(Crc);
-	}
-}
-
-VkSampler VulkanImage::CreateSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc)
-{
-	static const VkSamplerMipmapMode VulkanMipmapModes[] =
-	{
-		VK_SAMPLER_MIPMAP_MODE_NEAREST,
-		VK_SAMPLER_MIPMAP_MODE_LINEAR
-	};
-
-	static const VkSamplerAddressMode VulkanAddressModes[] =
-	{
-		VK_SAMPLER_ADDRESS_MODE_REPEAT,
-		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
-		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
-	};
-
-	VkFilter Filter = GetVulkanFilter(SamplerDesc.Filter);
-	VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.SMM)];
-	VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.SAM)];
-
-	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-	SamplerInfo.magFilter = Filter;
-	SamplerInfo.minFilter = Filter;
-	SamplerInfo.mipmapMode = SMM;
-	SamplerInfo.addressModeU = SAM;
-	SamplerInfo.addressModeV = SAM;
-	SamplerInfo.addressModeW = SAM;
-	SamplerInfo.anisotropyEnable = Device.GetFeatures().samplerAnisotropy;
-	SamplerInfo.maxAnisotropy = Device.GetFeatures().samplerAnisotropy ? Device.GetProperties().limits.maxSamplerAnisotropy : 1.0f;
-	SamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
-	SamplerInfo.compareEnable = VK_FALSE;
-	SamplerInfo.compareOp = VK_COMPARE_OP_NEVER;
-	SamplerInfo.minLod = SamplerDesc.MinLod;
-	SamplerInfo.maxLod = SamplerDesc.MaxLod;
-
-	VkSampler Sampler;
-	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
-
-	return Sampler;
 }
 
 VkFormat VulkanImage::GetVulkanFormat() const
@@ -271,25 +244,25 @@ static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFo
 
 VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format)
 {
-	const auto Candidates = [&]() -> std::vector<VkFormat>
+	const auto Candidates = [&] () -> std::vector<VkFormat>
 	{
 		if (drm::Image::IsDepthStencil(Format))
 		{
-			return 
+			return
 			{
-				VulkanImage::GetVulkanFormat(Format), 
-				VK_FORMAT_D32_SFLOAT_S8_UINT, 
-				VK_FORMAT_D24_UNORM_S8_UINT, 
-				VK_FORMAT_D16_UNORM_S8_UINT 
+				VulkanImage::GetVulkanFormat(Format),
+				VK_FORMAT_D32_SFLOAT_S8_UINT,
+				VK_FORMAT_D24_UNORM_S8_UINT,
+				VK_FORMAT_D16_UNORM_S8_UINT
 			};
 		}
 		else
 		{
-			return 
-			{ 
+			return
+			{
 				VulkanImage::GetVulkanFormat(Format),
 				VK_FORMAT_D32_SFLOAT,
-				VK_FORMAT_D16_UNORM 
+				VK_FORMAT_D16_UNORM
 			};
 		}
 	}();
@@ -297,45 +270,59 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-VulkanImageView::VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format)
-	: Device(&Device)
-	, ImageView(ImageView)
-	, Format(Format)
+const drm::Sampler* VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
 {
-}
+	const Crc Crc = CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
 
-VulkanImageView::VulkanImageView(VulkanImageView&& Other)
-	: Device(Other.Device)
-	, ImageView(std::exchange(Other.ImageView, nullptr))
-	, Format(Other.Format)
-{
-}
-
-VulkanImageView& VulkanImageView::operator=(VulkanImageView&& Other)
-{
-	Device = std::exchange(Other.Device, nullptr);
-	ImageView = std::exchange(Other.ImageView, nullptr);
-	Format = Other.Format;
-	return *this;
-}
-
-VulkanImageView::~VulkanImageView()
-{
-	if (ImageView)
+	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
 	{
-		vkDestroyImageView(*Device, ImageView, nullptr);
+		return &SamplerIter->second;
+	}
+	else
+	{
+		SamplerCache.emplace(Crc, VulkanSampler(Device, SamplerDesc));
+		return &SamplerCache.at(Crc);
 	}
 }
 
-void VulkanCache::FreeImage(VulkanImage& Image)
+VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc)
 {
-	vkDestroyImage(Device, Image.Image, nullptr);
-	vkFreeMemory(Device, Image.Memory, nullptr);
-}
+	static const VkSamplerMipmapMode VulkanMipmapModes[] =
+	{
+		VK_SAMPLER_MIPMAP_MODE_NEAREST,
+		VK_SAMPLER_MIPMAP_MODE_LINEAR
+	};
 
-VulkanSampler::VulkanSampler(VkSampler Sampler)
-	: Sampler(Sampler)
-{
+	static const VkSamplerAddressMode VulkanAddressModes[] =
+	{
+		VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
+	};
+
+	VkFilter Filter = VulkanImage::GetVulkanFilter(SamplerDesc.Filter);
+	VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.SMM)];
+	VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.SAM)];
+
+	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+	SamplerInfo.magFilter = Filter;
+	SamplerInfo.minFilter = Filter;
+	SamplerInfo.mipmapMode = SMM;
+	SamplerInfo.addressModeU = SAM;
+	SamplerInfo.addressModeV = SAM;
+	SamplerInfo.addressModeW = SAM;
+	SamplerInfo.anisotropyEnable = Device.GetFeatures().samplerAnisotropy;
+	SamplerInfo.maxAnisotropy = Device.GetFeatures().samplerAnisotropy ? Device.GetProperties().limits.maxSamplerAnisotropy : 1.0f;
+	SamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
+	SamplerInfo.compareEnable = VK_FALSE;
+	SamplerInfo.compareOp = VK_COMPARE_OP_NEVER;
+	SamplerInfo.minLod = SamplerDesc.MinLod;
+	SamplerInfo.maxLod = SamplerDesc.MaxLod;
+
+	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
 }
 
 static VkImageLayout ChooseImageLayout(EFormat Format)

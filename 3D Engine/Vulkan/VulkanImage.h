@@ -7,6 +7,9 @@ class VulkanDevice;
 class VulkanImageView
 {
 public:
+	VulkanImageView(const VulkanImageView&) = delete;
+	VulkanImageView& operator=(const VulkanImageView&) = delete;
+
 	VulkanImageView() = default;
 	VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format);
 	VulkanImageView(VulkanImageView&& Other);
@@ -63,21 +66,21 @@ public:
 
 	static VkFilter GetVulkanFilter(EFilter Filter);
 
-	[[nodiscard]] static VkSampler CreateSampler(VulkanDevice& Device, const struct SamplerDesc& SamplerDesc);
-
 	VkFormat GetVulkanFormat() const;
 
 	VkImageAspectFlags GetVulkanAspect() const;
 
 private:
-	VulkanDevice* Device = nullptr;
+	VkDevice Device;
 };
 
 class VulkanSampler
 {
 public:
 	VulkanSampler() = default;
-	VulkanSampler(VkSampler Sampler);
+
+	VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc);
+
 	inline VkSampler GetHandle() const { return Sampler; }
 
 private:
