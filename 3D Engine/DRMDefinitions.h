@@ -6,6 +6,7 @@
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanMemory.h"
 #include "Vulkan/VulkanDescriptors.h"
+#include "Vulkan/VulkanBindlessResources.h"
 #include "Vulkan/VulkanPipeline.h"
 
 namespace drm
@@ -21,6 +22,7 @@ namespace drm
 	using Pipeline = VulkanPipeline;
 	using RenderPass = VulkanRenderPass;
 	using RenderPassView = VulkanRenderPassView;
+	using BindlessResources = VulkanBindlessResources;
 
 	class AttachmentView
 	{

@@ -3,34 +3,38 @@
 #include "MaterialInterface.glsl"
 #define MATERIAL_SET 2
 
-layout(binding = 0, set = MATERIAL_SET) uniform sampler2D BaseColorTexture;
-layout(binding = 1, set = MATERIAL_SET) uniform sampler2D MetallicRoughnessTexture;
-layout(binding = 2, set = MATERIAL_SET) uniform PBRUniformBuffer
+#extension GL_EXT_nonuniform_qualifier : require
+
+layout(binding = 0, set = MATERIAL_SET) uniform sampler2D SceneTextures[];
+
+layout(push_constant) uniform MaterialConstants
 {
+	uint BaseColorIndex;
+	uint MetallicRoughnessIndex;
 	float Roughness;
 	float Metallicity;
-} PBR;
+} _Material;
 
 layout(constant_id = 0) const bool HasMetallicRoughnessTexture = false;
 layout(constant_id = 1) const bool IsMasked = false;
 
 MaterialData Material_Get(in SurfaceData Surface)
 {
-	vec4 BaseColor = texture(BaseColorTexture, Surface.UV).rgba;
+	vec4 BaseColor = texture(SceneTextures[nonuniformEXT(_Material.BaseColorIndex)], Surface.UV).rgba;
 	
 	MaterialData Material;
 	Material.BaseColor = BaseColor.rgb;
 
 	if (HasMetallicRoughnessTexture)
 	{
-		vec2 MetallicRoughness = texture(MetallicRoughnessTexture, Surface.UV).gb;
+		vec2 MetallicRoughness = texture(SceneTextures[nonuniformEXT(_Material.MetallicRoughnessIndex)], Surface.UV).gb;
 		Material.Metallicity = MetallicRoughness.x;
 		Material.Roughness = MetallicRoughness.y;
 	}
 	else
 	{
-		Material.Roughness = PBR.Roughness;
-		Material.Metallicity = PBR.Metallicity;
+		Material.Roughness = _Material.Roughness;
+		Material.Metallicity = _Material.Metallicity;
 	}
 
 	if (IsMasked)
@@ -50,7 +54,7 @@ MaterialData Material_Get(in SurfaceData Surface)
 #ifdef FRAGMENT_SHADER
 void Material_DiscardMaskedPixel(in SurfaceData Surface)
 {
-	float Alpha = texture(BaseColorTexture, Surface.UV).a;
+	float Alpha = texture(SceneTextures[nonuniformEXT(_Material.BaseColorIndex)], Surface.UV).a;
 	if (Alpha <= 0)
 	{
 		discard;

@@ -3,8 +3,9 @@
 
 AssetManager::AssetManager(DRMDevice& Device)
 	: Device(Device)
-	, MaterialLayout(Device)
+	, BindlessSampledImages(Device.CreateBindlessResources(EDescriptorType::SampledImage))
 {
+	
 	Material::CreateDebugMaterials(Device);
 
 	std::array<std::string, 6> Cubemap =
@@ -80,9 +81,6 @@ const drm::Image* AssetManager::GetImage(const std::string& AssetName) const
 const Material* AssetManager::LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material)
 {
 	check(Materials.find(AssetName) == Materials.end(), "Material %s already exists.", AssetName.c_str());
-
-	Material->DescriptorSet = MaterialLayout.CreateDescriptorSet(Device);
-	MaterialLayout.UpdateDescriptorSet(Device, Material->DescriptorSet, Material->Descriptors);
 
 	Materials[AssetName] = std::move(Material);
 

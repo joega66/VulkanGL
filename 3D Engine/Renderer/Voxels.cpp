@@ -111,7 +111,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
@@ -131,7 +131,7 @@ void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, con
 	PSODesc.Layouts = {
 		GlobalData.CameraDescriptorSet.GetLayout(),
 		MeshProxy.GetSurfaceSet().GetLayout(),
-		MeshProxy.GetMaterialSet().GetLayout(),
+		BindlessSampledImages.GetLayout(),
 		VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
 
@@ -139,7 +139,7 @@ void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, con
 	{
 		GlobalData.CameraDescriptorSet,
 		MeshProxy.GetSurfaceSet(),
-		MeshProxy.GetMaterialSet(),
+		BindlessSampledImages.GetResources(),
 		VCTLightingCache.GetDescriptorSet()
 	};
 

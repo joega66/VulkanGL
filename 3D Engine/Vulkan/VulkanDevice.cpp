@@ -204,6 +204,19 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.ColorAttachments.size()));
 }
 
+drm::BindlessResources VulkanDevice::CreateBindlessResources(EDescriptorType DescriptorType)
+{
+	static const VkDescriptorType DescriptorTypes[] =
+	{
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+	};
+
+	return VulkanBindlessResources(Device, DescriptorTypes[static_cast<uint32>(DescriptorType)]);
+}
+
 void VulkanDevice::CreateLogicalDevice()
 {
 	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
@@ -219,31 +232,40 @@ void VulkanDevice::CreateLogicalDevice()
 		QueueCreateInfos.push_back(QueueCreateInfo);
 	}
 
-	VkPhysicalDeviceFeatures DeviceFeatures = {};
-	DeviceFeatures.samplerAnisotropy = VK_TRUE;
-	DeviceFeatures.geometryShader = VK_TRUE;
-	DeviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
-	DeviceFeatures.vertexPipelineStoresAndAtomics = VK_TRUE;
+	VkPhysicalDeviceFeatures Features = {};
+	Features.samplerAnisotropy = VK_TRUE;
+	Features.geometryShader = VK_TRUE;
+	Features.fragmentStoresAndAtomics = VK_TRUE;
+	Features.vertexPipelineStoresAndAtomics = VK_TRUE;
 
-	VkDeviceCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-	CreateInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());
-	CreateInfo.pQueueCreateInfos = QueueCreateInfos.data();
-	CreateInfo.pEnabledFeatures = &DeviceFeatures;
-	CreateInfo.enabledExtensionCount = static_cast<uint32>(DeviceExtensions.size());
-	CreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
+	VkPhysicalDeviceDescriptorIndexingFeatures DescriptorIndexingFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES };
+	DescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+	DescriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+	DescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+	DescriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
+
+	VkPhysicalDeviceFeatures2 Features2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+	Features2.pNext = &DescriptorIndexingFeatures;
+	Features2.features = Features;
+	
+	VkDeviceCreateInfo DeviceInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+	DeviceInfo.pNext = &Features2;
+	DeviceInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());
+	DeviceInfo.pQueueCreateInfos = QueueCreateInfos.data();
+	DeviceInfo.enabledExtensionCount = static_cast<uint32>(DeviceExtensions.size());
+	DeviceInfo.ppEnabledExtensionNames = DeviceExtensions.data();
 
 	if (Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false))
 	{
-		CreateInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
-		CreateInfo.ppEnabledLayerNames = ValidationLayers.data();
+		DeviceInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
+		DeviceInfo.ppEnabledLayerNames = ValidationLayers.data();
 	}
 	else
 	{
-		CreateInfo.enabledLayerCount = 0;
+		DeviceInfo.enabledLayerCount = 0;
 	}
 	
-	vulkan(vkCreateDevice(PhysicalDevice, &CreateInfo, nullptr, &Device));
+	vulkan(vkCreateDevice(PhysicalDevice, &DeviceInfo, nullptr, &Device));
 
-	// Create queues and command pools.
 	Queues.Create(Device);
 }

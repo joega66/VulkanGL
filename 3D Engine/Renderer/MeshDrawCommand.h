@@ -11,9 +11,11 @@ public:
 		PipelineStateDesc& PSODesc,
 		const std::vector<VkDescriptorSet>& DescriptorSets)
 		: Submeshes(MeshProxy.GetSubmeshes())
+		, Material(MeshProxy.GetMaterial())
 		, DescriptorSets(DescriptorSets)
 	{
 		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
+		PSODesc.PushConstantRange = Material->GetPushConstantRange();
 		Pipeline = Device.CreatePipeline(PSODesc);
 	}
 
@@ -21,11 +23,13 @@ public:
 	{
 		CmdList.BindPipeline(Pipeline);
 
-		CmdList.BindDescriptorSets(Pipeline, (uint32)DescriptorSets.size(), DescriptorSets.data());
+		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+
+		CmdList.PushConstants(Pipeline, &Material->GetPushConstants());
 
 		for (const auto& Submesh : Submeshes)
 		{
-			CmdList.BindVertexBuffers((uint32)Submesh.GetVertexBuffers().size(), Submesh.GetVertexBuffers().data());
+			CmdList.BindVertexBuffers(static_cast<uint32>(Submesh.GetVertexBuffers().size()), Submesh.GetVertexBuffers().data());
 
 			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
 		}
@@ -43,4 +47,5 @@ private:
 	std::shared_ptr<drm::Pipeline> Pipeline;
 	std::vector<VkDescriptorSet> DescriptorSets;
 	const std::vector<Submesh>& Submeshes;
+	const Material* Material;
 };

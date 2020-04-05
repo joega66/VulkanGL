@@ -149,7 +149,6 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, DRMDevice& Device)
 {
 	auto& GLTFMaterial = Model.materials[Primitive.material];
-
 	const EMaterialMode MaterialMode = [] (const std::string& AlphaMode)
 	{
 		if (AlphaMode == "MASK")
@@ -161,24 +160,23 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 			return EMaterialMode::Opaque;
 		}
 	}(GLTFMaterial.alphaMode);
-
 	const std::string MaterialAssetName = AssetName + "_Material_" + std::to_string(Primitive.material);
-
 	const Material* Material = Assets.GetMaterial(MaterialAssetName);
 
 	if (!Material)
 	{
-		MaterialDescriptors Descriptors(Device);
-		Descriptors.BaseColor.SetImage(*GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index));
-		Descriptors.MetallicRoughness.SetImage(*GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index));
-
+		const drm::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+		const drm::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+		
 		Material = Assets.LoadMaterial(
 			MaterialAssetName,
 			std::make_unique<class Material>
 			(
 				Device,
-				Descriptors,
+				Assets.GetBindlessSampledImages(),
 				MaterialMode,
+				BaseColor,
+				MetallicRoughness,
 				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor),
 				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
 			)
@@ -204,7 +202,7 @@ const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, DRMDevice& Dev
 {
 	if (TextureIndex == -1)
 	{
-		return &Material::Dummy;
+		return nullptr;
 	}
 	else
 	{

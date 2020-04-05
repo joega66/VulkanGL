@@ -102,7 +102,7 @@ public:
 	}
 };
 
-void ShadowProxy::AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void ShadowProxy::AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
@@ -115,9 +115,9 @@ void ShadowProxy::AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const Mesh
 	PSODesc.RasterizationState.DepthBiasEnable = true;
 	PSODesc.RasterizationState.DepthBiasConstantFactor = DepthBiasConstantFactor;
 	PSODesc.RasterizationState.DepthBiasSlopeFactor = DepthBiasSlopeFactor;
-	PSODesc.Layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), MeshProxy.GetMaterialSet().GetLayout() };
+	PSODesc.Layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), BindlessSampledImages.GetLayout() };
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, MeshProxy.GetSurfaceSet(), MeshProxy.GetMaterialSet() };
+	const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, MeshProxy.GetSurfaceSet(), BindlessSampledImages.GetResources() };
 	MeshDrawCommands.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
 }
 

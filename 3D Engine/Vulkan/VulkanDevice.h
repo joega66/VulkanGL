@@ -4,6 +4,7 @@
 #include "VulkanCache.h"
 #include "VulkanRenderPass.h"
 #include "VulkanCommandList.h"
+#include "VulkanBindlessResources.h"
 
 static const std::vector<const char*> ValidationLayers =
 {
@@ -13,7 +14,6 @@ static const std::vector<const char*> ValidationLayers =
 static const std::vector<const char*> DeviceExtensions =
 {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	VK_KHR_MAINTENANCE1_EXTENSION_NAME,
 	VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
 };
 
@@ -58,6 +58,8 @@ public:
 	virtual drm::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
+
+	virtual drm::BindlessResources CreateBindlessResources(EDescriptorType DescriptorType) override;
 
 	operator VkDevice() const { return Device; }
 

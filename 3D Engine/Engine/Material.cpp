@@ -6,31 +6,29 @@ drm::Image Material::Green;
 drm::Image Material::Blue;
 drm::Image Material::White;
 drm::Image Material::Black;
-drm::Image Material::Dummy;
 
 Material::Material(
 	DRMDevice& Device,
-	const MaterialDescriptors& InDescriptors,
+	drm::BindlessResources& BindlessSampledImages,
 	EMaterialMode MaterialMode,
+	const drm::Image* BaseColor,
+	const drm::Image* MetallicRoughness,
 	float Roughness,
 	float Metallicity)
-	: Descriptors(InDescriptors)
-	, MaterialMode(MaterialMode)
-	, Roughness(Roughness)
-	, Metallicity(Metallicity)
+	: MaterialMode(MaterialMode)
 {
-	struct PBRUniformData
-	{
-		float Roughness;
-		float Metallicity;
-	} PBRUniformData = { Roughness, Metallicity };
+	BaseColor = BaseColor ? BaseColor : &Material::Red;
 
-	PBRUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(PBRUniformData), &PBRUniformData);
+	const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
-	Descriptors.PBRUniform = PBRUniform;
+	PushConstants.BaseColorIndex = BindlessSampledImages.Add(BaseColor->GetImageView(), Sampler);
+	PushConstants.MetallicRoughnessIndex = MetallicRoughness ? BindlessSampledImages.Add(MetallicRoughness->GetImageView(), Sampler) : 0;
 
-	SpecializationInfo.Add(0, Descriptors.MetallicRoughness != Material::Dummy);
-	SpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
+	PushConstants.Roughness = Roughness;
+	PushConstants.Metallicity = Metallicity;
+
+	mSpecializationInfo.Add(0, MetallicRoughness != nullptr);
+	mSpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
 }
 
 void Material::CreateDebugMaterials(DRMDevice& Device)
@@ -42,7 +40,6 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 		0, 0, 255, 0, // Blue
 		255, 255, 255, 0, // White
 		0, 0, 0, 0, // Black
-		234, 115, 79, 0 // Dummy
 	};
 
 	drm::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
@@ -52,7 +49,6 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 	Material::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	Material::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	Material::Dummy = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
@@ -63,7 +59,6 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 		ImageMemoryBarrier{ Material::Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
 		ImageMemoryBarrier{ Material::White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
 		ImageMemoryBarrier{ Material::Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
-		ImageMemoryBarrier{ Material::Dummy, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal }
 	};
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
@@ -84,10 +79,4 @@ void Material::CreateDebugMaterials(DRMDevice& Device)
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
 
 	Device.SubmitCommands(CmdList);
-}
-
-MaterialDescriptors::MaterialDescriptors(DRMDevice& Device)
-	: BaseColor(Material::Dummy, Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear }))
-	, MetallicRoughness(Material::Dummy, Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear }))
-{
 }

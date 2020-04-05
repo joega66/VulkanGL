@@ -63,6 +63,7 @@
     <ClCompile Include="Systems\RenderSystem.cpp" />
     <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
     <ClCompile Include="Systems\UserInterface.cpp" />
+    <ClCompile Include="Vulkan\VulkanBindlessResources.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp" />
     <ClCompile Include="Vulkan\VulkanCache.cpp" />
@@ -132,6 +133,7 @@
     <ClInclude Include="Systems\RenderSystem.h" />
     <ClInclude Include="Systems\TransformGizmoSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />
+    <ClInclude Include="Vulkan\VulkanBindlessResources.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
     <ClInclude Include="Vulkan\VulkanDescriptors.h" />
     <ClInclude Include="Vulkan\VulkanCache.h" />
@@ -239,8 +241,8 @@
     <LibraryPath>C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Joe\Documents\GitHub\VulkanGL\ThirdParty;C:\Users\Joe\Source\Repos\3D Engine\ThirdParty;C:\Users\Joe\Documents\GitHub\VulkanGL\3D Engine;C:\Users\Joe\Documents\GitHub\VulkanGL\Includes;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Joe\Documents\GitHub\VulkanGL\WinLib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../ThirdParty/;$(ProjectDir);$(ProjectDir)/../Includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)/../WinLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

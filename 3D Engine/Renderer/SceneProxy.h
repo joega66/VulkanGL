@@ -12,6 +12,8 @@ namespace EStaticDrawListType
 };
 
 class Engine;
+class EntityManager;
+class AssetManager;
 
 class SceneProxy
 {
@@ -40,7 +42,7 @@ private:
 	void InitPointLights(Engine& Engine);
 	void InitMeshDrawCommands(Engine& Engine);
 
-	void AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
-	void AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy);
+	void AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy);
+	void AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy);
 };

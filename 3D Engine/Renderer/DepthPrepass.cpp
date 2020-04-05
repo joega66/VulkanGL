@@ -48,7 +48,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void SceneProxy::AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
@@ -60,11 +60,11 @@ void SceneProxy::AddToDepthPrepass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 	PSODesc.ShaderStages.Fragment = MeshProxy.GetMaterial()->IsMasked() ? ShaderMap.FindShader<DepthPrepassFS<MeshType>>() : nullptr;
 	PSODesc.Viewport.Width = GlobalData.SceneDepth.GetWidth();
 	PSODesc.Viewport.Height = GlobalData.SceneDepth.GetHeight();
-	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), MeshProxy.GetMaterialSet().GetLayout() };
+	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), BindlessSampledImages.GetLayout() };
 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
-		GlobalData.CameraDescriptorSet, MeshProxy.GetSurfaceSet(), MeshProxy.GetMaterialSet()
+		GlobalData.CameraDescriptorSet, MeshProxy.GetSurfaceSet(), BindlessSampledImages.GetResources()
 	};
 
 	DepthPrepass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));

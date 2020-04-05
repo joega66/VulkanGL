@@ -137,10 +137,10 @@ void SceneProxy::InitMeshDrawCommands(Engine& Engine)
 
 		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, MeshProxy.WorldSpaceBB))
 		{
-			AddToDepthPrepass(Engine.Device, Engine.ShaderMap, MeshProxy);
-			AddToLightingPass(Engine.Device, Engine.ShaderMap, MeshProxy);
+			AddToDepthPrepass(Engine.Device, Engine.ShaderMap, Engine.Assets.GetBindlessSampledImages(), MeshProxy);
+			AddToLightingPass(Engine.Device, Engine.ShaderMap, Engine.Assets.GetBindlessSampledImages(), MeshProxy);
 		}
 
-		AddToVoxelsPass(Engine.Device, Engine.ShaderMap, MeshProxy);
+		AddToVoxelsPass(Engine.Device, Engine.ShaderMap, Engine.Assets.GetBindlessSampledImages(), MeshProxy);
 	}
 }
