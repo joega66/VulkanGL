@@ -8,8 +8,8 @@ layout(push_constant) uniform MaterialConstants
 {
 	uint BaseColorIndex;
 	uint MetallicRoughnessIndex;
+	float Metallic;
 	float Roughness;
-	float Metallicity;
 } _Material;
 
 layout(constant_id = 0) const bool HasMetallicRoughnessTexture = false;
@@ -25,13 +25,13 @@ MaterialData Material_Get(in SurfaceData Surface)
 	if (HasMetallicRoughnessTexture)
 	{
 		vec2 MetallicRoughness = texture(SceneTextures[nonuniformEXT(_Material.MetallicRoughnessIndex)], Surface.UV).gb;
-		Material.Metallicity = MetallicRoughness.x;
+		Material.Metallic = MetallicRoughness.x;
 		Material.Roughness = MetallicRoughness.y;
 	}
 	else
 	{
+		Material.Metallic = _Material.Metallic;
 		Material.Roughness = _Material.Roughness;
-		Material.Metallicity = _Material.Metallicity;
 	}
 
 	if (IsMasked)
@@ -43,7 +43,7 @@ MaterialData Material_Get(in SurfaceData Surface)
 		Material.Alpha = 1.0f;
 	}
 
-	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallicity);
+	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
 
 	return Material;
 }

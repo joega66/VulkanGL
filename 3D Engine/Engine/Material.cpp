@@ -12,8 +12,8 @@ Material::Material(
 	EMaterialMode MaterialMode,
 	const drm::Image* BaseColor,
 	const drm::Image* MetallicRoughness,
-	float Roughness,
-	float Metallicity)
+	float Metallic,
+	float Roughness)
 	: MaterialMode(MaterialMode)
 {
 	BaseColor = BaseColor ? BaseColor : &Material::Red;
@@ -23,9 +23,9 @@ Material::Material(
 	PushConstants.BaseColorIndex = Device.GetSampledImages().Add(BaseColor->GetImageView(), Sampler);
 	PushConstants.MetallicRoughnessIndex = MetallicRoughness ? Device.GetSampledImages().Add(MetallicRoughness->GetImageView(), Sampler) : 0;
 
+	PushConstants.Metallic = Metallic;
 	PushConstants.Roughness = Roughness;
-	PushConstants.Metallicity = Metallicity;
-
+	
 	mSpecializationInfo.Add(0, MetallicRoughness != nullptr);
 	mSpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
 }

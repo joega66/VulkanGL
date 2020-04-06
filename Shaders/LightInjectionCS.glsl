@@ -41,8 +41,8 @@ void main()
 	MaterialData Material;
 	Material.BaseColor = BaseColor.rgb;
 	Material.Alpha = BaseColor.a;
+	Material.Metallic = 0.0f;
 	Material.Roughness = 0.0f;
-	Material.Metallicity = 0.0f;
 
 	SurfaceData Surface;
 	Surface.WorldPosition = WorldPosition.xyz;

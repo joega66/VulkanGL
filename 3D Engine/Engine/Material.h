@@ -17,8 +17,8 @@ public:
 	{
 		uint32 BaseColorIndex;
 		uint32 MetallicRoughnessIndex;
+		float Metallic;
 		float Roughness;
-		float Metallicity;
 	};
 
 	Material() = default;
@@ -28,8 +28,8 @@ public:
 		EMaterialMode MaterialMode,
 		const drm::Image* BaseColor,
 		const drm::Image* MetallicRoughness,
-		float Roughness,
-		float Metallicity
+		float Metallic,
+		float Roughness
 	);
 
 	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };
