@@ -12,9 +12,11 @@ layout(binding = 0, set = LIGHT_SET) uniform LightViewProjUniform
 	mat4 InvLightViewProj;
 };
 layout(binding = 1, set = LIGHT_SET) uniform sampler2D ShadowMap;
-layout(binding = 2, set = LIGHT_SET) uniform ShadowMapSizeUniform
+layout(binding = 2, set = LIGHT_SET) uniform LightInjectionUniform
 {
 	ivec4 ShadowMapSize;
+	vec4 L;
+	vec4 Radiance;
 };
 
 layout(local_size_x = 8, local_size_y = 8) in;
@@ -22,8 +24,6 @@ void main()
 {
 	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, ShadowMapSize.xy)))
 		return;
-
-	// @todo Reproject(InvMatrix, UV, Depth)...
 
 	// 1. Project light depth into the volume.
 	float LightDepth = texelFetch(ShadowMap, ivec2(gl_GlobalInvocationID.xy), 0).r;
@@ -49,8 +49,14 @@ void main()
 	Surface.WorldNormal = imageLoad(VoxelNormal, VoxelGridCoord).rgb;
 
 	// 3. Compute lighting.
-	vec3 DirectLighting = Shade(Surface, Material).rgb;
+	const vec3 V = normalize(Camera.Position - Surface.WorldPosition);
+
+	LightParams Light;
+	Light.L = L.xyz;
+	Light.Radiance = Radiance.rgb;
+
+	vec3 Lo = DirectLighting(V, Light, Surface, Material).rgb;
 
 	// 4. Inject into the volume.
-	imageStore(VoxelRadiance, VoxelGridCoord, vec4(DirectLighting, 1.0f));
+	imageStore(VoxelRadiance, VoxelGridCoord, vec4(Lo, 1.0f));
 }

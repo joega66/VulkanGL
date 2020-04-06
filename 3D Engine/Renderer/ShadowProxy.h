@@ -6,7 +6,7 @@ struct ShadowDescriptors
 {
 	drm::DescriptorBufferInfo LightViewProjBuffer;
 	drm::DescriptorImageInfo ShadowMap;
-	drm::DescriptorBufferInfo ShadowMapSizeBuffer;
+	drm::DescriptorBufferInfo LightInjectionUniform;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -42,7 +42,7 @@ private:
 	float DepthBiasSlopeFactor = 0.0f;
 	drm::Buffer LightViewProjBuffer;
 	drm::Image ShadowMap;
-	drm::Buffer ShadowMapSizeBuffer;
+	drm::Buffer LightInjectionUniform;
 	drm::DescriptorSet DescriptorSet;
 	std::vector<MeshDrawCommand> MeshDrawCommands;
 };

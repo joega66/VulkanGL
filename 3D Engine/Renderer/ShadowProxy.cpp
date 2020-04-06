@@ -8,6 +8,12 @@ UNIFORM_STRUCT(LightViewProjUniformData,
 	glm::mat4 InvLightViewProj;
 );
 
+UNIFORM_STRUCT(LightInjectionUniformData,
+	glm::ivec4 ShadowMapSize;
+	glm::vec4 L;
+	glm::vec4 Radiance;
+);
+
 ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 {
 	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightViewProjUniformData));
@@ -17,8 +23,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 
 	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-	const glm::ivec4 ShadowMapSize(ShadowMapRes, 0, 0);
-	ShadowMapSizeBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(ShadowMapSize), &ShadowMapSize);
+	LightInjectionUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightInjectionUniformData));
 
 	RenderPassDesc RPDesc = {};
 	RPDesc.DepthAttachment = drm::AttachmentView(
@@ -34,7 +39,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 	ShadowDescriptors Descriptors;
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
 	Descriptors.ShadowMap = drm::DescriptorImageInfo(ShadowMap, Device.CreateSampler({}));
-	Descriptors.ShadowMapSizeBuffer = ShadowMapSizeBuffer;
+	Descriptors.LightInjectionUniform = LightInjectionUniform;
 	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
 }
@@ -44,6 +49,11 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
 
+	LightInjectionUniformData* LightInjectionUniformPtr = static_cast<LightInjectionUniformData*>(LightInjectionUniform.GetData());
+	LightInjectionUniformPtr->ShadowMapSize = glm::ivec4(ShadowMap.GetWidth(), ShadowMap.GetHeight(), 0, 0);
+	LightInjectionUniformPtr->L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
+	LightInjectionUniformPtr->Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+	
 	const float64 Width = Platform::GetFloat64("Engine.ini", "Shadows", "Width", 400.0f);
 	const float64 ZNear = Platform::GetFloat64("Engine.ini", "Shadows", "ZNear", 1.0f);
 	const float64 ZFar = Platform::GetFloat64("Engine.ini", "Shadows", "ZFar", 96.0f);
