@@ -173,7 +173,6 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 			std::make_unique<class Material>
 			(
 				Device,
-				Assets.GetBindlessSampledImages(),
 				MaterialMode,
 				BaseColor,
 				MetallicRoughness,

@@ -204,19 +204,6 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.ColorAttachments.size()));
 }
 
-drm::BindlessResources VulkanDevice::CreateBindlessResources(EDescriptorType DescriptorType)
-{
-	static const VkDescriptorType DescriptorTypes[] =
-	{
-		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-	};
-
-	return VulkanBindlessResources(Device, DescriptorTypes[static_cast<uint32>(DescriptorType)]);
-}
-
 void VulkanDevice::CreateLogicalDevice()
 {
 	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
@@ -268,4 +255,11 @@ void VulkanDevice::CreateLogicalDevice()
 	vulkan(vkCreateDevice(PhysicalDevice, &DeviceInfo, nullptr, &Device));
 
 	Queues.Create(Device);
+
+	CreateBindlessResources();
+}
+
+void VulkanDevice::CreateBindlessResources()
+{
+	SampledImages = std::make_unique<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 }

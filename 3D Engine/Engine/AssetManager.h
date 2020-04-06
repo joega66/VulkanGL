@@ -33,12 +33,8 @@ public:
 	void LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);
 	const drm::Image* GetCubemap(const std::string& AssetName) const;
 
-	inline drm::BindlessResources& GetBindlessSampledImages() { return BindlessSampledImages; }
-
 private:
 	DRMDevice& Device;
-
-	drm::BindlessResources BindlessSampledImages;
 
 	HashTable<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	HashTable<std::string, std::unique_ptr<Material>> Materials;

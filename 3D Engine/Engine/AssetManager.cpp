@@ -3,9 +3,7 @@
 
 AssetManager::AssetManager(DRMDevice& Device)
 	: Device(Device)
-	, BindlessSampledImages(Device.CreateBindlessResources(EDescriptorType::SampledImage))
 {
-	
 	Material::CreateDebugMaterials(Device);
 
 	std::array<std::string, 6> Cubemap =

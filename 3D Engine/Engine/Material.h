@@ -25,7 +25,6 @@ public:
 
 	Material(
 		DRMDevice& Device,
-		drm::BindlessResources& BindlessSampledImages,
 		EMaterialMode MaterialMode,
 		const drm::Image* BaseColor,
 		const drm::Image* MetallicRoughness,

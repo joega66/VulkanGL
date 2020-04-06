@@ -50,7 +50,7 @@ public:
 	}
 };
 
-void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const drm::BindlessResources& BindlessSampledImages, const MeshProxy& MeshProxy)
+void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
@@ -68,7 +68,7 @@ void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 	{
 		GlobalData.CameraDescriptorSet.GetLayout(), 
 		MeshProxy.GetSurfaceSet().GetLayout(),
-		BindlessSampledImages.GetLayout(),
+		Device.GetSampledImages().GetLayout(),
 		GlobalData.SceneTexturesDescriptorSet.GetLayout(),
 		GlobalData.VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
@@ -81,7 +81,7 @@ void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, c
 	{
 		GlobalData.CameraDescriptorSet,
 		MeshProxy.GetSurfaceSet(),
-		BindlessSampledImages.GetResources(),
+		Device.GetSampledImages().GetResources(),
 		GlobalData.SceneTexturesDescriptorSet,
 		GlobalData.VCTLightingCache.GetDescriptorSet()
 	};

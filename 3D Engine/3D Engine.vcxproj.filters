@@ -501,9 +501,6 @@
     <None Include="..\Shaders\ShadowDepthFS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\SceneTexturesCommon.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\UserInterfaceFS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -517,6 +514,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\DownsampleVolumeCS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SceneResources.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\CameraTexturesCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

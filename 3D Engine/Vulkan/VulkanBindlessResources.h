@@ -11,7 +11,6 @@ public:
 	VulkanBindlessResources(const VulkanBindlessResources&) = delete;
 	VulkanBindlessResources& operator=(const VulkanBindlessResources&) = delete;
 
-	VulkanBindlessResources() = default;
 	VulkanBindlessResources(VkDevice Device, VkDescriptorType BindlessResourceType);
 	~VulkanBindlessResources();
 

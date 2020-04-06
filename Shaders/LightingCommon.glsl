@@ -4,8 +4,8 @@
 const float PI = 3.14159265;
 const float AMBIENT = 0.01f;
 
-#ifdef SCENE_TEXTURES_SET
-#include "SceneTexturesCommon.glsl"
+#ifdef CAMERA_TEXTURES_SET
+#include "CameraTexturesCommon.glsl"
 #endif
 
 #if defined(TRACE_SHADOW_CONE) || defined(TRACE_DIFFUSE_CONES)

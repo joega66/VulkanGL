@@ -9,7 +9,6 @@ drm::Image Material::Black;
 
 Material::Material(
 	DRMDevice& Device,
-	drm::BindlessResources& BindlessSampledImages,
 	EMaterialMode MaterialMode,
 	const drm::Image* BaseColor,
 	const drm::Image* MetallicRoughness,
@@ -21,8 +20,8 @@ Material::Material(
 
 	const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
-	PushConstants.BaseColorIndex = BindlessSampledImages.Add(BaseColor->GetImageView(), Sampler);
-	PushConstants.MetallicRoughnessIndex = MetallicRoughness ? BindlessSampledImages.Add(MetallicRoughness->GetImageView(), Sampler) : 0;
+	PushConstants.BaseColorIndex = Device.GetSampledImages().Add(BaseColor->GetImageView(), Sampler);
+	PushConstants.MetallicRoughnessIndex = MetallicRoughness ? Device.GetSampledImages().Add(MetallicRoughness->GetImageView(), Sampler) : 0;
 
 	PushConstants.Roughness = Roughness;
 	PushConstants.Metallicity = Metallicity;

@@ -1,9 +1,9 @@
-#ifndef SCENE_TEXTURES_COMMON
-#define SCENE_TEXTURES_COMMON
+#ifndef CAMERA_TEXTURES_COMMON
+#define CAMERA_TEXTURES_COMMON
 
-layout(binding = 0, set = SCENE_TEXTURES_SET) uniform sampler2D SceneDepth;
+layout(binding = 0, set = CAMERA_TEXTURES_SET) uniform sampler2D SceneDepth;
 
-layout(binding = 1, set = SCENE_TEXTURES_SET) uniform sampler3D RadianceVolume;
+layout(binding = 1, set = CAMERA_TEXTURES_SET) uniform sampler3D RadianceVolume;
 
 vec3 ScreenToWorld(vec2 UV)
 {

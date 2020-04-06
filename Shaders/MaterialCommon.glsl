@@ -1,11 +1,8 @@
 #ifndef MATERIAL_COMMON
 #define MATERIAL_COMMON
 #include "MaterialInterface.glsl"
-#define MATERIAL_SET 2
-
-#extension GL_EXT_nonuniform_qualifier : require
-
-layout(binding = 0, set = MATERIAL_SET) uniform sampler2D SceneTextures[];
+#define SCENE_TEXTURES_SET 2
+#include "SceneResources.glsl"
 
 layout(push_constant) uniform MaterialConstants
 {

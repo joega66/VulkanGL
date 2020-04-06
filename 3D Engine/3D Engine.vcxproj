@@ -163,7 +163,8 @@
     <None Include="..\Shaders\MaterialInterface.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />
     <None Include="..\Shaders\SceneCommon.glsl" />
-    <None Include="..\Shaders\SceneTexturesCommon.glsl" />
+    <None Include="..\Shaders\SceneResources.glsl" />
+    <None Include="..\Shaders\CameraTexturesCommon.glsl" />
     <None Include="..\Shaders\ShadowDepthFS.glsl" />
     <None Include="..\Shaders\ShadowDepthVS.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />

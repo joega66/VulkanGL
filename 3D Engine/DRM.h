@@ -48,7 +48,7 @@ public:
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
 
-	virtual drm::BindlessResources CreateBindlessResources(EDescriptorType DescriptorType) = 0;
+	virtual drm::BindlessResources& GetSampledImages() = 0;
 };
 
 namespace drm
