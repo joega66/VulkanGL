@@ -33,6 +33,12 @@ public:
 	void LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);
 	const drm::Image* GetCubemap(const std::string& AssetName) const;
 
+	static drm::Image Red;
+	static drm::Image Green;
+	static drm::Image Blue;
+	static drm::Image White;
+	static drm::Image Black;
+
 private:
 	DRMDevice& Device;
 
@@ -40,4 +46,6 @@ private:
 	HashTable<std::string, std::unique_ptr<Material>> Materials;
 	HashTable<std::string, std::unique_ptr<drm::Image>> Images;
 	HashTable<std::string, std::unique_ptr<drm::Image>> Cubemaps;
+
+	static void CreateDebugImages(DRMDevice& Device);
 };

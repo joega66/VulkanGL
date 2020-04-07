@@ -41,14 +41,6 @@ public:
 		return PushConstantRange;
 	}
 
-	static drm::Image Red;
-	static drm::Image Green;
-	static drm::Image Blue;
-	static drm::Image White;
-	static drm::Image Black;
-
-	static void CreateDebugMaterials(DRMDevice& Device);
-
 private:
 	EMaterialMode MaterialMode;
 	PushConstants PushConstants;

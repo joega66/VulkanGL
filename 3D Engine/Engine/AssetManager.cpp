@@ -4,7 +4,7 @@
 AssetManager::AssetManager(DRMDevice& Device)
 	: Device(Device)
 {
-	Material::CreateDebugMaterials(Device);
+	CreateDebugImages(Device);
 
 	std::array<std::string, 6> Cubemap =
 	{
@@ -14,8 +14,8 @@ AssetManager::AssetManager(DRMDevice& Device)
 	};
 
 	LoadCubemap("Engine_Cubemap_Default", Cubemap);
-	LoadImage("Engine_BaseColor_Default", "../Images/Frozen-Ice-Texture.jpg");
 	LoadStaticMesh("../Meshes/Primitives/Cube.gltf");
+
 }
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesystem::path& Path, bool Breakup)
@@ -144,4 +144,60 @@ void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<st
 const drm::Image* AssetManager::GetCubemap(const std::string& AssetName) const
 {
 	return Cubemaps.at(AssetName).get();
+}
+
+drm::Image AssetManager::Red;
+drm::Image AssetManager::Green;
+drm::Image AssetManager::Blue;
+drm::Image AssetManager::White;
+drm::Image AssetManager::Black;
+
+void AssetManager::CreateDebugImages(DRMDevice& Device)
+{
+	std::vector<uint8> Colors =
+	{
+		255, 0, 0, 0, // Red
+		0, 255, 0, 0, // Green
+		0, 0, 255, 0, // Blue
+		255, 255, 255, 0, // White
+		0, 0, 0, 0, // Black
+	};
+
+	drm::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
+
+	AssetManager::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+
+	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+
+	std::vector<ImageMemoryBarrier> Barriers
+	{
+		ImageMemoryBarrier{ AssetManager::Red, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::Green, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+	};
+
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
+
+	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
+	{
+		CmdList.CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image, EImageLayout::TransferDstOptimal);
+	}
+
+	for (auto& Barrier : Barriers)
+	{
+		Barrier.SrcAccessMask = EAccess::TransferWrite;
+		Barrier.DstAccessMask = EAccess::ShaderRead;
+		Barrier.OldLayout = EImageLayout::TransferDstOptimal;
+		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	}
+
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
+
+	Device.SubmitCommands(CmdList);
 }

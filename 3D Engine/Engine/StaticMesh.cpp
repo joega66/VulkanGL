@@ -168,6 +168,11 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 		const drm::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
 		const drm::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
 		
+		if (!BaseColor)
+		{
+			BaseColor = &AssetManager::Red;
+		}
+
 		Material = Assets.LoadMaterial(
 			MaterialAssetName,
 			std::make_unique<class Material>
