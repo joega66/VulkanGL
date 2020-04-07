@@ -22,6 +22,9 @@ public:
 
 	/** Voxelize the scene. */
 	void Render(SceneProxy& Scene, drm::CommandList& CmdList);
+	
+	/** Called just before the lighting pass. */
+	void PreLightingPass(drm::CommandList& CmdList);
 
 	/** Visualize the voxels. */
 	void RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
@@ -30,7 +33,6 @@ public:
 	inline const drm::Image& GetVoxelRadiance() const { return VoxelRadiance; }
 	inline const drm::Sampler& GetVoxelRadianceSampler() const { return VoxelRadianceSampler; }
 	inline const drm::RenderPass& GetRenderPass() const { return VoxelRP; }
-	inline const drm::RenderPass& GetDebugRenderPass() const { return DebugRP; }
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return VoxelDescriptorSet; }
 	inline bool IsDebuggingEnabled() const { return DebugVoxels; }
 
@@ -40,6 +42,7 @@ public:
 private:
 	const float VoxelSize;
 	const uint32 VoxelGridSize;
+	const glm::vec3 VoxelProbeCenter;
 	const bool DebugVoxels;
 
 	DRMDevice& Device;
@@ -62,6 +65,8 @@ private:
 
 	drm::Buffer VoxelPositions;
 	drm::Buffer VoxelIndirectBuffer;
+
+	EImageLayout VoxelRadianceImageLayout;
 
 	struct DownsampleVolumeDescriptors
 	{

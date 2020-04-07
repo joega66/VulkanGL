@@ -249,6 +249,9 @@ UNIFORM_STRUCT(WorldToVoxelUniform,
 VCTLightingCache::VCTLightingCache(Engine& Engine)
 	: VoxelSize(static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f)))
 	, VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
+	, VoxelProbeCenter(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
+		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f))
 	, DebugVoxels(Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false))
 	, Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
@@ -317,11 +320,6 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 
 void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	const glm::vec3 VoxelProbeCenter(
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f));
-	
 	glm::mat4 OrthoProj = glm::ortho(
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
@@ -369,6 +367,27 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 			CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 		}
 	}
+
+	VoxelRadianceImageLayout = EImageLayout::ShaderReadOnlyOptimal;
+}
+
+void VCTLightingCache::PreLightingPass(drm::CommandList& CmdList)
+{
+	if (VoxelRadianceImageLayout != EImageLayout::ShaderReadOnlyOptimal)
+	{
+		ImageMemoryBarrier ImageBarrier{ 
+			VoxelRadiance, 
+			EAccess::None, 
+			EAccess::ShaderRead, 
+			EImageLayout::General, 
+			EImageLayout::ShaderReadOnlyOptimal, 
+			0, VoxelRadiance.GetMipLevels() 
+		};
+
+		CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageBarrier);
+
+		VoxelRadianceImageLayout = EImageLayout::ShaderReadOnlyOptimal;
+	}
 }
 
 void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
@@ -379,8 +398,7 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
 		EImageLayout::TransferDstOptimal,
-		0,
-		VoxelRadiance.GetMipLevels()
+		0, VoxelRadiance.GetMipLevels()
 	};
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageBarrier);
@@ -461,26 +479,31 @@ void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, co
 
 void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
 {
-	std::vector<BufferMemoryBarrier> BufferBarriers =
+	if (VoxelRadianceImageLayout != EImageLayout::General)
 	{
-		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
-		{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
-	};
+		std::vector<BufferMemoryBarrier> BufferBarriers =
+		{
+			{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
+			{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
+		};
 
-	std::vector<ImageMemoryBarrier> ImageBarriers =
-	{
-		{ VoxelBaseColor, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
-		{ VoxelNormal, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
-		{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::ShaderReadOnlyOptimal, EImageLayout::General, 0, VoxelRadiance.GetMipLevels() }
-	};
+		std::vector<ImageMemoryBarrier> ImageBarriers =
+		{
+			{ VoxelBaseColor, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
+			{ VoxelNormal, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
+			{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::ShaderReadOnlyOptimal, EImageLayout::General, 0, VoxelRadiance.GetMipLevels() }
+		};
 
-	CmdList.PipelineBarrier(
-		EPipelineStage::FragmentShader | EPipelineStage::ComputeShader,
-		EPipelineStage::DrawIndirect | EPipelineStage::VertexShader,
-		BufferBarriers.size(), BufferBarriers.data(),
-		ImageBarriers.size(), ImageBarriers.data()
-	);
+		CmdList.PipelineBarrier(
+			EPipelineStage::FragmentShader | EPipelineStage::ComputeShader,
+			EPipelineStage::DrawIndirect | EPipelineStage::VertexShader,
+			BufferBarriers.size(), BufferBarriers.data(),
+			ImageBarriers.size(), ImageBarriers.data()
+		);
 
+		VoxelRadianceImageLayout = EImageLayout::General;
+	}
+	
 	CmdList.BeginRenderPass(DebugRP);
 
 	auto& GlobalData = Scene.ECS.GetSingletonComponent<GlobalRenderData>();

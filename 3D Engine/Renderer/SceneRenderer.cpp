@@ -20,6 +20,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 void SceneRenderer::Render(SceneProxy& Scene)
 {
+	RenderSettings& Settings = ECS.GetSingletonComponent<RenderSettings>();
 	GlobalRenderData& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 	VCTLightingCache& VCTLightingCache = GlobalData.VCTLightingCache;
 
@@ -29,14 +30,21 @@ void SceneRenderer::Render(SceneProxy& Scene)
 
 	RenderShadowDepths(Scene, CmdList);
 
-	VCTLightingCache.Render(Scene, CmdList);
-
-	if (ECS.GetSingletonComponent<RenderSettings>().DrawVoxels && VCTLightingCache.IsDebuggingEnabled())
+	if (Settings.bVoxelize)
+	{
+		VCTLightingCache.Render(Scene, CmdList);
+		
+		Settings.bVoxelize = false;
+	}
+	
+	if (Settings.bDrawVoxels && VCTLightingCache.IsDebuggingEnabled())
 	{
 		VCTLightingCache.RenderVisualization(Scene, CmdList);
 	}
 	else
 	{
+		VCTLightingCache.PreLightingPass(CmdList);
+
 		RenderLightingPass(Scene, CmdList);
 	}
 	

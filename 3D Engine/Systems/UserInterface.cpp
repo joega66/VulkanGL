@@ -151,7 +151,8 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 
 	auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
 
-	ImGui::Checkbox("DrawVoxels", &RenderSettings.DrawVoxels);
+	ImGui::Checkbox("Voxelize", &RenderSettings.bVoxelize);
+	ImGui::Checkbox("Draw Voxels", &RenderSettings.bDrawVoxels);
 
 	ImGui::End();
 }
