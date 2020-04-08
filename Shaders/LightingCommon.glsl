@@ -139,11 +139,10 @@ vec3 DirectLighting(vec3 V, LightParams Light, SurfaceData Surface, MaterialData
 	return Lo;
 }
 
-vec4 Shade(SurfaceData Surface, MaterialData Material)
+vec4 Shade(vec3 V, SurfaceData Surface, MaterialData Material)
 {
 	vec3 Lo = vec3(0.0);
-	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
-
+	
 	// Directional lights
 	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
 	{

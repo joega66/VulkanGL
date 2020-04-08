@@ -17,6 +17,7 @@ public:
 	{
 		uint32 BaseColorIndex;
 		uint32 MetallicRoughnessIndex;
+		uint32 NormalIndex;
 		float Metallic;
 		float Roughness;
 	};
@@ -28,6 +29,7 @@ public:
 		EMaterialMode MaterialMode,
 		const drm::Image* BaseColor,
 		const drm::Image* MetallicRoughness,
+		const drm::Image* Normal,
 		float Metallic,
 		float Roughness
 	);
