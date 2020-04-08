@@ -15,11 +15,13 @@ class Material
 public:
 	struct PushConstants
 	{
-		uint32 BaseColorIndex;
-		uint32 MetallicRoughnessIndex;
-		uint32 NormalIndex;
+		uint32 BaseColor;
+		uint32 MetallicRoughness;
+		uint32 Normal;
+		uint32 Emissive;
 		float Metallic;
 		float Roughness;
+		glm::vec3 EmissiveFactor;
 	};
 
 	Material() = default;
@@ -30,8 +32,10 @@ public:
 		const drm::Image* BaseColor,
 		const drm::Image* MetallicRoughness,
 		const drm::Image* Normal,
+		const drm::Image* Emissive,
 		float Metallic,
-		float Roughness
+		float Roughness,
+		const glm::vec3& EmissiveFactor
 	);
 
 	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };

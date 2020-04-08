@@ -5,7 +5,7 @@
 
 void TransformGizmoSystem::Start(Engine& Engine)
 {
-	auto& ECS = Engine.ECS;
+	/*auto& ECS = Engine.ECS;
 
 	State = std::bind(&TransformGizmoSystem::Null, this, std::placeholders::_1);
 
@@ -40,7 +40,7 @@ void TransformGizmoSystem::Start(Engine& Engine)
 
 	ECS.AddComponent(TranslateAxis.X, StaticMeshComponent(TransformGizmo, MaterialX));
 	ECS.AddComponent(TranslateAxis.Y, StaticMeshComponent(TransformGizmo, MaterialY));
-	ECS.AddComponent(TranslateAxis.Z, StaticMeshComponent(TransformGizmo, MaterialZ));
+	ECS.AddComponent(TranslateAxis.Z, StaticMeshComponent(TransformGizmo, MaterialZ));*/
 }
 
 void TransformGizmoSystem::Update(Engine& Engine)

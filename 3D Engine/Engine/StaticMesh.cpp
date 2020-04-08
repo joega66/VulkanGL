@@ -168,6 +168,12 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 		const drm::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
 		const drm::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
 		const drm::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
+		const drm::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
+		const glm::vec3 EmissiveFactor(
+			static_cast<float>(GLTFMaterial.emissiveFactor[0]),
+			static_cast<float>(GLTFMaterial.emissiveFactor[1]),
+			static_cast<float>(GLTFMaterial.emissiveFactor[2])
+		);
 
 		if (!BaseColor)
 		{
@@ -183,8 +189,10 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 				BaseColor,
 				MetallicRoughness,
 				Normal,
+				Emissive,
 				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor),
-				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor)
+				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor),
+				EmissiveFactor
 			)
 		);
 	}

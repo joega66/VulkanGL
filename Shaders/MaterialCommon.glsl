@@ -6,27 +6,30 @@
 
 layout(push_constant) uniform MaterialConstants
 {
-	uint BaseColorIndex;
-	uint MetallicRoughnessIndex;
-	uint NormalIndex;
+	uint BaseColor;
+	uint MetallicRoughness;
+	uint Normal;
+	uint Emissive;
 	float Metallic;
 	float Roughness;
+	vec3 EmissiveFactor;
 } _Material;
 
 layout(constant_id = 0) const bool HasMetallicRoughnessTexture = false;
 layout(constant_id = 1) const bool IsMasked = false;
 layout(constant_id = 2) const bool HasNormalTexture = false;
+layout(constant_id = 3) const bool HasEmissiveTexture = false;
 
 MaterialData Material_Get(SurfaceData Surface)
 {
-	vec4 BaseColor = texture(SceneTextures[nonuniformEXT(_Material.BaseColorIndex)], Surface.UV).rgba;
+	vec4 BaseColor = texture(SceneTextures[nonuniformEXT(_Material.BaseColor)], Surface.UV).rgba;
 	
 	MaterialData Material;
 	Material.BaseColor = BaseColor.rgb;
 
 	if (HasMetallicRoughnessTexture)
 	{
-		vec2 MetallicRoughness = texture(SceneTextures[nonuniformEXT(_Material.MetallicRoughnessIndex)], Surface.UV).gb;
+		vec2 MetallicRoughness = texture(SceneTextures[nonuniformEXT(_Material.MetallicRoughness)], Surface.UV).gb;
 		Material.Metallic = MetallicRoughness.x;
 		Material.Roughness = MetallicRoughness.y;
 	}
@@ -54,7 +57,7 @@ MaterialData Material_Get(SurfaceData Surface)
 
 void Material_DiscardMaskedPixel(SurfaceData Surface)
 {
-	float Alpha = texture(SceneTextures[nonuniformEXT(_Material.BaseColorIndex)], Surface.UV).a;
+	float Alpha = texture(SceneTextures[nonuniformEXT(_Material.BaseColor)], Surface.UV).a;
 	if (Alpha <= 0)
 	{
 		discard;
@@ -82,8 +85,18 @@ void Material_NormalMapping(inout SurfaceData Surface, vec3 V)
 {
 	if (HasNormalTexture)
 	{
-		const vec3 MapNormal = texture(SceneTextures[nonuniformEXT(_Material.NormalIndex)], Surface.UV).xyz * 2.0 - 1.0;
+		const vec3 MapNormal = texture(SceneTextures[nonuniformEXT(_Material.Normal)], Surface.UV).xyz * 2.0 - 1.0;
 		Surface.WorldNormal = normalize(CotangentFrame(Surface.WorldNormal, V, Surface.UV) * MapNormal);
+	}
+}
+
+void Material_Emissive(SurfaceData Surface, inout vec3 Color)
+{
+	if (HasEmissiveTexture)
+	{
+		vec3 EmissiveColor = texture(SceneTextures[nonuniformEXT(_Material.Emissive)], Surface.UV).rgb;
+		EmissiveColor *= _Material.EmissiveFactor;
+		Color += EmissiveColor;
 	}
 }
 

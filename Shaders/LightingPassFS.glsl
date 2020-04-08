@@ -25,5 +25,8 @@ void main()
 	Material_NormalMapping(Surface, V);
 
 	OutColor = Shade(V, Surface, Material);
+
+	Material_Emissive(Surface, OutColor.xyz);
+
 	OutColor.xyz = ApplyGammaCorrection(OutColor.xyz);
 }
