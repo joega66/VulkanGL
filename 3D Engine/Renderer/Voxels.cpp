@@ -111,9 +111,9 @@ public:
 	}
 };
 
-void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 {
-	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
+	auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
 
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
@@ -121,29 +121,29 @@ void SceneProxy::AddToVoxelsPass(DRMDevice& Device, DRMShaderMap& ShaderMap, con
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = VCTLightingCache.GetRenderPass();
-	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<VoxelsVS<MeshType>>();
-	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<VoxelsGS<MeshType>>();
-	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<VoxelsFS<MeshType>>();
+	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<VoxelsVS<MeshType>>();
+	PSODesc.ShaderStages.Geometry = Engine.ShaderMap.FindShader<VoxelsGS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<VoxelsFS<MeshType>>();
 	PSODesc.DepthStencilState.DepthTestEnable = false;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 	PSODesc.Viewport.Width = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.Viewport.Height = VCTLightingCache.GetVoxelGridSize();
 	PSODesc.Layouts = {
-		GlobalData.CameraDescriptorSet.GetLayout(),
+		CameraDescriptorSet.GetLayout(),
 		MeshProxy.GetSurfaceSet().GetLayout(),
-		Device.GetSampledImages().GetLayout(),
+		Engine.Device.GetSampledImages().GetLayout(),
 		VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
-		GlobalData.CameraDescriptorSet,
+		CameraDescriptorSet,
 		MeshProxy.GetSurfaceSet(),
-		Device.GetSampledImages().GetResources(),
+		Engine.Device.GetSampledImages().GetResources(),
 		VCTLightingCache.GetDescriptorSet()
 	};
 
-	VoxelsPass.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
+	VoxelsPass.push_back(MeshDrawCommand(Engine.Device, MeshProxy, PSODesc, DescriptorSets));
 }
 
 class DrawVoxelsVS : public drm::Shader
@@ -318,7 +318,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	DownsampleVolumeUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(Scale), &Scale);
 }
 
-void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
+void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
 {
 	glm::mat4 OrthoProj = glm::ortho(
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
@@ -340,9 +340,9 @@ void VCTLightingCache::Render(SceneProxy& Scene, drm::CommandList& CmdList)
 
 	Platform::Memcpy(VoxelIndirectBuffer.GetData(), &DrawIndirectCommand, sizeof(DrawIndirectCommand));
 
-	RenderVoxels(Scene, CmdList);
+	RenderVoxels(Camera, CmdList);
 
-	ComputeLightInjection(Scene, CmdList);
+	ComputeLightInjection(ECS, Camera, CmdList);
 
 	if (VoxelRadiance.GetMipLevels() > 1)
 	{
@@ -390,7 +390,7 @@ void VCTLightingCache::PreLightingPass(drm::CommandList& CmdList)
 	}
 }
 
-void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList)
+void VCTLightingCache::RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdList)
 {
 	ImageMemoryBarrier ImageBarrier{
 		VoxelRadiance,
@@ -416,16 +416,13 @@ void VCTLightingCache::RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList
 
 	CmdList.BeginRenderPass(VoxelRP);
 	
-	MeshDrawCommand::Draw(CmdList, Scene.VoxelsPass);
+	MeshDrawCommand::Draw(CmdList, Camera.VoxelsPass);
 
 	CmdList.EndRenderPass();
 }
 
-void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::CommandList& CmdList)
+void VCTLightingCache::ComputeLightInjection(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
 {
-	auto& ECS = SceneProxy.ECS;
-	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
-
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
 		const auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
@@ -433,13 +430,13 @@ void VCTLightingCache::ComputeLightInjection(SceneProxy& SceneProxy, drm::Comman
 
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
-		ComputeDesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), ShadowProxy.GetDescriptorSet().GetLayout() };
+		ComputeDesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), ShadowProxy.GetDescriptorSet().GetLayout() };
 
 		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet, ShadowProxy.GetDescriptorSet() };
+		const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, VoxelDescriptorSet, ShadowProxy.GetDescriptorSet() };
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 		
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);
@@ -477,7 +474,7 @@ void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, co
 	CmdList.Dispatch(GroupCounts.x, GroupCounts.y, GroupCounts.z);
 }
 
-void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList)
+void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList)
 {
 	if (VoxelRadianceImageLayout != EImageLayout::General)
 	{
@@ -506,19 +503,17 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 	
 	CmdList.BeginRenderPass(DebugRP);
 
-	auto& GlobalData = Scene.ECS.GetSingletonComponent<GlobalRenderData>();
-
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = DebugRP;
-	PSODesc.Viewport.Width = GlobalData.SceneColor.GetWidth();
-	PSODesc.Viewport.Height = GlobalData.SceneColor.GetHeight();
+	PSODesc.Viewport.Width = Camera.SceneColor.GetWidth();
+	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;
 	PSODesc.DepthStencilState.DepthWriteEnable = true;
 	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
 	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
-	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout() };
+	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout() };
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
 	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
@@ -532,10 +527,12 @@ void VCTLightingCache::RenderVisualization(SceneProxy& Scene, drm::CommandList& 
 
 	CmdList.BindPipeline(Pipeline);
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, VoxelDescriptorSet };
+	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, VoxelDescriptorSet };
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
+
+	CmdList.EndRenderPass();
 }
 
 void VCTLightingCache::CreateDebugRenderPass(const drm::Image& SceneColor, const drm::Image& SceneDepth)
@@ -547,7 +544,7 @@ void VCTLightingCache::CreateDebugRenderPass(const drm::Image& SceneColor, const
 		EStoreAction::Store,
 		ClearColorValue{},
 		EImageLayout::Undefined,
-		EImageLayout::TransferSrcOptimal));
+		EImageLayout::ColorAttachmentOptimal));
 	RPDesc.DepthAttachment = drm::AttachmentView(
 		&SceneDepth,
 		ELoadAction::Clear,

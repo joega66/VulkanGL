@@ -6,6 +6,7 @@
 #include <Components/RenderSettings.h>
 #include <Systems/SceneSystem.h>
 #include <Renderer/GlobalRenderData.h>
+#include <Renderer/CameraProxy.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -61,42 +62,7 @@ void UserInterface::Start(Engine& Engine)
 
 	ImGui::StyleColorsDark();
 
-	Engine.ECS.AddSingletonComponent<ImGuiRenderData>(Engine.Device);
-
-	Engine._Screen.ScreenResizeEvent([&Engine, &ImGui] (int32 Width, int32 Height)
-	{
-		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
-
-		auto& RenderData = Engine.ECS.GetSingletonComponent<ImGuiRenderData>();
-		auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
-
-		PipelineStateDesc PSODesc = {};
-		PSODesc.RenderPass = GlobalData.LightingRP;
-		PSODesc.Viewport.Width = Width;
-		PSODesc.Viewport.Height = Height;
-		PSODesc.DepthStencilState.DepthTestEnable = true;
-		PSODesc.DepthStencilState.DepthWriteEnable = false;
-		PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-		PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<UserInterfaceVS>();
-		PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
-		PSODesc.ColorBlendAttachmentStates.resize(1, {});
-		PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
-		PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
-		PSODesc.ColorBlendAttachmentStates[0].DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-		PSODesc.ColorBlendAttachmentStates[0].ColorBlendOp = EBlendOp::ADD;
-		PSODesc.ColorBlendAttachmentStates[0].SrcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-		PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
-		PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
-		PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
-		PSODesc.VertexAttributes = {
-			{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
-			{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
-			{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
-		PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-		PSODesc.Layouts = { RenderData.DescriptorSet.GetLayout() };
-		
-		RenderData.Pipeline = Engine.Device.CreatePipeline(PSODesc);
-	});
+	Engine.ECS.AddSingletonComponent<ImGuiRenderData>(Engine);
 }
 
 void UserInterface::Update(Engine& Engine)
@@ -157,8 +123,9 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 	ImGui::End();
 }
 
-ImGuiRenderData::ImGuiRenderData(DRMDevice& Device)
+ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 {
+	DRMDevice& Device = Engine.Device;
 	ImGuiIO& Imgui = ImGui::GetIO();
 
 	unsigned char* Pixels;
@@ -196,14 +163,50 @@ ImGuiRenderData::ImGuiRenderData(DRMDevice& Device)
 	drm::UploadImageData(Device, Pixels, FontImage);
 
 	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)FontImage.GetNativeHandle();
+
+	PSODesc.DepthStencilState.DepthTestEnable = false;
+	PSODesc.DepthStencilState.DepthWriteEnable = false;
+	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
+	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<UserInterfaceVS>();
+	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
+	PSODesc.ColorBlendAttachmentStates.resize(1, {});
+	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
+	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
+	PSODesc.ColorBlendAttachmentStates[0].DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	PSODesc.ColorBlendAttachmentStates[0].ColorBlendOp = EBlendOp::ADD;
+	PSODesc.ColorBlendAttachmentStates[0].SrcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
+	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
+	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
+	PSODesc.VertexAttributes = {
+		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
+		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
+		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
+	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
+	PSODesc.Layouts = { DescriptorSet.GetLayout() };
+
+	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
+	{
+		ImGuiIO& ImGui = ImGui::GetIO();
+		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
+
+		PSODesc.Viewport.Width = Width;
+		PSODesc.Viewport.Height = Height;
+	});
 }
 
-void ImGuiRenderData::Render(drm::CommandList& CmdList)
+void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, CameraProxy& Camera)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 
 	if (DrawData->CmdListsCount > 0)
 	{
+		PSODesc.RenderPass = Camera.SceneRP;
+
+		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
+
+		CmdList.BeginRenderPass(Camera.SceneRP);
+
 		CmdList.BindPipeline(Pipeline);
 
 		CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetHandle());
@@ -244,6 +247,8 @@ void ImGuiRenderData::Render(drm::CommandList& CmdList)
 			IndexOffset += DrawList->IdxBuffer.Size;
 			VertexOffset += DrawList->VtxBuffer.Size;
 		}
+
+		CmdList.EndRenderPass();
 	}
 }
 

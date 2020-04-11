@@ -2,7 +2,7 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
 #include "MeshCommon.glsl"
-#include "SceneCommon.glsl"
+#include "CameraCommon.glsl"
 #define VOXEL_SET 3
 #include "VoxelsCommon.glsl"
 

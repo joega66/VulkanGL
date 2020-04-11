@@ -1,7 +1,8 @@
 #pragma once
 #include <DRM.h>
 
-class SceneProxy;
+class CameraProxy;
+class EntityManager;
 
 class VoxelShader
 {
@@ -21,13 +22,13 @@ public:
 	VCTLightingCache(class Engine& Engine);
 
 	/** Voxelize the scene. */
-	void Render(SceneProxy& Scene, drm::CommandList& CmdList);
+	void Render(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList);
 	
 	/** Called just before the lighting pass. */
 	void PreLightingPass(drm::CommandList& CmdList);
 
 	/** Visualize the voxels. */
-	void RenderVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
+	void RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList);
 
 	inline uint32 GetVoxelGridSize() const { return VoxelGridSize; }
 	inline const drm::Image& GetVoxelRadiance() const { return VoxelRadiance; }
@@ -93,10 +94,8 @@ private:
 
 	std::shared_ptr<drm::Pipeline> DownsampleVolumePipeline;
 
-	void RenderVoxels(SceneProxy& Scene, drm::CommandList& CmdList);
-
-	void ComputeLightInjection(SceneProxy& Scene, drm::CommandList& CmdList);
-
+	void RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdList);
+	void ComputeLightInjection(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputeVolumetricDownsample(drm::CommandList& CmdList, const drm::ImageView& SrcVolume, const drm::ImageView& DstVolume, const glm::uvec3& DstVolumeDimensions);
 
 	void CreateVoxelRP();

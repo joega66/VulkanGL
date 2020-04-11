@@ -1,5 +1,5 @@
 #include "Common.glsl"
-#include "SceneCommon.glsl"
+#include "CameraCommon.glsl"
 #define VOXEL_SET 1
 #include "VoxelsCommon.glsl"
 

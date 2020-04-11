@@ -1,100 +1,108 @@
-#include "MaterialShader.h"
-#include "SceneProxy.h"
+#include "CameraProxy.h"
 #include "SceneRenderer.h"
 #include "GlobalRenderData.h"
 #include <ECS/EntityManager.h>
+#include <Components/Light.h>
+#include <Components/Transform.h>
 
-template<EMeshType MeshType>
-class LightingPassVS : public MeshShader<MeshType>
+/** Must match LightingPassCS.glsl */
+struct LightParams
 {
-	using Base = MeshShader<MeshType>;
+	glm::vec4 L;
+	glm::vec4 Radiance;
+};
+
+class LightingPassCS : public drm::Shader
+{
 public:
-	LightingPassVS(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
+	static constexpr uint32 DirectionalLight = 0;
+	static constexpr uint32 PointLight = 1;
+
+	LightingPassCS(const ShaderCompilationInfo& CompilationInfo)
+		: drm::Shader(CompilationInfo)
 	{
 	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Base::SetEnvironmentVariables(Worker);
 		VoxelShader::SetEnvironmentVariables(Worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/LightingPassVS.glsl", "main", EShaderStage::Vertex };
+		static ShaderInfo BaseInfo = { "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute };
 		return BaseInfo;
 	}
 };
 
-template<EMeshType MeshType>
-class LightingPassFS : public MeshShader<MeshType>
+void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList)
 {
-	using Base = MeshShader<MeshType>;
-public:
-	LightingPassFS(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
+	for (auto Entity : ECS.GetEntities<DirectionalLight>())
 	{
+		const auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
+
+		LightParams Light;
+		Light.L = glm::vec4(glm::normalize(DirectionalLight.Direction), 0.0f);
+		Light.Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+
+		ComputeDeferredLight(Camera, CmdList, Light);
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	for (auto Entity : ECS.GetEntities<PointLight>())
 	{
-		Base::SetEnvironmentVariables(Worker);
-		VoxelShader::SetEnvironmentVariables(Worker);
+		const auto& PointLight = ECS.GetComponent<struct PointLight>(Entity);
+		const auto& LightTransform = ECS.GetComponent<Transform>(Entity);
+
+		LightParams Light;
+		Light.L = glm::vec4(LightTransform.GetPosition(), 1.0f);
+		Light.Radiance = glm::vec4(PointLight.Intensity * PointLight.Color, 1.0f);
+
+		ComputeDeferredLight(Camera, CmdList, Light);
 	}
 
-	static const ShaderInfo& GetShaderInfo()
+	const ImageMemoryBarrier ImageBarrier
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/LightingPassFS.glsl", "main", EShaderStage::Fragment };
-		return BaseInfo;
-	}
-};
+		Camera.SceneColor,
+		EAccess::ShaderWrite,
+		EAccess::TransferRead,
+		EImageLayout::General,
+		EImageLayout::ColorAttachmentOptimal
+	};
 
-void SceneProxy::AddToLightingPass(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::Transfer, 0, nullptr, 1, &ImageBarrier);
+}
+
+void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightParams& Light)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
-	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
-
-	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = GlobalData.LightingRP;
-	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<LightingPassVS<MeshType>>();
-	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<LightingPassFS<MeshType>>();
-	PSODesc.Viewport.Width = GlobalData.SceneDepth.GetWidth();
-	PSODesc.Viewport.Height = GlobalData.SceneDepth.GetHeight();
-	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Equal;
-	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.Layouts = 
+	ComputePipelineDesc ComputeDesc;
+	ComputeDesc.ComputeShader = ShaderMap.FindShader<LightingPassCS>();
+	ComputeDesc.SpecializationInfo.Add(0, Light.L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
+	ComputeDesc.Layouts =
 	{
-		GlobalData.CameraDescriptorSet.GetLayout(), 
-		MeshProxy.GetSurfaceSet().GetLayout(),
-		Device.GetSampledImages().GetLayout(),
-		GlobalData.SceneTexturesDescriptorSet.GetLayout(),
+		Camera.CameraDescriptorSet.GetLayout(),
 		GlobalData.VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
+	ComputeDesc.PushConstantRange.Size = sizeof(Light);
+	ComputeDesc.PushConstantRange.StageFlags = EShaderStage::Compute;
 
-	const EStaticDrawListType::EStaticDrawListType StaticDrawListType =
-		MeshProxy.GetMaterial()->IsMasked() ?
-		EStaticDrawListType::Masked : EStaticDrawListType::Opaque;
+	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
+
+	CmdList.BindPipeline(Pipeline);
 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
-		GlobalData.CameraDescriptorSet,
-		MeshProxy.GetSurfaceSet(),
-		Device.GetSampledImages().GetResources(),
-		GlobalData.SceneTexturesDescriptorSet,
+		Camera.CameraDescriptorSet,
 		GlobalData.VCTLightingCache.GetDescriptorSet()
 	};
 
-	LightingPass[StaticDrawListType].push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
-}
+	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
-void SceneRenderer::RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList)
-{
-	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
+	CmdList.PushConstants(Pipeline, &Light);
 
-	CmdList.BeginRenderPass(GlobalData.LightingRP);
+	const uint32 GroupCountX = DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u);
+	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);
 
-	MeshDrawCommand::Draw(CmdList, Scene.LightingPass[EStaticDrawListType::Opaque]);
-	MeshDrawCommand::Draw(CmdList, Scene.LightingPass[EStaticDrawListType::Masked]);
+	CmdList.Dispatch(GroupCountX, GroupCountY, 1);
 }

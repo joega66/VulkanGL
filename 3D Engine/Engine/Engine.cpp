@@ -1,5 +1,5 @@
 #include <Renderer/SceneRenderer.h>
-#include <Renderer/SceneProxy.h>
+#include <Renderer/CameraProxy.h>
 #include <Renderer/GlobalRenderData.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/SceneSystem.h>
@@ -34,6 +34,11 @@ Engine::Engine(
 
 void Engine::Main()
 {
+	_Screen.ScreenResizeEvent([this] (int32 Width, int32 Height)
+	{
+		Surface.Resize(Device, Width, Height);
+	});
+
 	ECS.AddSingletonComponent<GlobalRenderData>(*this);
 
 	SystemsManager SystemsManager;
@@ -53,6 +58,8 @@ void Engine::Main()
 	SystemsManager.StartRenderSystems(*this);
 	SystemsManager.StartSystems(*this);
 
+	CameraProxy CameraProxy(*this);
+
 	while (!_Platform.WindowShouldClose())
 	{
 		_Platform.PollEvents();
@@ -60,16 +67,14 @@ void Engine::Main()
 		ECS.NotifyComponentEvents();
 
 		SystemsManager.UpdateSystems(*this);
-
 		SystemsManager.UpdateRenderSystems(*this);
 
-		SceneProxy SceneProxy(*this);
-		SceneRenderer SceneRenderer(*this);
+		CameraProxy.Update(*this);
 
-		SceneRenderer.Render(SceneProxy);
+		SceneRenderer SceneRenderer(*this);
+		SceneRenderer.Render(CameraProxy);
 
 		_Cursor.Update(_Platform);
-
 		_Input.Update(_Platform);
 	}
 }

@@ -3,6 +3,7 @@
 #include <DRM.h>
 
 class Engine;
+class CameraProxy;
 
 struct ImGuiRenderData
 {
@@ -15,11 +16,11 @@ struct ImGuiRenderData
 	drm::Buffer VertexBuffer;
 	drm::Buffer IndexBuffer;
 
-	std::shared_ptr<drm::Pipeline> Pipeline;
+	PipelineStateDesc PSODesc = {};
 
-	ImGuiRenderData(DRMDevice& Device);
+	ImGuiRenderData(Engine& Engine);
 
-	void Render(drm::CommandList& CmdList);
+	void Render(DRMDevice& Device, drm::CommandList& CmdList, CameraProxy& Camera);
 
 	void Update(DRMDevice& Device);
 };

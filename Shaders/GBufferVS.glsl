@@ -1,4 +1,4 @@
-#include "SceneCommon.glsl"
+#include "CameraCommon.glsl"
 #include "MeshCommon.glsl"
 
 void main()

@@ -149,9 +149,6 @@
     <ClInclude Include="Systems\EditorControllerSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\SceneProxy.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Scene.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -257,6 +254,9 @@
     <ClInclude Include="Vulkan\VulkanBindlessResources.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\CameraProxy.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -331,9 +331,6 @@
     <ClCompile Include="Systems\TransformGizmoSystem.cpp">
       <Filter>Source\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\SceneProxy.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Scene.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
@@ -353,9 +350,6 @@
       <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\MeshProxy.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\DepthPrepass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\ShadowDepthPass.cpp">
@@ -430,6 +424,12 @@
     <ClCompile Include="Vulkan\VulkanBindlessResources.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\GBufferPass.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\CameraProxy.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -439,15 +439,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\Common.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\LightingPassVS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\LightingPassFS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\DepthPassVS.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SkyboxVS.glsl">
@@ -460,9 +451,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\MaterialCommon.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\SceneCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="ECS\ComponentArray.inl">
@@ -492,9 +480,6 @@
     <None Include="..\Shaders\DrawVoxels.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\DepthPrepass.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\ShadowDepthVS.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -519,7 +504,19 @@
     <None Include="..\Shaders\SceneResources.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\CameraTexturesCommon.glsl">
+    <None Include="..\Shaders\GBufferFS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\GBufferVS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\LightingPassCS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SurfaceInterface.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\CameraCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

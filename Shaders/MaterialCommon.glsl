@@ -39,17 +39,6 @@ MaterialData Material_Get(SurfaceData Surface)
 		Material.Roughness = _Material.Roughness;
 	}
 
-	if (IsMasked)
-	{
-		Material.Alpha = BaseColor.a;
-	}
-	else
-	{
-		Material.Alpha = 1.0f;
-	}
-
-	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
-
 	return Material;
 }
 
@@ -57,10 +46,13 @@ MaterialData Material_Get(SurfaceData Surface)
 
 void Material_DiscardMaskedPixel(SurfaceData Surface)
 {
-	float Alpha = texture(SceneTextures[nonuniformEXT(_Material.BaseColor)], Surface.UV).a;
-	if (Alpha <= 0)
+	if (IsMasked)
 	{
-		discard;
+		float Alpha = texture(SceneTextures[nonuniformEXT(_Material.BaseColor)], Surface.UV).a;
+		if (Alpha <= 0)
+		{
+			discard;
+		}
 	}
 }
 

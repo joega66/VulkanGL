@@ -1,12 +1,6 @@
 #ifndef MESH_COMMON
 #define MESH_COMMON
-
-struct SurfaceData
-{
-	vec3 WorldPosition;
-	vec3 WorldNormal;
-	vec2 UV;
-};
+#include "SurfaceInterface.glsl"
 
 #ifdef STATIC_MESH
 #include "StaticMeshCommon.glsl"

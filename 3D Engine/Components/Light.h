@@ -1,11 +1,5 @@
 #pragma once
 
-enum class ELightType
-{
-	Point,
-	Directional,
-};
-
 enum class EShadowType
 {
 	None,
@@ -13,7 +7,7 @@ enum class EShadowType
 	Soft,
 };
 
-struct CLight
+struct Light
 {
 	EShadowType ShadowType = EShadowType::None;
 	glm::vec3 Color = glm::vec3(1.0f);
@@ -22,12 +16,12 @@ struct CLight
 	float DepthBiasSlopeFactor = 1.0f;
 };
 
-struct DirectionalLight : public CLight
+struct DirectionalLight : public Light
 {
 	glm::vec3 Direction;
 };
 
-struct CPointLight : public CLight
+struct PointLight : public Light
 {
 	float Range = 10.0f;
 };

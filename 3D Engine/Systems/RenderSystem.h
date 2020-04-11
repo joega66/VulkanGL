@@ -24,6 +24,5 @@ public:
 	virtual void Update(class Engine& Engine) override;
 
 	DescriptorSetLayout<StaticMeshDescriptors> StaticMeshLayout;
-
 	DescriptorSetLayout<ShadowDescriptors> ShadowLayout;
 };

@@ -41,7 +41,7 @@ public:
 	}
 };
 
-void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
+void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 {
 	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
 
@@ -49,17 +49,17 @@ void SceneRenderer::RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList)
 	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = GlobalData.LightingRP;
-	PSODesc.Viewport.Width = GlobalData.SceneColor.GetWidth();
-	PSODesc.Viewport.Height = GlobalData.SceneColor.GetHeight();
+	//PSODesc.RenderPass = GlobalData.LightingRP;
+	PSODesc.Viewport.Width = Camera.SceneColor.GetWidth();
+	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.Layouts = { GlobalData.CameraDescriptorSet.GetLayout(), GlobalData.SkyboxDescriptorSet.GetLayout() };
+	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), GlobalData.SkyboxDescriptorSet.GetLayout() };
 
 	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { GlobalData.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
+	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, GlobalData.SkyboxDescriptorSet };
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	const StaticMesh* Cube = Assets.GetStaticMesh("Cube");

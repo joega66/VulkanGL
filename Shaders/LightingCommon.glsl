@@ -2,39 +2,6 @@
 #define LIGHTING_COMMON
 
 const float PI = 3.14159265;
-const float AMBIENT = 0.01f;
-
-#ifdef CAMERA_TEXTURES_SET
-#include "CameraTexturesCommon.glsl"
-#endif
-
-#if defined(TRACE_SHADOW_CONE) || defined(TRACE_DIFFUSE_CONES)
-#include "VoxelsCommon.glsl"
-#endif
-
-#ifdef TRACE_SHADOW_CONE
-float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
-{
-	const float ConeAngle = 60.0;
-	const float Aperture = atan(radians(ConeAngle / 2.0));
-	const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
-	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
-
-	float Dist = VOXEL_SIZE;
-	float Visibility = 0.0;
-
-	while (Visibility < 1.0 && Dist < 1.0)
-	{
-		const float Diameter = 2.0 * Aperture * Dist;
-		const float MipLevel = log2(Diameter / VOXEL_SIZE);
-		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, MipLevel).a;
-		Visibility += (1.0 - Visibility) * VisibilitySample; // alpha = alpha + (1 - alpha)alpha2
-		Dist += Diameter;
-	}
-
-	return Visibility;
-}
-#endif
 
 #ifdef TRACE_DIFFUSE_CONES
 vec3 TraceDiffuseGI(vec3 WorldPosition, vec3 WorldNormal)
@@ -137,47 +104,6 @@ vec3 DirectLighting(vec3 V, LightParams Light, SurfaceData Surface, MaterialData
 	vec3 Lo = (Material.BaseColor / PI + Specular) * Light.Radiance * NdotL;
 
 	return Lo;
-}
-
-vec4 Shade(vec3 V, SurfaceData Surface, MaterialData Material)
-{
-	vec3 Lo = vec3(0.0);
-	
-	// Directional lights
-	for (int LightIndex = 0; LightIndex < NumDirectionalLights.x; LightIndex++)
-	{
-		LightParams Light;
-		Light.L = DirectionalLights[LightIndex].Direction;
-		Light.Radiance = DirectionalLights[LightIndex].Intensity * DirectionalLights[LightIndex].Color;
-
-		vec3 Radiance = DirectLighting(V, Light, Surface, Material);
-
-#ifdef TRACE_SHADOW_CONE
-		Lo += Radiance * TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
-#else
-		Lo += Radiance;
-#endif
-	}
-
-	// Point lights
-	for (int LightIndex = 0; LightIndex < NumPointLights.x; LightIndex++)
-	{
-		vec3 FragToLight = PointLights[LightIndex].Position - Surface.WorldPosition;
-		float Distance = length(FragToLight);
-		float Attenuation = 1.0 / (Distance * Distance);
-
-		LightParams Light;
-		Light.L = normalize(FragToLight);
-		Light.Radiance = PointLights[LightIndex].Intensity * PointLights[LightIndex].Color * Attenuation;
-
-		Lo += DirectLighting(V, Light, Surface, Material);
-	}
-
-#ifdef TRACE_DIFFUSE_CONES
-	//Lo += TraceDiffuseGI(Surface.WorldPosition, Surface.WorldNormal);
-#endif
-
-	return vec4(Lo, Material.Alpha);
 }
 
 #endif

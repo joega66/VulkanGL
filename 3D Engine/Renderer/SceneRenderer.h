@@ -1,7 +1,6 @@
 #pragma once
 #include <DRM.h>
-#include <Renderer/SceneProxy.h>
-#include <Components/StaticMeshComponent.h>
+#include "CameraProxy.h"
 
 /** The Scene Renderer renders camera views. */
 class SceneRenderer
@@ -9,18 +8,19 @@ class SceneRenderer
 public:
 	SceneRenderer(class Engine& Engine);
 
-	void Render(SceneProxy& Scene);
+	void Render(CameraProxy& Camera);
 
 private:
 	DRMDevice& Device;
 	DRMShaderMap& ShaderMap;
+	drm::Surface& Surface;
 	EntityManager& ECS;
 	AssetManager& Assets;
 
-	void RenderDepthPrepass(SceneProxy& Scene, drm::CommandList& CmdList);
-	void RenderShadowDepths(SceneProxy& Scene, drm::CommandList& CmdList);
-	void RenderLightingPass(SceneProxy& Scene, drm::CommandList& CmdList);
-	void RenderSkybox(SceneProxy& Scene, drm::CommandList& CmdList);
-	void RenderDepthVisualization(SceneProxy& Scene, drm::CommandList& CmdList);
-	void Present(drm::CommandList& CmdList);
+	void RenderGBufferPass(CameraProxy& Camera, drm::CommandList& CmdList);
+	void RenderShadowDepths(CameraProxy& Camera, drm::CommandList& CmdList);
+	void ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList);
+	void ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const struct LightParams& Light);
+	void RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList);
+	void Present(CameraProxy& Camera, drm::CommandList& CmdList);
 };

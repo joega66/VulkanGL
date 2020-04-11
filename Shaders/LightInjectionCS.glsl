@@ -1,8 +1,6 @@
-#include "SceneCommon.glsl"
+#include "CameraCommon.glsl"
 #define VOXEL_SET 1
 #include "VoxelsCommon.glsl"
-#include "MaterialInterface.glsl"
-#include "MeshCommon.glsl"
 #include "LightingCommon.glsl"
 
 #define LIGHT_SET 2
@@ -38,11 +36,12 @@ void main()
 	// 2. Load the material from the voxel grid.
 	vec4 BaseColor = imageLoad(VoxelBaseColor, VoxelGridCoord);
 
+	// @todo Metallic, Roughness
 	MaterialData Material;
 	Material.BaseColor = BaseColor.rgb;
-	Material.Alpha = BaseColor.a;
 	Material.Metallic = 0.0f;
 	Material.Roughness = 0.0f;
+	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
 
 	SurfaceData Surface;
 	Surface.WorldPosition = WorldPosition.xyz;
