@@ -66,6 +66,9 @@ namespace tinygltf { class Model; struct Mesh; struct Primitive; }
 class StaticMesh
 {
 public:
+	/** Name of the static mesh asset. */
+	const std::string Name;
+
 	/** Path of the static mesh asset. */
 	const std::filesystem::path Path;
 
@@ -79,7 +82,7 @@ public:
 	StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
-	StaticMesh(StaticMesh& StaticMesh, uint32 SubmeshIndex);
+	StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uint32 SubmeshIndex);
 
 	inline const BoundingBox& GetBounds() const { return Bounds; }
 

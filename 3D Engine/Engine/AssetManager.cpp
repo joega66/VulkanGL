@@ -29,9 +29,9 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesyste
 		OutStaticMeshes.reserve(StaticMesh->Submeshes.size());
 		for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
 		{
-			const std::string MadeUpSubmeshName = AssetName + std::to_string(SubmeshIndex);
-			StaticMeshes[MadeUpSubmeshName] = std::make_unique<class StaticMesh>(*StaticMesh, SubmeshIndex);
-			OutStaticMeshes.push_back(StaticMeshes[MadeUpSubmeshName].get());
+			const std::string MadeUpAssetName = AssetName + std::to_string(SubmeshIndex);
+			StaticMeshes[MadeUpAssetName] = std::make_unique<class StaticMesh>(MadeUpAssetName, *StaticMesh, SubmeshIndex);
+			OutStaticMeshes.push_back(StaticMeshes[MadeUpAssetName].get());
 		}
 		return OutStaticMeshes;
 	}

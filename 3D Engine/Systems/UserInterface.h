@@ -31,13 +31,11 @@ public:
 	~UserInterface();
 	
 	virtual void Start(Engine& Engine) override;
-
 	virtual void Update(Engine& Engine) override;
 
 private:
 	void ShowUI(Engine& Engine);
-
 	void ShowMainMenu(Engine& Engine);
-
 	void ShowRenderSettings(Engine& Engine);
+	void ShowEntities(Engine& Engine);
 };

@@ -18,7 +18,7 @@ void SceneSystem::Start(Engine& Engine)
 	const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
 	const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
-	auto Light = ECS.CreateEntity();
+	auto Light = ECS.CreateEntity("DirectionalLight");
 	auto& DirectionalLight = ECS.AddComponent(Light, struct DirectionalLight());
 	DirectionalLight.Intensity = 10.0f;
 	DirectionalLight.Direction = glm::vec3(X, Y, Z);
@@ -30,15 +30,6 @@ void SceneSystem::Start(Engine& Engine)
 void SceneSystem::Update(Engine& Engine)
 {
 	auto& ECS = Engine.ECS;
-
-	for (auto& Entity : ECS.GetEntities<DirectionalLight>())
-	{
-		auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
-		const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
-		const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
-		const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
-		DirectionalLight.Direction = glm::vec3(X, Y, Z);
-	}
 
 	for (auto& Entity : ECS.GetEntities<struct SceneLoadRequest>())
 	{
@@ -64,7 +55,7 @@ void SceneSystem::HandleSceneLoadRequest(Engine& Engine, const SceneLoadRequest&
 	
 	for (auto StaticMesh : Scene)
 	{
-		auto Entity = ECS.CreateEntity();
+		auto Entity = ECS.CreateEntity(StaticMesh->Name.c_str());
 		ECS.AddComponent(Entity, StaticMeshComponent(StaticMesh, StaticMesh->Materials.front()));
 
 		auto& Transform = ECS.GetComponent<class Transform>(Entity);

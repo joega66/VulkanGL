@@ -29,20 +29,10 @@ public:
 
 	void RemoveChild(Entity Child);
 
-	inline const glm::vec3& GetPosition() const
-	{
-		return Position;
-	}
-
-	inline const glm::vec3& GetRotation() const
-	{
-		return Rotation;
-	}
-
-	inline const glm::vec3& GetScale() const
-	{
-		return ScaleBy;
-	}
+	inline const glm::vec3& GetPosition() const { return Position; }
+	inline const glm::vec3& GetRotation() const { return Rotation; }
+	inline const glm::vec3& GetScale() const { return ScaleBy; }
+	inline float GetAngle() const { return Angle; }
 
 	void Clean(EntityManager& ECS);
 

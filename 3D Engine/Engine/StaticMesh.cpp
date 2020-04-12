@@ -7,7 +7,8 @@
 #include <tiny_gltf.h>
 
 StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path)
-	: Path(Path)
+	: Name(AssetName)
+	, Path(Path)
 {
 	if (Path.extension() == ".gltf" || Path.extension() == ".glb")
 	{
@@ -25,8 +26,9 @@ StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDe
 	});
 }
 
-StaticMesh::StaticMesh(StaticMesh& StaticMesh, uint32 SubmeshIndex)
-	: Path(StaticMesh.Path)
+StaticMesh::StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uint32 SubmeshIndex)
+	: Name(AssetName)
+	, Path(StaticMesh.Path)
 	, Materials{ StaticMesh.Materials[SubmeshIndex] }
 	, SubmeshBounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
 	, SubmeshNames{ StaticMesh.SubmeshNames[SubmeshIndex] }

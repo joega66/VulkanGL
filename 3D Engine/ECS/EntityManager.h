@@ -1,6 +1,21 @@
 #pragma once
 #include "Entity.h"
 
+class EntityIterator
+{
+	friend class EntityManager;
+	EntityIterator(std::vector<Entity>& Entities, const std::vector<bool>& EntityStatus);
+
+public:
+	Entity& Next();
+	bool End();
+
+private:
+	uint32 CurrIndex = 0;
+	std::vector<Entity>& Entities;
+	const std::vector<bool>& EntityStatus;
+};
+
 /** The EntityManager stores entities and performs component operations (Add, Get, Has, Remove) */
 class EntityManager
 {
@@ -17,7 +32,7 @@ public:
 	Entity CreatePrefab(const std::string& Name);
 
 	/** Create an empty entity. */
-	Entity CreateEntity();
+	Entity CreateEntity(const std::string& Name = "");
 
 	/** Destroy the entity and all associated components. */
 	void Destroy(Entity& Entity);
@@ -114,11 +129,17 @@ public:
 		Array->NewComponentCallback(ComponentCallback);
 	}
 
+	/** Create an entity iterator. */
+	EntityIterator Iter();
+
 	/** Whether the entity is a valid one. */
 	inline bool IsValid(Entity Entity) { return Entity.GetEntityID() != Entity::InvalidID && EntityStatus[Entity.GetEntityID()]; }
 
 	/** Call component events. */
 	void NotifyComponentEvents();
+
+	/** Get the name of an entity. */
+	inline const std::string& GetName(Entity& Entity) { return EntityNames[Entity.GetEntityID()]; }
 
 private:
 	/** Map of prefab names to prefab entities. */
@@ -129,6 +150,9 @@ private:
 
 	/** Entity pool. */
 	std::vector<Entity> Entities;
+
+	/** Map of entity id to entity name. */
+	std::unordered_map<uint32, std::string> EntityNames;
 
 	/** Whether the entity is dead or alive. */
 	std::vector<bool> EntityStatus;

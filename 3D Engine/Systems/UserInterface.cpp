@@ -1,9 +1,11 @@
 #include "UserInterface.h"
-#include <Engine/Engine.h>
-#include <Engine/Screen.h>
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
+#include <Engine/Engine.h>
+#include <Engine/Screen.h>
 #include <Components/RenderSettings.h>
+#include <Components/Transform.h>
+#include <Components/Light.h>
 #include <Systems/SceneSystem.h>
 #include <Renderer/GlobalRenderData.h>
 #include <Renderer/CameraProxy.h>
@@ -57,8 +59,11 @@ void UserInterface::Start(Engine& Engine)
 
 	ImGui_ImplGlfw_InitForVulkan(Engine._Platform.Window, true);
 
-	ImGuiIO& ImGui = ImGui::GetIO();
-	ImGui.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+	ImGuiIO& IO = ImGui::GetIO();
+	IO.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+
+	ImGuiStyle& Style = ImGui::GetStyle();
+	Style.FrameBorderSize = 1.0f;
 
 	ImGui::StyleColorsDark();
 
@@ -83,6 +88,7 @@ void UserInterface::ShowUI(Engine& Engine)
 {
 	ShowRenderSettings(Engine);
 	ShowMainMenu(Engine);
+	ShowEntities(Engine);
 }
 
 void UserInterface::ShowMainMenu(Engine& Engine)
@@ -119,6 +125,101 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 
 	ImGui::Checkbox("Voxelize", &RenderSettings.bVoxelize);
 	ImGui::Checkbox("Draw Voxels", &RenderSettings.bDrawVoxels);
+
+	ImGui::End();
+}
+
+void UserInterface::ShowEntities(Engine& Engine)
+{
+	if (!ImGui::Begin("Entities"))
+	{
+		ImGui::End();
+		return;
+	}
+
+	EntityManager& ECS = Engine.ECS;
+	EntityIterator EntityIter = ECS.Iter();
+	static Entity Selected;
+	static ImGuiTextFilter Filter;
+
+	Filter.Draw("");
+
+	while (!EntityIter.End())
+	{
+		auto& Entity = EntityIter.Next();
+		const auto& Name = ECS.GetName(Entity);
+
+		if (Filter.PassFilter(Name.c_str()) && ImGui::Selectable(Name.c_str(), Selected == Entity))
+		{
+			Selected = Entity;
+		}
+	}
+	
+	ImGui::End();
+
+	if (!ImGui::Begin("Components") || !ECS.IsValid(Selected))
+	{
+		ImGui::End();
+		return;
+	}
+
+	const auto& Name = ECS.GetName(Selected);
+	ImGui::Text(Name.c_str());
+	
+	if (ECS.HasComponent<Transform>(Selected))
+	{
+		ImGui::Text("Transform");
+
+		auto& Transform = ECS.GetComponent<class Transform>(Selected);
+		glm::vec3 Position = Transform.GetPosition();
+		glm::vec3 Rotation = Transform.GetRotation();
+		glm::vec3 Scale = Transform.GetScale();
+		float Angle = Transform.GetAngle();
+
+		ImGui::DragFloat3("Position", &Position[0], 0.05f);
+		ImGui::DragFloat3("Rotation", &Rotation[0], 0.05f);
+		ImGui::DragFloat("Angle", &Angle, 1.0f, -180.0, 180.0f);
+		ImGui::InputFloat3("Scale", &Scale[0]);
+
+		if (Position != Transform.GetPosition() ||
+			Rotation != Transform.GetRotation() ||
+			Scale != Transform.GetScale() || 
+			Angle != Transform.GetAngle())
+		{
+			Transform.Translate(ECS, Position);
+			Transform.Rotate(ECS, Rotation, Angle);
+			Transform.Scale(ECS, Scale);
+
+			auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
+			Settings.bVoxelize = true;
+		}
+	}
+
+	if (ECS.HasComponent<DirectionalLight>(Selected))
+	{
+		ImGui::Text("Directional Light");
+
+		auto& Light = ECS.GetComponent<DirectionalLight>(Selected);
+		glm::vec3 Direction = Light.Direction;
+		glm::vec3 Color = Light.Color;
+		float Intensity = Light.Intensity;
+
+		ImGui::DragFloat3("Direction", &Direction[0]);
+		ImGui::ColorEdit3("Color", &Color[0]);
+		ImGui::DragFloat("Intensity", &Intensity);
+
+		if (Direction != Light.Direction ||
+			Color != Light.Color ||
+			Intensity != Light.Intensity)
+		{
+			Light.Direction = Direction;
+			Light.Color = Color;
+			Light.Intensity = Intensity;
+
+			auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
+			Settings.bVoxelize = true;
+		}
+	}
 
 	ImGui::End();
 }
