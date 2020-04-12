@@ -90,7 +90,7 @@ void main()
 
 	Lo *= TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
 
-	//ApplyGammaCorrection(Lo);
+	const vec3 LoTotal = Lo + imageLoad(SceneColor, ScreenCoords).rgb;
 
-	imageStore(SceneColor, ScreenCoords, vec4(Lo, 1.0));
+	imageStore(SceneColor, ScreenCoords, vec4(LoTotal, 1.0));
 }

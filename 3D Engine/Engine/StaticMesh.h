@@ -14,7 +14,6 @@ class Submesh
 		Positions,
 		TextureCoordinates,
 		Normals,
-		Tangents,
 		NumLocations
 	};
 public:
@@ -25,15 +24,13 @@ public:
 		, drm::Buffer&& PositionBuffer
 		, drm::Buffer&& TextureCoordinateBuffer
 		, drm::Buffer&& NormalBuffer
-		, drm::Buffer&& TangentBuffer)
-		: IndexCount(IndexCount)
+	) : IndexCount(IndexCount)
 		, IndexType(IndexType)
 		, IndexBuffer(std::move(IndexBuffer))
 	{
 		VertexBuffers[Positions] = std::move(PositionBuffer);
 		VertexBuffers[TextureCoordinates] = std::move(TextureCoordinateBuffer);
 		VertexBuffers[Normals] = std::move(NormalBuffer);
-		VertexBuffers[Tangents] = std::move(TangentBuffer);
 	}
 
 	Submesh(Submesh&& Other)

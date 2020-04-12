@@ -93,7 +93,6 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	drm::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
 	drm::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
 	drm::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
-	drm::Buffer TangentBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
@@ -124,7 +123,6 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 
 	Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
 	CmdList.CopyBuffer(StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
-	CmdList.CopyBuffer(StagingBuffer, TangentBuffer, SrcOffset, 0, NormalView.byteLength); // @todo Generate tangents
 	Memmapped += NormalView.byteLength;
 	SrcOffset += NormalView.byteLength;
 
@@ -137,8 +135,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 		, std::move(PositionBuffer)
 		, std::move(TextureCoordinateBuffer)
 		, std::move(NormalBuffer)
-		, std::move(TangentBuffer))
-	);
+	));
 
 	const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);
 	const glm::vec3 Max(PositionAccessor.maxValues[0], PositionAccessor.maxValues[1], PositionAccessor.maxValues[2]);

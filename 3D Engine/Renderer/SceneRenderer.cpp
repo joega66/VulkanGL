@@ -68,7 +68,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 		ComputeLightingPass(Camera, CmdList);
 	}
-	
+
 	//RenderSkybox(Camera, CmdList);
 
 	ECS.GetSingletonComponent<ImGuiRenderData>().Render(Device, CmdList, Camera);

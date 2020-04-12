@@ -7,14 +7,12 @@ layout(location = 0) InOut Surface##InOut	\
 	vec3 Position;							\
 	vec2 UV;								\
 	vec3 Normal;							\
-	vec3 Tangent;							\
 } 											\
 
 #if VERTEX_SHADER
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec2 UV;
 layout(location = 2) in vec3 Normal;
-layout(location = 3) in vec3 Tangent;
 #elif GEOMETRY_SHADER
 SURFACE(in) Input[];
 #else
@@ -31,6 +29,7 @@ layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniform
 {
 	mat4 Transform;
 	mat4 Inverse;
+	mat4 InverseTranspose;
 } LocalToWorld;
 
 #if VERTEX_SHADER
@@ -44,8 +43,7 @@ void Surface_SetAttributes(in vec4 WorldPosition)
 {
 	Output.Position = WorldPosition.xyz;
 	Output.UV = UV;
-	Output.Normal = mat3(transpose(LocalToWorld.Inverse)) * Normal;
-	Output.Tangent = Tangent;
+	Output.Normal = mat3(LocalToWorld.InverseTranspose) * Normal;
 }
 
 #elif GEOMETRY_SHADER
@@ -55,7 +53,6 @@ void Surface_SetAttributes(in uint VertexIndex)
 	Output.Position = Input[VertexIndex].Position;
 	Output.UV = Input[VertexIndex].UV;
 	Output.Normal = Input[VertexIndex].Normal;
-	Output.Tangent = Input[VertexIndex].Tangent;
 }
 
 SurfaceData Surface_Get(in uint VertexIndex)

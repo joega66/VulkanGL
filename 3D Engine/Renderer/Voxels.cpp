@@ -544,7 +544,7 @@ void VCTLightingCache::CreateDebugRenderPass(const drm::Image& SceneColor, const
 		EStoreAction::Store,
 		ClearColorValue{},
 		EImageLayout::Undefined,
-		EImageLayout::ColorAttachmentOptimal));
+		EImageLayout::General));
 	RPDesc.DepthAttachment = drm::AttachmentView(
 		&SceneDepth,
 		ELoadAction::Clear,

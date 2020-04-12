@@ -37,6 +37,15 @@ public:
 
 void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList)
 {
+	const ImageMemoryBarrier ImageBarrier
+	{
+		Camera.SceneColor,
+		EAccess::ShaderRead | EAccess::ShaderWrite,
+		EAccess::ShaderRead | EAccess::ShaderWrite,
+		EImageLayout::General,
+		EImageLayout::General
+	};
+
 	for (auto Entity : ECS.GetEntities<DirectionalLight>())
 	{
 		const auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
@@ -46,6 +55,8 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 		Light.Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
 
 		ComputeDeferredLight(Camera, CmdList, Light);
+
+		CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 	}
 
 	for (auto Entity : ECS.GetEntities<PointLight>())
@@ -58,18 +69,9 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 		Light.Radiance = glm::vec4(PointLight.Intensity * PointLight.Color, 1.0f);
 
 		ComputeDeferredLight(Camera, CmdList, Light);
+
+		CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 	}
-
-	const ImageMemoryBarrier ImageBarrier
-	{
-		Camera.SceneColor,
-		EAccess::ShaderWrite,
-		EAccess::TransferRead,
-		EImageLayout::General,
-		EImageLayout::ColorAttachmentOptimal
-	};
-
-	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::Transfer, 0, nullptr, 1, &ImageBarrier);
 }
 
 void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightParams& Light)

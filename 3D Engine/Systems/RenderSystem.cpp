@@ -10,6 +10,7 @@
 UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 	glm::mat4 Transform;
 	glm::mat4 Inverse;
+	glm::mat4 InverseTranspose;
 );
 
 RenderSystem::RenderSystem(Engine& Engine)
@@ -69,6 +70,7 @@ void RenderSystem::Update(Engine& Engine)
 		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(MeshProxy.LocalToWorldUniform.GetData());
 		LocalToWorldUniformBuffer->Transform = Transform.GetLocalToWorld();
 		LocalToWorldUniformBuffer->Inverse = glm::inverse(Transform.GetLocalToWorld());
+		LocalToWorldUniformBuffer->InverseTranspose = glm::transpose(LocalToWorldUniformBuffer->Inverse);
 
 		MeshProxy.WorldSpaceBB = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 
