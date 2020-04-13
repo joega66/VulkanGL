@@ -1,14 +1,12 @@
 #include "Camera.h"
 #include "Screen.h"
 
-Camera::Camera(Screen& Screen, const glm::vec3& Position, const glm::vec3& Up, float Yaw, float Pitch, float InFOV)
+Camera::Camera(Screen& Screen, const glm::vec3& Position, const glm::vec3& Up, float InFOV)
 	: Position(Position)
 	, WorldUp(Up)
-	, Yaw(Yaw)
-	, Pitch(Pitch)
 	, FOV(InFOV)
 {
-	Axis({ 0.0f, 0.0f });
+	RotateBy({ 0.0f, 0.0f });
 	Screen.ScreenResizeEvent([&] (uint32 InWidth, uint32 InHeight)
 	{
 		Width = InWidth;
@@ -66,28 +64,31 @@ bool Camera::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& 
 	return false;
 }
 
-glm::mat4 Camera::GetWorldToView() const
+void Camera::RotateBy(const glm::vec2& Degrees)
 {
-	return glm::lookAt(Position, Position + Front, Up);
+	const glm::quat Yaw = glm::normalize(glm::angleAxis(glm::radians(Degrees.x), glm::vec3(0, 1, 0)));
+	const glm::quat Pitch = glm::normalize(glm::angleAxis(glm::radians(Degrees.y), glm::vec3(1, 0, 0)));
+	const glm::mat4 Translation = glm::translate(glm::mat4(1.0f), -Position);
+	Rotation = glm::normalize(Pitch * Rotation * Yaw);
+	WorldToView = glm::mat4_cast(Rotation) * Translation;
+	Forward = glm::normalize(glm::vec3(WorldToView[0][2], WorldToView[1][2], WorldToView[2][2]));
 }
 
-void Camera::Axis(const glm::vec2& Offset)
+void Camera::TranslateBy(const float DS)
 {
-	Yaw += Offset.x;
-	Pitch += Offset.y;
-	Pitch = std::clamp(Pitch, -89.0f, 89.0f);
-
-	Front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	Front.y = sin(glm::radians(Pitch));
-	Front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	Front = glm::normalize(Front);
-	Right = glm::normalize(glm::cross(Front, WorldUp));
-	Up = glm::normalize(glm::cross(Right, Front));
+	Position += -Forward * DS;
+	const glm::mat4 Translation = glm::translate(glm::mat4(1.0f), -Position);
+	WorldToView = glm::mat4_cast(Rotation) * Translation;
+	Forward = glm::normalize(glm::vec3(WorldToView[0][2], WorldToView[1][2], WorldToView[2][2]));
 }
 
-void Camera::Translate(const float DS)
+void Camera::LookAt(const glm::vec3& Point)
 {
-	Position += Front * DS;
+	Forward = glm::normalize(Point - Position);
+	const glm::vec3 Right = glm::normalize(glm::cross(Forward, WorldUp));
+	const glm::vec3 Up = glm::normalize(glm::cross(Right, Forward));
+	WorldToView = glm::lookAt(Position, Position + Forward, Up);
+	Rotation = glm::quat_cast(WorldToView);
 }
 
 FrustumPlanes Camera::GetFrustumPlanes() const

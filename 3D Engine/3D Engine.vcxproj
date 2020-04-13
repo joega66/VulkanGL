@@ -61,7 +61,6 @@
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\SceneSystem.cpp" />
     <ClCompile Include="Systems\RenderSystem.cpp" />
-    <ClCompile Include="Systems\TransformGizmoSystem.cpp" />
     <ClCompile Include="Systems\UserInterface.cpp" />
     <ClCompile Include="Vulkan\VulkanBindlessResources.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
@@ -88,12 +87,10 @@
     <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h" />
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
     <ClInclude Include="Components\Light.h" />
-    <ClInclude Include="Components\Outline.h" />
     <ClInclude Include="Components\RenderSettings.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
     <ClInclude Include="DRMDefinitions.h" />
-    <ClInclude Include="ECS\Component.h" />
     <ClInclude Include="ECS\ComponentArray.h" />
     <ClInclude Include="ECS\Entity.h" />
     <ClInclude Include="ECS\EntityManager.h" />
@@ -132,7 +129,6 @@
     <ClInclude Include="Systems\EditorControllerSystem.h" />
     <ClInclude Include="Systems\SceneSystem.h" />
     <ClInclude Include="Systems\RenderSystem.h" />
-    <ClInclude Include="Systems\TransformGizmoSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />
     <ClInclude Include="Vulkan\VulkanBindlessResources.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />

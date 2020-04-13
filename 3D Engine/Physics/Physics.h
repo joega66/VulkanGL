@@ -17,6 +17,7 @@ public:
 
 	inline const glm::vec3& GetMin() const { return Min; }
 	inline const glm::vec3& GetMax() const { return Max; }
+	inline glm::vec3 GetCenter() const { return (Max - Min) / 2.0f + Min; }
 
 private:
 	glm::vec3 Min = glm::vec3(std::numeric_limits<float>::max());

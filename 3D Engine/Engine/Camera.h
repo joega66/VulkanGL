@@ -1,13 +1,11 @@
 #pragma once
 #include <Physics/Physics.h>
+#include <glm/gtx/quaternion.hpp>
 
 class Camera
 {
 public:
-	Camera(class Screen& Screen,
-		const glm::vec3& Position = glm::vec3(0.0f, 0.0f, 0.0f),
-		const glm::vec3& Up = glm::vec3(0.0f, 1.0f, 0.0f),
-		float Yaw = -90.0f, float Pitch = 0.0f, float FOV = 45.0f);
+	Camera(class Screen& Screen, const glm::vec3& Position = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3& Up = glm::vec3(0.0f, 1.0f, 0.0f), float FOV = 45.0f);
 
 	/** Get the width of the camera pixels. */
 	inline uint32 GetWidth() const { return Width; }
@@ -24,31 +22,33 @@ public:
 	/** Project world coordinate to screen coordinate. */
 	bool WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition) const;
 
-	/** Change view axis. */
-	void Axis(const glm::vec2& Offset);
+	/** Rotate the camera by yaw (x), pitch (y) degrees. */
+	void RotateBy(const glm::vec2& Degrees);
 
-	/** Translate the view forward/backward. */
-	void Translate(const float DS);
+	/** Translate the camera forward/backward. */
+	void TranslateBy(const float DS);
+
+	/** Rotate the camera to look at the point. */
+	void LookAt(const glm::vec3& Point);
 
 	/** Get the World-to-View matrix. */
-	glm::mat4 GetWorldToView() const;
-
+	inline const glm::mat4& GetWorldToView() const { return WorldToView; }
 	/** Get the View-to-Projective matrix. */
 	inline const glm::mat4& GetViewToClip() const { return ViewToClip; }
-
 	/** Get the World-to-Projective matrix. */
 	inline glm::mat4 GetWorldToClip() const { return GetViewToClip() * GetWorldToView(); }
-
-	/** Get the view position. */
+	/** Get the camera position. */
 	inline const glm::vec3& GetPosition() const { return Position; }
-
+	/** Get the camera rotation. */
+	inline const glm::quat& GetRotation() const { return Rotation; }
+	/** Get the camera forward vector. */
+	inline const glm::vec3& GetForward() const { return Forward; }
 	/** Get the FOV. */
 	inline float GetFOV() const { return FOV; }
-
 	/** Get the combined clipping planes in model space. */
 	FrustumPlanes GetFrustumPlanes() const;
 
-	/** Freeze/Unfreeze the view. */
+	/** Freeze/Unfreeze the camera. */
 	bool bFreeze = false;
 
 private:
@@ -57,27 +57,21 @@ private:
 
 	/** Camera height. */
 	uint32 Height;
-
+	
 	/** Camera position. */
 	glm::vec3 Position;
-
-	/** Front vector. */
-	glm::vec3 Front = glm::vec3(0.0f, 0.0f, 1.0f);
-
-	/** Up vector. */
-	glm::vec3 Up;
 	
-	/** Right vector. */
-	glm::vec3 Right;
+	/** Camera rotation. */
+	glm::quat Rotation;
+
+	/** Cached world-to-view matrix. */
+	glm::mat4 WorldToView;
+
+	/** Camera forward vector. */
+	glm::vec3 Forward;
 
 	/** World up vector. */
 	glm::vec3 WorldUp;
-
-	/** Camera yaw. */
-	float Yaw;
-
-	/** Camera pitch. */
-	float Pitch;
 
 	/** Camera FOV. */
 	float FOV;

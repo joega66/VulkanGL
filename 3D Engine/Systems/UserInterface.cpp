@@ -6,6 +6,7 @@
 #include <Components/RenderSettings.h>
 #include <Components/Transform.h>
 #include <Components/Light.h>
+#include <Components/StaticMeshComponent.h>
 #include <Systems/SceneSystem.h>
 #include <Renderer/GlobalRenderData.h>
 #include <Renderer/CameraProxy.h>
@@ -149,9 +150,24 @@ void UserInterface::ShowEntities(Engine& Engine)
 		auto& Entity = EntityIter.Next();
 		const auto& Name = ECS.GetName(Entity);
 
-		if (Filter.PassFilter(Name.c_str()) && ImGui::Selectable(Name.c_str(), Selected == Entity))
+		if (Filter.PassFilter(Name.c_str()))
 		{
-			Selected = Entity;
+			bool IsSelected = ImGui::Selectable(Name.c_str(), Selected == Entity, ImGuiSelectableFlags_AllowDoubleClick);
+
+			if (IsSelected)
+			{
+				Selected = Entity;
+			}
+			
+			if (IsSelected && ImGui::IsMouseDoubleClicked(0))
+			{
+				const StaticMeshComponent& StaticMeshComponent = ECS.GetComponent<class StaticMeshComponent>(Entity);
+				const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
+				const BoundingBox Bounds = StaticMeshComponent.StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
+				const glm::vec3 Center = Bounds.GetCenter();
+
+				Engine.Camera.LookAt(Center);
+			}
 		}
 	}
 	
@@ -179,7 +195,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 		ImGui::DragFloat3("Position", &Position[0], 0.05f);
 		ImGui::DragFloat3("Rotation", &Rotation[0], 0.05f);
 		ImGui::DragFloat("Angle", &Angle, 1.0f, -180.0, 180.0f);
-		ImGui::InputFloat3("Scale", &Scale[0]);
+		ImGui::DragFloat3("Scale", &Scale[0], 0.05f);
 
 		if (Position != Transform.GetPosition() ||
 			Rotation != Transform.GetRotation() ||

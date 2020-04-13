@@ -3,7 +3,6 @@
 #include <Renderer/GlobalRenderData.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/SceneSystem.h>
-#include <Systems/TransformGizmoSystem.h>
 #include <Systems/RenderSystem.h>
 #include <Systems/UserInterface.h>
 #include <Engine/Screen.h>

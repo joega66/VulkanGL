@@ -22,9 +22,8 @@ void EditorControllerSystem::Update(Engine& Engine)
 	Input& Input = Engine._Input;
 	Camera& Camera = Engine.Camera;
 
-	// Translate the view.
 	const float DS = Cursor.MouseScrollSpeed * Cursor.MouseScrollDelta.y;
-	Camera.Translate(DS);
+	Camera.TranslateBy(DS);
 
 	if (Input.GetKeyDown(EKeyCode::MouseLeft))
 	{
@@ -33,9 +32,8 @@ void EditorControllerSystem::Update(Engine& Engine)
 
 		if (!Camera.bFreeze)
 		{
-			// Look around.
-			glm::vec2 Offset = glm::vec2(Cursor.Position.x - Cursor.Last.x, Cursor.Last.y - Cursor.Position.y) * Cursor.Sensitivity;
-			Camera.Axis(Offset);
+			const glm::vec2 Degrees = glm::vec2(Cursor.Position.x - Cursor.Last.x, -(Cursor.Last.y - Cursor.Position.y)) * Cursor.Sensitivity;
+			Camera.RotateBy(Degrees);
 		}
 	}
 	else if (Input.GetKeyUp(EKeyCode::MouseLeft))
