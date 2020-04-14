@@ -2,6 +2,7 @@
 #include "GlobalRenderData.h"
 #include <Engine/Engine.h>
 #include <Engine/Screen.h>
+#include <Components/Bounds.h>
 
 UNIFORM_STRUCT(CameraUniformBufferShaderParameters,
 	glm::mat4 WorldToView;
@@ -86,9 +87,10 @@ void CameraProxy::BuildMeshDrawCommands(Engine& Engine)
 	
 	for (auto Entity : Engine.ECS.GetEntities<MeshProxy>())
 	{
-		const MeshProxy& MeshProxy = Engine.ECS.GetComponent<class MeshProxy>(Entity);
+		const auto& MeshProxy = Engine.ECS.GetComponent<class MeshProxy>(Entity);
+		const auto& Bounds = Engine.ECS.GetComponent<class Bounds>(Entity);
 
-		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, MeshProxy.WorldSpaceBB))
+		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, Bounds.Box))
 		{
 			AddToGBufferPass(Engine, MeshProxy);
 		}

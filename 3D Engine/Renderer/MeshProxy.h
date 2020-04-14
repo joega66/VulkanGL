@@ -16,10 +16,7 @@ public:
 	inline const Material* GetMaterial() const { return Material; }
 	inline const drm::DescriptorSet& GetSurfaceSet() const { return SurfaceSet; }
 	inline const SpecializationInfo& GetSpecializationInfo() const { return Material->GetSpecializationInfo(); }
-
-	/** World-space bounding box. */
-	BoundingBox WorldSpaceBB;
-
+	
 	/** Local to world uniform. */
 	drm::Buffer LocalToWorldUniform;
 

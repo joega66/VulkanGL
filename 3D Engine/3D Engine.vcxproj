@@ -86,6 +86,7 @@
     <ClInclude Include="..\ThirdParty\imgui\imstb_textedit.h" />
     <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h" />
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
+    <ClInclude Include="Components\Bounds.h" />
     <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\RenderSettings.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />

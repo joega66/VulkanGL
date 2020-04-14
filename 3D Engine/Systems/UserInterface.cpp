@@ -7,6 +7,7 @@
 #include <Components/Transform.h>
 #include <Components/Light.h>
 #include <Components/StaticMeshComponent.h>
+#include <Components/Bounds.h>
 #include <Systems/SceneSystem.h>
 #include <Renderer/GlobalRenderData.h>
 #include <Renderer/CameraProxy.h>
@@ -148,6 +149,10 @@ void UserInterface::ShowEntities(Engine& Engine)
 	while (!EntityIter.End())
 	{
 		auto& Entity = EntityIter.Next();
+
+		if (!ECS.HasComponent<Bounds>(Entity))
+			continue;
+
 		const auto& Name = ECS.GetName(Entity);
 
 		if (Filter.PassFilter(Name.c_str()))
@@ -161,11 +166,8 @@ void UserInterface::ShowEntities(Engine& Engine)
 			
 			if (IsSelected && ImGui::IsMouseDoubleClicked(0))
 			{
-				const StaticMeshComponent& StaticMeshComponent = ECS.GetComponent<class StaticMeshComponent>(Entity);
-				const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-				const BoundingBox Bounds = StaticMeshComponent.StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
-				const glm::vec3 Center = Bounds.GetCenter();
-
+				const auto& Bounds = ECS.GetComponent<class Bounds>(Entity);
+				const glm::vec3 Center = Bounds.Box.GetCenter();
 				Engine.Camera.LookAt(Center);
 			}
 		}

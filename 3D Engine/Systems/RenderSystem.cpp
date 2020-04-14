@@ -4,6 +4,7 @@
 #include <Components/Transform.h>
 #include <Components/Light.h>
 #include <Components/RenderSettings.h>
+#include <Components/Bounds.h>
 #include <Renderer/MeshProxy.h>
 #include <Renderer/ShadowProxy.h>
 
@@ -34,13 +35,17 @@ void RenderSystem::Start(Engine& Engine)
 		drm::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet(Device);
 		StaticMeshLayout.UpdateDescriptorSet(Device, SurfaceSet, SurfaceDescriptors);
 
-		ECS.AddComponent(Entity, 
+		ECS.AddComponent(Entity,
 			MeshProxy(
 				StaticMeshComponent.Material,
 				std::move(SurfaceSet),
 				StaticMesh->Submeshes,
 				std::move(LocalToWorldUniform))
-			);
+		);
+
+		auto& SurfaceBounds = ECS.AddComponent(Entity, Bounds());
+		const auto& Transform = ECS.GetComponent<class Transform>(Entity);
+		SurfaceBounds.Box = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 	});
 
 	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
@@ -65,14 +70,15 @@ void RenderSystem::Update(Engine& Engine)
 	{
 		auto& MeshProxy = ECS.GetComponent<class MeshProxy>(Entity);
 		const auto& Transform = ECS.GetComponent<class Transform>(Entity);
+		auto& Bounds = ECS.GetComponent<class Bounds>(Entity);
 		const auto* StaticMesh = ECS.GetComponent<class StaticMeshComponent>(Entity).StaticMesh;
+
+		Bounds.Box = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 
 		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(MeshProxy.LocalToWorldUniform.GetData());
 		LocalToWorldUniformBuffer->Transform = Transform.GetLocalToWorld();
 		LocalToWorldUniformBuffer->Inverse = glm::inverse(Transform.GetLocalToWorld());
 		LocalToWorldUniformBuffer->InverseTranspose = glm::transpose(LocalToWorldUniformBuffer->Inverse);
-
-		MeshProxy.WorldSpaceBB = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 
 		// Add to the light's shadow depth rendering.
 		for (auto Entity : ECS.GetEntities<ShadowProxy>())

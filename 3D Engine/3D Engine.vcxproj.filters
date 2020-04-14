@@ -251,6 +251,9 @@
     <ClInclude Include="Renderer\CameraProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Components\Bounds.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
