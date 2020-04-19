@@ -1,7 +1,8 @@
 #pragma once
 #include <Engine/Skybox.h>
+#include <ECS/Component.h>
 
-class SkyboxComponent
+class SkyboxComponent : public Component
 {
 public:
 	SkyboxComponent(const Skybox* Skybox)

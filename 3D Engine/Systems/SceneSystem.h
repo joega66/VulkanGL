@@ -1,9 +1,16 @@
 #pragma once
 #include <ECS/System.h>
+#include <ECS/Component.h>
 #include <filesystem>
 
-struct SceneLoadRequest
+class SceneLoadRequest : public Component
 {
+public:
+	SceneLoadRequest(const std::filesystem::path& Path, bool DestroyOldEntities)
+		: Path(Path), DestroyOldEntities(DestroyOldEntities)
+	{
+	}
+
 	/** Path to the new scene. */
 	std::filesystem::path Path;
 	/** Whether to destroy the old scene entities. */
@@ -25,5 +32,4 @@ public:
 
 private:
 	void HandleSceneLoadRequest(Engine& Engine, const SceneLoadRequest& SceneLoadRequest);
-
 };

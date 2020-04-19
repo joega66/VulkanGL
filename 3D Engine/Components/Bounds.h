@@ -1,7 +1,8 @@
 #pragma once
+#include <ECS/Component.h>
 #include <Physics/Physics.h>
 
-class Bounds
+class Bounds : public Component
 {
 public:
 	/** World-space bounding box. */

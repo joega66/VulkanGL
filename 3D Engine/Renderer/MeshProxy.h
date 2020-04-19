@@ -1,8 +1,9 @@
 #pragma once
 #include <DRM.h>
+#include <ECS/Component.h>
 #include <Engine/StaticMesh.h>
 
-class MeshProxy
+class MeshProxy : public Component
 {
 public:
 	MeshProxy(

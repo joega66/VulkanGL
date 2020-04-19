@@ -1,4 +1,5 @@
 #pragma once
+#include <ECS/Component.h>
 
 enum class EShadowType
 {
@@ -16,12 +17,12 @@ struct Light
 	float DepthBiasSlopeFactor = 1.0f;
 };
 
-struct DirectionalLight : public Light
+struct DirectionalLight : public Light, public Component
 {
 	glm::vec3 Direction;
 };
 
-struct PointLight : public Light
+struct PointLight : public Light, public Component
 {
 	float Range = 10.0f;
 };

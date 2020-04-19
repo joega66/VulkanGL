@@ -1,11 +1,12 @@
 #pragma once
 #include <ECS/System.h>
+#include <ECS/Component.h>
 #include <DRM.h>
 
 class Engine;
 class CameraProxy;
 
-struct ImGuiRenderData
+struct ImGuiRenderData : public Component
 {
 	drm::Image FontImage;
 	drm::Buffer ImguiUniform;

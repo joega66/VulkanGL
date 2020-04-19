@@ -1,7 +1,7 @@
 #pragma once
 #include <ECS/EntityManager.h>
 
-class Transform
+class Transform : public Component
 {
 public:
 	Transform(

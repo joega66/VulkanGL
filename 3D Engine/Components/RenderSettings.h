@@ -1,6 +1,7 @@
 #pragma once
+#include <ECS/Component.h>
 
-class RenderSettings
+class RenderSettings : public Component
 {
 public:
 	/** Whether the scene should be voxelized this frame. */

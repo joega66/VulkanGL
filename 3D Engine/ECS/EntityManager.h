@@ -1,5 +1,6 @@
 #pragma once
 #include "Entity.h"
+#include "Component.h"
 
 class EntityIterator
 {
@@ -38,15 +39,17 @@ public:
 	void Destroy(Entity& Entity);
 
 	template<typename ComponentType>
-	ComponentType& AddComponent(Entity& Entity, ComponentType&& Component)
+	ComponentType& AddComponent(Entity& Entity, ComponentType&& ComponentData)
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		auto Array = GetComponentArray<ComponentType>();
-		return Array->AddComponent(Entity, std::move(Component));
+		return Array->AddComponent(Entity, std::move(ComponentData));
 	}
 
 	template<typename ComponentType>
 	ComponentType& GetComponent(Entity& Entity)
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		auto Array = GetComponentArray<ComponentType>();
 		return Array->GetComponent(Entity);
 	}
@@ -54,6 +57,7 @@ public:
 	template<typename ComponentType>
 	bool HasComponent(Entity& Entity)
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		auto Array = GetComponentArray<ComponentType>();
 		return Array->HasComponent(Entity);
 	}
@@ -61,6 +65,7 @@ public:
 	template<typename ComponentType>
 	void RemoveComponent(Entity& Entity)
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		auto Array = GetComponentArray<ComponentType>();
 		return Array->RemoveComponent(Entity);
 	}
@@ -68,6 +73,8 @@ public:
 	template<typename ComponentType, typename ...ComponentArgs>
 	ComponentType& AddSingletonComponent(ComponentArgs&& ...Args)
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
+
 		std::size_t ArrayIndex;
 
 		if (FreeSingletonComponentArrayIndices.size())
@@ -89,6 +96,7 @@ public:
 	template<typename ComponentType>
 	ComponentType& GetSingletonComponent()
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		const std::size_t ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
 		return *std::static_pointer_cast<ComponentType>(SingletonComponentsArray[ArrayIndex]);
 	}
@@ -96,6 +104,7 @@ public:
 	template<typename ComponentType>
 	void RemoveSingletonComponent()
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		const uint32 ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
 		SingletonComponentsArray[ArrayIndex] = nullptr;
 		FreeSingletonComponentArrayIndices.push_back(ArrayIndex);
@@ -110,6 +119,8 @@ public:
 	template<typename ComponentType>
 	std::vector<Entity> GetEntities()
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
+
 		std::vector<Entity> EntitiesWithComponent;
 		EntitiesWithComponent.reserve(GetComponentArray<ComponentType>()->GetEntities().size());
 
@@ -125,6 +136,7 @@ public:
 	template<typename ComponentType>
 	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback)
 	{
+		static_assert(std::is_base_of<Component, ComponentType>::value);
 		auto Array = GetComponentArray<ComponentType>();
 		Array->NewComponentCallback(ComponentCallback);
 	}

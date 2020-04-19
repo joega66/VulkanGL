@@ -1,6 +1,7 @@
 #pragma once
-#include <DRM.h>
 #include "MeshDrawCommand.h"
+#include <DRM.h>
+#include <ECS/Component.h>
 
 struct ShadowDescriptors
 {
@@ -20,7 +21,7 @@ struct ShadowDescriptors
 	}
 };
 
-class ShadowProxy
+class ShadowProxy : public Component
 {
 public:
 	ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);

@@ -12,9 +12,9 @@ void SceneSystem::Start(Engine& Engine)
 	auto& ECS = Engine.ECS;
 
 	const std::string ScenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Meshes/Sponza/Sponza.gltf");
-	const SceneLoadRequest SceneLoadRequest = { ScenePath, false };
+	const SceneLoadRequest SceneLoadReq(ScenePath, false);
 
-	HandleSceneLoadRequest(Engine, SceneLoadRequest);
+	HandleSceneLoadRequest(Engine, SceneLoadReq);
 
 	const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
 	const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
@@ -36,10 +36,10 @@ void SceneSystem::Update(Engine& Engine)
 {
 	auto& ECS = Engine.ECS;
 
-	for (auto& Entity : ECS.GetEntities<struct SceneLoadRequest>())
+	for (auto& Entity : ECS.GetEntities<SceneLoadRequest>())
 	{
-		auto& SceneLoadRequest = ECS.GetComponent<struct SceneLoadRequest>(Entity);
-		HandleSceneLoadRequest(Engine, SceneLoadRequest);
+		auto& SceneLoadReq = ECS.GetComponent<SceneLoadRequest>(Entity);
+		HandleSceneLoadRequest(Engine, SceneLoadReq);
 		ECS.Destroy(Entity);
 	}
 }
