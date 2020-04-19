@@ -1,5 +1,6 @@
 #pragma once
 #include "StaticMesh.h"
+#include "Skybox.h"
 #include <filesystem>
 
 class DRMDevice;
@@ -30,8 +31,8 @@ public:
 	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
 	const Material* GetMaterial(const std::string& AssetName);
 
-	void LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format = EFormat::R8G8B8A8_UNORM);
-	const drm::Image* GetCubemap(const std::string& AssetName) const;
+	const Skybox* LoadSkybox(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format);
+	const Skybox* GetSkybox(const std::string& AssetName);
 
 	static drm::Image Red;
 	static drm::Image Green;
@@ -44,8 +45,8 @@ private:
 
 	HashTable<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	HashTable<std::string, std::unique_ptr<Material>> Materials;
+	HashTable<std::string, std::unique_ptr<Skybox>> Skyboxes;
 	HashTable<std::string, std::unique_ptr<drm::Image>> Images;
-	HashTable<std::string, std::unique_ptr<drm::Image>> Cubemaps;
 
 	static void CreateDebugImages(DRMDevice& Device);
 };

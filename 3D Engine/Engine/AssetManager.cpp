@@ -6,14 +6,15 @@ AssetManager::AssetManager(DRMDevice& Device)
 {
 	CreateDebugImages(Device);
 
-	std::array<std::string, 6> Cubemap =
+	const std::array<std::string, 6> Skybox =
 	{
 		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
 		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
 		"../Images/Cubemaps/DownUnder/down-under_bk.tga", "../Images/Cubemaps/DownUnder/down-under_ft.tga",
 	};
 
-	LoadCubemap("Engine_Cubemap_Default", Cubemap);
+	LoadSkybox("Default_Skybox", Skybox, EFormat::R8G8B8A8_UNORM);
+
 	LoadStaticMesh("../Meshes/Cube/glTF/Cube.gltf");
 }
 
@@ -89,60 +90,15 @@ const Material* AssetManager::GetMaterial(const std::string& AssetName)
 	return Materials.find(AssetName) == Materials.end() ? nullptr : Materials[AssetName].get();
 }
 
-void AssetManager::LoadCubemap(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format)
+const Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format)
 {
-	std::unique_ptr<drm::Image> Image;
-	drm::Buffer StagingBuffer;
-	void* MemMapped = nullptr;
-
-	for (uint32 FaceIndex = 0; FaceIndex < Files.size(); FaceIndex++)
-	{
-		int32 Width, Height, Channels;
-		uint8* Pixels = Platform::LoadImage(Files[FaceIndex], Width, Height, Channels);
-
-		if (FaceIndex == 0)
-		{
-			Image = std::make_unique<drm::Image>(Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst));
-			StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image->GetSize());
-			MemMapped = StagingBuffer.GetData();
-		}
-
-		check(Image->GetWidth() == Width && Image->GetHeight() == Height, "Cubemap faces must all be the same size.");
-
-		Platform::Memcpy((uint8*)MemMapped + FaceIndex * (Image->GetSize() / 6), Pixels, (Image->GetSize() / 6));
-
-		Platform::FreeImage(Pixels);
-	}
-
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
-
-	ImageMemoryBarrier Barrier{
-		*Image,
-		EAccess::None,
-		EAccess::TransferWrite,
-		EImageLayout::Undefined,
-		EImageLayout::TransferDstOptimal
-	};
-
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
-
-	CmdList.CopyBufferToImage(StagingBuffer, 0, *Image, EImageLayout::TransferDstOptimal);
-
-	Barrier.SrcAccessMask = EAccess::TransferWrite;
-	Barrier.DstAccessMask = EAccess::ShaderRead;
-	Barrier.OldLayout = EImageLayout::TransferDstOptimal;
-	Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
-	
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
-
-	Device.SubmitCommands(CmdList);
-
-	Cubemaps[AssetName] = std::move(Image);
+	Skyboxes[AssetName] = std::make_unique<Skybox>(Device, Files, Format);
+	return Skyboxes[AssetName].get();
 }
 
-const drm::Image* AssetManager::GetCubemap(const std::string& AssetName) const
+const Skybox* AssetManager::GetSkybox(const std::string& AssetName)
 {
-	return Cubemaps.at(AssetName).get();
+	return Skyboxes[AssetName].get();
 }
 
 drm::Image AssetManager::Red;

@@ -36,8 +36,8 @@
     <ClCompile Include="Engine\Engine.cpp" />
     <ClCompile Include="Engine\Input.cpp" />
     <ClCompile Include="Engine\Material.cpp" />
-    <ClCompile Include="Engine\Scene.cpp" />
     <ClCompile Include="Engine\Screen.cpp" />
+    <ClCompile Include="Engine\Skybox.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\Timers.cpp" />
     <ClCompile Include="Engine\Camera.cpp" />
@@ -53,7 +53,7 @@
     <ClCompile Include="Renderer\CameraProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
-    <ClCompile Include="Renderer\Skybox.cpp" />
+    <ClCompile Include="Renderer\SkyboxRender.cpp" />
     <ClCompile Include="Renderer\Voxels.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
     <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
@@ -89,6 +89,7 @@
     <ClInclude Include="Components\Bounds.h" />
     <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\RenderSettings.h" />
+    <ClInclude Include="Components\SkyboxComponent.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
     <ClInclude Include="DRMDefinitions.h" />
@@ -101,8 +102,8 @@
     <ClInclude Include="Engine\Engine.h" />
     <ClInclude Include="Engine\Input.h" />
     <ClInclude Include="Engine\Material.h" />
-    <ClInclude Include="Engine\Scene.h" />
     <ClInclude Include="Engine\Screen.h" />
+    <ClInclude Include="Engine\Skybox.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\Timers.h" />
     <ClInclude Include="Engine\Types.h" />

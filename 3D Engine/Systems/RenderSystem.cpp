@@ -51,8 +51,6 @@ void RenderSystem::Start(Engine& Engine)
 	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
 	{
 		ECS.AddComponent(Entity, ShadowProxy(Device, ShadowLayout, DirectionalLight));
-		auto& Box = ECS.AddComponent(Entity, Bounds()).Box;
-		Box = BoundingBox(glm::vec3(0.0f), glm::vec3(0.0f));
 	});
 }
 

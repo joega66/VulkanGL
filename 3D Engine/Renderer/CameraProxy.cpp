@@ -45,11 +45,6 @@ CameraProxy::CameraProxy(Engine& Engine)
 		CameraDescriptorSet.SceneColor = drm::DescriptorImageInfo(SceneColor);
 		CameraDescriptorSet.Update(Engine.Device);
 	});
-
-	GlobalRenderData& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
-
-	GlobalData.SkyboxDescriptorSet.Skybox = drm::DescriptorImageInfo(*Engine.Scene.Skybox, Engine.Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }));
-	GlobalData.SkyboxDescriptorSet.Update(Engine.Device);
 }
 
 void CameraProxy::Update(Engine& Engine)

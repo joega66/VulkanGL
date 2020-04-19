@@ -146,9 +146,6 @@
     <ClInclude Include="Systems\EditorControllerSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanQueues.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -254,6 +251,12 @@
     <ClInclude Include="Components\Bounds.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Skybox.h">
+      <Filter>Source\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\SkyboxComponent.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -325,9 +328,6 @@
     <ClCompile Include="Systems\EditorControllerSystem.cpp">
       <Filter>Source\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Scene.cpp">
-      <Filter>Source\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="Vulkan\VulkanQueues.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
@@ -336,9 +336,6 @@
     </ClCompile>
     <ClCompile Include="Engine\Input.cpp">
       <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\Skybox.cpp">
-      <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\Voxels.cpp">
       <Filter>Source\Renderer</Filter>
@@ -422,6 +419,12 @@
       <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\CameraProxy.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Skybox.cpp">
+      <Filter>Source\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\SkyboxRender.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

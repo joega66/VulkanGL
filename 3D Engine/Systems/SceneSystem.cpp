@@ -3,6 +3,7 @@
 #include <Components/Transform.h>
 #include <Components/Light.h>
 #include <Components/Bounds.h>
+#include <Components/SkyboxComponent.h>
 #include <Engine/Engine.h>
 #include <Engine/AssetManager.h>
 
@@ -26,6 +27,9 @@ void SceneSystem::Start(Engine& Engine)
 	DirectionalLight.ShadowType = EShadowType::Soft;
 	DirectionalLight.DepthBiasConstantFactor = 1.75f;
 	DirectionalLight.DepthBiasSlopeFactor = 1.75f;
+
+	auto Skybox = ECS.CreateEntity("Skybox");
+	ECS.AddComponent(Skybox, SkyboxComponent(Engine.Assets.GetSkybox("Default_Skybox")));
 }
 
 void SceneSystem::Update(Engine& Engine)

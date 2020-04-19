@@ -1,6 +1,5 @@
 #include "EditorControllerSystem.h"
 #include <Engine/Engine.h>
-#include <Engine/Scene.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
 #include <DRMShader.h>

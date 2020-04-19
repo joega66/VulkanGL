@@ -1,7 +1,8 @@
-layout(location = 0) out vec4 OutColor;
 layout(location = 0) in vec3 InPosition;
 
-layout(set = 1, binding = 0) uniform samplerCube Skybox;
+layout(binding = 0, set = 1) uniform samplerCube Skybox;
+
+layout(location = 0) out vec4 OutColor;
 
 void main()
 {

@@ -26,7 +26,6 @@ Engine::Engine(
 	, ShaderMap(InShaderMap)
 	, Surface(InSurface)
 	, Assets(InDevice)
-	, Scene(*this)
 	, Camera(InScreen)
 {
 }

@@ -2,7 +2,6 @@
 #include <Platform/Platform.h>
 #include <ECS/EntityManager.h>
 #include "AssetManager.h"
-#include "Scene.h"
 #include "Camera.h"
 
 class Cursor;
@@ -42,6 +41,5 @@ public:
 	/** Engine misc. */
 	EntityManager ECS;
 	AssetManager Assets;
-	Scene Scene;
 	Camera Camera;
 };

@@ -150,9 +150,6 @@ void UserInterface::ShowEntities(Engine& Engine)
 	{
 		auto& Entity = EntityIter.Next();
 
-		if (!ECS.HasComponent<Bounds>(Entity))
-			continue;
-
 		const auto& Name = ECS.GetName(Entity);
 
 		if (Filter.PassFilter(Name.c_str()))
@@ -164,7 +161,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 				Selected = Entity;
 			}
 			
-			if (IsSelected && ImGui::IsMouseDoubleClicked(0))
+			if (IsSelected && ImGui::IsMouseDoubleClicked(0) && ECS.HasComponent<Bounds>(Entity))
 			{
 				const auto& Bounds = ECS.GetComponent<class Bounds>(Entity);
 				const glm::vec3 Center = Bounds.Box.GetCenter();

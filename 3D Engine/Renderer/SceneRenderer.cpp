@@ -1,7 +1,6 @@
 #include "SceneRenderer.h"
 #include <DRMShader.h>
 #include <Engine/Engine.h>
-#include <Engine/Scene.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
 #include <Components/RenderSettings.h>
