@@ -90,7 +90,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	auto& PositionData = Model.buffers[PositionView.buffer];
 	auto& NormalData = Model.buffers[NormalView.buffer];
 	auto& UvData = Model.buffers[UvView.buffer];
-
+	
 	drm::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
 	drm::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
 	drm::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
@@ -100,7 +100,6 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 
 	uint64 SrcOffset = 0;
 
-	// Create one big staging buffer for the upload, because why not.
 	drm::Buffer StagingBuffer = Device.CreateBuffer(
 		EBufferUsage::Transfer,
 		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength

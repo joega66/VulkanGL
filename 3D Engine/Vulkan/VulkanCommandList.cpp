@@ -97,7 +97,7 @@ void VulkanCommandList::DrawIndexed(
 	uint32 FirstInstance,
 	EIndexType IndexType)
 {
-	vkCmdBindIndexBuffer(CommandBuffer, IndexBuffer.GetHandle(), IndexBuffer.GetOffset(), IndexType == EIndexType::UINT32 ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(CommandBuffer, IndexBuffer.GetHandle(), IndexBuffer.GetOffset(), static_cast<VkIndexType>(IndexType));
 	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
 

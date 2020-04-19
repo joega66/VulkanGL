@@ -105,6 +105,14 @@ void CameraProxy::CreateSceneRP(DRMDevice& Device)
 	RPDesc.ColorAttachments.push_back(
 		drm::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::TransferSrcOptimal)
 	);
+	RPDesc.DepthAttachment = drm::AttachmentView(
+		&SceneDepth,
+		ELoadAction::Load,
+		EStoreAction::Store,
+		ClearDepthStencilValue{},
+		EImageLayout::DepthReadStencilWrite,
+		EImageLayout::DepthReadStencilWrite
+	);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
 	SceneRP = Device.CreateRenderPass(RPDesc);
 }

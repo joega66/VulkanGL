@@ -14,7 +14,7 @@ AssetManager::AssetManager(DRMDevice& Device)
 	};
 
 	LoadCubemap("Engine_Cubemap_Default", Cubemap);
-	LoadStaticMesh("../Meshes/Primitives/Cube.gltf");
+	LoadStaticMesh("../Meshes/Cube/glTF/Cube.gltf");
 }
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesystem::path& Path, bool Breakup)

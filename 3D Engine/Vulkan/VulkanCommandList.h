@@ -44,7 +44,7 @@ public:
 		uint32 FirstIndex, 
 		uint32 VertexOffset, 
 		uint32 FirstInstance,
-		EIndexType IndexType = EIndexType::UINT32
+		EIndexType IndexType
 	);
 
 	void Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance);

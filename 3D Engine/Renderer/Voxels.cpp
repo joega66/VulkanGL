@@ -551,7 +551,7 @@ void VCTLightingCache::CreateDebugRenderPass(const drm::Image& SceneColor, const
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
-		EImageLayout::DepthWriteStencilWrite);
+		EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
 	DebugRP = Device.CreateRenderPass(RPDesc);
 }

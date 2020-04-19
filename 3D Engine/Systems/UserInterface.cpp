@@ -324,8 +324,6 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 
 		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
 
-		CmdList.BeginRenderPass(Camera.SceneRP);
-
 		CmdList.BindPipeline(Pipeline);
 
 		CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetHandle());
@@ -366,8 +364,6 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 			IndexOffset += DrawList->IdxBuffer.Size;
 			VertexOffset += DrawList->VtxBuffer.Size;
 		}
-
-		CmdList.EndRenderPass();
 	}
 }
 

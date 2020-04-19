@@ -49,7 +49,9 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
 
 	PipelineStateDesc PSODesc = {};
-	//PSODesc.RenderPass = GlobalData.LightingRP;
+	PSODesc.RenderPass = Camera.SceneRP;
+	PSODesc.DepthStencilState.DepthTestEnable = true;
+	PSODesc.DepthStencilState.DepthWriteEnable = true;
 	PSODesc.Viewport.Width = Camera.SceneColor.GetWidth();
 	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
@@ -66,6 +68,6 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	for (const auto& Submesh : Cube->Submeshes)
 	{
 		CmdList.BindVertexBuffers(1, &Submesh.GetPositionBuffer());
-		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0);
+		CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
 	}
 }
