@@ -6,7 +6,7 @@ AssetManager::AssetManager(DRMDevice& Device)
 {
 	CreateDebugImages(Device);
 
-	const std::array<std::string, 6> Skybox =
+	const std::array<std::filesystem::path, 6> Skybox =
 	{
 		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
 		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
@@ -48,20 +48,24 @@ const StaticMesh* AssetManager::GetStaticMesh(const std::string& AssetName) cons
 	return StaticMeshes.at(AssetName).get();
 }
 
-void AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format)
+const drm::Image* AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage)
 {
 	check(Images.find(AssetName) == Images.end(), "Image %s already exists.", AssetName.c_str());
 
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform::LoadImage(Path.generic_string(), Width, Height, Channels);
 
-	std::unique_ptr<drm::Image> Image = std::make_unique<drm::Image>(Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst));
+	std::unique_ptr<drm::Image> Image = std::make_unique<drm::Image>(
+		Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst | AdditionalUsage)
+	);
 
 	drm::UploadImageData(Device, Pixels, *Image);
 
 	Platform::FreeImage(Pixels);
 
 	Images[AssetName] = std::move(Image);
+
+	return Images[AssetName].get();
 }
 
 const drm::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<drm::Image> Image)
@@ -90,9 +94,24 @@ const Material* AssetManager::GetMaterial(const std::string& AssetName)
 	return Materials.find(AssetName) == Materials.end() ? nullptr : Materials[AssetName].get();
 }
 
-const Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format)
+const Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::array<std::filesystem::path, 6>& Files, EFormat Format)
 {
-	Skyboxes[AssetName] = std::make_unique<Skybox>(Device, Files, Format);
+	std::array<const drm::Image*, 6> Images;
+
+	for (uint32 FaceIndex = 0; FaceIndex < Images.size(); FaceIndex++)
+	{
+		const std::string AssetName = Files[FaceIndex].stem().string();
+		const drm::Image* Image = GetImage(AssetName);
+
+		if (!Image)
+		{ 
+			Image = LoadImage(AssetName, Files[FaceIndex], EFormat::R8G8B8A8_UNORM, EImageUsage::TransferSrc);
+		}
+
+		Images[FaceIndex] = Image;
+	}
+
+	Skyboxes[AssetName] = std::make_unique<Skybox>(Device, Images, Format);
 	return Skyboxes[AssetName].get();
 }
 

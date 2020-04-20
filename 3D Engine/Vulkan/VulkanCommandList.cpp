@@ -337,3 +337,38 @@ void VulkanCommandList::CopyBuffer(
 
 	vkCmdCopyBuffer(CommandBuffer, SrcBuffer.GetHandle(), DstBuffer.GetHandle(), 1, &Region);
 }
+
+void VulkanCommandList::CopyImage(
+	const VulkanImage& SrcImage, 
+	EImageLayout SrcImageLayout, 
+	const VulkanImage& DstImage, 
+	EImageLayout DstImageLayout,
+	uint32 DstArrayLayer
+)
+{
+	VkImageCopy Region = {};
+
+	Region.srcSubresource.aspectMask = SrcImage.GetVulkanAspect();
+	Region.srcSubresource.mipLevel = 0;
+	Region.srcSubresource.baseArrayLayer = 0;
+	Region.srcSubresource.layerCount = 1;
+
+	Region.dstSubresource.aspectMask = DstImage.GetVulkanAspect();
+	Region.dstSubresource.mipLevel = 0;
+	Region.dstSubresource.baseArrayLayer = DstArrayLayer;
+	Region.dstSubresource.layerCount = 1;
+
+	Region.extent.width = SrcImage.GetWidth();
+	Region.extent.height = SrcImage.GetHeight();
+	Region.extent.depth = 1;
+
+	vkCmdCopyImage(
+		CommandBuffer,
+		SrcImage,
+		VulkanImage::GetVulkanLayout(SrcImageLayout),
+		DstImage,
+		VulkanImage::GetVulkanLayout(DstImageLayout),
+		1,
+		&Region
+	);
+}

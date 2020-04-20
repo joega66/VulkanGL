@@ -86,7 +86,7 @@ public:
 
 	// Loading
 #undef LoadImage
-	static uint8* LoadImage(const std::string& Filename, int32& Width, int32& Height, int32& NumChannels);
+	static uint8* LoadImage(const std::filesystem::path& Path, int32& Width, int32& Height, int32& NumChannels);
 	static void FreeImage(uint8* Pixels);
 
 	// .ini

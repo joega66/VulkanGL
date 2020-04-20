@@ -1,32 +1,27 @@
 #include "Skybox.h"
 
-Skybox::Skybox(DRMDevice& Device, const std::array<std::string, 6>& Files, EFormat Format)
+Skybox::Skybox(DRMDevice& Device, const std::array<const drm::Image*, 6>& Images, EFormat Format)
+	: Images(Images)
 {
-	drm::Buffer StagingBuffer;
-	void* MemMapped = nullptr;
-
-	for (uint32 FaceIndex = 0; FaceIndex < Files.size(); FaceIndex++)
-	{
-		int32 Width, Height, Channels;
-		uint8* Pixels = Platform::LoadImage(Files[FaceIndex], Width, Height, Channels);
-
-		if (FaceIndex == 0)
-		{
-			Image = Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
-			StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Image.GetSize());
-			MemMapped = StagingBuffer.GetData();
-		}
-
-		check(Image.GetWidth() == Width && Image.GetHeight() == Height, "Cubemap faces must all be the same size.");
-
-		Platform::Memcpy(static_cast<uint8*>(MemMapped) + FaceIndex * static_cast<uint64>(Image.GetSize() / 6), Pixels, (Image.GetSize() / 6));
-
-		Platform::FreeImage(Pixels);
-	}
+	Image = Device.CreateImage(Images.front()->GetWidth(), Images.front()->GetHeight(), 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
-	ImageMemoryBarrier Barrier{
+	std::vector<ImageMemoryBarrier> SrcImageBarriers;
+	SrcImageBarriers.reserve(Images.size());
+
+	for (auto SrcImage : Images)
+	{
+		SrcImageBarriers.push_back({
+			*SrcImage,
+			EAccess::None,
+			EAccess::TransferRead,
+			EImageLayout::Undefined,
+			EImageLayout::TransferSrcOptimal
+		});
+	}
+	
+	ImageMemoryBarrier DstImageBarrier{
 		Image,
 		EAccess::None,
 		EAccess::TransferWrite,
@@ -34,16 +29,35 @@ Skybox::Skybox(DRMDevice& Device, const std::array<std::string, 6>& Files, EForm
 		EImageLayout::TransferDstOptimal
 	};
 
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+	CmdList.PipelineBarrier(EPipelineStage::Host, EPipelineStage::Transfer, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::Host, EPipelineStage::Transfer, 0, nullptr, 1, &DstImageBarrier);
 
-	CmdList.CopyBufferToImage(StagingBuffer, 0, Image, EImageLayout::TransferDstOptimal);
+	for (uint32 FaceIndex = 0; FaceIndex < Images.size(); FaceIndex++)
+	{
+		CmdList.CopyImage(
+			*Images[FaceIndex], 
+			EImageLayout::TransferSrcOptimal, 
+			Image, 
+			EImageLayout::TransferDstOptimal, 
+			FaceIndex
+		);
+	}
 
-	Barrier.SrcAccessMask = EAccess::TransferWrite;
-	Barrier.DstAccessMask = EAccess::ShaderRead;
-	Barrier.OldLayout = EImageLayout::TransferDstOptimal;
-	Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	for (auto& SrcImageBarrier : SrcImageBarriers)
+	{
+		SrcImageBarrier.SrcAccessMask = EAccess::TransferRead;
+		SrcImageBarrier.DstAccessMask = EAccess::ShaderRead;
+		SrcImageBarrier.OldLayout = EImageLayout::TransferSrcOptimal;
+		SrcImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	}
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
+	DstImageBarrier.SrcAccessMask = EAccess::TransferWrite;
+	DstImageBarrier.DstAccessMask = EAccess::ShaderRead;
+	DstImageBarrier.OldLayout = EImageLayout::TransferDstOptimal;
+	DstImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &DstImageBarrier);
 
 	Device.SubmitCommands(CmdList);
 }

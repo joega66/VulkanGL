@@ -8,6 +8,7 @@
 #include <Components/Light.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Bounds.h>
+#include <Components/SkyboxComponent.h>
 #include <Systems/SceneSystem.h>
 #include <Renderer/GlobalRenderData.h>
 #include <Renderer/CameraProxy.h>
@@ -234,6 +235,15 @@ void UserInterface::ShowEntities(Engine& Engine)
 			auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
 			Settings.bVoxelize = true;
 		}
+	}
+
+	if (ECS.HasComponent<SkyboxComponent>(Selected))
+	{
+		auto& SkyboxComp = ECS.GetComponent<SkyboxComponent>(Selected);
+		const Skybox* Skybox = SkyboxComp.Skybox;
+		const drm::Image& Image = Skybox->GetImage();
+
+		//ImGui::ImageButton(my_tex_id, ImVec2(32, 32), ImVec2(0, 0), ImVec2(32.0f / Image.GetWidth(), 32 / Image.GetHeight()), 0, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
 	}
 
 	ImGui::End();

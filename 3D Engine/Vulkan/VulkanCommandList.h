@@ -91,6 +91,14 @@ public:
 		uint64 Size
 	);
 
+	void CopyImage(
+		const VulkanImage& SrcImage,
+		EImageLayout SrcImageLayout,
+		const VulkanImage& DstImage,
+		EImageLayout DstImageLayout,
+		uint32 DstArrayLayer
+	);
+
 	/** @end */
 
 private:

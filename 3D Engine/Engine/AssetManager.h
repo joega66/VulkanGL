@@ -24,14 +24,14 @@ public:
 	std::vector<const StaticMesh*> LoadStaticMesh(const std::filesystem::path& Path, bool Breakup = false);
 	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
 
-	void LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format = EFormat::R8G8B8A8_UNORM);
+	const drm::Image* LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage = EImageUsage::None);
 	const drm::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<drm::Image> Image);
 	const drm::Image* GetImage(const std::string& AssetName) const;
 
 	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
 	const Material* GetMaterial(const std::string& AssetName);
 
-	const Skybox* LoadSkybox(const std::string& AssetName, const std::array<std::string, 6>& Files, EFormat Format);
+	const Skybox* LoadSkybox(const std::string& AssetName, const std::array<std::filesystem::path, 6>& Files, EFormat Format);
 	const Skybox* GetSkybox(const std::string& AssetName);
 
 	static drm::Image Red;
