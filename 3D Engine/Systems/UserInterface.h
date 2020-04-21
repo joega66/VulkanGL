@@ -9,6 +9,8 @@ class CameraProxy;
 struct ImGuiRenderData : public Component
 {
 	drm::Image FontImage;
+	uint32 FontIndex;
+
 	drm::Buffer ImguiUniform;
 
 	drm::DescriptorSet DescriptorSet;

@@ -241,9 +241,18 @@ void UserInterface::ShowEntities(Engine& Engine)
 	{
 		auto& SkyboxComp = ECS.GetComponent<SkyboxComponent>(Selected);
 		const Skybox* Skybox = SkyboxComp.Skybox;
-		const drm::Image& Image = Skybox->GetImage();
+		const drm::Image* Front = Skybox->GetFace(CubemapFace::Front);
 
-		//ImGui::ImageButton(my_tex_id, ImVec2(32, 32), ImVec2(0, 0), ImVec2(32.0f / Image.GetWidth(), 32 / Image.GetHeight()), 0, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+		ImGui::Image(Front->GetHandle(), ImVec2(static_cast<float>(Front->GetWidth()), static_cast<float>(Front->GetHeight())), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1.0f, 1.0f, 1.0f, 1.0f), ImVec4(1.0f, 1.0f, 1.0f, 0.5f));
+
+		/*ImGui::ImageButton(
+			Front->GetHandle(),
+			ImVec2(32.0f, 32.0f),
+			ImVec2(0.0f, 0.0f),
+			ImVec2(32.0f / static_cast<float>(Front->GetWidth()), 32.0f / static_cast<float>(Front->GetHeight())),
+			0,
+			ImVec4(0.0f, 0.0f, 0.0f, 1.0f)
+		);*/
 	}
 
 	ImGui::End();
@@ -259,19 +268,19 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
 
 	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	FontIndex = Device.GetSampledImages().Add(FontImage.GetImageView(), Device.CreateSampler({}));
+
 	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
 
 	struct ImGuiDescriptors
 	{
-		drm::DescriptorImageInfo FontImage;
 		drm::DescriptorBufferInfo ImguiUniform;
 
 		static const std::vector<DescriptorBinding>& GetBindings()
 		{
 			static const std::vector<DescriptorBinding> Bindings =
 			{
-				{ 0, 1, EDescriptorType::SampledImage },
-				{ 1, 1, EDescriptorType::UniformBuffer }
+				{ 0, 1, EDescriptorType::UniformBuffer }
 			};
 			return Bindings;
 		}
@@ -281,7 +290,6 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
 
 	ImGuiDescriptors Descriptors;
-	Descriptors.FontImage = drm::DescriptorImageInfo(FontImage, Device.CreateSampler({}));
 	Descriptors.ImguiUniform = ImguiUniform;
 
 	DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
@@ -309,7 +317,8 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { DescriptorSet.GetLayout() };
+	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetSampledImages().GetLayout() };
+	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(uint32) };
 
 	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
 	{
@@ -333,7 +342,8 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 
 		CmdList.BindPipeline(Pipeline);
 
-		CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetHandle());
+		const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, Device.GetSampledImages().GetResources() };
+		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
 
@@ -350,7 +360,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 			for (int32 DrawCmdIndex = 0; DrawCmdIndex < DrawList->CmdBuffer.Size; DrawCmdIndex++)
 			{
 				const ImDrawCmd* DrawCmd = &DrawList->CmdBuffer[DrawCmdIndex];
-
+				
 				ImVec4 ClipRect;
 				ClipRect.x = std::max((DrawCmd->ClipRect.x - ClipOff.x) * ClipScale.x, 0.0f);
 				ClipRect.y = std::max((DrawCmd->ClipRect.y - ClipOff.y) * ClipScale.y, 0.0f);
@@ -364,6 +374,8 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 				Scissor.Extent.y = static_cast<uint32_t>(ClipRect.w - ClipRect.y);
 
 				CmdList.SetScissor(1, &Scissor);
+
+				CmdList.PushConstants(Pipeline, &FontIndex);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}
