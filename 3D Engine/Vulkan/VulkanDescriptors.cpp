@@ -73,7 +73,7 @@ void VulkanDescriptorPool::Free(VkDescriptorSet DescriptorSet)
 	DescriptorSetsWaitingToBeFreed.push_back(DescriptorSet);
 }
 
-void VulkanDescriptorPool::DeferredFree(VulkanDevice& Device)
+void VulkanDescriptorPool::EndFrame(VulkanDevice& Device)
 {
 	if (!DescriptorSetsWaitingToBeFreed.empty())
 	{
@@ -114,11 +114,11 @@ VulkanDescriptorSet VulkanDescriptorPoolManager::Allocate(VulkanDevice& Device, 
 	return VulkanDescriptorSet(DescriptorPool, Layout, DescriptorPool.Allocate(Device, Layout));
 }
 
-void VulkanDescriptorPoolManager::DeferredFree(VulkanDevice& Device)
+void VulkanDescriptorPoolManager::EndFrame(VulkanDevice& Device)
 {
 	for (auto& DescriptorPool : DescriptorPools)
 	{
-		DescriptorPool->DeferredFree(Device);
+		DescriptorPool->EndFrame(Device);
 	}
 }
 

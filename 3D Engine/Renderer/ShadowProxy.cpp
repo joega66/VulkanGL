@@ -125,9 +125,9 @@ void ShadowProxy::AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const Mesh
 	PSODesc.RasterizationState.DepthBiasEnable = true;
 	PSODesc.RasterizationState.DepthBiasConstantFactor = DepthBiasConstantFactor;
 	PSODesc.RasterizationState.DepthBiasSlopeFactor = DepthBiasSlopeFactor;
-	PSODesc.Layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Device.GetSampledImages().GetLayout() };
+	PSODesc.Layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Device.GetTextures().GetLayout() };
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, MeshProxy.GetSurfaceSet(), Device.GetSampledImages().GetResources() };
+	const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, MeshProxy.GetSurfaceSet(), Device.GetTextures().GetSet() };
 	MeshDrawCommands.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
 }
 

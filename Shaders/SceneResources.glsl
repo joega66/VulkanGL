@@ -3,8 +3,8 @@
 
 #extension GL_EXT_nonuniform_qualifier : require
 
-#ifdef SCENE_TEXTURES_SET
-layout(binding = 0, set = SCENE_TEXTURES_SET) uniform sampler2D SceneTextures[];
+#ifdef TEXTURES_SET
+layout(binding = 0, set = TEXTURES_SET) uniform sampler2D Textures[];
 #endif
 
 #endif

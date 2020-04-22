@@ -59,7 +59,9 @@ public:
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
-	virtual drm::BindlessResources& GetSampledImages() override { return *SampledImages; }
+	virtual drm::TextureID CreateTextureID(const VulkanImageView& ImageView, const VulkanSampler& Sampler) override;
+	
+	virtual drm::BindlessResources& GetTextures() override;
 
 	operator VkDevice() const { return Device; }
 
@@ -94,9 +96,7 @@ private:
 
 	VulkanDescriptorPoolManager DescriptorPoolManager;
 
-	std::unique_ptr<VulkanBindlessResources> SampledImages;
-
-	void CreateBindlessResources();
+	std::unique_ptr<VulkanBindlessResources> BindlessTextures;
 };
 
 #define vulkan(Result) \

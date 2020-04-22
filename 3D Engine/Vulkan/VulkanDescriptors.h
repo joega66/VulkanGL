@@ -39,7 +39,7 @@ public:
 	void Free(VkDescriptorSet DescriptorSet);
 
 	/** Free all the descriptor sets waiting to be freed. */
-	void DeferredFree(VulkanDevice& Device);
+	void EndFrame(VulkanDevice& Device);
 
 private:
 	VkDescriptorPool DescriptorPool;
@@ -56,7 +56,7 @@ public:
 
 	VulkanDescriptorSet Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
 
-	void DeferredFree(VulkanDevice& Device);
+	void EndFrame(VulkanDevice& Device);
 
 private:
 	std::vector<std::unique_ptr<VulkanDescriptorPool>> DescriptorPools;

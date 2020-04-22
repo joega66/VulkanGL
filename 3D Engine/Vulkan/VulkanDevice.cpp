@@ -4,8 +4,9 @@
 
 void VulkanDevice::EndFrame()
 {
-	DescriptorPoolManager.DeferredFree(*this);
+	DescriptorPoolManager.EndFrame(*this);
 	VulkanCache.EndFrame();
+	BindlessTextures->EndFrame();
 }
 
 void VulkanDevice::SubmitCommands(drm::CommandList& CmdList)
@@ -204,6 +205,16 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.ColorAttachments.size()));
 }
 
+drm::TextureID VulkanDevice::CreateTextureID(const VulkanImageView& ImageView, const VulkanSampler& Sampler)
+{
+	return BindlessTextures->CreateTextureID(ImageView, Sampler);
+}
+
+drm::BindlessResources& VulkanDevice::GetTextures()
+{
+	return *BindlessTextures;
+}
+
 void VulkanDevice::CreateLogicalDevice()
 {
 	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
@@ -256,10 +267,6 @@ void VulkanDevice::CreateLogicalDevice()
 
 	Queues.Create(Device);
 
-	CreateBindlessResources();
-}
-
-void VulkanDevice::CreateBindlessResources()
-{
-	SampledImages = std::make_unique<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+	BindlessTextures = std::make_unique<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 65556);
+	gBindlessTextures = BindlessTextures.get();
 }

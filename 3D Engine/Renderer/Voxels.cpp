@@ -131,7 +131,7 @@ void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 	PSODesc.Layouts = {
 		CameraDescriptorSet.GetLayout(),
 		MeshProxy.GetSurfaceSet().GetLayout(),
-		Engine.Device.GetSampledImages().GetLayout(),
+		Engine.Device.GetTextures().GetLayout(),
 		VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
 
@@ -139,7 +139,7 @@ void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 	{
 		CameraDescriptorSet,
 		MeshProxy.GetSurfaceSet(),
-		Engine.Device.GetSampledImages().GetResources(),
+		Engine.Device.GetTextures().GetSet(),
 		VCTLightingCache.GetDescriptorSet()
 	};
 

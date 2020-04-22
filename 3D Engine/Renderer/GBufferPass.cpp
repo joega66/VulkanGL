@@ -59,11 +59,11 @@ void CameraProxy::AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy)
 	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<GBufferPassFS<MeshType>>();
 	PSODesc.Viewport.Width = SceneDepth.GetWidth();
 	PSODesc.Viewport.Height = SceneDepth.GetHeight();
-	PSODesc.Layouts = { CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Engine.Device.GetSampledImages().GetLayout() };
+	PSODesc.Layouts = { CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Engine.Device.GetTextures().GetLayout() };
 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
-		CameraDescriptorSet, MeshProxy.GetSurfaceSet(), Engine.Device.GetSampledImages().GetResources()
+		CameraDescriptorSet, MeshProxy.GetSurfaceSet(), Engine.Device.GetTextures().GetSet()
 	};
 
 	GBufferPass.push_back(MeshDrawCommand(Engine.Device, MeshProxy, PSODesc, DescriptorSets));

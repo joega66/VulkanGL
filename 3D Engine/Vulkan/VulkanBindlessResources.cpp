@@ -1,7 +1,7 @@
 #include "VulkanBindlessResources.h"
 #include "VulkanDevice.h"
 
-VulkanBindlessResources::VulkanBindlessResources(VkDevice Device, VkDescriptorType BindlessResourceType)
+VulkanBindlessResources::VulkanBindlessResources(VkDevice Device, VkDescriptorType ResourceType, uint32 ResourceCount)
 	: Device(Device)
 {
 	constexpr VkDescriptorBindingFlags BindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
@@ -12,8 +12,8 @@ VulkanBindlessResources::VulkanBindlessResources(VkDevice Device, VkDescriptorTy
 
 	VkDescriptorSetLayoutBinding Binding = {};
 	Binding.binding = 0;
-	Binding.descriptorType = BindlessResourceType;
-	Binding.descriptorCount = BindlessResourceCount;
+	Binding.descriptorType = ResourceType;
+	Binding.descriptorCount = ResourceCount;
 	Binding.stageFlags = VK_SHADER_STAGE_ALL;
 
 	VkDescriptorSetLayoutCreateInfo SetLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -29,8 +29,8 @@ VulkanBindlessResources::VulkanBindlessResources(VkDevice Device, VkDescriptorTy
 	vulkan(vkCreateDescriptorSetLayout(Device, &SetLayoutInfo, nullptr, &BindlessResourceSetLayout));
 
 	VkDescriptorPoolSize DescriptorPoolSize;
-	DescriptorPoolSize.descriptorCount = BindlessResourceCount;
-	DescriptorPoolSize.type = BindlessResourceType;
+	DescriptorPoolSize.descriptorCount = ResourceCount;
+	DescriptorPoolSize.type = ResourceType;
 
 	VkDescriptorPoolCreateInfo DescriptorPoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 	DescriptorPoolInfo.maxSets = 1;
@@ -41,7 +41,7 @@ VulkanBindlessResources::VulkanBindlessResources(VkDevice Device, VkDescriptorTy
 
 	VkDescriptorSetVariableDescriptorCountAllocateInfo VariableDescriptorCountInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO };
 	VariableDescriptorCountInfo.descriptorSetCount = 1;
-	VariableDescriptorCountInfo.pDescriptorCounts = &BindlessResourceCount;
+	VariableDescriptorCountInfo.pDescriptorCounts = &ResourceCount;
 
 	VkDescriptorSetAllocateInfo SetAllocateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	SetAllocateInfo.pNext = &VariableDescriptorCountInfo;
@@ -78,10 +78,21 @@ static VkImageLayout ChooseImageLayout(EFormat Format)
 	}
 }
 
-uint32 VulkanBindlessResources::Add(const VulkanImageView& ImageView, const VulkanSampler& Sampler)
+VulkanTextureID VulkanBindlessResources::CreateTextureID(const VulkanImageView& ImageView, const VulkanSampler& Sampler)
 {
 	const VkDescriptorImageInfo ImageInfo = { Sampler.GetHandle(), ImageView.GetHandle(), ChooseImageLayout(ImageView.GetFormat()) };
-	const uint32 DstArrayElement = CurrNumBindlessResources++;
+
+	uint32 DstArrayElement;
+
+	if (Available.empty())
+	{
+		DstArrayElement = CurrNumBindlessResources++;
+	}
+	else
+	{
+		DstArrayElement = Available.front();
+		Available.pop_front();
+	}
 
 	VkWriteDescriptorSet WriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 	WriteDescriptorSet.dstSet = BindlessResources;
@@ -93,5 +104,48 @@ uint32 VulkanBindlessResources::Add(const VulkanImageView& ImageView, const Vulk
 	
 	vkUpdateDescriptorSets(Device, 1, &WriteDescriptorSet, 0, nullptr);
 
-	return DstArrayElement;
+	return VulkanTextureID(DstArrayElement);
+}
+
+void VulkanBindlessResources::FreeResourceID(uint32 ResourceID)
+{
+	FreedThisFrame.push_back(ResourceID);
+}
+
+void VulkanBindlessResources::EndFrame()
+{
+	for (auto ID : FreedThisFrame)
+	{
+		Available.push_back(ID);
+	}
+
+	FreedThisFrame.clear();
+}
+
+static constexpr uint32 NULL_ID = -1;
+
+VulkanBindlessResources* gBindlessTextures = nullptr;
+
+VulkanTextureID::VulkanTextureID(uint32 ID)
+	: ID(ID)
+{
+}
+
+VulkanTextureID::VulkanTextureID(VulkanTextureID&& Other)
+	: ID(std::exchange(Other.ID, NULL_ID))
+{
+}
+
+VulkanTextureID& VulkanTextureID::operator=(VulkanTextureID&& Other)
+{
+	ID = std::exchange(Other.ID, NULL_ID);
+	return *this;
+}
+
+VulkanTextureID::~VulkanTextureID()
+{
+	if (ID != NULL_ID)
+	{
+		gBindlessTextures->FreeResourceID(ID);
+	}
 }

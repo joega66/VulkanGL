@@ -23,6 +23,7 @@ namespace drm
 	using RenderPass = VulkanRenderPass;
 	using RenderPassView = VulkanRenderPassView;
 	using BindlessResources = VulkanBindlessResources;
+	using TextureID = VulkanTextureID;
 
 	class AttachmentView
 	{

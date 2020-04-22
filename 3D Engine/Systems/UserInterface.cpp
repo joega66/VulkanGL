@@ -268,7 +268,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
 
 	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	FontIndex = Device.GetSampledImages().Add(FontImage.GetImageView(), Device.CreateSampler({}));
+	FontID = Device.CreateTextureID(FontImage.GetImageView(), Device.CreateSampler({}));
 
 	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
 
@@ -317,7 +317,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetSampledImages().GetLayout() };
+	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetTextures().GetLayout() };
 	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(uint32) };
 
 	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
@@ -342,7 +342,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 
 		CmdList.BindPipeline(Pipeline);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, Device.GetSampledImages().GetResources() };
+		const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, Device.GetTextures().GetSet() };
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
@@ -375,7 +375,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 
 				CmdList.SetScissor(1, &Scissor);
 
-				CmdList.PushConstants(Pipeline, &FontIndex);
+				CmdList.PushConstants(Pipeline, &FontID);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}

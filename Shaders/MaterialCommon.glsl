@@ -1,7 +1,7 @@
 #ifndef MATERIAL_COMMON
 #define MATERIAL_COMMON
 #include "MaterialInterface.glsl"
-#define SCENE_TEXTURES_SET 2
+#define TEXTURES_SET 2
 #include "SceneResources.glsl"
 
 layout(push_constant) uniform MaterialConstants
@@ -22,14 +22,14 @@ layout(constant_id = 3) const bool HasEmissiveTexture = false;
 
 MaterialData Material_Get(SurfaceData Surface)
 {
-	vec4 BaseColor = texture(SceneTextures[nonuniformEXT(_Material.BaseColor)], Surface.UV).rgba;
+	vec4 BaseColor = texture(Textures[nonuniformEXT(_Material.BaseColor)], Surface.UV).rgba;
 	
 	MaterialData Material;
 	Material.BaseColor = BaseColor.rgb;
 
 	if (HasMetallicRoughnessTexture)
 	{
-		vec2 MetallicRoughness = texture(SceneTextures[nonuniformEXT(_Material.MetallicRoughness)], Surface.UV).gb;
+		vec2 MetallicRoughness = texture(Textures[nonuniformEXT(_Material.MetallicRoughness)], Surface.UV).gb;
 		Material.Metallic = MetallicRoughness.x;
 		Material.Roughness = MetallicRoughness.y;
 	}
@@ -48,7 +48,7 @@ void Material_DiscardMaskedPixel(SurfaceData Surface)
 {
 	if (IsMasked)
 	{
-		float Alpha = texture(SceneTextures[nonuniformEXT(_Material.BaseColor)], Surface.UV).a;
+		float Alpha = texture(Textures[nonuniformEXT(_Material.BaseColor)], Surface.UV).a;
 		if (Alpha <= 0)
 		{
 			discard;
@@ -77,7 +77,7 @@ void Material_NormalMapping(inout SurfaceData Surface, vec3 V)
 {
 	if (HasNormalTexture)
 	{
-		const vec3 MapNormal = texture(SceneTextures[nonuniformEXT(_Material.Normal)], Surface.UV).xyz * 2.0 - 1.0;
+		const vec3 MapNormal = texture(Textures[nonuniformEXT(_Material.Normal)], Surface.UV).xyz * 2.0 - 1.0;
 		Surface.WorldNormal = normalize(CotangentFrame(Surface.WorldNormal, V, Surface.UV) * MapNormal);
 	}
 }
@@ -86,7 +86,7 @@ void Material_Emissive(SurfaceData Surface, inout vec3 Color)
 {
 	if (HasEmissiveTexture)
 	{
-		vec3 EmissiveColor = texture(SceneTextures[nonuniformEXT(_Material.Emissive)], Surface.UV).rgb;
+		vec3 EmissiveColor = texture(Textures[nonuniformEXT(_Material.Emissive)], Surface.UV).rgb;
 		EmissiveColor *= _Material.EmissiveFactor;
 		Color += EmissiveColor;
 	}

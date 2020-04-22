@@ -15,10 +15,10 @@ class Material
 public:
 	struct PushConstants
 	{
-		uint32 BaseColor;
-		uint32 MetallicRoughness;
-		uint32 Normal;
-		uint32 Emissive;
+		drm::TextureID BaseColor;
+		drm::TextureID MetallicRoughness;
+		drm::TextureID Normal;
+		drm::TextureID Emissive;
 		float Metallic;
 		float Roughness;
 		glm::vec3 EmissiveFactor;
