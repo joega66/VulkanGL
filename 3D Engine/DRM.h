@@ -48,9 +48,11 @@ public:
 
 	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
 
-	virtual drm::TextureID CreateTextureID(const VulkanImageView& ImageView, const VulkanSampler& Sampler) = 0;
+	virtual drm::TextureID CreateTextureID(const drm::ImageView& ImageView) = 0;
 
 	virtual drm::BindlessResources& GetTextures() = 0;
+	
+	virtual drm::BindlessResources& GetSamplers() = 0;
 };
 
 namespace drm

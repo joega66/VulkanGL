@@ -78,10 +78,44 @@ static VkImageLayout ChooseImageLayout(EFormat Format)
 	}
 }
 
-VulkanTextureID VulkanBindlessResources::CreateTextureID(const VulkanImageView& ImageView, const VulkanSampler& Sampler)
+VulkanTextureID VulkanBindlessResources::CreateTextureID(const VulkanImageView& ImageView)
 {
-	const VkDescriptorImageInfo ImageInfo = { Sampler.GetHandle(), ImageView.GetHandle(), ChooseImageLayout(ImageView.GetFormat()) };
+	const VkDescriptorImageInfo ImageInfo = { nullptr, ImageView.GetHandle(), ChooseImageLayout(ImageView.GetFormat()) };
+	const uint32 DstArrayElement = AllocateResourceID();
 
+	VkWriteDescriptorSet WriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+	WriteDescriptorSet.dstSet = BindlessResources;
+	WriteDescriptorSet.dstBinding = 0;
+	WriteDescriptorSet.dstArrayElement = DstArrayElement;
+	WriteDescriptorSet.descriptorCount = 1;
+	WriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	WriteDescriptorSet.pImageInfo = &ImageInfo;
+	
+	vkUpdateDescriptorSets(Device, 1, &WriteDescriptorSet, 0, nullptr);
+
+	return VulkanTextureID(DstArrayElement);
+}
+
+VulkanSamplerID VulkanBindlessResources::CreateSamplerID(const VulkanSampler& Sampler)
+{
+	const VkDescriptorImageInfo ImageInfo = { Sampler.GetHandle(), nullptr, {} };
+	const uint32 DstArrayElement = AllocateResourceID();
+
+	VkWriteDescriptorSet WriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+	WriteDescriptorSet.dstSet = BindlessResources;
+	WriteDescriptorSet.dstBinding = 0;
+	WriteDescriptorSet.dstArrayElement = DstArrayElement;
+	WriteDescriptorSet.descriptorCount = 1;
+	WriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+	WriteDescriptorSet.pImageInfo = &ImageInfo;
+
+	vkUpdateDescriptorSets(Device, 1, &WriteDescriptorSet, 0, nullptr);
+
+	return VulkanSamplerID(DstArrayElement);
+}
+
+uint32 VulkanBindlessResources::AllocateResourceID()
+{
 	uint32 DstArrayElement;
 
 	if (Available.empty())
@@ -94,58 +128,53 @@ VulkanTextureID VulkanBindlessResources::CreateTextureID(const VulkanImageView& 
 		Available.pop_front();
 	}
 
-	VkWriteDescriptorSet WriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-	WriteDescriptorSet.dstSet = BindlessResources;
-	WriteDescriptorSet.dstBinding = 0;
-	WriteDescriptorSet.dstArrayElement = DstArrayElement;
-	WriteDescriptorSet.descriptorCount = 1;
-	WriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	WriteDescriptorSet.pImageInfo = &ImageInfo;
-	
-	vkUpdateDescriptorSets(Device, 1, &WriteDescriptorSet, 0, nullptr);
-
-	return VulkanTextureID(DstArrayElement);
+	return DstArrayElement;
 }
 
-void VulkanBindlessResources::FreeResourceID(uint32 ResourceID)
+void VulkanBindlessResources::Release(uint32 ResourceID)
 {
-	FreedThisFrame.push_back(ResourceID);
+	Released.push_back(ResourceID);
 }
 
 void VulkanBindlessResources::EndFrame()
 {
-	for (auto ID : FreedThisFrame)
+	for (auto ID : Released)
 	{
 		Available.push_back(ID);
 	}
 
-	FreedThisFrame.clear();
+	Released.clear();
 }
 
 static constexpr uint32 NULL_ID = -1;
 
-VulkanBindlessResources* gBindlessTextures = nullptr;
+std::weak_ptr<VulkanBindlessResources> gBindlessTextures;
+std::weak_ptr<VulkanBindlessResources> gBindlessSamplers;
 
-VulkanTextureID::VulkanTextureID(uint32 ID)
-	: ID(ID)
-{
-}
+#define DEFINE_VULKAN_RESOURCE_ID(ResourceType) \
+ResourceType::ResourceType(uint32 ID) \
+	: ID(ID) \
+{ \
+} \
 
-VulkanTextureID::VulkanTextureID(VulkanTextureID&& Other)
-	: ID(std::exchange(Other.ID, NULL_ID))
-{
-}
+DEFINE_VULKAN_RESOURCE_ID(VulkanTextureID);
 
-VulkanTextureID& VulkanTextureID::operator=(VulkanTextureID&& Other)
+void VulkanTextureID::Release()
 {
-	ID = std::exchange(Other.ID, NULL_ID);
-	return *this;
-}
-
-VulkanTextureID::~VulkanTextureID()
-{
-	if (ID != NULL_ID)
+	if (auto Textures = gBindlessTextures.lock(); ID != NULL_ID && Textures)
 	{
-		gBindlessTextures->FreeResourceID(ID);
+		Textures->Release(ID);
+		ID = NULL_ID;
+	}
+}
+
+DEFINE_VULKAN_RESOURCE_ID(VulkanSamplerID);
+
+void VulkanSamplerID::Release()
+{
+	if (auto Samplers = gBindlessSamplers.lock(); ID != NULL_ID && Samplers)
+	{
+		Samplers->Release(ID);
+		ID = NULL_ID;
 	}
 }

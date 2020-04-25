@@ -5,29 +5,28 @@
 class VulkanImageView;
 class VulkanSampler;
 
-class VulkanTextureID
-{
-public:
-	VulkanTextureID(const VulkanTextureID&) = delete;
-	VulkanTextureID& operator=(const VulkanTextureID&) = delete;
+#define DECLARE_VULKAN_RESOURCE_ID(ResourceType) \
+class ResourceType \
+{ \
+public: \
+	ResourceType() = default; \
+	ResourceType(uint32 ID); \
+	void Release(); \
+	inline const uint32& Get() const { return ID; } \
+	inline operator uint32() const { return ID; } \
+protected: \
+	uint32 ID; \
+}; \
 
-	VulkanTextureID() = default;
-	VulkanTextureID(uint32 ID);
-	VulkanTextureID(VulkanTextureID&& Other);
-	~VulkanTextureID();
-
-	VulkanTextureID& operator=(VulkanTextureID&& Other);
-
-	inline const uint32& Get() const { return ID; }
-
-protected:
-	uint32 ID;
-};
+DECLARE_VULKAN_RESOURCE_ID(VulkanTextureID);
+DECLARE_VULKAN_RESOURCE_ID(VulkanSamplerID);
 
 class VulkanBindlessResources
 {
-	friend class VulkanDevice; // EndFrame()
-	friend class VulkanTextureID; // FreeResourceID()
+	friend class VulkanDevice;		// EndFrame
+	friend class VulkanTextureID;	// FreeResourceID
+	friend class VulkanSamplerID;	// FreeResourceID
+	friend class VulkanSampler;		// CreateSamplerID
 
 public:
 	VulkanBindlessResources(const VulkanBindlessResources&) = delete;
@@ -36,7 +35,8 @@ public:
 	VulkanBindlessResources(VkDevice Device, VkDescriptorType ResourceType, uint32 ResourceCount);
 	~VulkanBindlessResources();
 
-	VulkanTextureID CreateTextureID(const VulkanImageView& ImageView, const VulkanSampler& Sampler);
+	/** Create a texture ID for indexing into the texture2D array. */
+	VulkanTextureID CreateTextureID(const VulkanImageView& ImageView);
 
 	inline VkDescriptorSetLayout GetLayout() const { return BindlessResourceSetLayout; }
 	inline VkDescriptorSet GetSet() const { return BindlessResources; }
@@ -47,11 +47,21 @@ private:
 	VkDescriptorPool BindlessResourceDescriptorPool;
 	VkDescriptorSet BindlessResources;
 	uint32 CurrNumBindlessResources = 0;
-	std::list<uint32> FreedThisFrame;
 	std::list<uint32> Available;
+	std::list<uint32> Released;
 
-	void FreeResourceID(uint32 ResourceID); // VulkanTextureID
-	void EndFrame(); // VulkanDevice
+	/** Creates a SamplerID. Samplers call this automatically. */
+	VulkanSamplerID CreateSamplerID(const VulkanSampler& Sampler);
+
+	/** Allocates an ID into a bindless resource table. */
+	uint32 AllocateResourceID();
+
+	/** Release an ID. */
+	void Release(uint32 ResourceID);
+
+	/** Called in VulkanDevice::EndFrame(). */
+	void EndFrame();
 };
 
-extern VulkanBindlessResources* gBindlessTextures;
+extern std::weak_ptr<VulkanBindlessResources> gBindlessTextures;
+extern std::weak_ptr<VulkanBindlessResources> gBindlessSamplers;

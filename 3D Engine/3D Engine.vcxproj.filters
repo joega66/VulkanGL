@@ -519,8 +519,5 @@
     <None Include="..\Shaders\CameraCommon.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="VULKAN\VULKANBINDLESSRESOURCES.INL">
-      <Filter>Source</Filter>
-    </None>
   </ItemGroup>
 </Project>

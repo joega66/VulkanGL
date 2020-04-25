@@ -249,8 +249,8 @@ namespace drm
 	{
 	public:
 		ImagePrivate() = default;
-		ImagePrivate(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage UsageFlags, uint32 MipLevels)
-			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(UsageFlags), MipLevels(MipLevels)
+		ImagePrivate(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage Usage, uint32 MipLevels)
+			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(Usage), MipLevels(MipLevels)
 		{
 		}
 

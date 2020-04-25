@@ -16,10 +16,11 @@ Material::Material(
 {
 	const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
-	PushConstants.BaseColor = Device.CreateTextureID(BaseColor->GetImageView(), Sampler);
-	PushConstants.MetallicRoughness = MetallicRoughness ? Device.CreateTextureID(MetallicRoughness->GetImageView(), Sampler) : drm::TextureID();
-	PushConstants.Normal = Normal ? Device.CreateTextureID(Normal->GetImageView(), Sampler) : 0;
-	PushConstants.Emissive = Emissive ? Device.CreateTextureID(Emissive->GetImageView(), Sampler) : 0;
+	PushConstants.BaseColor = BaseColor->GetTextureID();
+	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID().Get() : 0;
+	PushConstants.Normal = Normal ? Normal->GetTextureID().Get() : 0;
+	PushConstants.Emissive = Emissive ? Emissive->GetTextureID().Get() : 0;
+	PushConstants.Sampler = Sampler.GetSamplerID();
 
 	PushConstants.Metallic = Metallic;
 	PushConstants.Roughness = Roughness;

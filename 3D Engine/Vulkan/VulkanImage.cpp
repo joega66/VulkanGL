@@ -94,19 +94,25 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	, uint32 Width
 	, uint32 Height
 	, uint32 Depth
-	, EImageUsage UsageFlags
+	, EImageUsage Usage
 	, uint32 MipLevels) 
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
-	, drm::ImagePrivate(Format, Width, Height, Depth, UsageFlags, MipLevels)
+	, drm::ImagePrivate(Format, Width, Height, Depth, Usage, MipLevels)
 {
-	ImageView = Device.CreateImageView(*this, 0, MipLevels, 0, Any(GetUsage() & EImageUsage::Cubemap) ? 6 : 1);
+	ImageView = Device.CreateImageView(*this, 0, MipLevels, 0, Any(Usage & EImageUsage::Cubemap) ? 6 : 1);
+
+	if (Any(Usage & EImageUsage::Sampled))
+	{
+		TextureID = Device.CreateTextureID(ImageView);
+	}
 }
 
 VulkanImage::VulkanImage(VulkanImage&& Other)
 	: Image(std::exchange(Other.Image, nullptr))
 	, ImageView(std::move(Other.ImageView))
+	, TextureID(std::move(Other.TextureID))
 	, Memory(Other.Memory)
 	, Device(Other.Device)
 	, ImagePrivate(Other)
@@ -117,6 +123,7 @@ VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 {
 	Image = std::exchange(Other.Image, nullptr);
 	ImageView = std::move(Other.ImageView);
+	TextureID = std::move(Other.TextureID);
 	Memory = Other.Memory;
 	Device = Other.Device;
 	Format = Other.Format;
@@ -132,6 +139,7 @@ VulkanImage::~VulkanImage()
 {
 	if (Image != nullptr)
 	{
+		TextureID.Release();
 		vkDestroyImage(Device, Image, nullptr);
 		vkFreeMemory(Device, Memory, nullptr);
 	}
@@ -285,9 +293,9 @@ VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDes
 		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 	};
 
-	VkFilter Filter = VulkanImage::GetVulkanFilter(SamplerDesc.Filter);
-	VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.SMM)];
-	VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.SAM)];
+	const VkFilter Filter = VulkanImage::GetVulkanFilter(SamplerDesc.Filter);
+	const VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.SMM)];
+	const VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.SAM)];
 
 	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	SamplerInfo.magFilter = Filter;
@@ -306,6 +314,8 @@ VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDes
 	SamplerInfo.maxLod = SamplerDesc.MaxLod;
 
 	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
+
+	SamplerID = Device.GetSamplers().CreateSamplerID(*this);
 }
 
 static VkImageLayout ChooseImageLayout(EFormat Format)

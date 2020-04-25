@@ -1,8 +1,10 @@
 #include "Common.glsl"
 #include "CameraCommon.glsl"
 #include "MeshCommon.glsl"
+#define TEXTURES_SET 2
+#define SAMPLERS_SET 3
 #include "MaterialCommon.glsl"
-#define VOXEL_SET 3
+#define VOXEL_SET 4
 #include "VoxelsCommon.glsl"
 
 void main()

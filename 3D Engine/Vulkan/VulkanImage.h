@@ -1,6 +1,6 @@
 #pragma once
+#include "VulkanBindlessResources.h"
 #include <DRMResource.h>
-#include <vulkan/vulkan.h>
 
 class VulkanDevice;
 
@@ -39,7 +39,7 @@ public:
 		, uint32 Width
 		, uint32 Height
 		, uint32 Depth
-		, EImageUsage UsageFlags
+		, EImageUsage Usage
 		, uint32 MipLevels
 	);
 	VulkanImage(VulkanImage&& Other);
@@ -50,6 +50,7 @@ public:
 	inline operator VkImage() const { return Image; }
 	inline VkImage GetHandle() const { return Image; }
 	inline const VulkanImageView& GetImageView() const { return ImageView; }
+	inline const VulkanTextureID& GetTextureID() const { return TextureID; }
 	VkFormat GetVulkanFormat() const;
 	VkImageAspectFlags GetVulkanAspect() const;
 	
@@ -64,6 +65,7 @@ private:
 	VkDevice Device = VK_NULL_HANDLE;
 	VkImage Image = nullptr;
 	VulkanImageView ImageView = {};
+	VulkanTextureID TextureID = {};
 	VkDeviceMemory Memory = nullptr;
 };
 
@@ -74,9 +76,11 @@ public:
 	VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc);
 
 	inline VkSampler GetHandle() const { return Sampler; }
+	inline const VulkanSamplerID& GetSamplerID() const { return SamplerID; }
 
 private:
 	VkSampler Sampler = nullptr;
+	VulkanSamplerID SamplerID = {};
 };
 
 class VulkanDescriptorImageInfo

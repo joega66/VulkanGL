@@ -132,6 +132,7 @@ void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 		CameraDescriptorSet.GetLayout(),
 		MeshProxy.GetSurfaceSet().GetLayout(),
 		Engine.Device.GetTextures().GetLayout(),
+		Engine.Device.GetSamplers().GetLayout(),
 		VCTLightingCache.GetDescriptorSet().GetLayout()
 	};
 
@@ -140,6 +141,7 @@ void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 		CameraDescriptorSet,
 		MeshProxy.GetSurfaceSet(),
 		Engine.Device.GetTextures().GetSet(),
+		Engine.Device.GetSamplers().GetSet(),
 		VCTLightingCache.GetDescriptorSet()
 	};
 

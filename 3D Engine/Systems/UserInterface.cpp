@@ -239,14 +239,23 @@ void UserInterface::ShowEntities(Engine& Engine)
 
 	if (ECS.HasComponent<SkyboxComponent>(Selected))
 	{
+		auto& Device = Engine.Device;
 		auto& SkyboxComp = ECS.GetComponent<SkyboxComponent>(Selected);
 		const Skybox* Skybox = SkyboxComp.Skybox;
 		const drm::Image* Front = Skybox->GetFace(CubemapFace::Front);
+		drm::TextureID& TextureID = const_cast<drm::TextureID&>(const_cast<drm::Image*>(Front)->GetTextureID());
 
-		ImGui::Image(Front->GetHandle(), ImVec2(static_cast<float>(Front->GetWidth()), static_cast<float>(Front->GetHeight())), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1.0f, 1.0f, 1.0f, 1.0f), ImVec4(1.0f, 1.0f, 1.0f, 0.5f));
+		ImGui::Image(
+			&TextureID, 
+			ImVec2(static_cast<float>(Front->GetWidth()), static_cast<float>(Front->GetHeight())), 
+			ImVec2(0, 0), 
+			ImVec2(1, 1), 
+			ImVec4(1.0f, 1.0f, 1.0f, 1.0f), 
+			ImVec4(1.0f, 1.0f, 1.0f, 0.5f)
+		);
 
 		/*ImGui::ImageButton(
-			Front->GetHandle(),
+			&SkyboxID,
 			ImVec2(32.0f, 32.0f),
 			ImVec2(0.0f, 0.0f),
 			ImVec2(32.0f / static_cast<float>(Front->GetWidth()), 32.0f / static_cast<float>(Front->GetHeight())),
@@ -268,7 +277,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
 
 	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	FontID = Device.CreateTextureID(FontImage.GetImageView(), Device.CreateSampler({}));
+	SamplerID = Device.CreateSampler({}).GetSamplerID();
 
 	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
 
@@ -296,7 +305,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 
 	drm::UploadImageData(Device, Pixels, FontImage);
 
-	Imgui.Fonts->TexID = (ImTextureID)(intptr_t)FontImage.GetNativeHandle();
+	Imgui.Fonts->TexID = &const_cast<drm::TextureID&>(FontImage.GetTextureID());
 
 	PSODesc.DepthStencilState.DepthTestEnable = false;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
@@ -317,8 +326,8 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetTextures().GetLayout() };
-	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(uint32) };
+	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(glm::uvec2) };
 
 	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
 	{
@@ -342,7 +351,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 
 		CmdList.BindPipeline(Pipeline);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, Device.GetTextures().GetSet() };
+		const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
@@ -375,7 +384,8 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 
 				CmdList.SetScissor(1, &Scissor);
 
-				CmdList.PushConstants(Pipeline, &FontID);
+				const glm::uvec2 PushConstants(*static_cast<uint32*>(DrawCmd->TextureId), SamplerID);
+				CmdList.PushConstants(Pipeline, &PushConstants);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}

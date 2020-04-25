@@ -176,7 +176,6 @@
     <None Include="..\Shaders\VoxelsGS.glsl" />
     <None Include="..\Shaders\VoxelsVS.glsl" />
     <None Include="ECS\ComponentArray.inl" />
-    <None Include="VULKAN\VULKANBINDLESSRESOURCES.INL" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -1,10 +1,12 @@
 #version 450
 #define TEXTURES_SET 1
+#define SAMPLERS_SET 2
 #include "SceneResources.glsl"
 
 layout(push_constant) uniform PushConstants
 {
 	uint TextureID;
+	uint SamplerID;
 };
 
 layout(location = 0) in vec2 InUV;
@@ -14,5 +16,5 @@ layout(location = 0) out vec4 OutColor;
 
 void main()
 {
-	OutColor = InColor * texture(Textures[nonuniformEXT(TextureID)], InUV);
+	OutColor = InColor * Sample2D(TextureID, SamplerID, InUV);
 }

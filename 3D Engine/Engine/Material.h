@@ -19,6 +19,7 @@ public:
 		drm::TextureID MetallicRoughness;
 		drm::TextureID Normal;
 		drm::TextureID Emissive;
+		drm::SamplerID Sampler;
 		float Metallic;
 		float Roughness;
 		glm::vec3 EmissiveFactor;
