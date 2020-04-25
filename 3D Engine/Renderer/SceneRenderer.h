@@ -2,7 +2,6 @@
 #include <DRM.h>
 #include "CameraProxy.h"
 
-/** The Scene Renderer renders camera views. */
 class SceneRenderer
 {
 public:

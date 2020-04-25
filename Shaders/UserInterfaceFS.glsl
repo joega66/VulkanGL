@@ -1,6 +1,6 @@
 #version 450
-#define TEXTURES_SET 1
-#define SAMPLERS_SET 2
+#define TEXTURE_SET 1
+#define SAMPLER_SET 2
 #include "SceneResources.glsl"
 
 layout(push_constant) uniform PushConstants

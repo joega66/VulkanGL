@@ -33,7 +33,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
-
+	
 	RenderPass = Device.CreateRenderPass(RPDesc);
 
 	ShadowDescriptors Descriptors;
@@ -42,6 +42,13 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 	Descriptors.LightInjectionUniform = LightInjectionUniform;
 	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
+
+	const float64 Width = Platform::GetFloat64("Engine.ini", "Shadows", "Width", 400.0f);
+	const float64 ZNear = Platform::GetFloat64("Engine.ini", "Shadows", "ZNear", 1.0f);
+	const float64 ZFar = Platform::GetFloat64("Engine.ini", "Shadows", "ZFar", 96.0f);
+
+	LightProjMatrix = glm::ortho(-(float)Width * 0.5f, (float)Width * 0.5f, -(float)Width * 0.5f, (float)Width * 0.5f, (float)ZNear, (float)ZFar);
+	LightProjMatrix[1][1] *= -1;
 }
 
 void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalLight)
@@ -53,13 +60,7 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	LightInjectionUniformPtr->ShadowMapSize = glm::ivec4(ShadowMap.GetWidth(), ShadowMap.GetHeight(), 0, 0);
 	LightInjectionUniformPtr->L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
 	LightInjectionUniformPtr->Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
-	
-	const float64 Width = Platform::GetFloat64("Engine.ini", "Shadows", "Width", 400.0f);
-	const float64 ZNear = Platform::GetFloat64("Engine.ini", "Shadows", "ZNear", 1.0f);
-	const float64 ZFar = Platform::GetFloat64("Engine.ini", "Shadows", "ZFar", 96.0f);
-	
-	glm::mat4 LightProjMatrix = glm::ortho(-(float)Width * 0.5f, (float)Width * 0.5f, -(float)Width * 0.5f, (float)Width * 0.5f, (float)ZNear, (float)ZFar);
-	LightProjMatrix[1][1] *= -1;
+
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
 

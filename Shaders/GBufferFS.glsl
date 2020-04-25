@@ -1,7 +1,7 @@
 #include "CameraCommon.glsl"
 #include "MeshCommon.glsl"
-#define TEXTURES_SET 2
-#define SAMPLERS_SET 3
+#define TEXTURE_SET 2
+#define SAMPLER_SET 3
 #include "MaterialCommon.glsl"
 
 layout(location = 0) out vec4 OutGBuffer0;

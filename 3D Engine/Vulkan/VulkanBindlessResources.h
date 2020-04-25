@@ -43,6 +43,7 @@ public:
 
 private:
 	VkDevice Device;
+	const uint32 ResourceCount;
 	VkDescriptorSetLayout BindlessResourceSetLayout;
 	VkDescriptorPool BindlessResourceDescriptorPool;
 	VkDescriptorSet BindlessResources;

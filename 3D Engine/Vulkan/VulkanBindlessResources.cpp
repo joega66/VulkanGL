@@ -3,6 +3,7 @@
 
 VulkanBindlessResources::VulkanBindlessResources(VkDevice Device, VkDescriptorType ResourceType, uint32 ResourceCount)
 	: Device(Device)
+	, ResourceCount(ResourceCount)
 {
 	constexpr VkDescriptorBindingFlags BindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 
@@ -120,6 +121,7 @@ uint32 VulkanBindlessResources::AllocateResourceID()
 
 	if (Available.empty())
 	{
+		check(CurrNumBindlessResources < ResourceCount, "Out of descriptor indexes!");
 		DstArrayElement = CurrNumBindlessResources++;
 	}
 	else

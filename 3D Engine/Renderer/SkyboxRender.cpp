@@ -41,26 +41,16 @@ public:
 	}
 };
 
-struct SkyboxDescriptors
-{
-	drm::DescriptorImageInfo Skybox;
-
-	static const std::vector<DescriptorBinding>& GetBindings()
-	{
-		static std::vector<DescriptorBinding> Bindings =
-		{
-			{ 0, 1, EDescriptorType::SampledImage }
-		};
-		return Bindings;
-	}
-};
-
 void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 {
-	drm::DescriptorSetLayout SkyboxLayout = Device.CreateDescriptorSetLayout(SkyboxDescriptors::GetBindings().size(), SkyboxDescriptors::GetBindings().data());
-
 	const SkyboxVS* VertShader = ShaderMap.FindShader<SkyboxVS>();
 	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
+
+	struct PushConstants
+	{
+		drm::TextureID Skybox;
+		drm::SamplerID Sampler;
+	};
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = Camera.SceneRP;
@@ -69,24 +59,25 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	PSODesc.Viewport.Width = Camera.SceneColor.GetWidth();
 	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), SkyboxLayout };
+	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(PushConstants) };
 
 	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 
+	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
+	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+
 	for (auto& Entity : ECS.GetEntities<SkyboxComponent>())
 	{
 		auto& Skybox = ECS.GetComponent<SkyboxComponent>(Entity);
 
-		SkyboxDescriptors Descriptors;
-		Descriptors.Skybox = drm::DescriptorImageInfo(Skybox.Skybox->GetImage(), Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }));
+		PushConstants PushConstants;
+		PushConstants.Skybox = Skybox.Skybox->GetImage().GetTextureID();
+		PushConstants.Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 
-		drm::DescriptorSet DescriptorSet = SkyboxLayout.CreateDescriptorSet(Device);
-		SkyboxLayout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
-
-		const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, DescriptorSet };
-		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+		CmdList.PushConstants(Pipeline, &PushConstants);
 
 		const StaticMesh* Cube = Assets.GetStaticMesh("Cube");
 
