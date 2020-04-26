@@ -20,7 +20,7 @@ public:
 
 	/** @begin drm::CommandList */
 
-	VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags);
+	VulkanCommandList(VulkanDevice& Device, VkQueueFlags QueueFlags);
 	~VulkanCommandList();
 	VulkanCommandList(const VulkanCommandList&) = delete;
 	VulkanCommandList& operator=(const VulkanCommandList&) = delete;

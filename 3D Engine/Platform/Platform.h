@@ -2,6 +2,8 @@
 #include <Engine/Types.h>
 #include <filesystem>
 
+using Crc = uint32;
+
 enum class EMBType
 {
 	ABORTRETRYIGNORE,
@@ -94,6 +96,8 @@ public:
 	static int32 GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default);
 	static float64 GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default);
 	static std::string GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default);
+
+	static Crc CalculateCrc(const void* Message, std::size_t nBytes);
 };
 
 using Platform = WindowsPlatform;

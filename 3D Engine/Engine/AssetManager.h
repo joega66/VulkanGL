@@ -47,10 +47,10 @@ public:
 private:
 	DRMDevice& Device;
 
-	HashTable<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
-	HashTable<std::string, std::unique_ptr<Material>> Materials;
-	HashTable<std::string, std::unique_ptr<Skybox>> Skyboxes;
-	HashTable<std::string, std::unique_ptr<drm::Image>> Images;
+	std::unordered_map<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
+	std::unordered_map<std::string, std::unique_ptr<Material>> Materials;
+	std::unordered_map<std::string, std::unique_ptr<Skybox>> Skyboxes;
+	std::unordered_map<std::string, std::unique_ptr<drm::Image>> Images;
 
 	static void CreateDebugImages(DRMDevice& Device);
 };

@@ -1,6 +1,7 @@
 #include "VulkanDevice.h"
 #include "VulkanRenderPass.h"
 #include "VulkanSurface.h"
+#include <unordered_set>
 
 void VulkanDevice::EndFrame()
 {
@@ -26,7 +27,7 @@ void VulkanDevice::SubmitCommands(drm::CommandList& CmdList)
 drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 {
 	// @todo Transfer, AsyncCompute Queues
-	const VkQueueFlagBits QueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+	const VkQueueFlags QueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
 	return VulkanCommandList(*this, QueueFlags);
 }
 

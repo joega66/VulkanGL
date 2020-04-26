@@ -6,7 +6,7 @@ std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> VulkanCache::GetDes
 	const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
 )
 {
-	const Crc Crc = CalculateCrc(Bindings.data(), Bindings.size() * sizeof(Bindings.front()));
+	const Crc Crc = Platform::CalculateCrc(Bindings.data(), Bindings.size() * sizeof(Bindings.front()));
 
 	if (auto Iter = SetLayoutCache.find(Crc); Iter != SetLayoutCache.end())
 	{

@@ -149,21 +149,21 @@ namespace std
 		{
 			std::size_t Seed = 0;
 			HashCombine(Seed, PSODesc.RenderPass.GetRenderPass());
-			HashCombine(Seed, CalculateCrc(&PSODesc.Scissor, sizeof(PSODesc.Scissor)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.Viewport, sizeof(PSODesc.Viewport)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.DepthStencilState, sizeof(PSODesc.DepthStencilState)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.RasterizationState, sizeof(PSODesc.RasterizationState)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.MultisampleState, sizeof(PSODesc.MultisampleState)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.InputAssemblyState, sizeof(PSODesc.InputAssemblyState)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.ShaderStages, sizeof(PSODesc.ShaderStages)));
-			HashCombine(Seed, CalculateCrc(PSODesc.SpecializationInfo.GetMapEntries().data(), PSODesc.SpecializationInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
-			HashCombine(Seed, CalculateCrc(PSODesc.SpecializationInfo.GetData().data(), PSODesc.SpecializationInfo.GetData().size()));
-			HashCombine(Seed, CalculateCrc(PSODesc.ColorBlendAttachmentStates.data(), PSODesc.ColorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
-			HashCombine(Seed, CalculateCrc(PSODesc.DynamicStates.data(), PSODesc.DynamicStates.size() * sizeof(EDynamicState)));
-			HashCombine(Seed, CalculateCrc(PSODesc.VertexAttributes.data(), PSODesc.VertexAttributes.size() * sizeof(VertexAttributeDescription)));
-			HashCombine(Seed, CalculateCrc(PSODesc.VertexBindings.data(), PSODesc.VertexBindings.size() * sizeof(VertexBindingDescription)));
-			HashCombine(Seed, CalculateCrc(PSODesc.Layouts.data(), PSODesc.Layouts.size() * sizeof(VkDescriptorSetLayout)));
-			HashCombine(Seed, CalculateCrc(&PSODesc.PushConstantRange, sizeof(PSODesc.PushConstantRange)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.Scissor, sizeof(PSODesc.Scissor)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.Viewport, sizeof(PSODesc.Viewport)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.DepthStencilState, sizeof(PSODesc.DepthStencilState)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.RasterizationState, sizeof(PSODesc.RasterizationState)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.MultisampleState, sizeof(PSODesc.MultisampleState)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.InputAssemblyState, sizeof(PSODesc.InputAssemblyState)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.ShaderStages, sizeof(PSODesc.ShaderStages)));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.SpecializationInfo.GetMapEntries().data(), PSODesc.SpecializationInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.SpecializationInfo.GetData().data(), PSODesc.SpecializationInfo.GetData().size()));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.ColorBlendAttachmentStates.data(), PSODesc.ColorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.DynamicStates.data(), PSODesc.DynamicStates.size() * sizeof(EDynamicState)));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.VertexAttributes.data(), PSODesc.VertexAttributes.size() * sizeof(VertexAttributeDescription)));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.VertexBindings.data(), PSODesc.VertexBindings.size() * sizeof(VertexBindingDescription)));
+			HashCombine(Seed, Platform::CalculateCrc(PSODesc.Layouts.data(), PSODesc.Layouts.size() * sizeof(VkDescriptorSetLayout)));
+			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.PushConstantRange, sizeof(PSODesc.PushConstantRange)));
 			return Seed;
 		}
 	};

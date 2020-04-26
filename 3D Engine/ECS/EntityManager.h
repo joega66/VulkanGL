@@ -155,10 +155,10 @@ public:
 
 private:
 	/** Map of prefab names to prefab entities. */
-	HashTable<std::string, Entity> Prefabs;
+	std::unordered_map<std::string, Entity> Prefabs;
 
 	/** Map of entity id's to prefab names*/
-	HashTable<uint32, std::string> PrefabNames;
+	std::unordered_map<uint32, std::string> PrefabNames;
 
 	/** Entity pool. */
 	std::vector<Entity> Entities;
@@ -173,13 +173,13 @@ private:
 	std::list<Entity> DeadEntities;
 
 	/** Map of a component's type to its component array. */
-	HashTable<std::type_index, std::unique_ptr<IComponentArray>> ComponentArrays;
+	std::unordered_map<std::type_index, std::unique_ptr<IComponentArray>> ComponentArrays;
 
 	/** Array of singleton components. */
 	std::vector<std::shared_ptr<void>> SingletonComponentsArray;
 
 	/** Singleton type index to its array index. */
-	HashTable<std::type_index, std::size_t> SingletonTypeToArrayIndex;
+	std::unordered_map<std::type_index, std::size_t> SingletonTypeToArrayIndex;
 
 	/** Free indices in the singleton component array. */
 	std::list<std::size_t> FreeSingletonComponentArrayIndices;

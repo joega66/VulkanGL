@@ -64,7 +64,8 @@ private:
 	std::array<bool, NUM_KEYS> KeysPressed;
 
 	/** Keyboard shortcuts. */
-	HashTable<std::string, std::vector<EKeyCode>> Shortcuts;
+	std::unordered_map<std::string, std::vector<EKeyCode>> Shortcuts;
+	std::unordered_map<Crc, std::string> ShortcutCrcs;
 
 	static void GLFWKeyboardEvent(struct GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
 

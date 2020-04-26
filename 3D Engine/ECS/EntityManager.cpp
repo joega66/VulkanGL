@@ -3,9 +3,9 @@
 
 Entity EntityManager::CreatePrefab(const std::string& Name)
 {
-	check(!Contains(Prefabs, Name), "Prefab %s already exists.", Name.c_str());
+	check(!Prefabs.contains(Name), "Prefab %s already exists.", Name.c_str());
 	Prefabs.emplace(Name, CreateEntity());
-	Entity Prefab = GetValue(Prefabs, Name);
+	Entity Prefab = Prefabs[Name];
 	PrefabNames.emplace(Prefab.GetEntityID(), Name);
 	return Prefab;
 }

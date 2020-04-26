@@ -1,6 +1,6 @@
 #include "VulkanQueues.h"
 
-static inline bool HasQueue(const VkQueueFamilyProperties& QueueFamily, VkQueueFlagBits QueueFlags)
+static inline bool HasQueue(const VkQueueFamilyProperties& QueueFamily, VkQueueFlags QueueFlags)
 {
 	return QueueFamily.queueCount > 0 && QueueFamily.queueFlags & QueueFlags;
 }

@@ -10,7 +10,7 @@ VulkanCache::VulkanCache(VulkanDevice& Device)
 
 drm::Sampler VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
 {
-	const Crc Crc = CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
+	const Crc Crc = Platform::CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
 
 	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
 	{

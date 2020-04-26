@@ -3,7 +3,7 @@
 #include <DRMShader.h>
 #include <DRMDefinitions.h>
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VkQueueFlagBits QueueFlags)
+VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VkQueueFlags QueueFlags)
 	: Device(Device)
 	, Queue(Device.GetQueues().GetQueue(QueueFlags))
 	, CommandPool(Device.GetQueues().GetCommandPool(QueueFlags))

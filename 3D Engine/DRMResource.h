@@ -1,9 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
 
-using Crc = uint32;
-Crc CalculateCrc(const void* Message, std::size_t nBytes);
-
 enum class EFormat
 {
 	UNDEFINED,
@@ -90,7 +87,7 @@ enum class EAccess
 	HostWrite = 0x00004000,
 	MemoryRead = 0x00008000,
 	MemoryWrite = 0x00010000,
-};
+}; ENABLE_BITWISE_OPERATORS(EAccess)
 
 enum class EPipelineStage
 {
@@ -112,7 +109,7 @@ enum class EPipelineStage
 	Host = 0x00004000,
 	AllGraphics = 0x00008000,
 	AllCommands = 0x00010000,
-};
+}; ENABLE_BITWISE_OPERATORS(EPipelineStage);
 
 enum class EBufferUsage
 {
@@ -124,7 +121,7 @@ enum class EBufferUsage
 	Index = 1 << 4,
 	Uniform = 1 << 5,
 	Transfer = 1 << 6,
-};
+}; ENABLE_BITWISE_OPERATORS(EBufferUsage);
 
 enum class EImageUsage
 {
@@ -135,7 +132,7 @@ enum class EImageUsage
 	Storage		= 1 << 3,
 	TransferSrc = 1 << 4,
 	TransferDst	= 1 << 5,
-};
+}; ENABLE_BITWISE_OPERATORS(EImageUsage);
 
 enum class ELoadAction
 {
@@ -518,7 +515,7 @@ enum class EColorChannel
 	B = 0x04,
 	A = 0x08,
 	RGBA = R | G | B | A
-};
+}; ENABLE_BITWISE_OPERATORS(EColorChannel);
 
 struct ColorBlendAttachmentState
 {

@@ -1,6 +1,7 @@
 #pragma once
 #include <Platform/Platform.h>
 #include <vulkan/vulkan.h>
+#include <unordered_set>
 
 class VulkanQueues
 {

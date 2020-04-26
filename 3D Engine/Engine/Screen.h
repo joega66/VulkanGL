@@ -1,5 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
+#include <functional>
 
 /** Abstraction of GLFW window resize events. */
 class Screen

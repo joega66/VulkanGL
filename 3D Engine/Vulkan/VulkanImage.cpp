@@ -1,7 +1,8 @@
 #include "VulkanImage.h"
 #include "VulkanDevice.h"
+#include <unordered_set>
 
-static const HashTable<EFormat, VkFormat> VulkanFormat =
+static std::unordered_map<EFormat, VkFormat> EngineToVulkanFormat =
 {
 	ENTRY(EFormat::UNDEFINED, VK_FORMAT_UNDEFINED)
 	ENTRY(EFormat::R8_UNORM, VK_FORMAT_R8_UNORM)
@@ -56,6 +57,16 @@ static const HashTable<EFormat, VkFormat> VulkanFormat =
 	ENTRY(EFormat::D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT)
 	ENTRY(EFormat::BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
+
+static std::unordered_map<VkFormat, EFormat> VulkanToEngineFormat = [&] ()
+{
+	std::unordered_map<VkFormat, EFormat> ReverseMap;
+	std::for_each(EngineToVulkanFormat.begin(), EngineToVulkanFormat.end(), [&ReverseMap] (const auto& Pair)
+	{
+		ReverseMap[Pair.second] = Pair.first;
+	});
+	return ReverseMap;
+}();
 
 VulkanImageView::VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format)
 	: Device(Device)
@@ -147,17 +158,17 @@ VulkanImage::~VulkanImage()
 
 VkFormat VulkanImage::GetVulkanFormat(EFormat Format)
 {
-	return GetValue(VulkanFormat, Format);
+	return EngineToVulkanFormat[Format];
 }
 
 EFormat VulkanImage::GetEngineFormat(VkFormat Format)
 {
-	return GetKey(VulkanFormat, Format);
+	return VulkanToEngineFormat[Format];
 }
 
 VkImageLayout VulkanImage::GetVulkanLayout(EImageLayout Layout)
 {
-	static const HashTable<EImageLayout, VkImageLayout> VulkanLayout =
+	static std::unordered_map<EImageLayout, VkImageLayout> VulkanLayout =
 	{
 		ENTRY(EImageLayout::Undefined, VK_IMAGE_LAYOUT_UNDEFINED)
 		ENTRY(EImageLayout::General, VK_IMAGE_LAYOUT_GENERAL)
@@ -173,7 +184,7 @@ VkImageLayout VulkanImage::GetVulkanLayout(EImageLayout Layout)
 		ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 	};
 
-	return GetValue(VulkanLayout, Layout);
+	return VulkanLayout[Layout];
 }
 
 bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
@@ -185,8 +196,7 @@ bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
 		, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
 		, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
 	};
-
-	return Contains(VulkanDepthLayouts, Layout);
+	return VulkanDepthLayouts.contains(Layout);
 }
 
 VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
@@ -203,7 +213,7 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 
 VkFormat VulkanImage::GetVulkanFormat() const
 {
-	return GetValue(VulkanFormat, GetFormat());
+	return EngineToVulkanFormat[Format];
 }
 
 VkImageAspectFlags VulkanImage::GetVulkanAspect() const

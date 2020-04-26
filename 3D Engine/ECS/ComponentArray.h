@@ -1,5 +1,6 @@
 #pragma once
 #include "System.h"
+#include <functional>
 
 class Entity;
 

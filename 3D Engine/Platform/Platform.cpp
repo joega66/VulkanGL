@@ -243,7 +243,7 @@ std::string WindowsPlatform::GetString(const std::string& Filename, const std::s
 
 EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality)
 {
-	static const HashTable<EMBType, UINT> WindowsMBType =
+	static const std::unordered_map<EMBType, UINT> WindowsMBType =
 	{
 		ENTRY(EMBType::ABORTRETRYIGNORE, MB_ABORTRETRYIGNORE)
 		ENTRY(EMBType::CANCELTRYCONTINUE, MB_CANCELTRYCONTINUE)
@@ -256,7 +256,7 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 		ENTRY(EMBType::YESNOCANCEL, MB_YESNOCANCEL)
 	};
 
-	static const HashTable<EMBIcon, UINT> WindowsMBIcon =
+	static const std::unordered_map<EMBIcon, UINT> WindowsMBIcon =
 	{
 		ENTRY(EMBIcon::EXCLAMATION, MB_ICONEXCLAMATION)
 		ENTRY(EMBIcon::WARNING, MB_ICONWARNING)
@@ -268,14 +268,14 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 		ENTRY(EMBIcon::HAND, MB_ICONHAND)
 	};
 
-	static const HashTable<EMBModality, UINT> WindowsMBModality =
+	static const std::unordered_map<EMBModality, UINT> WindowsMBModality =
 	{
 		ENTRY(EMBModality::APPLMODAL, MB_APPLMODAL)
 		ENTRY(EMBModality::SYSTEMMODAL, MB_SYSTEMMODAL)
 		ENTRY(EMBModality::TASKMODAL, MB_TASKMODAL)
 	};
 
-	static const HashTable<int32, EMBReturn> WindowsMBReturn =
+	static const std::unordered_map<int32, EMBReturn> WindowsMBReturn =
 	{
 		ENTRY(IDABORT, EMBReturn::ABORT)
 		ENTRY(IDCANCEL, EMBReturn::CANCEL)
@@ -328,4 +328,53 @@ std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 	{
 		return {};
 	}
+}
+
+/** Reference: https://barrgroup.com/embedded-systems/how-to/crc-calculation-c-code */
+#define POLYNOMIAL 0xD8
+#define WIDTH  (8 * sizeof(Crc))
+#define TOPBIT (1 << (WIDTH - 1))
+
+static std::array<Crc, 256> GetCrcTable()
+{
+	std::array<Crc, 256> CrcTable;
+	Crc Remainder = 0;
+
+	for (uint32 Dividend = 0; Dividend < 256; ++Dividend)
+	{
+		Remainder = Dividend << (WIDTH - 8);
+
+		for (uint32 Bit = 8; Bit > 0; --Bit)
+		{
+			if (Remainder & TOPBIT)
+			{
+				Remainder = (Remainder << 1) ^ POLYNOMIAL;
+			}
+			else
+			{
+				Remainder = (Remainder << 1);
+			}
+		}
+
+		CrcTable[Dividend] = Remainder;
+	}
+
+	return CrcTable;
+}
+
+Crc Platform::CalculateCrc(const void* Message, std::size_t nBytes)
+{
+	static std::array<Crc, 256> CrcTable = GetCrcTable();
+	const uint8* ByteMessage = static_cast<const uint8*>(Message);
+
+	uint8 Data;
+	Crc Remainder = 0;
+
+	for (std::size_t Byte = 0; Byte < nBytes; ++Byte)
+	{
+		Data = ByteMessage[Byte] ^ (Remainder >> (WIDTH - 8));
+		Remainder = CrcTable[Data] ^ (Remainder << 8);
+	}
+
+	return Remainder;
 }

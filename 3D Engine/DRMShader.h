@@ -13,7 +13,7 @@ enum class EShaderStage
 	Compute = 1 << 5,
 	AllGraphics = Vertex | TessControl | TessEvaluation | Geometry | Fragment,
 	All = AllGraphics | Compute
-};
+}; ENABLE_BITWISE_OPERATORS(EShaderStage);
 
 class ShaderCompilerWorker
 {
@@ -110,7 +110,7 @@ public:
 	{
 		std::type_index Type = std::type_index(typeid(ShaderType));
 
-		if (Contains(Shaders, Type))
+		if (Shaders.contains(Type))
 		{
 			return static_cast<const ShaderType*>(Shaders[Type].get());
 		}
@@ -140,6 +140,6 @@ private:
 
 protected:
 	/** Cached shaders. */
-	HashTable<std::type_index, std::unique_ptr<drm::Shader>> Shaders;
+	std::unordered_map<std::type_index, std::unique_ptr<drm::Shader>> Shaders;
 
 };

@@ -1,7 +1,7 @@
 #include "Input.h"
 #include <GLFW/glfw3.h>
 
-static const HashTable<int32, EKeyCode> GLFWKeyCodes =
+static std::unordered_map<int32, EKeyCode> GLFWKeyCodes =
 {
 	ENTRY(GLFW_MOUSE_BUTTON_LEFT, EKeyCode::MouseLeft)
 	ENTRY(GLFW_KEY_0, EKeyCode::Keypad0)
@@ -27,9 +27,9 @@ void Input::GLFWKeyboardEvent(GLFWwindow* Window, int32 Key, int32 Scancode, int
 {
 	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Input;
 
-	if (Contains(GLFWKeyCodes, Key))
+	if (GLFWKeyCodes.contains(Key))
 	{
-		EKeyCode KeyCode = GetValue(GLFWKeyCodes, Key);
+		const EKeyCode KeyCode = GLFWKeyCodes[Key];
 
 		if (Action == GLFW_PRESS)
 		{
@@ -47,9 +47,9 @@ void Input::GLFWMouseButtonEvent(GLFWwindow* Window, int32 Button, int32 Action,
 {
 	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Input;
 
-	if (Contains(GLFWKeyCodes, Button))
+	if (GLFWKeyCodes.contains(Button))
 	{
-		EKeyCode KeyCode = GetValue(GLFWKeyCodes, Button);
+		const EKeyCode KeyCode = GLFWKeyCodes[Button];
 
 		if (Action == GLFW_PRESS)
 		{
@@ -82,9 +82,16 @@ bool Input::GetKeyUp(EKeyCode KeyCode) const
 
 void Input::AddShortcut(std::string&& ShortcutName, std::vector<EKeyCode>&& Shortcut)
 {
-	check(!Contains(Shortcuts, ShortcutName), "Shortcut name \"%s\" already taken.", ShortcutName.c_str());
+	check(!Shortcuts.contains(ShortcutName), "Shortcut name \"%s\" already taken.", ShortcutName.c_str());
+
 	std::sort(Shortcut.begin(), Shortcut.end());
-	check(!HasValue(Shortcuts, Shortcut), "\"%s\" trying to remap shortcut \"%s\".", ShortcutName.c_str(), GetKey(Shortcuts, Shortcut).c_str());
+
+	const Crc Crc = Platform::CalculateCrc(Shortcut.data(), Shortcut.size() * sizeof(EKeyCode));
+
+	check(!ShortcutCrcs.contains(Crc), "\"%s\" trying to remap shortcut \"%s\".", ShortcutName.c_str(), ShortcutCrcs[Crc].c_str());
+
+	ShortcutCrcs[Crc] = ShortcutName;
+
 	Shortcuts[ShortcutName] = Shortcut;
 }
 
@@ -95,15 +102,15 @@ bool Input::RemoveShortcut(std::string&& ShortcutName)
 
 bool Input::GetShortcutDown(std::string&& ShortcutName) const
 {
-	check(Contains(Shortcuts, ShortcutName), "Shortcut %s not found.", ShortcutName.c_str());
-	const auto& Shortcut = GetValue(Shortcuts, ShortcutName);
+	check(Shortcuts.contains(ShortcutName), "Shortcut %s not found.", ShortcutName.c_str());
+	const auto& Shortcut = Shortcuts.at(ShortcutName);
 	return std::all_of(Shortcut.begin(), Shortcut.end(), [this] (auto Key) { return GetKeyDown(Key); });
 }
 
 bool Input::GetShortcutUp(std::string&& ShortcutName) const
 {
-	check(Contains(Shortcuts, ShortcutName), "Shortcut %s not found.", ShortcutName.c_str());
-	const auto& Shortcut = GetValue(Shortcuts, ShortcutName);
+	check(Shortcuts.contains(ShortcutName), "Shortcut %s not found.", ShortcutName.c_str());
+	const auto& Shortcut = Shortcuts.at(ShortcutName);
 	const bool bAllKeysPressed = std::all_of(Shortcut.begin(), Shortcut.end() - 1, [this] (auto Key) { return GetKeyDown(Key); });
 	return bAllKeysPressed && GetKeyUp(Shortcut.back());
 }

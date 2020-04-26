@@ -31,12 +31,12 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDes
 	};
 
 	ComputePipelineHash ComputeHash;
-	ComputeHash.ComputeShaderCrc = CalculateCrc(ComputeDesc.ComputeShader, sizeof(ComputeDesc.ComputeShader));
-	ComputeHash.MapEntriesCrc = CalculateCrc(MapEntries.data(), MapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry));
-	ComputeHash.MapDataCrc = CalculateCrc(Data.data(), Data.size());
-	ComputeHash.SetLayoutsCrc = CalculateCrc(SetLayouts.data(), SetLayouts.size() * sizeof(VkDescriptorSetLayout));
+	ComputeHash.ComputeShaderCrc = Platform::CalculateCrc(ComputeDesc.ComputeShader, sizeof(ComputeDesc.ComputeShader));
+	ComputeHash.MapEntriesCrc = Platform::CalculateCrc(MapEntries.data(), MapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry));
+	ComputeHash.MapDataCrc = Platform::CalculateCrc(Data.data(), Data.size());
+	ComputeHash.SetLayoutsCrc = Platform::CalculateCrc(SetLayouts.data(), SetLayouts.size() * sizeof(VkDescriptorSetLayout));
 
-	const Crc Crc = CalculateCrc(&ComputeHash, sizeof(ComputeHash));
+	const Crc Crc = Platform::CalculateCrc(&ComputeHash, sizeof(ComputeHash));
 
 	if (auto Iter = ComputePipelineCache.find(Crc); Iter != ComputePipelineCache.end())
 	{
@@ -52,14 +52,14 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDes
 
 static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipelineDepthStencilStateCreateInfo& DepthStencilState)
 {
-	static const HashTable<EStencilOp, VkStencilOp> VulkanStencilOp =
+	static const std::unordered_map<EStencilOp, VkStencilOp> VulkanStencilOp =
 	{
 		ENTRY(EStencilOp::Keep, VK_STENCIL_OP_KEEP)
 		ENTRY(EStencilOp::Replace, VK_STENCIL_OP_REPLACE)
 		ENTRY(EStencilOp::Zero, VK_STENCIL_OP_ZERO)
 	};
 
-	static const HashTable<ECompareOp, VkCompareOp> VulkanCompareOp =
+	static const std::unordered_map<ECompareOp, VkCompareOp> VulkanCompareOp =
 	{
 		ENTRY(ECompareOp::Never, VK_COMPARE_OP_NEVER)
 		ENTRY(ECompareOp::Less, VK_COMPARE_OP_LESS)
@@ -71,7 +71,7 @@ static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipeline
 		ENTRY(ECompareOp::Always, VK_COMPARE_OP_ALWAYS)
 	};
 
-	static const HashTable<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
+	static const std::unordered_map<EDepthCompareTest, VkCompareOp> VulkanDepthCompare =
 	{
 		ENTRY(EDepthCompareTest::Never, VK_COMPARE_OP_NEVER)
 		ENTRY(EDepthCompareTest::Less, VK_COMPARE_OP_LESS)
@@ -102,7 +102,7 @@ static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipeline
 
 static void CreateRasterizationState(const PipelineStateDesc& PSODesc, VkPipelineRasterizationStateCreateInfo& RasterizationState)
 {
-	static const HashTable<ECullMode, VkCullModeFlags> VulkanCullMode =
+	static const std::unordered_map<ECullMode, VkCullModeFlags> VulkanCullMode =
 	{
 		ENTRY(ECullMode::None, VK_CULL_MODE_NONE)
 		ENTRY(ECullMode::Back, VK_CULL_MODE_BACK_BIT)
@@ -110,13 +110,13 @@ static void CreateRasterizationState(const PipelineStateDesc& PSODesc, VkPipelin
 		ENTRY(ECullMode::FrontAndBack, VK_CULL_MODE_FRONT_AND_BACK)
 	};
 
-	static const HashTable<EFrontFace, VkFrontFace> VulkanFrontFace =
+	static const std::unordered_map<EFrontFace, VkFrontFace> VulkanFrontFace =
 	{
 		ENTRY(EFrontFace::CW, VK_FRONT_FACE_CLOCKWISE)
 		ENTRY(EFrontFace::CCW, VK_FRONT_FACE_COUNTER_CLOCKWISE)
 	};
 
-	static const HashTable<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
+	static const std::unordered_map<EPolygonMode, VkPolygonMode> VulkanPolygonMode =
 	{
 		ENTRY(EPolygonMode::Fill, VK_POLYGON_MODE_FILL)
 		ENTRY(EPolygonMode::Line, VK_POLYGON_MODE_LINE)
@@ -151,7 +151,7 @@ static void CreateColorBlendState(
 	VkPipelineColorBlendStateCreateInfo& ColorBlendState,
 	std::vector<VkPipelineColorBlendAttachmentState>& ColorBlendAttachmentStates)
 {
-	static const HashTable<EBlendOp, VkBlendOp> VulkanBlendOp =
+	static const std::unordered_map<EBlendOp, VkBlendOp> VulkanBlendOp =
 	{
 		ENTRY(EBlendOp::ADD, VK_BLEND_OP_ADD)
 		ENTRY(EBlendOp::SUBTRACT, VK_BLEND_OP_SUBTRACT)
@@ -160,7 +160,7 @@ static void CreateColorBlendState(
 		ENTRY(EBlendOp::MAX,VK_BLEND_OP_MAX)
 	};
 
-	static const HashTable<EBlendFactor, VkBlendFactor> VulkanBlendFactor =
+	static const std::unordered_map<EBlendFactor, VkBlendFactor> VulkanBlendFactor =
 	{
 		ENTRY(EBlendFactor::ZERO, VK_BLEND_FACTOR_ZERO)
 		ENTRY(EBlendFactor::ONE, VK_BLEND_FACTOR_ONE)
@@ -253,7 +253,7 @@ static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector
 		ShaderStages.push_back(PSODesc.ShaderStages.Fragment);
 	}
 
-	static const HashTable<EShaderStage, VkShaderStageFlagBits> VulkanStages =
+	static const std::unordered_map<EShaderStage, VkShaderStageFlagBits> VulkanStages =
 	{
 		ENTRY(EShaderStage::Vertex, VK_SHADER_STAGE_VERTEX_BIT)
 		ENTRY(EShaderStage::TessControl, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
@@ -516,8 +516,8 @@ static VkPushConstantRange CreatePushConstantRange(const PushConstantRange& Push
 
 std::pair<VkPipelineLayout, VkPushConstantRange> VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange)
 {
-	const Crc Crc0 = CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
-	const Crc Crc1 = CalculateCrc(&PushConstantRange, sizeof(PushConstantRange));
+	const Crc Crc0 = Platform::CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
+	const Crc Crc1 = Platform::CalculateCrc(&PushConstantRange, sizeof(PushConstantRange));
 
 	Crc Crc = 0;
 	HashCombine(Crc, Crc0);

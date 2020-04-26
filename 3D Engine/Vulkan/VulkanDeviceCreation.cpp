@@ -1,5 +1,6 @@
 #include "VulkanDevice.h"
 #include <GLFW/glfw3.h>
+#include <unordered_set>
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& ValidationLayers)
 {
