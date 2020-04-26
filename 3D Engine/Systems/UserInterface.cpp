@@ -179,9 +179,6 @@ void UserInterface::ShowEntities(Engine& Engine)
 		return;
 	}
 
-	const auto& Name = ECS.GetName(Selected);
-	ImGui::Text(Name.c_str());
-	
 	if (ECS.HasComponent<Transform>(Selected))
 	{
 		ImGui::Text("Transform");
@@ -239,29 +236,22 @@ void UserInterface::ShowEntities(Engine& Engine)
 
 	if (ECS.HasComponent<SkyboxComponent>(Selected))
 	{
+		ImGui::Text("Skybox");
+
 		auto& Device = Engine.Device;
 		auto& SkyboxComp = ECS.GetComponent<SkyboxComponent>(Selected);
-		const Skybox* Skybox = SkyboxComp.Skybox;
-		const drm::Image* Front = Skybox->GetFace(CubemapFace::Front);
-		drm::TextureID& TextureID = const_cast<drm::TextureID&>(const_cast<drm::Image*>(Front)->GetTextureID());
-
-		ImGui::Image(
-			&TextureID, 
-			ImVec2(static_cast<float>(Front->GetWidth()), static_cast<float>(Front->GetHeight())), 
-			ImVec2(0, 0), 
-			ImVec2(1, 1), 
-			ImVec4(1.0f, 1.0f, 1.0f, 1.0f), 
-			ImVec4(1.0f, 1.0f, 1.0f, 0.5f)
-		);
-
-		/*ImGui::ImageButton(
-			&SkyboxID,
-			ImVec2(32.0f, 32.0f),
-			ImVec2(0.0f, 0.0f),
-			ImVec2(32.0f / static_cast<float>(Front->GetWidth()), 32.0f / static_cast<float>(Front->GetHeight())),
-			0,
-			ImVec4(0.0f, 0.0f, 0.0f, 1.0f)
-		);*/
+		Skybox* Skybox = SkyboxComp.Skybox;
+		
+		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
+		{
+			drm::TextureID& TextureID = const_cast<drm::TextureID&>(const_cast<drm::Image*>(Skybox->GetFaces()[Face])->GetTextureID());
+			ImGui::Text(Skybox::CubemapFaces[Face].c_str());
+			ImGui::SameLine();
+			ImGui::ImageButton(
+				&TextureID,
+				ImVec2(64.0f, 64.0f)
+			);
+		}
 	}
 
 	ImGui::End();

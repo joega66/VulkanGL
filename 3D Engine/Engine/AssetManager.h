@@ -31,8 +31,12 @@ public:
 	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
 	const Material* GetMaterial(const std::string& AssetName);
 
-	const Skybox* LoadSkybox(const std::string& AssetName, const std::array<std::filesystem::path, 6>& Files, EFormat Format);
-	const Skybox* GetSkybox(const std::string& AssetName);
+	/** 
+	  * Load a skybox. If the path has an extension, it's assumed to be pointing to a file in a cubemap format. 
+	  * Otherwise, the loader looks for px, nx, py, ny, pz, nz, in the directory.
+	  */
+	Skybox* LoadSkybox(const std::string& AssetName, const std::filesystem::path& Path);
+	Skybox* GetSkybox(const std::string& AssetName);
 
 	static drm::Image Red;
 	static drm::Image Green;

@@ -8,5 +8,4 @@ void main()
 	vec4 OutPosition = Camera.ViewToClip * vec4(mat3(Camera.WorldToView) * Position, 0.0f);
 	gl_Position = OutPosition.xyzz;
 	OutTexCoord = Position;
-	OutTexCoord.y *= -1;
 }

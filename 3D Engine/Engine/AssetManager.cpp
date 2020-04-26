@@ -6,15 +6,6 @@ AssetManager::AssetManager(DRMDevice& Device)
 {
 	CreateDebugImages(Device);
 
-	const std::array<std::filesystem::path, 6> Skybox =
-	{
-		"../Images/Cubemaps/DownUnder/down-under_rt.tga", "../Images/Cubemaps/DownUnder/down-under_lf.tga",
-		"../Images/Cubemaps/DownUnder/down-under_up.tga", "../Images/Cubemaps/DownUnder/down-under_dn.tga",
-		"../Images/Cubemaps/DownUnder/down-under_bk.tga", "../Images/Cubemaps/DownUnder/down-under_ft.tga",
-	};
-
-	LoadSkybox("Default_Skybox", Skybox, EFormat::R8G8B8A8_UNORM);
-
 	LoadStaticMesh("../Meshes/Cube/glTF/Cube.gltf");
 }
 
@@ -55,6 +46,12 @@ const drm::Image* AssetManager::LoadImage(const std::string& AssetName, const st
 	int32 Width, Height, Channels;
 	uint8* Pixels = Platform::LoadImage(Path.generic_string(), Width, Height, Channels);
 
+	if (Pixels == nullptr)
+	{
+		LOG("Warning: Failed to load image %s at %s", AssetName.c_str(), Path.c_str());
+		return nullptr;
+	}
+
 	std::unique_ptr<drm::Image> Image = std::make_unique<drm::Image>(
 		Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst | AdditionalUsage)
 	);
@@ -94,28 +91,51 @@ const Material* AssetManager::GetMaterial(const std::string& AssetName)
 	return Materials.find(AssetName) == Materials.end() ? nullptr : Materials[AssetName].get();
 }
 
-const Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::array<std::filesystem::path, 6>& Files, EFormat Format)
+Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::filesystem::path& Path)
 {
-	std::array<const drm::Image*, 6> Images;
+	check(Skyboxes.find(AssetName) == Skyboxes.end(), "Skybox %s already exists.", AssetName.c_str());
 
-	for (uint32 FaceIndex = 0; FaceIndex < Images.size(); FaceIndex++)
+	if (Path.has_extension())
 	{
-		const std::string AssetName = Files[FaceIndex].stem().string();
-		const drm::Image* Image = GetImage(AssetName);
+		signal_unimplemented();
+	}
+	else
+	{
+		const std::string PathStr = Path.string();
 
-		if (!Image)
-		{ 
-			Image = LoadImage(AssetName, Files[FaceIndex], EFormat::R8G8B8A8_UNORM, EImageUsage::TransferSrc);
+		std::array<const drm::Image*, 6> Images;
+
+		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
+		{
+			const std::string& Stem = Skybox::CubemapStems[Face];
+			const std::string ImageName = AssetName + "_" + Stem;
+			const drm::Image* Image = GetImage(ImageName);
+
+			if (!Image)
+			{
+				const std::filesystem::path ImagePath = PathStr + Stem + ".png";
+
+				Image = LoadImage(ImageName, ImagePath, EFormat::R8G8B8A8_UNORM, EImageUsage::TransferSrc);
+
+				if (!Image)
+				{
+					fail("Skybox %s is missing a %s image",
+						AssetName.c_str(),
+						Skybox::CubemapFaces[Face].c_str()
+					);
+				}
+			}
+
+			Images[Face] = Image;
 		}
 
-		Images[FaceIndex] = Image;
-	}
+		Skyboxes[AssetName] = std::make_unique<Skybox>(Device, Images, EFormat::R8G8B8A8_UNORM);
 
-	Skyboxes[AssetName] = std::make_unique<Skybox>(Device, Images, Format);
-	return Skyboxes[AssetName].get();
+		return Skyboxes[AssetName].get();
+	}
 }
 
-const Skybox* AssetManager::GetSkybox(const std::string& AssetName)
+Skybox* AssetManager::GetSkybox(const std::string& AssetName)
 {
 	return Skyboxes[AssetName].get();
 }

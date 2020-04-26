@@ -1,5 +1,23 @@
 #include "Skybox.h"
 
+const std::string Skybox::CubemapFaces[6] = { 
+	"Left   [+X]", 
+	"Right  [-X]", 
+	"Up     [+Y]", 
+	"Down   [-Y]", 
+	"Front  [+Z]", 
+	"Back   [-Z]" 
+};
+
+const std::string Skybox::CubemapStems[6] = {
+	"px",
+	"nx",
+	"py",
+	"ny",
+	"pz",
+	"nz",
+};
+
 Skybox::Skybox(DRMDevice& Device, const std::array<const drm::Image*, 6>& Images, EFormat Format)
 	: Images(Images)
 {

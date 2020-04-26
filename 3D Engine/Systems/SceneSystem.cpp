@@ -28,8 +28,11 @@ void SceneSystem::Start(Engine& Engine)
 	DirectionalLight.DepthBiasConstantFactor = 1.75f;
 	DirectionalLight.DepthBiasSlopeFactor = 1.75f;
 
-	auto Skybox = ECS.CreateEntity("Skybox");
-	ECS.AddComponent(Skybox, SkyboxComponent(Engine.Assets.GetSkybox("Default_Skybox")));
+	const std::string SkyboxPath = Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/");
+	Skybox* Skybox = Engine.Assets.LoadSkybox("Default_Skybox", SkyboxPath);
+
+	auto SkyboxEntity = ECS.CreateEntity("Skybox");
+	ECS.AddComponent(SkyboxEntity, SkyboxComponent(Skybox));
 }
 
 void SceneSystem::Update(Engine& Engine)
