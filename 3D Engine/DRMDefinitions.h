@@ -19,7 +19,7 @@ namespace drm
 	using Sampler = VulkanSampler;
 	using DescriptorSet = VulkanDescriptorSet;
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;
-	using Pipeline = VulkanPipeline;
+	using Pipeline = std::shared_ptr<VulkanPipeline>;
 	using RenderPass = VulkanRenderPass;
 	using RenderPassView = VulkanRenderPassView;
 	using BindlessResources = VulkanBindlessResources;

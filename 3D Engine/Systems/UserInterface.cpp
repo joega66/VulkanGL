@@ -337,7 +337,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 	{
 		PSODesc.RenderPass = Camera.SceneRP;
 
-		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
+		drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 		CmdList.BindPipeline(Pipeline);
 

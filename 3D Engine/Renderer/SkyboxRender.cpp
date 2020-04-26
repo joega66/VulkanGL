@@ -62,7 +62,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
 	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(PushConstants) };
 
-	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
+	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 

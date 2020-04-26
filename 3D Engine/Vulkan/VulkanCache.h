@@ -18,9 +18,9 @@ public:
 
 	std::pair<VkPipelineLayout, VkPushConstantRange> GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange);
 
-	std::shared_ptr<drm::Pipeline> GetPipeline(const PipelineStateDesc& PSODesc);
+	drm::Pipeline GetPipeline(const PipelineStateDesc& PSODesc);
 
-	std::shared_ptr<drm::Pipeline> GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
+	drm::Pipeline GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
 
 	drm::Sampler GetSampler(const SamplerDesc& SamplerDesc);
 
@@ -48,9 +48,9 @@ private:
 
 	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
 
-	std::unordered_map<PipelineStateDesc, std::shared_ptr<drm::Pipeline>> GraphicsPipelineCache;
+	std::unordered_map<PipelineStateDesc, drm::Pipeline> GraphicsPipelineCache;
 
-	std::unordered_map<Crc, std::shared_ptr<drm::Pipeline>> ComputePipelineCache;
+	std::unordered_map<Crc, drm::Pipeline> ComputePipelineCache;
 	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
 
 	std::unordered_map<Crc, drm::Sampler> SamplerCache;

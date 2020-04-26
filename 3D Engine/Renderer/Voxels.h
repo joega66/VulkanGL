@@ -92,7 +92,7 @@ private:
 
 	DescriptorSetLayout<DownsampleVolumeDescriptors> DownsampleVolumeSetLayout;
 
-	std::shared_ptr<drm::Pipeline> DownsampleVolumePipeline;
+	drm::Pipeline DownsampleVolumePipeline;
 
 	void RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputeLightInjection(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList);

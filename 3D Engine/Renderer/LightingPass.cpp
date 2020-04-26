@@ -89,7 +89,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	ComputeDesc.PushConstantRange.Size = sizeof(Light);
 	ComputeDesc.PushConstantRange.StageFlags = EShaderStage::Compute;
 
-	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
+	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 	CmdList.BindPipeline(Pipeline);
 

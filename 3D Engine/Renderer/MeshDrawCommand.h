@@ -44,7 +44,7 @@ public:
 	}
 
 private:
-	std::shared_ptr<drm::Pipeline> Pipeline;
+	drm::Pipeline Pipeline;
 	std::vector<VkDescriptorSet> DescriptorSets;
 	const std::vector<Submesh>& Submeshes;
 	const Material* Material;

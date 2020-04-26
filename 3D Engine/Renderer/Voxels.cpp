@@ -434,7 +434,7 @@ void VCTLightingCache::ComputeLightInjection(EntityManager& ECS, CameraProxy& Ca
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
 		ComputeDesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), ShadowProxy.GetDescriptorSet().GetLayout() };
 
-		std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(ComputeDesc);
+		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
@@ -525,7 +525,7 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
 	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
 
-	std::shared_ptr<drm::Pipeline> Pipeline = Device.CreatePipeline(PSODesc);
+	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 

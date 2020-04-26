@@ -3,7 +3,7 @@
 #include <DRMShader.h>
 #include "VulkanPipeline.h"
 
-std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
+drm::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
 	if (auto Iter = GraphicsPipelineCache.find(PSODesc); Iter != GraphicsPipelineCache.end())
 	{
@@ -11,12 +11,12 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const PipelineStateDesc&
 	}
 
 	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(PSODesc.Layouts, PSODesc.PushConstantRange);
-	auto Pipeline = std::make_shared<drm::Pipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, PushConstantRange);
+	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, PushConstantRange);
 	GraphicsPipelineCache[PSODesc] = Pipeline;
 	return Pipeline;
 }
 
-std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
+drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 {
 	auto& MapEntries = ComputeDesc.SpecializationInfo.GetMapEntries();
 	auto& Data = ComputeDesc.SpecializationInfo.GetData();
@@ -44,7 +44,7 @@ std::shared_ptr<drm::Pipeline> VulkanCache::GetPipeline(const ComputePipelineDes
 	}
 
 	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(ComputeDesc.Layouts, ComputeDesc.PushConstantRange);
-	auto Pipeline = std::make_shared<drm::Pipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE, PushConstantRange);
+	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE, PushConstantRange);
 	ComputePipelineCache[Crc] = Pipeline;
 	CrcToComputeDesc[Crc] = ComputeDesc;
 	return Pipeline;

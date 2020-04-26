@@ -19,9 +19,9 @@ public:
 
 	virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
 
-	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
+	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
 
-	virtual std::shared_ptr<drm::Pipeline> CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
+	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
 
 	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumBindings, const DescriptorBinding* Bindings) = 0;
 

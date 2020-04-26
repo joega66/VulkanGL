@@ -31,12 +31,12 @@ drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 	return VulkanCommandList(*this, QueueFlags);
 }
 
-std::shared_ptr<drm::Pipeline> VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
+drm::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
 {
 	return VulkanCache.GetPipeline(PSODesc);
 }
 
-std::shared_ptr<drm::Pipeline> VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
+drm::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
 {
 	return VulkanCache.GetPipeline(ComputePipelineDesc);
 }
