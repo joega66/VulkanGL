@@ -63,8 +63,8 @@ namespace drm
 
 struct RenderArea
 {
-	glm::ivec2 Offset;
-	glm::uvec2 Extent;
+	glm::ivec2 Offset = {};
+	glm::uvec2 Extent = {};
 };
 
 struct RenderPassDesc

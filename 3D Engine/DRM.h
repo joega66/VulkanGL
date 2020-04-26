@@ -65,6 +65,7 @@ namespace drm
 		virtual void Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandList& CmdList) = 0;
 		virtual void Resize(DRMDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight) = 0;
 		virtual const drm::Image& GetImage(uint32 ImageIndex) = 0;
+		virtual const std::vector<drm::Image>& GetImages() = 0;
 	};
 
 	void UploadImageData(DRMDevice& Device, const void* SrcPixels, const drm::Image& DstImage);

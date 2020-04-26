@@ -50,6 +50,7 @@
     <ClCompile Include="Platform\Platform.cpp" />
     <ClCompile Include="Renderer\GBufferPass.cpp" />
     <ClCompile Include="Renderer\GlobalRenderData.cpp" />
+    <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\ShadowProxy.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\MeshProxy.cpp" />
@@ -162,6 +163,7 @@
     <None Include="..\Shaders\MaterialInterface.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />
     <None Include="..\Shaders\CameraCommon.glsl" />
+    <None Include="..\Shaders\PostProcessingCS.glsl" />
     <None Include="..\Shaders\SceneResources.glsl" />
     <None Include="..\Shaders\ShadowDepthFS.glsl" />
     <None Include="..\Shaders\ShadowDepthVS.glsl" />

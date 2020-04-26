@@ -224,6 +224,12 @@ int32 WindowsPlatform::GetInt(const std::string& Filename, const std::string& Se
 	return GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, Path.c_str());
 }
 
+float WindowsPlatform::GetFloat(const std::string& Filename, const std::string& Section, const std::string& Key, float Default)
+{
+	const float Value = static_cast<float>(GetFloat64(Filename, Section, Key, Default));
+	return Value;
+}
+
 float64 WindowsPlatform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default)
 {
 	std::string FloatStr = GetString(Filename, Section, Key, std::to_string(Default));

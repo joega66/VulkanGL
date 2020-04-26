@@ -52,12 +52,6 @@ float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
 	return Visibility;
 }
 
-void ApplyGammaCorrection(inout vec3 Color)
-{
-	Color = Color / (Color + vec3(1.0));
-	Color = pow(Color, vec3(1.0 / 2.2));
-}
-
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {

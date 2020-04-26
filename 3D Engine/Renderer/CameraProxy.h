@@ -39,6 +39,7 @@ public:
 
 	drm::RenderPass SceneRP;
 	drm::RenderPass GBufferRP;
+	std::vector<drm::RenderPass> UserInterfaceRP;
 	
 	drm::Buffer CameraUniformBuffer;
 
@@ -63,4 +64,5 @@ private:
 
 	void CreateSceneRP(DRMDevice& Device);
 	void CreateGBufferRP(DRMDevice& Device);
+	void CreateUserInterfaceRP(DRMDevice& Device, drm::Surface& Surface);
 };

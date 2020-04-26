@@ -22,7 +22,7 @@ void SceneSystem::Start(Engine& Engine)
 
 	auto Light = ECS.CreateEntity("DirectionalLight");
 	auto& DirectionalLight = ECS.AddComponent(Light, struct DirectionalLight());
-	DirectionalLight.Intensity = 10.0f;
+	DirectionalLight.Intensity = Platform::GetFloat("Engine.ini", "DirectionalLight", "Intensity", 5.0f);
 	DirectionalLight.Direction = glm::vec3(X, Y, Z);
 	DirectionalLight.ShadowType = EShadowType::Soft;
 	DirectionalLight.DepthBiasConstantFactor = 1.75f;

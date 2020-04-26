@@ -72,32 +72,26 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 	RenderSkybox(Camera, CmdList);
 
-	ECS.GetSingletonComponent<ImGuiRenderData>().Render(Device, CmdList, Camera);
-
 	CmdList.EndRenderPass();
 
-	Present(Camera, CmdList);
-
-	Device.EndFrame();
-}
-
-void SceneRenderer::Present(CameraProxy& Camera, drm::CommandList& CmdList)
-{
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
-	const drm::Image& PresentImage = Surface.GetImage(ImageIndex);
+	const drm::Image& DisplayImage = Surface.GetImage(ImageIndex);
+	ImageMemoryBarrier Barrier{ DisplayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
-	ImageMemoryBarrier Barrier{ PresentImage, EAccess::MemoryRead, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &Barrier);
 
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+	ComputePostProcessing(DisplayImage, Camera, CmdList);
 
-	CmdList.BlitImage(Camera.SceneColor, EImageLayout::TransferSrcOptimal, PresentImage, EImageLayout::TransferDstOptimal, EFilter::Nearest);
+	Barrier.SrcAccessMask = EAccess::ShaderWrite;
+	Barrier.DstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
+	Barrier.OldLayout = EImageLayout::General;
+	Barrier.NewLayout = EImageLayout::ColorAttachmentOptimal;
 
-	Barrier.SrcAccessMask = EAccess::TransferWrite;
-	Barrier.DstAccessMask = EAccess::MemoryRead;
-	Barrier.OldLayout = EImageLayout::TransferDstOptimal;
-	Barrier.NewLayout = EImageLayout::Present;
+	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &Barrier);
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &Barrier);
+	ECS.GetSingletonComponent<ImGuiRenderData>().Render(Device, CmdList, Camera.UserInterfaceRP[ImageIndex]);
 
 	Surface.Present(Device, ImageIndex, CmdList);
+
+	Device.EndFrame();
 }

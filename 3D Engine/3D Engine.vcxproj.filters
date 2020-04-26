@@ -430,6 +430,9 @@
     <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.cpp">
       <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\PostProcessing.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -517,6 +520,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\CameraCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\PostProcessingCS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

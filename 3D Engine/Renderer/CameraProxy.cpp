@@ -24,26 +24,30 @@ CameraProxy::CameraProxy(Engine& Engine)
 
 	Engine._Screen.ScreenResizeEvent([this, &Engine] (int32 Width, int32 Height)
 	{
-		SceneColor = Engine.Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferSrc | EImageUsage::TransferDst);
-		SceneDepth = Engine.Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		auto& Device = Engine.Device;
+		auto& Surface = Engine.Surface;
 
-		GBuffer0 = Engine.Device.CreateImage(Width, Height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-		GBuffer1 = Engine.Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
+		SceneColor = Device.CreateImage(Width, Height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
+		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-		CreateSceneRP(Engine.Device);
-		CreateGBufferRP(Engine.Device);
+		GBuffer0 = Device.CreateImage(Width, Height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		GBuffer1 = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
+
+		CreateSceneRP(Device);
+		CreateGBufferRP(Device);
+		CreateUserInterfaceRP(Device, Surface);
 
 		auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
 		GlobalData.VCTLightingCache.CreateDebugRenderPass(SceneColor, SceneDepth);
 
-		const drm::Sampler Sampler = Engine.Device.CreateSampler({ EFilter::Nearest });
+		const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Nearest });
 
 		CameraDescriptorSet.SceneDepth = drm::DescriptorImageInfo(SceneDepth, Sampler);
 		CameraDescriptorSet.GBuffer0 = drm::DescriptorImageInfo(GBuffer0, Sampler);
 		CameraDescriptorSet.GBuffer1 = drm::DescriptorImageInfo(GBuffer1, Sampler);
 		CameraDescriptorSet.RadianceVolume = drm::DescriptorImageInfo(GlobalData.VCTLightingCache.GetVoxelRadiance(), GlobalData.VCTLightingCache.GetVoxelRadianceSampler());
 		CameraDescriptorSet.SceneColor = drm::DescriptorImageInfo(SceneColor);
-		CameraDescriptorSet.Update(Engine.Device);
+		CameraDescriptorSet.Update(Device);
 	});
 }
 
@@ -98,7 +102,7 @@ void CameraProxy::CreateSceneRP(DRMDevice& Device)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments.push_back(
-		drm::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::TransferSrcOptimal)
+		drm::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General)
 	);
 	RPDesc.DepthAttachment = drm::AttachmentView(
 		&SceneDepth,
@@ -129,4 +133,24 @@ void CameraProxy::CreateGBufferRP(DRMDevice& Device)
 		EImageLayout::DepthReadStencilWrite);
 	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
 	GBufferRP = Device.CreateRenderPass(RPDesc);
+}
+
+void CameraProxy::CreateUserInterfaceRP(DRMDevice& Device, drm::Surface& Surface)
+{
+	const auto& Images = Surface.GetImages();
+
+	UserInterfaceRP.clear();
+	UserInterfaceRP.reserve(Images.size());
+
+	for (const auto& Image : Images)
+	{
+		// After UI rendering, the image is ready for the present queue.
+		RenderPassDesc RPDesc = {};
+		RPDesc.ColorAttachments.push_back(
+			drm::AttachmentView(&Image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present)
+		);
+		RPDesc.RenderArea.Extent = { Image.GetWidth(), Image.GetHeight() };
+
+		UserInterfaceRP.push_back(Device.CreateRenderPass(RPDesc));
+	}
 }

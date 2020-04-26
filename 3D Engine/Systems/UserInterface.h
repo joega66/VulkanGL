@@ -23,7 +23,7 @@ struct ImGuiRenderData : public Component
 
 	ImGuiRenderData(Engine& Engine);
 
-	void Render(DRMDevice& Device, drm::CommandList& CmdList, CameraProxy& Camera);
+	void Render(DRMDevice& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass);
 
 	void Update(DRMDevice& Device);
 };

@@ -24,6 +24,9 @@ public:
 	/** Get the swapchain image. */
 	virtual const drm::Image& GetImage(uint32 ImageIndex) override;
 
+	/** Get all images in the swapchain. */
+	virtual const std::vector<drm::Image>& GetImages() override;
+
 	operator VkSurfaceKHR() { return Surface; }
 
 	inline VkSurfaceFormatKHR GetFormat() const { return SurfaceFormat; }

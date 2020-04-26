@@ -202,7 +202,7 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 	{
 		ImageCount = SwapchainSupport.Capabilities.maxImageCount;
 	}
-
+	
 	VkSwapchainCreateInfoKHR SwapchainInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	SwapchainInfo.surface = Surface;
 	SwapchainInfo.minImageCount = ImageCount;
@@ -210,7 +210,7 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 	SwapchainInfo.imageColorSpace = SurfaceFormat.colorSpace;
 	SwapchainInfo.imageExtent = Extent;
 	SwapchainInfo.imageArrayLayers = 1;
-	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	SwapchainInfo.imageUsage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 	const uint32 QueueFamilyIndices[] = 
 	{ 
@@ -257,8 +257,8 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 			, Extent.width
 			, Extent.height
 			, 1
-			, EImageUsage::Attachment | EImageUsage::TransferDst,
-			1
+			, EImageUsage::Storage | EImageUsage::Attachment
+			, 1
 		));
 	}
 }
@@ -266,4 +266,9 @@ void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
 const drm::Image& VulkanSurface::GetImage(uint32 ImageIndex)
 {
 	return Images[ImageIndex];
+}
+
+const std::vector<drm::Image>& VulkanSurface::GetImages()
+{
+	return Images;
 }

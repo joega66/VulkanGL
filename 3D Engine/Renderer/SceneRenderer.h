@@ -21,5 +21,5 @@ private:
 	void ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const struct LightParams& Light);
 	void RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList);
-	void Present(CameraProxy& Camera, drm::CommandList& CmdList);
+	void ComputePostProcessing(const drm::Image& DisplayImage, CameraProxy& Camera, drm::CommandList& CmdList);
 };

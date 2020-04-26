@@ -128,6 +128,8 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 
 	ImGui::Checkbox("Voxelize", &RenderSettings.bVoxelize);
 	ImGui::Checkbox("Draw Voxels", &RenderSettings.bDrawVoxels);
+	ImGui::DragFloat("Exposure Adjustment", &RenderSettings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
+	ImGui::DragFloat("Exposure Bias", &RenderSettings.ExposureBias, 0.05f, 0.0f, 16.0f);
 
 	ImGui::End();
 }
@@ -219,7 +221,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 
 		ImGui::DragFloat3("Direction", &Direction[0]);
 		ImGui::ColorEdit3("Color", &Color[0]);
-		ImGui::DragFloat("Intensity", &Intensity);
+		ImGui::DragFloat("Intensity", &Intensity, 1.0f, 0.0f);
 
 		if (Direction != Light.Direction ||
 			Color != Light.Color ||
@@ -329,13 +331,15 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	});
 }
 
-void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, CameraProxy& Camera)
+void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass)
 {
+	CmdList.BeginRenderPass(RenderPass);
+
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 
 	if (DrawData->CmdListsCount > 0)
 	{
-		PSODesc.RenderPass = Camera.SceneRP;
+		PSODesc.RenderPass = RenderPass;
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
@@ -384,6 +388,8 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, Camer
 			VertexOffset += DrawList->VtxBuffer.Size;
 		}
 	}
+
+	CmdList.EndRenderPass();
 }
 
 void ImGuiRenderData::Update(DRMDevice& Device)
