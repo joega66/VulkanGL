@@ -30,6 +30,10 @@ VulkanBuffer VulkanAllocator::Allocate(VkDeviceSize Size, VkBufferUsageFlags Vul
 		{
 			return Align(Size, Device.GetProperties().limits.minStorageBufferOffsetAlignment);
 		}
+		else if (VulkanUsage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+		{
+			return Align(Size, 4); // VK_INDEX_TYPE_UINT32
+		}
 		else
 		{
 			return Size;
