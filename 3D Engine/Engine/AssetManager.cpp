@@ -6,7 +6,7 @@ AssetManager::AssetManager(DRMDevice& Device)
 {
 	CreateDebugImages(Device);
 
-	LoadStaticMesh("../Meshes/Cube/glTF/Cube.gltf");
+	LoadStaticMesh("../Assets/Meshes/Cube/glTF/Cube.gltf");
 }
 
 std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesystem::path& Path, bool Breakup)

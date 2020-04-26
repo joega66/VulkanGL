@@ -56,24 +56,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SPIRV-Cross\GLSL.std.450.h">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClInclude>
-    <ClInclude Include="SPIRV-Cross\spirv.hpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClInclude>
-    <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClInclude>
-    <ClInclude Include="SPIRV-Cross\spirv_common.hpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClInclude>
-    <ClInclude Include="SPIRV-Cross\spirv_cross.hpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClInclude>
-    <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanDescriptors.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -260,19 +242,28 @@
     <ClInclude Include="ECS\Component.h">
       <Filter>Source\ECS</Filter>
     </ClInclude>
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\GLSL.std.450.h">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv.hpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_cfg.hpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_common.hpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_cross.hpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.hpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClCompile>
-    <ClCompile Include="SPIRV-Cross\spirv_cross.cpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
-    </ClCompile>
-    <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp">
-      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -429,6 +420,15 @@
     </ClCompile>
     <ClCompile Include="Renderer\SkyboxRender.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_cfg.cpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_cross.cpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.cpp">
+      <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

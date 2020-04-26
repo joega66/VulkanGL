@@ -11,6 +11,8 @@ class VulkanPipeline;
 
 class VulkanCommandList
 {
+	VulkanCommandList(const VulkanCommandList&) = delete;
+	VulkanCommandList& operator=(const VulkanCommandList&) = delete;
 public:
 	VkQueue Queue;
 
@@ -18,12 +20,9 @@ public:
 
 	VkCommandBuffer CommandBuffer;
 
-	/** @begin drm::CommandList */
-
 	VulkanCommandList(VulkanDevice& Device, VkQueueFlags QueueFlags);
+
 	~VulkanCommandList();
-	VulkanCommandList(const VulkanCommandList&) = delete;
-	VulkanCommandList& operator=(const VulkanCommandList&) = delete;
 
 	void BeginRenderPass(const class VulkanRenderPass& RenderPass);
 
@@ -98,8 +97,6 @@ public:
 		EImageLayout DstImageLayout,
 		uint32 DstArrayLayer
 	);
-
-	/** @end */
 
 private:
 	VulkanDevice& Device;

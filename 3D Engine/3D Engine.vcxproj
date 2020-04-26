@@ -25,6 +25,9 @@
     <ClCompile Include="..\ThirdParty\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_cfg.cpp" />
+    <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_cross.cpp" />
+    <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.cpp" />
     <ClCompile Include="Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="DRM.cpp" />
@@ -55,9 +58,6 @@
     <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
     <ClCompile Include="Renderer\Voxels.cpp" />
-    <ClCompile Include="SPIRV-Cross\spirv_cfg.cpp" />
-    <ClCompile Include="SPIRV-Cross\spirv_cross.cpp" />
-    <ClCompile Include="SPIRV-Cross\spirv_glsl.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\SceneSystem.cpp" />
     <ClCompile Include="Systems\RenderSystem.cpp" />
@@ -85,6 +85,12 @@
     <ClInclude Include="..\ThirdParty\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\ThirdParty\imgui\imstb_textedit.h" />
     <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\GLSL.std.450.h" />
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv.hpp" />
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_cfg.hpp" />
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_common.hpp" />
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_cross.hpp" />
+    <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
     <ClInclude Include="Components\Bounds.h" />
     <ClInclude Include="Components\Light.h" />
@@ -123,12 +129,6 @@
     <ClInclude Include="Renderer\CameraProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="Renderer\Voxels.h" />
-    <ClInclude Include="SPIRV-Cross\GLSL.std.450.h" />
-    <ClInclude Include="SPIRV-Cross\spirv.hpp" />
-    <ClInclude Include="SPIRV-Cross\spirv_cfg.hpp" />
-    <ClInclude Include="SPIRV-Cross\spirv_common.hpp" />
-    <ClInclude Include="SPIRV-Cross\spirv_cross.hpp" />
-    <ClInclude Include="SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
     <ClInclude Include="Systems\SceneSystem.h" />
     <ClInclude Include="Systems\RenderSystem.h" />

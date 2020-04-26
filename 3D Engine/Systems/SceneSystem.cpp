@@ -11,7 +11,7 @@ void SceneSystem::Start(Engine& Engine)
 {
 	auto& ECS = Engine.ECS;
 
-	const std::string ScenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Meshes/Sponza/Sponza.gltf");
+	const std::string ScenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");
 	const SceneLoadRequest SceneLoadReq(ScenePath, false);
 
 	HandleSceneLoadRequest(Engine, SceneLoadReq);
