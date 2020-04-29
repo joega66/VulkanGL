@@ -4,6 +4,14 @@
 class CameraProxy;
 class EntityManager;
 
+enum class EVoxelDebugMode
+{
+	None,
+	Radiance,
+	BaseColor,
+	Normal,
+};
+
 class VoxelShader
 {
 public:
@@ -28,7 +36,7 @@ public:
 	void PreLightingPass(drm::CommandList& CmdList);
 
 	/** Visualize the voxels. */
-	void RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList);
+	void RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList, EVoxelDebugMode VoxelDebugMode);
 
 	inline uint32 GetVoxelGridSize() const { return VoxelGridSize; }
 	inline const drm::Image& GetVoxelRadiance() const { return VoxelRadiance; }

@@ -125,9 +125,12 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 	}
 
 	auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
+	int& VoxelDebugMode = reinterpret_cast<int&>(RenderSettings.VoxelDebugMode);
 
 	ImGui::Checkbox("Voxelize", &RenderSettings.bVoxelize);
-	ImGui::Checkbox("Draw Voxels", &RenderSettings.bDrawVoxels);
+	ImGui::RadioButton("Voxel Radiance", &VoxelDebugMode, (int)EVoxelDebugMode::Radiance);
+	ImGui::SameLine(); ImGui::RadioButton("Voxel Base Color", &VoxelDebugMode, (int)EVoxelDebugMode::BaseColor);
+	ImGui::SameLine(); ImGui::RadioButton("Voxel Normal", &VoxelDebugMode, (int)EVoxelDebugMode::Normal);
 	ImGui::DragFloat("Exposure Adjustment", &RenderSettings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
 	ImGui::DragFloat("Exposure Bias", &RenderSettings.ExposureBias, 0.05f, 0.0f, 16.0f);
 

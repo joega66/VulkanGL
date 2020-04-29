@@ -13,12 +13,28 @@ layout(location = 0) out vec3 OutPosition;
 layout(location = 1) out vec4 OutVoxelColor;
 layout(location = 2) out int OutVoxelGridZ;
 
+layout(constant_id = 0) const uint VoxelDebugMode = 1;
+
 void main()
 {
 	ivec3 VoxelPosition = DecodeVoxelPosition(VoxelPositions[gl_VertexIndex]);
 
 	OutPosition = TransformVoxelToWorld(VoxelPosition);
-	OutVoxelColor = imageLoad(VoxelRadiance, VoxelPosition);
+
+	// Must match Voxels.h
+	if (VoxelDebugMode == 1)
+	{
+		OutVoxelColor = imageLoad(VoxelRadiance, VoxelPosition);
+	}
+	else if (VoxelDebugMode == 2)
+	{
+		OutVoxelColor = imageLoad(VoxelBaseColor, VoxelPosition);
+	}
+	else // 3
+	{
+		OutVoxelColor = imageLoad(VoxelNormal, VoxelPosition);
+	}
+	
 	OutVoxelGridZ = VoxelPosition.z;
 
 	gl_Position = vec4(OutPosition, 1);

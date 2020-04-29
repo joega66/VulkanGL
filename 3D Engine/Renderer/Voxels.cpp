@@ -476,7 +476,7 @@ void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, co
 	CmdList.Dispatch(GroupCounts.x, GroupCounts.y, GroupCounts.z);
 }
 
-void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList)
+void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList, EVoxelDebugMode VoxelDebugMode)
 {
 	if (VoxelRadianceImageLayout != EImageLayout::General)
 	{
@@ -524,6 +524,7 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	PSODesc.ColorBlendAttachmentStates[0].SrcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
 	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
 	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
+	PSODesc.SpecializationInfo.Add(0, static_cast<uint32>(VoxelDebugMode));
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 

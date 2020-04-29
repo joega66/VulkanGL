@@ -57,9 +57,9 @@ void SceneRenderer::Render(CameraProxy& Camera)
 		Settings.bVoxelize = false;
 	}
 	
-	if (Settings.bDrawVoxels && VCTLightingCache.IsDebuggingEnabled())
+	if (Settings.VoxelDebugMode != EVoxelDebugMode::None && VCTLightingCache.IsDebuggingEnabled())
 	{
-		VCTLightingCache.RenderVisualization(Camera, CmdList);
+		VCTLightingCache.RenderVisualization(Camera, CmdList, Settings.VoxelDebugMode);
 	}
 	else
 	{
