@@ -15,7 +15,6 @@ layout(binding = 2, set = VOXEL_SET, rgba16f) uniform image3D VoxelNormal;
 layout(binding = 3, set = VOXEL_SET, rgba8) uniform image3D VoxelRadiance;
 
 const float VOXEL_SIZE = 1.0f / (float(VOXEL_GRID_SIZE) * float(VOXEL_SCALE));
-const vec2 HALF_VOXEL_SIZE = vec2(VOXEL_SIZE / 2.0f);
 
 vec3 TransformWorldToVoxel(in vec3 WorldPosition)
 {

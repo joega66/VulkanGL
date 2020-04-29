@@ -6,6 +6,8 @@ layout(triangle_strip, max_vertices = 3) out;
 #define VOXEL_SET 4
 #include "VoxelsCommon.glsl"
 
+const vec2 PIXEL_SIZE = vec2(1.0f / float(VOXEL_GRID_SIZE));
+
 void main()
 {
 	SurfaceData Surface[] = { Surface_Get(0), Surface_Get(1), Surface_Get(2) };
@@ -31,29 +33,29 @@ void main()
 		}
 	};
 
-	///* 2. Conservative rasterization (GPU Gems 2: Chapter 42) */
+	/* 2. Conservative rasterization (GPU Gems 2: Chapter 42) */
 
-	//// Find the input triangle edges.
-	//vec3 Edges[3] = { vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0) };
-	//Edges[0].xy = ClipSpacePositions[1].xy - ClipSpacePositions[0].xy;
-	//Edges[1].xy = ClipSpacePositions[2].xy - ClipSpacePositions[1].xy;
-	//Edges[2].xy = ClipSpacePositions[0].xy - ClipSpacePositions[2].xy;
+	// Find the input triangle edges.
+	vec3 Edges[3] = { vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0) };
+	Edges[0].xy = ClipSpacePositions[1].xy - ClipSpacePositions[0].xy;
+	Edges[1].xy = ClipSpacePositions[2].xy - ClipSpacePositions[1].xy;
+	Edges[2].xy = ClipSpacePositions[0].xy - ClipSpacePositions[2].xy;
 
-	//// Find the edge normals.
-	//vec2 Normals[3];
-	//Normals[0] = CalcLineNormal(Edges[0].xy);
-	//Normals[1] = CalcLineNormal(Edges[1].xy);
-	//Normals[2] = CalcLineNormal(Edges[2].xy);
+	// Find the edge normals.
+	vec2 Normals[3];
+	Normals[0] = CalcLineNormal(Edges[0].xy);
+	Normals[1] = CalcLineNormal(Edges[1].xy);
+	Normals[2] = CalcLineNormal(Edges[2].xy);
 
-	//// Move the edges by the worst-case semidiagonal.
-	//Edges[0].xy += dot(HALF_VOXEL_SIZE, Normals[0]);
-	//Edges[1].xy += dot(HALF_VOXEL_SIZE, Normals[1]);
-	//Edges[2].xy += dot(HALF_VOXEL_SIZE, Normals[2]);
+	// Move the edges by the worst-case semidiagonal.
+	Edges[0].xy += dot(PIXEL_SIZE, Normals[0]);
+	Edges[1].xy += dot(PIXEL_SIZE, Normals[1]);
+	Edges[2].xy += dot(PIXEL_SIZE, Normals[2]);
 
-	//// Find the bounding triangle.
-	//ClipSpacePositions[0].xy = cross(Edges[0], Edges[1]).xy;
-	//ClipSpacePositions[1].xy = cross(Edges[1], Edges[2]).xy;
-	//ClipSpacePositions[2].xy = cross(Edges[0], Edges[2]).xy;
+	// Find the bounding triangle.
+	ClipSpacePositions[0].xy = cross(Edges[1], Edges[0]).xy;
+	ClipSpacePositions[1].xy = cross(Edges[2], Edges[1]).xy;
+	ClipSpacePositions[2].xy = cross(Edges[0], Edges[2]).xy;
 
 	for (uint i = 0; i < 3; i++)
 	{
