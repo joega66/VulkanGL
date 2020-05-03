@@ -12,6 +12,7 @@
 #include <Systems/SceneSystem.h>
 #include <Renderer/GlobalRenderData.h>
 #include <Renderer/CameraProxy.h>
+#include <Renderer/ShadowProxy.h>
 
 class UserInterfaceVS : public drm::Shader
 {
@@ -124,15 +125,32 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 		return;
 	}
 
-	auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
-	int& VoxelDebugMode = reinterpret_cast<int&>(RenderSettings.VoxelDebugMode);
+	auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
+	int& VoxelDebugMode = reinterpret_cast<int&>(Settings.VoxelDebugMode);
 
-	ImGui::Checkbox("Voxelize", &RenderSettings.bVoxelize);
-	ImGui::RadioButton("Voxel Radiance", &VoxelDebugMode, (int)EVoxelDebugMode::Radiance);
-	ImGui::SameLine(); ImGui::RadioButton("Voxel Base Color", &VoxelDebugMode, (int)EVoxelDebugMode::BaseColor);
-	ImGui::SameLine(); ImGui::RadioButton("Voxel Normal", &VoxelDebugMode, (int)EVoxelDebugMode::Normal);
-	ImGui::DragFloat("Exposure Adjustment", &RenderSettings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
-	ImGui::DragFloat("Exposure Bias", &RenderSettings.ExposureBias, 0.05f, 0.0f, 16.0f);
+	if (ImGui::TreeNode("Voxel Cone Tracing"))
+	{
+		ImGui::Checkbox("Voxelize", &Settings.bVoxelize);
+
+		if (ImGui::DragFloat("Size", &Settings.VoxelSize))
+		{
+			Settings.bVoxelize = true;
+		}
+
+		if (ImGui::DragFloat3("Position", &Settings.VoxelFieldCenter[0]))
+		{
+			Settings.bVoxelize = true;
+		}
+
+		ImGui::RadioButton("None", &VoxelDebugMode, (int)EVoxelDebugMode::None);
+		ImGui::SameLine(); ImGui::RadioButton("Voxel Radiance", &VoxelDebugMode, (int)EVoxelDebugMode::Radiance);
+		ImGui::SameLine(); ImGui::RadioButton("Voxel Base Color", &VoxelDebugMode, (int)EVoxelDebugMode::BaseColor);
+		ImGui::SameLine(); ImGui::RadioButton("Voxel Normal", &VoxelDebugMode, (int)EVoxelDebugMode::Normal);
+		ImGui::TreePop();
+	}
+	
+	ImGui::DragFloat("Exposure Adjustment", &Settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
+	ImGui::DragFloat("Exposure Bias", &Settings.ExposureBias, 0.05f, 0.0f, 16.0f);
 
 	ImGui::End();
 }
@@ -236,6 +254,15 @@ void UserInterface::ShowEntities(Engine& Engine)
 
 			auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
 			Settings.bVoxelize = true;
+		}
+
+		if (ECS.HasComponent<ShadowProxy>(Selected))
+		{
+			ImGui::Text("Shadows");
+			auto& Shadow = ECS.GetComponent<ShadowProxy>(Selected);
+			ImGui::DragFloat("Width", &Shadow.Width);
+			ImGui::DragFloat("ZNear", &Shadow.ZNear);
+			ImGui::DragFloat("ZFar", &Shadow.ZFar);
 		}
 	}
 

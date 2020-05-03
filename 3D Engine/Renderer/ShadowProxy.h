@@ -24,6 +24,12 @@ struct ShadowDescriptors
 class ShadowProxy : public Component
 {
 public:
+	float Width;
+
+	float ZNear;
+
+	float ZFar;
+
 	ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
 
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
@@ -39,12 +45,18 @@ public:
 
 private:
 	drm::RenderPass RenderPass;
+
 	float DepthBiasConstantFactor = 0.0f;
+
 	float DepthBiasSlopeFactor = 0.0f;
-	glm::mat4 LightProjMatrix;
+
 	drm::Buffer LightViewProjBuffer;
+
 	drm::Image ShadowMap;
+
 	drm::Buffer LightInjectionUniform;
+
 	drm::DescriptorSet DescriptorSet;
+
 	std::vector<MeshDrawCommand> MeshDrawCommands;
 };

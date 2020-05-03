@@ -34,22 +34,44 @@ float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
 {
 	const float ConeAngle = 60.0;
 	const float Aperture = atan(radians(ConeAngle / 2.0));
-	const vec3 StartPosition = WorldPosition + WorldNormal * VOXEL_SIZE;
+	const vec3 StartPosition = WorldPosition + WorldNormal * _VoxelSize.x;
 	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
 
-	float Dist = VOXEL_SIZE;
+	float Dist = _VoxelSize.x;
 	float Visibility = 0.0;
 
 	while (Visibility < 1.0 && Dist < 1.0)
 	{
 		const float Diameter = 2.0 * Aperture * Dist;
-		const float MipLevel = log2(Diameter / VOXEL_SIZE);
+		const float MipLevel = log2(Diameter / _VoxelSize.x);
 		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, MipLevel).a;
 		Visibility += (1.0 - Visibility) * VisibilitySample; // alpha = alpha + (1 - alpha)alpha2
 		Dist += Diameter;
 	}
 
 	return Visibility;
+}
+
+vec3 TraceCone(vec3 StartPosition, vec3 Direction, float ConeAngle)
+{
+	const float Aperture = atan(radians(ConeAngle / 2.0));
+	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+
+	float Dist = _VoxelSize.x;
+	vec3 Li = vec3(0.0);
+	float Alpha = 0.0;
+
+	while (Alpha < 1.0 && Dist < 1.0)
+	{
+		const float Diameter = 2.0 * Aperture * Dist;
+		const float MipLevel = log2(Diameter / _VoxelSize.x);
+		const vec4 LiSample = textureLod(RadianceVolume, VolumeUV + Direction * Dist, MipLevel).rgba;
+		Li = Alpha * Li + (1.0 - Alpha) * LiSample.a * LiSample.rgb; // c = a * c + (1 - a)a2 * c
+		Alpha += (1.0 - Alpha) * LiSample.a; // alpha = alpha + (1 - alpha)alpha2
+		Dist += Diameter;
+	}
+	
+	return Li /*/ (Dist * 256.0)*/;
 }
 
 layout(local_size_x = 8, local_size_y = 8) in;
@@ -80,11 +102,28 @@ void main()
 		GetPointLightParams(Light, Surface);
 	}
 
-	vec3 Lo = DirectLighting(V, Light, Surface, Material);
+	vec3 Lo = vec3(0.0);
+
+	Lo += DirectLighting(V, Light, Surface, Material);
 
 	Lo *= TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
 
-	const vec3 LoTotal = Lo + imageLoad(SceneColor, ScreenCoords).rgb;
+	/** Indirect diffuse. */
+
+	/** Indirect specular. */
+
+	/*vec3 RayStart = Surface.WorldPosition + Surface.WorldNormal * VOXEL_SIZE;
+	vec3 Eye = normalize( Surface.WorldPosition - Camera.Position );
+	vec3 RayDir = normalize( reflect(Eye, Surface.WorldNormal) );
+	
+	vec3 IndirectSpecular = TraceCone( RayStart, RayDir, 35.0 );
+
+	BRDFContext BRDFContext;
+	BRDF_InitContext(BRDFContext, Surface.WorldNormal, V, RayDir);
+
+	Lo += Specular_BRDF(BRDFContext, Material.SpecularColor, Material.Roughness) * IndirectSpecular * BRDFContext.NdotL;*/
+
+	vec3 LoTotal = Lo + imageLoad(SceneColor, ScreenCoords).rgb;
 
 	imageStore(SceneColor, ScreenCoords, vec4(LoTotal, 1.0));
 }

@@ -46,13 +46,20 @@ void main()
 	SurfaceData Surface;
 	Surface.WorldPosition = WorldPosition.xyz;
 	Surface.WorldNormal = imageLoad(VoxelNormal, VoxelGridCoord).rgb;
-
-	// 3. Compute lighting.
-	const vec3 V = normalize(Camera.Position - Surface.WorldPosition);
-
+	
 	LightParams Light;
 	Light.L = L.xyz;
 	Light.Radiance = Radiance.rgb;
+
+	if (dot(Surface.WorldNormal, Light.L) < 0.0)
+	{
+		// The voxel field is too sparse to capture thin geometry, 
+		// so flip the normal if it's facing away from the light.
+		Surface.WorldNormal *= -1;
+	}
+
+	// 3. Compute lighting.
+	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 
 	vec3 Lo = DirectLighting(V, Light, Surface, Material).rgb;
 

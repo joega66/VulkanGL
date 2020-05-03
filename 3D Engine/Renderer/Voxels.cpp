@@ -10,7 +10,7 @@
 
 struct VoxelDescriptors
 {
-	drm::DescriptorBufferInfo WorldToVoxelBuffer;
+	drm::DescriptorBufferInfo VoxelUniformBuffer;
 	drm::DescriptorImageInfo VoxelBaseColor;
 	drm::DescriptorImageInfo VoxelNormal;
 	drm::DescriptorImageInfo VoxelRadiance;
@@ -243,17 +243,14 @@ public:
 	}
 };
 
-UNIFORM_STRUCT(WorldToVoxelUniform,
+UNIFORM_STRUCT(VoxelUniformBufferData,
 	glm::mat4 WorldToVoxel;
 	glm::mat4 WorldToVoxelInv;
+	glm::vec4 VoxelSize;
 );
 
 VCTLightingCache::VCTLightingCache(Engine& Engine)
-	: VoxelSize(static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f)))
-	, VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
-	, VoxelProbeCenter(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterX", 0.0f),
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterY", 0.0f),
-		Platform::GetFloat64("Engine.ini", "Voxels", "VoxelProbeCenterZ", 0.0f))
+	: VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
 	, DebugVoxels(Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false))
 	, Device(Engine.Device)
 	, ShaderMap(Engine.ShaderMap)
@@ -261,7 +258,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 {
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
 	
-	WorldToVoxelBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(WorldToVoxelUniform));
+	VoxelUniformBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(VoxelUniformBufferData));
 	VoxelIndirectBuffer = Device.CreateBuffer(EBufferUsage::Storage | EBufferUsage::Indirect | EBufferUsage::HostVisible, sizeof(DrawIndirectCommand));
 
 	VoxelBaseColor = Device.CreateImage(VoxelGridSize, VoxelGridSize, VoxelGridSize, EFormat::R8G8B8A8_UNORM, EImageUsage::Storage | EImageUsage::Sampled);
@@ -290,7 +287,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		VoxelPositions = Device.CreateBuffer(EBufferUsage::Storage, uint64(VoxelGridSize) * uint64(VoxelGridSize) * uint64(VoxelGridSize) * sizeof(int32));
 		
 		DebugVoxelsDescriptors Descriptors;
-		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
+		Descriptors.VoxelUniformBuffer = VoxelUniformBuffer;
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelNormal = VoxelNormal;
 		Descriptors.VoxelRadiance = VoxelRadiance;
@@ -301,7 +298,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	else
 	{
 		VoxelDescriptors Descriptors;
-		Descriptors.WorldToVoxelBuffer = WorldToVoxelBuffer;
+		Descriptors.VoxelUniformBuffer = VoxelUniformBuffer;
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelNormal = VoxelNormal;
 		Descriptors.VoxelRadiance = VoxelRadiance;
@@ -322,25 +319,25 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 
 void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
 {
+	const auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
+	const float InvVoxelSize = 1.0f / (Settings.VoxelSize * static_cast<float>(VoxelGridSize));
+
 	glm::mat4 OrthoProj = glm::ortho(
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
 		0.0f, (float)VoxelGridSize);
 	OrthoProj[1][1] *= -1;
 
-	WorldToVoxelUniform WorldToVoxelUniform;
-	WorldToVoxelUniform.WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -VoxelProbeCenter);
-	WorldToVoxelUniform.WorldToVoxelInv = glm::inverse(WorldToVoxelUniform.WorldToVoxel);
+	VoxelUniformBufferData* VoxelUniformBufferDataPtr = static_cast<VoxelUniformBufferData*>(VoxelUniformBuffer.GetData());
+	VoxelUniformBufferDataPtr->WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / Settings.VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -Settings.VoxelFieldCenter);
+	VoxelUniformBufferDataPtr->WorldToVoxelInv = glm::inverse(VoxelUniformBufferDataPtr->WorldToVoxel);
+	VoxelUniformBufferDataPtr->VoxelSize = glm::vec4(InvVoxelSize, InvVoxelSize, Settings.VoxelSize, Settings.VoxelSize);
 
-	Platform::Memcpy(WorldToVoxelBuffer.GetData(), &WorldToVoxelUniform, sizeof(WorldToVoxelUniform));
-
-	DrawIndirectCommand DrawIndirectCommand;
-	DrawIndirectCommand.VertexCount = 0;
-	DrawIndirectCommand.InstanceCount = 1;
-	DrawIndirectCommand.FirstVertex = 0;
-	DrawIndirectCommand.FirstInstance = 0;
-
-	Platform::Memcpy(VoxelIndirectBuffer.GetData(), &DrawIndirectCommand, sizeof(DrawIndirectCommand));
+	DrawIndirectCommand* DrawIndirectCommandPtr = static_cast<DrawIndirectCommand*>(VoxelIndirectBuffer.GetData());
+	DrawIndirectCommandPtr->VertexCount = 0;
+	DrawIndirectCommandPtr->InstanceCount = 1;
+	DrawIndirectCommandPtr->FirstVertex = 0;
+	DrawIndirectCommandPtr->FirstInstance = 0;
 
 	RenderVoxels(Camera, CmdList);
 

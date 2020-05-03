@@ -3,10 +3,6 @@
 #define VOXEL_SET 1
 #include "VoxelsCommon.glsl"
 
-#ifndef VOXEL_GRID_SIZE
-#define VOXEL_GRID_SIZE 512
-#endif
-
 #ifdef VERTEX_SHADER
 
 layout(location = 0) out vec3 OutPosition;
@@ -55,13 +51,13 @@ layout(location = 0) out vec4 OutVoxelColor;
 
 void main()
 {
-	const float CubeZOffset = InVoxelGridZ[0] % 2 == 0 ? 0.0f : float(VOXEL_SCALE) / 2.0f;
+	const float CubeZOffset = InVoxelGridZ[0] % 2 == 0 ? 0.0f : _VoxelSize.z / 2.0f;
 
 	OutVoxelColor = InVoxelColor[0];
 
 	for (uint i = 0; i < 14; i++)
 	{
-		vec3 CubePosition = CreateCube(i) * float(VOXEL_SCALE);
+		vec3 CubePosition = CreateCube(i) * _VoxelSize.z;
 		CubePosition.z += CubeZOffset;
 		vec3 VoxelPosition = InVoxelPosition[0];
 		VoxelPosition += vec3(CubePosition.x, -CubePosition.y, -CubePosition.z);

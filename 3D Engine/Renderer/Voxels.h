@@ -19,7 +19,6 @@ public:
 	{
 		Worker.SetDefine("VOXEL_GRID_SIZE", Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256));
 		Worker.SetDefine("DEBUG_VOXELS", Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false));
-		Worker.SetDefine("VOXEL_SCALE", static_cast<float>(Platform::GetFloat64("Engine.ini", "Voxels", "VoxelSize", 5.0f)));
 	}
 };
 
@@ -49,9 +48,7 @@ public:
 	void CreateDebugRenderPass(const drm::Image& SceneColor, const drm::Image& SceneDepth);
 
 private:
-	const float VoxelSize;
 	const uint32 VoxelGridSize;
-	const glm::vec3 VoxelProbeCenter;
 	const bool DebugVoxels;
 
 	DRMDevice& Device;
@@ -63,7 +60,7 @@ private:
 	drm::DescriptorSet VoxelDescriptorSet;
 	drm::DescriptorSetLayout VoxelSetLayout;
 
-	drm::Buffer WorldToVoxelBuffer;
+	drm::Buffer VoxelUniformBuffer;
 	drm::Image VoxelBaseColor;
 	drm::Image VoxelNormal;
 	drm::Image VoxelRadiance;

@@ -6,6 +6,7 @@ layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 {
 	mat4 WorldToVoxel;
 	mat4 WorldToVoxelInv;
+	vec4 _VoxelSize; //xy: InvSize, zw: Size
 };
 
 layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelBaseColor;
@@ -13,8 +14,6 @@ layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelBaseColor;
 layout(binding = 2, set = VOXEL_SET, rgba16f) uniform image3D VoxelNormal;
 
 layout(binding = 3, set = VOXEL_SET, rgba8) uniform image3D VoxelRadiance;
-
-const float VOXEL_SIZE = 1.0f / (float(VOXEL_GRID_SIZE) * float(VOXEL_SCALE));
 
 vec3 TransformWorldToVoxel(in vec3 WorldPosition)
 {

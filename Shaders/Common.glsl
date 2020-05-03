@@ -24,24 +24,31 @@ uvec3 Unflatten3D(uint Index, uvec3 Dim)
 	return uvec3(X, Y, Z);
 }
 
-vec3 CreateCube(in uint VertexID)
+vec3 CreateCube(uint VertexID)
 {
 	uint B = 1 << VertexID;
 	return vec3((0x287a & B) != 0, (0x02af & B) != 0, (0x31e3 & B) != 0);
 }
 
-vec4 IntToColor(in uint Int)
+vec4 IntToColor(uint Int)
 {
-	return vec4((Int >> 24) & 255, (Int >> 16) & 255, (Int >> 8) & 255, (Int >> 0) & 255) / 255.0f;
+	return vec4(
+		float((Int & 0x000000FF)), 
+		float((Int & 0x0000FF00) >> 8U),
+		float((Int & 0x00FF0000) >> 16U),
+		float((Int & 0xFF000000) >> 24U)) / 255.0;
 }
 
-uint ColorToInt(in vec4 Color)
+uint ColorToInt(vec4 Color)
 {
-	ivec4 Bytes = ivec4(Color * 255);
-	return (Bytes.r << 24) | (Bytes.g << 16) | (Bytes.b << 8) | (Bytes.a << 0);
+	uvec4 Bytes = uvec4(Color * 255.0);
+	return (uint(Bytes.w) & 0x000000FF) << 24U 
+		| (uint(Bytes.z) & 0x000000FF) << 16U 
+		| (uint(Bytes.y) & 0x000000FF) << 8U 
+		| (uint(Bytes.x) & 0x000000FF);
 }
 
-vec2 CalcLineNormal(in vec2 Line)
+vec2 CalcLineNormal(vec2 Line)
 {
 	// Rotate the line 90 degrees.
 	return normalize(vec2(-Line.y, Line.x));
