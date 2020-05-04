@@ -149,8 +149,12 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 		ImGui::TreePop();
 	}
 	
-	ImGui::DragFloat("Exposure Adjustment", &Settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
-	ImGui::DragFloat("Exposure Bias", &Settings.ExposureBias, 0.05f, 0.0f, 16.0f);
+	if (ImGui::TreeNode("Camera"))
+	{
+		ImGui::DragFloat("Exposure Adjustment", &Settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
+		ImGui::DragFloat("Exposure Bias", &Settings.ExposureBias, 0.05f, 0.0f, 16.0f);
+		ImGui::TreePop();
+	}
 
 	ImGui::End();
 }

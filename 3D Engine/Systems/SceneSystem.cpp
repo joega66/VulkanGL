@@ -60,13 +60,14 @@ void SceneSystem::HandleSceneLoadRequest(Engine& Engine, const SceneLoadRequest&
 	}
 
 	const std::vector<const StaticMesh*> Scene = Engine.Assets.LoadStaticMesh(SceneLoadRequest.Path, true);
-	
+	const float Scale = Platform::GetFloat("Engine.ini", "Scene", "Scale", 0.1f);
+
 	for (auto StaticMesh : Scene)
 	{
 		auto Entity = ECS.CreateEntity(StaticMesh->Name.c_str());
 		ECS.AddComponent(Entity, StaticMeshComponent(StaticMesh, StaticMesh->Materials.front()));
 
 		auto& Transform = ECS.GetComponent<class Transform>(Entity);
-		Transform.Scale(ECS, glm::vec3(0.1f));
+		Transform.Scale(ECS, glm::vec3(Scale));
 	}
 }

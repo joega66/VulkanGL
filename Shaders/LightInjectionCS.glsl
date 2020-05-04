@@ -42,6 +42,7 @@ void main()
 	Material.Metallic = 0.0f;
 	Material.Roughness = 0.0f;
 	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
+	Material.DiffuseColor = Diffuse_BRDF(Material.BaseColor);
 
 	SurfaceData Surface;
 	Surface.WorldPosition = WorldPosition.xyz;

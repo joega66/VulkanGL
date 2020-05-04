@@ -98,7 +98,7 @@ vec3 DirectLighting(vec3 V, LightParams Light, SurfaceData Surface, MaterialData
 	BRDFContext BRDFContext;
 	BRDF_InitContext(BRDFContext, Surface.WorldNormal, V, Light.L);
 
-	vec3 Lo = ( Diffuse_BRDF(Material.BaseColor) + Specular_BRDF(BRDFContext, Material.SpecularColor, Material.Roughness) ) * Light.Radiance * BRDFContext.NdotL;
+	vec3 Lo = ( Material.DiffuseColor + Specular_BRDF(BRDFContext, Material.SpecularColor, Material.Roughness) ) * Light.Radiance * BRDFContext.NdotL;
 	
 	return Lo;
 }

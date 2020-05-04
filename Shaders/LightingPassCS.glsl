@@ -71,7 +71,7 @@ vec3 TraceCone(vec3 StartPosition, vec3 Direction, float ConeAngle)
 		Dist += Diameter;
 	}
 	
-	return Li /*/ (Dist * 256.0)*/;
+	return Li / ( Dist * float( VOXEL_GRID_SIZE ) );
 }
 
 layout(local_size_x = 8, local_size_y = 8) in;
@@ -89,7 +89,7 @@ void main()
 
 	UnpackGBuffers(ScreenUV, ScreenCoords, Surface, Material);
 
-	const vec3 V = normalize(Camera.Position - Surface.WorldPosition);
+	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 
 	LightParams Light;
 
@@ -108,7 +108,37 @@ void main()
 
 	Lo *= TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
 
-	/** Indirect diffuse. */
+	vec3 Up = abs(Surface.WorldNormal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+	vec3 Tangent = normalize(cross(Up, Surface.WorldNormal));
+	vec3 Bitangent = cross(Surface.WorldNormal, Tangent);
+
+	vec3 RayStart = Surface.WorldPosition + 3.0 * Surface.WorldNormal;
+
+	vec3 IndirectDiffuse = vec3(0.0);
+	
+	float DiffuseCone = 60.0;
+	float Theta = 45.0;
+	float SinTheta = sin(Theta);
+	float CosTheta = cos(Theta);
+	float Phi[] = { 0.0, 90.0, 180.0, 270.0 };
+
+	for (int i = 0; i < 4; i++)
+	{
+		vec3 Cartesian;
+		Cartesian.x = cos(Phi[i]) * SinTheta;
+		Cartesian.y = sin(Phi[i]) * SinTheta;
+		Cartesian.z = CosTheta;
+
+		vec3 SampleDir = normalize(Tangent * Cartesian.x + Bitangent * Cartesian.y + Surface.WorldNormal * Cartesian.z);
+
+		float NdotL = max(dot(Surface.WorldNormal, SampleDir), 0.0);
+
+		IndirectDiffuse += Material.DiffuseColor * TraceCone(RayStart, SampleDir, DiffuseCone) * NdotL;
+	}
+
+	IndirectDiffuse += Material.DiffuseColor * TraceCone(RayStart, Surface.WorldNormal, DiffuseCone);
+
+	Lo += IndirectDiffuse;
 
 	/** Indirect specular. */
 

@@ -2,6 +2,7 @@
 #define CAMERA_COMMON
 #include "SurfaceInterface.glsl"
 #include "MaterialInterface.glsl"
+#include "LightingCommon.glsl"
 
 #define CAMERA_SET 0
 layout(binding = 0, set = CAMERA_SET) uniform CameraUniform
@@ -46,6 +47,7 @@ void UnpackGBuffers(vec2 ScreenUV, ivec2 ScreenCoords, inout SurfaceData Surface
 	Material.Metallic = GBuffer0Data.a;
 	Material.Roughness = GBuffer1Data.a;
 	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
+	Material.DiffuseColor = Diffuse_BRDF(Material.BaseColor);
 }
 
 #endif
