@@ -419,22 +419,45 @@ void VCTLightingCache::RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdLi
 
 void VCTLightingCache::ComputeLightInjection(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
 {
+	struct LightInjectionPushConstants
+	{
+		drm::TextureID ShadowMap;
+	};
+
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
 		const auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
 		const drm::Image& ShadowMap = ShadowProxy.GetShadowMap();
+		const std::vector<VkDescriptorSet> DescriptorSets = 
+		{
+			Camera.CameraDescriptorSet, 
+			VoxelDescriptorSet, 
+			ShadowProxy.GetDescriptorSet(),
+			Device.GetTextures().GetSet(),
+		};
 
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
-		ComputeDesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), ShadowProxy.GetDescriptorSet().GetLayout() };
+		ComputeDesc.Layouts = 
+		{ 
+			Camera.CameraDescriptorSet.GetLayout(), 
+			VoxelDescriptorSet.GetLayout(), 
+			ShadowProxy.GetDescriptorSet().GetLayout(),
+			Device.GetTextures().GetLayout(),
+		};
+		ComputeDesc.PushConstantRange = PushConstantRange{ EShaderStage::Compute, sizeof(LightInjectionPushConstants) };
+
+		LightInjectionPushConstants PushConstants;
+		PushConstants.ShadowMap = ShadowMap.GetTextureID();
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, VoxelDescriptorSet, ShadowProxy.GetDescriptorSet() };
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 		
+		CmdList.PushConstants(Pipeline, &PushConstants);
+
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);
 		const uint32 GroupCountY = DivideAndRoundUp(ShadowMap.GetHeight(), 8U);
 		CmdList.Dispatch(GroupCountX, GroupCountY, 1);

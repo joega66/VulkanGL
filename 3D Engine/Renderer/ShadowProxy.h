@@ -6,7 +6,6 @@
 struct ShadowDescriptors
 {
 	drm::DescriptorBufferInfo LightViewProjBuffer;
-	drm::DescriptorImageInfo ShadowMap;
 	drm::DescriptorBufferInfo LightInjectionUniform;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
@@ -14,8 +13,7 @@ struct ShadowDescriptors
 		static std::vector<DescriptorBinding> Bindings =
 		{
 			{ 0, 1, EDescriptorType::UniformBuffer },
-			{ 1, 1, EDescriptorType::SampledImage },
-			{ 2, 1, EDescriptorType::UniformBuffer }
+			{ 1, 1, EDescriptorType::UniformBuffer }
 		};
 		return Bindings;
 	}

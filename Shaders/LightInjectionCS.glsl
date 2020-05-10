@@ -9,12 +9,19 @@ layout(binding = 0, set = LIGHT_SET) uniform LightViewProjUniform
 	mat4 LightViewProj;
 	mat4 InvLightViewProj;
 };
-layout(binding = 1, set = LIGHT_SET) uniform sampler2D ShadowMap;
-layout(binding = 2, set = LIGHT_SET) uniform LightInjectionUniform
+layout(binding = 1, set = LIGHT_SET) uniform LightInjectionUniform
 {
 	ivec4 ShadowMapSize;
 	vec4 L;
 	vec4 Radiance;
+};
+
+#define TEXTURE_SET 3
+#include "SceneResources.glsl"
+
+layout(push_constant) uniform PushConstants
+{
+	uint ShadowMap;
 };
 
 layout(local_size_x = 8, local_size_y = 8) in;
@@ -24,7 +31,7 @@ void main()
 		return;
 
 	// 1. Project light depth into the volume.
-	float LightDepth = texelFetch(ShadowMap, ivec2(gl_GlobalInvocationID.xy), 0).r;
+	float LightDepth = Load(ShadowMap, ivec2(gl_GlobalInvocationID.xy)).r;
 	vec2 ClipSpace = vec2(gl_GlobalInvocationID.xy) / ShadowMapSize.xy;
 	ClipSpace = (ClipSpace - 0.5f) * 2.0f;
 	vec4 ClipSpaceH = vec4(ClipSpace, LightDepth, 1.0f);
