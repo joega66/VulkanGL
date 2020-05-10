@@ -10,7 +10,7 @@
 #include <Components/Bounds.h>
 #include <Components/SkyboxComponent.h>
 #include <Systems/SceneSystem.h>
-#include <Renderer/GlobalRenderData.h>
+#include <Renderer/Voxels.h>
 #include <Renderer/CameraProxy.h>
 #include <Renderer/ShadowProxy.h>
 

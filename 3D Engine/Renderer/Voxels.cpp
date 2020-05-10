@@ -4,7 +4,6 @@
 #include "MeshProxy.h"
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
-#include "GlobalRenderData.h"
 #include <Engine/Engine.h>
 #include <Components/RenderSettings.h>
 
@@ -113,27 +112,25 @@ public:
 
 void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 {
-	auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
+	auto& VCTLighting = Engine.ECS.GetSingletonComponent<VCTLightingCache>();
 
 	static constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
-	VCTLightingCache& VCTLightingCache = GlobalData.VCTLightingCache;
-
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = VCTLightingCache.GetRenderPass();
+	PSODesc.RenderPass = VCTLighting.GetRenderPass();
 	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<VoxelsVS<MeshType>>();
 	PSODesc.ShaderStages.Geometry = Engine.ShaderMap.FindShader<VoxelsGS<MeshType>>();
 	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<VoxelsFS<MeshType>>();
 	PSODesc.DepthStencilState.DepthTestEnable = false;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.Viewport.Width = VCTLightingCache.GetVoxelGridSize();
-	PSODesc.Viewport.Height = VCTLightingCache.GetVoxelGridSize();
+	PSODesc.Viewport.Width = VCTLighting.GetVoxelGridSize();
+	PSODesc.Viewport.Height = VCTLighting.GetVoxelGridSize();
 	PSODesc.Layouts = {
 		CameraDescriptorSet.GetLayout(),
 		MeshProxy.GetSurfaceSet().GetLayout(),
 		Engine.Device.GetTextures().GetLayout(),
 		Engine.Device.GetSamplers().GetLayout(),
-		VCTLightingCache.GetDescriptorSet().GetLayout()
+		VCTLighting.GetDescriptorSet().GetLayout()
 	};
 
 	const std::vector<VkDescriptorSet> DescriptorSets =
@@ -142,7 +139,7 @@ void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 		MeshProxy.GetSurfaceSet(),
 		Engine.Device.GetTextures().GetSet(),
 		Engine.Device.GetSamplers().GetSet(),
-		VCTLightingCache.GetDescriptorSet()
+		VCTLighting.GetDescriptorSet()
 	};
 
 	VoxelsPass.push_back(MeshDrawCommand(Engine.Device, MeshProxy, PSODesc, DescriptorSets));

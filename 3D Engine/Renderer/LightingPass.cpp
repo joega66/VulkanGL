@@ -1,6 +1,6 @@
 #include "CameraProxy.h"
 #include "SceneRenderer.h"
-#include "GlobalRenderData.h"
+#include "Voxels.h"
 #include <ECS/EntityManager.h>
 #include <Components/Light.h>
 #include <Components/Transform.h>
@@ -76,7 +76,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 
 void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightParams& Light)
 {
-	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
+	auto& VCTLighting = ECS.GetSingletonComponent<VCTLightingCache>();
 
 	ComputePipelineDesc ComputeDesc;
 	ComputeDesc.ComputeShader = ShaderMap.FindShader<LightingPassCS>();
@@ -84,7 +84,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	ComputeDesc.Layouts =
 	{
 		Camera.CameraDescriptorSet.GetLayout(),
-		GlobalData.VCTLightingCache.GetDescriptorSet().GetLayout()
+		VCTLighting.GetDescriptorSet().GetLayout()
 	};
 	ComputeDesc.PushConstantRange.Size = sizeof(Light);
 	ComputeDesc.PushConstantRange.StageFlags = EShaderStage::Compute;
@@ -96,7 +96,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
 		Camera.CameraDescriptorSet,
-		GlobalData.VCTLightingCache.GetDescriptorSet()
+		VCTLighting.GetDescriptorSet()
 	};
 
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());

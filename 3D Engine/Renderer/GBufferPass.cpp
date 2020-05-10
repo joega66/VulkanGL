@@ -1,7 +1,7 @@
 #include "MaterialShader.h"
 #include "CameraProxy.h"
 #include "SceneRenderer.h"
-#include "GlobalRenderData.h"
+#include "Voxels.h"
 #include <ECS/EntityManager.h>
 #include <Engine/Engine.h>
 
@@ -71,8 +71,6 @@ void CameraProxy::AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy)
 
 void SceneRenderer::RenderGBufferPass(CameraProxy& Camera, drm::CommandList& CmdList)
 {
-	auto& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
-
 	CmdList.BeginRenderPass(Camera.GBufferRP);
 
 	MeshDrawCommand::Draw(CmdList, Camera.GBufferPass);

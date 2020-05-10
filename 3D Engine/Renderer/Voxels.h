@@ -1,5 +1,6 @@
 #pragma once
 #include <DRM.h>
+#include <ECS/Component.h>
 
 class CameraProxy;
 class EntityManager;
@@ -23,7 +24,7 @@ public:
 };
 
 /** Voxel cone tracing lighting cache. */
-class VCTLightingCache
+class VCTLightingCache : public Component
 {
 public:
 	VCTLightingCache(class Engine& Engine);

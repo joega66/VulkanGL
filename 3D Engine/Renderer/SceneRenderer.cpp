@@ -7,7 +7,7 @@
 #include <Systems/UserInterface.h>
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
-#include "GlobalRenderData.h"
+#include "Voxels.h"
 
 SceneRenderer::SceneRenderer(Engine& Engine)
 	: Device(Engine.Device)
@@ -21,8 +21,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 void SceneRenderer::Render(CameraProxy& Camera)
 {
 	RenderSettings& Settings = ECS.GetSingletonComponent<RenderSettings>();
-	GlobalRenderData& GlobalData = ECS.GetSingletonComponent<GlobalRenderData>();
-	VCTLightingCache& VCTLightingCache = GlobalData.VCTLightingCache;
+	auto& VCTLighting = ECS.GetSingletonComponent<VCTLightingCache>();
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
@@ -52,18 +51,18 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 	if (Settings.bVoxelize)
 	{
-		VCTLightingCache.Render(ECS, Camera, CmdList);
+		VCTLighting.Render(ECS, Camera, CmdList);
 		
 		Settings.bVoxelize = false;
 	}
 	
-	if (Settings.VoxelDebugMode != EVoxelDebugMode::None && VCTLightingCache.IsDebuggingEnabled())
+	if (Settings.VoxelDebugMode != EVoxelDebugMode::None && VCTLighting.IsDebuggingEnabled())
 	{
-		VCTLightingCache.RenderVisualization(Camera, CmdList, Settings.VoxelDebugMode);
+		VCTLighting.RenderVisualization(Camera, CmdList, Settings.VoxelDebugMode);
 	}
 	else
 	{
-		VCTLightingCache.PreLightingPass(CmdList);
+		VCTLighting.PreLightingPass(CmdList);
 
 		ComputeLightingPass(Camera, CmdList);
 	}

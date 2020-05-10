@@ -221,9 +221,6 @@
     <ClInclude Include="Systems\SceneSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\GlobalRenderData.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanBindlessResources.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -402,9 +399,6 @@
     </ClCompile>
     <ClCompile Include="Systems\SceneSystem.cpp">
       <Filter>Source\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\GlobalRenderData.cpp">
-      <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanBindlessResources.cpp">
       <Filter>Source\Vulkan</Filter>
