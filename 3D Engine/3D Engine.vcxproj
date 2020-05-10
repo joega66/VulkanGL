@@ -156,7 +156,7 @@
     <None Include="..\Shaders\GBufferVS.glsl" />
     <None Include="..\Shaders\LightingCommon.glsl" />
     <None Include="..\Shaders\LightingPassCS.glsl" />
-    <None Include="..\Shaders\LightInjectionCS.glsl" />
+    <None Include="..\Shaders\LightVolumeCS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
     <None Include="..\Shaders\MaterialInterface.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />

@@ -9,7 +9,7 @@ layout(binding = 0, set = LIGHT_SET) uniform LightViewProjUniform
 	mat4 LightViewProj;
 	mat4 InvLightViewProj;
 };
-layout(binding = 1, set = LIGHT_SET) uniform LightInjectionUniform
+layout(binding = 1, set = LIGHT_SET) uniform VolumeLightingUniform
 {
 	ivec4 ShadowMapSize;
 	vec4 L;
@@ -71,6 +71,5 @@ void main()
 
 	vec3 Lo = DirectLighting(V, Light, Surface, Material).rgb;
 
-	// 4. Inject into the volume.
 	imageStore(VoxelRadiance, VoxelGridCoord, vec4(Lo, 1.0f));
 }

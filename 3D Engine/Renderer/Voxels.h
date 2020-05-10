@@ -101,7 +101,7 @@ private:
 	drm::Pipeline DownsampleVolumePipeline;
 
 	void RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdList);
-	void ComputeLightInjection(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList);
+	void ComputeLightVolume(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputeVolumetricDownsample(drm::CommandList& CmdList, const drm::ImageView& SrcVolume, const drm::ImageView& DstVolume, const glm::uvec3& DstVolumeDimensions);
 
 	void CreateVoxelRP();

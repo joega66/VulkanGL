@@ -43,8 +43,7 @@ float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
 	while (Visibility < 1.0 && Dist < 1.0)
 	{
 		const float Diameter = 2.0 * Aperture * Dist;
-		const float MipLevel = log2(Diameter / _VoxelSize.x);
-		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, MipLevel).a;
+		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, 0).a;
 		Visibility += (1.0 - Visibility) * VisibilitySample; // alpha = alpha + (1 - alpha)alpha2
 		Dist += Diameter;
 	}
@@ -64,8 +63,7 @@ vec3 TraceCone(vec3 StartPosition, vec3 Direction, float ConeAngle)
 	while (Alpha < 1.0 && Dist < 1.0)
 	{
 		const float Diameter = 2.0 * Aperture * Dist;
-		const float MipLevel = log2(Diameter / _VoxelSize.x);
-		const vec4 LiSample = textureLod(RadianceVolume, VolumeUV + Direction * Dist, MipLevel).rgba;
+		const vec4 LiSample = textureLod(RadianceVolume, VolumeUV + Direction * Dist, 0).rgba;
 		Li = Alpha * Li + (1.0 - Alpha) * LiSample.a * LiSample.rgb; // c = a * c + (1 - a)a2 * c
 		Alpha += (1.0 - Alpha) * LiSample.a; // alpha = alpha + (1 - alpha)alpha2
 		Dist += Diameter;

@@ -8,7 +8,7 @@ UNIFORM_STRUCT(LightViewProjUniformData,
 	glm::mat4 InvLightViewProj;
 );
 
-UNIFORM_STRUCT(LightInjectionUniformData,
+UNIFORM_STRUCT(VolumeLightingUniformData,
 	glm::ivec4 ShadowMapSize;
 	glm::vec4 L;
 	glm::vec4 Radiance;
@@ -26,7 +26,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 
 	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-	LightInjectionUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightInjectionUniformData));
+	VolumeLightingUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(VolumeLightingUniformData));
 
 	RenderPassDesc RPDesc = {};
 	RPDesc.DepthAttachment = drm::AttachmentView(
@@ -41,7 +41,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 
 	ShadowDescriptors Descriptors;
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
-	Descriptors.LightInjectionUniform = LightInjectionUniform;
+	Descriptors.VolumeLightingUniform = VolumeLightingUniform;
 
 	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
@@ -52,10 +52,10 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
 
-	LightInjectionUniformData* LightInjectionUniformPtr = static_cast<LightInjectionUniformData*>(LightInjectionUniform.GetData());
-	LightInjectionUniformPtr->ShadowMapSize = glm::ivec4(ShadowMap.GetWidth(), ShadowMap.GetHeight(), 0, 0);
-	LightInjectionUniformPtr->L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
-	LightInjectionUniformPtr->Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+	VolumeLightingUniformData* VolumeLightingUniformPtr = static_cast<VolumeLightingUniformData*>(VolumeLightingUniform.GetData());
+	VolumeLightingUniformPtr->ShadowMapSize = glm::ivec4(ShadowMap.GetWidth(), ShadowMap.GetHeight(), 0, 0);
+	VolumeLightingUniformPtr->L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
+	VolumeLightingUniformPtr->Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
 
 	glm::mat4 LightProjMatrix = glm::ortho(-Width * 0.5f, Width * 0.5f, -Width * 0.5f, Width * 0.5f, ZNear, ZFar);
 	LightProjMatrix[1][1] *= -1;

@@ -205,10 +205,10 @@ public:
 	}
 };
 
-class LightInjectionCS : public drm::Shader
+class LightVolumeCS : public drm::Shader
 {
 public:
-	LightInjectionCS(const ShaderCompilationInfo& CompilationInfo)
+	LightVolumeCS(const ShaderCompilationInfo& CompilationInfo)
 		: drm::Shader(CompilationInfo)
 	{
 	}
@@ -220,7 +220,7 @@ public:
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/LightInjectionCS.glsl", "main", EShaderStage::Compute };
+		static ShaderInfo BaseInfo = { "../Shaders/LightVolumeCS.glsl", "main", EShaderStage::Compute };
 		return BaseInfo;
 	}
 };
@@ -324,7 +324,7 @@ void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::Comm
 		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
 		0.0f, (float)VoxelGridSize);
 	OrthoProj[1][1] *= -1;
-
+	
 	VoxelUniformBufferData* VoxelUniformBufferDataPtr = static_cast<VoxelUniformBufferData*>(VoxelUniformBuffer.GetData());
 	VoxelUniformBufferDataPtr->WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / Settings.VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -Settings.VoxelFieldCenter);
 	VoxelUniformBufferDataPtr->WorldToVoxelInv = glm::inverse(VoxelUniformBufferDataPtr->WorldToVoxel);
@@ -338,7 +338,7 @@ void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::Comm
 
 	RenderVoxels(Camera, CmdList);
 
-	ComputeLightInjection(ECS, Camera, CmdList);
+	ComputeLightVolume(ECS, Camera, CmdList);
 
 	if (VoxelRadiance.GetMipLevels() > 1)
 	{
@@ -388,7 +388,25 @@ void VCTLightingCache::PreLightingPass(drm::CommandList& CmdList)
 
 void VCTLightingCache::RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdList)
 {
-	ImageMemoryBarrier ImageBarrier{
+	const std::vector<ImageMemoryBarrier> ImageBarriers =
+	{
+		{ VoxelBaseColor, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General },
+		{ VoxelNormal, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General },
+	};
+
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, ImageBarriers.size(), ImageBarriers.data());
+
+	CmdList.BeginRenderPass(VoxelRP);
+	
+	MeshDrawCommand::Draw(CmdList, Camera.VoxelsPass);
+
+	CmdList.EndRenderPass();
+}
+
+void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
+{
+	ImageMemoryBarrier ImageBarrier
+	{
 		VoxelRadiance,
 		EAccess::None,
 		EAccess::TransferWrite,
@@ -401,24 +419,13 @@ void VCTLightingCache::RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdLi
 
 	CmdList.ClearColorImage(VoxelRadiance, EImageLayout::TransferDstOptimal, ClearColorValue{});
 
-	const std::vector<ImageMemoryBarrier> ImageBarriers =
-	{
-		{ VoxelBaseColor, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General },
-		{ VoxelNormal, EAccess::None, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General },
-		{ VoxelRadiance, EAccess::TransferWrite, EAccess::ShaderWrite, EImageLayout::TransferDstOptimal, EImageLayout::General, 0, VoxelRadiance.GetMipLevels() },
-	};
+	ImageBarrier.SrcAccessMask = EAccess::TransferWrite;
+	ImageBarrier.DstAccessMask = EAccess::ShaderWrite;
+	ImageBarrier.OldLayout = EImageLayout::TransferDstOptimal;
+	ImageBarrier.NewLayout = EImageLayout::General;
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, ImageBarriers.size(), ImageBarriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 
-	CmdList.BeginRenderPass(VoxelRP);
-	
-	MeshDrawCommand::Draw(CmdList, Camera.VoxelsPass);
-
-	CmdList.EndRenderPass();
-}
-
-void VCTLightingCache::ComputeLightInjection(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
-{
 	struct LightInjectionPushConstants
 	{
 		drm::TextureID ShadowMap;
@@ -437,7 +444,7 @@ void VCTLightingCache::ComputeLightInjection(EntityManager& ECS, CameraProxy& Ca
 		};
 
 		ComputePipelineDesc ComputeDesc = {};
-		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightInjectionCS>();
+		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightVolumeCS>();
 		ComputeDesc.Layouts = 
 		{ 
 			Camera.CameraDescriptorSet.GetLayout(), 
@@ -463,9 +470,9 @@ void VCTLightingCache::ComputeLightInjection(EntityManager& ECS, CameraProxy& Ca
 		CmdList.Dispatch(GroupCountX, GroupCountY, 1);
 	}
 
-	const ImageMemoryBarrier ImageBarrier{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal };
+	const ImageMemoryBarrier ReadBarrier{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal };
 
-	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
+	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ReadBarrier);
 }
 
 void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, const drm::ImageView& SrcVolume, const drm::ImageView& DstVolume, const glm::uvec3& DstVolumeDimensions)

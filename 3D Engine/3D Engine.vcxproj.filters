@@ -489,9 +489,6 @@
     <None Include="..\Shaders\UserInterfaceVS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\LightInjectionCS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\MaterialInterface.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -517,6 +514,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\PostProcessingCS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\LightVolumeCS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
