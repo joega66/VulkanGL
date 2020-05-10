@@ -154,6 +154,7 @@
     <None Include="..\Shaders\FullscreenVS.glsl" />
     <None Include="..\Shaders\GBufferFS.glsl" />
     <None Include="..\Shaders\GBufferVS.glsl" />
+    <None Include="..\Shaders\IndirectLightingCS.glsl" />
     <None Include="..\Shaders\LightingCommon.glsl" />
     <None Include="..\Shaders\LightingPassCS.glsl" />
     <None Include="..\Shaders\LightVolumeCS.glsl" />

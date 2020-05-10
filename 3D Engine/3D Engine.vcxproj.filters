@@ -519,5 +519,8 @@
     <None Include="..\Shaders\LightVolumeCS.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Shaders\IndirectLightingCS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

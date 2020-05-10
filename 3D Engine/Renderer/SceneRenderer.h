@@ -19,6 +19,7 @@ private:
 	void RenderGBufferPass(CameraProxy& Camera, drm::CommandList& CmdList);
 	void RenderShadowDepths(CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList);
+	void ComputeIndirectLightingPass(CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const struct LightParams& Light);
 	void RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList);
 	void ComputePostProcessing(const drm::Image& DisplayImage, CameraProxy& Camera, drm::CommandList& CmdList);

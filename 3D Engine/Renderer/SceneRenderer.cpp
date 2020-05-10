@@ -65,6 +65,8 @@ void SceneRenderer::Render(CameraProxy& Camera)
 		VCTLighting.PreLightingPass(CmdList);
 
 		ComputeLightingPass(Camera, CmdList);
+
+		ComputeIndirectLightingPass(Camera, CmdList);
 	}
 
 	CmdList.BeginRenderPass(Camera.SceneRP);
