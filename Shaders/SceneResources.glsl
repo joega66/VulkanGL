@@ -23,6 +23,11 @@ vec4 Load(uint TextureID, ivec2 Location)
 	return texelFetch(Textures[nonuniformEXT(TextureID)], Location, 0);
 }
 
+ivec2 TextureSize(uint TextureID, int Level)
+{
+	return textureSize(Textures[nonuniformEXT(TextureID)], Level);
+}
+
 #if defined(SAMPLER_SET)
 
 vec4 Sample2D(uint TextureID, uint SamplerID, vec2 UV)

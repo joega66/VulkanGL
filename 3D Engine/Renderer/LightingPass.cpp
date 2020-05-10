@@ -1,6 +1,7 @@
 #include "CameraProxy.h"
 #include "SceneRenderer.h"
 #include "Voxels.h"
+#include "ShadowProxy.h"
 #include <ECS/EntityManager.h>
 #include <Components/Light.h>
 #include <Components/Transform.h>
@@ -10,6 +11,9 @@ struct LightParams
 {
 	glm::vec4 L;
 	glm::vec4 Radiance;
+	glm::mat4 WorldToLight;
+	drm::TextureID ShadowMap;
+	drm::SamplerID ShadowMapSampler;
 };
 
 class LightingPassCS : public drm::Shader
@@ -49,10 +53,14 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 	for (auto Entity : ECS.GetEntities<DirectionalLight>())
 	{
 		const auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
+		const auto& Shadow = ECS.GetComponent<ShadowProxy>(Entity);
 
 		LightParams Light;
 		Light.L = glm::vec4(glm::normalize(DirectionalLight.Direction), 0.0f);
 		Light.Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+		Light.WorldToLight = Shadow.GetLightViewProjMatrix();
+		Light.ShadowMap = Shadow.GetShadowMap().GetTextureID();
+		Light.ShadowMapSampler = Device.CreateSampler({}).GetSamplerID();
 
 		ComputeDeferredLight(Camera, CmdList, Light);
 
@@ -84,7 +92,9 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	ComputeDesc.Layouts =
 	{
 		Camera.CameraDescriptorSet.GetLayout(),
-		VCTLighting.GetDescriptorSet().GetLayout()
+		VCTLighting.GetDescriptorSet().GetLayout(),
+		Device.GetTextures().GetLayout(),
+		Device.GetSamplers().GetLayout(),
 	};
 	ComputeDesc.PushConstantRange.Size = sizeof(Light);
 	ComputeDesc.PushConstantRange.StageFlags = EShaderStage::Compute;
@@ -96,7 +106,9 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{
 		Camera.CameraDescriptorSet,
-		VCTLighting.GetDescriptorSet()
+		VCTLighting.GetDescriptorSet(),
+		Device.GetTextures().GetSet(),
+		Device.GetSamplers().GetSet(),
 	};
 
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());

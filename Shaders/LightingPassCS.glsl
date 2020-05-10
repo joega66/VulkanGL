@@ -2,16 +2,22 @@
 #define VOXEL_SET 1
 #include "VoxelsCommon.glsl"
 #include "LightingCommon.glsl"
+#define TEXTURE_SET 2
+#define SAMPLER_SET 3
+#include "SceneResources.glsl"
 
 #define DIRECTIONAL_LIGHT 0
 #define POINT_LIGHT 1
 
-layout(constant_id = 0) const uint cLightType = 0;
+layout(constant_id = 0) const uint _LIGHT_TYPE = 0;
 
 layout(push_constant) uniform DirectionalLightConstants
 {
 	vec4 L;
 	vec4 Radiance;
+	mat4 LightViewProj;
+	uint ShadowMap;
+	uint ShadowMapSampler;
 };
 
 void GetDirectionalLightParams(inout LightParams Light)
@@ -30,25 +36,29 @@ void GetPointLightParams(inout LightParams Light, SurfaceData Surface)
 	Light.Radiance = Radiance.rgb * Attenuation;
 }
 
-float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
+float ShadowPCF(vec3 WorldPosition)
 {
-	const float ConeAngle = 60.0;
-	const float Aperture = atan(radians(ConeAngle / 2.0));
-	const vec3 StartPosition = WorldPosition + WorldNormal * _VoxelSize.x;
-	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
+	vec4 LightSpace = LightViewProj * vec4(WorldPosition, 1.0f);
+	LightSpace.xyz /= LightSpace.w;
+	LightSpace.xy = (LightSpace.xy + 1.0f) * 0.5f;
+	float CurrentDepth = LightSpace.z;
+	vec2 TexelSize = 1.0 / vec2( TextureSize(ShadowMap, 0) );
 
-	float Dist = _VoxelSize.x;
-	float Visibility = 0.0;
+	float ShadowFactor = 0.0;
 
-	while (Visibility < 1.0 && Dist < 1.0)
+	for (int X = -1; X <= 1; X++)
 	{
-		const float Diameter = 2.0 * Aperture * Dist;
-		const float VisibilitySample = textureLod(RadianceVolume, VolumeUV + LightDir * Dist, 0).a;
-		Visibility += (1.0 - Visibility) * VisibilitySample; // alpha = alpha + (1 - alpha)alpha2
-		Dist += Diameter;
+		for (int Y = -1; Y <= 1; Y++)
+		{
+			float ShadowDepth = Sample2D(ShadowMap, ShadowMapSampler, LightSpace.xy + vec2(X, Y) * TexelSize).r;
+			float DepthTest = CurrentDepth > ShadowDepth ? 1.0f : 0.0f;
+			ShadowFactor += DepthTest;
+		}
 	}
 
-	return Visibility;
+	ShadowFactor /= 9.0;
+	
+	return ( 1 - ShadowFactor);
 }
 
 vec3 TraceCone(vec3 StartPosition, vec3 Direction, float ConeAngle)
@@ -91,11 +101,11 @@ void main()
 
 	LightParams Light;
 
-	if (cLightType == DIRECTIONAL_LIGHT)
+	if (_LIGHT_TYPE == DIRECTIONAL_LIGHT)
 	{
 		GetDirectionalLightParams(Light);
 	}
-	else if (cLightType == POINT_LIGHT)
+	else if (_LIGHT_TYPE == POINT_LIGHT)
 	{
 		GetPointLightParams(Light, Surface);
 	}
@@ -104,7 +114,7 @@ void main()
 
 	Lo += DirectLighting(V, Light, Surface, Material);
 
-	Lo *= TraceShadowCone(Surface.WorldPosition, Surface.WorldNormal, Light.L);
+	Lo *= ShadowPCF(Surface.WorldPosition);
 
 	vec3 Up = abs(Surface.WorldNormal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
 	vec3 Tangent = normalize(cross(Up, Surface.WorldNormal));

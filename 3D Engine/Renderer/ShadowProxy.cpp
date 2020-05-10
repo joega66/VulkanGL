@@ -61,7 +61,7 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	LightProjMatrix[1][1] *= -1;
 
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	const glm::mat4 LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
+	LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
 
 	LightViewProjUniformData* LightViewProjMatrixPtr = static_cast<LightViewProjUniformData*>(LightViewProjBuffer.GetData());
 	LightViewProjMatrixPtr->LightViewProj = LightViewProjMatrix;
