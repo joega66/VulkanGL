@@ -54,7 +54,7 @@ float TraceShadowCone(vec3 WorldPosition, vec3 WorldNormal, vec3 LightDir)
 
 vec3 TraceCone(vec3 StartPosition, vec3 Direction, float ConeAngle)
 {
-	const float Aperture = atan(radians(ConeAngle / 2.0));
+	const float Aperture = atan(ConeAngle / 2.0);
 	const vec3 VolumeUV = TransformWorldToVoxelUVW(StartPosition);
 
 	float Dist = _VoxelSize.x;
@@ -116,11 +116,11 @@ void main()
 
 	vec3 IndirectDiffuse = vec3(0.0);
 	
-	float DiffuseCone = 60.0;
-	float Theta = 45.0;
+	float DiffuseCone = radians(60.0);
+	float Theta = radians(45.0);
 	float SinTheta = sin(Theta);
 	float CosTheta = cos(Theta);
-	float Phi[] = { 0.0, 90.0, 180.0, 270.0 };
+	float Phi[] = { radians(0.0), radians(90.0), radians(180.0), radians(270.0) };
 
 	for (int i = 0; i < 4; i++)
 	{
