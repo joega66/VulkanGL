@@ -1,5 +1,5 @@
 #include "CameraProxy.h"
-#include "GlobalRenderData.h"
+#include "Voxels.h"
 #include <Engine/Engine.h>
 #include <Engine/Screen.h>
 #include <Components/Bounds.h>
@@ -37,15 +37,15 @@ CameraProxy::CameraProxy(Engine& Engine)
 		CreateGBufferRP(Device);
 		CreateUserInterfaceRP(Device, Surface);
 
-		auto& GlobalData = Engine.ECS.GetSingletonComponent<GlobalRenderData>();
-		GlobalData.VCTLightingCache.CreateDebugRenderPass(SceneColor, SceneDepth);
+		auto& VCTLighting = Engine.ECS.GetSingletonComponent<VCTLightingCache>();
+		VCTLighting.CreateDebugRenderPass(SceneColor, SceneDepth);
 
 		const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Nearest });
 
 		CameraDescriptorSet.SceneDepth = drm::DescriptorImageInfo(SceneDepth, Sampler);
 		CameraDescriptorSet.GBuffer0 = drm::DescriptorImageInfo(GBuffer0, Sampler);
 		CameraDescriptorSet.GBuffer1 = drm::DescriptorImageInfo(GBuffer1, Sampler);
-		CameraDescriptorSet.RadianceVolume = drm::DescriptorImageInfo(GlobalData.VCTLightingCache.GetVoxelRadiance(), GlobalData.VCTLightingCache.GetVoxelRadianceSampler());
+		CameraDescriptorSet.RadianceVolume = drm::DescriptorImageInfo(VCTLighting.GetVoxelRadiance(), VCTLighting.GetVoxelRadianceSampler());
 		CameraDescriptorSet.SceneColor = drm::DescriptorImageInfo(SceneColor);
 		CameraDescriptorSet.Update(Device);
 	});
