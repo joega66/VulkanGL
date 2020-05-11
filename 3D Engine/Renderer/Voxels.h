@@ -31,9 +31,6 @@ public:
 
 	/** Voxelize the scene. */
 	void Render(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList);
-	
-	/** Called just before the lighting pass. */
-	void PreLightingPass(drm::CommandList& CmdList);
 
 	/** Visualize the voxels. */
 	void RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList, EVoxelDebugMode VoxelDebugMode);
@@ -72,8 +69,6 @@ private:
 
 	drm::Buffer VoxelPositions;
 	drm::Buffer VoxelIndirectBuffer;
-
-	EImageLayout VoxelRadianceImageLayout;
 
 	struct DownsampleVolumeDescriptors
 	{

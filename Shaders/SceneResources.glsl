@@ -8,6 +8,10 @@
 layout(binding = 0, set = TEXTURE_SET) uniform texture2D Textures[];
 #endif
 
+#ifdef TEXTURE_3D_SET
+layout(binding = 0, set = TEXTURE_3D_SET) uniform texture3D Textures3D[];
+#endif
+
 #ifdef SAMPLER_SET
 layout(binding = 0, set = SAMPLER_SET) uniform sampler Samplers[];
 #endif
@@ -36,6 +40,15 @@ vec4 Sample2D(uint TextureID, uint SamplerID, vec2 UV)
 }
 
 #endif
+
+#endif
+
+#if defined(TEXTURE_3D_SET)
+
+vec4 TexelFetch(uint TextureID, ivec3 Location, int Level)
+{
+	return texelFetch(Textures3D[nonuniformEXT(TextureID)], Location, Level);
+}
 
 #endif
 

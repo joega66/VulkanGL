@@ -17,11 +17,14 @@ layout(binding = 1, set = LIGHT_SET) uniform VolumeLightingUniform
 };
 
 #define TEXTURE_SET 3
+#define TEXTURE_3D_SET 4
 #include "SceneResources.glsl"
 
 layout(push_constant) uniform PushConstants
 {
-	uint ShadowMap;
+	uint _ShadowMap;
+	uint _VoxelBaseColor;
+	uint _VoxelNormal;
 };
 
 layout(local_size_x = 8, local_size_y = 8) in;
@@ -31,7 +34,7 @@ void main()
 		return;
 
 	// 1. Project light depth into the volume.
-	float LightDepth = Load(ShadowMap, ivec2(gl_GlobalInvocationID.xy)).r;
+	float LightDepth = Load(_ShadowMap, ivec2(gl_GlobalInvocationID.xy)).r;
 	vec2 ClipSpace = vec2(gl_GlobalInvocationID.xy) / ShadowMapSize.xy;
 	ClipSpace = (ClipSpace - 0.5f) * 2.0f;
 	vec4 ClipSpaceH = vec4(ClipSpace, LightDepth, 1.0f);
@@ -41,7 +44,7 @@ void main()
 	ivec3 VoxelGridCoord = TransformWorldToVoxelGridCoord(WorldPosition.xyz);
 
 	// 2. Load the material from the voxel grid.
-	vec4 BaseColor = imageLoad(VoxelBaseColor, VoxelGridCoord);
+	vec4 BaseColor = TexelFetch(_VoxelBaseColor, VoxelGridCoord, 0);
 
 	// @todo Metallic, Roughness
 	MaterialData Material;
@@ -53,7 +56,7 @@ void main()
 
 	SurfaceData Surface;
 	Surface.WorldPosition = WorldPosition.xyz;
-	Surface.WorldNormal = imageLoad(VoxelNormal, VoxelGridCoord).rgb;
+	Surface.WorldNormal = TexelFetch(_VoxelNormal, VoxelGridCoord, 0).rgb;
 	
 	LightParams Light;
 	Light.L = L.xyz;

@@ -2,6 +2,8 @@
 #include "CameraCommon.glsl"
 #define VOXEL_SET 1
 #include "VoxelsCommon.glsl"
+#define TEXTURE_3D_SET 2
+#include "SceneResources.glsl"
 
 #ifdef VERTEX_SHADER
 
@@ -10,6 +12,13 @@ layout(location = 1) out vec4 OutVoxelColor;
 layout(location = 2) out int OutVoxelGridZ;
 
 layout(constant_id = 0) const uint VoxelDebugMode = 1;
+
+layout(push_constant) uniform PushConstants
+{
+	uint _VoxelRadiance;
+	uint _VoxelBaseColor;
+	uint _VoxelNormal;
+};
 
 void main()
 {
@@ -20,15 +29,15 @@ void main()
 	// Must match Voxels.h
 	if (VoxelDebugMode == 1)
 	{
-		OutVoxelColor = imageLoad(VoxelRadiance, VoxelPosition);
+		OutVoxelColor = TexelFetch(_VoxelRadiance, VoxelPosition, 0);
 	}
 	else if (VoxelDebugMode == 2)
 	{
-		OutVoxelColor = imageLoad(VoxelBaseColor, VoxelPosition);
+		OutVoxelColor = TexelFetch(_VoxelBaseColor, VoxelPosition, 0);
 	}
 	else // 3
 	{
-		OutVoxelColor = imageLoad(VoxelNormal, VoxelPosition);
+		OutVoxelColor = TexelFetch(_VoxelNormal, VoxelPosition, 0);
 	}
 	
 	OutVoxelGridZ = VoxelPosition.z;

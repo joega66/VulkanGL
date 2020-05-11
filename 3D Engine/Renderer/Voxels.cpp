@@ -318,11 +318,12 @@ void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::Comm
 {
 	const auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
 	const float InvVoxelSize = 1.0f / (Settings.VoxelSize * static_cast<float>(VoxelGridSize));
+	const float VoxelHalfSize = VoxelGridSize * 0.5f;
 
 	glm::mat4 OrthoProj = glm::ortho(
-		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
-		-(float)VoxelGridSize * 0.5f, (float)VoxelGridSize * 0.5f,
-		0.0f, (float)VoxelGridSize);
+		-VoxelHalfSize, VoxelHalfSize,
+		-VoxelHalfSize, VoxelHalfSize,
+		0.0f, static_cast<float>(VoxelGridSize));
 	OrthoProj[1][1] *= -1;
 	
 	VoxelUniformBufferData* VoxelUniformBufferDataPtr = static_cast<VoxelUniformBufferData*>(VoxelUniformBuffer.GetData());
@@ -363,27 +364,6 @@ void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::Comm
 			CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 		}
 	}
-
-	VoxelRadianceImageLayout = EImageLayout::ShaderReadOnlyOptimal;
-}
-
-void VCTLightingCache::PreLightingPass(drm::CommandList& CmdList)
-{
-	if (VoxelRadianceImageLayout != EImageLayout::ShaderReadOnlyOptimal)
-	{
-		ImageMemoryBarrier ImageBarrier{ 
-			VoxelRadiance, 
-			EAccess::None, 
-			EAccess::ShaderRead, 
-			EImageLayout::General, 
-			EImageLayout::ShaderReadOnlyOptimal, 
-			0, VoxelRadiance.GetMipLevels() 
-		};
-
-		CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::FragmentShader, 0, nullptr, 1, &ImageBarrier);
-
-		VoxelRadianceImageLayout = EImageLayout::ShaderReadOnlyOptimal;
-	}
 }
 
 void VCTLightingCache::RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdList)
@@ -401,6 +381,14 @@ void VCTLightingCache::RenderVoxels(CameraProxy& Camera, drm::CommandList& CmdLi
 	MeshDrawCommand::Draw(CmdList, Camera.VoxelsPass);
 
 	CmdList.EndRenderPass();
+
+	const std::vector<ImageMemoryBarrier> ReadBarriers =
+	{
+		{ VoxelBaseColor, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal },
+		{ VoxelNormal, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::ShaderReadOnlyOptimal },
+	};
+
+	CmdList.PipelineBarrier(EPipelineStage::FragmentShader, EPipelineStage::ComputeShader, 0, nullptr, ReadBarriers.size(), ReadBarriers.data());
 }
 
 void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camera, drm::CommandList& CmdList)
@@ -426,9 +414,11 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 
-	struct LightInjectionPushConstants
+	struct LightVolumePushConstants
 	{
 		drm::TextureID ShadowMap;
+		drm::TextureID VoxelBaseColor;
+		drm::TextureID VoxelNormal;
 	};
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
@@ -441,6 +431,7 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 			VoxelDescriptorSet, 
 			ShadowProxy.GetDescriptorSet(),
 			Device.GetTextures().GetSet(),
+			Device.GetTextures().GetSet(),
 		};
 
 		ComputePipelineDesc ComputeDesc = {};
@@ -451,11 +442,14 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 			VoxelDescriptorSet.GetLayout(), 
 			ShadowProxy.GetDescriptorSet().GetLayout(),
 			Device.GetTextures().GetLayout(),
+			Device.GetTextures().GetLayout(),
 		};
-		ComputeDesc.PushConstantRange = PushConstantRange{ EShaderStage::Compute, sizeof(LightInjectionPushConstants) };
+		ComputeDesc.PushConstantRange = PushConstantRange{ EShaderStage::Compute, sizeof(LightVolumePushConstants) };
 
-		LightInjectionPushConstants PushConstants;
+		LightVolumePushConstants PushConstants;
 		PushConstants.ShadowMap = ShadowMap.GetTextureID();
+		PushConstants.VoxelBaseColor = VoxelBaseColor.GetTextureID();
+		PushConstants.VoxelNormal = VoxelNormal.GetTextureID();
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -502,31 +496,30 @@ void VCTLightingCache::ComputeVolumetricDownsample(drm::CommandList& CmdList, co
 
 void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList& CmdList, EVoxelDebugMode VoxelDebugMode)
 {
-	if (VoxelRadianceImageLayout != EImageLayout::General)
+	std::vector<BufferMemoryBarrier> BufferBarriers =
 	{
-		std::vector<BufferMemoryBarrier> BufferBarriers =
-		{
-			{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
-			{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
-		};
+		{ VoxelPositions, EAccess::ShaderWrite, EAccess::ShaderRead },
+		{ VoxelIndirectBuffer, EAccess::ShaderWrite, EAccess::IndirectCommandRead }
+	};
 
-		std::vector<ImageMemoryBarrier> ImageBarriers =
-		{
-			{ VoxelBaseColor, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
-			{ VoxelNormal, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::General, EImageLayout::General },
-			{ VoxelRadiance, EAccess::ShaderWrite, EAccess::ShaderRead, EImageLayout::ShaderReadOnlyOptimal, EImageLayout::General, 0, VoxelRadiance.GetMipLevels() }
-		};
+	CmdList.PipelineBarrier(
+		EPipelineStage::FragmentShader,
+		EPipelineStage::DrawIndirect | EPipelineStage::VertexShader,
+		BufferBarriers.size(), BufferBarriers.data(),
+		0, nullptr
+	);
 
-		CmdList.PipelineBarrier(
-			EPipelineStage::FragmentShader | EPipelineStage::ComputeShader,
-			EPipelineStage::DrawIndirect | EPipelineStage::VertexShader,
-			BufferBarriers.size(), BufferBarriers.data(),
-			ImageBarriers.size(), ImageBarriers.data()
-		);
+	struct DrawVoxelsPushConstants
+	{
+		drm::TextureID VoxelRadiance;
+		drm::TextureID VoxelBaseColor;
+		drm::TextureID VoxelNormal;
+	} PushConstants;
 
-		VoxelRadianceImageLayout = EImageLayout::General;
-	}
-	
+	PushConstants.VoxelRadiance = VoxelRadiance.GetTextureID();
+	PushConstants.VoxelBaseColor = VoxelBaseColor.GetTextureID();
+	PushConstants.VoxelNormal = VoxelNormal.GetTextureID();
+
 	CmdList.BeginRenderPass(DebugRP);
 
 	PipelineStateDesc PSODesc = {};
@@ -539,7 +532,7 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
 	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
-	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout() };
+	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), Device.GetTextures().GetLayout() };
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
 	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
@@ -549,13 +542,16 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
 	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
 	PSODesc.SpecializationInfo.Add(0, static_cast<uint32>(VoxelDebugMode));
+	PSODesc.PushConstantRange = { EShaderStage::Vertex, sizeof(PushConstants) };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, VoxelDescriptorSet };
+	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, VoxelDescriptorSet, Device.GetTextures().GetSet() };
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+
+	CmdList.PushConstants(Pipeline, &PushConstants);
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 
