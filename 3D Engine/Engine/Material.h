@@ -44,7 +44,7 @@ public:
 	inline const SpecializationInfo& GetSpecializationInfo() const { return mSpecializationInfo; }
 	inline const PushConstantRange& GetPushConstantRange() const 
 	{
-		static PushConstantRange PushConstantRange = { EShaderStage::Fragment, sizeof(PushConstants) };
+		static PushConstantRange PushConstantRange = { EShaderStage::Fragment, 0, sizeof(PushConstants) };
 		return PushConstantRange;
 	}
 

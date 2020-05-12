@@ -59,7 +59,7 @@ void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, Camera
 	ComputePipelineDesc ComputeDesc;
 	ComputeDesc.ComputeShader = ShaderMap.FindShader<PostProcessingCS>();
 	ComputeDesc.Layouts = { Layout };
-	ComputeDesc.PushConstantRange = { EShaderStage::Compute, sizeof(PushConstants) };
+	ComputeDesc.PushConstantRanges.push_back({ EShaderStage::Compute, 0, sizeof(PushConstants) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -71,7 +71,7 @@ void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, Camera
 	Constants.ExposureAdjustment = RenderSettings.ExposureAdjustment;
 	Constants.ExposureBias = RenderSettings.ExposureBias;
 
-	CmdList.PushConstants(Pipeline, &Constants);
+	CmdList.PushConstants(Pipeline, EShaderStage::Compute, 0, sizeof(Constants), &Constants);
 
 	const glm::ivec3 GroupCount(
 		DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u),

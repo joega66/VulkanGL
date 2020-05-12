@@ -62,14 +62,27 @@ void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>
 	);
 }
 
-void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const void* Values)
+void VulkanCommandList::PushConstants(
+	const std::shared_ptr<VulkanPipeline>& Pipeline, 
+	EShaderStage StageFlags, 
+	uint32 Offset, 
+	uint32 Size, 
+	const void* Values)
 {
+	VkShaderStageFlags VKStageFlags = 0;
+	VKStageFlags |= Any(StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+	VKStageFlags |= Any(StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+	VKStageFlags |= Any(StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+	VKStageFlags |= Any(StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+	VKStageFlags |= Any(StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+	VKStageFlags |= Any(StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+
 	vkCmdPushConstants(
 		CommandBuffer,
 		Pipeline->GetPipelineLayout(),
-		Pipeline->GetPushConstantRange().stageFlags,
-		Pipeline->GetPushConstantRange().offset,
-		Pipeline->GetPushConstantRange().size,
+		VKStageFlags,
+		Offset,
+		Size,
 		Values
 	);
 }

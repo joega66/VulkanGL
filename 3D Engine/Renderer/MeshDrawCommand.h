@@ -15,7 +15,7 @@ public:
 		, DescriptorSets(DescriptorSets)
 	{
 		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
-		PSODesc.PushConstantRange = Material->GetPushConstantRange();
+		PSODesc.PushConstantRanges.push_back(Material->GetPushConstantRange());
 		Pipeline = Device.CreatePipeline(PSODesc);
 	}
 
@@ -25,7 +25,7 @@ public:
 
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
-		CmdList.PushConstants(Pipeline, &Material->GetPushConstants());
+		CmdList.PushConstants(Pipeline, EShaderStage::Fragment, 0, sizeof(Material->GetPushConstants()), &Material->GetPushConstants());
 
 		for (const auto& Submesh : Submeshes)
 		{

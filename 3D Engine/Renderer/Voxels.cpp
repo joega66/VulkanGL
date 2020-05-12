@@ -12,7 +12,6 @@ struct VoxelDescriptors
 	drm::DescriptorBufferInfo VoxelUniformBuffer;
 	drm::DescriptorImageInfo VoxelBaseColor;
 	drm::DescriptorImageInfo VoxelNormal;
-	drm::DescriptorImageInfo VoxelRadiance;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -21,7 +20,6 @@ struct VoxelDescriptors
 			{ 0, 1, EDescriptorType::UniformBuffer },
 			{ 1, 1, EDescriptorType::StorageImage },
 			{ 2, 1, EDescriptorType::StorageImage },
-			{ 3, 1, EDescriptorType::StorageImage }
 		};
 		return Bindings;
 	}
@@ -35,8 +33,8 @@ struct DebugVoxelsDescriptors : public VoxelDescriptors
 	static std::vector<DescriptorBinding> GetBindings()
 	{
 		auto Bindings = VoxelDescriptors::GetBindings();
+		Bindings.push_back({ 3, 1, EDescriptorType::StorageBuffer });
 		Bindings.push_back({ 4, 1, EDescriptorType::StorageBuffer });
-		Bindings.push_back({ 5, 1, EDescriptorType::StorageBuffer });
 		return Bindings;
 	}
 };
@@ -287,7 +285,6 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		Descriptors.VoxelUniformBuffer = VoxelUniformBuffer;
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelNormal = VoxelNormal;
-		Descriptors.VoxelRadiance = VoxelRadiance;
 		Descriptors.VoxelPositions = VoxelPositions;
 		Descriptors.VoxelIndirectBuffer = VoxelIndirectBuffer;
 		VoxelSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
@@ -298,7 +295,6 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 		Descriptors.VoxelUniformBuffer = VoxelUniformBuffer;
 		Descriptors.VoxelBaseColor = VoxelBaseColor;
 		Descriptors.VoxelNormal = VoxelNormal;
-		Descriptors.VoxelRadiance = VoxelRadiance;
 		VoxelSetLayout.UpdateDescriptorSet(Device, VoxelDescriptorSet, &Descriptors);
 	}
 
@@ -326,9 +322,11 @@ void VCTLightingCache::Render(EntityManager& ECS, CameraProxy& Camera, drm::Comm
 		0.0f, static_cast<float>(VoxelGridSize));
 	OrthoProj[1][1] *= -1;
 	
+	WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / Settings.VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -Settings.VoxelFieldCenter);
+
 	VoxelUniformBufferData* VoxelUniformBufferDataPtr = static_cast<VoxelUniformBufferData*>(VoxelUniformBuffer.GetData());
-	VoxelUniformBufferDataPtr->WorldToVoxel = glm::scale(glm::mat4(), glm::vec3(1.0f / Settings.VoxelSize)) * OrthoProj * glm::translate(glm::mat4(), -Settings.VoxelFieldCenter);
-	VoxelUniformBufferDataPtr->WorldToVoxelInv = glm::inverse(VoxelUniformBufferDataPtr->WorldToVoxel);
+	VoxelUniformBufferDataPtr->WorldToVoxel = WorldToVoxel;
+	VoxelUniformBufferDataPtr->WorldToVoxelInv = glm::inverse(WorldToVoxel);
 	VoxelUniformBufferDataPtr->VoxelSize = glm::vec4(InvVoxelSize, InvVoxelSize, Settings.VoxelSize, Settings.VoxelSize);
 
 	DrawIndirectCommand* DrawIndirectCommandPtr = static_cast<DrawIndirectCommand*>(VoxelIndirectBuffer.GetData());
@@ -419,45 +417,51 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 		drm::TextureID ShadowMap;
 		drm::TextureID VoxelBaseColor;
 		drm::TextureID VoxelNormal;
+		drm::ImageID VoxelRadiance;
+		glm::mat4 WorldToVoxel;
 	};
+
+	LightVolumePushConstants LightVolumePushConstants;
+	LightVolumePushConstants.VoxelBaseColor = VoxelBaseColor.GetTextureID();
+	LightVolumePushConstants.VoxelNormal = VoxelNormal.GetTextureID();
+	LightVolumePushConstants.VoxelRadiance = VoxelRadiance.GetImageID();
+	LightVolumePushConstants.WorldToVoxel = WorldToVoxel;
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
 		const auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
 		const drm::Image& ShadowMap = ShadowProxy.GetShadowMap();
-		const std::vector<VkDescriptorSet> DescriptorSets = 
-		{
-			Camera.CameraDescriptorSet, 
-			VoxelDescriptorSet, 
-			ShadowProxy.GetDescriptorSet(),
-			Device.GetTextures().GetSet(),
-			Device.GetTextures().GetSet(),
-		};
 
 		ComputePipelineDesc ComputeDesc = {};
 		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightVolumeCS>();
-		ComputeDesc.Layouts = 
-		{ 
-			Camera.CameraDescriptorSet.GetLayout(), 
-			VoxelDescriptorSet.GetLayout(), 
+		ComputeDesc.Layouts =
+		{
+			Camera.CameraDescriptorSet.GetLayout(),
 			ShadowProxy.GetDescriptorSet().GetLayout(),
 			Device.GetTextures().GetLayout(),
 			Device.GetTextures().GetLayout(),
+			Device.GetImages().GetLayout(),
 		};
-		ComputeDesc.PushConstantRange = PushConstantRange{ EShaderStage::Compute, sizeof(LightVolumePushConstants) };
-
-		LightVolumePushConstants PushConstants;
-		PushConstants.ShadowMap = ShadowMap.GetTextureID();
-		PushConstants.VoxelBaseColor = VoxelBaseColor.GetTextureID();
-		PushConstants.VoxelNormal = VoxelNormal.GetTextureID();
+		ComputeDesc.PushConstantRanges.push_back(PushConstantRange{ EShaderStage::Compute, 0, sizeof(LightVolumePushConstants) });
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 		CmdList.BindPipeline(Pipeline);
 
+		const std::vector<VkDescriptorSet> DescriptorSets =
+		{
+			Camera.CameraDescriptorSet,
+			ShadowProxy.GetDescriptorSet(),
+			Device.GetTextures().GetSet(),
+			Device.GetTextures().GetSet(),
+			Device.GetImages().GetSet(),
+		};
+
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
-		
-		CmdList.PushConstants(Pipeline, &PushConstants);
+
+		LightVolumePushConstants.ShadowMap = ShadowMap.GetTextureID();
+
+		CmdList.PushConstants(Pipeline, EShaderStage::Compute, 0, sizeof(LightVolumePushConstants), &LightVolumePushConstants);
 
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);
 		const uint32 GroupCountY = DivideAndRoundUp(ShadowMap.GetHeight(), 8U);
@@ -542,7 +546,7 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
 	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
 	PSODesc.SpecializationInfo.Add(0, static_cast<uint32>(VoxelDebugMode));
-	PSODesc.PushConstantRange = { EShaderStage::Vertex, sizeof(PushConstants) };
+	PSODesc.PushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(PushConstants) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
@@ -551,7 +555,7 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, VoxelDescriptorSet, Device.GetTextures().GetSet() };
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
-	CmdList.PushConstants(Pipeline, &PushConstants);
+	CmdList.PushConstants(Pipeline, EShaderStage::Vertex, 0, sizeof(PushConstants), &PushConstants);
 
 	CmdList.DrawIndirect(VoxelIndirectBuffer, 0, 1);
 

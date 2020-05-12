@@ -16,7 +16,10 @@ public:
 	
 	std::pair<VkRenderPass, VkFramebuffer> GetRenderPass(const RenderPassDesc& RPDesc);
 
-	std::pair<VkPipelineLayout, VkPushConstantRange> GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange);
+	VkPipelineLayout GetPipelineLayout(
+		const std::vector<VkDescriptorSetLayout>& Layouts, 
+		const std::vector<PushConstantRange>& PushConstantRanges
+	);
 
 	drm::Pipeline GetPipeline(const PipelineStateDesc& PSODesc);
 

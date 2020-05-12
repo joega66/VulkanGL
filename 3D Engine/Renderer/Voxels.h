@@ -52,6 +52,8 @@ private:
 	DRMDevice& Device;
 	DRMShaderMap& ShaderMap;
 
+	glm::mat4 WorldToVoxel;
+
 	drm::RenderPass VoxelRP;
 	drm::RenderPass DebugRP;
 

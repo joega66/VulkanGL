@@ -212,6 +212,11 @@ drm::TextureID VulkanDevice::CreateTextureID(const VulkanImageView& ImageView)
 	return BindlessTextures->CreateTextureID(ImageView);
 }
 
+drm::ImageID VulkanDevice::CreateImageID(const VulkanImageView& ImageView)
+{
+	return BindlessImages->CreateImageID(ImageView);
+}
+
 drm::BindlessResources& VulkanDevice::GetTextures()
 {
 	return *BindlessTextures;
@@ -220,6 +225,11 @@ drm::BindlessResources& VulkanDevice::GetTextures()
 drm::BindlessResources& VulkanDevice::GetSamplers()
 {
 	return *BindlessSamplers;
+}
+
+drm::BindlessResources& VulkanDevice::GetImages()
+{
+	return *BindlessImages;
 }
 
 void VulkanDevice::CreateLogicalDevice()
@@ -242,9 +252,11 @@ void VulkanDevice::CreateLogicalDevice()
 	Features.geometryShader = VK_TRUE;
 	Features.fragmentStoresAndAtomics = VK_TRUE;
 	Features.vertexPipelineStoresAndAtomics = VK_TRUE;
+	Features.shaderStorageImageWriteWithoutFormat = VK_TRUE;
 
 	VkPhysicalDeviceDescriptorIndexingFeatures DescriptorIndexingFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES };
 	DescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+	DescriptorIndexingFeatures.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
 	DescriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
 	DescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
 	DescriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
@@ -279,4 +291,7 @@ void VulkanDevice::CreateLogicalDevice()
 
 	BindlessSamplers = std::make_shared<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_SAMPLER, 1024);
 	gBindlessSamplers = BindlessSamplers;
+
+	BindlessImages = std::make_shared<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
+	gBindlessImages = BindlessImages;
 }

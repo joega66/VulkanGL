@@ -1,44 +1,47 @@
-#include "CameraCommon.glsl"
-#define VOXEL_SET 1
-#include "VoxelsCommon.glsl"
-#include "LightingCommon.glsl"
-
-#define LIGHT_SET 2
-layout(binding = 0, set = LIGHT_SET) uniform LightViewProjUniform
-{
-	mat4 LightViewProj;
-	mat4 InvLightViewProj;
-};
-layout(binding = 1, set = LIGHT_SET) uniform VolumeLightingUniform
-{
-	ivec4 ShadowMapSize;
-	vec4 L;
-	vec4 Radiance;
-};
-
-#define TEXTURE_SET 3
-#define TEXTURE_3D_SET 4
-#include "SceneResources.glsl"
 
 layout(push_constant) uniform PushConstants
 {
 	uint _ShadowMap;
 	uint _VoxelBaseColor;
 	uint _VoxelNormal;
+	uint _VoxelRadiance;
+	mat4 _WorldToVoxel;
 };
+
+#include "CameraCommon.glsl"
+#include "VoxelsCommon.glsl"
+#include "LightingCommon.glsl"
+
+#define LIGHT_SET 1
+layout(binding = 0, set = LIGHT_SET) uniform LightViewProjUniform
+{
+	mat4 _LightViewProj;
+	mat4 _LightViewProjInv;
+};
+layout(binding = 1, set = LIGHT_SET) uniform VolumeLightingUniform
+{
+	ivec4 _ShadowMapSize;
+	vec4 _L;
+	vec4 _Radiance;
+};
+
+#define TEXTURE_SET 2
+#define TEXTURE_3D_SET 3
+#define IMAGE_3D_SET 4
+#include "SceneResources.glsl"
 
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, ShadowMapSize.xy)))
+	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, _ShadowMapSize.xy)))
 		return;
 
 	// 1. Project light depth into the volume.
 	float LightDepth = Load(_ShadowMap, ivec2(gl_GlobalInvocationID.xy)).r;
-	vec2 ClipSpace = vec2(gl_GlobalInvocationID.xy) / ShadowMapSize.xy;
+	vec2 ClipSpace = vec2(gl_GlobalInvocationID.xy) / _ShadowMapSize.xy;
 	ClipSpace = (ClipSpace - 0.5f) * 2.0f;
 	vec4 ClipSpaceH = vec4(ClipSpace, LightDepth, 1.0f);
-	vec4 WorldPosition = InvLightViewProj * ClipSpaceH;
+	vec4 WorldPosition = _LightViewProjInv * ClipSpaceH;
 	WorldPosition.xyz /= WorldPosition.w;
 
 	ivec3 VoxelGridCoord = TransformWorldToVoxelGridCoord(WorldPosition.xyz);
@@ -59,8 +62,8 @@ void main()
 	Surface.WorldNormal = TexelFetch(_VoxelNormal, VoxelGridCoord, 0).rgb;
 	
 	LightParams Light;
-	Light.L = L.xyz;
-	Light.Radiance = Radiance.rgb;
+	Light.L = _L.xyz;
+	Light.Radiance = _Radiance.rgb;
 
 	if (dot(Surface.WorldNormal, Light.L) < 0.0)
 	{
@@ -74,5 +77,5 @@ void main()
 
 	vec3 Lo = DirectLighting(V, Light, Surface, Material).rgb;
 
-	imageStore(VoxelRadiance, VoxelGridCoord, vec4(Lo, 1.0f));
+	ImageStore(_VoxelRadiance, VoxelGridCoord, vec4(Lo, 1.0f));
 }

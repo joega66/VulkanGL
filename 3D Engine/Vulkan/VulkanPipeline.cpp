@@ -10,8 +10,8 @@ drm::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 		return Iter->second;
 	}
 
-	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(PSODesc.Layouts, PSODesc.PushConstantRange);
-	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS, PushConstantRange);
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts, PSODesc.PushConstantRanges);
+	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	GraphicsPipelineCache[PSODesc] = Pipeline;
 	return Pipeline;
 }
@@ -43,8 +43,8 @@ drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 		return Iter->second;
 	}
 
-	const auto [PipelineLayout, PushConstantRange] = GetPipelineLayout(ComputeDesc.Layouts, ComputeDesc.PushConstantRange);
-	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE, PushConstantRange);
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts, ComputeDesc.PushConstantRanges);
+	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
 	ComputePipelineCache[Crc] = Pipeline;
 	CrcToComputeDesc[Crc] = ComputeDesc;
 	return Pipeline;
@@ -500,45 +500,56 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	return Pipeline;
 }
 
-static VkPushConstantRange CreatePushConstantRange(const PushConstantRange& PushConstantRange)
+static std::vector<VkPushConstantRange> CreatePushConstantRanges(const std::vector<PushConstantRange>& PushConstantRanges)
 {
-	VkPushConstantRange VulkanPushConstantRange = {};
-	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-	VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
-	VulkanPushConstantRange.offset = 0;
-	VulkanPushConstantRange.size = PushConstantRange.Size;
-	return VulkanPushConstantRange;
+	std::vector<VkPushConstantRange> VulkanPushConstantRanges;
+	VulkanPushConstantRanges.reserve(PushConstantRanges.size());
+
+	for (const auto& PushConstantRange : PushConstantRanges)
+	{
+		VkPushConstantRange VulkanPushConstantRange = {};
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+		VulkanPushConstantRange.offset = PushConstantRange.Offset;
+		VulkanPushConstantRange.size = PushConstantRange.Size;
+		VulkanPushConstantRanges.push_back(VulkanPushConstantRange);
+	}
+	
+	return VulkanPushConstantRanges;
 }
 
-std::pair<VkPipelineLayout, VkPushConstantRange> VulkanCache::GetPipelineLayout(const std::vector<VkDescriptorSetLayout>& Layouts, const PushConstantRange& PushConstantRange)
+VkPipelineLayout VulkanCache::GetPipelineLayout(
+	const std::vector<VkDescriptorSetLayout>& Layouts, 
+	const std::vector<PushConstantRange>& PushConstantRanges
+)
 {
 	const Crc Crc0 = Platform::CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
-	const Crc Crc1 = Platform::CalculateCrc(&PushConstantRange, sizeof(PushConstantRange));
+	const Crc Crc1 = Platform::CalculateCrc(PushConstantRanges.data(), PushConstantRanges.size() * sizeof(PushConstantRange));
 
 	Crc Crc = 0;
 	HashCombine(Crc, Crc0);
 	HashCombine(Crc, Crc1);
 
-	const VkPushConstantRange VulkanPushConstantRange = CreatePushConstantRange(PushConstantRange);
+	const std::vector<VkPushConstantRange> VulkanPushConstantRanges = CreatePushConstantRanges(PushConstantRanges);
 
 	if (auto Iter = PipelineLayoutCache.find(Crc); Iter != PipelineLayoutCache.end())
 	{
 		const auto& [CachedCrc, CachedPipelineLayout] = *Iter;
-		return { CachedPipelineLayout, VulkanPushConstantRange };
+		return CachedPipelineLayout;
 	}
 
 	VkPipelineLayoutCreateInfo PipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 	PipelineLayoutInfo.setLayoutCount = static_cast<uint32>(Layouts.size());
 	PipelineLayoutInfo.pSetLayouts = Layouts.data();
 
-	if (PushConstantRange.Size > 0)
+	if (VulkanPushConstantRanges.size() > 0)
 	{
-		PipelineLayoutInfo.pushConstantRangeCount = 1;
-		PipelineLayoutInfo.pPushConstantRanges = &VulkanPushConstantRange;
+		PipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32>(VulkanPushConstantRanges.size());
+		PipelineLayoutInfo.pPushConstantRanges = VulkanPushConstantRanges.data();
 	}
 
 	VkPipelineLayout PipelineLayout;
@@ -546,19 +557,17 @@ std::pair<VkPipelineLayout, VkPushConstantRange> VulkanCache::GetPipelineLayout(
 
 	PipelineLayoutCache[Crc] = PipelineLayout;
 
-	return { PipelineLayout, VulkanPushConstantRange };
+	return PipelineLayout;
 }
 
 VulkanPipeline::VulkanPipeline(VulkanDevice& Device, 
 	VkPipeline Pipeline, 
 	VkPipelineLayout PipelineLayout, 
-	VkPipelineBindPoint PipelineBindPoint, 
-	const VkPushConstantRange& PushConstantRange)
+	VkPipelineBindPoint PipelineBindPoint)
 	: Device(Device)
 	, Pipeline(Pipeline)
 	, PipelineLayout(PipelineLayout)
 	, PipelineBindPoint(PipelineBindPoint)
-	, PushConstantRange(PushConstantRange)
 {
 }
 

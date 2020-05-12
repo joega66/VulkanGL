@@ -52,20 +52,24 @@ void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalL
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
 
+	L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
+	Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+
 	VolumeLightingUniformData* VolumeLightingUniformPtr = static_cast<VolumeLightingUniformData*>(VolumeLightingUniform.GetData());
 	VolumeLightingUniformPtr->ShadowMapSize = glm::ivec4(ShadowMap.GetWidth(), ShadowMap.GetHeight(), 0, 0);
-	VolumeLightingUniformPtr->L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
-	VolumeLightingUniformPtr->Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+	VolumeLightingUniformPtr->L = L;
+	VolumeLightingUniformPtr->Radiance = Radiance;
 
 	glm::mat4 LightProjMatrix = glm::ortho(-Width * 0.5f, Width * 0.5f, -Width * 0.5f, Width * 0.5f, ZNear, ZFar);
 	LightProjMatrix[1][1] *= -1;
 
 	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
+	LightViewProjMatrixInv = glm::inverse(LightViewProjMatrix);
 
 	LightViewProjUniformData* LightViewProjMatrixPtr = static_cast<LightViewProjUniformData*>(LightViewProjBuffer.GetData());
 	LightViewProjMatrixPtr->LightViewProj = LightViewProjMatrix;
-	LightViewProjMatrixPtr->InvLightViewProj = glm::inverse(LightViewProjMatrix);
+	LightViewProjMatrixPtr->InvLightViewProj = LightViewProjMatrixInv;
 }
 
 template<EMeshType MeshType>

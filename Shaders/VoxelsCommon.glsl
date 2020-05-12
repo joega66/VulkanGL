@@ -2,22 +2,18 @@
 #define VOXELS_COMMON
 #include "Common.glsl"
 
+#ifdef VOXEL_SET
 layout(binding = 0, set = VOXEL_SET) uniform WorldToVoxelBuffer
 {
-	mat4 WorldToVoxel;
-	mat4 WorldToVoxelInv;
-	vec4 _VoxelSize; //xy: InvSize, zw: Size
+	mat4 _WorldToVoxel;
+	mat4 _WorldToVoxelInv;
+	vec4 _VoxelSize;
 };
-
-layout(binding = 1, set = VOXEL_SET, rgba8) uniform image3D VoxelBaseColor;
-
-layout(binding = 2, set = VOXEL_SET, rgba16f) uniform image3D VoxelNormal;
-
-layout(binding = 3, set = VOXEL_SET, rgba8) uniform image3D VoxelRadiance;
+#endif
 
 vec3 TransformWorldToVoxel(in vec3 WorldPosition)
 {
-	vec4 VoxelPosition = WorldToVoxel * vec4(WorldPosition.xyz, 1);
+	vec4 VoxelPosition = _WorldToVoxel * vec4(WorldPosition.xyz, 1);
 	return VoxelPosition.xyz;
 }
 
@@ -35,23 +31,14 @@ ivec3 TransformWorldToVoxelGridCoord(in vec3 WorldPosition)
 	return ivec3(VoxelUVW);
 }
 
-vec3 TransformVoxelToWorld(vec3 VoxelPosition)
-{
-	vec3 WorldPosition = VoxelPosition;
-	WorldPosition /= VOXEL_GRID_SIZE;
-	WorldPosition.xy = (WorldPosition.xy - 0.5f) * 2.0f;
-	WorldPosition = vec3(WorldToVoxelInv * vec4(WorldPosition, 1));
-	return WorldPosition;
-}
+#if defined(DEBUG_VOXELS) && defined(VOXEL_SET)
 
-#if DEBUG_VOXELS
-
-layout(binding = 4, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
+layout(binding = 3, set = VOXEL_SET, std430) buffer VoxelPositionBuffer
 {
 	int VoxelPositions[];
 };
 
-layout(binding = 5, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
+layout(binding = 4, set = VOXEL_SET, std430) buffer VoxelDrawIndirectBuffer
 {
 	DrawIndirectCommand VoxelDrawIndirect;
 };

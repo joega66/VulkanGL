@@ -118,12 +118,17 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	{
 		TextureID = Device.CreateTextureID(ImageView);
 	}
+	if (Any(Usage & EImageUsage::Storage))
+	{
+		ImageID = Device.CreateImageID(ImageView);
+	}
 }
 
 VulkanImage::VulkanImage(VulkanImage&& Other)
 	: Image(std::exchange(Other.Image, nullptr))
 	, ImageView(std::move(Other.ImageView))
 	, TextureID(std::move(Other.TextureID))
+	, ImageID(std::move(Other.ImageID))
 	, Memory(Other.Memory)
 	, Device(Other.Device)
 	, ImagePrivate(Other)
@@ -135,6 +140,7 @@ VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 	Image = std::exchange(Other.Image, nullptr);
 	ImageView = std::move(Other.ImageView);
 	TextureID = std::move(Other.TextureID);
+	ImageID = std::move(Other.ImageID);
 	Memory = Other.Memory;
 	Device = Other.Device;
 	Format = Other.Format;
@@ -151,6 +157,7 @@ VulkanImage::~VulkanImage()
 	if (Image != nullptr)
 	{
 		TextureID.Release();
+		ImageID.Release();
 		vkDestroyImage(Device, Image, nullptr);
 		vkFreeMemory(Device, Memory, nullptr);
 	}

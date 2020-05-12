@@ -93,8 +93,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 		Device.GetTextures().GetLayout(),
 		Device.GetSamplers().GetLayout(),
 	};
-	ComputeDesc.PushConstantRange.Size = sizeof(Light);
-	ComputeDesc.PushConstantRange.StageFlags = EShaderStage::Compute;
+	ComputeDesc.PushConstantRanges.push_back({ EShaderStage::Compute, 0, sizeof(Light) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -109,7 +108,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
-	CmdList.PushConstants(Pipeline, &Light);
+	CmdList.PushConstants(Pipeline, EShaderStage::Compute, 0, sizeof(Light), &Light);
 
 	const uint32 GroupCountX = DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u);
 	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);

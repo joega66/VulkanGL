@@ -51,7 +51,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 		drm::TextureID Skybox;
 		drm::SamplerID Sampler;
 	};
-
+	
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = Camera.SceneRP;
 	PSODesc.DepthStencilState.DepthTestEnable = true;
@@ -60,7 +60,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
 	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
 	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(PushConstants) };
+	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(PushConstants) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
@@ -77,7 +77,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 		PushConstants.Skybox = Skybox.Skybox->GetImage().GetTextureID();
 		PushConstants.Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 
-		CmdList.PushConstants(Pipeline, &PushConstants);
+		CmdList.PushConstants(Pipeline, EShaderStage::Fragment, 0, sizeof(PushConstants), &PushConstants);
 
 		const StaticMesh* Cube = Assets.GetStaticMesh("Cube");
 

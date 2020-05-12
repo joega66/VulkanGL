@@ -20,6 +20,15 @@ layout(push_constant) uniform PushConstants
 	uint _VoxelNormal;
 };
 
+vec3 TransformVoxelToWorld(vec3 VoxelPosition)
+{
+	vec3 WorldPosition = VoxelPosition;
+	WorldPosition /= VOXEL_GRID_SIZE;
+	WorldPosition.xy = (WorldPosition.xy - 0.5f) * 2.0f;
+	WorldPosition = vec3(_WorldToVoxelInv * vec4(WorldPosition, 1));
+	return WorldPosition;
+}
+
 void main()
 {
 	ivec3 VoxelPosition = DecodeVoxelPosition(VoxelPositions[gl_VertexIndex]);

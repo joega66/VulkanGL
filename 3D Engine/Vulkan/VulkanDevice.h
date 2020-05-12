@@ -61,9 +61,13 @@ public:
 
 	virtual drm::TextureID CreateTextureID(const VulkanImageView& ImageView) override;
 	
+	virtual drm::ImageID CreateImageID(const VulkanImageView& ImageView) override;
+
 	virtual drm::BindlessResources& GetTextures() override;
 
 	virtual drm::BindlessResources& GetSamplers() override;
+
+	virtual drm::BindlessResources& GetImages() override;
 
 	operator VkDevice() const { return Device; }
 
@@ -101,6 +105,8 @@ private:
 	std::shared_ptr<VulkanBindlessResources> BindlessTextures;
 
 	std::shared_ptr<VulkanBindlessResources> BindlessSamplers;
+
+	std::shared_ptr<VulkanBindlessResources> BindlessImages;
 };
 
 #define vulkan(Result) \

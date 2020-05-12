@@ -353,7 +353,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
 	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.PushConstantRange = { EShaderStage::Fragment, sizeof(glm::uvec2) };
+	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(glm::uvec2) });
 
 	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
 	{
@@ -413,7 +413,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, const
 				CmdList.SetScissor(1, &Scissor);
 
 				const glm::uvec2 PushConstants(*static_cast<uint32*>(DrawCmd->TextureId), SamplerID);
-				CmdList.PushConstants(Pipeline, &PushConstants);
+				CmdList.PushConstants(Pipeline, EShaderStage::Fragment, 0, sizeof(PushConstants), &PushConstants);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}

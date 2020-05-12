@@ -97,6 +97,24 @@ VulkanTextureID VulkanBindlessResources::CreateTextureID(const VulkanImageView& 
 	return VulkanTextureID(DstArrayElement);
 }
 
+VulkanImageID VulkanBindlessResources::CreateImageID(const VulkanImageView& ImageView)
+{
+	const VkDescriptorImageInfo ImageInfo = { nullptr, ImageView.GetHandle(), VK_IMAGE_LAYOUT_GENERAL };
+	const uint32 DstArrayElement = AllocateResourceID();
+
+	VkWriteDescriptorSet WriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+	WriteDescriptorSet.dstSet = BindlessResources;
+	WriteDescriptorSet.dstBinding = 0;
+	WriteDescriptorSet.dstArrayElement = DstArrayElement;
+	WriteDescriptorSet.descriptorCount = 1;
+	WriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	WriteDescriptorSet.pImageInfo = &ImageInfo;
+
+	vkUpdateDescriptorSets(Device, 1, &WriteDescriptorSet, 0, nullptr);
+
+	return VulkanImageID(DstArrayElement);
+}
+
 VulkanSamplerID VulkanBindlessResources::CreateSamplerID(const VulkanSampler& Sampler)
 {
 	const VkDescriptorImageInfo ImageInfo = { Sampler.GetHandle(), nullptr, {} };
@@ -152,6 +170,7 @@ static constexpr uint32 NULL_ID = -1;
 
 std::weak_ptr<VulkanBindlessResources> gBindlessTextures;
 std::weak_ptr<VulkanBindlessResources> gBindlessSamplers;
+std::weak_ptr<VulkanBindlessResources> gBindlessImages;
 
 #define DEFINE_VULKAN_RESOURCE_ID(ResourceType) \
 ResourceType::ResourceType(uint32 ID) \
@@ -177,6 +196,17 @@ void VulkanSamplerID::Release()
 	if (auto Samplers = gBindlessSamplers.lock(); ID != NULL_ID && Samplers)
 	{
 		Samplers->Release(ID);
+		ID = NULL_ID;
+	}
+}
+
+DEFINE_VULKAN_RESOURCE_ID(VulkanImageID);
+
+void VulkanImageID::Release()
+{
+	if (auto Images = gBindlessImages.lock(); ID != NULL_ID && Images)
+	{
+		Images->Release(ID);
 		ID = NULL_ID;
 	}
 }

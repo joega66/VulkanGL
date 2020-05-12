@@ -20,6 +20,7 @@ protected: \
 
 DECLARE_VULKAN_RESOURCE_ID(VulkanTextureID);
 DECLARE_VULKAN_RESOURCE_ID(VulkanSamplerID);
+DECLARE_VULKAN_RESOURCE_ID(VulkanImageID);
 
 class VulkanBindlessResources
 {
@@ -27,6 +28,7 @@ class VulkanBindlessResources
 	friend class VulkanTextureID;	// FreeResourceID
 	friend class VulkanSamplerID;	// FreeResourceID
 	friend class VulkanSampler;		// CreateSamplerID
+	friend class VulkanImageID;		// FreeResourceID
 
 public:
 	VulkanBindlessResources(const VulkanBindlessResources&) = delete;
@@ -37,6 +39,9 @@ public:
 
 	/** Create a texture ID for indexing into the texture2D array. */
 	VulkanTextureID CreateTextureID(const VulkanImageView& ImageView);
+
+	/** Create an image ID for indexing into the storage image array. */
+	VulkanImageID CreateImageID(const VulkanImageView& ImageView);
 
 	inline VkDescriptorSetLayout GetLayout() const { return BindlessResourceSetLayout; }
 	inline VkDescriptorSet GetSet() const { return BindlessResources; }
@@ -66,3 +71,4 @@ private:
 
 extern std::weak_ptr<VulkanBindlessResources> gBindlessTextures;
 extern std::weak_ptr<VulkanBindlessResources> gBindlessSamplers;
+extern std::weak_ptr<VulkanBindlessResources> gBindlessImages;

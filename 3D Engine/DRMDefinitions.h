@@ -25,6 +25,7 @@ namespace drm
 	using BindlessResources = VulkanBindlessResources;
 	using TextureID = VulkanTextureID;
 	using SamplerID = VulkanSamplerID;
+	using ImageID = VulkanImageID;
 
 	class AttachmentView
 	{
@@ -77,11 +78,22 @@ struct RenderPassDesc
 struct PushConstantRange
 {
 	EShaderStage StageFlags = EShaderStage::All;
+	uint32 Offset = 0;
 	uint32 Size = 0;
+
+	PushConstantRange() = default;
+
+	PushConstantRange(EShaderStage StageFlags, uint32 Offset, uint32 Size)
+		: StageFlags(StageFlags)
+		, Offset(Offset)
+		, Size(Size)
+	{
+	}
 
 	bool operator==(const PushConstantRange& Other) const
 	{
 		return StageFlags == Other.StageFlags
+			&& Offset == Other.Offset
 			&& Size == Other.Size;
 	}
 };
@@ -102,7 +114,7 @@ struct PipelineStateDesc
 	std::vector<VertexAttributeDescription> VertexAttributes;
 	std::vector<VertexBindingDescription> VertexBindings;
 	std::vector<VkDescriptorSetLayout> Layouts;
-	PushConstantRange PushConstantRange;
+	std::vector<PushConstantRange> PushConstantRanges;
 
 	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
 	{
@@ -118,9 +130,7 @@ struct PipelineStateDesc
 			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
 			&& L.DynamicStates == R.DynamicStates
 			&& L.VertexAttributes == R.VertexAttributes
-			&& L.VertexBindings == R.VertexBindings
-			&& L.Layouts == R.Layouts
-			&& L.PushConstantRange == R.PushConstantRange;
+			&& L.VertexBindings == R.VertexBindings;
 	}
 
 	bool HasShader(const drm::Shader* Shader) const
@@ -162,8 +172,6 @@ namespace std
 			HashCombine(Seed, Platform::CalculateCrc(PSODesc.DynamicStates.data(), PSODesc.DynamicStates.size() * sizeof(EDynamicState)));
 			HashCombine(Seed, Platform::CalculateCrc(PSODesc.VertexAttributes.data(), PSODesc.VertexAttributes.size() * sizeof(VertexAttributeDescription)));
 			HashCombine(Seed, Platform::CalculateCrc(PSODesc.VertexBindings.data(), PSODesc.VertexBindings.size() * sizeof(VertexBindingDescription)));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.Layouts.data(), PSODesc.Layouts.size() * sizeof(VkDescriptorSetLayout)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.PushConstantRange, sizeof(PSODesc.PushConstantRange)));
 			return Seed;
 		}
 	};
@@ -174,14 +182,12 @@ struct ComputePipelineDesc
 	const drm::Shader* ComputeShader = nullptr;
 	SpecializationInfo SpecializationInfo;
 	std::vector<VkDescriptorSetLayout> Layouts;
-	PushConstantRange PushConstantRange;
+	std::vector<PushConstantRange> PushConstantRanges;
 
 	inline bool operator==(const ComputePipelineDesc& Other) const
 	{
 		return ComputeShader == Other.ComputeShader
-			&& SpecializationInfo == Other.SpecializationInfo
-			&& Layouts == Other.Layouts
-			&& PushConstantRange == Other.PushConstantRange;
+			&& SpecializationInfo == Other.SpecializationInfo;
 	}
 };
 

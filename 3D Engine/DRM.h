@@ -50,9 +50,13 @@ public:
 
 	virtual drm::TextureID CreateTextureID(const drm::ImageView& ImageView) = 0;
 
+	virtual drm::ImageID CreateImageID(const drm::ImageView& ImageView) = 0;
+
 	virtual drm::BindlessResources& GetTextures() = 0;
 	
 	virtual drm::BindlessResources& GetSamplers() = 0;
+
+	virtual drm::BindlessResources& GetImages() = 0;
 };
 
 namespace drm

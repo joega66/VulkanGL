@@ -51,6 +51,7 @@ public:
 	inline VkImage GetHandle() const { return Image; }
 	inline const VulkanImageView& GetImageView() const { return ImageView; }
 	inline const VulkanTextureID& GetTextureID() const { return TextureID; }
+	inline const VulkanImageID& GetImageID() const { return ImageID; }
 	VkFormat GetVulkanFormat() const;
 	VkImageAspectFlags GetVulkanAspect() const;
 	
@@ -66,6 +67,7 @@ private:
 	VkImage Image = nullptr;
 	VulkanImageView ImageView = {};
 	VulkanTextureID TextureID = {};
+	VulkanImageID ImageID = {};
 	VkDeviceMemory Memory = nullptr;
 };
 

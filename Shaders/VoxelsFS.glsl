@@ -7,6 +7,10 @@
 #define VOXEL_SET 4
 #include "VoxelsCommon.glsl"
 
+layout(binding = 1, set = VOXEL_SET, rgba8) uniform writeonly image3D VoxelBaseColor;
+
+layout(binding = 2, set = VOXEL_SET, rgba16f) uniform writeonly image3D VoxelNormal;
+
 void main()
 {
 	vec2 NDCPosition = vec2(gl_FragCoord.xy / vec2(VOXEL_GRID_SIZE)) * 2.0f - 1.0f;

@@ -1,5 +1,5 @@
 #pragma once
-#include <DRMResource.h>
+#include <DRMShader.h>
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
@@ -32,7 +32,7 @@ public:
 
 	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets);
 
-	void PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const void* Values);
+	void PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, EShaderStage StageFlags, uint32 Offset, uint32 Size, const void* Values);
 
 	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 

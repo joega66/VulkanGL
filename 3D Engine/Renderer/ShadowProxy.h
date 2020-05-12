@@ -41,6 +41,9 @@ public:
 	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
 	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 	inline const glm::mat4& GetLightViewProjMatrix() const { return LightViewProjMatrix; }
+	inline const glm::mat4& GetLightViewProjMatrixInv() const { return LightViewProjMatrixInv; }
+	inline const glm::vec4& GetL() const { return L; }
+	inline const glm::vec4 GetRadiance() const { return Radiance; }
 
 private:
 	drm::RenderPass RenderPass;
@@ -50,6 +53,12 @@ private:
 	float DepthBiasSlopeFactor = 0.0f;
 
 	glm::mat4 LightViewProjMatrix;
+
+	glm::mat4 LightViewProjMatrixInv;
+
+	glm::vec4 L;
+
+	glm::vec4 Radiance;
 
 	drm::Buffer LightViewProjBuffer;
 
