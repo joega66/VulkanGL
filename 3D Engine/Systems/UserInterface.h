@@ -10,11 +10,8 @@ struct ImGuiRenderData : public Component
 {
 	drm::Image FontImage;
 	drm::SamplerID SamplerID;
-	
-	drm::Buffer ImguiUniform;
 
-	drm::DescriptorSet DescriptorSet;
-	drm::DescriptorSetLayout DescriptorSetLayout;
+	glm::vec4 ScaleAndTranslation;
 
 	drm::Buffer VertexBuffer;
 	drm::Buffer IndexBuffer;

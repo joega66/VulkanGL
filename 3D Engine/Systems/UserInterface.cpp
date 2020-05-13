@@ -305,30 +305,6 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	SamplerID = Device.CreateSampler({}).GetSamplerID();
 
-	ImguiUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(glm::mat4));
-
-	struct ImGuiDescriptors
-	{
-		drm::DescriptorBufferInfo ImguiUniform;
-
-		static const std::vector<DescriptorBinding>& GetBindings()
-		{
-			static const std::vector<DescriptorBinding> Bindings =
-			{
-				{ 0, 1, EDescriptorType::UniformBuffer }
-			};
-			return Bindings;
-		}
-	};
-
-	DescriptorSetLayout = Device.CreateDescriptorSetLayout(ImGuiDescriptors::GetBindings().size(), ImGuiDescriptors::GetBindings().data());
-	DescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
-
-	ImGuiDescriptors Descriptors;
-	Descriptors.ImguiUniform = ImguiUniform;
-
-	DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
-
 	drm::UploadImageData(Device, Pixels, FontImage);
 
 	Imgui.Fonts->TexID = &const_cast<drm::TextureID&>(FontImage.GetTextureID());
@@ -352,8 +328,9 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { DescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(glm::uvec2) });
+	PSODesc.Layouts = { Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PSODesc.PushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
+	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
 
 	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
 	{
@@ -379,7 +356,9 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, const
 
 		CmdList.BindPipeline(Pipeline);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
+		CmdList.PushConstants(Pipeline, EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation), &ScaleAndTranslation);
+
+		const std::vector<VkDescriptorSet> DescriptorSets = { Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
@@ -413,7 +392,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, const
 				CmdList.SetScissor(1, &Scissor);
 
 				const glm::uvec2 PushConstants(*static_cast<uint32*>(DrawCmd->TextureId), SamplerID);
-				CmdList.PushConstants(Pipeline, EShaderStage::Fragment, 0, sizeof(PushConstants), &PushConstants);
+				CmdList.PushConstants(Pipeline, EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(PushConstants), &PushConstants);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}
@@ -452,9 +431,9 @@ void ImGuiRenderData::Update(DRMDevice& Device)
 	}
 
 	ImGuiIO& ImGui = ImGui::GetIO();
-	glm::vec4* ImGuiData = static_cast<glm::vec4*>(ImguiUniform.GetData());
-	ImGuiData->x = 2.0f / ImGui.DisplaySize.x;
-	ImGuiData->y = 2.0f / ImGui.DisplaySize.y;
-	ImGuiData->z = -1.0f - DrawData->DisplayPos.x * ImGuiData->x;
-	ImGuiData->w = -1.0f - DrawData->DisplayPos.y * ImGuiData->y;
+	
+	ScaleAndTranslation.x = 2.0f / ImGui.DisplaySize.x;
+	ScaleAndTranslation.y = 2.0f / ImGui.DisplaySize.y;
+	ScaleAndTranslation.z = -1.0f - DrawData->DisplayPos.x * ScaleAndTranslation.x;
+	ScaleAndTranslation.w = -1.0f - DrawData->DisplayPos.y * ScaleAndTranslation.y;
 }
