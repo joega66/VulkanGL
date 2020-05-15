@@ -27,7 +27,7 @@ void RenderSystem::Start(Engine& Engine)
 
 	ECS.AddSingletonComponent<RenderSettings>();
 
-	ECS.NewComponentCallback<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
+	ECS.OnComponentCreated<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
 		drm::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniformBuffer));
@@ -48,7 +48,7 @@ void RenderSystem::Start(Engine& Engine)
 		SurfaceBounds.Box = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 	});
 
-	ECS.NewComponentCallback<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
+	ECS.OnComponentCreated<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
 	{
 		ECS.AddComponent(Entity, ShadowProxy(Device, ShadowLayout, DirectionalLight));
 	});

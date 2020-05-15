@@ -6,7 +6,7 @@ Entity::Entity()
 {
 }
 
-Entity::Entity(uint32 EntityID)
+Entity::Entity(std::size_t EntityID)
 	: EntityID(EntityID)
 {
 }

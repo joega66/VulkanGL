@@ -4,7 +4,7 @@
 class Entity
 {
 public:
-	static constexpr uint32 InvalidID = std::numeric_limits<uint32>::max();
+	static constexpr std::size_t InvalidID = std::numeric_limits<std::size_t>::max();
 
 	Entity();
 
@@ -23,7 +23,7 @@ public:
 		return EntityID < Entity.GetEntityID();
 	}
 
-	inline uint32 GetEntityID() const
+	inline std::size_t GetEntityID() const
 	{
 		return EntityID;
 	};
@@ -31,7 +31,7 @@ public:
 private:
 	friend class EntityManager; // So that only the entity manager can assign entity ids.
 
-	uint32 EntityID;
+	std::size_t EntityID;
 
-	Entity(uint32 EntityID);
+	Entity(std::size_t EntityID);
 };

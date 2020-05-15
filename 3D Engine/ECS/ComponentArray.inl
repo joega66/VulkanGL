@@ -2,28 +2,18 @@
 #include "ComponentArray.h"
 
 template<typename ComponentType>
-inline ComponentType & ComponentArray<ComponentType>::AddComponent(Entity& Entity, ComponentType&& Component)
+inline ComponentType& ComponentArray<ComponentType>::AddComponent(Entity& Entity, ComponentType&& Component)
 {
-	std::size_t ArrayIndex = -1;
+	const std::size_t ArrayIndex = Components.size();
 
-	if (!FreeList.empty())
-	{
-		ArrayIndex = FreeList.front();
-		FreeList.pop_front();
-		Components[ArrayIndex] = std::move(Component);
-	}
-	else
-	{
-		Components.emplace_back(std::move(Component));
-		ArrayIndex = Components.size() - 1;
-	}
+	Components.emplace_back(std::move(Component));
 
 	EntityToArrayIndex[Entity.GetEntityID()] = ArrayIndex;
 
-	// Later notify component events that this component was created.
+	ArrayIndexToEntity[ArrayIndex] = Entity.GetEntityID();
+
 	NewEntities.push_back(Entity);
 
-	// Return the newly created component.
 	return Components[ArrayIndex];
 }
 
@@ -33,25 +23,25 @@ inline ComponentArray<ComponentType>::ComponentArray()
 }
 
 template<typename ComponentType>
-inline ComponentType & ComponentArray<ComponentType>::GetComponent(Entity& Entity)
+inline ComponentType& ComponentArray<ComponentType>::GetComponent(Entity& Entity)
 {
 	const std::size_t ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
 	return Components[ArrayIndex];
 }
 
 template<typename ComponentType>
-inline void ComponentArray<ComponentType>::NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback)
+inline void ComponentArray<ComponentType>::OnComponentCreated(ComponentEvent<ComponentType> ComponentEvent)
 {
-	ComponentCreatedCallbacks.push_back(ComponentCallback);
+	ComponentCreatedEvents.push_back(ComponentEvent);
 }
 
 template<typename ComponentType>
-inline void ComponentArray<ComponentType>::NotifyComponentCreatedEvents()
+inline void ComponentArray<ComponentType>::NotifyOnComponentCreatedEvents()
 {
 	for (auto Entity : NewEntities)
 	{
 		auto& Component = GetComponent(Entity);
-		std::for_each(ComponentCreatedCallbacks.begin(), ComponentCreatedCallbacks.end(), [&] (auto& Callback)
+		std::for_each(ComponentCreatedEvents.begin(), ComponentCreatedEvents.end(), [&] (auto& Callback)
 		{
 			Callback(Entity, Component);
 		});
@@ -69,7 +59,19 @@ inline bool ComponentArray<ComponentType>::HasComponent(Entity& Entity) const
 template<typename ComponentType>
 inline void ComponentArray<ComponentType>::RemoveComponent(Entity& Entity)
 {
-	const std::size_t ArrayIndex = EntityToArrayIndex.at(Entity.GetEntityID());
-	FreeList.push_back(ArrayIndex);
+	const std::size_t Back = Components.size() - 1;
+	const std::size_t MovedEntity = ArrayIndexToEntity.at(Back);
+	const std::size_t MoveTo = EntityToArrayIndex.at(Entity.GetEntityID());
+	
+	if (Components.size() > 1)
+	{
+		Components[MoveTo] = std::move(Components.back());
+		EntityToArrayIndex[MovedEntity] = MoveTo;
+		ArrayIndexToEntity[MoveTo] = MovedEntity;
+	}
+
+	Components.pop_back();
+
+	ArrayIndexToEntity.erase(Back);
 	EntityToArrayIndex.erase(Entity.GetEntityID());
 }

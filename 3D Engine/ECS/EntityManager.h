@@ -75,21 +75,13 @@ public:
 	{
 		static_assert(std::is_base_of<Component, ComponentType>::value);
 
-		std::size_t ArrayIndex;
+		const std::size_t ArrayIndex = SingletonComponentsArray.size();
 
-		if (FreeSingletonComponentArrayIndices.size())
-		{
-			ArrayIndex = FreeSingletonComponentArrayIndices.front();
-			FreeSingletonComponentArrayIndices.pop_front();
-		}
-		else
-		{
-			SingletonComponentsArray.push_back(nullptr);
-			ArrayIndex = SingletonComponentsArray.size() - 1;
-		}
-
+		SingletonComponentsArray.push_back(nullptr);
 		SingletonComponentsArray[ArrayIndex] = std::make_shared<ComponentType>(Args...);
 		SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))] = ArrayIndex;
+		ArrayIndexToSingletonType[ArrayIndex] = std::type_index(typeid(ComponentType)).hash_code();
+
 		return *std::static_pointer_cast<ComponentType>(SingletonComponentsArray.back());
 	}
 
@@ -105,9 +97,20 @@ public:
 	void RemoveSingletonComponent()
 	{
 		static_assert(std::is_base_of<Component, ComponentType>::value);
-		const uint32 ArrayIndex = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
-		SingletonComponentsArray[ArrayIndex] = nullptr;
-		FreeSingletonComponentArrayIndices.push_back(ArrayIndex);
+		const std::size_t Back = SingletonComponentsArray.size() - 1;
+		const std::size_t MoveTo = SingletonTypeToArrayIndex[std::type_index(typeid(ComponentType))];
+		const std::size_t MovedSingletonType = ArrayIndexToSingletonType[Back];
+
+		if (SingletonComponentsArray.size() > 1)
+		{
+			SingletonComponentsArray[MoveTo] = SingletonComponentsArray.back();
+			SingletonTypeToArrayIndex[MovedSingletonType] = MoveTo;
+			ArrayIndexToSingletonType[MoveTo] = MovedSingletonType;
+		}
+
+		SingletonComponentsArray.pop_back();
+
+		ArrayIndexToSingletonType.erase(Back);
 		SingletonTypeToArrayIndex.erase(std::type_index(typeid(ComponentType)));
 	}
 
@@ -134,11 +137,11 @@ public:
 
 	/** Add a callback for when ComponentType is created. */
 	template<typename ComponentType>
-	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback)
+	void OnComponentCreated(ComponentEvent<ComponentType> ComponentEvent)
 	{
 		static_assert(std::is_base_of<Component, ComponentType>::value);
 		auto Array = GetComponentArray<ComponentType>();
-		Array->NewComponentCallback(ComponentCallback);
+		Array->OnComponentCreated(ComponentEvent);
 	}
 
 	/** Create an entity iterator. */
@@ -158,13 +161,13 @@ private:
 	std::unordered_map<std::string, Entity> Prefabs;
 
 	/** Map of entity id's to prefab names*/
-	std::unordered_map<uint32, std::string> PrefabNames;
+	std::unordered_map<std::size_t, std::string> PrefabNames;
 
 	/** Entity pool. */
 	std::vector<Entity> Entities;
 
 	/** Map of entity id to entity name. */
-	std::unordered_map<uint32, std::string> EntityNames;
+	std::unordered_map<std::size_t, std::string> EntityNames;
 
 	/** Whether the entity is dead or alive. */
 	std::vector<bool> EntityStatus;
@@ -181,8 +184,8 @@ private:
 	/** Singleton type index to its array index. */
 	std::unordered_map<std::type_index, std::size_t> SingletonTypeToArrayIndex;
 
-	/** Free indices in the singleton component array. */
-	std::list<std::size_t> FreeSingletonComponentArrayIndices;
+	/** Maps singleton array index to singleton type index. */
+	std::unordered_map<std::size_t, std::size_t> ArrayIndexToSingletonType;
 
 	template<typename ComponentType>
 	ComponentArray<ComponentType>* GetComponentArray()

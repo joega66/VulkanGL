@@ -5,7 +5,7 @@
 class Entity;
 
 template<typename ComponentType>
-using ComponentCallback = std::function<void(Entity& Entity, ComponentType& Component)>;
+using ComponentEvent = std::function<void(Entity& Entity, ComponentType& Component)>;
 
 /** ComponentArray interface. Only meant to be implemented by ComponentArray. */
 class IComponentArray
@@ -13,7 +13,7 @@ class IComponentArray
 public:
 	virtual bool HasComponent(Entity& Entity) const = 0;
 	virtual void RemoveComponent(Entity& Entity) = 0;
-	virtual void NotifyComponentCreatedEvents() = 0;
+	virtual void NotifyOnComponentCreatedEvents() = 0;
 };
 
 template<typename ComponentType>
@@ -29,10 +29,10 @@ public:
 	ComponentType& AddComponent(Entity& Entity, ComponentType&& Component);
 
 	/** Add a callback for when a component is created.	*/
-	void NewComponentCallback(ComponentCallback<ComponentType> ComponentCallback);
+	void OnComponentCreated(ComponentEvent<ComponentType> ComponentEvent);
 
 	/** Notify callbacks that a component was created. */
-	virtual void NotifyComponentCreatedEvents() final;
+	virtual void NotifyOnComponentCreatedEvents() final;
 
 	/** Check if entity has a component. */
 	virtual bool HasComponent(Entity& Entity) const final;
@@ -40,20 +40,20 @@ public:
 	/** Remove component from an entity. */
 	virtual void RemoveComponent(Entity& Entity) final;
 
-	inline const std::unordered_map<uint32, std::size_t>& GetEntities() const { return EntityToArrayIndex; }
+	inline const std::unordered_map<std::size_t, std::size_t>& GetEntities() const { return EntityToArrayIndex; }
 
 private:
 	/** Component pool. */
 	std::vector<ComponentType> Components;
 
-	/** List of free indices in the component array. */
-	std::list<std::size_t> FreeList;
-
 	/** Maps an entity to its array index. */
-	std::unordered_map<uint32, std::size_t> EntityToArrayIndex;
+	std::unordered_map<std::size_t, std::size_t> EntityToArrayIndex;
+
+	/** Maps an array index to an entity. */
+	std::unordered_map<std::size_t, std::size_t> ArrayIndexToEntity;
 
 	/** Component created events. */
-	std::vector<ComponentCallback<ComponentType>> ComponentCreatedCallbacks;
+	std::vector<ComponentEvent<ComponentType>> ComponentCreatedEvents;
 
 	/** Entities that were given a component this frame. */
 	std::vector<Entity> NewEntities;

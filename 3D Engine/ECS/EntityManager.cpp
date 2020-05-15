@@ -24,7 +24,7 @@ Entity EntityManager::CreateEntity(const std::string& Name)
 		else
 		{
 			EntityStatus.push_back(true);
-			return Entities.emplace_back(Entity{ static_cast<uint32>(Entities.size()) }); // @todo Use 64-bit entity id handles.
+			return Entities.emplace_back(Entity( Entities.size() ));
 		}
 	}();
 	
@@ -63,7 +63,7 @@ void EntityManager::NotifyComponentEvents()
 	for (auto& ComponentArrayEntry : ComponentArrays)
 	{
 		auto ComponentArray = ComponentArrayEntry.second.get();
-		ComponentArray->NotifyComponentCreatedEvents();
+		ComponentArray->NotifyOnComponentCreatedEvents();
 	}
 }
 
