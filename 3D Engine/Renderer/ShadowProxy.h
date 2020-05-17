@@ -28,12 +28,12 @@ public:
 
 	float ZFar;
 
-	ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
+	ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
 
-	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
+	void Update(drm::Device& Device, const struct DirectionalLight& DirectionalLight);
 
 	/** Add a mesh to the light's shadow depth rendering. */
-	void AddMesh(DRMDevice& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy);
+	void AddMesh(drm::Device& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy);
 
 	/** Render shadow depths. */
 	void Render(drm::CommandList& CmdList);

@@ -62,7 +62,7 @@ private:
 	void AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy);
 	void AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy);
 
-	void CreateSceneRP(DRMDevice& Device);
-	void CreateGBufferRP(DRMDevice& Device);
-	void CreateUserInterfaceRP(DRMDevice& Device, drm::Surface& Surface);
+	void CreateSceneRP(drm::Device& Device);
+	void CreateGBufferRP(drm::Device& Device);
+	void CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surface);
 };

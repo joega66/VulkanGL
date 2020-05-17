@@ -13,13 +13,13 @@ public:
 	void Init(VulkanDevice& Device);
 
 	/** Get the next image index. */
-	virtual uint32 AcquireNextImage(DRMDevice& Device) override;
+	virtual uint32 AcquireNextImage(drm::Device& Device) override;
 
 	/** Present the image to the display engine. */
-	virtual void Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandList& CmdList) override;
+	virtual void Present(drm::Device& Device, uint32 ImageIndex, drm::CommandList& CmdList) override;
 
 	/** Create a new swapchain (if within surface capabilities.) */
-	virtual void Resize(DRMDevice& Device, uint32 ScreenWidth, uint32 ScreenHeight) override;
+	virtual void Resize(drm::Device& Device, uint32 ScreenWidth, uint32 ScreenHeight) override;
 
 	/** Get the swapchain image. */
 	virtual const drm::Image& GetImage(uint32 ImageIndex) override;

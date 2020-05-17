@@ -93,7 +93,7 @@ void VulkanSurface::Init(VulkanDevice& Device)
 	vkGetDeviceQueue(Device, PresentIndex, 0, &PresentQueue);
 }
 
-uint32 VulkanSurface::AcquireNextImage(DRMDevice& Device)
+uint32 VulkanSurface::AcquireNextImage(drm::Device& Device)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
@@ -117,7 +117,7 @@ uint32 VulkanSurface::AcquireNextImage(DRMDevice& Device)
 	return ImageIndex;
 }
 
-void VulkanSurface::Present(DRMDevice& Device, uint32 ImageIndex, drm::CommandList& CmdList)
+void VulkanSurface::Present(drm::Device& Device, uint32 ImageIndex, drm::CommandList& CmdList)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
@@ -185,7 +185,7 @@ struct SwapchainSupportDetails
 	}
 };
 
-void VulkanSurface::Resize(DRMDevice& Device, uint32 Width, uint32 Height)
+void VulkanSurface::Resize(drm::Device& Device, uint32 Width, uint32 Height)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 

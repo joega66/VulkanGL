@@ -10,7 +10,7 @@ public:
 	void Render(CameraProxy& Camera);
 
 private:
-	DRMDevice& Device;
+	drm::Device& Device;
 	drm::ShaderLibrary& ShaderLibrary;
 	drm::Surface& Surface;
 	EntityManager& ECS;

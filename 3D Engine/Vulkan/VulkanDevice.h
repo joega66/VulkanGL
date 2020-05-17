@@ -17,7 +17,7 @@ static const std::vector<const char*> DeviceExtensions =
 	VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
 };
 
-class VulkanDevice final : public DRMDevice
+class VulkanDevice final : public drm::Device
 {
 public:
 	VulkanDevice(Platform& Platform);

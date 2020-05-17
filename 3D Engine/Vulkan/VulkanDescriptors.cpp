@@ -203,12 +203,12 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 	std::tie(DescriptorSetLayout, DescriptorUpdateTemplate) = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings, DescriptorUpdateTemplateEntries);
 }
 
-VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet(DRMDevice& Device)
+VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet(drm::Device& Device)
 {
 	return static_cast<VulkanDevice&>(Device).GetDescriptorPoolManager().Allocate(static_cast<VulkanDevice&>(Device), DescriptorSetLayout);
 }
 
-void VulkanDescriptorSetLayout::UpdateDescriptorSet(DRMDevice& Device, const VulkanDescriptorSet& DescriptorSet, void* Struct)
+void VulkanDescriptorSetLayout::UpdateDescriptorSet(drm::Device& Device, const VulkanDescriptorSet& DescriptorSet, void* Struct)
 {
 	static_cast<VulkanDevice&>(Device).GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetHandle(), DescriptorUpdateTemplate, Struct);
 }

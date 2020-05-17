@@ -7,7 +7,7 @@
 class Cursor;
 class Input;
 class Screen;
-class DRMDevice;
+class drm::Device;
 namespace drm { class Surface; class ShaderLibrary; }
 
 /** The main() of the engine, after the platform-dependent stuff has been resolved. */
@@ -19,7 +19,7 @@ public:
 		Cursor& InCursor,
 		Input& InInput,
 		Screen& InScreen,
-		DRMDevice& InDevice,
+		drm::Device& InDevice,
 		drm::ShaderLibrary& InShaderLibrary,
 		drm::Surface& InSurface
 	);
@@ -33,7 +33,7 @@ public:
 	Screen& _Screen;
 	
 	/** DRM implementations. */
-	DRMDevice& Device;
+	drm::Device& Device;
 	drm::ShaderLibrary& ShaderLibrary;
 	drm::Surface& Surface;
 

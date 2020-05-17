@@ -16,7 +16,7 @@ enum CubemapFace
 class Skybox
 {
 public:
-	Skybox(DRMDevice& Device, const std::array<const drm::Image*, 6>& Images, EFormat Format);
+	Skybox(drm::Device& Device, const std::array<const drm::Image*, 6>& Images, EFormat Format);
 	
 	inline const drm::Image& GetImage() const { return Image; }
 	inline std::array<const drm::Image*, 6>& GetFaces() { return Images; }

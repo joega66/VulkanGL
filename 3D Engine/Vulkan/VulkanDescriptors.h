@@ -64,7 +64,7 @@ private:
 	VkDescriptorPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 };
 
-class DRMDevice;
+namespace drm { class Device; }
 
 class VulkanDescriptorSetLayout
 {
@@ -74,10 +74,10 @@ public:
 	VulkanDescriptorSetLayout(VulkanDevice& Device, std::size_t NumEntries, const DescriptorBinding* Entries);
 
 	/** Create a descriptor set with this layout. */
-	VulkanDescriptorSet CreateDescriptorSet(DRMDevice& Device);
+	VulkanDescriptorSet CreateDescriptorSet(drm::Device& Device);
 
 	/** Update a descriptor set from a descriptor update template. */
-	void UpdateDescriptorSet(DRMDevice& Device, const VulkanDescriptorSet& DescriptorSet, void* Data);
+	void UpdateDescriptorSet(drm::Device& Device, const VulkanDescriptorSet& DescriptorSet, void* Data);
 
 	inline operator VkDescriptorSetLayout() const { return DescriptorSetLayout; }
 	inline VkDescriptorSetLayout GetHandle() const { return DescriptorSetLayout; }

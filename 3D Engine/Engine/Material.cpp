@@ -3,7 +3,7 @@
 #include <DRM.h>
 
 Material::Material(
-	DRMDevice& Device,
+	drm::Device& Device,
 	EMaterialMode MaterialMode,
 	const drm::Image* BaseColor,
 	const drm::Image* MetallicRoughness,

@@ -6,7 +6,7 @@ class MeshDrawCommand
 {
 public:
 	MeshDrawCommand(
-		DRMDevice& Device,
+		drm::Device& Device,
 		const MeshProxy& MeshProxy,
 		PipelineStateDesc& PSODesc,
 		const std::vector<VkDescriptorSet>& DescriptorSets)

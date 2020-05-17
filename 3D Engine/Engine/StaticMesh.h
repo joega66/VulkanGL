@@ -79,7 +79,7 @@ public:
 	std::vector<std::string> SubmeshNames;
 
 	/** Load a static mesh from file. */
-	StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path);
+	StaticMesh(const std::string& AssetName, AssetManager& Assets, drm::Device& Device, const std::filesystem::path& Path);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
 	StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uint32 SubmeshIndex);
@@ -90,8 +90,8 @@ private:
 	/** Local-space bounds of the mesh. */
 	BoundingBox Bounds;
 
-	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device);
-	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, DRMDevice& Device);
-	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, DRMDevice& Device);
-	const drm::Image* GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex);
+	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, drm::Device& Device);
+	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, drm::Device& Device);
+	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, drm::Device& Device);
+	const drm::Image* GLTFLoadImage(AssetManager& Assets, drm::Device& Device, tinygltf::Model& Model, int32 TextureIndex);
 };

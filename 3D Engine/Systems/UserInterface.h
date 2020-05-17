@@ -20,9 +20,9 @@ struct ImGuiRenderData : public Component
 
 	ImGuiRenderData(Engine& Engine);
 
-	void Render(DRMDevice& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass);
+	void Render(drm::Device& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass);
 
-	void Update(DRMDevice& Device);
+	void Update(drm::Device& Device);
 };
 
 class UserInterface : public IRenderSystem

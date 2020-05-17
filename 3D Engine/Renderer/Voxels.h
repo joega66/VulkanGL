@@ -49,7 +49,7 @@ private:
 	const uint32 VoxelGridSize;
 	const bool DebugVoxels;
 
-	DRMDevice& Device;
+	drm::Device& Device;
 	drm::ShaderLibrary& ShaderLibrary;
 
 	glm::mat4 WorldToVoxel;

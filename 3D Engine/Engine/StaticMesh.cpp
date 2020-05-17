@@ -6,7 +6,7 @@
 #define STBI_MSC_SECURE_CRT
 #include <tiny_gltf.h>
 
-StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device, const std::filesystem::path& Path)
+StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, drm::Device& Device, const std::filesystem::path& Path)
 	: Name(AssetName)
 	, Path(Path)
 {
@@ -39,7 +39,7 @@ StaticMesh::StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uin
 
 tinygltf::TinyGLTF Loader;
 
-void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, DRMDevice& Device)
+void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, drm::Device& Device)
 {
 	tinygltf::Model Model;
 	std::string Err;
@@ -74,7 +74,7 @@ void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, DR
 	}
 }
 
-void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, DRMDevice& Device)
+void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, drm::Device& Device)
 {
 	auto& IndexAccessor = Model.accessors[Primitive.indices];
 	auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
@@ -144,7 +144,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	SubmeshBounds.push_back(BoundingBox(Min, Max));
 }
 
-void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, DRMDevice& Device)
+void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, drm::Device& Device)
 {
 	auto& GLTFMaterial = Model.materials[Primitive.material];
 	const EMaterialMode MaterialMode = [] (const std::string& AlphaMode)
@@ -210,7 +210,7 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 	}
 }
 
-const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, DRMDevice& Device, tinygltf::Model& Model, int32 TextureIndex)
+const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, drm::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
 	if (TextureIndex == -1)
 	{

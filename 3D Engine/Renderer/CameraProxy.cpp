@@ -98,7 +98,7 @@ void CameraProxy::BuildMeshDrawCommands(Engine& Engine)
 	}
 }
 
-void CameraProxy::CreateSceneRP(DRMDevice& Device)
+void CameraProxy::CreateSceneRP(drm::Device& Device)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments.push_back(
@@ -116,7 +116,7 @@ void CameraProxy::CreateSceneRP(DRMDevice& Device)
 	SceneRP = Device.CreateRenderPass(RPDesc);
 }
 
-void CameraProxy::CreateGBufferRP(DRMDevice& Device)
+void CameraProxy::CreateGBufferRP(drm::Device& Device)
 {
 	RenderPassDesc RPDesc = {};
 	RPDesc.ColorAttachments =
@@ -135,7 +135,7 @@ void CameraProxy::CreateGBufferRP(DRMDevice& Device)
 	GBufferRP = Device.CreateRenderPass(RPDesc);
 }
 
-void CameraProxy::CreateUserInterfaceRP(DRMDevice& Device, drm::Surface& Surface)
+void CameraProxy::CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surface)
 {
 	const auto& Images = Surface.GetImages();
 

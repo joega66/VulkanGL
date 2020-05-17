@@ -2,7 +2,7 @@
 #include <DRMDefinitions.h>
 #include <DRMShader.h>
 
-class DRMDevice;
+class drm::Device;
 
 enum class EMaterialMode
 {
@@ -28,7 +28,7 @@ public:
 	Material() = default;
 
 	Material(
-		DRMDevice& Device,
+		drm::Device& Device,
 		EMaterialMode MaterialMode,
 		const drm::Image* BaseColor,
 		const drm::Image* MetallicRoughness,

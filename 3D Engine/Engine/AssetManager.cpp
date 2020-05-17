@@ -1,7 +1,7 @@
 #include "AssetManager.h"
 #include <DRM.h>
 
-AssetManager::AssetManager(DRMDevice& Device)
+AssetManager::AssetManager(drm::Device& Device)
 	: Device(Device)
 {
 	CreateDebugImages(Device);
@@ -146,7 +146,7 @@ drm::Image AssetManager::Blue;
 drm::Image AssetManager::White;
 drm::Image AssetManager::Black;
 
-void AssetManager::CreateDebugImages(DRMDevice& Device)
+void AssetManager::CreateDebugImages(drm::Device& Device)
 {
 	std::vector<uint8> Colors =
 	{

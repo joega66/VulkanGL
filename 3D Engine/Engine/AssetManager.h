@@ -3,12 +3,12 @@
 #include "Skybox.h"
 #include <filesystem>
 
-class DRMDevice;
+class drm::Device;
 
 class AssetManager
 {
 	friend class Engine;
-	AssetManager(DRMDevice& Device);
+	AssetManager(drm::Device& Device);
 
 public:
 	AssetManager(const AssetManager&) = delete;
@@ -45,12 +45,12 @@ public:
 	static drm::Image Black;
 
 private:
-	DRMDevice& Device;
+	drm::Device& Device;
 
 	std::unordered_map<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	std::unordered_map<std::string, std::unique_ptr<Material>> Materials;
 	std::unordered_map<std::string, std::unique_ptr<Skybox>> Skyboxes;
 	std::unordered_map<std::string, std::unique_ptr<drm::Image>> Images;
 
-	static void CreateDebugImages(DRMDevice& Device);
+	static void CreateDebugImages(drm::Device& Device);
 };

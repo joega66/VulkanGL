@@ -15,7 +15,7 @@ Engine::Engine(
 	Cursor& InCursor,
 	Input& InInput,
 	Screen& InScreen,
-	DRMDevice& InDevice, 
+	drm::Device& InDevice, 
 	drm::ShaderLibrary& InShaderLibrary,
 	drm::Surface& InSurface
 ) : _Platform(InPlatform)

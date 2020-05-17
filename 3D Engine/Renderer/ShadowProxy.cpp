@@ -14,7 +14,7 @@ UNIFORM_STRUCT(VolumeLightingUniformData,
 	glm::vec4 Radiance;
 );
 
-ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
+ShadowProxy::ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 	: Width(Platform::GetFloat("Engine.ini", "Shadows", "Width", 400.0f))
 	, ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
 	, ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
@@ -47,7 +47,7 @@ ShadowProxy::ShadowProxy(DRMDevice& Device, DescriptorSetLayout<ShadowDescriptor
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
 }
 
-void ShadowProxy::Update(DRMDevice& Device, const DirectionalLight& DirectionalLight)
+void ShadowProxy::Update(drm::Device& Device, const DirectionalLight& DirectionalLight)
 {
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
@@ -116,7 +116,7 @@ public:
 	}
 };
 
-void ShadowProxy::AddMesh(DRMDevice& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy)
+void ShadowProxy::AddMesh(drm::Device& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 

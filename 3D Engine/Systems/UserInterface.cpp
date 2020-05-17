@@ -295,7 +295,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 
 ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 {
-	DRMDevice& Device = Engine.Device;
+	drm::Device& Device = Engine.Device;
 	ImGuiIO& Imgui = ImGui::GetIO();
 
 	unsigned char* Pixels;
@@ -342,7 +342,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	});
 }
 
-void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass)
+void ImGuiRenderData::Render(drm::Device& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass)
 {
 	CmdList.BeginRenderPass(RenderPass);
 
@@ -405,7 +405,7 @@ void ImGuiRenderData::Render(DRMDevice& Device, drm::CommandList& CmdList, const
 	CmdList.EndRenderPass();
 }
 
-void ImGuiRenderData::Update(DRMDevice& Device)
+void ImGuiRenderData::Update(drm::Device& Device)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 	const uint32 VertexBufferSize = DrawData->TotalVtxCount * sizeof(ImDrawVert);
