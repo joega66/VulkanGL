@@ -11,7 +11,7 @@
 
 SceneRenderer::SceneRenderer(Engine& Engine)
 	: Device(Engine.Device)
-	, ShaderMap(Engine.ShaderMap)
+	, ShaderLibrary(Engine.ShaderLibrary)
 	, Surface(Engine.Surface)
 	, ECS(Engine.ECS)
 	, Assets(Engine.Assets)

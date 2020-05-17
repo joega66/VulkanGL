@@ -16,14 +16,14 @@ Engine::Engine(
 	Input& InInput,
 	Screen& InScreen,
 	DRMDevice& InDevice, 
-	DRMShaderMap& InShaderMap,
+	drm::ShaderLibrary& InShaderLibrary,
 	drm::Surface& InSurface
 ) : _Platform(InPlatform)
 	, _Cursor(InCursor)
 	, _Input(InInput)
 	, _Screen(InScreen)
 	, Device(InDevice)
-	, ShaderMap(InShaderMap)
+	, ShaderLibrary(InShaderLibrary)
 	, Surface(InSurface)
 	, Assets(InDevice)
 	, Camera(InScreen)

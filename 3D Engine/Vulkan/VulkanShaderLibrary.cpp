@@ -1,4 +1,4 @@
-#include "VulkanShaderMap.h"
+#include "VulkanShaderLibrary.h"
 #include "VulkanDevice.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 
@@ -77,12 +77,12 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	return Descriptions;
 }
 
-VulkanShaderMap::VulkanShaderMap(VulkanDevice& Device)
+VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& Device)
 	: Device(Device)
 {
 }
 
-ShaderCompilationInfo VulkanShaderMap::CompileShader(
+ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 	const ShaderCompilerWorker& Worker,
 	const std::string& Filename,
 	const std::string& EntryPoint,
@@ -179,7 +179,7 @@ ShaderCompilationInfo VulkanShaderMap::CompileShader(
 	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions);
 }
 
-void VulkanShaderMap::RecompileShaders()
+void VulkanShaderLibrary::RecompileShaders()
 {
 	for (const auto& [ShaderType, Shader] : Shaders)
 	{

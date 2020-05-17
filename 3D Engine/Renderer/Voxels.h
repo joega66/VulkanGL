@@ -50,7 +50,7 @@ private:
 	const bool DebugVoxels;
 
 	DRMDevice& Device;
-	DRMShaderMap& ShaderMap;
+	drm::ShaderLibrary& ShaderLibrary;
 
 	glm::mat4 WorldToVoxel;
 

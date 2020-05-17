@@ -98,48 +98,48 @@ namespace drm
 		{
 		}
 	};
-}
 
-/** The Shader Map compiles shaders and caches them by typename. */
-class DRMShaderMap
-{
-public:
-	/** Find shader of ShaderType. */
-	template<typename ShaderType>
-	const ShaderType* FindShader()
+	/** The shader library compiles shaders and caches them by typename. */
+	class ShaderLibrary
 	{
-		std::type_index Type = std::type_index(typeid(ShaderType));
-
-		if (Shaders.contains(Type))
+	public:
+		/** Find shader of ShaderType. */
+		template<typename ShaderType>
+		const ShaderType* FindShader()
 		{
-			return static_cast<const ShaderType*>(Shaders[Type].get());
+			std::type_index Type = std::type_index(typeid(ShaderType));
+
+			if (Shaders.contains(Type))
+			{
+				return static_cast<const ShaderType*>(Shaders[Type].get());
+			}
+			else
+			{
+				ShaderCompilerWorker Worker;
+				ShaderType::SetEnvironmentVariables(Worker);
+				const auto& [Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
+				const ShaderCompilationInfo CompilationInfo = CompileShader(Worker, Filename, EntryPoint, Stage, Type);
+				Shaders.emplace(CompilationInfo.Type, std::make_unique<ShaderType>(CompilationInfo));
+				return static_cast<const ShaderType*>(Shaders[CompilationInfo.Type].get());
+			}
 		}
-		else
-		{
-			ShaderCompilerWorker Worker;
-			ShaderType::SetEnvironmentVariables(Worker);
-			const auto& [Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
-			const ShaderCompilationInfo CompilationInfo = CompileShader(Worker, Filename, EntryPoint, Stage, Type);
-			Shaders.emplace(CompilationInfo.Type, std::make_unique<ShaderType>(CompilationInfo));
-			return static_cast<const ShaderType*>(Shaders[CompilationInfo.Type].get());
-		}
-	}
 
-	/** Recompile cached shaders. */
-	virtual void RecompileShaders() = 0;
+		/** Recompile cached shaders. */
+		virtual void RecompileShaders() = 0;
 
-private:
-	/** Compile the shader. */
-	virtual ShaderCompilationInfo CompileShader(
-		const ShaderCompilerWorker& Worker,
-		const std::string& Filename,
-		const std::string& EntryPoint,
-		EShaderStage Stage,
-		std::type_index Type
-	) = 0;
+	private:
+		/** Compile the shader. */
+		virtual ShaderCompilationInfo CompileShader(
+			const ShaderCompilerWorker& Worker,
+			const std::string& Filename,
+			const std::string& EntryPoint,
+			EShaderStage Stage,
+			std::type_index Type
+		) = 0;
 
-protected:
-	/** Cached shaders. */
-	std::unordered_map<std::type_index, std::unique_ptr<drm::Shader>> Shaders;
+	protected:
+		/** Cached shaders. */
+		std::unordered_map<std::type_index, std::unique_ptr<drm::Shader>> Shaders;
 
-};
+	};
+}

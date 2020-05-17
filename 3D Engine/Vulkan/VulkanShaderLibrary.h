@@ -3,10 +3,10 @@
 
 class VulkanDevice;
 
-class VulkanShaderMap final : public DRMShaderMap
+class VulkanShaderLibrary final : public drm::ShaderLibrary
 {
 public:
-	VulkanShaderMap(VulkanDevice& Device);
+	VulkanShaderLibrary(VulkanDevice& Device);
 
 	virtual void RecompileShaders() override;
 

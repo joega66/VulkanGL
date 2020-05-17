@@ -7,7 +7,7 @@
 #include <Components/Transform.h>
 
 /** Must match LightingPassCS.glsl */
-struct LightParams
+struct LightData
 {
 	glm::vec4 L;
 	glm::vec4 Radiance;
@@ -55,7 +55,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 		const auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
 		const auto& Shadow = ECS.GetComponent<ShadowProxy>(Entity);
 
-		LightParams Light;
+		LightData Light;
 		Light.L = glm::vec4(glm::normalize(DirectionalLight.Direction), 0.0f);
 		Light.Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
 		Light.WorldToLight = Shadow.GetLightViewProjMatrix();
@@ -72,7 +72,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 		const auto& PointLight = ECS.GetComponent<struct PointLight>(Entity);
 		const auto& LightTransform = ECS.GetComponent<Transform>(Entity);
 
-		LightParams Light;
+		LightData Light;
 		Light.L = glm::vec4(LightTransform.GetPosition(), 1.0f);
 		Light.Radiance = glm::vec4(PointLight.Intensity * PointLight.Color, 1.0f);
 
@@ -82,10 +82,10 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 	}
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightParams& Light)
+void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightData& Light)
 {
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = ShaderMap.FindShader<LightingPassCS>();
+	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<LightingPassCS>();
 	ComputeDesc.SpecializationInfo.Add(0, Light.L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
 	ComputeDesc.Layouts =
 	{
@@ -141,7 +141,7 @@ void SceneRenderer::ComputeIndirectLightingPass(CameraProxy& Camera, drm::Comman
 	auto& VCTLighting = ECS.GetSingletonComponent<VCTLightingCache>();
 
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = ShaderMap.FindShader<IndirectLightingCS>();
+	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<IndirectLightingCS>();
 	ComputeDesc.Layouts =
 	{
 		Camera.CameraDescriptorSet.GetLayout(),

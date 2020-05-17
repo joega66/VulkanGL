@@ -33,7 +33,7 @@ public:
 	void Update(DRMDevice& Device, const struct DirectionalLight& DirectionalLight);
 
 	/** Add a mesh to the light's shadow depth rendering. */
-	void AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy);
+	void AddMesh(DRMDevice& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy);
 
 	/** Render shadow depths. */
 	void Render(drm::CommandList& CmdList);

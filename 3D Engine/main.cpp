@@ -1,6 +1,6 @@
 #include <Engine/Engine.h>
 #include <Vulkan/VulkanDevice.h>
-#include <Vulkan/VulkanShaderMap.h>
+#include <Vulkan/VulkanShaderLibrary.h>
 #include <Vulkan/VulkanSurface.h>
 #include <Engine/Screen.h>
 #include <Engine/Input.h>
@@ -23,13 +23,13 @@ int main(int argc, char* argv[])
 
 	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>(Platform);
 	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, *Device);
-	std::unique_ptr<VulkanShaderMap> ShaderMap = std::make_unique<VulkanShaderMap>(*Device);
+	std::unique_ptr<VulkanShaderLibrary> ShaderLibrary = std::make_unique<VulkanShaderLibrary>(*Device);
 
 	Device->CreateLogicalDevice();
 
 	Surface->Init(*Device);
 
-	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderMap, *Surface);
+	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderLibrary, *Surface);
 	Engine.Main();
 
 	return 0;

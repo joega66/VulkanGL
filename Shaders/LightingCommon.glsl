@@ -3,7 +3,7 @@
 
 const float PI = 3.14159265;
 
-struct LightParams
+struct LightData
 {
 	vec3 L;
 	vec3 Radiance;
@@ -93,7 +93,7 @@ vec3 Diffuse_BRDF(vec3 BaseColor)
 	return BaseColor / PI;
 }
 
-vec3 DirectLighting(vec3 V, LightParams Light, SurfaceData Surface, MaterialData Material)
+vec3 DirectLighting(vec3 V, LightData Light, SurfaceData Surface, MaterialData Material)
 {
 	BRDFContext BRDFContext;
 	BRDF_InitContext(BRDFContext, Surface.WorldNormal, V, Light.L);

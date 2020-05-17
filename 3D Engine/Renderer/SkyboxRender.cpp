@@ -43,8 +43,8 @@ public:
 
 void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 {
-	const SkyboxVS* VertShader = ShaderMap.FindShader<SkyboxVS>();
-	const SkyboxFS* FragShader = ShaderMap.FindShader<SkyboxFS>();
+	const SkyboxVS* VertShader = ShaderLibrary.FindShader<SkyboxVS>();
+	const SkyboxFS* FragShader = ShaderLibrary.FindShader<SkyboxFS>();
 
 	struct PushConstants
 	{

@@ -61,7 +61,7 @@ void main()
 	Surface.WorldPosition = WorldPosition.xyz;
 	Surface.WorldNormal = TexelFetch(_VoxelNormal, VoxelGridCoord, 0).rgb;
 	
-	LightParams Light;
+	LightData Light;
 	Light.L = _L.xyz;
 	Light.Radiance = _Radiance.rgb;
 
@@ -75,7 +75,7 @@ void main()
 	// 3. Compute lighting.
 	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 
-	vec3 Lo = DirectLighting(V, Light, Surface, Material).rgb;
+	vec3 Ld = DirectLighting(V, Light, Surface, Material).rgb;
 
-	ImageStore(_VoxelRadiance, VoxelGridCoord, vec4(Lo, 1.0f));
+	ImageStore(_VoxelRadiance, VoxelGridCoord, vec4(Ld, 1.0f));
 }

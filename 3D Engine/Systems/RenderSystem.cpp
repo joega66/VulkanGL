@@ -84,7 +84,7 @@ void RenderSystem::Update(Engine& Engine)
 		for (auto Entity : ECS.GetEntities<ShadowProxy>())
 		{
 			auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
-			ShadowProxy.AddMesh(Engine.Device, Engine.ShaderMap, MeshProxy);
+			ShadowProxy.AddMesh(Engine.Device, Engine.ShaderLibrary, MeshProxy);
 		}
 	}
 }

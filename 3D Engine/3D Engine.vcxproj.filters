@@ -146,9 +146,6 @@
     <ClInclude Include="Components\Transform.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanShaderMap.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanRenderPass.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -257,6 +254,9 @@
     <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.hpp">
       <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanShaderLibrary.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -346,9 +346,6 @@
     <ClCompile Include="Components\Transform.cpp">
       <Filter>Source\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Vulkan\VulkanShaderMap.cpp">
-      <Filter>Source\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Vulkan\VulkanSurface.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
@@ -426,6 +423,9 @@
     </ClCompile>
     <ClCompile Include="Renderer\PostProcessing.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanShaderLibrary.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

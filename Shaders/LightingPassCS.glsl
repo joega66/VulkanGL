@@ -18,13 +18,13 @@ layout(push_constant) uniform DirectionalLightConstants
 	uint ShadowMapSampler;
 };
 
-void GetDirectionalLightParams(inout LightParams Light)
+void GetDirectionalLightParams(inout LightData Light)
 {
 	Light.L = L.xyz;
 	Light.Radiance = Radiance.rgb;
 }
 
-void GetPointLightParams(inout LightParams Light, SurfaceData Surface)
+void GetPointLightParams(inout LightData Light, SurfaceData Surface)
 {
 	const vec3 FragToLight = L.xyz - Surface.WorldPosition;
 	const float Distance = length(FragToLight);
@@ -76,7 +76,7 @@ void main()
 
 	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
 
-	LightParams Light;
+	LightData Light;
 
 	if (_LIGHT_TYPE == DIRECTIONAL_LIGHT)
 	{
@@ -87,13 +87,13 @@ void main()
 		GetPointLightParams(Light, Surface);
 	}
 
-	vec3 Lo = vec3(0.0);
+	vec3 Ld = vec3(0.0);
 
-	Lo += DirectLighting(V, Light, Surface, Material);
+	Ld += DirectLighting(V, Light, Surface, Material);
 
-	Lo *= ShadowPCF(Surface.WorldPosition);
+	Ld *= ShadowPCF(Surface.WorldPosition);
 
-	vec3 LoTotal = Lo + imageLoad(SceneColor, ScreenCoords).rgb;
+	vec3 LdTotal = Ld + imageLoad(SceneColor, ScreenCoords).rgb;
 
-	imageStore(SceneColor, ScreenCoords, vec4(LoTotal, 1.0));
+	imageStore(SceneColor, ScreenCoords, vec4(LdTotal, 1.0));
 }

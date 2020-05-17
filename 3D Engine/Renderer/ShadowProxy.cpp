@@ -116,14 +116,14 @@ public:
 	}
 };
 
-void ShadowProxy::AddMesh(DRMDevice& Device, DRMShaderMap& ShaderMap, const MeshProxy& MeshProxy)
+void ShadowProxy::AddMesh(DRMDevice& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = RenderPass;
-	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<ShadowDepthVS<MeshType>>();
-	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<ShadowDepthFS<MeshType>>();
+	PSODesc.ShaderStages.Vertex = ShaderLibrary.FindShader<ShadowDepthVS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = ShaderLibrary.FindShader<ShadowDepthFS<MeshType>>();
 	PSODesc.Viewport.Width = ShadowMap.GetWidth();
 	PSODesc.Viewport.Height = ShadowMap.GetHeight();
 	PSODesc.RasterizationState.DepthBiasEnable = true;

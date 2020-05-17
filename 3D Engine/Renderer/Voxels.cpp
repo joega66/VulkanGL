@@ -116,9 +116,9 @@ void CameraProxy::AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy)
 
 	PipelineStateDesc PSODesc = {};
 	PSODesc.RenderPass = VCTLighting.GetRenderPass();
-	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<VoxelsVS<MeshType>>();
-	PSODesc.ShaderStages.Geometry = Engine.ShaderMap.FindShader<VoxelsGS<MeshType>>();
-	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<VoxelsFS<MeshType>>();
+	PSODesc.ShaderStages.Vertex = Engine.ShaderLibrary.FindShader<VoxelsVS<MeshType>>();
+	PSODesc.ShaderStages.Geometry = Engine.ShaderLibrary.FindShader<VoxelsGS<MeshType>>();
+	PSODesc.ShaderStages.Fragment = Engine.ShaderLibrary.FindShader<VoxelsFS<MeshType>>();
 	PSODesc.DepthStencilState.DepthTestEnable = false;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 	PSODesc.Viewport.Width = VCTLighting.GetVoxelGridSize();
@@ -248,7 +248,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	: VoxelGridSize(Platform::GetInt("Engine.ini", "Voxels", "VoxelGridSize", 256))
 	, DebugVoxels(Platform::GetBool("Engine.ini", "Voxels", "DebugVoxels", false))
 	, Device(Engine.Device)
-	, ShaderMap(Engine.ShaderMap)
+	, ShaderLibrary(Engine.ShaderLibrary)
 	, DownsampleVolumeSetLayout(Engine.Device)
 {
 	check(VoxelGridSize <= 1024, "Exceeded voxel bits.");
@@ -301,7 +301,7 @@ VCTLightingCache::VCTLightingCache(Engine& Engine)
 	CreateVoxelRP();
 
 	ComputePipelineDesc ComputeDesc = {};
-	ComputeDesc.ComputeShader = ShaderMap.FindShader<DownsampleVolumeCS>();
+	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<DownsampleVolumeCS>();
 	ComputeDesc.Layouts = { DownsampleVolumeSetLayout };
 
 	DownsampleVolumePipeline = Device.CreatePipeline(ComputeDesc);
@@ -433,7 +433,7 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 		const drm::Image& ShadowMap = ShadowProxy.GetShadowMap();
 
 		ComputePipelineDesc ComputeDesc = {};
-		ComputeDesc.ComputeShader = ShaderMap.FindShader<LightVolumeCS>();
+		ComputeDesc.ComputeShader = ShaderLibrary.FindShader<LightVolumeCS>();
 		ComputeDesc.Layouts =
 		{
 			Camera.CameraDescriptorSet.GetLayout(),
@@ -532,9 +532,9 @@ void VCTLightingCache::RenderVisualization(CameraProxy& Camera, drm::CommandList
 	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
 	PSODesc.DepthStencilState.DepthTestEnable = true;
 	PSODesc.DepthStencilState.DepthWriteEnable = true;
-	PSODesc.ShaderStages.Vertex = ShaderMap.FindShader<DrawVoxelsVS>();
-	PSODesc.ShaderStages.Geometry = ShaderMap.FindShader<DrawVoxelsGS>();
-	PSODesc.ShaderStages.Fragment = ShaderMap.FindShader<DrawVoxelsFS>();
+	PSODesc.ShaderStages.Vertex = ShaderLibrary.FindShader<DrawVoxelsVS>();
+	PSODesc.ShaderStages.Geometry = ShaderLibrary.FindShader<DrawVoxelsGS>();
+	PSODesc.ShaderStages.Fragment = ShaderLibrary.FindShader<DrawVoxelsFS>();
 	PSODesc.InputAssemblyState.Topology = EPrimitiveTopology::PointList;
 	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), VoxelDescriptorSet.GetLayout(), Device.GetTextures().GetLayout() };
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});

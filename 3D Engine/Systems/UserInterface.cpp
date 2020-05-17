@@ -312,8 +312,8 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	PSODesc.DepthStencilState.DepthTestEnable = false;
 	PSODesc.DepthStencilState.DepthWriteEnable = false;
 	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-	PSODesc.ShaderStages.Vertex = Engine.ShaderMap.FindShader<UserInterfaceVS>();
-	PSODesc.ShaderStages.Fragment = Engine.ShaderMap.FindShader<UserInterfaceFS>();
+	PSODesc.ShaderStages.Vertex = Engine.ShaderLibrary.FindShader<UserInterfaceVS>();
+	PSODesc.ShaderStages.Fragment = Engine.ShaderLibrary.FindShader<UserInterfaceFS>();
 	PSODesc.ColorBlendAttachmentStates.resize(1, {});
 	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
 	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;

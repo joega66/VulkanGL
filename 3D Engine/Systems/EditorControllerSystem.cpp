@@ -42,6 +42,6 @@ void EditorControllerSystem::Update(Engine& Engine)
 
 	if (Input.GetShortcutUp("Recompile Shaders"))
 	{
-		Engine.ShaderMap.RecompileShaders();
+		Engine.ShaderLibrary.RecompileShaders();
 	}
 }

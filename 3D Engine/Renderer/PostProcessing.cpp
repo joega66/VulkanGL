@@ -57,7 +57,7 @@ void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, Camera
 	};
 
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = ShaderMap.FindShader<PostProcessingCS>();
+	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<PostProcessingCS>();
 	ComputeDesc.Layouts = { Layout };
 	ComputeDesc.PushConstantRanges.push_back({ EShaderStage::Compute, 0, sizeof(PushConstants) });
 

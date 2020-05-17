@@ -73,7 +73,7 @@
     <ClCompile Include="Vulkan\VulkanPipeline.cpp" />
     <ClCompile Include="Vulkan\VulkanQueues.cpp" />
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp" />
-    <ClCompile Include="Vulkan\VulkanShaderMap.cpp" />
+    <ClCompile Include="Vulkan\VulkanShaderLibrary.cpp" />
     <ClCompile Include="Vulkan\VulkanSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,7 +142,7 @@
     <ClInclude Include="Vulkan\VulkanPipeline.h" />
     <ClInclude Include="Vulkan\VulkanQueues.h" />
     <ClInclude Include="Vulkan\VulkanRenderPass.h" />
-    <ClInclude Include="Vulkan\VulkanShaderMap.h" />
+    <ClInclude Include="Vulkan\VulkanShaderLibrary.h" />
     <ClInclude Include="Vulkan\VulkanSurface.h" />
   </ItemGroup>
   <ItemGroup>
