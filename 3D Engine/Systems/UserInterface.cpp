@@ -332,7 +332,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	PSODesc.PushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
 	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
 
-	Engine._Screen.ScreenResizeEvent([this, &Device] (int32 Width, int32 Height)
+	Engine._Screen.OnScreenResize([this, &Device] (int32 Width, int32 Height)
 	{
 		ImGuiIO& ImGui = ImGui::GetIO();
 		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));

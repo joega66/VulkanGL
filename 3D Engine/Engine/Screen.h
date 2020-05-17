@@ -10,7 +10,7 @@ public:
 	Screen(Platform& Platform);
 	
 	/** Set an event to be fired. */
-	void ScreenResizeEvent(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event);
+	void OnScreenResize(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event);
 
 private:
 	struct GLFWwindow* Window;

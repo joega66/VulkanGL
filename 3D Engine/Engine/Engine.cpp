@@ -32,7 +32,7 @@ Engine::Engine(
 
 void Engine::Main()
 {
-	_Screen.ScreenResizeEvent([this] (int32 Width, int32 Height)
+	_Screen.OnScreenResize([this] (int32 Width, int32 Height)
 	{
 		Surface.Resize(Device, Width, Height);
 	});

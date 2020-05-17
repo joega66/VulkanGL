@@ -22,7 +22,7 @@ CameraProxy::CameraProxy(Engine& Engine)
 	CameraUniformBuffer = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBufferShaderParameters));
 	CameraDescriptorSet.CameraUniform = CameraUniformBuffer;
 
-	Engine._Screen.ScreenResizeEvent([this, &Engine] (int32 Width, int32 Height)
+	Engine._Screen.OnScreenResize([this, &Engine] (int32 Width, int32 Height)
 	{
 		auto& Device = Engine.Device;
 		auto& Surface = Engine.Surface;

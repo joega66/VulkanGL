@@ -7,7 +7,7 @@ Camera::Camera(Screen& Screen, const glm::vec3& Position, const glm::vec3& Up, f
 	, FOV(InFOV)
 {
 	RotateBy({ 0.0f, 0.0f });
-	Screen.ScreenResizeEvent([&] (uint32 InWidth, uint32 InHeight)
+	Screen.OnScreenResize([&] (uint32 InWidth, uint32 InHeight)
 	{
 		Width = InWidth;
 		Height = InHeight;

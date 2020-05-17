@@ -18,7 +18,7 @@ Screen::Screen(Platform& Platform)
 	FireScreenResizeEvents(PixelWidth, PixelHeight);
 }
 
-void Screen::ScreenResizeEvent(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event)
+void Screen::OnScreenResize(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event)
 {
 	int32 PixelWidth, PixelHeight;
 	glfwGetFramebufferSize(Window, &PixelWidth, &PixelHeight);
