@@ -10,6 +10,12 @@ public:
 	static std::string Serialize();
 };
 
+struct ShaderStructDecl
+{
+	std::string Struct;
+	uint32 Size;
+};
+
 #define BEGIN_SHADER_STRUCT(StructName)	\
 struct StructName						\
 {										\
@@ -30,7 +36,7 @@ private:																										\
 	struct NextMemberId##Name {};																				\
 	typedef NextMemberId##Name																					\
 
-#define END_SHADER_STRUCT()																						\
+#define END_SHADER_STRUCT(StructName)																			\
 		LastMemberId;																							\
 	static void Serialize(LastMemberId MemberId, std::string& ShaderStruct) {}									\
 public:																											\
@@ -40,7 +46,15 @@ public:																											\
 		Serialize(FirstMemberId{}, ShaderStruct);																\
 		return ShaderStruct;																					\
 	}																											\
+	struct Decl##StructName : ShaderStructDecl{																	\
+		Decl##StructName() {																					\
+			Struct = Serialize();																				\
+			Size = sizeof(StructName);																			\
+		}																										\
+	};																											\
+	static Decl##StructName Decl;																				\
 };																												\
+StructName::Decl##StructName StructName::Decl;																	\
 
 class ShaderCompilerWorker
 {
@@ -69,12 +83,10 @@ public:
 	}
 
 	/** Define the shader's push constant struct. */
-	template<typename PushConstantType>
-	inline void SetPushConstantRange(uint32 Offset = 0)
+	inline void operator<<(const ShaderStructDecl& ShaderStructDecl)
 	{
-		PushConstantOffset = Offset;
-		PushConstantSize = sizeof(PushConstantType);
-		PushConstantStruct = PushConstantType::Serialize();
+		PushConstantSize = ShaderStructDecl.Size;
+		PushConstantStruct = ShaderStructDecl.Struct;
 	}
 
 	/** Get the shader's push constant struct. */

@@ -209,7 +209,7 @@ BEGIN_SHADER_STRUCT(LightVolumeData)
 	SHADER_PARAMETER(drm::TextureID, _VoxelNormal)
 	SHADER_PARAMETER(drm::ImageID, _VoxelRadiance)
 	SHADER_PARAMETER(glm::mat4, _WorldToVoxel)
-END_SHADER_STRUCT()
+END_SHADER_STRUCT(LightVolumeData)
 
 class LightVolumeCS : public drm::Shader
 {
@@ -222,7 +222,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		VoxelShader::SetEnvironmentVariables(Worker);
-		Worker.SetPushConstantRange<LightVolumeData>();
+		Worker << LightVolumeData::Decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()

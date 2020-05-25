@@ -5,7 +5,7 @@
 BEGIN_SHADER_STRUCT(PostProcessingData)
 	SHADER_PARAMETER(float, _ExposureAdjustment)
 	SHADER_PARAMETER(float, _ExposureBias)
-END_SHADER_STRUCT()
+END_SHADER_STRUCT(PostProcessingData)
 
 class PostProcessingCS : public drm::Shader
 {
@@ -17,7 +17,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		Worker.SetPushConstantRange<PostProcessingData>();
+		Worker << PostProcessingData::Decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()

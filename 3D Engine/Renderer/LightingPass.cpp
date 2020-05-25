@@ -12,7 +12,7 @@ BEGIN_SHADER_STRUCT(LightData)
 	SHADER_PARAMETER(glm::mat4, _LightViewProj)
 	SHADER_PARAMETER(drm::TextureID, _ShadowMap)
 	SHADER_PARAMETER(drm::SamplerID, _ShadowMapSampler)
-END_SHADER_STRUCT()
+END_SHADER_STRUCT(LightData)
 
 class LightingPassCS : public drm::Shader
 {
@@ -28,7 +28,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		VoxelShader::SetEnvironmentVariables(Worker);
-		Worker.SetPushConstantRange<LightData>();
+		Worker << LightData::Decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
