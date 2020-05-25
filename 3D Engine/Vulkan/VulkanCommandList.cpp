@@ -62,6 +62,18 @@ void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>
 	);
 }
 
+static VkShaderStageFlags TranslateStageFlags(EShaderStage StageFlags)
+{
+	VkShaderStageFlags VkStageFlags = 0;
+	VkStageFlags |= Any(StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+	VkStageFlags |= Any(StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+	VkStageFlags |= Any(StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+	VkStageFlags |= Any(StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+	VkStageFlags |= Any(StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+	VkStageFlags |= Any(StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+	return VkStageFlags;
+}
+
 void VulkanCommandList::PushConstants(
 	const std::shared_ptr<VulkanPipeline>& Pipeline, 
 	EShaderStage StageFlags, 
@@ -69,20 +81,26 @@ void VulkanCommandList::PushConstants(
 	uint32 Size, 
 	const void* Values)
 {
-	VkShaderStageFlags VKStageFlags = 0;
-	VKStageFlags |= Any(StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-	VKStageFlags |= Any(StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-	VKStageFlags |= Any(StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-	VKStageFlags |= Any(StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-	VKStageFlags |= Any(StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-	VKStageFlags |= Any(StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+	vkCmdPushConstants(
+		CommandBuffer,
+		Pipeline->GetPipelineLayout(),
+		TranslateStageFlags(StageFlags),
+		Offset,
+		Size,
+		Values
+	);
+}
+
+void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const drm::Shader* Shader, const void* Values)
+{
+	const auto& PushConstantRange = Shader->CompilationInfo.PushConstantRange;
 
 	vkCmdPushConstants(
 		CommandBuffer,
 		Pipeline->GetPipelineLayout(),
-		VKStageFlags,
-		Offset,
-		Size,
+		TranslateStageFlags(PushConstantRange.StageFlags),
+		PushConstantRange.Offset,
+		PushConstantRange.Size,
 		Values
 	);
 }

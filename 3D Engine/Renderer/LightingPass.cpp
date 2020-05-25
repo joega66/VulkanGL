@@ -6,15 +6,13 @@
 #include <Components/Light.h>
 #include <Components/Transform.h>
 
-/** Must match LightingPassCS.glsl */
-struct LightData
-{
-	glm::vec4 L;
-	glm::vec4 Radiance;
-	glm::mat4 WorldToLight;
-	drm::TextureID ShadowMap;
-	drm::SamplerID ShadowMapSampler;
-};
+BEGIN_SHADER_STRUCT(LightData)
+	SHADER_PARAMETER(glm::vec4, _L)
+	SHADER_PARAMETER(glm::vec4, _Radiance)
+	SHADER_PARAMETER(glm::mat4, _LightViewProj)
+	SHADER_PARAMETER(drm::TextureID, _ShadowMap)
+	SHADER_PARAMETER(drm::SamplerID, _ShadowMapSampler)
+END_SHADER_STRUCT()
 
 class LightingPassCS : public drm::Shader
 {
@@ -30,6 +28,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		VoxelShader::SetEnvironmentVariables(Worker);
+		Worker.SetPushConstantRange<LightData>();
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -56,11 +55,11 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 		const auto& Shadow = ECS.GetComponent<ShadowProxy>(Entity);
 
 		LightData Light;
-		Light.L = glm::vec4(glm::normalize(DirectionalLight.Direction), 0.0f);
-		Light.Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
-		Light.WorldToLight = Shadow.GetLightViewProjMatrix();
-		Light.ShadowMap = Shadow.GetShadowMap().GetTextureID();
-		Light.ShadowMapSampler = Device.CreateSampler({}).GetSamplerID();
+		Light._L = glm::vec4(glm::normalize(DirectionalLight.Direction), 0.0f);
+		Light._Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+		Light._LightViewProj = Shadow.GetLightViewProjMatrix();
+		Light._ShadowMap = Shadow.GetShadowMap().GetTextureID();
+		Light._ShadowMapSampler = Device.CreateSampler({}).GetSamplerID();
 
 		ComputeDeferredLight(Camera, CmdList, Light);
 
@@ -73,8 +72,8 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 		const auto& LightTransform = ECS.GetComponent<Transform>(Entity);
 
 		LightData Light;
-		Light.L = glm::vec4(LightTransform.GetPosition(), 1.0f);
-		Light.Radiance = glm::vec4(PointLight.Intensity * PointLight.Color, 1.0f);
+		Light._L = glm::vec4(LightTransform.GetPosition(), 1.0f);
+		Light._Radiance = glm::vec4(PointLight.Intensity * PointLight.Color, 1.0f);
 
 		ComputeDeferredLight(Camera, CmdList, Light);
 
@@ -84,16 +83,17 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 
 void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightData& Light)
 {
+	const drm::Shader* Shader = ShaderLibrary.FindShader<LightingPassCS>();
+
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<LightingPassCS>();
-	ComputeDesc.SpecializationInfo.Add(0, Light.L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
+	ComputeDesc.ComputeShader = Shader;
+	ComputeDesc.SpecializationInfo.Add(0, Light._L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
 	ComputeDesc.Layouts =
 	{
 		Camera.CameraDescriptorSet.GetLayout(),
 		Device.GetTextures().GetLayout(),
 		Device.GetSamplers().GetLayout(),
 	};
-	ComputeDesc.PushConstantRanges.push_back({ EShaderStage::Compute, 0, sizeof(Light) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -108,7 +108,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
-	CmdList.PushConstants(Pipeline, EShaderStage::Compute, 0, sizeof(Light), &Light);
+	CmdList.PushConstants(Pipeline, Shader, &Light);
 
 	const uint32 GroupCountX = DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u);
 	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);

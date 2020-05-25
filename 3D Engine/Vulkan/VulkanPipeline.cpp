@@ -43,10 +43,18 @@ drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 		return Iter->second;
 	}
 
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts, ComputeDesc.PushConstantRanges);
+	const auto& InPushConstantRange = ComputeDesc.ComputeShader->CompilationInfo.PushConstantRange;
+
+	const auto PushConstantRanges = InPushConstantRange.Size > 0 ? std::vector{ InPushConstantRange } : std::vector<PushConstantRange>{};
+
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts, PushConstantRanges);
+
 	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
+
 	ComputePipelineCache[Crc] = Pipeline;
+
 	CrcToComputeDesc[Crc] = ComputeDesc;
+
 	return Pipeline;
 }
 

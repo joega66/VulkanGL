@@ -2,6 +2,11 @@
 #include <ECS/EntityManager.h>
 #include <Components/RenderSettings.h>
 
+BEGIN_SHADER_STRUCT(PostProcessingData)
+	SHADER_PARAMETER(float, _ExposureAdjustment)
+	SHADER_PARAMETER(float, _ExposureBias)
+END_SHADER_STRUCT()
+
 class PostProcessingCS : public drm::Shader
 {
 public:
@@ -12,6 +17,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
+		Worker.SetPushConstantRange<PostProcessingData>();
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -50,16 +56,11 @@ void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, Camera
 
 	Layout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
 
-	struct PushConstants
-	{
-		float ExposureAdjustment;
-		float ExposureBias;
-	};
+	const drm::Shader* Shader = ShaderLibrary.FindShader<PostProcessingCS>();
 
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<PostProcessingCS>();
+	ComputeDesc.ComputeShader = Shader;
 	ComputeDesc.Layouts = { Layout };
-	ComputeDesc.PushConstantRanges.push_back({ EShaderStage::Compute, 0, sizeof(PushConstants) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -67,11 +68,11 @@ void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, Camera
 
 	CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetHandle());
 
-	PushConstants Constants;
-	Constants.ExposureAdjustment = RenderSettings.ExposureAdjustment;
-	Constants.ExposureBias = RenderSettings.ExposureBias;
+	PostProcessingData PostProcessingData;
+	PostProcessingData._ExposureAdjustment = RenderSettings.ExposureAdjustment;
+	PostProcessingData._ExposureBias = RenderSettings.ExposureBias;
 
-	CmdList.PushConstants(Pipeline, EShaderStage::Compute, 0, sizeof(Constants), &Constants);
+	CmdList.PushConstants(Pipeline, Shader, &PostProcessingData);
 
 	const glm::ivec3 GroupCount(
 		DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u),

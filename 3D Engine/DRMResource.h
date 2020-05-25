@@ -589,6 +589,42 @@ struct ShaderStages
 	}
 };
 
+enum class EShaderStage
+{
+	None = 0,
+	Vertex = 1 << 0,
+	TessControl = 1 << 1,
+	TessEvaluation = 1 << 2,
+	Geometry = 1 << 3,
+	Fragment = 1 << 4,
+	Compute = 1 << 5,
+	AllGraphics = Vertex | TessControl | TessEvaluation | Geometry | Fragment,
+	All = AllGraphics | Compute
+}; ENABLE_BITWISE_OPERATORS(EShaderStage);
+
+struct PushConstantRange
+{
+	EShaderStage StageFlags = EShaderStage::All;
+	uint32 Offset = 0;
+	uint32 Size = 0;
+
+	PushConstantRange() = default;
+
+	PushConstantRange(EShaderStage StageFlags, uint32 Offset, uint32 Size)
+		: StageFlags(StageFlags)
+		, Offset(Offset)
+		, Size(Size)
+	{
+	}
+
+	bool operator==(const PushConstantRange& Other) const
+	{
+		return StageFlags == Other.StageFlags
+			&& Offset == Other.Offset
+			&& Size == Other.Size;
+	}
+};
+
 enum class EDynamicState
 {
 	Viewport = 0,

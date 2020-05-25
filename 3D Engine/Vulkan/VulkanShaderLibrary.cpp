@@ -1,6 +1,7 @@
 #include "VulkanShaderLibrary.h"
 #include "VulkanDevice.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
+#include <shaderc/shaderc.hpp>
 
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 {
@@ -77,6 +78,39 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	return Descriptions;
 }
 
+class ShadercIncluder : public shaderc::CompileOptions::IncluderInterface
+{
+public:
+	shaderc_include_result* GetInclude(
+		const char* requested_source,
+		shaderc_include_type type,
+		const char* requesting_source,
+		size_t include_depth) override
+	{
+		static const std::string ShaderPath = "../Shaders/";
+
+		auto& SourceName = SourceNames.emplace_back(ShaderPath + std::string(requested_source));
+
+		if (auto Iter = Includes.find(SourceName); Iter != Includes.end())
+		{
+			return &Iter->second;
+		}
+		else
+		{
+			auto& Source = Sources.emplace_back(Platform::FileRead(SourceName));
+			auto Include = Includes.emplace(SourceName, shaderc_include_result{ SourceName.c_str(), SourceName.size(), Source.c_str(), Source.size() });
+			return &Include.first->second;
+		}
+	}
+
+	void ReleaseInclude(shaderc_include_result* data) override {}
+
+private:
+	std::list<std::string> SourceNames;
+	std::list<std::string> Sources;
+	std::unordered_map<std::string, shaderc_include_result> Includes;
+};
+
 VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& Device)
 	: Device(Device)
 {
@@ -90,93 +124,89 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 	std::type_index Type
 )
 {
-	static const std::string ShaderCompilerPath = "../Shaders/glslc.exe";
-	static const std::string SPIRVExt = ".spv";
+	auto Includer = std::make_unique<ShadercIncluder>();
 
-	ShaderCompilerWorker PrivateWorker;
+	shaderc::CompileOptions CompileOptions;
+	CompileOptions.SetForcedVersionProfile(450, shaderc_profile::shaderc_profile_none);
+	CompileOptions.SetIncluder(std::move(Includer));
 
-	const std::string ShaderExt = [&] ()
+	const shaderc_shader_kind ShaderKind = [&] ()
 	{
 		switch (Stage)
 		{
 		case EShaderStage::Vertex:
-			PrivateWorker.SetDefine("VERTEX_SHADER");
-			return "vert";
+			CompileOptions.AddMacroDefinition("VERTEX_SHADER", "1");
+			return shaderc_vertex_shader;
 		case EShaderStage::TessControl:
-			PrivateWorker.SetDefine("TESSCONTROL_SHADER");
-			return "tesc";
+			CompileOptions.AddMacroDefinition("TESSCONTROL_SHADER", "1");
+			return shaderc_tess_control_shader;
 		case EShaderStage::TessEvaluation:
-			PrivateWorker.SetDefine("TESSEVAL_SHADER");
-			return "tese";
+			CompileOptions.AddMacroDefinition("TESSEVAL_SHADER", "1");
+			return shaderc_tess_evaluation_shader;
 		case EShaderStage::Geometry:
-			PrivateWorker.SetDefine("GEOMETRY_SHADER");
-			return "geom";
+			CompileOptions.AddMacroDefinition("GEOMETRY_SHADER", "1");
+			return shaderc_geometry_shader;
 		case EShaderStage::Fragment:
-			PrivateWorker.SetDefine("FRAGMENT_SHADER");
-			return "frag";
+			CompileOptions.AddMacroDefinition("FRAGMENT_SHADER", "1");
+			return shaderc_fragment_shader;
 		default: // Compute
-			return "comp";
+			return shaderc_compute_shader;
 		}
 	}();
 
-	std::stringstream SS;
-
-	const auto SetDefines = [&] (const std::pair<std::string, std::string>& Defines)
+	for (const auto& [Define, Value] : Worker.GetDefines())
 	{
-		const auto& [Define, Value] = Defines;
-		SS << " -D" + Define + "=" + Value;
-	};
-
-	std::for_each(Worker.GetDefines().begin(), Worker.GetDefines().end(), SetDefines);
-
-	std::for_each(PrivateWorker.GetDefines().begin(), PrivateWorker.GetDefines().end(), SetDefines);
-
-	SS << " -std=450";
-	SS << " -fshader-stage=" + ShaderExt;
-	SS << " -o ";
-	SS << Filename + SPIRVExt;
-	SS << " " + Filename;
-
-	while (true)
-	{
-		Platform::ForkProcess(ShaderCompilerPath, SS.str());
-
-		// Hack until ForkProcess can return STDOUT of child process.
-		if (Platform::FileExists(Filename + SPIRVExt))
-		{
-			break;
-		}
-
-		const EMBReturn Ret = Platform::DisplayMessageBox(EMBType::RETRYCANCEL, EMBIcon::WARNING, "Shader failed to compile. Filename: " + Filename, "Shader Compiler Error");
-
-		switch (Ret)
-		{
-		case EMBReturn::CANCEL:
-			Platform::Exit();
-		case EMBReturn::RETRY:
-			LOG("Recompiling shader %s", Filename.c_str());
-		}
+		CompileOptions.AddMacroDefinition(Define, Value);
 	}
 
-	const uint64 LastWriteTime = Platform::GetLastWriteTime(Filename);
+	const std::string ShaderStruct = Worker.GetPushConstantStruct().empty() == false ? 
+		"layout(push_constant) uniform _ShaderStruct{" + Worker.GetPushConstantStruct() + "};\n"
+		: "";
+	
+	shaderc::Compiler Compiler;
+	shaderc::SpvCompilationResult SpvCompilationResult;
 
-	const std::string SPIRV = Platform::FileRead(Filename + SPIRVExt);
-	Platform::FileDelete(Filename + SPIRVExt);
+	do
+	{
+		const std::string SourceText = ShaderStruct + Platform::FileRead(Filename);
+
+		SpvCompilationResult = Compiler.CompileGlslToSpv(SourceText, ShaderKind, Filename.c_str(), EntryPoint.c_str(), CompileOptions);
+
+		if (SpvCompilationResult.GetNumErrors() > 0)
+		{
+			const EMBReturn Ret = Platform::DisplayMessageBox(
+				EMBType::RETRYCANCEL, EMBIcon::WARNING, 
+				"Failed to compile " + Filename + "\n\n" + SpvCompilationResult.GetErrorMessage().c_str(), "Shader Compiler"
+			);
+
+			if (Ret == EMBReturn::CANCEL)
+			{
+				Platform::Exit();
+			}
+		}
+	} while (SpvCompilationResult.GetNumErrors() > 0);
+
+	std::vector<uint32> Code(SpvCompilationResult.begin(), SpvCompilationResult.end());
 
 	VkShaderModuleCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-	CreateInfo.codeSize = SPIRV.size();
-	CreateInfo.pCode = reinterpret_cast<const uint32*>(SPIRV.data());
+	CreateInfo.codeSize = Code.size() * sizeof(uint32);
+	CreateInfo.pCode = Code.data();
 
 	VkShaderModule ShaderModule;
 	vulkan(vkCreateShaderModule(Device, &CreateInfo, nullptr, &ShaderModule));
 
-	spirv_cross::CompilerGLSL GLSL(reinterpret_cast<const uint32*>(SPIRV.data()), SPIRV.size() / sizeof(uint32));
+	spirv_cross::CompilerGLSL GLSL(Code.data(), Code.size());
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
-	
-	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = 
-		Stage == EShaderStage::Vertex ? ParseVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
+	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = Stage == EShaderStage::Vertex ? 
+		ParseVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
+	const uint64 LastWriteTime = Platform::GetLastWriteTime(Filename);
 
-	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions);
+	PushConstantRange PushConstantRange;
+	PushConstantRange.StageFlags = Stage;
+	PushConstantRange.Offset = Worker.GetPushConstantOffset();
+	PushConstantRange.Size = Worker.GetPushConstantSize();
+
+	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions, PushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()

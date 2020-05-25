@@ -34,6 +34,8 @@ public:
 
 	void PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, EShaderStage StageFlags, uint32 Offset, uint32 Size, const void* Values);
 
+	void PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const drm::Shader* Shader, const void* Values);
+
 	void BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers);
 
 	void DrawIndexed(

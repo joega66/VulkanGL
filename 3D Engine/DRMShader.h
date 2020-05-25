@@ -2,18 +2,45 @@
 #include <DRMResource.h>
 #include <typeindex>
 
-enum class EShaderStage
+/** Serializes C++ types to shader types. */
+class ShaderTypeSerializer
 {
-	None = 0,
-	Vertex = 1 << 0,
-	TessControl = 1 << 1,
-	TessEvaluation = 1 << 2,
-	Geometry = 1 << 3,
-	Fragment = 1 << 4,
-	Compute = 1 << 5,
-	AllGraphics = Vertex | TessControl | TessEvaluation | Geometry | Fragment,
-	All = AllGraphics | Compute
-}; ENABLE_BITWISE_OPERATORS(EShaderStage);
+public:
+	template<typename T>
+	static std::string Serialize();
+};
+
+#define BEGIN_SHADER_STRUCT(StructName)	\
+struct StructName						\
+{										\
+private:								\
+	struct FirstMemberId {};			\
+	typedef FirstMemberId				\
+
+#define SHADER_PARAMETER(ShaderType, Name)																		\
+		MemberId##Name;																							\
+public:																											\
+	ShaderType Name;																							\
+private:																										\
+	static void Serialize(MemberId##Name MemberId, std::string& ShaderStruct)									\
+	{																											\
+		ShaderStruct += ShaderTypeSerializer::Serialize<ShaderType>() + " " + std::string(#Name) + ";";			\
+		Serialize(NextMemberId##Name{}, ShaderStruct);															\
+	}																											\
+	struct NextMemberId##Name {};																				\
+	typedef NextMemberId##Name																					\
+
+#define END_SHADER_STRUCT()																						\
+		LastMemberId;																							\
+	static void Serialize(LastMemberId MemberId, std::string& ShaderStruct) {}									\
+public:																											\
+	static std::string Serialize()																				\
+	{																											\
+		std::string ShaderStruct;																				\
+		Serialize(FirstMemberId{}, ShaderStruct);																\
+		return ShaderStruct;																					\
+	}																											\
+};																												\
 
 class ShaderCompilerWorker
 {
@@ -22,24 +49,44 @@ public:
 
 	ShaderCompilerWorker() = default;
 
+	/** Set a shader define (templated version). */
 	template<typename T>
 	void SetDefine(std::string&& Define, const T& Value)
 	{
 		Defines.push_back(std::make_pair(std::move(Define), std::to_string(Value)));
 	}
 
+	/** Set a shader define (stringified version). */
 	void SetDefine(std::string&& Define)
 	{
 		Defines.push_back(std::make_pair(std::move(Define), "1"));
 	}
 
+	/** Get all shader defines. */
 	const ShaderDefines& GetDefines() const
 	{
 		return Defines;
 	}
 
+	/** Define the shader's push constant struct. */
+	template<typename PushConstantType>
+	inline void SetPushConstantRange(uint32 Offset = 0)
+	{
+		PushConstantOffset = Offset;
+		PushConstantSize = sizeof(PushConstantType);
+		PushConstantStruct = PushConstantType::Serialize();
+	}
+
+	/** Get the shader's push constant struct. */
+	inline uint32 GetPushConstantOffset() const { return PushConstantOffset; }
+	inline uint32 GetPushConstantSize() const { return PushConstantSize; }
+	inline const std::string& GetPushConstantStruct() const { return PushConstantStruct; }
+
 private:
 	ShaderDefines Defines;
+	uint32 PushConstantOffset = 0;
+	uint32 PushConstantSize = 0;
+	std::string PushConstantStruct = "";
 };
 
 struct ShaderInfo
@@ -69,7 +116,8 @@ public:
 		uint64 LastWriteTime,
 		const ShaderCompilerWorker& Worker,
 		void* Module,
-		const std::vector<VertexAttributeDescription>& VertexAttributeDescriptions)
+		const std::vector<VertexAttributeDescription>& VertexAttributeDescriptions,
+		const PushConstantRange& PushConstantRange)
 		: Type(Type)
 		, Stage(Stage)
 		, Entrypoint(Entrypoint)
@@ -78,8 +126,11 @@ public:
 		, Worker(Worker)
 		, Module(Module)
 		, VertexAttributeDescriptions(VertexAttributeDescriptions)
+		, PushConstantRange(PushConstantRange)
 	{
 	}
+
+	PushConstantRange PushConstantRange;
 };
 
 namespace drm

@@ -1,12 +1,6 @@
 #define TEXTURE_SET 1
 #include "SceneResources.glsl"
 
-layout(push_constant) uniform PushConstants
-{
-	float ExposureAdjustment;
-	float ExposureBias;
-};
-
 layout(binding = 0, set = 0, rgba8) uniform writeonly image2D DisplayColor;
 layout(binding = 1, set = 0, rgba16f) uniform readonly image2D HDRColor;
 
@@ -39,9 +33,9 @@ void main()
 
 	vec3 Color = imageLoad(HDRColor, ScreenCoords).rgb;
 
-	Color *= ExposureAdjustment;
+	Color *= _ExposureAdjustment;
 
-	Color = Uncharted2ToneMapping(Color * ExposureBias);
+	Color = Uncharted2ToneMapping(Color * _ExposureBias);
 
 	const float W = 11.2;
 

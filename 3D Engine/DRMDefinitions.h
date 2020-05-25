@@ -75,29 +75,6 @@ struct RenderPassDesc
 	RenderArea RenderArea;
 };
 
-struct PushConstantRange
-{
-	EShaderStage StageFlags = EShaderStage::All;
-	uint32 Offset = 0;
-	uint32 Size = 0;
-
-	PushConstantRange() = default;
-
-	PushConstantRange(EShaderStage StageFlags, uint32 Offset, uint32 Size)
-		: StageFlags(StageFlags)
-		, Offset(Offset)
-		, Size(Size)
-	{
-	}
-
-	bool operator==(const PushConstantRange& Other) const
-	{
-		return StageFlags == Other.StageFlags
-			&& Offset == Other.Offset
-			&& Size == Other.Size;
-	}
-};
-
 struct PipelineStateDesc
 {
 	drm::RenderPassView RenderPass;
@@ -182,7 +159,6 @@ struct ComputePipelineDesc
 	const drm::Shader* ComputeShader = nullptr;
 	SpecializationInfo SpecializationInfo;
 	std::vector<VkDescriptorSetLayout> Layouts;
-	std::vector<PushConstantRange> PushConstantRanges;
 
 	inline bool operator==(const ComputePipelineDesc& Other) const
 	{

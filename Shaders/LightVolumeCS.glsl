@@ -1,13 +1,3 @@
-
-layout(push_constant) uniform PushConstants
-{
-	uint _ShadowMap;
-	uint _VoxelBaseColor;
-	uint _VoxelNormal;
-	uint _VoxelRadiance;
-	mat4 _WorldToVoxel;
-};
-
 #include "CameraCommon.glsl"
 #include "VoxelsCommon.glsl"
 #include "LightingCommon.glsl"

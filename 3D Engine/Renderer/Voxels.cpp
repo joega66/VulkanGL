@@ -203,6 +203,14 @@ public:
 	}
 };
 
+BEGIN_SHADER_STRUCT(LightVolumeData)
+	SHADER_PARAMETER(drm::TextureID, _ShadowMap)
+	SHADER_PARAMETER(drm::TextureID, _VoxelBaseColor)
+	SHADER_PARAMETER(drm::TextureID, _VoxelNormal)
+	SHADER_PARAMETER(drm::ImageID, _VoxelRadiance)
+	SHADER_PARAMETER(glm::mat4, _WorldToVoxel)
+END_SHADER_STRUCT()
+
 class LightVolumeCS : public drm::Shader
 {
 public:
@@ -214,6 +222,7 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 		VoxelShader::SetEnvironmentVariables(Worker);
+		Worker.SetPushConstantRange<LightVolumeData>();
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -412,28 +421,21 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 
-	struct LightVolumePushConstants
-	{
-		drm::TextureID ShadowMap;
-		drm::TextureID VoxelBaseColor;
-		drm::TextureID VoxelNormal;
-		drm::ImageID VoxelRadiance;
-		glm::mat4 WorldToVoxel;
-	};
-
-	LightVolumePushConstants LightVolumePushConstants;
-	LightVolumePushConstants.VoxelBaseColor = VoxelBaseColor.GetTextureID();
-	LightVolumePushConstants.VoxelNormal = VoxelNormal.GetTextureID();
-	LightVolumePushConstants.VoxelRadiance = VoxelRadiance.GetImageID();
-	LightVolumePushConstants.WorldToVoxel = WorldToVoxel;
+	LightVolumeData LightVolumeData;
+	LightVolumeData._VoxelBaseColor = VoxelBaseColor.GetTextureID();
+	LightVolumeData._VoxelNormal = VoxelNormal.GetTextureID();
+	LightVolumeData._VoxelRadiance = VoxelRadiance.GetImageID();
+	LightVolumeData._WorldToVoxel = WorldToVoxel;
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
 	{
 		const auto& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
 		const drm::Image& ShadowMap = ShadowProxy.GetShadowMap();
 
+		const drm::Shader* Shader = ShaderLibrary.FindShader<LightVolumeCS>();
+
 		ComputePipelineDesc ComputeDesc = {};
-		ComputeDesc.ComputeShader = ShaderLibrary.FindShader<LightVolumeCS>();
+		ComputeDesc.ComputeShader = Shader;
 		ComputeDesc.Layouts =
 		{
 			Camera.CameraDescriptorSet.GetLayout(),
@@ -442,7 +444,6 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 			Device.GetTextures().GetLayout(),
 			Device.GetImages().GetLayout(),
 		};
-		ComputeDesc.PushConstantRanges.push_back(PushConstantRange{ EShaderStage::Compute, 0, sizeof(LightVolumePushConstants) });
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
@@ -459,9 +460,9 @@ void VCTLightingCache::ComputeLightVolume(EntityManager& ECS, CameraProxy& Camer
 
 		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
-		LightVolumePushConstants.ShadowMap = ShadowMap.GetTextureID();
+		LightVolumeData._ShadowMap = ShadowMap.GetTextureID();
 
-		CmdList.PushConstants(Pipeline, EShaderStage::Compute, 0, sizeof(LightVolumePushConstants), &LightVolumePushConstants);
+		CmdList.PushConstants(Pipeline, Shader, &LightVolumeData);
 
 		const uint32 GroupCountX = DivideAndRoundUp(ShadowMap.GetWidth(), 8U);
 		const uint32 GroupCountY = DivideAndRoundUp(ShadowMap.GetHeight(), 8U);
