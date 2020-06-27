@@ -26,7 +26,19 @@ Engine::Engine(
 	, ShaderLibrary(InShaderLibrary)
 	, Surface(InSurface)
 	, Assets(InDevice)
-	, Camera(InScreen)
+	, Camera(
+		InScreen,
+		glm::vec3(
+			Platform::GetFloat("Engine.ini", "Camera", "LookFromX", 0.0f),
+			Platform::GetFloat("Engine.ini", "Camera", "LookFromY", 0.0f),
+			Platform::GetFloat("Engine.ini", "Camera", "LookFromZ", 0.0f)
+		),
+		glm::vec3(
+			Platform::GetFloat("Engine.ini", "Camera", "LookAtX", 0.0f),
+			Platform::GetFloat("Engine.ini", "Camera", "LookAtY", 0.0f),
+			Platform::GetFloat("Engine.ini", "Camera", "LookAtZ", 0.0f)
+		)
+	)
 {
 }
 

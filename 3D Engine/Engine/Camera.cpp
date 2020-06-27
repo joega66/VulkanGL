@@ -1,62 +1,68 @@
 #include "Camera.h"
 #include "Screen.h"
 
-Camera::Camera(Screen& Screen, const glm::vec3& Position, const glm::vec3& Up, float InFOV)
-	: Position(Position)
-	, WorldUp(Up)
-	, FOV(InFOV)
+Camera::Camera(
+	Screen& screen, 
+	const glm::vec3& lookFrom,
+	const glm::vec3& lookAt,
+	const glm::vec3& up, 
+	float fov)
+	: _Position(lookFrom)
+	, _WorldUp(up)
+	, _Fov(fov)
 {
-	RotateBy({ 0.0f, 0.0f });
-	Screen.OnScreenResize([&] (uint32 InWidth, uint32 InHeight)
+	LookAt(lookAt);
+
+	screen.OnScreenResize([&] (uint32 width, uint32 height)
 	{
-		Width = InWidth;
-		Height = InHeight;
-		ViewToClip = glm::perspective(glm::radians(FOV), static_cast<float>(Width) / static_cast<float>(Height), 0.1f, 1000.0f);
-		ViewToClip[1][1] *= -1;
+		_Width = width;
+		_Height = height;
+		_ViewToClip = glm::perspective(glm::radians(_Fov), static_cast<float>(_Width) / static_cast<float>(_Height), 0.1f, 1000.0f);
+		_ViewToClip[1][1] *= -1;
 	});
 }
 
-Ray Camera::ScreenPointToRay(const glm::vec2& ScreenPosition) const
+Ray Camera::ScreenPointToRay(const glm::vec2& screenPosition) const
 { 
-	const glm::vec2 Normalized = glm::vec2(ScreenPosition.x / (float)GetWidth(), ScreenPosition.y / (float)GetHeight());
+	const glm::vec2 normalized = glm::vec2(screenPosition.x / (float)GetWidth(), screenPosition.y / (float)GetHeight());
 
-	const glm::vec2 ScreenSpace = glm::vec2((Normalized.x - 0.5f) * 2.0f, (Normalized.y - 0.5f) * 2.0f);
+	const glm::vec2 screenSpace = glm::vec2((normalized.x - 0.5f) * 2.0f, (normalized.y - 0.5f) * 2.0f);
 	
-	const glm::vec4 RayStartClipSpace = glm::vec4(ScreenSpace.x, ScreenSpace.y, 0.0f, 1.0f);
-	const glm::vec4 RayEndClipSpace = glm::vec4(ScreenSpace.x, ScreenSpace.y, 0.5f, 1.0f);
+	const glm::vec4 rayStartClipSpace = glm::vec4(screenSpace.x, screenSpace.y, 0.0f, 1.0f);
+	const glm::vec4 rayEndClipSpace = glm::vec4(screenSpace.x, screenSpace.y, 0.5f, 1.0f);
 
-	const glm::mat4 InvViewProjMatrix = glm::inverse(GetViewToClip() * GetWorldToView());
-	const glm::vec4 HRayStartWorldSpace = InvViewProjMatrix * RayStartClipSpace;
-	const glm::vec4 HRayEndWorldSpace = InvViewProjMatrix * RayEndClipSpace;
+	const glm::mat4 invViewProjMatrix = glm::inverse(GetViewToClip() * GetWorldToView());
+	const glm::vec4 hRayStartWorldSpace = invViewProjMatrix * rayStartClipSpace;
+	const glm::vec4 hRayEndWorldSpace = invViewProjMatrix * rayEndClipSpace;
 
-	glm::vec3 RayStartWorldSpace = glm::vec3(HRayStartWorldSpace);
-	glm::vec3 RayEndWorldSpace = glm::vec3(HRayEndWorldSpace);
+	glm::vec3 rayStartWorldSpace = glm::vec3(hRayStartWorldSpace);
+	glm::vec3 rayEndWorldSpace = glm::vec3(hRayEndWorldSpace);
 
-	if (HRayStartWorldSpace.w != 0.0f)
+	if (hRayStartWorldSpace.w != 0.0f)
 	{
-		RayStartWorldSpace /= HRayStartWorldSpace.w;
+		rayStartWorldSpace /= hRayStartWorldSpace.w;
 	}
-	if (HRayEndWorldSpace.w != 0.0f)
+	if (hRayEndWorldSpace.w != 0.0f)
 	{
-		RayEndWorldSpace /= HRayEndWorldSpace.w;
+		rayEndWorldSpace /= hRayEndWorldSpace.w;
 	}
 
-	const glm::vec3 RayDirWorldSpace = glm::normalize(RayEndWorldSpace - RayStartWorldSpace);
+	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
-	return Ray(RayStartWorldSpace, RayDirWorldSpace);
+	return Ray(rayStartWorldSpace, rayDirWorldSpace);
 }
 
-bool Camera::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& ScreenPosition) const
+bool Camera::WorldToScreenCoordinate(const glm::vec3& worldPosition, glm::vec2& screenPosition) const
 {
-	const glm::vec4 ProjectiveSpace = GetViewToClip() * GetWorldToView() * glm::vec4(WorldPosition, 1.0f);
-	if (ProjectiveSpace.w > 0.0f)
+	const glm::vec4 projectiveSpace = GetViewToClip() * GetWorldToView() * glm::vec4(worldPosition, 1.0f);
+	if (projectiveSpace.w > 0.0f)
 	{
-		const float WInv = 1.0f / ProjectiveSpace.w;
-		const glm::vec4 ClipSpace = glm::vec4(ProjectiveSpace.x * WInv, ProjectiveSpace.y * WInv, ProjectiveSpace.z * WInv, ProjectiveSpace.w);
+		const float wInv = 1.0f / projectiveSpace.w;
+		const glm::vec4 clipSpace = glm::vec4(projectiveSpace.x * wInv, projectiveSpace.y * wInv, projectiveSpace.z * wInv, projectiveSpace.w);
 
 		// Projective space to normalized [0, 1] space.
-		const glm::vec2 Normalized = glm::vec2((ClipSpace.x / 2.0f) + 0.5f, (ClipSpace.y / 2.0f) + 0.5f);
-		ScreenPosition = glm::vec2(Normalized.x * GetWidth(), Normalized.y * GetHeight());
+		const glm::vec2 normalized = glm::vec2((clipSpace.x / 2.0f) + 0.5f, (clipSpace.y / 2.0f) + 0.5f);
+		screenPosition = glm::vec2(normalized.x * GetWidth(), normalized.y * GetHeight());
 
 		return true;
 	}
@@ -64,44 +70,44 @@ bool Camera::WorldToScreenCoordinate(const glm::vec3& WorldPosition, glm::vec2& 
 	return false;
 }
 
-void Camera::RotateBy(const glm::vec2& Degrees)
+void Camera::RotateBy(const glm::vec2& degrees)
 {
-	const glm::quat Yaw = glm::normalize(glm::angleAxis(glm::radians(Degrees.x), glm::vec3(0, 1, 0)));
-	const glm::quat Pitch = glm::normalize(glm::angleAxis(glm::radians(Degrees.y), glm::vec3(1, 0, 0)));
-	const glm::mat4 Translation = glm::translate(glm::mat4(1.0f), -Position);
-	Rotation = glm::normalize(Pitch * Rotation * Yaw);
-	WorldToView = glm::mat4_cast(Rotation) * Translation;
-	Forward = glm::normalize(glm::vec3(WorldToView[0][2], WorldToView[1][2], WorldToView[2][2]));
+	const glm::quat yaw = glm::normalize(glm::angleAxis(glm::radians(degrees.x), glm::vec3(0, 1, 0)));
+	const glm::quat pitch = glm::normalize(glm::angleAxis(glm::radians(degrees.y), glm::vec3(1, 0, 0)));
+	const glm::mat4 translation = glm::translate(glm::mat4(1.0f), -_Position);
+	_Rotation = glm::normalize(pitch * _Rotation * yaw);
+	_WorldToView = glm::mat4_cast(_Rotation) * translation;
+	_Forward = glm::normalize(glm::vec3(_WorldToView[0][2], _WorldToView[1][2], _WorldToView[2][2]));
 }
 
-void Camera::TranslateBy(const float DS)
+void Camera::TranslateBy(const float ds)
 {
-	Position += -Forward * DS;
-	const glm::mat4 Translation = glm::translate(glm::mat4(1.0f), -Position);
-	WorldToView = glm::mat4_cast(Rotation) * Translation;
-	Forward = glm::normalize(glm::vec3(WorldToView[0][2], WorldToView[1][2], WorldToView[2][2]));
+	_Position += -_Forward * ds;
+	const glm::mat4 translation = glm::translate(glm::mat4(1.0f), -_Position);
+	_WorldToView = glm::mat4_cast(_Rotation) * translation;
+	_Forward = glm::normalize(glm::vec3(_WorldToView[0][2], _WorldToView[1][2], _WorldToView[2][2]));
 }
 
-void Camera::LookAt(const glm::vec3& Point)
+void Camera::LookAt(const glm::vec3& point)
 {
-	Forward = glm::normalize(Point - Position);
-	const glm::vec3 Right = glm::normalize(glm::cross(Forward, WorldUp));
-	const glm::vec3 Up = glm::normalize(glm::cross(Right, Forward));
-	WorldToView = glm::lookAt(Position, Position + Forward, Up);
-	Rotation = glm::quat_cast(WorldToView);
+	_Forward = glm::normalize(point - _Position);
+	const glm::vec3 right = glm::normalize(glm::cross(_Forward, _WorldUp));
+	const glm::vec3 up = glm::normalize(glm::cross(right, _Forward));
+	_WorldToView = glm::lookAt(_Position, _Position + _Forward, up);
+	_Rotation = glm::quat_cast(_WorldToView);
 }
 
 FrustumPlanes Camera::GetFrustumPlanes() const
 {
-	const glm::mat4 WorldToClip = glm::transpose(GetWorldToClip());
-	const FrustumPlanes FrustumPlanes =
+	const glm::mat4 worldToClip = glm::transpose(GetWorldToClip());
+	const FrustumPlanes frustumPlanes =
 	{
-		WorldToClip[3] + WorldToClip[0],
-		WorldToClip[3] - WorldToClip[0],
-		WorldToClip[3] + WorldToClip[1],
-		WorldToClip[3] - WorldToClip[1],
-		WorldToClip[3] + WorldToClip[2],
-		WorldToClip[3] - WorldToClip[2]
+		worldToClip[3] + worldToClip[0],
+		worldToClip[3] - worldToClip[0],
+		worldToClip[3] + worldToClip[1],
+		worldToClip[3] - worldToClip[1],
+		worldToClip[3] + worldToClip[2],
+		worldToClip[3] - worldToClip[2]
 	};
-	return FrustumPlanes;
+	return frustumPlanes;
 }

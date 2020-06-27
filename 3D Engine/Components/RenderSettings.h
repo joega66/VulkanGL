@@ -16,7 +16,7 @@ public:
 	float ExposureBias;
 
 	/** Ray Tracing */
-	bool bRayTracing = false;
+	bool bRayTracing = true;
 
 	RenderSettings()
 		: VoxelFieldCenter(
