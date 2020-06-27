@@ -21,7 +21,7 @@ vec3 TraceCone(vec3 StartPosition, vec3 Direction, float ConeAngle)
 		Dist += Diameter;
 	}
 
-	return Li / (Dist * float(VOXEL_GRID_SIZE));
+	return Li;
 }
 
 layout(local_size_x = 8, local_size_y = 8) in;
@@ -39,12 +39,6 @@ void main()
 
 	UnpackGBuffers(ScreenUV, ScreenCoords, Surface, Material);
 
-	vec3 Lo = vec3(0.0);
-
-	vec3 Up = abs(Surface.WorldNormal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-	vec3 Tangent = normalize(cross(Up, Surface.WorldNormal));
-	vec3 Bitangent = cross(Surface.WorldNormal, Tangent);
-
 	vec3 RayStart = Surface.WorldPosition + 3.0 * Surface.WorldNormal;
 
 	vec3 IndirectDiffuse = vec3(0.0);
@@ -54,6 +48,10 @@ void main()
 	float SinTheta = sin(Theta);
 	float CosTheta = cos(Theta);
 	float Phi[] = { radians(0.0), radians(90.0), radians(180.0), radians(270.0) };
+
+	vec3 Up = abs(Surface.WorldNormal.x) > 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+	vec3 Tangent = normalize(cross(Up, Surface.WorldNormal));
+	vec3 Bitangent = cross(Surface.WorldNormal, Tangent);
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -71,9 +69,9 @@ void main()
 
 	IndirectDiffuse += Material.DiffuseColor * TraceCone(RayStart, Surface.WorldNormal, DiffuseCone);
 
-	Lo += IndirectDiffuse;
+	IndirectDiffuse /= 5.0;
 
-	vec3 LoTotal = Lo + imageLoad(SceneColor, ScreenCoords).rgb;
+	vec3 LoTotal = IndirectDiffuse + imageLoad(SceneColor, ScreenCoords).rgb;
 
 	imageStore(SceneColor, ScreenCoords, vec4(LoTotal, 1.0));
 }

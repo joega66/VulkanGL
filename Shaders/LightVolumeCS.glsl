@@ -39,33 +39,19 @@ void main()
 	// 2. Load the material from the voxel grid.
 	vec4 BaseColor = TexelFetch(_VoxelBaseColor, VoxelGridCoord, 0);
 
-	// @todo Metallic, Roughness
-	MaterialData Material;
-	Material.BaseColor = BaseColor.rgb;
-	Material.Metallic = 0.0f;
-	Material.Roughness = 0.0f;
-	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
-	Material.DiffuseColor = Diffuse_BRDF(Material.BaseColor);
+	vec3 WorldNormal = TexelFetch(_VoxelNormal, VoxelGridCoord, 0).rgb;
 
-	SurfaceData Surface;
-	Surface.WorldPosition = WorldPosition.xyz;
-	Surface.WorldNormal = TexelFetch(_VoxelNormal, VoxelGridCoord, 0).rgb;
-	
-	LightData Light;
-	Light.L = _L.xyz;
-	Light.Radiance = _Radiance.rgb;
-
-	if (dot(Surface.WorldNormal, Light.L) < 0.0)
+	if (dot(WorldNormal, _L.xyz) < 0.0)
 	{
 		// The voxel field is too sparse to capture thin geometry, 
 		// so flip the normal if it's facing away from the light.
-		Surface.WorldNormal *= -1;
+		WorldNormal *= -1;
 	}
 
 	// 3. Compute lighting.
-	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
+	float NdotL = max(dot(WorldNormal, _L.xyz), 0.0);
 
-	vec3 Ld = DirectLighting(V, Light, Surface, Material).rgb;
+	vec3 Ld = Diffuse_BRDF(BaseColor.rgb) * _Radiance.rgb * NdotL;
 
 	ImageStore(_VoxelRadiance, VoxelGridCoord, vec4(Ld, 1.0f));
 }
