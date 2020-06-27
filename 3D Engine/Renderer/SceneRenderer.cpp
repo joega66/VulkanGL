@@ -15,6 +15,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 	, Surface(Engine.Surface)
 	, ECS(Engine.ECS)
 	, Assets(Engine.Assets)
+	, _Camera(Engine.Camera)
 {
 }
 
@@ -25,54 +26,43 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
-	ImageMemoryBarrier ImageBarrier
+	if (Settings.bRayTracing)
 	{
-		Camera.SceneColor,
-		EAccess::None,
-		EAccess::TransferWrite,
-		EImageLayout::Undefined,
-		EImageLayout::TransferDstOptimal
-	};
-
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &ImageBarrier);
-
-	CmdList.ClearColorImage(Camera.SceneColor, EImageLayout::TransferDstOptimal, {});
-
-	ImageBarrier.SrcAccessMask = EAccess::TransferWrite;
-	ImageBarrier.DstAccessMask = EAccess::ShaderWrite;
-	ImageBarrier.OldLayout = EImageLayout::TransferDstOptimal;
-	ImageBarrier.NewLayout = EImageLayout::General;
-
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
-
-	RenderGBufferPass(Camera, CmdList);
-
-	RenderShadowDepths(Camera, CmdList);
-
-	if (Settings.bVoxelize)
-	{
-		VCTLighting.Render(ECS, Camera, CmdList);
-		
-		Settings.bVoxelize = false;
-	}
-	
-	if (Settings.VoxelDebugMode != EVoxelDebugMode::None && VCTLighting.IsDebuggingEnabled())
-	{
-		VCTLighting.RenderVisualization(Camera, CmdList, Settings.VoxelDebugMode);
+		ComputeRayTracing(Camera, CmdList);
 	}
 	else
 	{
-		ComputeLightingPass(Camera, CmdList);
+		ClearSceneColor(Camera, CmdList);
 
-		ComputeIndirectLightingPass(Camera, CmdList);
+		RenderGBufferPass(Camera, CmdList);
+
+		RenderShadowDepths(Camera, CmdList);
+
+		if (Settings.bVoxelize)
+		{
+			VCTLighting.Render(ECS, Camera, CmdList);
+
+			Settings.bVoxelize = false;
+		}
+
+		if (Settings.VoxelDebugMode != EVoxelDebugMode::None && VCTLighting.IsDebuggingEnabled())
+		{
+			VCTLighting.RenderVisualization(Camera, CmdList, Settings.VoxelDebugMode);
+		}
+		else
+		{
+			ComputeLightingPass(Camera, CmdList);
+
+			ComputeIndirectLightingPass(Camera, CmdList);
+		}
+
+		CmdList.BeginRenderPass(Camera.SceneRP);
+
+		RenderSkybox(Camera, CmdList);
+
+		CmdList.EndRenderPass();
 	}
-
-	CmdList.BeginRenderPass(Camera.SceneRP);
-
-	RenderSkybox(Camera, CmdList);
-
-	CmdList.EndRenderPass();
-
+	
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
 	const drm::Image& DisplayImage = Surface.GetImage(ImageIndex);
 	ImageMemoryBarrier Barrier{ DisplayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
@@ -93,4 +83,27 @@ void SceneRenderer::Render(CameraProxy& Camera)
 	Surface.Present(Device, ImageIndex, CmdList);
 
 	Device.EndFrame();
+}
+
+void SceneRenderer::ClearSceneColor(CameraProxy& camera, drm::CommandList& cmdList)
+{
+	ImageMemoryBarrier imageBarrier
+	{
+		camera.SceneColor,
+		EAccess::None,
+		EAccess::TransferWrite,
+		EImageLayout::Undefined,
+		EImageLayout::TransferDstOptimal
+	};
+
+	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &imageBarrier);
+
+	cmdList.ClearColorImage(camera.SceneColor, EImageLayout::TransferDstOptimal, {});
+
+	imageBarrier.SrcAccessMask = EAccess::TransferWrite;
+	imageBarrier.DstAccessMask = EAccess::ShaderWrite;
+	imageBarrier.OldLayout = EImageLayout::TransferDstOptimal;
+	imageBarrier.NewLayout = EImageLayout::General;
+
+	cmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 }

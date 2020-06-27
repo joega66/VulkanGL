@@ -43,6 +43,8 @@ public:
 	inline const glm::quat& GetRotation() const { return Rotation; }
 	/** Get the camera forward vector. */
 	inline const glm::vec3& GetForward() const { return Forward; }
+	/** Get the world up vector. */
+	inline const glm::vec3& GetWorldUp() const { return WorldUp; }
 	/** Get the FOV. */
 	inline float GetFOV() const { return FOV; }
 	/** Get the combined clipping planes in model space. */

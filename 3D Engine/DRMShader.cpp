@@ -2,9 +2,21 @@
 #include <DRMDefinitions.h>
 
 template<>
+std::string ShaderTypeSerializer::Serialize<uint32>()
+{
+	return "uint";
+}
+
+template<>
 std::string ShaderTypeSerializer::Serialize<float>()
 {
 	return "float";
+}
+
+template<>
+std::string ShaderTypeSerializer::Serialize<glm::vec3>()
+{
+	return "vec3";
 }
 
 template<>

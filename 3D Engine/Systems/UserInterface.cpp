@@ -156,6 +156,12 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Ray Tracing"))
+	{
+		ImGui::Checkbox("Ray Tracing", &Settings.bRayTracing);
+		ImGui::TreePop();
+	}
+
 	ImGui::End();
 }
 

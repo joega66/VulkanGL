@@ -15,6 +15,9 @@ public:
 	float ExposureAdjustment;
 	float ExposureBias;
 
+	/** Ray Tracing */
+	bool bRayTracing = false;
+
 	RenderSettings()
 		: VoxelFieldCenter(
 			Platform::GetFloat("Engine.ini", "Voxels", "VoxelFieldCenterX", 0.0f),

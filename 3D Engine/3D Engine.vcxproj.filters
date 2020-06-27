@@ -448,6 +448,9 @@
     <ClCompile Include="DRMShader.cpp">
       <Filter>Source\DRM</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\RayTracing.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenFS.glsl">
@@ -541,6 +544,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\IndirectLightingCS.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\RayTracingCS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
