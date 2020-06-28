@@ -10,7 +10,7 @@ drm::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 		return Iter->second;
 	}
 
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.Layouts, PSODesc.PushConstantRanges);
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.layouts, PSODesc.pushConstantRanges);
 	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	GraphicsPipelineCache[PSODesc] = Pipeline;
 	return Pipeline;
@@ -18,8 +18,8 @@ drm::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 
 drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 {
-	auto& MapEntries = ComputeDesc.SpecializationInfo.GetMapEntries();
-	auto& Data = ComputeDesc.SpecializationInfo.GetData();
+	auto& MapEntries = ComputeDesc.specInfo.GetMapEntries();
+	auto& Data = ComputeDesc.specInfo.GetData();
 	auto& SetLayouts = ComputeDesc.Layouts;
 
 	struct ComputePipelineHash
@@ -31,7 +31,7 @@ drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 	};
 
 	ComputePipelineHash ComputeHash;
-	ComputeHash.ComputeShaderCrc = Platform::CalculateCrc(ComputeDesc.ComputeShader, sizeof(ComputeDesc.ComputeShader));
+	ComputeHash.ComputeShaderCrc = Platform::CalculateCrc(ComputeDesc.computeShader, sizeof(ComputeDesc.computeShader));
 	ComputeHash.MapEntriesCrc = Platform::CalculateCrc(MapEntries.data(), MapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry));
 	ComputeHash.MapDataCrc = Platform::CalculateCrc(Data.data(), Data.size());
 	ComputeHash.SetLayoutsCrc = Platform::CalculateCrc(SetLayouts.data(), SetLayouts.size() * sizeof(VkDescriptorSetLayout));
@@ -43,9 +43,9 @@ drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 		return Iter->second;
 	}
 
-	const auto& InPushConstantRange = ComputeDesc.ComputeShader->CompilationInfo.PushConstantRange;
+	const auto& InPushConstantRange = ComputeDesc.computeShader->compilationInfo.pushConstantRange;
 
-	const auto PushConstantRanges = InPushConstantRange.Size > 0 ? std::vector{ InPushConstantRange } : std::vector<PushConstantRange>{};
+	const auto PushConstantRanges = InPushConstantRange.size > 0 ? std::vector{ InPushConstantRange } : std::vector<PushConstantRange>{};
 
 	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts, PushConstantRanges);
 
@@ -91,20 +91,20 @@ static void CreateDepthStencilState(const PipelineStateDesc& PSODesc, VkPipeline
 		ENTRY(EDepthCompareTest::Always, VK_COMPARE_OP_ALWAYS)
 	};
 
-	const auto& In = PSODesc.DepthStencilState;
-	DepthStencilState.depthTestEnable = In.DepthTestEnable;
-	DepthStencilState.depthWriteEnable = In.DepthWriteEnable;
-	DepthStencilState.depthCompareOp = VulkanDepthCompare.at(In.DepthCompareTest);
-	DepthStencilState.stencilTestEnable = In.StencilTestEnable;
+	const auto& In = PSODesc.depthStencilState;
+	DepthStencilState.depthTestEnable = In.depthTestEnable;
+	DepthStencilState.depthWriteEnable = In.depthWriteEnable;
+	DepthStencilState.depthCompareOp = VulkanDepthCompare.at(In.depthCompareTest);
+	DepthStencilState.stencilTestEnable = In.stencilTestEnable;
 
-	const auto& Back = In.Back;
-	DepthStencilState.back.failOp = VulkanStencilOp.at(Back.FailOp);
-	DepthStencilState.back.passOp = VulkanStencilOp.at(Back.PassOp);
-	DepthStencilState.back.depthFailOp = VulkanStencilOp.at(Back.DepthFailOp);
-	DepthStencilState.back.compareOp = VulkanCompareOp.at(Back.CompareOp);
-	DepthStencilState.back.compareMask = Back.CompareMask;
-	DepthStencilState.back.writeMask = Back.WriteMask;
-	DepthStencilState.back.reference = Back.Reference;
+	const auto& Back = In.back;
+	DepthStencilState.back.failOp = VulkanStencilOp.at(Back.failOp);
+	DepthStencilState.back.passOp = VulkanStencilOp.at(Back.passOp);
+	DepthStencilState.back.depthFailOp = VulkanStencilOp.at(Back.depthFailOp);
+	DepthStencilState.back.compareOp = VulkanCompareOp.at(Back.compareOp);
+	DepthStencilState.back.compareMask = Back.compareMask;
+	DepthStencilState.back.writeMask = Back.writeMask;
+	DepthStencilState.back.reference = Back.reference;
 	DepthStencilState.front = DepthStencilState.back;
 }
 
@@ -131,27 +131,27 @@ static void CreateRasterizationState(const PipelineStateDesc& PSODesc, VkPipelin
 		ENTRY(EPolygonMode::Point, VK_POLYGON_MODE_POINT)
 	};
 
-	const auto& In = PSODesc.RasterizationState;
-	RasterizationState.depthClampEnable = In.DepthClampEnable;
-	RasterizationState.rasterizerDiscardEnable = In.RasterizerDiscardEnable;
-	RasterizationState.polygonMode = VulkanPolygonMode.at(In.PolygonMode);
-	RasterizationState.cullMode = VulkanCullMode.at(In.CullMode);
-	RasterizationState.frontFace = VulkanFrontFace.at(In.FrontFace);
-	RasterizationState.depthBiasEnable = In.DepthBiasEnable;
-	RasterizationState.depthBiasConstantFactor = In.DepthBiasConstantFactor;
-	RasterizationState.depthBiasClamp = In.DepthBiasClamp;
-	RasterizationState.depthBiasSlopeFactor = In.DepthBiasSlopeFactor;
-	RasterizationState.lineWidth = In.LineWidth;
+	const auto& In = PSODesc.rasterizationState;
+	RasterizationState.depthClampEnable = In.depthClampEnable;
+	RasterizationState.rasterizerDiscardEnable = In.rasterizerDiscardEnable;
+	RasterizationState.polygonMode = VulkanPolygonMode.at(In.polygonMode);
+	RasterizationState.cullMode = VulkanCullMode.at(In.cullMode);
+	RasterizationState.frontFace = VulkanFrontFace.at(In.frontFace);
+	RasterizationState.depthBiasEnable = In.depthBiasEnable;
+	RasterizationState.depthBiasConstantFactor = In.depthBiasConstantFactor;
+	RasterizationState.depthBiasClamp = In.depthBiasClamp;
+	RasterizationState.depthBiasSlopeFactor = In.depthBiasSlopeFactor;
+	RasterizationState.lineWidth = In.lineWidth;
 }
 
 static void CreateMultisampleState(const PipelineStateDesc& PSODesc, VkPipelineMultisampleStateCreateInfo& MultisampleState)
 {
-	const auto& In = PSODesc.MultisampleState;
-	MultisampleState.rasterizationSamples = (VkSampleCountFlagBits)In.RasterizationSamples;
-	MultisampleState.sampleShadingEnable = In.SampleShadingEnable;
-	MultisampleState.minSampleShading = In.MinSampleShading;
-	MultisampleState.alphaToCoverageEnable = In.AlphaToCoverageEnable;
-	MultisampleState.alphaToOneEnable = In.AlphaToOneEnable;
+	const auto& In = PSODesc.multisampleState;
+	MultisampleState.rasterizationSamples = (VkSampleCountFlagBits)In.rasterizationSamples;
+	MultisampleState.sampleShadingEnable = In.sampleShadingEnable;
+	MultisampleState.minSampleShading = In.minSampleShading;
+	MultisampleState.alphaToCoverageEnable = In.alphaToCoverageEnable;
+	MultisampleState.alphaToOneEnable = In.alphaToOneEnable;
 }
 
 static void CreateColorBlendState(
@@ -201,31 +201,31 @@ static void CreateColorBlendState(
 			const ColorBlendAttachmentState& In = InColorBlendAttachmentStates[ColorAttachmentIndex];
 			VkPipelineColorBlendAttachmentState Out;
 			Out = {};
-			Out.blendEnable = In.BlendEnable;
-			Out.srcColorBlendFactor = VulkanBlendFactor.at(In.SrcColorBlendFactor);
-			Out.dstColorBlendFactor = VulkanBlendFactor.at(In.DstColorBlendFactor);
-			Out.colorBlendOp = VulkanBlendOp.at(In.ColorBlendOp);
-			Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.SrcAlphaBlendFactor);
-			Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.DstAlphaBlendFactor);
-			Out.alphaBlendOp = VulkanBlendOp.at(In.AlphaBlendOp);
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
-			Out.colorWriteMask |= Any(In.ColorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
+			Out.blendEnable = In.blendEnable;
+			Out.srcColorBlendFactor = VulkanBlendFactor.at(In.srcColorBlendFactor);
+			Out.dstColorBlendFactor = VulkanBlendFactor.at(In.dstColorBlendFactor);
+			Out.colorBlendOp = VulkanBlendOp.at(In.colorBlendOp);
+			Out.srcAlphaBlendFactor = VulkanBlendFactor.at(In.srcAlphaBlendFactor);
+			Out.dstAlphaBlendFactor = VulkanBlendFactor.at(In.dstAlphaBlendFactor);
+			Out.alphaBlendOp = VulkanBlendOp.at(In.alphaBlendOp);
+			Out.colorWriteMask |= Any(In.colorWriteMask & EColorChannel::R) ? VK_COLOR_COMPONENT_R_BIT : 0;
+			Out.colorWriteMask |= Any(In.colorWriteMask & EColorChannel::G) ? VK_COLOR_COMPONENT_G_BIT : 0;
+			Out.colorWriteMask |= Any(In.colorWriteMask & EColorChannel::B) ? VK_COLOR_COMPONENT_B_BIT : 0;
+			Out.colorWriteMask |= Any(In.colorWriteMask & EColorChannel::A) ? VK_COLOR_COMPONENT_A_BIT : 0;
 
 			ColorBlendAttachmentStates.push_back(Out);
 		}
 	};
 
-	ColorBlendAttachmentStates.reserve(PSODesc.RenderPass.GetNumAttachments());
-	if (PSODesc.ColorBlendAttachmentStates.empty())
+	ColorBlendAttachmentStates.reserve(PSODesc.renderPass.GetNumAttachments());
+	if (PSODesc.colorBlendAttachmentStates.empty())
 	{
-		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(PSODesc.RenderPass.GetNumAttachments(), ColorBlendAttachmentState{});
+		std::vector<ColorBlendAttachmentState> DefaultColorBlendAttachmentStates(PSODesc.renderPass.GetNumAttachments(), ColorBlendAttachmentState{});
 		ConvertColorBlendAttachmentStates(DefaultColorBlendAttachmentStates, ColorBlendAttachmentStates);
 	}
 	else
 	{
-		ConvertColorBlendAttachmentStates(PSODesc.ColorBlendAttachmentStates, ColorBlendAttachmentStates);
+		ConvertColorBlendAttachmentStates(PSODesc.colorBlendAttachmentStates, ColorBlendAttachmentStates);
 	}
 	
 	ColorBlendState.blendConstants[0] = 0.0f;
@@ -235,30 +235,30 @@ static void CreateColorBlendState(
 	ColorBlendState.logicOp = VK_LOGIC_OP_COPY;
 	ColorBlendState.logicOpEnable = false;
 	ColorBlendState.pAttachments = ColorBlendAttachmentStates.data();
-	ColorBlendState.attachmentCount = PSODesc.RenderPass.GetNumAttachments();
+	ColorBlendState.attachmentCount = PSODesc.renderPass.GetNumAttachments();
 }
 
 static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
 {
 	std::vector<const drm::Shader*> ShaderStages;
 
-	ShaderStages.push_back(PSODesc.ShaderStages.Vertex);
+	ShaderStages.push_back(PSODesc.shaderStages.vertex);
 
-	if (PSODesc.ShaderStages.TessControl)
+	if (PSODesc.shaderStages.tessControl)
 	{
-		ShaderStages.push_back(PSODesc.ShaderStages.TessControl);
+		ShaderStages.push_back(PSODesc.shaderStages.tessControl);
 	}
-	if (PSODesc.ShaderStages.TessEval)
+	if (PSODesc.shaderStages.tessEval)
 	{
-		ShaderStages.push_back(PSODesc.ShaderStages.TessEval);
+		ShaderStages.push_back(PSODesc.shaderStages.tessEval);
 	}
-	if (PSODesc.ShaderStages.Geometry)
+	if (PSODesc.shaderStages.geometry)
 	{
-		ShaderStages.push_back(PSODesc.ShaderStages.Geometry);
+		ShaderStages.push_back(PSODesc.shaderStages.geometry);
 	}
-	if (PSODesc.ShaderStages.Fragment)
+	if (PSODesc.shaderStages.fragment)
 	{
-		ShaderStages.push_back(PSODesc.ShaderStages.Fragment);
+		ShaderStages.push_back(PSODesc.shaderStages.fragment);
 	}
 
 	static const std::unordered_map<EShaderStage, VkShaderStageFlagBits> VulkanStages =
@@ -277,9 +277,9 @@ static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector
 	{
 		const drm::Shader* Shader = ShaderStages[StageIndex];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
-		ShaderStage.stage = VulkanStages.at(Shader->CompilationInfo.Stage);
-		ShaderStage.module = static_cast<VkShaderModule>(Shader->CompilationInfo.Module);
-		ShaderStage.pName = Shader->CompilationInfo.Entrypoint.data();
+		ShaderStage.stage = VulkanStages.at(Shader->compilationInfo.stage);
+		ShaderStage.module = static_cast<VkShaderModule>(Shader->compilationInfo.module);
+		ShaderStage.pName = Shader->compilationInfo.entrypoint.data();
 	}
 }
 
@@ -288,13 +288,13 @@ static void CreateSpecializationInfo(
 	VkSpecializationInfo& SpecializationInfo, 
 	std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
 {
-	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = PSODesc.SpecializationInfo.GetMapEntries();
+	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = PSODesc.specInfo.GetMapEntries();
 
 	if (MapEntries.size() > 0)
 	{
 		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
 
-		const std::vector<uint8>& Data = PSODesc.SpecializationInfo.GetData();
+		const std::vector<uint8>& Data = PSODesc.specInfo.GetData();
 		SpecializationInfo.mapEntryCount = static_cast<uint32>(MapEntries.size());
 		SpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
 		SpecializationInfo.dataSize = Data.size();
@@ -315,7 +315,7 @@ static void CreateVertexInputState(
 {
 	// If no vertex attributes were provided in the PSO desc, use the ones from shader reflection.
 	const std::vector<VertexAttributeDescription>& VertexAttributes =
-		PSODesc.VertexAttributes.empty() ? PSODesc.ShaderStages.Vertex->CompilationInfo.VertexAttributeDescriptions : PSODesc.VertexAttributes;
+		PSODesc.vertexAttributes.empty() ? PSODesc.shaderStages.vertex->compilationInfo.vertexAttributeDescriptions : PSODesc.vertexAttributes;
 
 	VulkanVertexAttributes.reserve(VertexAttributes.size());
 
@@ -324,24 +324,24 @@ static void CreateVertexInputState(
 		const VertexAttributeDescription& VertexAttributeDescription = VertexAttributes[VertexAttributeIndex];
 		const VkVertexInputAttributeDescription VulkanVertexAttributeDescription =
 		{
-			static_cast<uint32>(VertexAttributeDescription.Location),
-			VertexAttributeDescription.Binding,
-			VulkanImage::GetVulkanFormat(VertexAttributeDescription.Format),
-			VertexAttributeDescription.Offset
+			static_cast<uint32>(VertexAttributeDescription.location),
+			VertexAttributeDescription.binding,
+			VulkanImage::GetVulkanFormat(VertexAttributeDescription.format),
+			VertexAttributeDescription.offset
 		};
 		VulkanVertexAttributes.push_back(VulkanVertexAttributeDescription);
 	}
 
 	VertexBindings.reserve(VertexAttributes.size());
 
-	if (PSODesc.VertexBindings.empty())
+	if (PSODesc.vertexBindings.empty())
 	{
 		for (uint32 VertexBindingIndex = 0; VertexBindingIndex < VertexAttributes.size(); VertexBindingIndex++)
 		{
 			const VkVertexInputBindingDescription VertexBinding =
 			{
-				VertexAttributes[VertexBindingIndex].Binding,
-				VulkanImage::GetSize(VertexAttributes[VertexBindingIndex].Format),
+				VertexAttributes[VertexBindingIndex].binding,
+				VulkanImage::GetSize(VertexAttributes[VertexBindingIndex].format),
 				VK_VERTEX_INPUT_RATE_VERTEX
 			};
 			VertexBindings.push_back(VertexBinding);
@@ -349,12 +349,12 @@ static void CreateVertexInputState(
 	}
 	else
 	{
-		for (uint32 VertexBindingIndex = 0; VertexBindingIndex < PSODesc.VertexBindings.size(); VertexBindingIndex++)
+		for (uint32 VertexBindingIndex = 0; VertexBindingIndex < PSODesc.vertexBindings.size(); VertexBindingIndex++)
 		{
 			const VkVertexInputBindingDescription VertexBinding =
 			{
-				PSODesc.VertexBindings[VertexBindingIndex].Binding,
-				PSODesc.VertexBindings[VertexBindingIndex].Stride,
+				PSODesc.vertexBindings[VertexBindingIndex].binding,
+				PSODesc.vertexBindings[VertexBindingIndex].stride,
 				VK_VERTEX_INPUT_RATE_VERTEX
 			};
 			VertexBindings.push_back(VertexBinding);
@@ -373,7 +373,7 @@ static void CreateInputAssemblyState(const PipelineStateDesc& PSODesc, VkPipelin
 	{
 		for (VkPrimitiveTopology VulkanTopology = VK_PRIMITIVE_TOPOLOGY_BEGIN_RANGE; VulkanTopology < VK_PRIMITIVE_TOPOLOGY_RANGE_SIZE;)
 		{
-			if (static_cast<uint32>(PSODesc.InputAssemblyState.Topology) == VulkanTopology)
+			if (static_cast<uint32>(PSODesc.inputAssemblyState.topology) == VulkanTopology)
 			{
 				return VulkanTopology;
 			}
@@ -381,35 +381,35 @@ static void CreateInputAssemblyState(const PipelineStateDesc& PSODesc, VkPipelin
 		}
 		fail("VkPrimitiveTopology not found.");
 	}();
-	InputAssemblyState.primitiveRestartEnable = PSODesc.InputAssemblyState.PrimitiveRestartEnable;
+	InputAssemblyState.primitiveRestartEnable = PSODesc.inputAssemblyState.primitiveRestartEnable;
 }
 
-static void CreateViewportState(const PipelineStateDesc& PSODesc, VkViewport& Viewport, VkRect2D& Scissor, VkPipelineViewportStateCreateInfo& ViewportState)
+static void CreateViewportState(const PipelineStateDesc& PSODesc, VkViewport& Viewport, VkRect2D& scissor, VkPipelineViewportStateCreateInfo& ViewportState)
 {
-	Viewport.x = static_cast<float>(PSODesc.Viewport.X);
-	Viewport.y = static_cast<float>(PSODesc.Viewport.Y);
-	Viewport.width = static_cast<float>(PSODesc.Viewport.Width);
-	Viewport.height = static_cast<float>(PSODesc.Viewport.Height);
-	Viewport.minDepth = PSODesc.Viewport.MinDepth;
-	Viewport.maxDepth = PSODesc.Viewport.MaxDepth;
+	Viewport.x = static_cast<float>(PSODesc.viewport.x);
+	Viewport.y = static_cast<float>(PSODesc.viewport.y);
+	Viewport.width = static_cast<float>(PSODesc.viewport.width);
+	Viewport.height = static_cast<float>(PSODesc.viewport.height);
+	Viewport.minDepth = PSODesc.viewport.minDepth;
+	Viewport.maxDepth = PSODesc.viewport.maxDepth;
 
-	if (PSODesc.Scissor == ScissorDesc{})
+	if (PSODesc.scissor == Scissor{})
 	{
-		Scissor.extent.width = static_cast<uint32>(Viewport.width);
-		Scissor.extent.height = static_cast<uint32>(Viewport.height);
-		Scissor.offset = { 0, 0 };
+		scissor.extent.width = static_cast<uint32>(Viewport.width);
+		scissor.extent.height = static_cast<uint32>(Viewport.height);
+		scissor.offset = { 0, 0 };
 	}
 	else
 	{
-		Scissor.extent.width = PSODesc.Scissor.Extent.x;
-		Scissor.extent.height = PSODesc.Scissor.Extent.y;
-		Scissor.offset.x = PSODesc.Scissor.Offset.x;
-		Scissor.offset.y = PSODesc.Scissor.Offset.y;
+		scissor.extent.width = PSODesc.scissor.extent.x;
+		scissor.extent.height = PSODesc.scissor.extent.y;
+		scissor.offset.x = PSODesc.scissor.offset.x;
+		scissor.offset.y = PSODesc.scissor.offset.y;
 	}
 
 	ViewportState.pViewports = &Viewport;
 	ViewportState.viewportCount = 1;
-	ViewportState.pScissors = &Scissor;
+	ViewportState.pScissors = &scissor;
 	ViewportState.scissorCount = 1;
 }
 
@@ -448,8 +448,8 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipel
 	CreateViewportState(PSODesc, Viewport, Scissor, ViewportState);
 
 	VkPipelineDynamicStateCreateInfo DynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-	DynamicState.dynamicStateCount = static_cast<uint32>(PSODesc.DynamicStates.size());
-	DynamicState.pDynamicStates = reinterpret_cast<const VkDynamicState*>(PSODesc.DynamicStates.data());
+	DynamicState.dynamicStateCount = static_cast<uint32>(PSODesc.dynamicStates.size());
+	DynamicState.pDynamicStates = reinterpret_cast<const VkDynamicState*>(PSODesc.dynamicStates.data());
 
 	VkGraphicsPipelineCreateInfo PipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	PipelineInfo.stageCount = static_cast<uint32>(ShaderStageInfos.size());
@@ -463,7 +463,7 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& PSODesc, VkPipel
 	PipelineInfo.pColorBlendState = &ColorBlendState;
 	PipelineInfo.pDynamicState = &DynamicState;
 	PipelineInfo.layout = PipelineLayout;
-	PipelineInfo.renderPass = PSODesc.RenderPass.GetRenderPass();
+	PipelineInfo.renderPass = PSODesc.renderPass.GetRenderPass();
 	PipelineInfo.subpass = 0;
 	PipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 	PipelineInfo.basePipelineIndex = -1;
@@ -480,21 +480,21 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	ComputePipelineCreateInfo.layout = PipelineLayout;
 	ComputePipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	const drm::Shader* ComputeShader = ComputePipelineDesc.ComputeShader;
+	const drm::Shader* ComputeShader = ComputePipelineDesc.computeShader;
 
 	VkPipelineShaderStageCreateInfo& PipelineShaderStageCreateInfo = ComputePipelineCreateInfo.stage;
 	PipelineShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	PipelineShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-	PipelineShaderStageCreateInfo.module = static_cast<VkShaderModule>(ComputeShader->CompilationInfo.Module);
-	PipelineShaderStageCreateInfo.pName = ComputeShader->CompilationInfo.Entrypoint.data();
+	PipelineShaderStageCreateInfo.module = static_cast<VkShaderModule>(ComputeShader->compilationInfo.module);
+	PipelineShaderStageCreateInfo.pName = ComputeShader->compilationInfo.entrypoint.data();
 
 	VkSpecializationInfo SpecializationInfo;
-	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = ComputePipelineDesc.SpecializationInfo.GetMapEntries();
+	const std::vector<SpecializationInfo::SpecializationMapEntry>& MapEntries = ComputePipelineDesc.specInfo.GetMapEntries();
 	
 	if (MapEntries.size() > 0)
 	{
 		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
-		const std::vector<uint8>& Data = ComputePipelineDesc.SpecializationInfo.GetData();
+		const std::vector<uint8>& Data = ComputePipelineDesc.specInfo.GetData();
 		SpecializationInfo.mapEntryCount = static_cast<uint32>(MapEntries.size());
 		SpecializationInfo.pMapEntries = reinterpret_cast<const VkSpecializationMapEntry*>(MapEntries.data());
 		SpecializationInfo.dataSize = Data.size();
@@ -516,14 +516,14 @@ static std::vector<VkPushConstantRange> CreatePushConstantRanges(const std::vect
 	for (const auto& PushConstantRange : PushConstantRanges)
 	{
 		VkPushConstantRange VulkanPushConstantRange = {};
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
-		VulkanPushConstantRange.offset = PushConstantRange.Offset;
-		VulkanPushConstantRange.size = PushConstantRange.Size;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+		VulkanPushConstantRange.offset = PushConstantRange.offset;
+		VulkanPushConstantRange.size = PushConstantRange.size;
 		VulkanPushConstantRanges.push_back(VulkanPushConstantRange);
 	}
 	

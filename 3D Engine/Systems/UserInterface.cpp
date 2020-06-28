@@ -10,7 +10,6 @@
 #include <Components/Bounds.h>
 #include <Components/SkyboxComponent.h>
 #include <Systems/SceneSystem.h>
-#include <Renderer/Voxels.h>
 #include <Renderer/CameraProxy.h>
 #include <Renderer/ShadowProxy.h>
 
@@ -126,29 +125,7 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 	}
 
 	auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
-	int& VoxelDebugMode = reinterpret_cast<int&>(Settings.VoxelDebugMode);
 
-	if (ImGui::TreeNode("Voxel Cone Tracing"))
-	{
-		ImGui::Checkbox("Voxelize", &Settings.bVoxelize);
-
-		if (ImGui::DragFloat("Size", &Settings.VoxelSize))
-		{
-			Settings.bVoxelize = true;
-		}
-
-		if (ImGui::DragFloat3("Position", &Settings.VoxelFieldCenter[0]))
-		{
-			Settings.bVoxelize = true;
-		}
-
-		ImGui::RadioButton("None", &VoxelDebugMode, (int)EVoxelDebugMode::None);
-		ImGui::SameLine(); ImGui::RadioButton("Voxel Radiance", &VoxelDebugMode, (int)EVoxelDebugMode::Radiance);
-		ImGui::SameLine(); ImGui::RadioButton("Voxel Base Color", &VoxelDebugMode, (int)EVoxelDebugMode::BaseColor);
-		ImGui::SameLine(); ImGui::RadioButton("Voxel Normal", &VoxelDebugMode, (int)EVoxelDebugMode::Normal);
-		ImGui::TreePop();
-	}
-	
 	if (ImGui::TreeNode("Camera"))
 	{
 		ImGui::DragFloat("Exposure Adjustment", &Settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
@@ -235,9 +212,6 @@ void UserInterface::ShowEntities(Engine& Engine)
 			Transform.Translate(ECS, Position);
 			Transform.Rotate(ECS, Rotation, Angle);
 			Transform.Scale(ECS, Scale);
-
-			auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
-			Settings.bVoxelize = true;
 		}
 	}
 
@@ -261,9 +235,6 @@ void UserInterface::ShowEntities(Engine& Engine)
 			Light.Direction = Direction;
 			Light.Color = Color;
 			Light.Intensity = Intensity;
-
-			auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
-			Settings.bVoxelize = true;
 		}
 
 		if (ECS.HasComponent<ShadowProxy>(Selected))
@@ -315,36 +286,36 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 
 	Imgui.Fonts->TexID = &const_cast<drm::TextureID&>(FontImage.GetTextureID());
 
-	PSODesc.DepthStencilState.DepthTestEnable = false;
-	PSODesc.DepthStencilState.DepthWriteEnable = false;
-	PSODesc.DepthStencilState.DepthCompareTest = EDepthCompareTest::Always;
-	PSODesc.ShaderStages.Vertex = Engine.ShaderLibrary.FindShader<UserInterfaceVS>();
-	PSODesc.ShaderStages.Fragment = Engine.ShaderLibrary.FindShader<UserInterfaceFS>();
-	PSODesc.ColorBlendAttachmentStates.resize(1, {});
-	PSODesc.ColorBlendAttachmentStates[0].BlendEnable = true;
-	PSODesc.ColorBlendAttachmentStates[0].SrcColorBlendFactor = EBlendFactor::SRC_ALPHA;
-	PSODesc.ColorBlendAttachmentStates[0].DstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	PSODesc.ColorBlendAttachmentStates[0].ColorBlendOp = EBlendOp::ADD;
-	PSODesc.ColorBlendAttachmentStates[0].SrcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	PSODesc.ColorBlendAttachmentStates[0].DstAlphaBlendFactor = EBlendFactor::ZERO;
-	PSODesc.ColorBlendAttachmentStates[0].AlphaBlendOp = EBlendOp::ADD;
-	PSODesc.DynamicStates.push_back(EDynamicState::Scissor);
-	PSODesc.VertexAttributes = {
+	PSODesc.depthStencilState.depthTestEnable = false;
+	PSODesc.depthStencilState.depthWriteEnable = false;
+	PSODesc.depthStencilState.depthCompareTest = EDepthCompareTest::Always;
+	PSODesc.shaderStages.vertex = Engine.ShaderLibrary.FindShader<UserInterfaceVS>();
+	PSODesc.shaderStages.fragment = Engine.ShaderLibrary.FindShader<UserInterfaceFS>();
+	PSODesc.colorBlendAttachmentStates.resize(1, {});
+	PSODesc.colorBlendAttachmentStates[0].blendEnable = true;
+	PSODesc.colorBlendAttachmentStates[0].srcColorBlendFactor = EBlendFactor::SRC_ALPHA;
+	PSODesc.colorBlendAttachmentStates[0].dstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	PSODesc.colorBlendAttachmentStates[0].colorBlendOp = EBlendOp::ADD;
+	PSODesc.colorBlendAttachmentStates[0].srcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	PSODesc.colorBlendAttachmentStates[0].dstAlphaBlendFactor = EBlendFactor::ZERO;
+	PSODesc.colorBlendAttachmentStates[0].alphaBlendOp = EBlendOp::ADD;
+	PSODesc.dynamicStates.push_back(EDynamicState::Scissor);
+	PSODesc.vertexAttributes = {
 		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
-	PSODesc.VertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.Layouts = { Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.PushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
-	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
+	PSODesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
+	PSODesc.layouts = { Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PSODesc.pushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
+	PSODesc.pushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
 
 	Engine._Screen.OnScreenResize([this, &Device] (int32 Width, int32 Height)
 	{
 		ImGuiIO& ImGui = ImGui::GetIO();
 		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
 
-		PSODesc.Viewport.Width = Width;
-		PSODesc.Viewport.Height = Height;
+		PSODesc.viewport.width = Width;
+		PSODesc.viewport.height = Height;
 	});
 }
 
@@ -356,7 +327,7 @@ void ImGuiRenderData::Render(drm::Device& Device, drm::CommandList& CmdList, con
 
 	if (DrawData->CmdListsCount > 0)
 	{
-		PSODesc.RenderPass = RenderPass;
+		PSODesc.renderPass = RenderPass;
 
 		drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
@@ -389,11 +360,11 @@ void ImGuiRenderData::Render(drm::Device& Device, drm::CommandList& CmdList, con
 				ClipRect.z = (DrawCmd->ClipRect.z - ClipOff.x) * ClipScale.x;
 				ClipRect.w = (DrawCmd->ClipRect.w - ClipOff.y) * ClipScale.y;
 
-				ScissorDesc Scissor;
-				Scissor.Offset.x = static_cast<int32_t>(ClipRect.x);
-				Scissor.Offset.y = static_cast<int32_t>(ClipRect.y);
-				Scissor.Extent.x = static_cast<uint32_t>(ClipRect.z - ClipRect.x);
-				Scissor.Extent.y = static_cast<uint32_t>(ClipRect.w - ClipRect.y);
+				Scissor Scissor;
+				Scissor.offset.x = static_cast<int32_t>(ClipRect.x);
+				Scissor.offset.y = static_cast<int32_t>(ClipRect.y);
+				Scissor.extent.x = static_cast<uint32_t>(ClipRect.z - ClipRect.x);
+				Scissor.extent.y = static_cast<uint32_t>(ClipRect.w - ClipRect.y);
 
 				CmdList.SetScissor(1, &Scissor);
 

@@ -1,5 +1,4 @@
 #include "CameraProxy.h"
-#include "Voxels.h"
 #include <Engine/Engine.h>
 #include <Engine/Screen.h>
 #include <Components/Bounds.h>
@@ -37,15 +36,11 @@ CameraProxy::CameraProxy(Engine& Engine)
 		CreateGBufferRP(Device);
 		CreateUserInterfaceRP(Device, Surface);
 
-		auto& VCTLighting = Engine.ECS.GetSingletonComponent<VCTLightingCache>();
-		VCTLighting.CreateDebugRenderPass(SceneColor, SceneDepth);
-
 		const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Nearest });
 
 		CameraDescriptorSet.SceneDepth = drm::DescriptorImageInfo(SceneDepth, Sampler);
 		CameraDescriptorSet.GBuffer0 = drm::DescriptorImageInfo(GBuffer0, Sampler);
 		CameraDescriptorSet.GBuffer1 = drm::DescriptorImageInfo(GBuffer1, Sampler);
-		CameraDescriptorSet.RadianceVolume = drm::DescriptorImageInfo(VCTLighting.GetVoxelRadiance(), VCTLighting.GetVoxelRadianceSampler());
 		CameraDescriptorSet.SceneColor = drm::DescriptorImageInfo(SceneColor);
 		CameraDescriptorSet.Update(Device);
 	});
@@ -80,7 +75,6 @@ void CameraProxy::UpdateCameraUniform(Engine& Engine)
 void CameraProxy::BuildMeshDrawCommands(Engine& Engine)
 {
 	GBufferPass.clear();
-	VoxelsPass.clear();
 
 	const FrustumPlanes ViewFrustumPlanes = Engine.Camera.GetFrustumPlanes();
 	
@@ -93,18 +87,16 @@ void CameraProxy::BuildMeshDrawCommands(Engine& Engine)
 		{
 			AddToGBufferPass(Engine, MeshProxy);
 		}
-
-		AddToVoxelsPass(Engine, MeshProxy);
 	}
 }
 
 void CameraProxy::CreateSceneRP(drm::Device& Device)
 {
-	RenderPassDesc RPDesc = {};
-	RPDesc.ColorAttachments.push_back(
+	RenderPassDesc rpDesc = {};
+	rpDesc.colorAttachments.push_back(
 		drm::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General)
 	);
-	RPDesc.DepthAttachment = drm::AttachmentView(
+	rpDesc.depthAttachment = drm::AttachmentView(
 		&SceneDepth,
 		ELoadAction::Load,
 		EStoreAction::Store,
@@ -112,27 +104,27 @@ void CameraProxy::CreateSceneRP(drm::Device& Device)
 		EImageLayout::DepthReadStencilWrite,
 		EImageLayout::DepthReadStencilWrite
 	);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
-	SceneRP = Device.CreateRenderPass(RPDesc);
+	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
+	SceneRP = Device.CreateRenderPass(rpDesc);
 }
 
 void CameraProxy::CreateGBufferRP(drm::Device& Device)
 {
-	RenderPassDesc RPDesc = {};
-	RPDesc.ColorAttachments =
+	RenderPassDesc rpDesc = {};
+	rpDesc.colorAttachments =
 	{
 		drm::AttachmentView(&GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
 		drm::AttachmentView(&GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
 	};
-	RPDesc.DepthAttachment = drm::AttachmentView(
+	rpDesc.depthAttachment = drm::AttachmentView(
 		&SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
-	GBufferRP = Device.CreateRenderPass(RPDesc);
+	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
+	GBufferRP = Device.CreateRenderPass(rpDesc);
 }
 
 void CameraProxy::CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surface)
@@ -145,12 +137,12 @@ void CameraProxy::CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surfa
 	for (const auto& Image : Images)
 	{
 		// After UI rendering, the image is ready for the present queue.
-		RenderPassDesc RPDesc = {};
-		RPDesc.ColorAttachments.push_back(
+		RenderPassDesc rpDesc = {};
+		rpDesc.colorAttachments.push_back(
 			drm::AttachmentView(&Image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present)
 		);
-		RPDesc.RenderArea.Extent = { Image.GetWidth(), Image.GetHeight() };
+		rpDesc.renderArea.extent = { Image.GetWidth(), Image.GetHeight() };
 
-		UserInterfaceRP.push_back(Device.CreateRenderPass(RPDesc));
+		UserInterfaceRP.push_back(Device.CreateRenderPass(rpDesc));
 	}
 }

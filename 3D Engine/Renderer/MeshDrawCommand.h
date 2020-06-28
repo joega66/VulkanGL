@@ -14,8 +14,8 @@ public:
 		, Material(MeshProxy.GetMaterial())
 		, DescriptorSets(DescriptorSets)
 	{
-		PSODesc.SpecializationInfo = MeshProxy.GetSpecializationInfo();
-		PSODesc.PushConstantRanges.push_back(Material->GetPushConstantRange());
+		PSODesc.specInfo = MeshProxy.GetSpecializationInfo();
+		PSODesc.pushConstantRanges.push_back(Material->GetPushConstantRange());
 		Pipeline = Device.CreatePipeline(PSODesc);
 	}
 

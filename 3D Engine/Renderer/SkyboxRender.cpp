@@ -53,14 +53,14 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	};
 	
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = Camera.SceneRP;
-	PSODesc.DepthStencilState.DepthTestEnable = true;
-	PSODesc.DepthStencilState.DepthWriteEnable = true;
-	PSODesc.Viewport.Width = Camera.SceneColor.GetWidth();
-	PSODesc.Viewport.Height = Camera.SceneColor.GetHeight();
-	PSODesc.ShaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.Layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.PushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(PushConstants) });
+	PSODesc.renderPass = Camera.SceneRP;
+	PSODesc.depthStencilState.depthTestEnable = true;
+	PSODesc.depthStencilState.depthWriteEnable = true;
+	PSODesc.viewport.width = Camera.SceneColor.GetWidth();
+	PSODesc.viewport.height = Camera.SceneColor.GetHeight();
+	PSODesc.shaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
+	PSODesc.layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PSODesc.pushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(PushConstants) });
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 

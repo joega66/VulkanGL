@@ -55,9 +55,9 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	for (auto& Resource : Resources.stage_inputs)
 	{
 		VertexAttributeDescription Description = {};
-		Description.Location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
-		Description.Format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(GLSL.get_type(Resource.type_id)));
-		Description.Offset = 0;
+		Description.location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
+		Description.format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(GLSL.get_type(Resource.type_id)));
+		Description.offset = 0;
 
 		Descriptions.push_back(Description);
 	}
@@ -67,12 +67,12 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	std::sort(Descriptions.begin(), Descriptions.end(),
 		[] (const VertexAttributeDescription& LHS, const VertexAttributeDescription& RHS)
 	{
-		return LHS.Location < RHS.Location;
+		return LHS.location < RHS.location;
 	});
 
 	for (uint32_t Binding = 0; Binding < Descriptions.size(); Binding++)
 	{
-		Descriptions[Binding].Binding = Binding;
+		Descriptions[Binding].binding = Binding;
 	}
 
 	return Descriptions;
@@ -82,14 +82,14 @@ class ShadercIncluder : public shaderc::CompileOptions::IncluderInterface
 {
 public:
 	shaderc_include_result* GetInclude(
-		const char* requested_source,
+		const char* requestedSource,
 		shaderc_include_type type,
-		const char* requesting_source,
-		size_t include_depth) override
+		const char* requestingSource,
+		size_t includeDepth) override
 	{
 		static const std::string ShaderPath = "../Shaders/";
 
-		auto& SourceName = SourceNames.emplace_back(ShaderPath + std::string(requested_source));
+		auto& SourceName = SourceNames.emplace_back(ShaderPath + std::string(requestedSource));
 
 		if (auto Iter = Includes.find(SourceName); Iter != Includes.end())
 		{
@@ -202,34 +202,34 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 	const uint64 LastWriteTime = Platform::GetLastWriteTime(Filename);
 
 	PushConstantRange PushConstantRange;
-	PushConstantRange.StageFlags = Stage;
-	PushConstantRange.Offset = Worker.GetPushConstantOffset();
-	PushConstantRange.Size = Worker.GetPushConstantSize();
+	PushConstantRange.stageFlags = Stage;
+	PushConstantRange.offset = Worker.GetPushConstantOffset();
+	PushConstantRange.size = Worker.GetPushConstantSize();
 
 	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions, PushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()
 {
-	for (const auto& [ShaderType, Shader] : Shaders)
+	for (const auto& [ShaderType, Shader] : _Shaders)
 	{
-		const ShaderCompilationInfo& CompileInfo = Shader->CompilationInfo;
-		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.Filename);
+		const ShaderCompilationInfo& CompileInfo = Shader->compilationInfo;
+		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.filename);
 
 		//if (LastWriteTime > CompileInfo.LastWriteTime)
 		{
 			// Destroy the old shader module.
-			vkDestroyShaderModule(Device, static_cast<VkShaderModule>(CompileInfo.Module), nullptr);
+			vkDestroyShaderModule(Device, static_cast<VkShaderModule>(CompileInfo.module), nullptr);
 
 			const ShaderCompilationInfo NewCompilationInfo = CompileShader(
-				CompileInfo.Worker,
-				CompileInfo.Filename, 
-				CompileInfo.Entrypoint,
-				CompileInfo.Stage, 
-				CompileInfo.Type
+				CompileInfo.worker,
+				CompileInfo.filename, 
+				CompileInfo.entrypoint,
+				CompileInfo.stage, 
+				CompileInfo.type
 			);
 
-			Shader->CompilationInfo = NewCompilationInfo;
+			Shader->compilationInfo = NewCompilationInfo;
 		}
 	}
 

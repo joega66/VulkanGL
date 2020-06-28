@@ -143,12 +143,12 @@ VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
 	ImageID = std::move(Other.ImageID);
 	Memory = Other.Memory;
 	Device = Other.Device;
-	Format = Other.Format;
-	Width = Other.Width;
-	Height = Other.Height;
-	Depth = Other.Depth;
-	Usage = Other.Usage;
-	MipLevels = Other.MipLevels;
+	_Format = Other._Format;
+	_Width = Other._Width;
+	_Height = Other._Height;
+	_Depth = Other._Depth;
+	_Usage = Other._Usage;
+	_MipLevels = Other._MipLevels;
 	return *this;
 }
 
@@ -220,7 +220,7 @@ VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
 
 VkFormat VulkanImage::GetVulkanFormat() const
 {
-	return EngineToVulkanFormat[Format];
+	return EngineToVulkanFormat[_Format];
 }
 
 VkImageAspectFlags VulkanImage::GetVulkanAspect() const
@@ -310,9 +310,9 @@ VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDes
 		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 	};
 
-	const VkFilter Filter = VulkanImage::GetVulkanFilter(SamplerDesc.Filter);
-	const VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.SMM)];
-	const VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.SAM)];
+	const VkFilter Filter = VulkanImage::GetVulkanFilter(SamplerDesc.filter);
+	const VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.smm)];
+	const VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.sam)];
 
 	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 	SamplerInfo.magFilter = Filter;
@@ -327,8 +327,8 @@ VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDes
 	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
 	SamplerInfo.compareEnable = VK_FALSE;
 	SamplerInfo.compareOp = VK_COMPARE_OP_NEVER;
-	SamplerInfo.minLod = SamplerDesc.MinLod;
-	SamplerInfo.maxLod = SamplerDesc.MaxLod;
+	SamplerInfo.minLod = SamplerDesc.minLod;
+	SamplerInfo.maxLod = SamplerDesc.maxLod;
 
 	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
 

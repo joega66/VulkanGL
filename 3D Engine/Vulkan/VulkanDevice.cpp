@@ -161,50 +161,50 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	const VkRect2D RenderArea = 
 	{
-		RPDesc.RenderArea.Offset.x,
-		RPDesc.RenderArea.Offset.y,
-		RPDesc.RenderArea.Extent.x,
-		RPDesc.RenderArea.Extent.y
+		RPDesc.renderArea.offset.x,
+		RPDesc.renderArea.offset.y,
+		RPDesc.renderArea.extent.x,
+		RPDesc.renderArea.extent.y
 	};
 
 	// Get the clear values from the AttachmentViews.
 	std::vector<VkClearValue> ClearValues;
 
-	if (RPDesc.DepthAttachment.Image)
+	if (RPDesc.depthAttachment.image)
 	{
-		ClearValues.resize(RPDesc.ColorAttachments.size() + 1);
+		ClearValues.resize(RPDesc.colorAttachments.size() + 1);
 	}
 	else
 	{
-		ClearValues.resize(RPDesc.ColorAttachments.size());
+		ClearValues.resize(RPDesc.colorAttachments.size());
 	}
 
-	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPDesc.ColorAttachments.size(); ColorTargetIndex++)
+	for (uint32 ColorTargetIndex = 0; ColorTargetIndex < RPDesc.colorAttachments.size(); ColorTargetIndex++)
 	{
-		const auto& ClearValue = RPDesc.ColorAttachments[ColorTargetIndex].ClearColor;
-		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.Float32, sizeof(ClearValue.Float32));
-		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.Int32, sizeof(ClearValue.Int32));
-		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.Uint32, sizeof(ClearValue.Uint32));
+		const auto& ClearValue = RPDesc.colorAttachments[ColorTargetIndex].clearColor;
+		memcpy(ClearValues[ColorTargetIndex].color.float32, ClearValue.float32, sizeof(ClearValue.float32));
+		memcpy(ClearValues[ColorTargetIndex].color.int32, ClearValue.int32, sizeof(ClearValue.int32));
+		memcpy(ClearValues[ColorTargetIndex].color.uint32, ClearValue.uint32, sizeof(ClearValue.uint32));
 	}
 
-	if (RPDesc.DepthAttachment.Image)
+	if (RPDesc.depthAttachment.image)
 	{
-		const drm::Image* Image = RPDesc.DepthAttachment.Image;
+		const drm::Image* Image = RPDesc.depthAttachment.image;
 
-		ClearValues[RPDesc.ColorAttachments.size()].depthStencil = { 0, 0 };
+		ClearValues[RPDesc.colorAttachments.size()].depthStencil = { 0, 0 };
 
 		if (Image->IsDepth())
 		{
-			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.depth = RPDesc.DepthAttachment.ClearDepthStencil.DepthClear;
+			ClearValues[RPDesc.colorAttachments.size()].depthStencil.depth = RPDesc.depthAttachment.clearDepthStencil.depthClear;
 		}
 
 		if (Image->IsStencil())
 		{
-			ClearValues[RPDesc.ColorAttachments.size()].depthStencil.stencil = RPDesc.DepthAttachment.ClearDepthStencil.StencilClear;
+			ClearValues[RPDesc.colorAttachments.size()].depthStencil.stencil = RPDesc.depthAttachment.clearDepthStencil.stencilClear;
 		}
 	}
 
-	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.ColorAttachments.size()));
+	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.colorAttachments.size()));
 }
 
 drm::TextureID VulkanDevice::CreateTextureID(const VulkanImageView& ImageView)

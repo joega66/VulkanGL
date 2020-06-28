@@ -28,16 +28,16 @@ ShadowProxy::ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescript
 
 	VolumeLightingUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(VolumeLightingUniformData));
 
-	RenderPassDesc RPDesc = {};
-	RPDesc.DepthAttachment = drm::AttachmentView(
+	RenderPassDesc rpDesc = {};
+	rpDesc.depthAttachment = drm::AttachmentView(
 		&ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	RPDesc.RenderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
+	rpDesc.renderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
 	
-	RenderPass = Device.CreateRenderPass(RPDesc);
+	RenderPass = Device.CreateRenderPass(rpDesc);
 
 	ShadowDescriptors Descriptors;
 	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
@@ -121,15 +121,15 @@ void ShadowProxy::AddMesh(drm::Device& Device, drm::ShaderLibrary& ShaderLibrary
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = RenderPass;
-	PSODesc.ShaderStages.Vertex = ShaderLibrary.FindShader<ShadowDepthVS<MeshType>>();
-	PSODesc.ShaderStages.Fragment = ShaderLibrary.FindShader<ShadowDepthFS<MeshType>>();
-	PSODesc.Viewport.Width = ShadowMap.GetWidth();
-	PSODesc.Viewport.Height = ShadowMap.GetHeight();
-	PSODesc.RasterizationState.DepthBiasEnable = true;
-	PSODesc.RasterizationState.DepthBiasConstantFactor = DepthBiasConstantFactor;
-	PSODesc.RasterizationState.DepthBiasSlopeFactor = DepthBiasSlopeFactor;
-	PSODesc.Layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PSODesc.renderPass = RenderPass;
+	PSODesc.shaderStages.vertex = ShaderLibrary.FindShader<ShadowDepthVS<MeshType>>();
+	PSODesc.shaderStages.fragment = ShaderLibrary.FindShader<ShadowDepthFS<MeshType>>();
+	PSODesc.viewport.width = ShadowMap.GetWidth();
+	PSODesc.viewport.height = ShadowMap.GetHeight();
+	PSODesc.rasterizationState.depthBiasEnable = true;
+	PSODesc.rasterizationState.depthBiasConstantFactor = DepthBiasConstantFactor;
+	PSODesc.rasterizationState.depthBiasSlopeFactor = DepthBiasSlopeFactor;
+	PSODesc.layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
 
 	const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, MeshProxy.GetSurfaceSet(), Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
 	MeshDrawCommands.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));

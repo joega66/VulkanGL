@@ -61,10 +61,10 @@ enum class EFormat
 
 struct DrawIndirectCommand
 {
-	uint32 VertexCount;
-	uint32 InstanceCount;
-	uint32 FirstVertex;
-	uint32 FirstInstance;
+	uint32 vertexCount;
+	uint32 instanceCount;
+	uint32 firstVertex;
+	uint32 firstInstance;
 };
 
 enum class EAccess
@@ -149,15 +149,15 @@ enum class EStoreAction
 
 struct ClearDepthStencilValue
 {
-	float	DepthClear = 1.0f;
-	uint32	StencilClear = 0;
+	float	depthClear = 1.0f;
+	uint32	stencilClear = 0;
 };
 
 struct ClearColorValue
 {
-	float	Float32[4]	= { 0.0f, 0.0f, 0.0f, 0.0f };
-	int32	Int32[4]	= { 0, 0, 0, 0 };
-	uint32	Uint32[4]	= { 0, 0, 0, 0 };
+	float	float32[4]	= { 0.0f, 0.0f, 0.0f, 0.0f };
+	int32	int32[4]	= { 0, 0, 0, 0 };
+	uint32	uint32[4]	= { 0, 0, 0, 0 };
 };
 
 enum class EImageLayout
@@ -200,11 +200,11 @@ enum class EFilter
 
 struct SamplerDesc
 {
-	EFilter Filter = EFilter::Linear;
-	ESamplerAddressMode SAM = ESamplerAddressMode::ClampToEdge;
-	ESamplerMipmapMode SMM = ESamplerMipmapMode::Linear;
-	float MinLod = 0.0f;
-	float MaxLod = 0.0f;
+	EFilter filter = EFilter::Linear;
+	ESamplerAddressMode sam = ESamplerAddressMode::ClampToEdge;
+	ESamplerMipmapMode smm = ESamplerMipmapMode::Linear;
+	float minLod = 0.0f;
+	float maxLod = 0.0f;
 };
 
 enum class EDescriptorType
@@ -217,9 +217,9 @@ enum class EDescriptorType
 
 struct DescriptorBinding
 {
-	uint32 Binding;
-	uint32 DescriptorCount;
-	EDescriptorType DescriptorType;
+	uint32 binding;
+	uint32 descriptorCount;
+	EDescriptorType descriptorType;
 };
 
 namespace drm
@@ -227,93 +227,93 @@ namespace drm
 	class BufferPrivate
 	{
 	public:
-		EBufferUsage Usage;
-
 		BufferPrivate() = default;
-		BufferPrivate(EBufferUsage Usage, uint32 Size)
-			: Usage(Usage)
-			, Size(Size)
+		BufferPrivate(EBufferUsage usage, uint32 size)
+			: _Usage(usage)
+			, _Size(size)
 		{
 		}
 
-		inline uint32 GetSize() const { return Size; }
+		inline EBufferUsage GetUsage() const { return _Usage; }
+		inline uint32 GetSize() const { return _Size; }
 
 	protected:
-		uint32 Size;
+		EBufferUsage _Usage;
+		uint32 _Size;
 	};
 
 	class ImagePrivate
 	{
 	public:
 		ImagePrivate() = default;
-		ImagePrivate(EFormat Format, uint32 Width, uint32 Height, uint32 Depth, EImageUsage Usage, uint32 MipLevels)
-			: Format(Format), Width(Width), Height(Height), Depth(Depth), Usage(Usage), MipLevels(MipLevels)
+		ImagePrivate(EFormat format, uint32 width, uint32 height, uint32 depth, EImageUsage usage, uint32 mipLevels)
+			: _Format(format), _Width(width), _Height(height), _Depth(depth), _Usage(usage), _MipLevels(mipLevels)
 		{
 		}
 
-		inline EFormat GetFormat() const { return Format; }
-		inline uint32 GetWidth() const { return Width; }
-		inline uint32 GetHeight() const { return Height; }
-		inline uint32 GetDepth() const { return Depth; }
-		inline EImageUsage GetUsage() const { return Usage; }
-		inline uint32 GetMipLevels() const { return MipLevels; }
+		inline EFormat GetFormat() const { return _Format; }
+		inline uint32 GetWidth() const { return _Width; }
+		inline uint32 GetHeight() const { return _Height; }
+		inline uint32 GetDepth() const { return _Depth; }
+		inline EImageUsage GetUsage() const { return _Usage; }
+		inline uint32 GetMipLevels() const { return _MipLevels; }
 
 		bool IsColor() const;
 		bool IsStencil() const;
 		bool IsDepthStencil() const;
 		bool IsDepth() const;
 		uint32 GetStrideInBytes() const;
-		inline float64 GetAspect() const { return static_cast<float64>(Width) / static_cast<float64>(Height); }
+		inline float64 GetAspect() const { return static_cast<float64>(_Width) / static_cast<float64>(_Height); }
 		inline uint32 GetSize() const 
 		{ 
-			return Width * Height * Depth * GetStrideInBytes() * (Any(Usage & EImageUsage::Cubemap) ? 6 : 1); 
+			return _Width * _Height * _Depth * GetStrideInBytes() * (Any(_Usage & EImageUsage::Cubemap) ? 6 : 1);
 		}
 
-		static bool IsColor(EFormat Format);
-		static bool IsStencil(EFormat Format);
-		static bool IsDepthStencil(EFormat Format);
-		static bool IsDepth(EFormat Format);
-		static uint32 GetSize(EFormat Format);
+		static bool IsColor(EFormat format);
+		static bool IsStencil(EFormat format);
+		static bool IsDepthStencil(EFormat format);
+		static bool IsDepth(EFormat format);
+		static uint32 GetSize(EFormat format);
 
 	protected:
-		EFormat Format;
-		uint32 Width;
-		uint32 Height;
-		uint32 Depth;
-		EImageUsage Usage;
-		uint32 MipLevels;
+		EFormat _Format;
+		uint32 _Width;
+		uint32 _Height;
+		uint32 _Depth;
+		EImageUsage _Usage;
+		uint32 _MipLevels;
 	};
 }
 
 struct Viewport
 {
-	int32 X = 0;
-	int32 Y = 0;
-	int32 Width = 0;
-	int32 Height = 0;
-	float MinDepth = 0.0f;
-	float MaxDepth = 1.0f;
+	int32 x = 0;
+	int32 y = 0;
+	int32 width = 0;
+	int32 height = 0;
+	float minDepth = 0.0f;
+	float maxDepth = 1.0f;
 
-	friend bool operator==(const Viewport& L, const Viewport& R)
+	friend bool operator==(const Viewport& l, const Viewport& r)
 	{
-		return L.X == R.X
-			&& L.Y == R.Y
-			&& L.Width == R.Width
-			&& L.Height == R.Height
-			&& L.MinDepth == R.MinDepth
-			&& L.MaxDepth == R.MaxDepth;
+		return l.x == r.x
+			&& l.y == r.y
+			&& l.width == r.width
+			&& l.height == r.height
+			&& l.minDepth == r.minDepth
+			&& l.maxDepth == r.maxDepth;
 	}
 };
 
-struct ScissorDesc
+struct Scissor
 {
-	glm::ivec2 Offset = glm::ivec2(0);
-	glm::uvec2 Extent = glm::uvec2(0);
+	glm::ivec2 offset = glm::ivec2(0);
+	glm::uvec2 extent = glm::uvec2(0);
 
-	friend bool operator==(const ScissorDesc& L, const ScissorDesc& R)
+	friend bool operator==(const Scissor& l, const Scissor& r)
 	{
-		return L.Offset == R.Offset
-			&& L.Extent == R.Extent;
+		return l.offset == r.offset
+			&& l.extent == r.extent;
 	}
 };
 
@@ -338,23 +338,23 @@ enum class ECompareOp
 
 struct StencilOpState
 {
-	EStencilOp FailOp = EStencilOp::Keep;
-	EStencilOp PassOp = EStencilOp::Replace;
-	EStencilOp DepthFailOp = EStencilOp::Keep;
-	ECompareOp CompareOp = ECompareOp::Always;
-	uint32 CompareMask = 0;
-	uint32 WriteMask = 0;
-	uint32 Reference = 0;
+	EStencilOp failOp = EStencilOp::Keep;
+	EStencilOp passOp = EStencilOp::Replace;
+	EStencilOp depthFailOp = EStencilOp::Keep;
+	ECompareOp compareOp = ECompareOp::Always;
+	uint32 compareMask = 0;
+	uint32 writeMask = 0;
+	uint32 reference = 0;
 
-	friend bool operator==(const StencilOpState& L, const StencilOpState& R)
+	friend bool operator==(const StencilOpState& l, const StencilOpState& r)
 	{
-		return L.FailOp == R.FailOp
-			&& L.PassOp == R.PassOp
-			&& L.DepthFailOp == R.DepthFailOp
-			&& L.CompareOp == R.CompareOp
-			&& L.CompareMask == R.CompareMask
-			&& L.WriteMask == R.WriteMask
-			&& L.Reference == R.Reference;
+		return l.failOp == r.failOp
+			&& l.passOp == r.passOp
+			&& l.depthFailOp == r.depthFailOp
+			&& l.compareOp == r.compareOp
+			&& l.compareMask == r.compareMask
+			&& l.writeMask == r.writeMask
+			&& l.reference == r.reference;
 	}
 };
 
@@ -372,27 +372,27 @@ enum class EDepthCompareTest
 
 struct DepthStencilState
 {
-	bool DepthTestEnable = true;
-	bool DepthWriteEnable = true;
-	EDepthCompareTest DepthCompareTest = EDepthCompareTest::LEqual;
-	bool DepthBoundsTestEnable = false;
-	bool StencilTestEnable = false;
-	StencilOpState Front = {};
-	StencilOpState Back = {};
-	float MinDepthBounds = 0.0f;
-	float MaxDepthBounds = 0.0f;
+	bool depthTestEnable = true;
+	bool depthWriteEnable = true;
+	EDepthCompareTest depthCompareTest = EDepthCompareTest::LEqual;
+	bool depthBoundsTestEnable = false;
+	bool stencilTestEnable = false;
+	StencilOpState front = {};
+	StencilOpState back = {};
+	float minDepthBounds = 0.0f;
+	float maxDepthBounds = 0.0f;
 
-	friend bool operator==(const DepthStencilState& L, const DepthStencilState& R)
+	friend bool operator==(const DepthStencilState& l, const DepthStencilState& r)
 	{
-		return L.DepthTestEnable == R.DepthTestEnable
-			&& L.DepthWriteEnable == R.DepthWriteEnable
-			&& L.DepthCompareTest == R.DepthCompareTest
-			&& L.DepthBoundsTestEnable == R.DepthBoundsTestEnable
-			&& L.StencilTestEnable == R.StencilTestEnable
-			&& L.Front == R.Front
-			&& L.Back == R.Back
-			&& L.MinDepthBounds == R.MinDepthBounds
-			&& L.MaxDepthBounds == R.MaxDepthBounds;
+		return l.depthTestEnable == r.depthTestEnable
+			&& l.depthWriteEnable == r.depthWriteEnable
+			&& l.depthCompareTest == r.depthCompareTest
+			&& l.depthBoundsTestEnable == r.depthBoundsTestEnable
+			&& l.stencilTestEnable == r.stencilTestEnable
+			&& l.front == r.front
+			&& l.back == r.back
+			&& l.minDepthBounds == r.minDepthBounds
+			&& l.maxDepthBounds == r.maxDepthBounds;
 	}
 };
 
@@ -419,29 +419,29 @@ enum class ECullMode
 
 struct RasterizationState
 {
-	bool DepthClampEnable = false;
-	bool RasterizerDiscardEnable = false;
-	EPolygonMode PolygonMode = EPolygonMode::Fill;
-	ECullMode CullMode = ECullMode::None;
-	EFrontFace FrontFace = EFrontFace::CW;
-	bool DepthBiasEnable = false;
-	float DepthBiasConstantFactor = 0.0f;
-	float DepthBiasClamp = 0.0f;
-	float DepthBiasSlopeFactor = 0.0f;
-	float LineWidth = 1.0f;
+	bool depthClampEnable = false;
+	bool rasterizerDiscardEnable = false;
+	EPolygonMode polygonMode = EPolygonMode::Fill;
+	ECullMode cullMode = ECullMode::None;
+	EFrontFace frontFace = EFrontFace::CW;
+	bool depthBiasEnable = false;
+	float depthBiasConstantFactor = 0.0f;
+	float depthBiasClamp = 0.0f;
+	float depthBiasSlopeFactor = 0.0f;
+	float lineWidth = 1.0f;
 
-	friend bool operator==(const RasterizationState& L, const RasterizationState& R)
+	friend bool operator==(const RasterizationState& l, const RasterizationState& r)
 	{
-		return L.DepthClampEnable == R.DepthClampEnable
-			&& L.RasterizerDiscardEnable == R.RasterizerDiscardEnable
-			&& L.PolygonMode == R.PolygonMode
-			&& L.CullMode == R.CullMode
-			&& L.FrontFace == R.FrontFace
-			&& L.DepthBiasEnable == R.DepthBiasEnable
-			&& L.DepthBiasConstantFactor == R.DepthBiasConstantFactor
-			&& L.DepthBiasClamp == R.DepthBiasClamp
-			&& L.DepthBiasSlopeFactor == R.DepthBiasSlopeFactor
-			&& L.LineWidth == R.LineWidth;
+		return l.depthClampEnable == r.depthClampEnable
+			&& l.rasterizerDiscardEnable == r.rasterizerDiscardEnable
+			&& l.polygonMode == r.polygonMode
+			&& l.cullMode == r.cullMode
+			&& l.frontFace == r.frontFace
+			&& l.depthBiasEnable == r.depthBiasEnable
+			&& l.depthBiasConstantFactor == r.depthBiasConstantFactor
+			&& l.depthBiasClamp == r.depthBiasClamp
+			&& l.depthBiasSlopeFactor == r.depthBiasSlopeFactor
+			&& l.lineWidth == r.lineWidth;
 	}
 };
 
@@ -459,19 +459,19 @@ enum ESampleCount
 
 struct MultisampleState
 {
-	ESampleCount RasterizationSamples = ESampleCount::Samples1;
-	bool SampleShadingEnable = false;
-	float MinSampleShading = 0.0f;
-	bool AlphaToCoverageEnable = false;
-	bool AlphaToOneEnable = false;
+	ESampleCount rasterizationSamples = ESampleCount::Samples1;
+	bool sampleShadingEnable = false;
+	float minSampleShading = 0.0f;
+	bool alphaToCoverageEnable = false;
+	bool alphaToOneEnable = false;
 
-	friend bool operator==(const MultisampleState& L, const MultisampleState& R)
+	friend bool operator==(const MultisampleState& l, const MultisampleState& r)
 	{
-		return L.RasterizationSamples == R.RasterizationSamples
-			&& L.SampleShadingEnable == R.SampleShadingEnable
-			&& L.MinSampleShading == R.MinSampleShading
-			&& L.AlphaToCoverageEnable == R.AlphaToCoverageEnable
-			&& L.AlphaToOneEnable == R.AlphaToOneEnable;
+		return l.rasterizationSamples == r.rasterizationSamples
+			&& l.sampleShadingEnable == r.sampleShadingEnable
+			&& l.minSampleShading == r.minSampleShading
+			&& l.alphaToCoverageEnable == r.alphaToCoverageEnable
+			&& l.alphaToOneEnable == r.alphaToOneEnable;
 	}
 };
 
@@ -519,30 +519,30 @@ enum class EColorChannel
 
 struct ColorBlendAttachmentState
 {
-	bool BlendEnable = false;
-	EBlendFactor SrcColorBlendFactor;
-	EBlendFactor DstColorBlendFactor;
-	EBlendOp ColorBlendOp;
-	EBlendFactor SrcAlphaBlendFactor;
-	EBlendFactor DstAlphaBlendFactor;
-	EBlendOp AlphaBlendOp;
-	EColorChannel ColorWriteMask = EColorChannel::RGBA;
+	bool blendEnable = false;
+	EBlendFactor srcColorBlendFactor;
+	EBlendFactor dstColorBlendFactor;
+	EBlendOp colorBlendOp;
+	EBlendFactor srcAlphaBlendFactor;
+	EBlendFactor dstAlphaBlendFactor;
+	EBlendOp alphaBlendOp;
+	EColorChannel colorWriteMask = EColorChannel::RGBA;
 
-	friend bool operator==(const ColorBlendAttachmentState& L, const ColorBlendAttachmentState& R)
+	friend bool operator==(const ColorBlendAttachmentState& l, const ColorBlendAttachmentState& r)
 	{
-		return L.BlendEnable == R.BlendEnable
-			&& L.SrcColorBlendFactor == R.SrcColorBlendFactor
-			&& L.DstColorBlendFactor == R.DstColorBlendFactor
-			&& L.ColorBlendOp == R.ColorBlendOp
-			&& L.SrcAlphaBlendFactor == R.SrcAlphaBlendFactor
-			&& L.DstAlphaBlendFactor == R.DstAlphaBlendFactor
-			&& L.AlphaBlendOp == R.AlphaBlendOp
-			&& L.ColorWriteMask == R.ColorWriteMask;
+		return l.blendEnable == r.blendEnable
+			&& l.srcColorBlendFactor == r.srcColorBlendFactor
+			&& l.dstColorBlendFactor == r.dstColorBlendFactor
+			&& l.colorBlendOp == r.colorBlendOp
+			&& l.srcAlphaBlendFactor == r.srcAlphaBlendFactor
+			&& l.dstAlphaBlendFactor == r.dstAlphaBlendFactor
+			&& l.alphaBlendOp == r.alphaBlendOp
+			&& l.colorWriteMask == r.colorWriteMask;
 	}
 
-	friend bool operator!=(const ColorBlendAttachmentState& L, const ColorBlendAttachmentState& R)
+	friend bool operator!=(const ColorBlendAttachmentState& l, const ColorBlendAttachmentState& r)
 	{
-		return !(L == R);
+		return !(l == r);
 	}
 };
 
@@ -558,12 +558,13 @@ enum class EPrimitiveTopology
 
 struct InputAssemblyState
 {
-	EPrimitiveTopology Topology = EPrimitiveTopology::TriangleList;
-	bool PrimitiveRestartEnable = false;
+	EPrimitiveTopology topology = EPrimitiveTopology::TriangleList;
+	bool primitiveRestartEnable = false;
 
-	friend bool operator==(const InputAssemblyState& L, const InputAssemblyState& R)
+	friend bool operator==(const InputAssemblyState& l, const InputAssemblyState& r)
 	{
-		return L.Topology == R.Topology && L.PrimitiveRestartEnable == R.PrimitiveRestartEnable;
+		return l.topology == r.topology 
+			&& l.primitiveRestartEnable == r.primitiveRestartEnable;
 	}
 };
 
@@ -571,21 +572,24 @@ namespace drm { class Shader; }
 
 struct ShaderStages
 {
-	const drm::Shader* Vertex = nullptr;
-	const drm::Shader* TessControl = nullptr;
-	const drm::Shader* TessEval = nullptr;
-	const drm::Shader* Geometry = nullptr;
-	const drm::Shader* Fragment = nullptr;
+	const drm::Shader* vertex = nullptr;
+	const drm::Shader* tessControl = nullptr;
+	const drm::Shader* tessEval = nullptr;
+	const drm::Shader* geometry = nullptr;
+	const drm::Shader* fragment = nullptr;
 
-	friend bool operator==(const ShaderStages& L, const ShaderStages& R)
+	friend bool operator==(const ShaderStages& l, const ShaderStages& r)
 	{
-		return L.Vertex == R.Vertex && L.TessControl == R.TessControl && L.TessEval == R.TessEval
-			&& L.Geometry == R.Geometry && L.Fragment == R.Fragment;
+		return l.vertex == r.vertex 
+			&& l.tessControl == r.tessControl 
+			&& l.tessEval == r.tessEval
+			&& l.geometry == r.geometry 
+			&& l.fragment == r.fragment;
 	}
 
-	friend bool operator!=(const ShaderStages& L, const ShaderStages& R)
+	friend bool operator!=(const ShaderStages& l, const ShaderStages& r)
 	{
-		return !(L == R);
+		return !(l == r);
 	}
 };
 
@@ -604,24 +608,15 @@ enum class EShaderStage
 
 struct PushConstantRange
 {
-	EShaderStage StageFlags = EShaderStage::All;
-	uint32 Offset = 0;
-	uint32 Size = 0;
+	EShaderStage stageFlags = EShaderStage::All;
+	uint32 offset = 0;
+	uint32 size = 0;
 
-	PushConstantRange() = default;
-
-	PushConstantRange(EShaderStage StageFlags, uint32 Offset, uint32 Size)
-		: StageFlags(StageFlags)
-		, Offset(Offset)
-		, Size(Size)
+	bool operator==(const PushConstantRange& other) const
 	{
-	}
-
-	bool operator==(const PushConstantRange& Other) const
-	{
-		return StageFlags == Other.StageFlags
-			&& Offset == Other.Offset
-			&& Size == Other.Size;
+		return stageFlags == other.stageFlags
+			&& offset == other.offset
+			&& size == other.size;
 	}
 };
 
@@ -643,70 +638,61 @@ class SpecializationInfo
 public:
 	struct SpecializationMapEntry
 	{
-		uint32 ConstantID;
-		uint32 Offset;
-		size_t Size;
+		uint32 constantID;
+		uint32 offset;
+		size_t size;
 
-		bool operator==(const SpecializationMapEntry& Other) const
-		{
-			return ConstantID == Other.ConstantID
-				&& Offset == Other.Offset
-				&& Size == Other.Size;
-		}
+		bool operator==(const SpecializationMapEntry& other) const;
 	};
 
 	SpecializationInfo() = default;
 
 	template<typename SpecializationConstantType>
-	void Add(uint32 ConstantID, const SpecializationConstantType& Constant)
+	void Add(uint32 constantID, const SpecializationConstantType& constant)
 	{
-		const uint32 Offset = (uint32)Data.size();
-		Data.resize(Offset + sizeof(Constant));
-		memcpy(Data.data() + Offset, &Constant, sizeof(Constant));
-		const SpecializationMapEntry MapEntry = { ConstantID, Offset, sizeof(Constant) };
-		MapEntries.push_back(std::move(MapEntry));
+		const uint32 offset = (uint32)_Data.size();
+		_Data.resize(offset + sizeof(constant));
+		memcpy(_Data.data() + offset, &constant, sizeof(constant));
+		const SpecializationMapEntry mapEntry = { constantID, offset, sizeof(constant) };
+		_MapEntries.push_back(std::move(mapEntry));
 	}
 
-	bool operator==(const SpecializationInfo& Other) const
-	{
-		return MapEntries == Other.MapEntries
-			&& Data == Other.Data;
-	}
+	bool operator==(const SpecializationInfo& other) const;
 
-	inline const std::vector<SpecializationMapEntry>& GetMapEntries() const { return MapEntries; }
+	inline const std::vector<SpecializationMapEntry>& GetMapEntries() const { return _MapEntries; }
 
-	inline const std::vector<uint8>& GetData() const { return Data; }
+	inline const std::vector<uint8>& GetData() const { return _Data; }
 
 private:
-	std::vector<SpecializationMapEntry> MapEntries;
-	std::vector<uint8> Data;
+	std::vector<SpecializationMapEntry> _MapEntries;
+	std::vector<uint8> _Data;
 };
 
 struct VertexAttributeDescription
 {
-	uint64	Location;
-	uint32	Binding;
-	EFormat	Format;
-	uint32	Offset;
+	uint64	location;
+	uint32	binding;
+	EFormat	format;
+	uint32	offset;
 
-	friend bool operator==(const VertexAttributeDescription& L, const VertexAttributeDescription& R)
+	friend bool operator==(const VertexAttributeDescription& l, const VertexAttributeDescription& r)
 	{
-		return L.Location == R.Location
-			&& L.Binding == R.Binding
-			&& L.Format == R.Format
-			&& L.Offset == R.Offset;
+		return l.location == r.location
+			&& l.binding == r.binding
+			&& l.format == r.format
+			&& l.offset == r.offset;
 	}
 };
 
 struct VertexBindingDescription
 {
-	uint32 Binding;
-	uint32 Stride;
+	uint32 binding;
+	uint32 stride;
 
-	friend bool operator==(const VertexBindingDescription& L, const VertexBindingDescription& R)
+	friend bool operator==(const VertexBindingDescription& l, const VertexBindingDescription& r)
 	{
-		return L.Binding == R.Binding
-			&& L.Stride == R.Stride;
+		return l.binding == r.binding
+			&& l.stride == r.stride;
 	}
 };
 

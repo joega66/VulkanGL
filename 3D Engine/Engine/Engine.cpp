@@ -1,6 +1,5 @@
 #include <Renderer/SceneRenderer.h>
 #include <Renderer/CameraProxy.h>
-#include <Renderer/Voxels.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/SceneSystem.h>
 #include <Systems/RenderSystem.h>
@@ -48,8 +47,6 @@ void Engine::Main()
 	{
 		Surface.Resize(Device, Width, Height);
 	});
-
-	ECS.AddSingletonComponent<VCTLightingCache>(*this);
 
 	SystemsManager SystemsManager;
 

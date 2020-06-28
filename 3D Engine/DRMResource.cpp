@@ -3,61 +3,61 @@
 
 namespace drm
 {
-	bool ImagePrivate::IsColor(EFormat Format)
+	bool ImagePrivate::IsColor(EFormat format)
 	{
-		return !(IsDepth(Format) || IsStencil(Format) || Format == EFormat::UNDEFINED);
+		return !(IsDepth(format) || IsStencil(format) || format == EFormat::UNDEFINED);
 	}
 
 	bool ImagePrivate::IsColor() const
 	{
-		return IsColor(Format);
+		return IsColor(_Format);
 	}
 
-	bool ImagePrivate::IsStencil(EFormat Format)
+	bool ImagePrivate::IsStencil(EFormat format)
 	{
-		static const std::unordered_set<EFormat> StencilFormats =
+		static const std::unordered_set<EFormat> stencilFormats =
 		{
 			EFormat::S8_UINT
 		};
-		return IsDepthStencil(Format) || StencilFormats.find(Format) != StencilFormats.end();
+		return IsDepthStencil(format) || stencilFormats.find(format) != stencilFormats.end();
 	}
 
 	bool ImagePrivate::IsStencil() const
 	{
-		return IsStencil(Format);
+		return IsStencil(_Format);
 	}
 
-	bool ImagePrivate::IsDepthStencil(EFormat Format)
+	bool ImagePrivate::IsDepthStencil(EFormat format)
 	{
-		static const std::unordered_set<EFormat> DepthFormats =
+		static const std::unordered_set<EFormat> depthFormats =
 		{
 			EFormat::D32_SFLOAT_S8_UINT, EFormat::D24_UNORM_S8_UINT
 		};
-		return DepthFormats.find(Format) != DepthFormats.end();
+		return depthFormats.find(format) != depthFormats.end();
 	}
 
 	bool ImagePrivate::IsDepthStencil() const
 	{
-		return IsDepthStencil(Format);
+		return IsDepthStencil(_Format);
 	}
 
-	bool ImagePrivate::IsDepth(EFormat Format)
+	bool ImagePrivate::IsDepth(EFormat format)
 	{
-		static const std::unordered_set<EFormat> DepthFormats =
+		static const std::unordered_set<EFormat> depthFormats =
 		{
 			EFormat::D16_UNORM, EFormat::D32_SFLOAT, EFormat::D32_SFLOAT_S8_UINT, EFormat::D24_UNORM_S8_UINT
 		};
-		return DepthFormats.find(Format) != DepthFormats.end();
+		return depthFormats.find(format) != depthFormats.end();
 	}
 
 	bool ImagePrivate::IsDepth() const
 	{
-		return IsDepth(Format);
+		return IsDepth(_Format);
 	}
 
-	uint32 ImagePrivate::GetSize(EFormat Format)
+	uint32 ImagePrivate::GetSize(EFormat format)
 	{
-		static std::unordered_map<EFormat, uint32> EngineFormatStrides =
+		static std::unordered_map<EFormat, uint32> engineFormatStrides =
 		{
 			ENTRY(EFormat::R8_UNORM, 1)
 			ENTRY(EFormat::R8G8B8A8_UNORM, 4)
@@ -70,11 +70,24 @@ namespace drm
 			ENTRY(EFormat::R32G32_SFLOAT, 8)
 		};
 
-		return EngineFormatStrides[Format];
+		return engineFormatStrides[format];
 	}
 
 	uint32 ImagePrivate::GetStrideInBytes() const
 	{
-		return GetSize(Format);
+		return GetSize(_Format);
 	}
+}
+
+bool SpecializationInfo::SpecializationMapEntry::operator==(const SpecializationMapEntry& other) const
+{
+	return constantID == other.constantID
+		&& offset == other.offset
+		&& size == other.size;
+}
+
+bool SpecializationInfo::operator==(const SpecializationInfo& other) const
+{
+	return _MapEntries == other._MapEntries
+		&& _Data == other._Data;
 }

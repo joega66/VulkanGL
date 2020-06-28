@@ -1,7 +1,6 @@
 #include "MaterialShader.h"
 #include "CameraProxy.h"
 #include "SceneRenderer.h"
-#include "Voxels.h"
 #include <ECS/EntityManager.h>
 #include <Engine/Engine.h>
 
@@ -54,12 +53,12 @@ void CameraProxy::AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy)
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
 	PipelineStateDesc PSODesc = {};
-	PSODesc.RenderPass = GBufferRP;
-	PSODesc.ShaderStages.Vertex = Engine.ShaderLibrary.FindShader<GBufferPassVS<MeshType>>();
-	PSODesc.ShaderStages.Fragment = Engine.ShaderLibrary.FindShader<GBufferPassFS<MeshType>>();
-	PSODesc.Viewport.Width = SceneDepth.GetWidth();
-	PSODesc.Viewport.Height = SceneDepth.GetHeight();
-	PSODesc.Layouts = { CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Engine.Device.GetTextures().GetLayout(), Engine.Device.GetSamplers().GetLayout() };
+	PSODesc.renderPass = GBufferRP;
+	PSODesc.shaderStages.vertex = Engine.ShaderLibrary.FindShader<GBufferPassVS<MeshType>>();
+	PSODesc.shaderStages.fragment = Engine.ShaderLibrary.FindShader<GBufferPassFS<MeshType>>();
+	PSODesc.viewport.width = SceneDepth.GetWidth();
+	PSODesc.viewport.height = SceneDepth.GetHeight();
+	PSODesc.layouts = { CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Engine.Device.GetTextures().GetLayout(), Engine.Device.GetSamplers().GetLayout() };
 
 	const std::vector<VkDescriptorSet> DescriptorSets =
 	{

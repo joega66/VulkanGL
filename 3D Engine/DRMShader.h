@@ -12,8 +12,8 @@ public:
 
 struct ShaderStructDecl
 {
-	std::string Struct;
-	uint32 Size;
+	std::string decl;
+	uint32 size;
 };
 
 #define BEGIN_SHADER_STRUCT(StructName)	\
@@ -48,8 +48,8 @@ public:																											\
 	}																											\
 	struct Decl##StructName : ShaderStructDecl{																	\
 		Decl##StructName() {																					\
-			Struct = Serialize();																				\
-			Size = sizeof(StructName);																			\
+			decl = Serialize();																				\
+			size = sizeof(StructName);																			\
 		}																										\
 	};																											\
 	static Decl##StructName Decl;																				\
@@ -65,84 +65,83 @@ public:
 
 	/** Set a shader define (templated version). */
 	template<typename T>
-	void SetDefine(std::string&& Define, const T& Value)
+	void SetDefine(std::string&& define, const T& value)
 	{
-		Defines.push_back(std::make_pair(std::move(Define), std::to_string(Value)));
+		_Defines.push_back(std::make_pair(std::move(define), std::to_string(value)));
 	}
 
 	/** Set a shader define (stringified version). */
-	void SetDefine(std::string&& Define)
+	void SetDefine(std::string&& define)
 	{
-		Defines.push_back(std::make_pair(std::move(Define), "1"));
+		_Defines.push_back(std::make_pair(std::move(define), "1"));
 	}
 
 	/** Get all shader defines. */
 	const ShaderDefines& GetDefines() const
 	{
-		return Defines;
+		return _Defines;
 	}
 
 	/** Define the shader's push constant struct. */
-	inline void operator<<(const ShaderStructDecl& ShaderStructDecl)
+	inline void operator<<(const ShaderStructDecl& shaderStructDecl)
 	{
-		PushConstantSize = ShaderStructDecl.Size;
-		PushConstantStruct = ShaderStructDecl.Struct;
+		_PushConstantStruct = shaderStructDecl.decl;
+		_PushConstantSize = shaderStructDecl.size;
 	}
 
 	/** Get the shader's push constant struct. */
-	inline uint32 GetPushConstantOffset() const { return PushConstantOffset; }
-	inline uint32 GetPushConstantSize() const { return PushConstantSize; }
-	inline const std::string& GetPushConstantStruct() const { return PushConstantStruct; }
+	inline uint32 GetPushConstantOffset() const { return _PushConstantOffset; }
+	inline uint32 GetPushConstantSize() const { return _PushConstantSize; }
+	inline const std::string& GetPushConstantStruct() const { return _PushConstantStruct; }
 
 private:
-	ShaderDefines Defines;
-	uint32 PushConstantOffset = 0;
-	uint32 PushConstantSize = 0;
-	std::string PushConstantStruct = "";
+	ShaderDefines _Defines;
+	uint32 _PushConstantOffset = 0;
+	uint32 _PushConstantSize = 0;
+	std::string _PushConstantStruct = "";
 };
 
 struct ShaderInfo
 {
-	std::string Filename;
-	std::string Entrypoint;
-	EShaderStage Stage;
+	std::string filename;
+	std::string entrypoint;
+	EShaderStage stage;
 };
 
 class ShaderCompilationInfo
 {
 public:
-	std::type_index Type;
-	EShaderStage Stage;
-	std::string Entrypoint;
-	std::string Filename;
-	uint64 LastWriteTime;
-	ShaderCompilerWorker Worker;
-	void* Module;
-	std::vector<VertexAttributeDescription> VertexAttributeDescriptions;
+	std::type_index type;
+	EShaderStage stage;
+	std::string entrypoint;
+	std::string filename;
+	uint64 lastWriteTime;
+	ShaderCompilerWorker worker;
+	void* module;
+	std::vector<VertexAttributeDescription> vertexAttributeDescriptions;
+	PushConstantRange pushConstantRange;
 
 	ShaderCompilationInfo(
-		std::type_index Type,
-		EShaderStage Stage, 
-		const std::string& Entrypoint,
-		const std::string& Filename,
-		uint64 LastWriteTime,
-		const ShaderCompilerWorker& Worker,
-		void* Module,
-		const std::vector<VertexAttributeDescription>& VertexAttributeDescriptions,
-		const PushConstantRange& PushConstantRange)
-		: Type(Type)
-		, Stage(Stage)
-		, Entrypoint(Entrypoint)
-		, Filename(Filename)
-		, LastWriteTime(LastWriteTime)
-		, Worker(Worker)
-		, Module(Module)
-		, VertexAttributeDescriptions(VertexAttributeDescriptions)
-		, PushConstantRange(PushConstantRange)
+		std::type_index type,
+		EShaderStage stage, 
+		const std::string& entrypoint,
+		const std::string& filename,
+		uint64 lastWriteTime,
+		const ShaderCompilerWorker& worker,
+		void* module,
+		const std::vector<VertexAttributeDescription>& vertexAttributeDescriptions,
+		const PushConstantRange& pushConstantRange)
+		: type(type)
+		, stage(stage)
+		, entrypoint(entrypoint)
+		, filename(filename)
+		, lastWriteTime(lastWriteTime)
+		, worker(worker)
+		, module(module)
+		, vertexAttributeDescriptions(vertexAttributeDescriptions)
+		, pushConstantRange(pushConstantRange)
 	{
 	}
-
-	PushConstantRange PushConstantRange;
 };
 
 namespace drm
@@ -150,14 +149,14 @@ namespace drm
 	class Shader
 	{
 	public:
-		ShaderCompilationInfo CompilationInfo;
+		ShaderCompilationInfo compilationInfo;
 
-		Shader(const ShaderCompilationInfo& CompilationInfo)
-			: CompilationInfo(CompilationInfo)
+		Shader(const ShaderCompilationInfo& compilationInfo)
+			: compilationInfo(compilationInfo)
 		{
 		}
 
-		static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+		static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 		{
 		}
 	};
@@ -170,20 +169,20 @@ namespace drm
 		template<typename ShaderType>
 		const ShaderType* FindShader()
 		{
-			std::type_index Type = std::type_index(typeid(ShaderType));
+			std::type_index type = std::type_index(typeid(ShaderType));
 
-			if (Shaders.contains(Type))
+			if (_Shaders.contains(type))
 			{
-				return static_cast<const ShaderType*>(Shaders[Type].get());
+				return static_cast<const ShaderType*>(_Shaders[type].get());
 			}
 			else
 			{
-				ShaderCompilerWorker Worker;
-				ShaderType::SetEnvironmentVariables(Worker);
-				const auto& [Filename, EntryPoint, Stage] = ShaderType::GetShaderInfo();
-				const ShaderCompilationInfo CompilationInfo = CompileShader(Worker, Filename, EntryPoint, Stage, Type);
-				Shaders.emplace(CompilationInfo.Type, std::make_unique<ShaderType>(CompilationInfo));
-				return static_cast<const ShaderType*>(Shaders[CompilationInfo.Type].get());
+				ShaderCompilerWorker worker;
+				ShaderType::SetEnvironmentVariables(worker);
+				const auto& [filename, entrypoint, stage] = ShaderType::GetShaderInfo();
+				const ShaderCompilationInfo compilationInfo = CompileShader(worker, filename, entrypoint, stage, type);
+				_Shaders.emplace(compilationInfo.type, std::make_unique<ShaderType>(compilationInfo));
+				return static_cast<const ShaderType*>(_Shaders[compilationInfo.type].get());
 			}
 		}
 
@@ -193,16 +192,16 @@ namespace drm
 	private:
 		/** Compile the shader. */
 		virtual ShaderCompilationInfo CompileShader(
-			const ShaderCompilerWorker& Worker,
-			const std::string& Filename,
-			const std::string& EntryPoint,
-			EShaderStage Stage,
-			std::type_index Type
+			const ShaderCompilerWorker& worker,
+			const std::string& filename,
+			const std::string& entryPoint,
+			EShaderStage stage,
+			std::type_index type
 		) = 0;
 
 	protected:
 		/** Cached shaders. */
-		std::unordered_map<std::type_index, std::unique_ptr<drm::Shader>> Shaders;
+		std::unordered_map<std::type_index, std::unique_ptr<drm::Shader>> _Shaders;
 
 	};
 }

@@ -59,7 +59,6 @@
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
-    <ClCompile Include="Renderer\Voxels.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\SceneSystem.cpp" />
     <ClCompile Include="Systems\RenderSystem.cpp" />
@@ -134,7 +133,6 @@
     <ClInclude Include="Renderer\MeshProxy.h" />
     <ClInclude Include="Renderer\CameraProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
-    <ClInclude Include="Renderer\Voxels.h" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
     <ClInclude Include="Systems\SceneSystem.h" />
     <ClInclude Include="Systems\RenderSystem.h" />
@@ -154,17 +152,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Config\Engine.ini" />
-    <None Include="..\Shaders\DownsampleVolumeCS.glsl" />
     <None Include="..\Shaders\Common.glsl" />
-    <None Include="..\Shaders\DrawVoxels.glsl" />
     <None Include="..\Shaders\FullscreenFS.glsl" />
     <None Include="..\Shaders\FullscreenVS.glsl" />
     <None Include="..\Shaders\GBufferFS.glsl" />
     <None Include="..\Shaders\GBufferVS.glsl" />
-    <None Include="..\Shaders\IndirectLightingCS.glsl" />
     <None Include="..\Shaders\LightingCommon.glsl" />
     <None Include="..\Shaders\LightingPassCS.glsl" />
-    <None Include="..\Shaders\LightVolumeCS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
     <None Include="..\Shaders\MaterialInterface.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />
@@ -180,10 +174,6 @@
     <None Include="..\Shaders\SurfaceInterface.glsl" />
     <None Include="..\Shaders\UserInterfaceFS.glsl" />
     <None Include="..\Shaders\UserInterfaceVS.glsl" />
-    <None Include="..\Shaders\VoxelsCommon.glsl" />
-    <None Include="..\Shaders\VoxelsFS.glsl" />
-    <None Include="..\Shaders\VoxelsGS.glsl" />
-    <None Include="..\Shaders\VoxelsVS.glsl" />
     <None Include="ECS\ComponentArray.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

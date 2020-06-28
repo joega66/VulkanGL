@@ -82,7 +82,7 @@ public:
 		EFilter Filter
 	);
 
-	void SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors);
+	void SetScissor(uint32 ScissorCount, const Scissor* Scissors);
 
 	void CopyBuffer(
 		const VulkanBuffer& SrcBuffer,

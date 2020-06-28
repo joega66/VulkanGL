@@ -7,7 +7,6 @@
 #include <Systems/UserInterface.h>
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
-#include "Voxels.h"
 
 SceneRenderer::SceneRenderer(Engine& Engine)
 	: Device(Engine.Device)
@@ -21,8 +20,7 @@ SceneRenderer::SceneRenderer(Engine& Engine)
 
 void SceneRenderer::Render(CameraProxy& Camera)
 {
-	RenderSettings& Settings = ECS.GetSingletonComponent<RenderSettings>();
-	auto& VCTLighting = ECS.GetSingletonComponent<VCTLightingCache>();
+	const RenderSettings& Settings = ECS.GetSingletonComponent<RenderSettings>();
 
 	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
@@ -38,23 +36,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 		RenderShadowDepths(Camera, CmdList);
 
-		if (Settings.bVoxelize)
-		{
-			VCTLighting.Render(ECS, Camera, CmdList);
-
-			Settings.bVoxelize = false;
-		}
-
-		if (Settings.VoxelDebugMode != EVoxelDebugMode::None && VCTLighting.IsDebuggingEnabled())
-		{
-			VCTLighting.RenderVisualization(Camera, CmdList, Settings.VoxelDebugMode);
-		}
-		else
-		{
-			ComputeLightingPass(Camera, CmdList);
-
-			ComputeIndirectLightingPass(Camera, CmdList);
-		}
+		ComputeLightingPass(Camera, CmdList);
 
 		CmdList.BeginRenderPass(Camera.SceneRP);
 
@@ -62,7 +44,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 		CmdList.EndRenderPass();
 	}
-	
+
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
 	const drm::Image& DisplayImage = Surface.GetImage(ImageIndex);
 	ImageMemoryBarrier Barrier{ DisplayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
@@ -71,10 +53,10 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 	ComputePostProcessing(DisplayImage, Camera, CmdList);
 
-	Barrier.SrcAccessMask = EAccess::ShaderWrite;
-	Barrier.DstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
-	Barrier.OldLayout = EImageLayout::General;
-	Barrier.NewLayout = EImageLayout::ColorAttachmentOptimal;
+	Barrier.srcAccessMask = EAccess::ShaderWrite;
+	Barrier.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
+	Barrier.oldLayout = EImageLayout::General;
+	Barrier.newLayout = EImageLayout::ColorAttachmentOptimal;
 
 	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &Barrier);
 
@@ -100,10 +82,10 @@ void SceneRenderer::ClearSceneColor(CameraProxy& camera, drm::CommandList& cmdLi
 
 	cmdList.ClearColorImage(camera.SceneColor, EImageLayout::TransferDstOptimal, {});
 
-	imageBarrier.SrcAccessMask = EAccess::TransferWrite;
-	imageBarrier.DstAccessMask = EAccess::ShaderWrite;
-	imageBarrier.OldLayout = EImageLayout::TransferDstOptimal;
-	imageBarrier.NewLayout = EImageLayout::General;
+	imageBarrier.srcAccessMask = EAccess::TransferWrite;
+	imageBarrier.dstAccessMask = EAccess::ShaderWrite;
+	imageBarrier.oldLayout = EImageLayout::TransferDstOptimal;
+	imageBarrier.newLayout = EImageLayout::General;
 
 	cmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 }

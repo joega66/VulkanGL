@@ -59,7 +59,7 @@ void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, Camera
 	const drm::Shader* Shader = ShaderLibrary.FindShader<PostProcessingCS>();
 
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = Shader;
+	ComputeDesc.computeShader = Shader;
 	ComputeDesc.Layouts = { Layout };
 
 	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);

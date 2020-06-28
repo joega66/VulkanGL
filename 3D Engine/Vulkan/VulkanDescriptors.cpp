@@ -180,9 +180,9 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 	{
 		const DescriptorBinding& Binding = Bindings[BindingIndex];
 		VkDescriptorUpdateTemplateEntry DescriptorUpdateTemplateEntry = {};
-		DescriptorUpdateTemplateEntry.dstBinding = Binding.Binding;
-		DescriptorUpdateTemplateEntry.descriptorCount = Binding.DescriptorCount;
-		DescriptorUpdateTemplateEntry.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.DescriptorType)];
+		DescriptorUpdateTemplateEntry.dstBinding = Binding.binding;
+		DescriptorUpdateTemplateEntry.descriptorCount = Binding.descriptorCount;
+		DescriptorUpdateTemplateEntry.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.descriptorType)];
 		DescriptorUpdateTemplateEntry.offset = StructSize;
 
 		StructSize += (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER || DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ?
@@ -191,9 +191,9 @@ VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
 		DescriptorUpdateTemplateEntries.push_back(DescriptorUpdateTemplateEntry);
 
 		VkDescriptorSetLayoutBinding DescriptorSetLayoutBinding;
-		DescriptorSetLayoutBinding.binding = Binding.Binding;
-		DescriptorSetLayoutBinding.descriptorCount = Binding.DescriptorCount;
-		DescriptorSetLayoutBinding.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.DescriptorType)];
+		DescriptorSetLayoutBinding.binding = Binding.binding;
+		DescriptorSetLayoutBinding.descriptorCount = Binding.descriptorCount;
+		DescriptorSetLayoutBinding.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.descriptorType)];
 		DescriptorSetLayoutBinding.pImmutableSamplers = nullptr;
 		DescriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
 

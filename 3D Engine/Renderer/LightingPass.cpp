@@ -1,6 +1,5 @@
 #include "CameraProxy.h"
 #include "SceneRenderer.h"
-#include "Voxels.h"
 #include "ShadowProxy.h"
 #include <ECS/EntityManager.h>
 #include <Components/Light.h>
@@ -27,7 +26,6 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
-		VoxelShader::SetEnvironmentVariables(Worker);
 		Worker << LightData::Decl;
 	}
 
@@ -86,8 +84,8 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	const drm::Shader* Shader = ShaderLibrary.FindShader<LightingPassCS>();
 
 	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = Shader;
-	ComputeDesc.SpecializationInfo.Add(0, Light._L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
+	ComputeDesc.computeShader = Shader;
+	ComputeDesc.specInfo.Add(0, Light._L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
 	ComputeDesc.Layouts =
 	{
 		Camera.CameraDescriptorSet.GetLayout(),
@@ -109,56 +107,6 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	CmdList.PushConstants(Pipeline, Shader, &Light);
-
-	const uint32 GroupCountX = DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u);
-	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);
-
-	CmdList.Dispatch(GroupCountX, GroupCountY, 1);
-}
-
-class IndirectLightingCS : public drm::Shader
-{
-public:
-	IndirectLightingCS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
-	{
-	}
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
-	{
-		VoxelShader::SetEnvironmentVariables(Worker);
-	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo BaseInfo = { "../Shaders/IndirectLightingCS.glsl", "main", EShaderStage::Compute };
-		return BaseInfo;
-	}
-};
-
-void SceneRenderer::ComputeIndirectLightingPass(CameraProxy& Camera, drm::CommandList& CmdList)
-{
-	auto& VCTLighting = ECS.GetSingletonComponent<VCTLightingCache>();
-
-	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.ComputeShader = ShaderLibrary.FindShader<IndirectLightingCS>();
-	ComputeDesc.Layouts =
-	{
-		Camera.CameraDescriptorSet.GetLayout(),
-		VCTLighting.GetDescriptorSet().GetLayout()
-	};
-
-	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
-
-	CmdList.BindPipeline(Pipeline);
-
-	const std::vector<VkDescriptorSet> DescriptorSets =
-	{
-		Camera.CameraDescriptorSet,
-		VCTLighting.GetDescriptorSet(),
-	};
-
-	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
 
 	const uint32 GroupCountX = DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u);
 	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);

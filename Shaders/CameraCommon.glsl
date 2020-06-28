@@ -20,8 +20,7 @@ layout(binding = 0, set = CAMERA_SET) uniform CameraUniform
 layout(binding = 1, set = CAMERA_SET) uniform sampler2D SceneDepth;
 layout(binding = 2, set = CAMERA_SET) uniform sampler2D GBuffer0;
 layout(binding = 3, set = CAMERA_SET) uniform sampler2D GBuffer1;
-layout(binding = 4, set = CAMERA_SET) uniform sampler3D RadianceVolume;
-layout(binding = 5, set = CAMERA_SET, rgba8) uniform image2D SceneColor;
+layout(binding = 4, set = CAMERA_SET, rgba8) uniform image2D SceneColor;
 
 /** Transform from screen space to world space. */
 vec3 ScreenToWorld(vec2 ScreenUV)

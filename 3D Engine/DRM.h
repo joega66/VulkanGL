@@ -17,42 +17,49 @@ namespace drm
 
 		virtual void EndFrame() = 0;
 
-		virtual void SubmitCommands(drm::CommandList& CmdList) = 0;
+		virtual void SubmitCommands(drm::CommandList& cmdList) = 0;
 
-		virtual drm::CommandList CreateCommandList(EQueue Queue) = 0;
+		virtual drm::CommandList CreateCommandList(EQueue queue) = 0;
 
-		virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) = 0;
+		virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) = 0;
 
-		virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) = 0;
+		virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) = 0;
 
-		virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumBindings, const DescriptorBinding* Bindings) = 0;
+		virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(
+			std::size_t numBindings, 
+			const DescriptorBinding* bindings
+		) = 0;
 
-		virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) = 0;
+		virtual drm::Buffer CreateBuffer(
+			EBufferUsage usage, 
+			uint64 size, 
+			const void* data = nullptr
+		) = 0;
 
 		virtual drm::Image CreateImage(
-			uint32 Width,
-			uint32 Height,
-			uint32 Depth,
-			EFormat Format,
-			EImageUsage UsageFlags,
-			uint32 MipLevels = 1
+			uint32 width,
+			uint32 height,
+			uint32 depth,
+			EFormat format,
+			EImageUsage usageFlags,
+			uint32 mipLevels = 1
 		) = 0;
 
 		virtual drm::ImageView CreateImageView(
-			const drm::Image& Image,
-			uint32 BaseMipLevel,
-			uint32 LevelCount,
-			uint32 BaseArrayLayer,
-			uint32 LayerCount
+			const drm::Image& image,
+			uint32 baseMipLevel,
+			uint32 levelCount,
+			uint32 baseArrayLayer,
+			uint32 layerCount
 		) = 0;
 
-		virtual drm::Sampler CreateSampler(const SamplerDesc& SamplerDesc) = 0;
+		virtual drm::Sampler CreateSampler(const SamplerDesc& samplerDesc) = 0;
 
-		virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) = 0;
+		virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& rpDesc) = 0;
 
-		virtual drm::TextureID CreateTextureID(const drm::ImageView& ImageView) = 0;
+		virtual drm::TextureID CreateTextureID(const drm::ImageView& imageView) = 0;
 
-		virtual drm::ImageID CreateImageID(const drm::ImageView& ImageView) = 0;
+		virtual drm::ImageID CreateImageID(const drm::ImageView& imageView) = 0;
 
 		virtual drm::BindlessResources& GetTextures() = 0;
 
@@ -65,14 +72,14 @@ namespace drm
 	class Surface
 	{
 	public:
-		virtual uint32 AcquireNextImage(drm::Device& Device) = 0;
-		virtual void Present(drm::Device& Device, uint32 ImageIndex, drm::CommandList& CmdList) = 0;
-		virtual void Resize(drm::Device& Device, uint32 ScreenWidth, uint32 ScreenHeight) = 0;
-		virtual const drm::Image& GetImage(uint32 ImageIndex) = 0;
+		virtual uint32 AcquireNextImage(drm::Device& device) = 0;
+		virtual void Present(drm::Device& device, uint32 imageIndex, drm::CommandList& cmdList) = 0;
+		virtual void Resize(drm::Device& device, uint32 screenWidth, uint32 screenHeight) = 0;
+		virtual const drm::Image& GetImage(uint32 imageIndex) = 0;
 		virtual const std::vector<drm::Image>& GetImages() = 0;
 	};
 
-	void UploadImageData(drm::Device& Device, const void* SrcPixels, const drm::Image& DstImage);
+	void UploadImageData(drm::Device& device, const void* srcPixels, const drm::Image& dstImage);
 }
 
 /** Descriptor set layout helpers. */
@@ -84,19 +91,19 @@ private:
 	drm::DescriptorSetLayout _DescriptorSetLayout;
 
 public:
-	DescriptorSetLayout(drm::Device& Device)
+	DescriptorSetLayout(drm::Device& device)
 	{
-		_DescriptorSetLayout = Device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
+		_DescriptorSetLayout = device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
 	}
 
-	inline drm::DescriptorSet CreateDescriptorSet(drm::Device& Device) 
+	inline drm::DescriptorSet CreateDescriptorSet(drm::Device& device)
 	{ 
-		return _DescriptorSetLayout.CreateDescriptorSet(Device);
+		return _DescriptorSetLayout.CreateDescriptorSet(device);
 	}
 
-	inline void UpdateDescriptorSet(drm::Device& Device, const drm::DescriptorSet& DescriptorSet, DescriptorSetType& DescriptorWrite)
+	inline void UpdateDescriptorSet(drm::Device& device, const drm::DescriptorSet& descriptorSet, DescriptorSetType& descriptorWrite)
 	{ 
-		_DescriptorSetLayout.UpdateDescriptorSet(Device, DescriptorSet, &DescriptorWrite);
+		_DescriptorSetLayout.UpdateDescriptorSet(device, descriptorSet, &descriptorWrite);
 	}
 
 	inline operator VkDescriptorSetLayout() const { return _DescriptorSetLayout; }
@@ -106,21 +113,21 @@ template<typename DescriptorSetType>
 class DescriptorSet : public DescriptorSetType
 {
 private:
-	drm::DescriptorSetLayout DescriptorSetLayout;
+	drm::DescriptorSetLayout _DescriptorSetLayout;
 	drm::DescriptorSet _DescriptorSet;
 
 public:
-	DescriptorSet(drm::Device& Device)
+	DescriptorSet(drm::Device& device)
 	{
-		DescriptorSetLayout = Device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
-		_DescriptorSet = DescriptorSetLayout.CreateDescriptorSet(Device);
+		_DescriptorSetLayout = device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
+		_DescriptorSet = _DescriptorSetLayout.CreateDescriptorSet(device);
 	}
 
-	inline void Update(drm::Device& Device)
+	inline void Update(drm::Device& device)
 	{ 
-		DescriptorSetLayout.UpdateDescriptorSet(Device, _DescriptorSet, this);
+		_DescriptorSetLayout.UpdateDescriptorSet(device, _DescriptorSet, this);
 	}
 
-	inline VkDescriptorSetLayout GetLayout() const { return DescriptorSetLayout; }
+	inline VkDescriptorSetLayout GetLayout() const { return _DescriptorSetLayout; }
 	inline operator VkDescriptorSet() const { return _DescriptorSet; }
 };

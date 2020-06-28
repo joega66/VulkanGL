@@ -93,14 +93,14 @@ void VulkanCommandList::PushConstants(
 
 void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const drm::Shader* Shader, const void* Values)
 {
-	const auto& PushConstantRange = Shader->CompilationInfo.PushConstantRange;
+	const auto& PushConstantRange = Shader->compilationInfo.pushConstantRange;
 
 	vkCmdPushConstants(
 		CommandBuffer,
 		Pipeline->GetPipelineLayout(),
-		TranslateStageFlags(PushConstantRange.StageFlags),
-		PushConstantRange.Offset,
-		PushConstantRange.Size,
+		TranslateStageFlags(PushConstantRange.stageFlags),
+		PushConstantRange.offset,
+		PushConstantRange.size,
 		Values
 	);
 }
@@ -201,11 +201,11 @@ void VulkanCommandList::PipelineBarrier(
 	for (std::size_t BarrierIndex = 0; BarrierIndex < NumBufferBarriers; BarrierIndex++)
 	{
 		const BufferMemoryBarrier& BufferBarrier = BufferBarriers[BarrierIndex];
-		const VulkanBuffer& Buffer = BufferBarrier.Buffer;
+		const VulkanBuffer& Buffer = BufferBarrier.buffer;
 
 		VkBufferMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
-		Barrier.srcAccessMask = GetVulkanAccessFlags(BufferBarrier.SrcAccessMask);
-		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.DstAccessMask);
+		Barrier.srcAccessMask = GetVulkanAccessFlags(BufferBarrier.srcAccessMask);
+		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.dstAccessMask);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.buffer = Buffer.GetHandle();
@@ -221,19 +221,19 @@ void VulkanCommandList::PipelineBarrier(
 	for (std::size_t BarrierIndex = 0; BarrierIndex < NumImageBarriers; BarrierIndex++)
 	{
 		const ImageMemoryBarrier& ImageBarrier = ImageBarriers[BarrierIndex];
-		const drm::Image& Image = ImageBarrier.Image;
+		const drm::Image& Image = ImageBarrier.image;
 
 		VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.SrcAccessMask);
-		Barrier.dstAccessMask = GetVulkanAccessFlags(ImageBarrier.DstAccessMask);
-		Barrier.oldLayout = VulkanImage::GetVulkanLayout(ImageBarrier.OldLayout);
-		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.NewLayout);
+		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.srcAccessMask);
+		Barrier.dstAccessMask = GetVulkanAccessFlags(ImageBarrier.dstAccessMask);
+		Barrier.oldLayout = VulkanImage::GetVulkanLayout(ImageBarrier.oldLayout);
+		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.newLayout);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.image = Image;
 		Barrier.subresourceRange.aspectMask = Image.GetVulkanAspect();
-		Barrier.subresourceRange.baseMipLevel = ImageBarrier.BaseMipLevel;
-		Barrier.subresourceRange.levelCount = ImageBarrier.LevelCount;
+		Barrier.subresourceRange.baseMipLevel = ImageBarrier.baseMipLevel;
+		Barrier.subresourceRange.levelCount = ImageBarrier.levelCount;
 		Barrier.subresourceRange.baseArrayLayer = 0;
 		Barrier.subresourceRange.layerCount = Any(Image.GetUsage() & EImageUsage::Cubemap) ? 6 : 1;
 
@@ -345,9 +345,9 @@ void VulkanCommandList::BlitImage(
 	);
 }
 
-void VulkanCommandList::SetScissor(uint32 ScissorCount, const ScissorDesc* Scissors)
+void VulkanCommandList::SetScissor(uint32 ScissorCount, const Scissor* Scissors)
 {
-	static_assert(sizeof(ScissorDesc) == sizeof(VkRect2D));
+	static_assert(sizeof(Scissor) == sizeof(VkRect2D));
 	vkCmdSetScissor(CommandBuffer, 0, ScissorCount, reinterpret_cast<const VkRect2D*>(Scissors));
 }
 

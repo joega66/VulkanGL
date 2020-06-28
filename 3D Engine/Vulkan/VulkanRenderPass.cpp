@@ -5,18 +5,18 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPa
 {
 	std::size_t Seed;
 
-	for (const auto& ColorAttachment : RPDesc.ColorAttachments)
+	for (const auto& ColorAttachment : RPDesc.colorAttachments)
 	{
-		HashCombine(Seed, ColorAttachment.InitialLayout);
-		HashCombine(Seed, ColorAttachment.FinalLayout);
-		HashCombine(Seed, ColorAttachment.LoadAction);
-		HashCombine(Seed, ColorAttachment.StoreAction);
+		HashCombine(Seed, ColorAttachment.initialLayout);
+		HashCombine(Seed, ColorAttachment.finalLayout);
+		HashCombine(Seed, ColorAttachment.loadAction);
+		HashCombine(Seed, ColorAttachment.storeAction);
 	}
 
-	HashCombine(Seed, RPDesc.DepthAttachment.InitialLayout);
-	HashCombine(Seed, RPDesc.DepthAttachment.FinalLayout);
-	HashCombine(Seed, RPDesc.DepthAttachment.LoadAction);
-	HashCombine(Seed, RPDesc.DepthAttachment.StoreAction);
+	HashCombine(Seed, RPDesc.depthAttachment.initialLayout);
+	HashCombine(Seed, RPDesc.depthAttachment.finalLayout);
+	HashCombine(Seed, RPDesc.depthAttachment.loadAction);
+	HashCombine(Seed, RPDesc.depthAttachment.storeAction);
 
 	VkRenderPass RenderPass = VK_NULL_HANDLE;
 
@@ -67,23 +67,23 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 {
 	std::vector<VkAttachmentDescription> Descriptions;
 	std::vector<VkAttachmentReference> ColorRefs;
-	ColorRefs.reserve(RPDesc.ColorAttachments.size());
+	ColorRefs.reserve(RPDesc.colorAttachments.size());
 
 	VkAttachmentReference DepthRef = {};
 
-	if (RPDesc.DepthAttachment.Image)
+	if (RPDesc.depthAttachment.image)
 	{
-		Descriptions.reserve(RPDesc.ColorAttachments.size() + 1);
+		Descriptions.reserve(RPDesc.colorAttachments.size() + 1);
 	}
 	else
 	{
-		Descriptions.reserve(RPDesc.ColorAttachments.size());
+		Descriptions.reserve(RPDesc.colorAttachments.size());
 	}
 
-	for (uint32 AttachmentIndex = 0; AttachmentIndex < RPDesc.ColorAttachments.size(); AttachmentIndex++)
+	for (uint32 AttachmentIndex = 0; AttachmentIndex < RPDesc.colorAttachments.size(); AttachmentIndex++)
 	{
-		const drm::AttachmentView& ColorAttachment = RPDesc.ColorAttachments[AttachmentIndex];
-		const drm::Image* Image = ColorAttachment.Image;
+		const drm::AttachmentView& ColorAttachment = RPDesc.colorAttachments[AttachmentIndex];
+		const drm::Image* Image = ColorAttachment.image;
 
 		check(Image && Any(Image->GetUsage() & EImageUsage::Attachment), "Color target is invalid.");
 		check(Image->IsColor(), "Color target was not created in color format.");
@@ -91,26 +91,26 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 		VkAttachmentDescription ColorDescription = {};
 		ColorDescription.format = Image->GetVulkanFormat();
 		ColorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		ColorDescription.loadOp = GetVulkanLoadOp(ColorAttachment.LoadAction);
-		ColorDescription.storeOp = GetVulkanStoreOp(ColorAttachment.StoreAction);
+		ColorDescription.loadOp = GetVulkanLoadOp(ColorAttachment.loadAction);
+		ColorDescription.storeOp = GetVulkanStoreOp(ColorAttachment.storeAction);
 		ColorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		ColorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ColorDescription.initialLayout = VulkanImage::GetVulkanLayout(ColorAttachment.InitialLayout);
-		ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorAttachment.FinalLayout);
+		ColorDescription.initialLayout = VulkanImage::GetVulkanLayout(ColorAttachment.initialLayout);
+		ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorAttachment.finalLayout);
 		Descriptions.push_back(ColorDescription);
 
 		ColorRefs.push_back({ AttachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 	}
 
-	if (RPDesc.DepthAttachment.Image)
+	if (RPDesc.depthAttachment.image)
 	{
-		const drm::Image* DepthImage = RPDesc.DepthAttachment.Image;
+		const drm::Image* DepthImage = RPDesc.depthAttachment.image;
 
 		check(DepthImage && Any(DepthImage->GetUsage() & EImageUsage::Attachment), "Depth target is invalid.");
 		check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
-		VkAttachmentLoadOp LoadOp = GetVulkanLoadOp(RPDesc.DepthAttachment.LoadAction);
-		VkAttachmentStoreOp StoreOp = GetVulkanStoreOp(RPDesc.DepthAttachment.StoreAction);
+		VkAttachmentLoadOp LoadOp = GetVulkanLoadOp(RPDesc.depthAttachment.loadAction);
+		VkAttachmentStoreOp StoreOp = GetVulkanStoreOp(RPDesc.depthAttachment.storeAction);
 
 		VkAttachmentDescription DepthDescription = {};
 		DepthDescription.format = DepthImage->GetVulkanFormat();
@@ -119,11 +119,11 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 		DepthDescription.storeOp = DepthImage->IsDepth() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		DepthDescription.initialLayout = VulkanImage::GetVulkanLayout(RPDesc.DepthAttachment.InitialLayout);
-		DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPDesc.DepthAttachment.FinalLayout);
+		DepthDescription.initialLayout = VulkanImage::GetVulkanLayout(RPDesc.depthAttachment.initialLayout);
+		DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPDesc.depthAttachment.finalLayout);
 		Descriptions.push_back(DepthDescription);
 
-		DepthRef.attachment = static_cast<uint32>(RPDesc.ColorAttachments.size());
+		DepthRef.attachment = static_cast<uint32>(RPDesc.colorAttachments.size());
 		DepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	}
 
@@ -131,7 +131,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 	Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	Subpass.pColorAttachments = ColorRefs.data();
 	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-	Subpass.pDepthStencilAttachment = !RPDesc.DepthAttachment.Image ? nullptr : &DepthRef;
+	Subpass.pDepthStencilAttachment = !RPDesc.depthAttachment.image ? nullptr : &DepthRef;
 
 	std::array<VkSubpassDependency, 2> Dependencies;
 
@@ -169,24 +169,24 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const Rend
 {
 	std::vector<VkImageView> AttachmentViews;
 
-	if (RPDesc.DepthAttachment.Image)
+	if (RPDesc.depthAttachment.image)
 	{
-		AttachmentViews.reserve(RPDesc.ColorAttachments.size() + 1);
+		AttachmentViews.reserve(RPDesc.colorAttachments.size() + 1);
 	}
 	else
 	{
-		AttachmentViews.reserve(RPDesc.ColorAttachments.size());
+		AttachmentViews.reserve(RPDesc.colorAttachments.size());
 	}
 
-	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.ColorAttachments.size(); ColorAttachmentIndex++)
+	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.colorAttachments.size(); ColorAttachmentIndex++)
 	{
-		const drm::Image* Image = RPDesc.ColorAttachments[ColorAttachmentIndex].Image;
+		const drm::Image* Image = RPDesc.colorAttachments[ColorAttachmentIndex].image;
 		AttachmentViews.push_back(Image->GetImageView().GetHandle());
 	}
 
-	if (RPDesc.DepthAttachment.Image)
+	if (RPDesc.depthAttachment.image)
 	{
-		const drm::Image* Image = RPDesc.DepthAttachment.Image;
+		const drm::Image* Image = RPDesc.depthAttachment.image;
 		AttachmentViews.push_back(Image->GetImageView().GetHandle());
 	}
 
@@ -194,8 +194,8 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const Rend
 	FramebufferInfo.renderPass = RenderPass;
 	FramebufferInfo.pAttachments = AttachmentViews.data();
 	FramebufferInfo.attachmentCount = static_cast<uint32>(AttachmentViews.size());
-	FramebufferInfo.width = RPDesc.RenderArea.Extent.x;
-	FramebufferInfo.height = RPDesc.RenderArea.Extent.y;
+	FramebufferInfo.width = RPDesc.renderArea.extent.x;
+	FramebufferInfo.height = RPDesc.renderArea.extent.y;
 	FramebufferInfo.layers = 1;
 
 	VkFramebuffer Framebuffer;

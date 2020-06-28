@@ -9,7 +9,6 @@ struct CameraDescriptors
 	drm::DescriptorImageInfo SceneDepth;
 	drm::DescriptorImageInfo GBuffer0;
 	drm::DescriptorImageInfo GBuffer1;
-	drm::DescriptorImageInfo RadianceVolume;
 	drm::DescriptorImageInfo SceneColor;
 
 	static auto& GetBindings()
@@ -20,8 +19,7 @@ struct CameraDescriptors
 			{ 1, 1, EDescriptorType::SampledImage },
 			{ 2, 1, EDescriptorType::SampledImage },
 			{ 3, 1, EDescriptorType::SampledImage },
-			{ 4, 1, EDescriptorType::SampledImage },
-			{ 5, 1, EDescriptorType::StorageImage },
+			{ 4, 1, EDescriptorType::StorageImage },
 		};
 		return Bindings;
 	}
@@ -51,16 +49,15 @@ public:
 	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
 
 	std::vector<MeshDrawCommand> GBufferPass;
-	std::vector<MeshDrawCommand> VoxelsPass;
 
 	void Update(Engine& Engine);
 
 private:
 	void UpdateCameraUniform(Engine& Engine);
+
 	void BuildMeshDrawCommands(Engine& Engine);
 
 	void AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy);
-	void AddToVoxelsPass(Engine& Engine, const MeshProxy& MeshProxy);
 
 	void CreateSceneRP(drm::Device& Device);
 	void CreateGBufferRP(drm::Device& Device);

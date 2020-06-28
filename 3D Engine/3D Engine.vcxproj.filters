@@ -212,9 +212,6 @@
     <ClInclude Include="Vulkan\VulkanPipeline.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\Voxels.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Components\RenderSettings.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
@@ -346,9 +343,6 @@
     <ClCompile Include="Engine\Input.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\Voxels.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\MeshProxy.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
@@ -477,18 +471,6 @@
     <None Include="ECS\ComponentArray.inl">
       <Filter>Source\ECS</Filter>
     </None>
-    <None Include="..\Shaders\VoxelsVS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\VoxelsGS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\VoxelsFS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\VoxelsCommon.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Config\Engine.ini">
       <Filter>Config</Filter>
     </None>
@@ -496,9 +478,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\MeshCommon.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\DrawVoxels.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\ShadowDepthVS.glsl">
@@ -514,9 +493,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\MaterialInterface.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\DownsampleVolumeCS.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SceneResources.glsl">
@@ -538,12 +514,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\PostProcessingCS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\LightVolumeCS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="..\Shaders\IndirectLightingCS.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\RayTracingCS.glsl">

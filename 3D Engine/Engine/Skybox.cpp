@@ -63,16 +63,16 @@ Skybox::Skybox(drm::Device& Device, const std::array<const drm::Image*, 6>& Imag
 
 	for (auto& SrcImageBarrier : SrcImageBarriers)
 	{
-		SrcImageBarrier.SrcAccessMask = EAccess::TransferRead;
-		SrcImageBarrier.DstAccessMask = EAccess::ShaderRead;
-		SrcImageBarrier.OldLayout = EImageLayout::TransferSrcOptimal;
-		SrcImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+		SrcImageBarrier.srcAccessMask = EAccess::TransferRead;
+		SrcImageBarrier.dstAccessMask = EAccess::ShaderRead;
+		SrcImageBarrier.oldLayout = EImageLayout::TransferSrcOptimal;
+		SrcImageBarrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 
-	DstImageBarrier.SrcAccessMask = EAccess::TransferWrite;
-	DstImageBarrier.DstAccessMask = EAccess::ShaderRead;
-	DstImageBarrier.OldLayout = EImageLayout::TransferDstOptimal;
-	DstImageBarrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	DstImageBarrier.srcAccessMask = EAccess::TransferWrite;
+	DstImageBarrier.dstAccessMask = EAccess::ShaderRead;
+	DstImageBarrier.oldLayout = EImageLayout::TransferDstOptimal;
+	DstImageBarrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &DstImageBarrier);

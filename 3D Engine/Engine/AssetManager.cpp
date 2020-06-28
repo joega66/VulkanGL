@@ -180,15 +180,15 @@ void AssetManager::CreateDebugImages(drm::Device& Device)
 
 	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
 	{
-		CmdList.CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].Image, EImageLayout::TransferDstOptimal);
+		CmdList.CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].image, EImageLayout::TransferDstOptimal);
 	}
 
 	for (auto& Barrier : Barriers)
 	{
-		Barrier.SrcAccessMask = EAccess::TransferWrite;
-		Barrier.DstAccessMask = EAccess::ShaderRead;
-		Barrier.OldLayout = EImageLayout::TransferDstOptimal;
-		Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+		Barrier.srcAccessMask = EAccess::TransferWrite;
+		Barrier.dstAccessMask = EAccess::ShaderRead;
+		Barrier.oldLayout = EImageLayout::TransferDstOptimal;
+		Barrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 
 	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());

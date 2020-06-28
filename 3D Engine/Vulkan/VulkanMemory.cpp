@@ -207,7 +207,7 @@ VulkanBuffer::VulkanBuffer(VulkanBuffer&& Other)
 	: Memory(std::exchange(Other.Memory, nullptr))
 	, AlignedSize(Other.AlignedSize)
 	, Offset(Other.Offset)
-	, drm::BufferPrivate(Other.Usage, Other.GetSize())
+	, drm::BufferPrivate(Other.GetUsage(), Other.GetSize())
 {
 }
 
@@ -216,8 +216,8 @@ VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& Other)
 	Memory = std::exchange(Other.Memory, nullptr);
 	AlignedSize = Other.AlignedSize;
 	Offset = Other.Offset;
-	Usage = Other.Usage;
-	Size = Other.Size;
+	_Usage = Other._Usage;
+	_Size = Other._Size;
 	return *this;
 }
 

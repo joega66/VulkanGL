@@ -79,7 +79,7 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, drm::CommandList& cmd
 	rayTracingParams._FrameNumber = frameNumber++;
 
 	ComputePipelineDesc computeDesc = {};
-	computeDesc.ComputeShader = ShaderLibrary.FindShader<RayTracingCS>();
+	computeDesc.computeShader = ShaderLibrary.FindShader<RayTracingCS>();
 	computeDesc.Layouts = { camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
 	
 	drm::Pipeline pipeline = Device.CreatePipeline(computeDesc);
@@ -89,17 +89,17 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, drm::CommandList& cmd
 	std::vector<VkDescriptorSet> descriptorSets = { camera.CameraDescriptorSet, Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
 	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
-	cmdList.PushConstants(pipeline, computeDesc.ComputeShader, &rayTracingParams);
+	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
 
 	const uint32 groupCountX = DivideAndRoundUp(_Camera.GetWidth(), 8u);
 	const uint32 groupCountY = DivideAndRoundUp(_Camera.GetHeight(), 8u);
 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 
-	imageBarrier.SrcAccessMask = EAccess::ShaderWrite;
-	imageBarrier.DstAccessMask = EAccess::ShaderRead;
-	imageBarrier.OldLayout = EImageLayout::General;
-	imageBarrier.NewLayout = EImageLayout::General;
+	imageBarrier.srcAccessMask = EAccess::ShaderWrite;
+	imageBarrier.dstAccessMask = EAccess::ShaderRead;
+	imageBarrier.oldLayout = EImageLayout::General;
+	imageBarrier.newLayout = EImageLayout::General;
 
 	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 }

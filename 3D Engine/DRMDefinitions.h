@@ -27,36 +27,47 @@ namespace drm
 	using SamplerID = VulkanSamplerID;
 	using ImageID = VulkanImageID;
 
-	class AttachmentView
+	struct AttachmentView
 	{
-	public:
-		const drm::Image* Image = nullptr;
-		ClearColorValue ClearColor = {};
-		ClearDepthStencilValue ClearDepthStencil = {};
-		ELoadAction LoadAction = ELoadAction::DontCare;
-		EStoreAction StoreAction = EStoreAction::DontCare;
-		EImageLayout InitialLayout = EImageLayout::Undefined;
-		EImageLayout FinalLayout = EImageLayout::Undefined;
+		const drm::Image* image = nullptr;
+		ClearColorValue clearColor = {};
+		ClearDepthStencilValue clearDepthStencil = {};
+		ELoadAction loadAction = ELoadAction::DontCare;
+		EStoreAction storeAction = EStoreAction::DontCare;
+		EImageLayout initialLayout = EImageLayout::Undefined;
+		EImageLayout finalLayout = EImageLayout::Undefined;
 
 		AttachmentView() = default;
 
-		AttachmentView(const drm::Image* Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearColorValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout)
-			: Image(Image)
-			, ClearColor(ClearValue)
-			, LoadAction(LoadAction)
-			, StoreAction(StoreAction)
-			, InitialLayout(InitialLayout)
-			, FinalLayout(FinalLayout)
+		AttachmentView(
+			const drm::Image* image, 
+			ELoadAction loadAction, 
+			EStoreAction storeAction, 
+			const ClearColorValue& clearValue, 
+			EImageLayout initialLayout, 
+			EImageLayout finalLayout)
+			: image(image)
+			, clearColor(clearValue)
+			, loadAction(loadAction)
+			, storeAction(storeAction)
+			, initialLayout(initialLayout)
+			, finalLayout(finalLayout)
 		{
 		}
 
-		AttachmentView(const drm::Image* Image, ELoadAction LoadAction, EStoreAction StoreAction, const ClearDepthStencilValue& ClearValue, EImageLayout InitialLayout, EImageLayout FinalLayout)
-			: Image(Image)
-			, ClearDepthStencil(ClearValue)
-			, LoadAction(LoadAction)
-			, StoreAction(StoreAction)
-			, InitialLayout(InitialLayout)
-			, FinalLayout(FinalLayout)
+		AttachmentView(
+			const drm::Image* image, 
+			ELoadAction loadAction, 
+			EStoreAction storeAction, 
+			const ClearDepthStencilValue& clearValue, 
+			EImageLayout initialLayout, 
+			EImageLayout finalLayout)
+			: image(image)
+			, clearDepthStencil(clearValue)
+			, loadAction(loadAction)
+			, storeAction(storeAction)
+			, initialLayout(initialLayout)
+			, finalLayout(finalLayout)
 		{
 		}
 	};
@@ -64,66 +75,66 @@ namespace drm
 
 struct RenderArea
 {
-	glm::ivec2 Offset = {};
-	glm::uvec2 Extent = {};
+	glm::ivec2 offset = {};
+	glm::uvec2 extent = {};
 };
 
 struct RenderPassDesc
 {
-	std::vector<drm::AttachmentView> ColorAttachments;
-	drm::AttachmentView DepthAttachment;
-	RenderArea RenderArea;
+	std::vector<drm::AttachmentView> colorAttachments;
+	drm::AttachmentView depthAttachment;
+	RenderArea renderArea;
 };
 
 struct PipelineStateDesc
 {
-	drm::RenderPassView RenderPass;
-	ScissorDesc Scissor;
-	Viewport Viewport;
-	DepthStencilState DepthStencilState;
-	RasterizationState RasterizationState;
-	MultisampleState MultisampleState;
-	InputAssemblyState InputAssemblyState;
-	ShaderStages ShaderStages;
-	SpecializationInfo SpecializationInfo;
-	std::vector<ColorBlendAttachmentState> ColorBlendAttachmentStates;
-	std::vector<EDynamicState> DynamicStates;
-	std::vector<VertexAttributeDescription> VertexAttributes;
-	std::vector<VertexBindingDescription> VertexBindings;
-	std::vector<VkDescriptorSetLayout> Layouts;
-	std::vector<PushConstantRange> PushConstantRanges;
+	drm::RenderPassView renderPass;
+	Scissor scissor;
+	Viewport viewport;
+	DepthStencilState depthStencilState;
+	RasterizationState rasterizationState;
+	MultisampleState multisampleState;
+	InputAssemblyState inputAssemblyState;
+	ShaderStages shaderStages;
+	SpecializationInfo specInfo;
+	std::vector<ColorBlendAttachmentState> colorBlendAttachmentStates;
+	std::vector<EDynamicState> dynamicStates;
+	std::vector<VertexAttributeDescription> vertexAttributes;
+	std::vector<VertexBindingDescription> vertexBindings;
+	std::vector<VkDescriptorSetLayout> layouts;
+	std::vector<PushConstantRange> pushConstantRanges;
 
-	friend bool operator==(const PipelineStateDesc& L, const PipelineStateDesc& R)
+	friend bool operator==(const PipelineStateDesc& l, const PipelineStateDesc& r)
 	{
-		return L.RenderPass == R.RenderPass
-			&& L.Scissor == R.Scissor
-			&& L.Viewport == R.Viewport
-			&& L.DepthStencilState == R.DepthStencilState
-			&& L.RasterizationState == R.RasterizationState
-			&& L.MultisampleState == R.MultisampleState
-			&& L.InputAssemblyState == R.InputAssemblyState
-			&& L.ShaderStages == R.ShaderStages
-			&& L.SpecializationInfo == R.SpecializationInfo
-			&& L.ColorBlendAttachmentStates == R.ColorBlendAttachmentStates
-			&& L.DynamicStates == R.DynamicStates
-			&& L.VertexAttributes == R.VertexAttributes
-			&& L.VertexBindings == R.VertexBindings;
+		return l.renderPass == r.renderPass
+			&& l.scissor == r.scissor
+			&& l.viewport == r.viewport
+			&& l.depthStencilState == r.depthStencilState
+			&& l.rasterizationState == r.rasterizationState
+			&& l.multisampleState == r.multisampleState
+			&& l.inputAssemblyState == r.inputAssemblyState
+			&& l.shaderStages == r.shaderStages
+			&& l.specInfo == r.specInfo
+			&& l.colorBlendAttachmentStates == r.colorBlendAttachmentStates
+			&& l.dynamicStates == r.dynamicStates
+			&& l.vertexAttributes == r.vertexAttributes
+			&& l.vertexBindings == r.vertexBindings;
 	}
 
-	bool HasShader(const drm::Shader* Shader) const
+	bool HasShader(const drm::Shader* shader) const
 	{
-		switch (Shader->CompilationInfo.Stage)
+		switch (shader->compilationInfo.stage)
 		{
 		case EShaderStage::Vertex:
-			return ShaderStages.Vertex == Shader;
+			return shaderStages.vertex == shader;
 		case EShaderStage::TessControl:
-			return ShaderStages.TessControl == Shader;
+			return shaderStages.tessControl == shader;
 		case EShaderStage::TessEvaluation:
-			return ShaderStages.TessEval == Shader;
+			return shaderStages.tessEval == shader;
 		case EShaderStage::Geometry:
-			return ShaderStages.Geometry == Shader;
+			return shaderStages.geometry == shader;
 		default: // EShaderStage::Fragment
-			return ShaderStages.Fragment == Shader;
+			return shaderStages.fragment == shader;
 		}
 	}
 };
@@ -132,57 +143,57 @@ namespace std
 {
 	template<> struct hash<PipelineStateDesc>
 	{
-		std::size_t operator()(PipelineStateDesc const& PSODesc) const noexcept
+		std::size_t operator()(PipelineStateDesc const& psoDesc) const noexcept
 		{
-			std::size_t Seed = 0;
-			HashCombine(Seed, PSODesc.RenderPass.GetRenderPass());
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.Scissor, sizeof(PSODesc.Scissor)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.Viewport, sizeof(PSODesc.Viewport)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.DepthStencilState, sizeof(PSODesc.DepthStencilState)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.RasterizationState, sizeof(PSODesc.RasterizationState)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.MultisampleState, sizeof(PSODesc.MultisampleState)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.InputAssemblyState, sizeof(PSODesc.InputAssemblyState)));
-			HashCombine(Seed, Platform::CalculateCrc(&PSODesc.ShaderStages, sizeof(PSODesc.ShaderStages)));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.SpecializationInfo.GetMapEntries().data(), PSODesc.SpecializationInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.SpecializationInfo.GetData().data(), PSODesc.SpecializationInfo.GetData().size()));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.ColorBlendAttachmentStates.data(), PSODesc.ColorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.DynamicStates.data(), PSODesc.DynamicStates.size() * sizeof(EDynamicState)));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.VertexAttributes.data(), PSODesc.VertexAttributes.size() * sizeof(VertexAttributeDescription)));
-			HashCombine(Seed, Platform::CalculateCrc(PSODesc.VertexBindings.data(), PSODesc.VertexBindings.size() * sizeof(VertexBindingDescription)));
-			return Seed;
+			std::size_t seed = 0;
+			HashCombine(seed, psoDesc.renderPass.GetRenderPass());
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.scissor, sizeof(psoDesc.scissor)));
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.viewport, sizeof(psoDesc.viewport)));
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState)));
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState)));
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.multisampleState, sizeof(psoDesc.multisampleState)));
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState)));
+			HashCombine(seed, Platform::CalculateCrc(&psoDesc.shaderStages, sizeof(psoDesc.shaderStages)));
+			HashCombine(seed, Platform::CalculateCrc(psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
+			HashCombine(seed, Platform::CalculateCrc(psoDesc.specInfo.GetData().data(), psoDesc.specInfo.GetData().size()));
+			HashCombine(seed, Platform::CalculateCrc(psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
+			HashCombine(seed, Platform::CalculateCrc(psoDesc.dynamicStates.data(), psoDesc.dynamicStates.size() * sizeof(EDynamicState)));
+			HashCombine(seed, Platform::CalculateCrc(psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(VertexAttributeDescription)));
+			HashCombine(seed, Platform::CalculateCrc(psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(VertexBindingDescription)));
+			return seed;
 		}
 	};
 }
 
 struct ComputePipelineDesc
 {
-	const drm::Shader* ComputeShader = nullptr;
-	SpecializationInfo SpecializationInfo;
+	const drm::Shader* computeShader = nullptr;
+	SpecializationInfo specInfo;
 	std::vector<VkDescriptorSetLayout> Layouts;
 
-	inline bool operator==(const ComputePipelineDesc& Other) const
+	inline bool operator==(const ComputePipelineDesc& other) const
 	{
-		return ComputeShader == Other.ComputeShader
-			&& SpecializationInfo == Other.SpecializationInfo;
+		return computeShader == other.computeShader
+			&& specInfo == other.specInfo;
 	}
 };
 
 struct BufferMemoryBarrier
 {
-	const drm::Buffer& Buffer;
-	EAccess SrcAccessMask;
-	EAccess DstAccessMask;
+	const drm::Buffer& buffer;
+	EAccess srcAccessMask;
+	EAccess dstAccessMask;
 };
 
 struct ImageMemoryBarrier
 {
-	const drm::Image& Image;
-	EAccess SrcAccessMask;
-	EAccess DstAccessMask;
-	EImageLayout OldLayout;
-	EImageLayout NewLayout;
-	uint32 BaseMipLevel = 0;
-	uint32 LevelCount = 1;
+	const drm::Image& image;
+	EAccess srcAccessMask;
+	EAccess dstAccessMask;
+	EImageLayout oldLayout;
+	EImageLayout newLayout;
+	uint32 baseMipLevel = 0;
+	uint32 levelCount = 1;
 };
 
 #include "Vulkan/VulkanCommandList.h"

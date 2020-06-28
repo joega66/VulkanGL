@@ -1,23 +1,23 @@
 #include "DRM.h"
 
-void drm::UploadImageData(drm::Device& Device, const void* SrcPixels, const drm::Image& DstImage)
+void drm::UploadImageData(drm::Device& device, const void* srcPixels, const drm::Image& dstImage)
 {
-	drm::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, DstImage.GetSize(), SrcPixels);
+	drm::Buffer stagingBuffer = device.CreateBuffer(EBufferUsage::Transfer, dstImage.GetSize(), srcPixels);
 
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	drm::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 
-	ImageMemoryBarrier Barrier{ DstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
+	ImageMemoryBarrier barrier{ dstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
 
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &Barrier);
+	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &barrier);
 
-	CmdList.CopyBufferToImage(StagingBuffer, 0, DstImage, EImageLayout::TransferDstOptimal);
+	cmdList.CopyBufferToImage(stagingBuffer, 0, dstImage, EImageLayout::TransferDstOptimal);
 
-	Barrier.SrcAccessMask = EAccess::TransferWrite;
-	Barrier.DstAccessMask = EAccess::ShaderRead;
-	Barrier.OldLayout = EImageLayout::TransferDstOptimal;
-	Barrier.NewLayout = EImageLayout::ShaderReadOnlyOptimal;
+	barrier.srcAccessMask = EAccess::TransferWrite;
+	barrier.dstAccessMask = EAccess::ShaderRead;
+	barrier.oldLayout = EImageLayout::TransferDstOptimal;
+	barrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &Barrier);
+	cmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &barrier);
 
-	Device.SubmitCommands(CmdList);
+	device.SubmitCommands(cmdList);
 }
