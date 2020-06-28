@@ -6,7 +6,7 @@
 #define STBI_MSC_SECURE_CRT
 #include <tiny_gltf.h>
 
-StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, drm::Device& Device, const std::filesystem::path& Path)
+StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device, const std::filesystem::path& Path)
 	: Name(AssetName)
 	, Path(Path)
 {
@@ -39,7 +39,7 @@ StaticMesh::StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uin
 
 tinygltf::TinyGLTF Loader;
 
-void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, drm::Device& Device)
+void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device)
 {
 	tinygltf::Model Model;
 	std::string Err;
@@ -74,7 +74,7 @@ void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, dr
 	}
 }
 
-void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, drm::Device& Device)
+void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, gpu::Device& Device)
 {
 	auto& IndexAccessor = Model.accessors[Primitive.indices];
 	auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
@@ -91,16 +91,16 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	auto& NormalData = Model.buffers[NormalView.buffer];
 	auto& UvData = Model.buffers[UvView.buffer];
 	
-	drm::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
-	drm::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
-	drm::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
-	drm::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
+	gpu::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
+	gpu::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
+	gpu::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
+	gpu::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
 
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	uint64 SrcOffset = 0;
 
-	drm::Buffer StagingBuffer = Device.CreateBuffer(
+	gpu::Buffer StagingBuffer = Device.CreateBuffer(
 		EBufferUsage::Transfer,
 		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
 	);
@@ -144,7 +144,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	SubmeshBounds.push_back(BoundingBox(Min, Max));
 }
 
-void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, drm::Device& Device)
+void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, gpu::Device& Device)
 {
 	auto& GLTFMaterial = Model.materials[Primitive.material];
 	const EMaterialMode MaterialMode = [] (const std::string& AlphaMode)
@@ -163,10 +163,10 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 
 	if (!Material)
 	{
-		const drm::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-		const drm::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
-		const drm::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
-		const drm::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
+		const gpu::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+		const gpu::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+		const gpu::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
+		const gpu::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
 		const glm::vec3 EmissiveFactor(
 			static_cast<float>(GLTFMaterial.emissiveFactor[0]),
 			static_cast<float>(GLTFMaterial.emissiveFactor[1]),
@@ -210,7 +210,7 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 	}
 }
 
-const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, drm::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
+const gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
 	if (TextureIndex == -1)
 	{
@@ -221,20 +221,20 @@ const drm::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, drm::Device& D
 		auto& Texture = Model.textures[TextureIndex];
 		auto& Image = Model.images[Texture.source];
 
-		if (const drm::Image* LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
+		if (const gpu::Image* LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
 		{
 			return LoadedImage;
 		}
 		else
 		{
 #undef LoadImage
-			std::unique_ptr<drm::Image> NewImage = std::make_unique<drm::Image>(Device.CreateImage(
+			std::unique_ptr<gpu::Image> NewImage = std::make_unique<gpu::Image>(Device.CreateImage(
 				Image.width, 
 				Image.height, 
 				1, 
 				GetFormat(Image.bits, Image.component, Image.pixel_type), 
 				EImageUsage::Sampled | EImageUsage::TransferDst));
-			drm::UploadImageData(Device, Image.image.data(), *NewImage);
+			gpu::UploadImageData(Device, Image.image.data(), *NewImage);
 			return Assets.LoadImage(Image.uri, std::move(NewImage));
 		}
 	}

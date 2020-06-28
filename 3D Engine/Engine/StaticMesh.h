@@ -1,6 +1,6 @@
 #pragma once
 #include <Physics/Physics.h>
-#include <DRM.h>
+#include <GPU/GPU.h>
 #include "Material.h"
 #include <filesystem>
 
@@ -20,10 +20,10 @@ public:
 	Submesh(
 		uint32 IndexCount
 		, EIndexType IndexType
-		, drm::Buffer&& IndexBuffer
-		, drm::Buffer&& PositionBuffer
-		, drm::Buffer&& TextureCoordinateBuffer
-		, drm::Buffer&& NormalBuffer
+		, gpu::Buffer&& IndexBuffer
+		, gpu::Buffer&& PositionBuffer
+		, gpu::Buffer&& TextureCoordinateBuffer
+		, gpu::Buffer&& NormalBuffer
 	) : IndexCount(IndexCount)
 		, IndexType(IndexType)
 		, IndexBuffer(std::move(IndexBuffer))
@@ -50,15 +50,15 @@ public:
 
 	inline uint32 GetIndexCount() const { return IndexCount; }
 	inline EIndexType GetIndexType() const { return IndexType; }
-	inline const drm::Buffer& GetIndexBuffer() const { return IndexBuffer; }
-	inline const std::array<drm::Buffer, NumLocations>& GetVertexBuffers() const { return VertexBuffers; }
-	inline const drm::Buffer& GetPositionBuffer() const { return VertexBuffers[Positions]; }
+	inline const gpu::Buffer& GetIndexBuffer() const { return IndexBuffer; }
+	inline const std::array<gpu::Buffer, NumLocations>& GetVertexBuffers() const { return VertexBuffers; }
+	inline const gpu::Buffer& GetPositionBuffer() const { return VertexBuffers[Positions]; }
 
 private:
 	uint32 IndexCount;
 	EIndexType IndexType;
-	drm::Buffer IndexBuffer;
-	std::array<drm::Buffer, NumLocations> VertexBuffers;
+	gpu::Buffer IndexBuffer;
+	std::array<gpu::Buffer, NumLocations> VertexBuffers;
 };
 
 namespace tinygltf { class Model; struct Mesh; struct Primitive; }
@@ -79,7 +79,7 @@ public:
 	std::vector<std::string> SubmeshNames;
 
 	/** Load a static mesh from file. */
-	StaticMesh(const std::string& AssetName, AssetManager& Assets, drm::Device& Device, const std::filesystem::path& Path);
+	StaticMesh(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device, const std::filesystem::path& Path);
 	
 	/** Initialize a static mesh from a single submesh of a static mesh. */
 	StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uint32 SubmeshIndex);
@@ -90,8 +90,8 @@ private:
 	/** Local-space bounds of the mesh. */
 	BoundingBox Bounds;
 
-	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, drm::Device& Device);
-	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, drm::Device& Device);
-	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, drm::Device& Device);
-	const drm::Image* GLTFLoadImage(AssetManager& Assets, drm::Device& Device, tinygltf::Model& Model, int32 TextureIndex);
+	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device);
+	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, gpu::Device& Device);
+	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, gpu::Device& Device);
+	const gpu::Image* GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex);
 };

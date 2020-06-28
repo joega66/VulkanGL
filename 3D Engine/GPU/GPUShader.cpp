@@ -1,5 +1,5 @@
-#include "DRMShader.h"
-#include <DRMDefinitions.h>
+#include "GPU/GPUShader.h"
+#include "GPU/GPUDefinitions.h"
 
 template<>
 std::string ShaderTypeSerializer::Serialize<uint32>()
@@ -32,19 +32,19 @@ std::string ShaderTypeSerializer::Serialize<glm::mat4>()
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<drm::TextureID>()
+std::string ShaderTypeSerializer::Serialize<gpu::TextureID>()
 {
 	return "uint";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<drm::SamplerID>()
+std::string ShaderTypeSerializer::Serialize<gpu::SamplerID>()
 {
 	return "uint";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<drm::ImageID>()
+std::string ShaderTypeSerializer::Serialize<gpu::ImageID>()
 {
 	return "uint";
 }

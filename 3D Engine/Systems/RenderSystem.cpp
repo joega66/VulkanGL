@@ -30,9 +30,9 @@ void RenderSystem::Start(Engine& Engine)
 	ECS.OnComponentCreated<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
-		drm::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniformBuffer));
+		gpu::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniformBuffer));
 		StaticMeshDescriptors SurfaceDescriptors = { LocalToWorldUniform };
-		drm::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet(Device);
+		gpu::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet(Device);
 		StaticMeshLayout.UpdateDescriptorSet(Device, SurfaceSet, SurfaceDescriptors);
 
 		ECS.AddComponent(Entity,

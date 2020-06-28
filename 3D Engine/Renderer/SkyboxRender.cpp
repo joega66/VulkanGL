@@ -3,11 +3,11 @@
 #include <Engine/AssetManager.h>
 #include <Components/SkyboxComponent.h>
 
-class SkyboxVS : public drm::Shader
+class SkyboxVS : public gpu::Shader
 {
 public:
 	SkyboxVS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -22,11 +22,11 @@ public:
 	}
 };
 
-class SkyboxFS : public drm::Shader
+class SkyboxFS : public gpu::Shader
 {
 public:
 	SkyboxFS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -41,15 +41,15 @@ public:
 	}
 };
 
-void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
+void SceneRenderer::RenderSkybox(CameraProxy& Camera, gpu::CommandList& CmdList)
 {
 	const SkyboxVS* VertShader = ShaderLibrary.FindShader<SkyboxVS>();
 	const SkyboxFS* FragShader = ShaderLibrary.FindShader<SkyboxFS>();
 
 	struct PushConstants
 	{
-		drm::TextureID Skybox;
-		drm::SamplerID Sampler;
+		gpu::TextureID Skybox;
+		gpu::SamplerID Sampler;
 	};
 	
 	PipelineStateDesc PSODesc = {};
@@ -62,7 +62,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList)
 	PSODesc.layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
 	PSODesc.pushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(PushConstants) });
 
-	drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+	gpu::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 	CmdList.BindPipeline(Pipeline);
 

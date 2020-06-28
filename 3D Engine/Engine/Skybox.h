@@ -1,5 +1,5 @@
 #pragma once
-#include <DRM.h>
+#include <GPU/GPU.h>
 
 enum CubemapFace
 {
@@ -16,17 +16,17 @@ enum CubemapFace
 class Skybox
 {
 public:
-	Skybox(drm::Device& Device, const std::array<const drm::Image*, 6>& Images, EFormat Format);
+	Skybox(gpu::Device& Device, const std::array<const gpu::Image*, 6>& Images, EFormat Format);
 	
-	inline const drm::Image& GetImage() const { return Image; }
-	inline std::array<const drm::Image*, 6>& GetFaces() { return Images; }
+	inline const gpu::Image& GetImage() const { return Image; }
+	inline std::array<const gpu::Image*, 6>& GetFaces() { return Images; }
 
 	static const std::string CubemapFaces[6];
 	static const std::string CubemapStems[6];
 
 private:
 	/** Cubemap image. */
-	drm::Image Image;
+	gpu::Image Image;
 	/** Image faces. */
-	std::array<const drm::Image*, 6> Images;
+	std::array<const gpu::Image*, 6> Images;
 };

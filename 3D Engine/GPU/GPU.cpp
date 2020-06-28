@@ -1,10 +1,10 @@
-#include "DRM.h"
+#include "GPU/GPU.h"
 
-void drm::UploadImageData(drm::Device& device, const void* srcPixels, const drm::Image& dstImage)
+void gpu::UploadImageData(gpu::Device& device, const void* srcPixels, const gpu::Image& dstImage)
 {
-	drm::Buffer stagingBuffer = device.CreateBuffer(EBufferUsage::Transfer, dstImage.GetSize(), srcPixels);
+	gpu::Buffer stagingBuffer = device.CreateBuffer(EBufferUsage::Transfer, dstImage.GetSize(), srcPixels);
 
-	drm::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 
 	ImageMemoryBarrier barrier{ dstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
 

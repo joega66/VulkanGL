@@ -3,12 +3,12 @@
 #include "Skybox.h"
 #include <filesystem>
 
-class drm::Device;
+class gpu::Device;
 
 class AssetManager
 {
 	friend class Engine;
-	AssetManager(drm::Device& Device);
+	AssetManager(gpu::Device& Device);
 
 public:
 	AssetManager(const AssetManager&) = delete;
@@ -24,9 +24,9 @@ public:
 	std::vector<const StaticMesh*> LoadStaticMesh(const std::filesystem::path& Path, bool Breakup = false);
 	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
 
-	const drm::Image* LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage = EImageUsage::None);
-	const drm::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<drm::Image> Image);
-	const drm::Image* GetImage(const std::string& AssetName) const;
+	const gpu::Image* LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage = EImageUsage::None);
+	const gpu::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image);
+	const gpu::Image* GetImage(const std::string& AssetName) const;
 
 	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
 	const Material* GetMaterial(const std::string& AssetName);
@@ -38,19 +38,19 @@ public:
 	Skybox* LoadSkybox(const std::string& AssetName, const std::filesystem::path& Path);
 	Skybox* GetSkybox(const std::string& AssetName);
 
-	static drm::Image Red;
-	static drm::Image Green;
-	static drm::Image Blue;
-	static drm::Image White;
-	static drm::Image Black;
+	static gpu::Image Red;
+	static gpu::Image Green;
+	static gpu::Image Blue;
+	static gpu::Image White;
+	static gpu::Image Black;
 
 private:
-	drm::Device& Device;
+	gpu::Device& Device;
 
 	std::unordered_map<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
 	std::unordered_map<std::string, std::unique_ptr<Material>> Materials;
 	std::unordered_map<std::string, std::unique_ptr<Skybox>> Skyboxes;
-	std::unordered_map<std::string, std::unique_ptr<drm::Image>> Images;
+	std::unordered_map<std::string, std::unique_ptr<gpu::Image>> Images;
 
-	static void CreateDebugImages(drm::Device& Device);
+	static void CreateDebugImages(gpu::Device& Device);
 };

@@ -7,8 +7,7 @@
 class Cursor;
 class Input;
 class Screen;
-class drm::Device;
-namespace drm { class Surface; class ShaderLibrary; }
+namespace gpu { class Device; class Surface; class ShaderLibrary; }
 
 /** The main() of the engine, after the platform-dependent stuff has been resolved. */
 class Engine
@@ -19,9 +18,9 @@ public:
 		Cursor& InCursor,
 		Input& InInput,
 		Screen& InScreen,
-		drm::Device& InDevice,
-		drm::ShaderLibrary& InShaderLibrary,
-		drm::Surface& InSurface
+		gpu::Device& InDevice,
+		gpu::ShaderLibrary& InShaderLibrary,
+		gpu::Surface& InSurface
 	);
 
 	void Main();
@@ -32,10 +31,10 @@ public:
 	Input& _Input;
 	Screen& _Screen;
 	
-	/** DRM implementations. */
-	drm::Device& Device;
-	drm::ShaderLibrary& ShaderLibrary;
-	drm::Surface& Surface;
+	/** GPU/GPU.h implementations. */
+	gpu::Device& Device;
+	gpu::ShaderLibrary& ShaderLibrary;
+	gpu::Surface& Surface;
 
 	/** Engine misc. */
 	EntityManager ECS;

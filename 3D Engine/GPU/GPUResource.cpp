@@ -1,7 +1,7 @@
-#include "DRMResource.h"
+#include "GPU/GPUResource.h"
 #include <unordered_set>
 
-namespace drm
+namespace gpu
 {
 	bool ImagePrivate::IsColor(EFormat format)
 	{

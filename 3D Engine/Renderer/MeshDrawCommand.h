@@ -1,12 +1,12 @@
 #pragma once
-#include <DRM.h>
+#include <GPU/GPU.h>
 #include "MeshProxy.h"
 
 class MeshDrawCommand
 {
 public:
 	MeshDrawCommand(
-		drm::Device& Device,
+		gpu::Device& Device,
 		const MeshProxy& MeshProxy,
 		PipelineStateDesc& PSODesc,
 		const std::vector<VkDescriptorSet>& DescriptorSets)
@@ -19,7 +19,7 @@ public:
 		Pipeline = Device.CreatePipeline(PSODesc);
 	}
 
-	void Draw(drm::CommandList& CmdList)
+	void Draw(gpu::CommandList& CmdList)
 	{
 		CmdList.BindPipeline(Pipeline);
 
@@ -35,7 +35,7 @@ public:
 		}
 	}
 
-	static void Draw(drm::CommandList& CmdList, std::vector<MeshDrawCommand>& MeshDrawCommands)
+	static void Draw(gpu::CommandList& CmdList, std::vector<MeshDrawCommand>& MeshDrawCommands)
 	{
 		for (auto& MeshDrawCommand : MeshDrawCommands)
 		{
@@ -44,7 +44,7 @@ public:
 	}
 
 private:
-	drm::Pipeline Pipeline;
+	gpu::Pipeline Pipeline;
 	std::vector<VkDescriptorSet> DescriptorSets;
 	const std::vector<Submesh>& Submeshes;
 	const Material* Material;

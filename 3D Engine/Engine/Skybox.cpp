@@ -18,12 +18,12 @@ const std::string Skybox::CubemapStems[6] = {
 	"nz",
 };
 
-Skybox::Skybox(drm::Device& Device, const std::array<const drm::Image*, 6>& Images, EFormat Format)
+Skybox::Skybox(gpu::Device& Device, const std::array<const gpu::Image*, 6>& Images, EFormat Format)
 	: Images(Images)
 {
 	Image = Device.CreateImage(Images.front()->GetWidth(), Images.front()->GetHeight(), 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
 
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> SrcImageBarriers;
 	SrcImageBarriers.reserve(Images.size());

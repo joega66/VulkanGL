@@ -1,7 +1,7 @@
 #include "AssetManager.h"
-#include <DRM.h>
+#include <GPU/GPU.h>
 
-AssetManager::AssetManager(drm::Device& Device)
+AssetManager::AssetManager(gpu::Device& Device)
 	: Device(Device)
 {
 	CreateDebugImages(Device);
@@ -39,7 +39,7 @@ const StaticMesh* AssetManager::GetStaticMesh(const std::string& AssetName) cons
 	return StaticMeshes.at(AssetName).get();
 }
 
-const drm::Image* AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage)
+const gpu::Image* AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage)
 {
 	check(Images.find(AssetName) == Images.end(), "Image %s already exists.", AssetName.c_str());
 
@@ -52,11 +52,11 @@ const drm::Image* AssetManager::LoadImage(const std::string& AssetName, const st
 		return nullptr;
 	}
 
-	std::unique_ptr<drm::Image> Image = std::make_unique<drm::Image>(
+	std::unique_ptr<gpu::Image> Image = std::make_unique<gpu::Image>(
 		Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst | AdditionalUsage)
 	);
 
-	drm::UploadImageData(Device, Pixels, *Image);
+	gpu::UploadImageData(Device, Pixels, *Image);
 
 	Platform::FreeImage(Pixels);
 
@@ -65,14 +65,14 @@ const drm::Image* AssetManager::LoadImage(const std::string& AssetName, const st
 	return Images[AssetName].get();
 }
 
-const drm::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<drm::Image> Image)
+const gpu::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image)
 {
 	check(Images.find(Path.generic_string()) == Images.end(), "Image %s already exists.", Path.generic_string().c_str());
 	Images[Path.generic_string()] = std::move(Image);
 	return Images[Path.generic_string()].get();
 }
 
-const drm::Image* AssetManager::GetImage(const std::string& AssetName) const
+const gpu::Image* AssetManager::GetImage(const std::string& AssetName) const
 {
 	return Images.find(AssetName) == Images.end() ? nullptr : Images.at(AssetName).get();
 }
@@ -103,13 +103,13 @@ Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::filesy
 	{
 		const std::string PathStr = Path.string();
 
-		std::array<const drm::Image*, 6> Images;
+		std::array<const gpu::Image*, 6> Images;
 
 		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
 		{
 			const std::string& Stem = Skybox::CubemapStems[Face];
 			const std::string ImageName = AssetName + "_" + Stem;
-			const drm::Image* Image = GetImage(ImageName);
+			const gpu::Image* Image = GetImage(ImageName);
 
 			if (!Image)
 			{
@@ -140,13 +140,13 @@ Skybox* AssetManager::GetSkybox(const std::string& AssetName)
 	return Skyboxes[AssetName].get();
 }
 
-drm::Image AssetManager::Red;
-drm::Image AssetManager::Green;
-drm::Image AssetManager::Blue;
-drm::Image AssetManager::White;
-drm::Image AssetManager::Black;
+gpu::Image AssetManager::Red;
+gpu::Image AssetManager::Green;
+gpu::Image AssetManager::Blue;
+gpu::Image AssetManager::White;
+gpu::Image AssetManager::Black;
 
-void AssetManager::CreateDebugImages(drm::Device& Device)
+void AssetManager::CreateDebugImages(gpu::Device& Device)
 {
 	std::vector<uint8> Colors =
 	{
@@ -157,7 +157,7 @@ void AssetManager::CreateDebugImages(drm::Device& Device)
 		0, 0, 0, 0, // Black
 	};
 
-	drm::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
+	gpu::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
 
 	AssetManager::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
@@ -165,7 +165,7 @@ void AssetManager::CreateDebugImages(drm::Device& Device)
 	AssetManager::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> Barriers
 	{

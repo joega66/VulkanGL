@@ -110,7 +110,7 @@ VulkanImage::VulkanImage(VulkanDevice& Device
 	: Device(Device)
 	, Image(Image)
 	, Memory(Memory)
-	, drm::ImagePrivate(Format, Width, Height, Depth, Usage, MipLevels)
+	, gpu::ImagePrivate(Format, Width, Height, Depth, Usage, MipLevels)
 {
 	ImageView = Device.CreateImageView(*this, 0, MipLevels, 0, Any(Usage & EImageUsage::Cubemap) ? 6 : 1);
 
@@ -269,7 +269,7 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 {
 	const auto Candidates = [&] () -> std::vector<VkFormat>
 	{
-		if (drm::Image::IsDepthStencil(Format))
+		if (gpu::Image::IsDepthStencil(Format))
 		{
 			return
 			{
@@ -337,15 +337,15 @@ VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDes
 
 static VkImageLayout ChooseImageLayout(EFormat Format)
 {
-	if (drm::ImagePrivate::IsColor(Format))
+	if (gpu::ImagePrivate::IsColor(Format))
 	{
 		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
-	else if (drm::ImagePrivate::IsDepthStencil(Format))
+	else if (gpu::ImagePrivate::IsDepthStencil(Format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 	}
-	else if (drm::ImagePrivate::IsDepth(Format))
+	else if (gpu::ImagePrivate::IsDepth(Format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 	}

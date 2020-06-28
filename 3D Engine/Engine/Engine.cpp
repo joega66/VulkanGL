@@ -14,9 +14,9 @@ Engine::Engine(
 	Cursor& InCursor,
 	Input& InInput,
 	Screen& InScreen,
-	drm::Device& InDevice, 
-	drm::ShaderLibrary& InShaderLibrary,
-	drm::Surface& InSurface
+	gpu::Device& InDevice, 
+	gpu::ShaderLibrary& InShaderLibrary,
+	gpu::Surface& InSurface
 ) : _Platform(InPlatform)
 	, _Cursor(InCursor)
 	, _Input(InInput)
@@ -47,7 +47,7 @@ void Engine::Main()
 	{
 		Surface.Resize(Device, Width, Height);
 	});
-
+	
 	SystemsManager SystemsManager;
 
 	RenderSystem RenderSystem(*this);

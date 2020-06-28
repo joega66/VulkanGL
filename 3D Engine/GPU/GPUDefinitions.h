@@ -1,6 +1,6 @@
 #pragma once
-#include <DRMResource.h>
-#include <DRMShader.h>
+#include "GPU/GPUResource.h"
+#include "GPU/GPUShader.h"
 
 #include "Vulkan/VulkanRenderPass.h"
 #include "Vulkan/VulkanImage.h"
@@ -9,7 +9,7 @@
 #include "Vulkan/VulkanBindlessResources.h"
 #include "Vulkan/VulkanPipeline.h"
 
-namespace drm
+namespace gpu
 {
 	using Buffer = VulkanBuffer;
 	using DescriptorBufferInfo = VulkanDescriptorBufferInfo;
@@ -29,7 +29,7 @@ namespace drm
 
 	struct AttachmentView
 	{
-		const drm::Image* image = nullptr;
+		const gpu::Image* image = nullptr;
 		ClearColorValue clearColor = {};
 		ClearDepthStencilValue clearDepthStencil = {};
 		ELoadAction loadAction = ELoadAction::DontCare;
@@ -40,7 +40,7 @@ namespace drm
 		AttachmentView() = default;
 
 		AttachmentView(
-			const drm::Image* image, 
+			const gpu::Image* image, 
 			ELoadAction loadAction, 
 			EStoreAction storeAction, 
 			const ClearColorValue& clearValue, 
@@ -56,7 +56,7 @@ namespace drm
 		}
 
 		AttachmentView(
-			const drm::Image* image, 
+			const gpu::Image* image, 
 			ELoadAction loadAction, 
 			EStoreAction storeAction, 
 			const ClearDepthStencilValue& clearValue, 
@@ -81,14 +81,14 @@ struct RenderArea
 
 struct RenderPassDesc
 {
-	std::vector<drm::AttachmentView> colorAttachments;
-	drm::AttachmentView depthAttachment;
+	std::vector<gpu::AttachmentView> colorAttachments;
+	gpu::AttachmentView depthAttachment;
 	RenderArea renderArea;
 };
 
 struct PipelineStateDesc
 {
-	drm::RenderPassView renderPass;
+	gpu::RenderPassView renderPass;
 	Scissor scissor;
 	Viewport viewport;
 	DepthStencilState depthStencilState;
@@ -121,7 +121,7 @@ struct PipelineStateDesc
 			&& l.vertexBindings == r.vertexBindings;
 	}
 
-	bool HasShader(const drm::Shader* shader) const
+	bool HasShader(const gpu::Shader* shader) const
 	{
 		switch (shader->compilationInfo.stage)
 		{
@@ -167,7 +167,7 @@ namespace std
 
 struct ComputePipelineDesc
 {
-	const drm::Shader* computeShader = nullptr;
+	const gpu::Shader* computeShader = nullptr;
 	SpecializationInfo specInfo;
 	std::vector<VkDescriptorSetLayout> Layouts;
 
@@ -180,14 +180,14 @@ struct ComputePipelineDesc
 
 struct BufferMemoryBarrier
 {
-	const drm::Buffer& buffer;
+	const gpu::Buffer& buffer;
 	EAccess srcAccessMask;
 	EAccess dstAccessMask;
 };
 
 struct ImageMemoryBarrier
 {
-	const drm::Image& image;
+	const gpu::Image& image;
 	EAccess srcAccessMask;
 	EAccess dstAccessMask;
 	EImageLayout oldLayout;
@@ -198,7 +198,7 @@ struct ImageMemoryBarrier
 
 #include "Vulkan/VulkanCommandList.h"
 
-namespace drm
+namespace gpu
 {
 	using CommandList = VulkanCommandList;
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include <DRMResource.h>
+#include <GPU/GPUResource.h>
 #include <vulkan/vulkan.h>
 #include <optional>
 
@@ -48,7 +48,7 @@ private:
 	void Free(const class VulkanBuffer& Buffer);
 };
 
-class VulkanBuffer : public drm::BufferPrivate
+class VulkanBuffer : public gpu::BufferPrivate
 {
 public:
 	VulkanBuffer(const VulkanBuffer&) = delete;
@@ -56,7 +56,7 @@ public:
 
 	VulkanBuffer() = default;
 	VulkanBuffer(VulkanMemory& Memory, VkDeviceSize Size, VkDeviceSize AlignedSize, VkDeviceSize Offset, EBufferUsage Usage)
-		: Memory(&Memory), AlignedSize(AlignedSize), Offset(Offset), drm::BufferPrivate(Usage, static_cast<uint32>(Size)) {}
+		: Memory(&Memory), AlignedSize(AlignedSize), Offset(Offset), gpu::BufferPrivate(Usage, static_cast<uint32>(Size)) {}
 	VulkanBuffer(VulkanBuffer&& Other);
 	VulkanBuffer& operator=(VulkanBuffer&& Other);
 	~VulkanBuffer();

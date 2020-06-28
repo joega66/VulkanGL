@@ -1,12 +1,12 @@
 #pragma once
 #include "MeshDrawCommand.h"
-#include <DRM.h>
+#include <GPU/GPU.h>
 #include <ECS/Component.h>
 
 struct ShadowDescriptors
 {
-	drm::DescriptorBufferInfo LightViewProjBuffer;
-	drm::DescriptorBufferInfo VolumeLightingUniform;
+	gpu::DescriptorBufferInfo LightViewProjBuffer;
+	gpu::DescriptorBufferInfo VolumeLightingUniform;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
@@ -28,25 +28,25 @@ public:
 
 	float ZFar;
 
-	ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
+	ShadowProxy(gpu::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
 
-	void Update(drm::Device& Device, const struct DirectionalLight& DirectionalLight);
+	void Update(gpu::Device& Device, const struct DirectionalLight& DirectionalLight);
 
 	/** Add a mesh to the light's shadow depth rendering. */
-	void AddMesh(drm::Device& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy);
+	void AddMesh(gpu::Device& Device, gpu::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy);
 
 	/** Render shadow depths. */
-	void Render(drm::CommandList& CmdList);
+	void Render(gpu::CommandList& CmdList);
 
-	inline const drm::Image& GetShadowMap() const { return ShadowMap; }
-	inline const drm::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
+	inline const gpu::Image& GetShadowMap() const { return ShadowMap; }
+	inline const gpu::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
 	inline const glm::mat4& GetLightViewProjMatrix() const { return LightViewProjMatrix; }
 	inline const glm::mat4& GetLightViewProjMatrixInv() const { return LightViewProjMatrixInv; }
 	inline const glm::vec4& GetL() const { return L; }
 	inline const glm::vec4 GetRadiance() const { return Radiance; }
 
 private:
-	drm::RenderPass RenderPass;
+	gpu::RenderPass RenderPass;
 
 	float DepthBiasConstantFactor = 0.0f;
 
@@ -60,13 +60,13 @@ private:
 
 	glm::vec4 Radiance;
 
-	drm::Buffer LightViewProjBuffer;
+	gpu::Buffer LightViewProjBuffer;
 
-	drm::Image ShadowMap;
+	gpu::Image ShadowMap;
 
-	drm::Buffer VolumeLightingUniform;
+	gpu::Buffer VolumeLightingUniform;
 
-	drm::DescriptorSet DescriptorSet;
+	gpu::DescriptorSet DescriptorSet;
 
 	std::vector<MeshDrawCommand> MeshDrawCommands;
 };

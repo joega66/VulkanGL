@@ -68,7 +68,7 @@ void CameraProxy::AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy)
 	GBufferPass.push_back(MeshDrawCommand(Engine.Device, MeshProxy, PSODesc, DescriptorSets));
 }
 
-void SceneRenderer::RenderGBufferPass(CameraProxy& Camera, drm::CommandList& CmdList)
+void SceneRenderer::RenderGBufferPass(CameraProxy& Camera, gpu::CommandList& CmdList)
 {
 	CmdList.BeginRenderPass(Camera.GBufferRP);
 

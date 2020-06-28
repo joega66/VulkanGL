@@ -7,11 +7,11 @@ BEGIN_SHADER_STRUCT(PostProcessingData)
 	SHADER_PARAMETER(float, _ExposureBias)
 END_SHADER_STRUCT(PostProcessingData)
 
-class PostProcessingCS : public drm::Shader
+class PostProcessingCS : public gpu::Shader
 {
 public:
 	PostProcessingCS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -29,8 +29,8 @@ public:
 
 struct PostProcessingDescriptors
 {
-	drm::DescriptorImageInfo DisplayColor;
-	drm::DescriptorImageInfo HDRColor;
+	gpu::DescriptorImageInfo DisplayColor;
+	gpu::DescriptorImageInfo HDRColor;
 
 	static auto& GetBindings()
 	{
@@ -43,26 +43,26 @@ struct PostProcessingDescriptors
 	}
 };
 
-void SceneRenderer::ComputePostProcessing(const drm::Image& DisplayImage, CameraProxy& Camera, drm::CommandList& CmdList)
+void SceneRenderer::ComputePostProcessing(const gpu::Image& DisplayImage, CameraProxy& Camera, gpu::CommandList& CmdList)
 {
 	auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
 
-	drm::DescriptorSetLayout Layout = Device.CreateDescriptorSetLayout(PostProcessingDescriptors::GetBindings().size(), PostProcessingDescriptors::GetBindings().data());
-	drm::DescriptorSet DescriptorSet = Layout.CreateDescriptorSet(Device);
+	gpu::DescriptorSetLayout Layout = Device.CreateDescriptorSetLayout(PostProcessingDescriptors::GetBindings().size(), PostProcessingDescriptors::GetBindings().data());
+	gpu::DescriptorSet DescriptorSet = Layout.CreateDescriptorSet(Device);
 	
 	PostProcessingDescriptors Descriptors;
-	Descriptors.DisplayColor = drm::DescriptorImageInfo(DisplayImage);
-	Descriptors.HDRColor = drm::DescriptorImageInfo(Camera.SceneColor);
+	Descriptors.DisplayColor = gpu::DescriptorImageInfo(DisplayImage);
+	Descriptors.HDRColor = gpu::DescriptorImageInfo(Camera.SceneColor);
 
 	Layout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
 
-	const drm::Shader* Shader = ShaderLibrary.FindShader<PostProcessingCS>();
+	const gpu::Shader* Shader = ShaderLibrary.FindShader<PostProcessingCS>();
 
 	ComputePipelineDesc ComputeDesc;
 	ComputeDesc.computeShader = Shader;
 	ComputeDesc.Layouts = { Layout };
 
-	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
+	gpu::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 	CmdList.BindPipeline(Pipeline);
 

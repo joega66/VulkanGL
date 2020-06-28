@@ -1,5 +1,5 @@
 #pragma once
-#include <DRM.h>
+#include <GPU/GPU.h>
 #include "CameraProxy.h"
 
 class Engine;
@@ -13,19 +13,19 @@ public:
 	void Render(CameraProxy& Camera);
 
 private:
-	drm::Device& Device;
-	drm::ShaderLibrary& ShaderLibrary;
-	drm::Surface& Surface;
+	gpu::Device& Device;
+	gpu::ShaderLibrary& ShaderLibrary;
+	gpu::Surface& Surface;
 	EntityManager& ECS;
 	AssetManager& Assets;
 	Camera& _Camera;
 
-	void ClearSceneColor(CameraProxy& Camera, drm::CommandList& CmdList);
-	void RenderGBufferPass(CameraProxy& Camera, drm::CommandList& CmdList);
-	void RenderShadowDepths(CameraProxy& Camera, drm::CommandList& CmdList);
-	void ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList);
-	void ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const struct LightData& Light);
-	void ComputeRayTracing(CameraProxy& Camera, drm::CommandList& CmdList);
-	void RenderSkybox(CameraProxy& Camera, drm::CommandList& CmdList);
-	void ComputePostProcessing(const drm::Image& DisplayImage, CameraProxy& Camera, drm::CommandList& CmdList);
+	void ClearSceneColor(CameraProxy& Camera, gpu::CommandList& CmdList);
+	void RenderGBufferPass(CameraProxy& Camera, gpu::CommandList& CmdList);
+	void RenderShadowDepths(CameraProxy& Camera, gpu::CommandList& CmdList);
+	void ComputeLightingPass(CameraProxy& Camera, gpu::CommandList& CmdList);
+	void ComputeDeferredLight(CameraProxy& Camera, gpu::CommandList& CmdList, const struct LightData& Light);
+	void ComputeRayTracing(CameraProxy& Camera, gpu::CommandList& CmdList);
+	void RenderSkybox(CameraProxy& Camera, gpu::CommandList& CmdList);
+	void ComputePostProcessing(const gpu::Image& DisplayImage, CameraProxy& Camera, gpu::CommandList& CmdList);
 };

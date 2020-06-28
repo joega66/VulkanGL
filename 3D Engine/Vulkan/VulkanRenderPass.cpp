@@ -82,8 +82,8 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	for (uint32 AttachmentIndex = 0; AttachmentIndex < RPDesc.colorAttachments.size(); AttachmentIndex++)
 	{
-		const drm::AttachmentView& ColorAttachment = RPDesc.colorAttachments[AttachmentIndex];
-		const drm::Image* Image = ColorAttachment.image;
+		const gpu::AttachmentView& ColorAttachment = RPDesc.colorAttachments[AttachmentIndex];
+		const gpu::Image* Image = ColorAttachment.image;
 
 		check(Image && Any(Image->GetUsage() & EImageUsage::Attachment), "Color target is invalid.");
 		check(Image->IsColor(), "Color target was not created in color format.");
@@ -104,7 +104,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	if (RPDesc.depthAttachment.image)
 	{
-		const drm::Image* DepthImage = RPDesc.depthAttachment.image;
+		const gpu::Image* DepthImage = RPDesc.depthAttachment.image;
 
 		check(DepthImage && Any(DepthImage->GetUsage() & EImageUsage::Attachment), "Depth target is invalid.");
 		check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
@@ -180,13 +180,13 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const Rend
 
 	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.colorAttachments.size(); ColorAttachmentIndex++)
 	{
-		const drm::Image* Image = RPDesc.colorAttachments[ColorAttachmentIndex].image;
+		const gpu::Image* Image = RPDesc.colorAttachments[ColorAttachmentIndex].image;
 		AttachmentViews.push_back(Image->GetImageView().GetHandle());
 	}
 
 	if (RPDesc.depthAttachment.image)
 	{
-		const drm::Image* Image = RPDesc.depthAttachment.image;
+		const gpu::Image* Image = RPDesc.depthAttachment.image;
 		AttachmentViews.push_back(Image->GetImageView().GetHandle());
 	}
 

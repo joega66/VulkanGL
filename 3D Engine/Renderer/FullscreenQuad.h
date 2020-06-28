@@ -1,11 +1,11 @@
 #pragma once
-#include "DRMShader.h"
+#include "GPU/GPUShader.h"
 
-class FullscreenVS : public drm::Shader
+class FullscreenVS : public gpu::Shader
 {
 public:
 	FullscreenVS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -23,11 +23,11 @@ enum class EVisualize
 };
 
 template<EVisualize Visualize>
-class FullscreenFS : public drm::Shader
+class FullscreenFS : public gpu::Shader
 {
 public:
 	FullscreenFS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 

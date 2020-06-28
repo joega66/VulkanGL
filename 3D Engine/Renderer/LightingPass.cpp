@@ -9,18 +9,18 @@ BEGIN_SHADER_STRUCT(LightData)
 	SHADER_PARAMETER(glm::vec4, _L)
 	SHADER_PARAMETER(glm::vec4, _Radiance)
 	SHADER_PARAMETER(glm::mat4, _LightViewProj)
-	SHADER_PARAMETER(drm::TextureID, _ShadowMap)
-	SHADER_PARAMETER(drm::SamplerID, _ShadowMapSampler)
+	SHADER_PARAMETER(gpu::TextureID, _ShadowMap)
+	SHADER_PARAMETER(gpu::SamplerID, _ShadowMapSampler)
 END_SHADER_STRUCT(LightData)
 
-class LightingPassCS : public drm::Shader
+class LightingPassCS : public gpu::Shader
 {
 public:
 	static constexpr uint32 DirectionalLight = 0;
 	static constexpr uint32 PointLight = 1;
 
 	LightingPassCS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -36,7 +36,7 @@ public:
 	}
 };
 
-void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& CmdList)
+void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, gpu::CommandList& CmdList)
 {
 	const ImageMemoryBarrier ImageBarrier
 	{
@@ -79,9 +79,9 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, drm::CommandList& C
 	}
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& CmdList, const LightData& Light)
+void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, gpu::CommandList& CmdList, const LightData& Light)
 {
-	const drm::Shader* Shader = ShaderLibrary.FindShader<LightingPassCS>();
+	const gpu::Shader* Shader = ShaderLibrary.FindShader<LightingPassCS>();
 
 	ComputePipelineDesc ComputeDesc;
 	ComputeDesc.computeShader = Shader;
@@ -93,7 +93,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, drm::CommandList& 
 		Device.GetSamplers().GetLayout(),
 	};
 
-	drm::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
+	gpu::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
 
 	CmdList.BindPipeline(Pipeline);
 

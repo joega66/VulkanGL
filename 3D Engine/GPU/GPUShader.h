@@ -1,5 +1,5 @@
 #pragma once
-#include <DRMResource.h>
+#include "GPU/GPUResource.h"
 #include <typeindex>
 
 /** Serializes C++ types to shader types. */
@@ -48,7 +48,7 @@ public:																											\
 	}																											\
 	struct Decl##StructName : ShaderStructDecl{																	\
 		Decl##StructName() {																					\
-			decl = Serialize();																				\
+			decl = Serialize();																					\
 			size = sizeof(StructName);																			\
 		}																										\
 	};																											\
@@ -144,7 +144,7 @@ public:
 	}
 };
 
-namespace drm
+namespace gpu
 {
 	class Shader
 	{
@@ -201,7 +201,7 @@ namespace drm
 
 	protected:
 		/** Cached shaders. */
-		std::unordered_map<std::type_index, std::unique_ptr<drm::Shader>> _Shaders;
+		std::unordered_map<std::type_index, std::unique_ptr<gpu::Shader>> _Shaders;
 
 	};
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include <DRM.h>
+#include <GPU/GPU.h>
 #include "VulkanQueues.h"
 #include "VulkanCache.h"
 #include "VulkanRenderPass.h"
@@ -17,7 +17,7 @@ static const std::vector<const char*> DeviceExtensions =
 	VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
 };
 
-class VulkanDevice final : public drm::Device
+class VulkanDevice final : public gpu::Device
 {
 public:
 	VulkanDevice(Platform& Platform);
@@ -26,19 +26,19 @@ public:
 
 	virtual void EndFrame() override;
 
-	virtual void SubmitCommands(drm::CommandList& CmdList) override;
+	virtual void SubmitCommands(gpu::CommandList& CmdList) override;
 
-	virtual drm::CommandList CreateCommandList(EQueue Queue) override;
+	virtual gpu::CommandList CreateCommandList(EQueue Queue) override;
 
-	virtual drm::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
+	virtual gpu::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
 
-	virtual drm::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
+	virtual gpu::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
 
-	virtual drm::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
+	virtual gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
 
-	virtual drm::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) override;
+	virtual gpu::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) override;
 
-	virtual drm::Image CreateImage(
+	virtual gpu::Image CreateImage(
 		uint32 Width,
 		uint32 Height,
 		uint32 Depth,
@@ -47,27 +47,27 @@ public:
 		uint32 MipLevels
 	) override;
 
-	virtual drm::ImageView CreateImageView(
-		const drm::Image& Image,
+	virtual gpu::ImageView CreateImageView(
+		const gpu::Image& Image,
 		uint32 BaseMipLevel,
 		uint32 LevelCount,
 		uint32 BaseArrayLayer,
 		uint32 LayerCount
 	) override;
 
-	virtual drm::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
+	virtual gpu::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
 
-	virtual drm::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
+	virtual gpu::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
-	virtual drm::TextureID CreateTextureID(const VulkanImageView& ImageView) override;
+	virtual gpu::TextureID CreateTextureID(const VulkanImageView& ImageView) override;
 	
-	virtual drm::ImageID CreateImageID(const VulkanImageView& ImageView) override;
+	virtual gpu::ImageID CreateImageID(const VulkanImageView& ImageView) override;
 
-	virtual drm::BindlessResources& GetTextures() override;
+	virtual gpu::BindlessResources& GetTextures() override;
 
-	virtual drm::BindlessResources& GetSamplers() override;
+	virtual gpu::BindlessResources& GetSamplers() override;
 
-	virtual drm::BindlessResources& GetImages() override;
+	virtual gpu::BindlessResources& GetImages() override;
 
 	operator VkDevice() const { return Device; }
 

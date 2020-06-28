@@ -1,9 +1,9 @@
 #include "VulkanCache.h"
 #include "VulkanDevice.h"
-#include <DRMShader.h>
+#include <GPU/GPUShader.h>
 #include "VulkanPipeline.h"
 
-drm::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
+gpu::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 {
 	if (auto Iter = GraphicsPipelineCache.find(PSODesc); Iter != GraphicsPipelineCache.end())
 	{
@@ -16,7 +16,7 @@ drm::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 	return Pipeline;
 }
 
-drm::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
+gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 {
 	auto& MapEntries = ComputeDesc.specInfo.GetMapEntries();
 	auto& Data = ComputeDesc.specInfo.GetData();
@@ -240,7 +240,7 @@ static void CreateColorBlendState(
 
 static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector<VkPipelineShaderStageCreateInfo>& ShaderStageInfos)
 {
-	std::vector<const drm::Shader*> ShaderStages;
+	std::vector<const gpu::Shader*> ShaderStages;
 
 	ShaderStages.push_back(PSODesc.shaderStages.vertex);
 
@@ -275,7 +275,7 @@ static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector
 
 	for (std::size_t StageIndex = 0; StageIndex < ShaderStageInfos.size(); StageIndex++)
 	{
-		const drm::Shader* Shader = ShaderStages[StageIndex];
+		const gpu::Shader* Shader = ShaderStages[StageIndex];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
 		ShaderStage.stage = VulkanStages.at(Shader->compilationInfo.stage);
 		ShaderStage.module = static_cast<VkShaderModule>(Shader->compilationInfo.module);
@@ -480,7 +480,7 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	ComputePipelineCreateInfo.layout = PipelineLayout;
 	ComputePipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	const drm::Shader* ComputeShader = ComputePipelineDesc.computeShader;
+	const gpu::Shader* ComputeShader = ComputePipelineDesc.computeShader;
 
 	VkPipelineShaderStageCreateInfo& PipelineShaderStageCreateInfo = ComputePipelineCreateInfo.stage;
 	PipelineShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };

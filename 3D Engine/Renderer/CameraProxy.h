@@ -5,11 +5,11 @@ class Engine;
 
 struct CameraDescriptors
 {
-	drm::DescriptorBufferInfo CameraUniform;
-	drm::DescriptorImageInfo SceneDepth;
-	drm::DescriptorImageInfo GBuffer0;
-	drm::DescriptorImageInfo GBuffer1;
-	drm::DescriptorImageInfo SceneColor;
+	gpu::DescriptorBufferInfo CameraUniform;
+	gpu::DescriptorImageInfo SceneDepth;
+	gpu::DescriptorImageInfo GBuffer0;
+	gpu::DescriptorImageInfo GBuffer1;
+	gpu::DescriptorImageInfo SceneColor;
 
 	static auto& GetBindings()
 	{
@@ -35,16 +35,16 @@ public:
 	CameraProxy(const CameraProxy&) = delete;
 	CameraProxy& operator=(const CameraProxy&) = delete;
 
-	drm::RenderPass SceneRP;
-	drm::RenderPass GBufferRP;
-	std::vector<drm::RenderPass> UserInterfaceRP;
+	gpu::RenderPass SceneRP;
+	gpu::RenderPass GBufferRP;
+	std::vector<gpu::RenderPass> UserInterfaceRP;
 	
-	drm::Buffer CameraUniformBuffer;
+	gpu::Buffer CameraUniformBuffer;
 
-	drm::Image SceneDepth;
-	drm::Image SceneColor;
-	drm::Image GBuffer0;
-	drm::Image GBuffer1;
+	gpu::Image SceneDepth;
+	gpu::Image SceneColor;
+	gpu::Image GBuffer0;
+	gpu::Image GBuffer1;
 
 	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
 
@@ -59,7 +59,7 @@ private:
 
 	void AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy);
 
-	void CreateSceneRP(drm::Device& Device);
-	void CreateGBufferRP(drm::Device& Device);
-	void CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surface);
+	void CreateSceneRP(gpu::Device& Device);
+	void CreateGBufferRP(gpu::Device& Device);
+	void CreateUserInterfaceRP(gpu::Device& Device, gpu::Surface& Surface);
 };

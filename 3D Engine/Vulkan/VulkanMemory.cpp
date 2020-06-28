@@ -207,7 +207,7 @@ VulkanBuffer::VulkanBuffer(VulkanBuffer&& Other)
 	: Memory(std::exchange(Other.Memory, nullptr))
 	, AlignedSize(Other.AlignedSize)
 	, Offset(Other.Offset)
-	, drm::BufferPrivate(Other.GetUsage(), Other.GetSize())
+	, gpu::BufferPrivate(Other.GetUsage(), Other.GetSize())
 {
 }
 

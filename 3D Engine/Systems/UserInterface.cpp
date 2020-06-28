@@ -13,11 +13,11 @@
 #include <Renderer/CameraProxy.h>
 #include <Renderer/ShadowProxy.h>
 
-class UserInterfaceVS : public drm::Shader
+class UserInterfaceVS : public gpu::Shader
 {
 public:
 	UserInterfaceVS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -32,11 +32,11 @@ public:
 	}
 };
 
-class UserInterfaceFS : public drm::Shader
+class UserInterfaceFS : public gpu::Shader
 {
 public:
 	UserInterfaceFS(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 
@@ -257,7 +257,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 		
 		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
 		{
-			drm::TextureID& TextureID = const_cast<drm::TextureID&>(const_cast<drm::Image*>(Skybox->GetFaces()[Face])->GetTextureID());
+			gpu::TextureID& TextureID = const_cast<gpu::TextureID&>(const_cast<gpu::Image*>(Skybox->GetFaces()[Face])->GetTextureID());
 			ImGui::Text(Skybox::CubemapFaces[Face].c_str());
 			ImGui::SameLine();
 			ImGui::ImageButton(
@@ -272,7 +272,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 
 ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 {
-	drm::Device& Device = Engine.Device;
+	gpu::Device& Device = Engine.Device;
 	ImGuiIO& Imgui = ImGui::GetIO();
 
 	unsigned char* Pixels;
@@ -282,9 +282,9 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	SamplerID = Device.CreateSampler({}).GetSamplerID();
 
-	drm::UploadImageData(Device, Pixels, FontImage);
+	gpu::UploadImageData(Device, Pixels, FontImage);
 
-	Imgui.Fonts->TexID = &const_cast<drm::TextureID&>(FontImage.GetTextureID());
+	Imgui.Fonts->TexID = &const_cast<gpu::TextureID&>(FontImage.GetTextureID());
 
 	PSODesc.depthStencilState.depthTestEnable = false;
 	PSODesc.depthStencilState.depthWriteEnable = false;
@@ -319,7 +319,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 	});
 }
 
-void ImGuiRenderData::Render(drm::Device& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass)
+void ImGuiRenderData::Render(gpu::Device& Device, gpu::CommandList& CmdList, const gpu::RenderPass& RenderPass)
 {
 	CmdList.BeginRenderPass(RenderPass);
 
@@ -329,7 +329,7 @@ void ImGuiRenderData::Render(drm::Device& Device, drm::CommandList& CmdList, con
 	{
 		PSODesc.renderPass = RenderPass;
 
-		drm::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+		gpu::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
 
 		CmdList.BindPipeline(Pipeline);
 
@@ -382,7 +382,7 @@ void ImGuiRenderData::Render(drm::Device& Device, drm::CommandList& CmdList, con
 	CmdList.EndRenderPass();
 }
 
-void ImGuiRenderData::Update(drm::Device& Device)
+void ImGuiRenderData::Update(gpu::Device& Device)
 {
 	const ImDrawData* DrawData = ImGui::GetDrawData();
 	const uint32 VertexBufferSize = DrawData->TotalVtxCount * sizeof(ImDrawVert);

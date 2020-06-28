@@ -36,12 +36,12 @@ CameraProxy::CameraProxy(Engine& Engine)
 		CreateGBufferRP(Device);
 		CreateUserInterfaceRP(Device, Surface);
 
-		const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Nearest });
+		const gpu::Sampler Sampler = Device.CreateSampler({ EFilter::Nearest });
 
-		CameraDescriptorSet.SceneDepth = drm::DescriptorImageInfo(SceneDepth, Sampler);
-		CameraDescriptorSet.GBuffer0 = drm::DescriptorImageInfo(GBuffer0, Sampler);
-		CameraDescriptorSet.GBuffer1 = drm::DescriptorImageInfo(GBuffer1, Sampler);
-		CameraDescriptorSet.SceneColor = drm::DescriptorImageInfo(SceneColor);
+		CameraDescriptorSet.SceneDepth = gpu::DescriptorImageInfo(SceneDepth, Sampler);
+		CameraDescriptorSet.GBuffer0 = gpu::DescriptorImageInfo(GBuffer0, Sampler);
+		CameraDescriptorSet.GBuffer1 = gpu::DescriptorImageInfo(GBuffer1, Sampler);
+		CameraDescriptorSet.SceneColor = gpu::DescriptorImageInfo(SceneColor);
 		CameraDescriptorSet.Update(Device);
 	});
 }
@@ -90,13 +90,13 @@ void CameraProxy::BuildMeshDrawCommands(Engine& Engine)
 	}
 }
 
-void CameraProxy::CreateSceneRP(drm::Device& Device)
+void CameraProxy::CreateSceneRP(gpu::Device& Device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments.push_back(
-		drm::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General)
+		gpu::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General)
 	);
-	rpDesc.depthAttachment = drm::AttachmentView(
+	rpDesc.depthAttachment = gpu::AttachmentView(
 		&SceneDepth,
 		ELoadAction::Load,
 		EStoreAction::Store,
@@ -108,15 +108,15 @@ void CameraProxy::CreateSceneRP(drm::Device& Device)
 	SceneRP = Device.CreateRenderPass(rpDesc);
 }
 
-void CameraProxy::CreateGBufferRP(drm::Device& Device)
+void CameraProxy::CreateGBufferRP(gpu::Device& Device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments =
 	{
-		drm::AttachmentView(&GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
-		drm::AttachmentView(&GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
+		gpu::AttachmentView(&GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
+		gpu::AttachmentView(&GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
 	};
-	rpDesc.depthAttachment = drm::AttachmentView(
+	rpDesc.depthAttachment = gpu::AttachmentView(
 		&SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
@@ -127,7 +127,7 @@ void CameraProxy::CreateGBufferRP(drm::Device& Device)
 	GBufferRP = Device.CreateRenderPass(rpDesc);
 }
 
-void CameraProxy::CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surface)
+void CameraProxy::CreateUserInterfaceRP(gpu::Device& Device, gpu::Surface& Surface)
 {
 	const auto& Images = Surface.GetImages();
 
@@ -139,7 +139,7 @@ void CameraProxy::CreateUserInterfaceRP(drm::Device& Device, drm::Surface& Surfa
 		// After UI rendering, the image is ready for the present queue.
 		RenderPassDesc rpDesc = {};
 		rpDesc.colorAttachments.push_back(
-			drm::AttachmentView(&Image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present)
+			gpu::AttachmentView(&Image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present)
 		);
 		rpDesc.renderArea.extent = { Image.GetWidth(), Image.GetHeight() };
 

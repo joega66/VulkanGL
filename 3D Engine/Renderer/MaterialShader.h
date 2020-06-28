@@ -1,5 +1,5 @@
 #pragma once
-#include <DRMShader.h>
+#include <GPU/GPUShader.h>
 
 enum class EMeshType
 {
@@ -7,11 +7,11 @@ enum class EMeshType
 };
 
 template<EMeshType MeshType>
-class MeshShader : public drm::Shader
+class MeshShader : public gpu::Shader
 {
 public:
 	MeshShader(const ShaderCompilationInfo& CompilationInfo)
-		: drm::Shader(CompilationInfo)
+		: gpu::Shader(CompilationInfo)
 	{
 	}
 

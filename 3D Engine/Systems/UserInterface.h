@@ -1,28 +1,28 @@
 #pragma once
 #include <ECS/System.h>
 #include <ECS/Component.h>
-#include <DRM.h>
+#include <GPU/GPU.h>
 
 class Engine;
 class CameraProxy;
 
 struct ImGuiRenderData : public Component
 {
-	drm::Image FontImage;
-	drm::SamplerID SamplerID;
+	gpu::Image FontImage;
+	gpu::SamplerID SamplerID;
 
 	glm::vec4 ScaleAndTranslation;
 
-	drm::Buffer VertexBuffer;
-	drm::Buffer IndexBuffer;
+	gpu::Buffer VertexBuffer;
+	gpu::Buffer IndexBuffer;
 
 	PipelineStateDesc PSODesc = {};
 
 	ImGuiRenderData(Engine& Engine);
 
-	void Render(drm::Device& Device, drm::CommandList& CmdList, const drm::RenderPass& RenderPass);
+	void Render(gpu::Device& Device, gpu::CommandList& CmdList, const gpu::RenderPass& RenderPass);
 
-	void Update(drm::Device& Device);
+	void Update(gpu::Device& Device);
 };
 
 class UserInterface : public IRenderSystem

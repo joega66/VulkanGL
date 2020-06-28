@@ -1,8 +1,8 @@
 #pragma once
-#include <DRMDefinitions.h>
-#include <DRMShader.h>
+#include <GPU/GPUDefinitions.h>
+#include <GPU/GPUShader.h>
 
-class drm::Device;
+class gpu::Device;
 
 enum class EMaterialMode
 {
@@ -15,11 +15,11 @@ class Material
 public:
 	struct PushConstants
 	{
-		drm::TextureID BaseColor;
-		drm::TextureID MetallicRoughness;
-		drm::TextureID Normal;
-		drm::TextureID Emissive;
-		drm::SamplerID Sampler;
+		gpu::TextureID BaseColor;
+		gpu::TextureID MetallicRoughness;
+		gpu::TextureID Normal;
+		gpu::TextureID Emissive;
+		gpu::SamplerID Sampler;
 		float Metallic;
 		float Roughness;
 		glm::vec3 EmissiveFactor;
@@ -28,12 +28,12 @@ public:
 	Material() = default;
 
 	Material(
-		drm::Device& Device,
+		gpu::Device& Device,
 		EMaterialMode MaterialMode,
-		const drm::Image* BaseColor,
-		const drm::Image* MetallicRoughness,
-		const drm::Image* Normal,
-		const drm::Image* Emissive,
+		const gpu::Image* BaseColor,
+		const gpu::Image* MetallicRoughness,
+		const gpu::Image* Normal,
+		const gpu::Image* Emissive,
 		float Metallic,
 		float Roughness,
 		const glm::vec3& EmissiveFactor

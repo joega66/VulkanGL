@@ -1,206 +1,206 @@
 #include "VulkanCommandList.h"
 #include "VulkanDevice.h"
-#include <DRMShader.h>
-#include <DRMDefinitions.h>
+#include <GPU/GPUShader.h>
+#include <GPU/GPUDefinitions.h>
 
-VulkanCommandList::VulkanCommandList(VulkanDevice& Device, VkQueueFlags QueueFlags)
-	: Device(Device)
-	, Queue(Device.GetQueues().GetQueue(QueueFlags))
-	, CommandPool(Device.GetQueues().GetCommandPool(QueueFlags))
+VulkanCommandList::VulkanCommandList(VulkanDevice& device, VkQueueFlags queueFlags)
+	: _Device(device)
+	, _Queue(device.GetQueues().GetQueue(queueFlags))
+	, _CommandPool(device.GetQueues().GetCommandPool(queueFlags))
 {
 	VkCommandBufferAllocateInfo CommandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	CommandBufferInfo.commandPool = CommandPool;
+	CommandBufferInfo.commandPool = _CommandPool;
 	CommandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	CommandBufferInfo.commandBufferCount = 1;
 
-	vulkan(vkAllocateCommandBuffers(Device, &CommandBufferInfo, &CommandBuffer));
+	vulkan(vkAllocateCommandBuffers(_Device, &CommandBufferInfo, &_CommandBuffer));
 
 	VkCommandBufferBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	vulkan(vkBeginCommandBuffer(CommandBuffer, &BeginInfo));
+	vulkan(vkBeginCommandBuffer(_CommandBuffer, &BeginInfo));
 }
 
 VulkanCommandList::~VulkanCommandList()
 {
-	vkFreeCommandBuffers(Device, CommandPool, 1, &CommandBuffer);
+	vkFreeCommandBuffers(_Device, _CommandPool, 1, &_CommandBuffer);
 }
 
-void VulkanCommandList::BeginRenderPass(const VulkanRenderPass& RenderPass)
+void VulkanCommandList::BeginRenderPass(const VulkanRenderPass& renderPass)
 {
 	VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	BeginInfo.renderPass = RenderPass.GetRenderPass();
-	BeginInfo.framebuffer = RenderPass.GetFramebuffer();
-	BeginInfo.renderArea = RenderPass.GetRenderArea();
-	BeginInfo.pClearValues = RenderPass.GetClearValues().data();
-	BeginInfo.clearValueCount = static_cast<uint32>(RenderPass.GetClearValues().size());
+	BeginInfo.renderPass = renderPass.GetRenderPass();
+	BeginInfo.framebuffer = renderPass.GetFramebuffer();
+	BeginInfo.renderArea = renderPass.GetRenderArea();
+	BeginInfo.pClearValues = renderPass.GetClearValues().data();
+	BeginInfo.clearValueCount = static_cast<uint32>(renderPass.GetClearValues().size());
 
-	vkCmdBeginRenderPass(CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(_CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void VulkanCommandList::EndRenderPass()
 {
-	vkCmdEndRenderPass(CommandBuffer);
+	vkCmdEndRenderPass(_CommandBuffer);
 }
 
-void VulkanCommandList::BindPipeline(const std::shared_ptr<VulkanPipeline>& Pipeline)
+void VulkanCommandList::BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline)
 {
-	vkCmdBindPipeline(CommandBuffer, Pipeline->GetPipelineBindPoint(), Pipeline->GetPipeline());
+	vkCmdBindPipeline(_CommandBuffer, pipeline->GetPipelineBindPoint(), pipeline->GetPipeline());
 }
 
-void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& Pipeline, uint32 NumDescriptorSets, const VkDescriptorSet* DescriptorSets)
+void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, uint32 numDescriptorSets, const VkDescriptorSet* descriptorSets)
 {
 	vkCmdBindDescriptorSets(
-		CommandBuffer,
-		Pipeline->GetPipelineBindPoint(),
-		Pipeline->GetPipelineLayout(),
+		_CommandBuffer,
+		pipeline->GetPipelineBindPoint(),
+		pipeline->GetPipelineLayout(),
 		0,
-		NumDescriptorSets,
-		DescriptorSets,
+		numDescriptorSets,
+		descriptorSets,
 		0,
 		nullptr
 	);
 }
 
-static VkShaderStageFlags TranslateStageFlags(EShaderStage StageFlags)
+static VkShaderStageFlags TranslateStageFlags(EShaderStage stageFlags)
 {
 	VkShaderStageFlags VkStageFlags = 0;
-	VkStageFlags |= Any(StageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-	VkStageFlags |= Any(StageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-	VkStageFlags |= Any(StageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-	VkStageFlags |= Any(StageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-	VkStageFlags |= Any(StageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-	VkStageFlags |= Any(StageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
 	return VkStageFlags;
 }
 
 void VulkanCommandList::PushConstants(
-	const std::shared_ptr<VulkanPipeline>& Pipeline, 
-	EShaderStage StageFlags, 
-	uint32 Offset, 
-	uint32 Size, 
-	const void* Values)
+	const std::shared_ptr<VulkanPipeline>& pipeline, 
+	EShaderStage stageFlags, 
+	uint32 offset, 
+	uint32 size, 
+	const void* values)
 {
 	vkCmdPushConstants(
-		CommandBuffer,
-		Pipeline->GetPipelineLayout(),
-		TranslateStageFlags(StageFlags),
-		Offset,
-		Size,
-		Values
+		_CommandBuffer,
+		pipeline->GetPipelineLayout(),
+		TranslateStageFlags(stageFlags),
+		offset,
+		size,
+		values
 	);
 }
 
-void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& Pipeline, const drm::Shader* Shader, const void* Values)
+void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
 {
-	const auto& PushConstantRange = Shader->compilationInfo.pushConstantRange;
+	const auto& PushConstantRange = shader->compilationInfo.pushConstantRange;
 
 	vkCmdPushConstants(
-		CommandBuffer,
-		Pipeline->GetPipelineLayout(),
+		_CommandBuffer,
+		pipeline->GetPipelineLayout(),
 		TranslateStageFlags(PushConstantRange.stageFlags),
 		PushConstantRange.offset,
 		PushConstantRange.size,
-		Values
+		values
 	);
 }
 
-void VulkanCommandList::BindVertexBuffers(uint32 NumVertexBuffers, const VulkanBuffer* VertexBuffers)
+void VulkanCommandList::BindVertexBuffers(uint32 numVertexBuffers, const VulkanBuffer* vertexBuffers)
 {
-	std::vector<VkDeviceSize> Offsets(NumVertexBuffers);
-	std::vector<VkBuffer> Buffers(NumVertexBuffers);
+	std::vector<VkDeviceSize> Offsets(numVertexBuffers);
+	std::vector<VkBuffer> Buffers(numVertexBuffers);
 
-	for (uint32 Location = 0; Location < NumVertexBuffers; Location++)
+	for (uint32 Location = 0; Location < numVertexBuffers; Location++)
 	{
-		Offsets[Location] = VertexBuffers[Location].GetOffset();
-		Buffers[Location] = VertexBuffers[Location].GetHandle();
+		Offsets[Location] = vertexBuffers[Location].GetOffset();
+		Buffers[Location] = vertexBuffers[Location].GetHandle();
 	}
 
-	vkCmdBindVertexBuffers(CommandBuffer, 0, static_cast<uint32>(Buffers.size()), Buffers.data(), Offsets.data());
+	vkCmdBindVertexBuffers(_CommandBuffer, 0, static_cast<uint32>(Buffers.size()), Buffers.data(), Offsets.data());
 }
 
 void VulkanCommandList::DrawIndexed(
-	const VulkanBuffer& IndexBuffer, 
-	uint32 IndexCount, 
-	uint32 InstanceCount, 
-	uint32 FirstIndex, 
-	uint32 VertexOffset, 
-	uint32 FirstInstance,
-	EIndexType IndexType)
+	const VulkanBuffer& indexBuffer, 
+	uint32 indexCount, 
+	uint32 instanceCount, 
+	uint32 firstIndex, 
+	uint32 vertexOffset, 
+	uint32 firstInstance,
+	EIndexType indexType)
 {
-	vkCmdBindIndexBuffer(CommandBuffer, IndexBuffer.GetHandle(), IndexBuffer.GetOffset(), static_cast<VkIndexType>(IndexType));
-	vkCmdDrawIndexed(CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
+	vkCmdBindIndexBuffer(_CommandBuffer, indexBuffer.GetHandle(), indexBuffer.GetOffset(), static_cast<VkIndexType>(indexType));
+	vkCmdDrawIndexed(_CommandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
-void VulkanCommandList::Draw(uint32 VertexCount, uint32 InstanceCount, uint32 FirstVertex, uint32 FirstInstance)
+void VulkanCommandList::Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance)
 {
-	vkCmdDraw(CommandBuffer, VertexCount, InstanceCount, FirstVertex, FirstInstance);
+	vkCmdDraw(_CommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
-void VulkanCommandList::DrawIndirect(const VulkanBuffer& Buffer, uint32 Offset, uint32 DrawCount)
+void VulkanCommandList::DrawIndirect(const VulkanBuffer& buffer, uint32 offset, uint32 drawCount)
 {
 	vkCmdDrawIndirect(
-		CommandBuffer,
-		Buffer.GetHandle(),
-		Buffer.GetOffset() + Offset,
-		DrawCount,
-		DrawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0
+		_CommandBuffer,
+		buffer.GetHandle(),
+		buffer.GetOffset() + offset,
+		drawCount,
+		drawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0
 	);
 }
 
-void VulkanCommandList::Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ)
+void VulkanCommandList::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)
 {
-	vkCmdDispatch(CommandBuffer, GroupCountX, GroupCountY, GroupCountZ);
+	vkCmdDispatch(_CommandBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
-void VulkanCommandList::ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color)
+void VulkanCommandList::ClearColorImage(const VulkanImage& image, EImageLayout imageLayout, const ClearColorValue& color)
 {
 	VkImageSubresourceRange Range = {};
-	Range.aspectMask = Image.GetVulkanAspect();
+	Range.aspectMask = image.GetVulkanAspect();
 	Range.baseMipLevel = 0;
-	Range.levelCount = Image.GetMipLevels();
+	Range.levelCount = image.GetMipLevels();
 	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
 
-	vkCmdClearColorImage(CommandBuffer, Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearColorValue*>(&Color), 1, &Range);
+	vkCmdClearColorImage(_CommandBuffer, image, VulkanImage::GetVulkanLayout(imageLayout), reinterpret_cast<const VkClearColorValue*>(&color), 1, &Range);
 }
 
-void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue)
+void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue)
 {
 	VkImageSubresourceRange Range = {};
-	Range.aspectMask = Image.GetVulkanAspect();
+	Range.aspectMask = image.GetVulkanAspect();
 	Range.baseMipLevel = 0;
 	Range.levelCount = 1;
 	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
 	
-	vkCmdClearDepthStencilImage(CommandBuffer, Image, VulkanImage::GetVulkanLayout(ImageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&DepthStencilValue), 1, &Range);
+	vkCmdClearDepthStencilImage(_CommandBuffer, image, VulkanImage::GetVulkanLayout(imageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&depthStencilValue), 1, &Range);
 }
 
-static inline VkAccessFlags GetVulkanAccessFlags(EAccess Access)
+static inline VkAccessFlags GetVulkanAccessFlags(EAccess access)
 {
-	return VkAccessFlags(Access);
+	return VkAccessFlags(access);
 }
 
-static inline VkPipelineStageFlags GetVulkanPipelineStageFlags(EPipelineStage PipelineStage)
+static inline VkPipelineStageFlags GetVulkanPipelineStageFlags(EPipelineStage pipelineStage)
 {
-	return VkPipelineStageFlags(PipelineStage);
+	return VkPipelineStageFlags(pipelineStage);
 }
 
 void VulkanCommandList::PipelineBarrier(
-	EPipelineStage SrcStageMask,
-	EPipelineStage DstStageMask,
-	std::size_t NumBufferBarriers,
-	const BufferMemoryBarrier* BufferBarriers,
-	std::size_t NumImageBarriers,
-	const ImageMemoryBarrier* ImageBarriers)
+	EPipelineStage srcStageMask,
+	EPipelineStage dstStageMask,
+	std::size_t numBufferBarriers,
+	const BufferMemoryBarrier* bufferBarriers,
+	std::size_t numImageBarriers,
+	const ImageMemoryBarrier* imageBarriers)
 {
 	std::vector<VkBufferMemoryBarrier> VulkanBufferBarriers;
-	VulkanBufferBarriers.reserve(NumBufferBarriers);
+	VulkanBufferBarriers.reserve(numBufferBarriers);
 
-	for (std::size_t BarrierIndex = 0; BarrierIndex < NumBufferBarriers; BarrierIndex++)
+	for (std::size_t BarrierIndex = 0; BarrierIndex < numBufferBarriers; BarrierIndex++)
 	{
-		const BufferMemoryBarrier& BufferBarrier = BufferBarriers[BarrierIndex];
+		const BufferMemoryBarrier& BufferBarrier = bufferBarriers[BarrierIndex];
 		const VulkanBuffer& Buffer = BufferBarrier.buffer;
 
 		VkBufferMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
@@ -216,12 +216,12 @@ void VulkanCommandList::PipelineBarrier(
 	}
 	
 	std::vector<VkImageMemoryBarrier> VulkanImageBarriers;
-	VulkanImageBarriers.reserve(NumImageBarriers);
+	VulkanImageBarriers.reserve(numImageBarriers);
 
-	for (std::size_t BarrierIndex = 0; BarrierIndex < NumImageBarriers; BarrierIndex++)
+	for (std::size_t BarrierIndex = 0; BarrierIndex < numImageBarriers; BarrierIndex++)
 	{
-		const ImageMemoryBarrier& ImageBarrier = ImageBarriers[BarrierIndex];
-		const drm::Image& Image = ImageBarrier.image;
+		const ImageMemoryBarrier& ImageBarrier = imageBarriers[BarrierIndex];
+		const gpu::Image& Image = ImageBarrier.image;
 
 		VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.srcAccessMask);
@@ -241,9 +241,9 @@ void VulkanCommandList::PipelineBarrier(
 	}
 	
 	vkCmdPipelineBarrier(
-		CommandBuffer,
-		GetVulkanPipelineStageFlags(SrcStageMask),
-		GetVulkanPipelineStageFlags(DstStageMask),
+		_CommandBuffer,
+		GetVulkanPipelineStageFlags(srcStageMask),
+		GetVulkanPipelineStageFlags(dstStageMask),
 		0,
 		0, nullptr,
 		static_cast<uint32>(VulkanBufferBarriers.size()), VulkanBufferBarriers.data(),
@@ -252,17 +252,17 @@ void VulkanCommandList::PipelineBarrier(
 }
 
 void VulkanCommandList::CopyBufferToImage(
-	const VulkanBuffer& SrcBuffer, 
-	uint32 BufferOffset, 
-	const VulkanImage& DstImage, 
-	EImageLayout DstImageLayout
+	const VulkanBuffer& srcBuffer, 
+	uint32 bufferOffset, 
+	const VulkanImage& dstImage, 
+	EImageLayout dstImageLayout
 )
 {
 	std::vector<VkBufferImageCopy> Regions;
 
-	if (Any(DstImage.GetUsage() & EImageUsage::Cubemap))
+	if (Any(dstImage.GetUsage() & EImageUsage::Cubemap))
 	{
-		const uint32 FaceSize = DstImage.GetSize() / 6;
+		const uint32 FaceSize = dstImage.GetSize() / 6;
 
 		Regions.resize(6, {});
 
@@ -271,134 +271,134 @@ void VulkanCommandList::CopyBufferToImage(
 			// VkImageSubresourceRange(3) Manual Page:
 			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
 			VkBufferImageCopy& Region = Regions[LayerIndex];
-			Region.bufferOffset = LayerIndex * FaceSize + SrcBuffer.GetOffset();
+			Region.bufferOffset = LayerIndex * FaceSize + srcBuffer.GetOffset();
 			Region.bufferRowLength = 0;
 			Region.bufferImageHeight = 0;
-			Region.imageSubresource.aspectMask = DstImage.GetVulkanAspect();
+			Region.imageSubresource.aspectMask = dstImage.GetVulkanAspect();
 			Region.imageSubresource.mipLevel = 0;
 			Region.imageSubresource.baseArrayLayer = LayerIndex;
 			Region.imageSubresource.layerCount = 1;
 			Region.imageOffset = { 0, 0, 0 };
 			Region.imageExtent = {
-				DstImage.GetWidth(),
-				DstImage.GetHeight(),
-				DstImage.GetDepth()
+				dstImage.GetWidth(),
+				dstImage.GetHeight(),
+				dstImage.GetDepth()
 			};
 		}
 	}
 	else
 	{
 		VkBufferImageCopy Region = {};
-		Region.bufferOffset = BufferOffset + SrcBuffer.GetOffset();
+		Region.bufferOffset = bufferOffset + srcBuffer.GetOffset();
 		Region.bufferRowLength = 0;
 		Region.bufferImageHeight = 0;
-		Region.imageSubresource.aspectMask = DstImage.GetVulkanAspect();
+		Region.imageSubresource.aspectMask = dstImage.GetVulkanAspect();
 		Region.imageSubresource.mipLevel = 0;
 		Region.imageSubresource.baseArrayLayer = 0;
 		Region.imageSubresource.layerCount = 1;
 		Region.imageOffset = { 0, 0, 0 };
 		Region.imageExtent = {
-			DstImage.GetWidth(),
-			DstImage.GetHeight(),
-			DstImage.GetDepth()
+			dstImage.GetWidth(),
+			dstImage.GetHeight(),
+			dstImage.GetDepth()
 		};
 
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(CommandBuffer, SrcBuffer.GetHandle(), DstImage, VulkanImage::GetVulkanLayout(DstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
+	vkCmdCopyBufferToImage(_CommandBuffer, srcBuffer.GetHandle(), dstImage, VulkanImage::GetVulkanLayout(dstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
-	const VulkanImage& SrcImage,
-	EImageLayout SrcImageLayout,
-	const VulkanImage& DstImage,
-	EImageLayout DstImageLayout,
-	EFilter Filter
+	const VulkanImage& srcImage,
+	EImageLayout srcImageLayout,
+	const VulkanImage& dstImage,
+	EImageLayout dstImageLayout,
+	EFilter filter
 )
 {
 	VkImageBlit Region = {};
-	Region.srcSubresource.aspectMask = SrcImage.GetVulkanAspect();
+	Region.srcSubresource.aspectMask = srcImage.GetVulkanAspect();
 	Region.srcSubresource.mipLevel = 0;
 	Region.srcSubresource.baseArrayLayer = 0;
 	Region.srcSubresource.layerCount = 1;
-	Region.dstSubresource.aspectMask = DstImage.GetVulkanAspect();
+	Region.dstSubresource.aspectMask = dstImage.GetVulkanAspect();
 	Region.dstSubresource.mipLevel = 0;
 	Region.dstSubresource.baseArrayLayer = 0;
 	Region.dstSubresource.layerCount = 1;
-	Region.srcOffsets[1].x = SrcImage.GetWidth();
-	Region.srcOffsets[1].y = SrcImage.GetHeight();
+	Region.srcOffsets[1].x = srcImage.GetWidth();
+	Region.srcOffsets[1].y = srcImage.GetHeight();
 	Region.srcOffsets[1].z = 1;
-	Region.dstOffsets[1].x = DstImage.GetWidth();
-	Region.dstOffsets[1].y = DstImage.GetHeight();
+	Region.dstOffsets[1].x = dstImage.GetWidth();
+	Region.dstOffsets[1].y = dstImage.GetHeight();
 	Region.dstOffsets[1].z = 1;
 
 	vkCmdBlitImage(
-		CommandBuffer,
-		SrcImage,
-		VulkanImage::GetVulkanLayout(SrcImageLayout),
-		DstImage,
-		VulkanImage::GetVulkanLayout(DstImageLayout),
+		_CommandBuffer,
+		srcImage,
+		VulkanImage::GetVulkanLayout(srcImageLayout),
+		dstImage,
+		VulkanImage::GetVulkanLayout(dstImageLayout),
 		1,
 		&Region,
-		VulkanImage::GetVulkanFilter(Filter)
+		VulkanImage::GetVulkanFilter(filter)
 	);
 }
 
-void VulkanCommandList::SetScissor(uint32 ScissorCount, const Scissor* Scissors)
+void VulkanCommandList::SetScissor(uint32 scissorCount, const Scissor* scissors)
 {
 	static_assert(sizeof(Scissor) == sizeof(VkRect2D));
-	vkCmdSetScissor(CommandBuffer, 0, ScissorCount, reinterpret_cast<const VkRect2D*>(Scissors));
+	vkCmdSetScissor(_CommandBuffer, 0, scissorCount, reinterpret_cast<const VkRect2D*>(scissors));
 }
 
 void VulkanCommandList::CopyBuffer(
-	const VulkanBuffer& SrcBuffer, 
-	const VulkanBuffer& DstBuffer, 
-	uint64 SrcOffset, 
-	uint64 DstOffset, 
-	uint64 Size
+	const VulkanBuffer& srcBuffer, 
+	const VulkanBuffer& dstBuffer, 
+	uint64 srcOffset, 
+	uint64 dstOffset, 
+	uint64 size
 )
 {
 	const VkBufferCopy Region = 
 	{ 
-		SrcBuffer.GetOffset() + SrcOffset, 
-		DstBuffer.GetOffset() + DstOffset,
-		Size 
+		srcBuffer.GetOffset() + srcOffset, 
+		dstBuffer.GetOffset() + dstOffset,
+		size
 	};
 
-	vkCmdCopyBuffer(CommandBuffer, SrcBuffer.GetHandle(), DstBuffer.GetHandle(), 1, &Region);
+	vkCmdCopyBuffer(_CommandBuffer, srcBuffer.GetHandle(), dstBuffer.GetHandle(), 1, &Region);
 }
 
 void VulkanCommandList::CopyImage(
-	const VulkanImage& SrcImage, 
-	EImageLayout SrcImageLayout, 
-	const VulkanImage& DstImage, 
-	EImageLayout DstImageLayout,
-	uint32 DstArrayLayer
+	const VulkanImage& srcImage, 
+	EImageLayout srcImageLayout, 
+	const VulkanImage& dstImage, 
+	EImageLayout dstImageLayout,
+	uint32 dstArrayLayer
 )
 {
 	VkImageCopy Region = {};
 
-	Region.srcSubresource.aspectMask = SrcImage.GetVulkanAspect();
+	Region.srcSubresource.aspectMask = srcImage.GetVulkanAspect();
 	Region.srcSubresource.mipLevel = 0;
 	Region.srcSubresource.baseArrayLayer = 0;
 	Region.srcSubresource.layerCount = 1;
 
-	Region.dstSubresource.aspectMask = DstImage.GetVulkanAspect();
+	Region.dstSubresource.aspectMask = dstImage.GetVulkanAspect();
 	Region.dstSubresource.mipLevel = 0;
-	Region.dstSubresource.baseArrayLayer = DstArrayLayer;
+	Region.dstSubresource.baseArrayLayer = dstArrayLayer;
 	Region.dstSubresource.layerCount = 1;
 
-	Region.extent.width = SrcImage.GetWidth();
-	Region.extent.height = SrcImage.GetHeight();
+	Region.extent.width = srcImage.GetWidth();
+	Region.extent.height = srcImage.GetHeight();
 	Region.extent.depth = 1;
 
 	vkCmdCopyImage(
-		CommandBuffer,
-		SrcImage,
-		VulkanImage::GetVulkanLayout(SrcImageLayout),
-		DstImage,
-		VulkanImage::GetVulkanLayout(DstImageLayout),
+		_CommandBuffer,
+		srcImage,
+		VulkanImage::GetVulkanLayout(srcImageLayout),
+		dstImage,
+		VulkanImage::GetVulkanLayout(dstImageLayout),
 		1,
 		&Region
 	);

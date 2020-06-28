@@ -30,8 +30,6 @@
     <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.cpp" />
     <ClCompile Include="Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
-    <ClCompile Include="DRM.cpp" />
-    <ClCompile Include="DRMShader.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
     <ClCompile Include="ECS\EntityManager.cpp" />
     <ClCompile Include="ECS\System.cpp" />
@@ -45,7 +43,9 @@
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\Timers.cpp" />
     <ClCompile Include="Engine\Camera.cpp" />
-    <ClCompile Include="DRMResource.cpp" />
+    <ClCompile Include="GPU\GPU.cpp" />
+    <ClCompile Include="GPU\GPUResource.cpp" />
+    <ClCompile Include="GPU\GPUShader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Physics\Physics.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
@@ -104,7 +104,6 @@
     <ClInclude Include="Components\SkyboxComponent.h" />
     <ClInclude Include="Components\StaticMeshComponent.h" />
     <ClInclude Include="Components\Transform.h" />
-    <ClInclude Include="DRMDefinitions.h" />
     <ClInclude Include="ECS\Component.h" />
     <ClInclude Include="ECS\ComponentArray.h" />
     <ClInclude Include="ECS\Entity.h" />
@@ -121,9 +120,10 @@
     <ClInclude Include="Engine\Timers.h" />
     <ClInclude Include="Engine\Types.h" />
     <ClInclude Include="Engine\Camera.h" />
-    <ClInclude Include="DRM.h" />
-    <ClInclude Include="DRMResource.h" />
-    <ClInclude Include="DRMShader.h" />
+    <ClInclude Include="GPU\GPU.h" />
+    <ClInclude Include="GPU\GPUDefinitions.h" />
+    <ClInclude Include="GPU\GPUResource.h" />
+    <ClInclude Include="GPU\GPUShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Renderer\MeshDrawCommand.h" />

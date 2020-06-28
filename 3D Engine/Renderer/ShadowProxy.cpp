@@ -14,7 +14,7 @@ UNIFORM_STRUCT(VolumeLightingUniformData,
 	glm::vec4 Radiance;
 );
 
-ShadowProxy::ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
+ShadowProxy::ShadowProxy(gpu::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
 	: Width(Platform::GetFloat("Engine.ini", "Shadows", "Width", 400.0f))
 	, ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
 	, ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
@@ -29,7 +29,7 @@ ShadowProxy::ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescript
 	VolumeLightingUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(VolumeLightingUniformData));
 
 	RenderPassDesc rpDesc = {};
-	rpDesc.depthAttachment = drm::AttachmentView(
+	rpDesc.depthAttachment = gpu::AttachmentView(
 		&ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
@@ -47,7 +47,7 @@ ShadowProxy::ShadowProxy(drm::Device& Device, DescriptorSetLayout<ShadowDescript
 	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
 }
 
-void ShadowProxy::Update(drm::Device& Device, const DirectionalLight& DirectionalLight)
+void ShadowProxy::Update(gpu::Device& Device, const DirectionalLight& DirectionalLight)
 {
 	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
 	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
@@ -116,7 +116,7 @@ public:
 	}
 };
 
-void ShadowProxy::AddMesh(drm::Device& Device, drm::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy)
+void ShadowProxy::AddMesh(gpu::Device& Device, gpu::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy)
 {
 	constexpr EMeshType MeshType = EMeshType::StaticMesh;
 
@@ -135,7 +135,7 @@ void ShadowProxy::AddMesh(drm::Device& Device, drm::ShaderLibrary& ShaderLibrary
 	MeshDrawCommands.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
 }
 
-void ShadowProxy::Render(drm::CommandList& CmdList)
+void ShadowProxy::Render(gpu::CommandList& CmdList)
 {
 	CmdList.BeginRenderPass(RenderPass);
 

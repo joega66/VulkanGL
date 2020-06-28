@@ -1,9 +1,9 @@
 #pragma once
-#include <DRMShader.h>
+#include <GPU/GPUShader.h>
 
 class VulkanDevice;
 
-class VulkanShaderLibrary final : public drm::ShaderLibrary
+class VulkanShaderLibrary final : public gpu::ShaderLibrary
 {
 public:
 	VulkanShaderLibrary(VulkanDevice& Device);

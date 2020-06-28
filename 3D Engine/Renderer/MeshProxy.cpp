@@ -2,9 +2,9 @@
 
 MeshProxy::MeshProxy(
 	const class Material* Material,
-	drm::DescriptorSet&& SurfaceSet,
+	gpu::DescriptorSet&& SurfaceSet,
 	const std::vector<Submesh>& Submeshes,
-	drm::Buffer&& LocalToWorldUniform)
+	gpu::Buffer&& LocalToWorldUniform)
 	: Material(Material)
 	, SurfaceSet(std::move(SurfaceSet))
 	, Submeshes(&Submeshes)

@@ -1,5 +1,5 @@
 #include "SceneRenderer.h"
-#include <DRMShader.h>
+#include <GPU/GPUShader.h>
 #include <Engine/Engine.h>
 #include <Engine/AssetManager.h>
 #include <Engine/Screen.h>
@@ -22,7 +22,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 {
 	const RenderSettings& Settings = ECS.GetSingletonComponent<RenderSettings>();
 
-	drm::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
+	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
 
 	if (Settings.bRayTracing)
 	{
@@ -46,7 +46,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 	}
 
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
-	const drm::Image& DisplayImage = Surface.GetImage(ImageIndex);
+	const gpu::Image& DisplayImage = Surface.GetImage(ImageIndex);
 	ImageMemoryBarrier Barrier{ DisplayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
 	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &Barrier);
@@ -67,7 +67,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 	Device.EndFrame();
 }
 
-void SceneRenderer::ClearSceneColor(CameraProxy& camera, drm::CommandList& cmdList)
+void SceneRenderer::ClearSceneColor(CameraProxy& camera, gpu::CommandList& cmdList)
 {
 	ImageMemoryBarrier imageBarrier
 	{

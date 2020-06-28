@@ -8,16 +8,16 @@ BEGIN_SHADER_STRUCT(RayTracingParams)
 	SHADER_PARAMETER(glm::vec4, _Horizontal)
 	SHADER_PARAMETER(glm::vec4, _Vertical)
 	SHADER_PARAMETER(glm::vec4, _LowerLeftCorner)
-	SHADER_PARAMETER(drm::TextureID, _Skybox)
-	SHADER_PARAMETER(drm::SamplerID, _SkyboxSampler)
+	SHADER_PARAMETER(gpu::TextureID, _Skybox)
+	SHADER_PARAMETER(gpu::SamplerID, _SkyboxSampler)
 	SHADER_PARAMETER(uint32, _FrameNumber)
 END_SHADER_STRUCT(RayTracingParams)
 
-class RayTracingCS : public drm::Shader
+class RayTracingCS : public gpu::Shader
 {
 public:
 	RayTracingCS(const ShaderCompilationInfo& compilationInfo)
-		: drm::Shader(compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
@@ -33,7 +33,7 @@ public:
 	}
 };
 
-void SceneRenderer::ComputeRayTracing(CameraProxy& camera, drm::CommandList& cmdList)
+void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmdList)
 {
 	ImageMemoryBarrier imageBarrier
 	{
@@ -82,7 +82,7 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, drm::CommandList& cmd
 	computeDesc.computeShader = ShaderLibrary.FindShader<RayTracingCS>();
 	computeDesc.Layouts = { camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
 	
-	drm::Pipeline pipeline = Device.CreatePipeline(computeDesc);
+	gpu::Pipeline pipeline = Device.CreatePipeline(computeDesc);
 
 	cmdList.BindPipeline(pipeline);
 

@@ -93,7 +93,7 @@ void VulkanSurface::Init(VulkanDevice& Device)
 	vkGetDeviceQueue(Device, PresentIndex, 0, &PresentQueue);
 }
 
-uint32 VulkanSurface::AcquireNextImage(drm::Device& Device)
+uint32 VulkanSurface::AcquireNextImage(gpu::Device& Device)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
@@ -117,11 +117,11 @@ uint32 VulkanSurface::AcquireNextImage(drm::Device& Device)
 	return ImageIndex;
 }
 
-void VulkanSurface::Present(drm::Device& Device, uint32 ImageIndex, drm::CommandList& CmdList)
+void VulkanSurface::Present(gpu::Device& Device, uint32 ImageIndex, gpu::CommandList& CmdList)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
-	vulkan(vkEndCommandBuffer(CmdList.CommandBuffer));
+	vulkan(vkEndCommandBuffer(CmdList._CommandBuffer));
 
 	const VkPipelineStageFlags WaitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -130,11 +130,11 @@ void VulkanSurface::Present(drm::Device& Device, uint32 ImageIndex, drm::Command
 	SubmitInfo.pWaitSemaphores = &ImageAvailableSem;
 	SubmitInfo.pWaitDstStageMask = &WaitDstStageMask;
 	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pCommandBuffers = &CmdList.CommandBuffer;
+	SubmitInfo.pCommandBuffers = &CmdList._CommandBuffer;
 	SubmitInfo.signalSemaphoreCount = 1;
 	SubmitInfo.pSignalSemaphores = &RenderEndSem;
 
-	vulkan(vkQueueSubmit(CmdList.Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
+	vulkan(vkQueueSubmit(CmdList._Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
 	VkPresentInfoKHR PresentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	PresentInfo.pWaitSemaphores = &RenderEndSem;
@@ -185,7 +185,7 @@ struct SwapchainSupportDetails
 	}
 };
 
-void VulkanSurface::Resize(drm::Device& Device, uint32 Width, uint32 Height)
+void VulkanSurface::Resize(gpu::Device& Device, uint32 Width, uint32 Height)
 {
 	VulkanDevice& VulkanDevice = static_cast<class VulkanDevice&>(Device);
 
@@ -250,7 +250,7 @@ void VulkanSurface::Resize(drm::Device& Device, uint32 Width, uint32 Height)
 
 	for (auto& VulkanImage : VulkanImages)
 	{
-		Images.push_back(drm::Image(VulkanDevice
+		Images.push_back(gpu::Image(VulkanDevice
 			, VulkanImage
 			, VkDeviceMemory()
 			, VulkanImage::GetEngineFormat(SurfaceFormat.format)
@@ -263,12 +263,12 @@ void VulkanSurface::Resize(drm::Device& Device, uint32 Width, uint32 Height)
 	}
 }
 
-const drm::Image& VulkanSurface::GetImage(uint32 ImageIndex)
+const gpu::Image& VulkanSurface::GetImage(uint32 ImageIndex)
 {
 	return Images[ImageIndex];
 }
 
-const std::vector<drm::Image>& VulkanSurface::GetImages()
+const std::vector<gpu::Image>& VulkanSurface::GetImages()
 {
 	return Images;
 }

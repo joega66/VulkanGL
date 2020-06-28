@@ -11,37 +11,37 @@ void VulkanDevice::EndFrame()
 	BindlessSamplers->EndFrame();
 }
 
-void VulkanDevice::SubmitCommands(drm::CommandList& CmdList)
+void VulkanDevice::SubmitCommands(gpu::CommandList& CmdList)
 {
-	vulkan(vkEndCommandBuffer(CmdList.CommandBuffer));
+	vulkan(vkEndCommandBuffer(CmdList._CommandBuffer));
 
 	VkSubmitInfo SubmitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	SubmitInfo.commandBufferCount = 1;
-	SubmitInfo.pCommandBuffers = &CmdList.CommandBuffer;
+	SubmitInfo.pCommandBuffers = &CmdList._CommandBuffer;
 
-	vulkan(vkQueueSubmit(CmdList.Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
+	vulkan(vkQueueSubmit(CmdList._Queue, 1, &SubmitInfo, VK_NULL_HANDLE));
 
-	vulkan(vkQueueWaitIdle(CmdList.Queue));
+	vulkan(vkQueueWaitIdle(CmdList._Queue));
 }
 
-drm::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
+gpu::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 {
 	// @todo Transfer, AsyncCompute Queues
 	const VkQueueFlags QueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
 	return VulkanCommandList(*this, QueueFlags);
 }
 
-drm::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
+gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
 {
 	return VulkanCache.GetPipeline(PSODesc);
 }
 
-drm::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
+gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc)
 {
 	return VulkanCache.GetPipeline(ComputePipelineDesc);
 }
 
-drm::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries)
+gpu::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries)
 {
 	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);
 }
@@ -60,7 +60,7 @@ VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint64 Size, const v
 	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
 }
 
-drm::Image VulkanDevice::CreateImage(
+gpu::Image VulkanDevice::CreateImage(
 	uint32 Width,
 	uint32 Height,
 	uint32 Depth,
@@ -69,7 +69,7 @@ drm::Image VulkanDevice::CreateImage(
 	uint32 MipLevels
 )
 {
-	if (drm::Image::IsDepth(Format))
+	if (gpu::Image::IsDepth(Format))
 	{
 		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(*this, Format));
 	}
@@ -90,7 +90,7 @@ drm::Image VulkanDevice::CreateImage(
 
 		if (Any(UsageFlags & EImageUsage::Attachment))
 		{
-			Usage |= drm::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			Usage |= gpu::Image::IsDepth(Format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
 		Usage |= Any(UsageFlags & EImageUsage::TransferSrc) ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0;
@@ -125,8 +125,8 @@ drm::Image VulkanDevice::CreateImage(
 	);
 }
 
-drm::ImageView VulkanDevice::CreateImageView(
-	const drm::Image& Image, 
+gpu::ImageView VulkanDevice::CreateImageView(
+	const gpu::Image& Image, 
 	uint32 BaseMipLevel, 
 	uint32 LevelCount, 
 	uint32 BaseArrayLayer, 
@@ -150,12 +150,12 @@ drm::ImageView VulkanDevice::CreateImageView(
 	return VulkanImageView(*this, ImageView, Image.GetFormat());
 }
 
-drm::Sampler VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
+gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
 {
 	return VulkanCache.GetSampler(SamplerDesc);
 }
 
-drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
+gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 {
 	const auto[RenderPass, Framebuffer] = VulkanCache.GetRenderPass(RPDesc);
 
@@ -189,7 +189,7 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 
 	if (RPDesc.depthAttachment.image)
 	{
-		const drm::Image* Image = RPDesc.depthAttachment.image;
+		const gpu::Image* Image = RPDesc.depthAttachment.image;
 
 		ClearValues[RPDesc.colorAttachments.size()].depthStencil = { 0, 0 };
 
@@ -207,27 +207,27 @@ drm::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.colorAttachments.size()));
 }
 
-drm::TextureID VulkanDevice::CreateTextureID(const VulkanImageView& ImageView)
+gpu::TextureID VulkanDevice::CreateTextureID(const VulkanImageView& ImageView)
 {
 	return BindlessTextures->CreateTextureID(ImageView);
 }
 
-drm::ImageID VulkanDevice::CreateImageID(const VulkanImageView& ImageView)
+gpu::ImageID VulkanDevice::CreateImageID(const VulkanImageView& ImageView)
 {
 	return BindlessImages->CreateImageID(ImageView);
 }
 
-drm::BindlessResources& VulkanDevice::GetTextures()
+gpu::BindlessResources& VulkanDevice::GetTextures()
 {
 	return *BindlessTextures;
 }
 
-drm::BindlessResources& VulkanDevice::GetSamplers()
+gpu::BindlessResources& VulkanDevice::GetSamplers()
 {
 	return *BindlessSamplers;
 }
 
-drm::BindlessResources& VulkanDevice::GetImages()
+gpu::BindlessResources& VulkanDevice::GetImages()
 {
 	return *BindlessImages;
 }

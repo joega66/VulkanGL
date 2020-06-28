@@ -33,9 +33,6 @@
     <Filter Include="Source\Vulkan\SPIRV-Cross">
       <UniqueIdentifier>{cb045061-4184-4be1-9e0a-0745f217c51f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\DRM">
-      <UniqueIdentifier>{6feafe98-9750-45ea-bfeb-487c5349b673}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\ECS">
       <UniqueIdentifier>{fd042fa3-58d0-4e00-8180-0946d3cf194e}</UniqueIdentifier>
     </Filter>
@@ -56,6 +53,9 @@
     </Filter>
     <Filter Include="ThirdParty\shaderc">
       <UniqueIdentifier>{e2420e39-7489-44c4-9e9d-bf57afe1588f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\GPU">
+      <UniqueIdentifier>{6feafe98-9750-45ea-bfeb-487c5349b673}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -97,15 +97,6 @@
     </ClInclude>
     <ClInclude Include="Vulkan\VulkanCommandList.h">
       <Filter>Source\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="DRM.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
-    <ClInclude Include="DRMResource.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
-    <ClInclude Include="DRMShader.h">
-      <Filter>Source\DRM</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Screen.h">
       <Filter>Source\Engine</Filter>
@@ -200,9 +191,6 @@
     <ClInclude Include="..\ThirdParty\tiny_gltf.h">
       <Filter>ThirdParty</Filter>
     </ClInclude>
-    <ClInclude Include="DRMDefinitions.h">
-      <Filter>Source\DRM</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Engine.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -272,6 +260,18 @@
     <ClInclude Include="..\ThirdParty\shaderc\visibility.h">
       <Filter>ThirdParty\shaderc</Filter>
     </ClInclude>
+    <ClInclude Include="GPU\GPU.h">
+      <Filter>Source\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\GPUDefinitions.h">
+      <Filter>Source\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\GPUResource.h">
+      <Filter>Source\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\GPUShader.h">
+      <Filter>Source\GPU</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -306,9 +306,6 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCommandList.cpp">
       <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="DRMResource.cpp">
-      <Filter>Source\DRM</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -400,9 +397,6 @@
     <ClCompile Include="Engine\Engine.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="DRM.cpp">
-      <Filter>Source\DRM</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Material.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
@@ -439,11 +433,17 @@
     <ClCompile Include="Vulkan\VulkanShaderLibrary.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="DRMShader.cpp">
-      <Filter>Source\DRM</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\RayTracing.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="GPU\GPU.cpp">
+      <Filter>Source\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="GPU\GPUResource.cpp">
+      <Filter>Source\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="GPU\GPUShader.cpp">
+      <Filter>Source\GPU</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

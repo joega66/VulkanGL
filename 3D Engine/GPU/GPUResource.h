@@ -222,7 +222,7 @@ struct DescriptorBinding
 	EDescriptorType descriptorType;
 };
 
-namespace drm
+namespace gpu
 {
 	class BufferPrivate
 	{
@@ -568,15 +568,15 @@ struct InputAssemblyState
 	}
 };
 
-namespace drm { class Shader; }
+namespace gpu { class Shader; }
 
 struct ShaderStages
 {
-	const drm::Shader* vertex = nullptr;
-	const drm::Shader* tessControl = nullptr;
-	const drm::Shader* tessEval = nullptr;
-	const drm::Shader* geometry = nullptr;
-	const drm::Shader* fragment = nullptr;
+	const gpu::Shader* vertex = nullptr;
+	const gpu::Shader* tessControl = nullptr;
+	const gpu::Shader* tessEval = nullptr;
+	const gpu::Shader* geometry = nullptr;
+	const gpu::Shader* fragment = nullptr;
 
 	friend bool operator==(const ShaderStages& l, const ShaderStages& r)
 	{

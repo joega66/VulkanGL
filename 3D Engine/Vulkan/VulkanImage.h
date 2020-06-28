@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanBindlessResources.h"
-#include <DRMResource.h>
+#include <GPU/GPUResource.h>
 
 class VulkanDevice;
 
@@ -25,7 +25,7 @@ private:
 	EFormat Format;
 };
 
-class VulkanImage : public drm::ImagePrivate
+class VulkanImage : public gpu::ImagePrivate
 {
 public:
 	VulkanImage(const VulkanImage&) = delete;

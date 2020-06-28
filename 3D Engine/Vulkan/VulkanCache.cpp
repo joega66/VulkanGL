@@ -8,7 +8,7 @@ VulkanCache::VulkanCache(VulkanDevice& Device)
 {
 }
 
-drm::Sampler VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
+gpu::Sampler VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
 {
 	const Crc Crc = Platform::CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
 

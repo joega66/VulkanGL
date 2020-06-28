@@ -1,20 +1,20 @@
 #include "Material.h"
 #include <Engine/AssetManager.h>
-#include <DRM.h>
+#include <GPU/GPU.h>
 
 Material::Material(
-	drm::Device& Device,
+	gpu::Device& Device,
 	EMaterialMode MaterialMode,
-	const drm::Image* BaseColor,
-	const drm::Image* MetallicRoughness,
-	const drm::Image* Normal,
-	const drm::Image* Emissive,
+	const gpu::Image* BaseColor,
+	const gpu::Image* MetallicRoughness,
+	const gpu::Image* Normal,
+	const gpu::Image* Emissive,
 	float Metallic,
 	float Roughness,
 	const glm::vec3& EmissiveFactor
 ) : MaterialMode(MaterialMode)
 {
-	const drm::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
+	const gpu::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
 	PushConstants.BaseColor = BaseColor->GetTextureID();
 	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID().Get() : 0;

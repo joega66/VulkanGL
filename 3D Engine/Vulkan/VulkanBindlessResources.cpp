@@ -61,15 +61,15 @@ VulkanBindlessResources::~VulkanBindlessResources()
 
 static VkImageLayout ChooseImageLayout(EFormat Format)
 {
-	if (drm::ImagePrivate::IsColor(Format))
+	if (gpu::ImagePrivate::IsColor(Format))
 	{
 		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
-	else if (drm::ImagePrivate::IsDepthStencil(Format))
+	else if (gpu::ImagePrivate::IsDepthStencil(Format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 	}
-	else if (drm::ImagePrivate::IsDepth(Format))
+	else if (gpu::ImagePrivate::IsDepth(Format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 	}

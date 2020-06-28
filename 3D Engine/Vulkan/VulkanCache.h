@@ -1,14 +1,11 @@
 #pragma once
-#include <DRM.h>
+#include <GPU/GPU.h>
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
 
-/** A (very slow) Vulkan object cache. */
 class VulkanCache
 {
-	template<typename DRMObject, typename ...VulkanObjects>
-	using SlowCache = std::vector<std::tuple<DRMObject, VulkanObjects...>>;
 public:
 	VulkanCache(VulkanDevice& Device);
 
@@ -21,11 +18,11 @@ public:
 		const std::vector<PushConstantRange>& PushConstantRanges
 	);
 
-	drm::Pipeline GetPipeline(const PipelineStateDesc& PSODesc);
+	gpu::Pipeline GetPipeline(const PipelineStateDesc& PSODesc);
 
-	drm::Pipeline GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
+	gpu::Pipeline GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
 
-	drm::Sampler GetSampler(const SamplerDesc& SamplerDesc);
+	gpu::Sampler GetSampler(const SamplerDesc& SamplerDesc);
 
 	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> GetDescriptorSetLayout(
 		const std::vector<VkDescriptorSetLayoutBinding>& Bindings,
@@ -51,12 +48,12 @@ private:
 
 	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
 
-	std::unordered_map<PipelineStateDesc, drm::Pipeline> GraphicsPipelineCache;
+	std::unordered_map<PipelineStateDesc, gpu::Pipeline> GraphicsPipelineCache;
 
-	std::unordered_map<Crc, drm::Pipeline> ComputePipelineCache;
+	std::unordered_map<Crc, gpu::Pipeline> ComputePipelineCache;
 	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
 
-	std::unordered_map<Crc, drm::Sampler> SamplerCache;
+	std::unordered_map<Crc, gpu::Sampler> SamplerCache;
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 
