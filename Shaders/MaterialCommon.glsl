@@ -30,8 +30,8 @@ MaterialData Material_Get(SurfaceData Surface)
 	if (HasMetallicRoughnessTexture)
 	{
 		vec2 MetallicRoughness = Sample2D(_Material.MetallicRoughness, _Material.Sampler, Surface.UV).gb;
-		Material.Metallic = MetallicRoughness.x;
-		Material.Roughness = MetallicRoughness.y;
+		Material.Metallic = MetallicRoughness.y;
+		Material.Roughness = 1.0 - MetallicRoughness.x;
 	}
 	else
 	{

@@ -10,6 +10,7 @@ struct CameraDescriptors
 	gpu::DescriptorImageInfo GBuffer0;
 	gpu::DescriptorImageInfo GBuffer1;
 	gpu::DescriptorImageInfo SceneColor;
+	gpu::DescriptorImageInfo _SSGIHistory;
 
 	static auto& GetBindings()
 	{
@@ -20,6 +21,7 @@ struct CameraDescriptors
 			{ 2, 1, EDescriptorType::SampledImage },
 			{ 3, 1, EDescriptorType::SampledImage },
 			{ 4, 1, EDescriptorType::StorageImage },
+			{ 5, 1, EDescriptorType::StorageImage },
 		};
 		return Bindings;
 	}
@@ -44,6 +46,7 @@ public:
 	gpu::Image SceneColor;
 	gpu::Image GBuffer0;
 	gpu::Image GBuffer1;
+	gpu::Image _SSGIHistory;
 
 	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
 

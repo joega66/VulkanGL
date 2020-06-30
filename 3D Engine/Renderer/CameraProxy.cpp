@@ -33,6 +33,8 @@ CameraProxy::CameraProxy(Engine& Engine)
 
 		GBuffer0 = Device.CreateImage(Width, Height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 		GBuffer1 = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
+		
+		_SSGIHistory = Device.CreateImage(Width, Height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
 
 		CreateSceneRP(Device);
 		CreateGBufferRP(Device);
@@ -44,7 +46,23 @@ CameraProxy::CameraProxy(Engine& Engine)
 		CameraDescriptorSet.GBuffer0 = gpu::DescriptorImageInfo(GBuffer0, Sampler);
 		CameraDescriptorSet.GBuffer1 = gpu::DescriptorImageInfo(GBuffer1, Sampler);
 		CameraDescriptorSet.SceneColor = gpu::DescriptorImageInfo(SceneColor);
+		CameraDescriptorSet._SSGIHistory = gpu::DescriptorImageInfo(_SSGIHistory);
 		CameraDescriptorSet.Update(Device);
+
+		gpu::CommandList cmdList = Device.CreateCommandList(EQueue::Transfer);
+
+		const ImageMemoryBarrier imageBarrier
+		{
+			_SSGIHistory,
+			EAccess::None,
+			EAccess::ShaderRead | EAccess::ShaderWrite,
+			EImageLayout::Undefined,
+			EImageLayout::General
+		};
+
+		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+
+		Device.SubmitCommands(cmdList);
 	});
 }
 

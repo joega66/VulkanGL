@@ -5,6 +5,7 @@
 #include <Components/Light.h>
 #include <Components/Transform.h>
 #include <Components/SkyboxComponent.h>
+#include <Engine/Camera.h>
 
 BEGIN_SHADER_STRUCT(LightData)
 	SHADER_PARAMETER(glm::vec4, _L)
@@ -170,6 +171,16 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
 
 	static uint32 frameNumber = 0;
+	static glm::vec3 oldCameraPosition;
+	static glm::quat oldCameraRotation;
+
+	if (oldCameraPosition != _Camera.GetPosition() || oldCameraRotation != _Camera.GetRotation())
+	{
+		frameNumber = 0;
+	}
+
+	oldCameraPosition = _Camera.GetPosition();
+	oldCameraRotation = _Camera.GetRotation();
 
 	SSGIParams ssgiParams;
 	ssgiParams._Skybox = ECS.GetComponent<SkyboxComponent>(ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();

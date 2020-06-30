@@ -21,14 +21,21 @@ void main()
 
 	UnpackGBuffers(screenUV, screenCoords, surface, material);
 
+	uint seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
+	
 	const vec3 eyeDir = normalize( Camera.Position - surface.WorldPosition );
-	const vec3 scatterDir = reflect( -eyeDir, surface.WorldNormal );
-	const vec3 csScatterDir = vec3( normalize( Camera.WorldToView * vec4( scatterDir, 0.0) ) );
-	const vec3 csOrigin = vec3( Camera.WorldToView * vec4( surface.WorldPosition, 1 ) );
-
+	const vec3 scatterDir = reflect(-eyeDir, surface.WorldNormal + material.Roughness * RandomInUnitSphere( seed ) );
+	const vec3 csScatterDir = vec3( normalize( Camera.WorldToView * vec4(scatterDir, 0.0) ) );
+	const vec3 csOrigin = vec3( Camera.WorldToView * vec4(surface.WorldPosition, 1) );
+	
 	vec2 hitPixel;
 	vec3 csHitPoint;
 	vec3 indirectSpecular = vec3(0);
+
+	const float THICC = 0.1;
+	const float STRIDE = 8.0;
+	const float JITTER = 0.0;
+	const float STEPS = 75.0;
 
 	if (TraceScreenSpaceRay(
 		csOrigin,
@@ -37,10 +44,10 @@ void main()
 		SceneDepth,
 		vec2(sceneColorSize),
 		Camera.clipData,
-		0.1,	// thickness
-		8.0,	// stride
-		0.0,	// jitter
-		75.0,	// steps
+		THICC,
+		STRIDE,
+		JITTER,
+		STEPS,
 		-Camera.clipData.z, // max distance
 		hitPixel,
 		csHitPoint)
@@ -49,16 +56,24 @@ void main()
 		indirectSpecular = imageLoad(SceneColor, ivec2(hitPixel)).rgb;
 
 		const vec3 hitNormal = LoadNormal(ivec2(hitPixel));
-		indirectSpecular *= dot(hitNormal, scatterDir) > 0.0 ? 0.0 : 1.0;
-		indirectSpecular *= dot(hitNormal, surface.WorldNormal) > 0.9 ? 0.0 : 1.0;
+		indirectSpecular *= dot( hitNormal, scatterDir ) > 0.0 ? 0.0 : 1.0;
+		indirectSpecular *= dot( hitNormal, surface.WorldNormal ) > 0.9 ? 0.0 : 1.0;
+
+		//float confidence = smoothstep(0, THICC, distance(csOrigin, csHitPoint));
 	}
 	else
 	{
 		//indirectSpecular = SampleCubemap(_Skybox, _SkyboxSampler, scatterDir ).rgb;
 	}
 
-	const vec3 directLighting = imageLoad(SceneColor, screenCoords).rgb;
-	const vec3 lo = material.SpecularColor * indirectSpecular + directLighting;
+	indirectSpecular *= material.BaseColor;
 
+	const vec4 prevSSGIColor = imageLoad(_SSGIHistory, screenCoords);
+	const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSGIColor.a)));
+	indirectSpecular = mix(prevSSGIColor.rgb, indirectSpecular, blend);
+	imageStore(_SSGIHistory, screenCoords, vec4(indirectSpecular, blend));
+
+	const vec3 directLighting = imageLoad(SceneColor, screenCoords).rgb;
+	const vec3 lo = indirectSpecular + directLighting;
 	imageStore(SceneColor, screenCoords, vec4(lo, 1.0));
 }
