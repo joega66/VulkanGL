@@ -4,6 +4,7 @@
 #include <ECS/EntityManager.h>
 #include <Components/Light.h>
 #include <Components/Transform.h>
+#include <Components/SkyboxComponent.h>
 
 BEGIN_SHADER_STRUCT(LightData)
 	SHADER_PARAMETER(glm::vec4, _L)
@@ -77,6 +78,8 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, gpu::CommandList& C
 
 		CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
 	}
+
+	ComputeSSGI(Camera, CmdList);
 }
 
 void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, gpu::CommandList& CmdList, const LightData& Light)
@@ -112,4 +115,82 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, gpu::CommandList& 
 	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);
 
 	CmdList.Dispatch(GroupCountX, GroupCountY, 1);
+}
+
+BEGIN_SHADER_STRUCT(SSGIParams)
+	SHADER_PARAMETER(gpu::TextureID, _Skybox)
+	SHADER_PARAMETER(gpu::SamplerID, _SkyboxSampler)
+	SHADER_PARAMETER(uint32, _FrameNumber)
+END_SHADER_STRUCT(SSGIParams)
+
+class SSGI : public gpu::Shader
+{
+public:
+	SSGI(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
+	{
+	}
+
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
+	{
+		worker << SSGIParams::Decl;
+	}
+
+	static const ShaderInfo& GetShaderInfo()
+	{
+		static ShaderInfo baseInfo = { "../Shaders/SSGI.glsl", "main", EShaderStage::Compute };
+		return baseInfo;
+	}
+};
+
+void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
+{
+	const gpu::Shader* shader = ShaderLibrary.FindShader<SSGI>();
+
+	ComputePipelineDesc computeDesc;
+	computeDesc.computeShader = shader;
+	computeDesc.Layouts =
+	{
+		camera.CameraDescriptorSet.GetLayout(),
+		Device.GetTextures().GetLayout(),
+		Device.GetSamplers().GetLayout(),
+	};
+
+	gpu::Pipeline pipeline = Device.CreatePipeline(computeDesc);
+
+	cmdList.BindPipeline(pipeline);
+
+	const std::vector<VkDescriptorSet> descriptorSets =
+	{
+		camera.CameraDescriptorSet,
+		Device.GetTextures().GetSet(),
+		Device.GetSamplers().GetSet(),
+	};
+
+	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
+
+	static uint32 frameNumber = 0;
+
+	SSGIParams ssgiParams;
+	ssgiParams._Skybox = ECS.GetComponent<SkyboxComponent>(ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
+	ssgiParams._SkyboxSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+	ssgiParams._FrameNumber = frameNumber++;
+
+	cmdList.PushConstants(pipeline, shader, &ssgiParams);
+
+	const uint32 groupCountX = DivideAndRoundUp(camera.SceneColor.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(camera.SceneColor.GetHeight(), 8u);
+
+	cmdList.Dispatch(groupCountX, groupCountY, 1);
+
+	const ImageMemoryBarrier barrier
+	{
+		camera.SceneColor,
+		EAccess::ShaderRead | EAccess::ShaderWrite,
+		EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite,
+		EImageLayout::General,
+		EImageLayout::General
+	};
+
+	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
 }

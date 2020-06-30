@@ -25,7 +25,6 @@ struct CameraDescriptors
 	}
 };
 
-/** The camera proxy holds camera-dependent render data. */
 class CameraProxy
 {
 	friend class Engine;

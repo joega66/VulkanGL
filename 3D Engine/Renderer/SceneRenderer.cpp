@@ -38,11 +38,7 @@ void SceneRenderer::Render(CameraProxy& Camera)
 
 		ComputeLightingPass(Camera, CmdList);
 
-		CmdList.BeginRenderPass(Camera.SceneRP);
-
 		RenderSkybox(Camera, CmdList);
-
-		CmdList.EndRenderPass();
 	}
 
 	const uint32 ImageIndex = Surface.AcquireNextImage(Device);

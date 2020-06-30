@@ -12,10 +12,12 @@ layout(binding = 0, set = CAMERA_SET) uniform CameraUniform
 	mat4 WorldToClip;
 	mat4 ClipToWorld;
 	vec3 Position;
-	float _Pad0;
+	float _pad0;
 	float AspectRatio;
 	float FieldOfView;
 	vec2 ScreenDims;
+	vec3 clipData;
+	float _pad1;
 } Camera;
 layout(binding = 1, set = CAMERA_SET) uniform sampler2D SceneDepth;
 layout(binding = 2, set = CAMERA_SET) uniform sampler2D GBuffer0;
@@ -47,6 +49,11 @@ void UnpackGBuffers(vec2 ScreenUV, ivec2 ScreenCoords, inout SurfaceData Surface
 	Material.Roughness = GBuffer1Data.a;
 	Material.SpecularColor = mix(vec3(0.04), Material.BaseColor, Material.Metallic);
 	Material.DiffuseColor = Diffuse_BRDF(Material.BaseColor);
+}
+
+vec3 LoadNormal(ivec2 screenCoords)
+{
+	return texelFetch(GBuffer0, screenCoords, 0).rgb;
 }
 
 #endif

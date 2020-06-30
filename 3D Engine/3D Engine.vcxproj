@@ -164,12 +164,14 @@
     <None Include="..\Shaders\MeshCommon.glsl" />
     <None Include="..\Shaders\CameraCommon.glsl" />
     <None Include="..\Shaders\PostProcessingCS.glsl" />
+    <None Include="..\Shaders\RayTracingCommon.glsl" />
     <None Include="..\Shaders\RayTracingCS.glsl" />
     <None Include="..\Shaders\SceneResources.glsl" />
     <None Include="..\Shaders\ShadowDepthFS.glsl" />
     <None Include="..\Shaders\ShadowDepthVS.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
+    <None Include="..\Shaders\SSGICommon.glsl" />
     <None Include="..\Shaders\StaticMeshCommon.glsl" />
     <None Include="..\Shaders\SurfaceInterface.glsl" />
     <None Include="..\Shaders\UserInterfaceFS.glsl" />

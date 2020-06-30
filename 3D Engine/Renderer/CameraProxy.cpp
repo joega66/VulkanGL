@@ -4,15 +4,17 @@
 #include <Components/Bounds.h>
 
 UNIFORM_STRUCT(CameraUniformBufferShaderParameters,
-	glm::mat4 WorldToView;
-	glm::mat4 ViewToClip;
-	glm::mat4 WorldToClip;
-	glm::mat4 ClipToWorld;
-	glm::vec3 Position;
-	float _Pad0;
-	float AspectRatio;
-	float FOV;
-	glm::vec2 ScreenDims;
+	glm::mat4 worldToView;
+	glm::mat4 viewToClip;
+	glm::mat4 worldToClip;
+	glm::mat4 clipToWorld;
+	glm::vec3 position;
+	float _pad0;
+	float aspectRatio;
+	float fov;
+	glm::vec2 screenDims;
+	glm::vec3 clipData;
+	float _pad1;
 );
 
 CameraProxy::CameraProxy(Engine& Engine)
@@ -54,19 +56,26 @@ void CameraProxy::Update(Engine& Engine)
 
 void CameraProxy::UpdateCameraUniform(Engine& Engine)
 {
-	const Camera& Camera = Engine.Camera;
+	const Camera& camera = Engine.Camera;
+
+	const glm::vec3 clipData(
+		camera.GetFarPlane() * camera.GetNearPlane(),
+		camera.GetNearPlane() - camera.GetFarPlane(),
+		camera.GetFarPlane());
 
 	const CameraUniformBufferShaderParameters CameraUniformBufferShaderParameters =
 	{
-		Camera.GetWorldToView(),
-		Camera.GetViewToClip(),
-		Camera.GetWorldToClip(),
-		glm::inverse(Camera.GetWorldToClip()),
-		Camera.GetPosition(),
+		camera.GetWorldToView(),
+		camera.GetViewToClip(),
+		camera.GetWorldToClip(),
+		glm::inverse(camera.GetWorldToClip()),
+		camera.GetPosition(),
 		0.0f,
-		Camera.GetAspectRatio(),
-		Camera.GetFOV(),
-		glm::vec2(Camera.GetWidth(), Camera.GetHeight())
+		camera.GetAspectRatio(),
+		camera.GetFOV(),
+		glm::vec2(camera.GetWidth(), camera.GetHeight()),
+		clipData,
+		0.0f,
 	};
 
 	Platform::Memcpy(CameraUniformBuffer.GetData(), &CameraUniformBufferShaderParameters, sizeof(CameraUniformBufferShaderParameters));

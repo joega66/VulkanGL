@@ -2,17 +2,13 @@
 #define COMMON
 #extension GL_ARB_separate_shader_objects : enable
 
-struct DrawIndirectCommand
+ // zFar * zNear / (zFar + depth * (zNear - zFar))
+ // clipData[0] = zFar * zNear
+ // clipData[1] = zNear - zFar
+ // clipData[2] = zFar
+float LinearizeDepth(float depth, vec3 clipData)
 {
-	uint VertexCount;
-	uint InstanceCount;
-	uint FirstVertex;
-	uint FirstInstance;
-};
-
-float LinearizeDepth(float D, float zNear, float zFar)
-{
-	return zNear * zFar / mix(zFar, zNear, D);
+	return clipData[0] / ( depth * clipData[1] + clipData[2] );
 }
 
 uvec3 Unflatten3D(uint Index, uvec3 Dim)
@@ -52,6 +48,21 @@ vec2 CalcLineNormal(vec2 Line)
 {
 	// Rotate the line 90 degrees.
 	return normalize(vec2(-Line.y, Line.x));
+}
+
+/** Distance squared. */
+float Distance2(vec2 a, vec2 b)
+{
+	a -= b;
+	return dot(a, a);
+}
+
+/** Swap a and b. */
+void Swap(inout float a, inout float b)
+{
+	float temp = a;
+	a = b;
+	b = temp;
 }
 
 #endif

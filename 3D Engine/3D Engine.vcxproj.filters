@@ -519,5 +519,11 @@
     <None Include="..\Shaders\RayTracingCS.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Shaders\RayTracingCommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\SSGICommon.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

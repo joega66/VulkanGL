@@ -43,6 +43,8 @@ public:
 
 void SceneRenderer::RenderSkybox(CameraProxy& Camera, gpu::CommandList& CmdList)
 {
+	CmdList.BeginRenderPass(Camera.SceneRP);
+
 	const SkyboxVS* VertShader = ShaderLibrary.FindShader<SkyboxVS>();
 	const SkyboxFS* FragShader = ShaderLibrary.FindShader<SkyboxFS>();
 
@@ -87,4 +89,6 @@ void SceneRenderer::RenderSkybox(CameraProxy& Camera, gpu::CommandList& CmdList)
 			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
 		}
 	}
+
+	CmdList.EndRenderPass();
 }

@@ -10,6 +10,8 @@ Camera::Camera(
 	: _Position(lookFrom)
 	, _WorldUp(up)
 	, _Fov(fov)
+	, _NearPlane(0.1f)
+	, _FarPlane(1000.0f)
 {
 	LookAt(lookAt);
 
@@ -17,7 +19,7 @@ Camera::Camera(
 	{
 		_Width = width;
 		_Height = height;
-		_ViewToClip = glm::perspective(glm::radians(_Fov), static_cast<float>(_Width) / static_cast<float>(_Height), 0.1f, 1000.0f);
+		_ViewToClip = glm::perspective(glm::radians(_Fov), static_cast<float>(_Width) / static_cast<float>(_Height), _NearPlane, _FarPlane);
 		_ViewToClip[1][1] *= -1;
 	});
 }

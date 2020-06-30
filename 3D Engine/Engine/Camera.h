@@ -58,6 +58,9 @@ public:
 	inline float GetFOV() const { return _Fov; }
 	/** Get the combined clipping planes in model space. */
 	FrustumPlanes GetFrustumPlanes() const;
+	/** Get the near/far planes. */
+	inline float GetNearPlane() const { return _NearPlane; }
+	inline float GetFarPlane() const { return _FarPlane; }
 
 private:
 	/** Camera width. */
@@ -86,4 +89,8 @@ private:
 
 	/** Transforms points from view to clip space. */
 	glm::mat4 _ViewToClip;
+	
+	/** Near and far planes. */
+	float _NearPlane;
+	float _FarPlane;
 };
