@@ -5,7 +5,7 @@
 
 void main()
 {
-	SurfaceData Surface = Surface_Get();
+	SurfaceData surface = Surface_Get();
 
-	Material_DiscardMaskedPixel(Surface);
+	Material_DiscardMaskedPixel(surface);
 }

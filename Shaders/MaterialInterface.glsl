@@ -3,11 +3,11 @@
 
 struct MaterialData
 {
-	vec3 BaseColor;
-	vec3 SpecularColor;
-	vec3 DiffuseColor;
-	float Metallic;
-	float Roughness;
+	vec3 baseColor;
+	vec3 specularColor;
+	vec3 diffuseColor;
+	float metallic;
+	float roughness;
 };
 
 #endif

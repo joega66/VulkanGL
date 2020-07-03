@@ -9,82 +9,82 @@
 
 layout(constant_id = 0) const uint _LIGHT_TYPE = 0;
 
-void GetDirectionalLightParams(inout LightData Light)
+void GetDirectionalLightParams(inout LightData light)
 {
-	Light.L = _L.xyz;
-	Light.Radiance = _Radiance.rgb;
+	light.l = _L.xyz;
+	light.radiance = _Radiance.rgb;
 }
 
-void GetPointLightParams(inout LightData Light, SurfaceData Surface)
+void GetPointLightParams(inout LightData light, SurfaceData surface)
 {
-	const vec3 FragToLight = _L.xyz - Surface.WorldPosition;
-	const float Distance = length(FragToLight);
-	const float Attenuation = 1.0 / (Distance * Distance);
+	const vec3 fragToLight = _L.xyz - surface.worldPosition;
+	const float distance = length(fragToLight);
+	const float attenuation = 1.0 / (distance * distance);
 
-	Light.L = normalize(FragToLight);
-	Light.Radiance = _Radiance.rgb * Attenuation;
+	light.l = normalize(fragToLight);
+	light.radiance = _Radiance.rgb * attenuation;
 }
 
-float ShadowPCF(vec3 WorldPosition)
+float ShadowPCF(vec3 worldPosition)
 {
-	vec4 LightSpace = _LightViewProj * vec4(WorldPosition, 1.0f);
-	LightSpace.xyz /= LightSpace.w;
-	LightSpace.xy = (LightSpace.xy + 1.0f) * 0.5f;
-	float CurrentDepth = LightSpace.z;
-	vec2 TexelSize = 1.0 / vec2( TextureSize(_ShadowMap, 0) );
+	vec4 lightSpace = _LightViewProj * vec4(worldPosition, 1.0f);
+	lightSpace.xyz /= lightSpace.w;
+	lightSpace.xy = (lightSpace.xy + 1.0f) * 0.5f;
+	float currentDepth = lightSpace.z;
+	vec2 texelSize = 1.0 / vec2( TextureSize(_ShadowMap, 0) );
 
-	float ShadowFactor = 0.0;
+	float shadowFactor = 0.0;
 
-	for (int X = -1; X <= 1; X++)
+	for (int x = -1; x <= 1; x++)
 	{
-		for (int Y = -1; Y <= 1; Y++)
+		for (int y = -1; y <= 1; y++)
 		{
-			float ShadowDepth = Sample2D(_ShadowMap, _ShadowMapSampler, LightSpace.xy + vec2(X, Y) * TexelSize).r;
-			float DepthTest = CurrentDepth > ShadowDepth ? 1.0f : 0.0f;
-			ShadowFactor += DepthTest;
+			float shadowDepth = Sample2D(_ShadowMap, _ShadowMapSampler, lightSpace.xy + vec2(x, y) * texelSize).r;
+			float depthTest = currentDepth > shadowDepth ? 1.0f : 0.0f;
+			shadowFactor += depthTest;
 		}
 	}
 
-	ShadowFactor /= 9.0;
+	shadowFactor /= 9.0;
 	
-	return ( 1 - ShadowFactor);
+	return ( 1 - shadowFactor);
 }
 
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 SceneColorSize = imageSize(SceneColor);
-	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, SceneColorSize.xy)))
+	const ivec2 sceneColorSize = imageSize(_SceneColor);
+	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, sceneColorSize.xy)))
 		return;
 
-	const ivec2 ScreenCoords = ivec2(gl_GlobalInvocationID.xy);
-	const vec2 ScreenUV = vec2(ScreenCoords) / vec2(SceneColorSize);
+	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
+	const vec2 screenUV = vec2(screenCoords) / vec2(sceneColorSize);
 
-	SurfaceData Surface;
-	MaterialData Material;
+	SurfaceData surface;
+	MaterialData material;
 
-	UnpackGBuffers(ScreenUV, ScreenCoords, Surface, Material);
+	UnpackGBuffers(screenUV, screenCoords, surface, material);
 
-	vec3 V = normalize(Camera.Position - Surface.WorldPosition);
+	vec3 v = normalize(_Camera.position - surface.worldPosition);
 
-	LightData Light;
+	LightData light;
 
 	if (_LIGHT_TYPE == DIRECTIONAL_LIGHT)
 	{
-		GetDirectionalLightParams(Light);
+		GetDirectionalLightParams(light);
 	}
 	else if (_LIGHT_TYPE == POINT_LIGHT)
 	{
-		GetPointLightParams(Light, Surface);
+		GetPointLightParams(light, surface);
 	}
 
-	vec3 Ld = vec3(0.0);
+	vec3 ld = vec3(0.0);
 
-	Ld += DirectLighting(V, Light, Surface, Material);
+	ld += DirectLighting(v, light, surface, material);
 
-	Ld *= ShadowPCF(Surface.WorldPosition);
+	ld *= ShadowPCF(surface.worldPosition);
 
-	vec3 LdTotal = Ld + imageLoad(SceneColor, ScreenCoords).rgb;
+	vec3 ldTotal = ld + imageLoad(_SceneColor, screenCoords).rgb;
 
-	imageStore(SceneColor, ScreenCoords, vec4(LdTotal, 1.0));
+	imageStore(_SceneColor, screenCoords, vec4(ldTotal, 1.0));
 }

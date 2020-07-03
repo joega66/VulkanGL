@@ -525,5 +525,8 @@
     <None Include="..\Shaders\SSGICommon.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Shaders\SSGI.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -2,15 +2,15 @@
 
 layout(binding = 0, set = 0) uniform LightViewProjBuffer
 {
-	mat4 LightViewProj;
-	mat4 InvLightViewProj;
+	mat4 _LightViewProj;
+	mat4 _InvLightViewProj;
 };
 
 void main()
 {
-	vec4 WorldPosition = Surface_GetWorldPosition();
+	vec4 worldPosition = Surface_GetWorldPosition();
 
-	Surface_SetAttributes(WorldPosition);
+	Surface_SetAttributes(worldPosition);
 
-	gl_Position = LightViewProj * WorldPosition;
+	gl_Position = _LightViewProj * worldPosition;
 }

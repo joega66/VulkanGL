@@ -4,22 +4,22 @@
 #define SAMPLER_SET 3
 #include "MaterialCommon.glsl"
 
-layout(location = 0) out vec4 OutGBuffer0;
-layout(location = 1) out vec4 OutGBuffer1;
+layout(location = 0) out vec4 outGBuffer0;
+layout(location = 1) out vec4 outGBuffer1;
 
 void main()
 {
-	SurfaceData Surface = Surface_Get();
-	MaterialData Material = Material_Get(Surface);
+	SurfaceData surface = Surface_Get();
+	MaterialData material = Material_Get(surface);
 
-	Material_DiscardMaskedPixel(Surface);
+	Material_DiscardMaskedPixel(surface);
 
-	const vec3 V = normalize(Camera.Position - Surface.WorldPosition);
+	const vec3 v = normalize(_Camera.position - surface.worldPosition);
 
-	Material_NormalMapping(Surface, V);
+	Material_NormalMapping(surface, v);
 
-	OutGBuffer0.rgb = Surface.WorldNormal;
-	OutGBuffer0.a = Material.Metallic;
-	OutGBuffer1.rgb = Material.BaseColor;
-	OutGBuffer1.a = Material.Roughness;
+	outGBuffer0.rgb = surface.worldNormal;
+	outGBuffer0.a = material.metallic;
+	outGBuffer1.rgb = material.baseColor;
+	outGBuffer1.a = material.roughness;
 }

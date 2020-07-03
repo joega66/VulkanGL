@@ -3,9 +3,9 @@
 
 void main()
 {
-	vec4 WorldPosition = Surface_GetWorldPosition();
+	vec4 worldPosition = Surface_GetWorldPosition();
 
-	Surface_SetAttributes(WorldPosition);
+	Surface_SetAttributes(worldPosition);
 
-	gl_Position = Camera.WorldToClip * WorldPosition;
+	gl_Position = _Camera.worldToClip * worldPosition;
 }

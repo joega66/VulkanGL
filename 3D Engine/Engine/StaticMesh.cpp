@@ -167,11 +167,12 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 		const gpu::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
 		const gpu::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
 		const gpu::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
-		const glm::vec3 EmissiveFactor(
-			static_cast<float>(GLTFMaterial.emissiveFactor[0]),
+		const glm::vec3 EmissiveFactor = 
+			GLTFMaterial.emissiveFactor.empty() ? 
+			glm::vec3(0.0) : 
+			glm::vec3(static_cast<float>(GLTFMaterial.emissiveFactor[0]),
 			static_cast<float>(GLTFMaterial.emissiveFactor[1]),
-			static_cast<float>(GLTFMaterial.emissiveFactor[2])
-		);
+			static_cast<float>(GLTFMaterial.emissiveFactor[2]));
 
 		if (!BaseColor)
 		{
@@ -212,7 +213,7 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 
 const gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
-	if (TextureIndex == -1)
+	if (TextureIndex == -1 || Model.textures.empty())
 	{
 		return nullptr;
 	}

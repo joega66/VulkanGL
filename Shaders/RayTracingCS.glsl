@@ -214,7 +214,7 @@ float Lambertian_ScatteringPDF(Ray ray, HitRecord rec, Ray scattered)
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 sceneColorSize = imageSize( SceneColor );
+	const ivec2 sceneColorSize = imageSize( _SceneColor );
 	if ( any( greaterThanEqual( gl_GlobalInvocationID.xy, sceneColorSize.xy ) ) )
 		return;
 
@@ -262,9 +262,9 @@ void main()
 
 	if (_FrameNumber < 1024) // Prevents color banding
 	{
-		const vec4 prevFrameColor = imageLoad(SceneColor, screenCoords);
+		const vec4 prevFrameColor = imageLoad(_SceneColor, screenCoords);
 		const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevFrameColor.a)));
 		color = mix(prevFrameColor.rgb, color, blend);
-		imageStore(SceneColor, screenCoords, vec4(color, blend));
+		imageStore(_SceneColor, screenCoords, vec4(color, blend));
 	}
 }

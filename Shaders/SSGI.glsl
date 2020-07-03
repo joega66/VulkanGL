@@ -9,7 +9,7 @@
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 sceneColorSize = imageSize(SceneColor);
+	const ivec2 sceneColorSize = imageSize(_SceneColor);
 	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, sceneColorSize.xy)))
 		return;
 
@@ -23,10 +23,10 @@ void main()
 
 	uint seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
 	
-	const vec3 eyeDir = normalize( Camera.Position - surface.WorldPosition );
-	const vec3 scatterDir = reflect(-eyeDir, surface.WorldNormal + material.Roughness * RandomInUnitSphere( seed ) );
-	const vec3 csScatterDir = vec3( normalize( Camera.WorldToView * vec4(scatterDir, 0.0) ) );
-	const vec3 csOrigin = vec3( Camera.WorldToView * vec4(surface.WorldPosition, 1) );
+	const vec3 eyeDir = normalize( _Camera.position - surface.worldPosition );
+	const vec3 scatterDir = reflect(-eyeDir, surface.worldNormal + material.roughness * RandomInUnitSphere( seed ) );
+	const vec3 csScatterDir = vec3( normalize( _Camera.worldToView * vec4(scatterDir, 0.0) ) );
+	const vec3 csOrigin = vec3( _Camera.worldToView * vec4(surface.worldPosition, 1) );
 	
 	vec2 hitPixel;
 	vec3 csHitPoint;
@@ -40,24 +40,24 @@ void main()
 	if (TraceScreenSpaceRay(
 		csOrigin,
 		csScatterDir,
-		Camera.ViewToClip,
-		SceneDepth,
+		_Camera.viewToClip,
+		_SceneDepth,
 		vec2(sceneColorSize),
-		Camera.clipData,
+		_Camera.clipData,
 		THICC,
 		STRIDE,
 		JITTER,
 		STEPS,
-		-Camera.clipData.z, // max distance
+		-_Camera.clipData.z, // max distance
 		hitPixel,
 		csHitPoint)
 		)
 	{
-		indirectSpecular = imageLoad(SceneColor, ivec2(hitPixel)).rgb;
+		indirectSpecular = imageLoad(_SceneColor, ivec2(hitPixel)).rgb;
 
 		const vec3 hitNormal = LoadNormal(ivec2(hitPixel));
 		indirectSpecular *= dot( hitNormal, scatterDir ) > 0.0 ? 0.0 : 1.0;
-		indirectSpecular *= dot( hitNormal, surface.WorldNormal ) > 0.9 ? 0.0 : 1.0;
+		indirectSpecular *= dot( hitNormal, surface.worldNormal ) > 0.9 ? 0.0 : 1.0;
 
 		//float confidence = smoothstep(0, THICC, distance(csOrigin, csHitPoint));
 	}
@@ -66,14 +66,14 @@ void main()
 		//indirectSpecular = SampleCubemap(_Skybox, _SkyboxSampler, scatterDir ).rgb;
 	}
 
-	indirectSpecular *= material.BaseColor;
+	indirectSpecular *= material.baseColor;
 
 	const vec4 prevSSGIColor = imageLoad(_SSGIHistory, screenCoords);
 	const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSGIColor.a)));
 	indirectSpecular = mix(prevSSGIColor.rgb, indirectSpecular, blend);
 	imageStore(_SSGIHistory, screenCoords, vec4(indirectSpecular, blend));
 
-	const vec3 directLighting = imageLoad(SceneColor, screenCoords).rgb;
+	const vec3 directLighting = imageLoad(_SceneColor, screenCoords).rgb;
 	const vec3 lo = indirectSpecular + directLighting;
-	imageStore(SceneColor, screenCoords, vec4(lo, 1.0));
+	imageStore(_SceneColor, screenCoords, vec4(lo, 1.0));
 }

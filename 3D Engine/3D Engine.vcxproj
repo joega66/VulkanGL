@@ -171,6 +171,7 @@
     <None Include="..\Shaders\ShadowDepthVS.glsl" />
     <None Include="..\Shaders\SkyboxFS.glsl" />
     <None Include="..\Shaders\SkyboxVS.glsl" />
+    <None Include="..\Shaders\SSGI.glsl" />
     <None Include="..\Shaders\SSGICommon.glsl" />
     <None Include="..\Shaders\StaticMeshCommon.glsl" />
     <None Include="..\Shaders\SurfaceInterface.glsl" />

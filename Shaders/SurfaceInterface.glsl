@@ -3,9 +3,9 @@
 
 struct SurfaceData
 {
-	vec3 WorldPosition;
-	vec3 WorldNormal;
-	vec2 UV;
+	vec3 worldPosition;
+	vec3 worldNormal;
+	vec2 uv;
 };
 
 #endif

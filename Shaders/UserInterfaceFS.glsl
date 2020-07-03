@@ -8,12 +8,12 @@ layout(push_constant) uniform PushConstants
 	layout(offset = 16) ivec2 _TextureAndSampler;
 };
 
-layout(location = 0) in vec2 InUV;
-layout(location = 1) in vec4 InColor;
+layout(location = 0) in vec2 inUV;
+layout(location = 1) in vec4 inColor;
 
-layout(location = 0) out vec4 OutColor;
+layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	OutColor = InColor * Sample2D(_TextureAndSampler.x, _TextureAndSampler.y, InUV);
+	outColor = inColor * Sample2D(_TextureAndSampler.x, _TextureAndSampler.y, inUV);
 }
