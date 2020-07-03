@@ -70,7 +70,7 @@ void UserInterface::Start(Engine& Engine)
 
 	ImGui::StyleColorsDark();
 
-	Engine.ECS.AddSingletonComponent<ImGuiRenderData>(Engine);
+	Engine._ECS.AddSingletonComponent<ImGuiRenderData>(Engine);
 }
 
 void UserInterface::Update(Engine& Engine)
@@ -84,7 +84,7 @@ void UserInterface::Update(Engine& Engine)
 
 	ImGui::Render();
 
-	Engine.ECS.GetSingletonComponent<ImGuiRenderData>().Update(Engine.Device);
+	Engine._ECS.GetSingletonComponent<ImGuiRenderData>().Update(Engine.Device);
 }
 
 void UserInterface::ShowUI(Engine& Engine)
@@ -104,8 +104,8 @@ void UserInterface::ShowMainMenu(Engine& Engine)
 			{
 				if (const std::filesystem::path FilePath = Engine._Platform.DisplayFileExplorer(); !FilePath.empty())
 				{
-					auto Message = Engine.ECS.CreateEntity();
-					Engine.ECS.AddComponent(Message, SceneLoadRequest{ FilePath, true });
+					auto Message = Engine._ECS.CreateEntity();
+					Engine._ECS.AddComponent(Message, SceneLoadRequest{ FilePath, true });
 				}
 			}
 			ImGui::EndMenu();
@@ -116,7 +116,7 @@ void UserInterface::ShowMainMenu(Engine& Engine)
 
 void UserInterface::ShowRenderSettings(Engine& Engine)
 {
-	auto& ECS = Engine.ECS;
+	auto& ECS = Engine._ECS;
 	
 	if (!ImGui::Begin("Render Settings"))
 	{
@@ -150,7 +150,7 @@ void UserInterface::ShowEntities(Engine& Engine)
 		return;
 	}
 
-	EntityManager& ECS = Engine.ECS;
+	EntityManager& ECS = Engine._ECS;
 	EntityIterator EntityIter = ECS.Iter();
 	static Entity Selected;
 	static ImGuiTextFilter Filter;
@@ -241,9 +241,9 @@ void UserInterface::ShowEntities(Engine& Engine)
 		{
 			ImGui::Text("Shadows");
 			auto& Shadow = ECS.GetComponent<ShadowProxy>(Selected);
-			ImGui::DragFloat("Width", &Shadow.Width);
-			ImGui::DragFloat("ZNear", &Shadow.ZNear);
-			ImGui::DragFloat("ZFar", &Shadow.ZFar);
+			ImGui::DragFloat("Width", &Shadow._Width);
+			ImGui::DragFloat("ZNear", &Shadow._ZNear);
+			ImGui::DragFloat("ZFar", &Shadow._ZFar);
 		}
 	}
 
@@ -286,36 +286,36 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 
 	Imgui.Fonts->TexID = &const_cast<gpu::TextureID&>(FontImage.GetTextureID());
 
-	PSODesc.depthStencilState.depthTestEnable = false;
-	PSODesc.depthStencilState.depthWriteEnable = false;
-	PSODesc.depthStencilState.depthCompareTest = EDepthCompareTest::Always;
-	PSODesc.shaderStages.vertex = Engine.ShaderLibrary.FindShader<UserInterfaceVS>();
-	PSODesc.shaderStages.fragment = Engine.ShaderLibrary.FindShader<UserInterfaceFS>();
-	PSODesc.colorBlendAttachmentStates.resize(1, {});
-	PSODesc.colorBlendAttachmentStates[0].blendEnable = true;
-	PSODesc.colorBlendAttachmentStates[0].srcColorBlendFactor = EBlendFactor::SRC_ALPHA;
-	PSODesc.colorBlendAttachmentStates[0].dstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	PSODesc.colorBlendAttachmentStates[0].colorBlendOp = EBlendOp::ADD;
-	PSODesc.colorBlendAttachmentStates[0].srcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	PSODesc.colorBlendAttachmentStates[0].dstAlphaBlendFactor = EBlendFactor::ZERO;
-	PSODesc.colorBlendAttachmentStates[0].alphaBlendOp = EBlendOp::ADD;
-	PSODesc.dynamicStates.push_back(EDynamicState::Scissor);
-	PSODesc.vertexAttributes = {
+	psoDesc.depthStencilState.depthTestEnable = false;
+	psoDesc.depthStencilState.depthWriteEnable = false;
+	psoDesc.depthStencilState.depthCompareTest = EDepthCompareTest::Always;
+	psoDesc.shaderStages.vertex = Engine.ShaderLibrary.FindShader<UserInterfaceVS>();
+	psoDesc.shaderStages.fragment = Engine.ShaderLibrary.FindShader<UserInterfaceFS>();
+	psoDesc.colorBlendAttachmentStates.resize(1, {});
+	psoDesc.colorBlendAttachmentStates[0].blendEnable = true;
+	psoDesc.colorBlendAttachmentStates[0].srcColorBlendFactor = EBlendFactor::SRC_ALPHA;
+	psoDesc.colorBlendAttachmentStates[0].dstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	psoDesc.colorBlendAttachmentStates[0].colorBlendOp = EBlendOp::ADD;
+	psoDesc.colorBlendAttachmentStates[0].srcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+	psoDesc.colorBlendAttachmentStates[0].dstAlphaBlendFactor = EBlendFactor::ZERO;
+	psoDesc.colorBlendAttachmentStates[0].alphaBlendOp = EBlendOp::ADD;
+	psoDesc.dynamicStates.push_back(EDynamicState::Scissor);
+	psoDesc.vertexAttributes = {
 		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
-	PSODesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
-	PSODesc.layouts = { Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.pushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
-	PSODesc.pushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
+	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
+	psoDesc.layouts = { Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	psoDesc.pushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
+	psoDesc.pushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
 
 	Engine._Screen.OnScreenResize([this, &Device] (int32 Width, int32 Height)
 	{
 		ImGuiIO& ImGui = ImGui::GetIO();
 		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
 
-		PSODesc.viewport.width = Width;
-		PSODesc.viewport.height = Height;
+		psoDesc.viewport.width = Width;
+		psoDesc.viewport.height = Height;
 	});
 }
 
@@ -327,9 +327,9 @@ void ImGuiRenderData::Render(gpu::Device& Device, gpu::CommandList& CmdList, con
 
 	if (DrawData->CmdListsCount > 0)
 	{
-		PSODesc.renderPass = RenderPass;
+		psoDesc.renderPass = RenderPass;
 
-		gpu::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+		gpu::Pipeline Pipeline = Device.CreatePipeline(psoDesc);
 
 		CmdList.BindPipeline(Pipeline);
 

@@ -4,15 +4,15 @@
 class FullscreenVS : public gpu::Shader
 {
 public:
-	FullscreenVS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	FullscreenVS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo Base = { "../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex };
-		return Base;
+		static ShaderInfo base = { "../Shaders/FullscreenVS.glsl", "main", EShaderStage::Vertex };
+		return base;
 	}
 };
 
@@ -22,23 +22,23 @@ enum class EVisualize
 	RGBA8,
 };
 
-template<EVisualize Visualize>
+template<EVisualize visualize>
 class FullscreenFS : public gpu::Shader
 {
 public:
-	FullscreenFS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	FullscreenFS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo Base = { "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment };
-		return Base;
+		static ShaderInfo base = { "../Shaders/FullscreenFS.glsl", "main", EShaderStage::Fragment };
+		return base;
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Worker.SetDefine("TEXTURE", static_cast<uint32>(Visualize));
+		worker.SetDefine("TEXTURE", static_cast<uint32>(visualize));
 	}
 };

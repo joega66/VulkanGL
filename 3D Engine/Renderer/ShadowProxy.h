@@ -5,68 +5,64 @@
 
 struct ShadowDescriptors
 {
-	gpu::DescriptorBufferInfo LightViewProjBuffer;
-	gpu::DescriptorBufferInfo VolumeLightingUniform;
+	gpu::DescriptorBufferInfo _LightViewProjBuffer;
 
 	static const std::vector<DescriptorBinding>& GetBindings()
 	{
-		static std::vector<DescriptorBinding> Bindings =
+		static std::vector<DescriptorBinding> bindings =
 		{
 			{ 0, 1, EDescriptorType::UniformBuffer },
-			{ 1, 1, EDescriptorType::UniformBuffer }
 		};
-		return Bindings;
+		return bindings;
 	}
 };
 
 class ShadowProxy : public Component
 {
 public:
-	float Width;
+	float _Width;
 
-	float ZNear;
+	float _ZNear;
 
-	float ZFar;
+	float _ZFar;
 
-	ShadowProxy(gpu::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const struct DirectionalLight& DirectionalLight);
+	ShadowProxy(gpu::Device& device, DescriptorSetLayout<ShadowDescriptors>& shadowLayout, const struct DirectionalLight& directionalLight);
 
-	void Update(gpu::Device& Device, const struct DirectionalLight& DirectionalLight);
+	void Update(gpu::Device& device, const struct DirectionalLight& directionalLight);
 
 	/** Add a mesh to the light's shadow depth rendering. */
-	void AddMesh(gpu::Device& Device, gpu::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy);
+	void AddMesh(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary, const MeshProxy& meshProxy);
 
 	/** Render shadow depths. */
-	void Render(gpu::CommandList& CmdList);
+	void Render(gpu::CommandList& cmdList);
 
-	inline const gpu::Image& GetShadowMap() const { return ShadowMap; }
-	inline const gpu::DescriptorSet& GetDescriptorSet() const { return DescriptorSet; }
-	inline const glm::mat4& GetLightViewProjMatrix() const { return LightViewProjMatrix; }
-	inline const glm::mat4& GetLightViewProjMatrixInv() const { return LightViewProjMatrixInv; }
-	inline const glm::vec4& GetL() const { return L; }
-	inline const glm::vec4 GetRadiance() const { return Radiance; }
+	inline const gpu::Image& GetShadowMap() const { return _ShadowMap; }
+	inline const gpu::DescriptorSet& GetDescriptorSet() const { return _DescriptorSet; }
+	inline const glm::mat4& GetLightViewProjMatrix() const { return _LightViewProjMatrix; }
+	inline const glm::mat4& GetLightViewProjMatrixInv() const { return _LightViewProjMatrixInv; }
+	inline const glm::vec4& GetL() const { return _L; }
+	inline const glm::vec4 GetRadiance() const { return _Radiance; }
 
 private:
-	gpu::RenderPass RenderPass;
+	gpu::RenderPass _RenderPass;
 
-	float DepthBiasConstantFactor = 0.0f;
+	float _DepthBiasConstantFactor = 0.0f;
 
-	float DepthBiasSlopeFactor = 0.0f;
+	float _DepthBiasSlopeFactor = 0.0f;
 
-	glm::mat4 LightViewProjMatrix;
+	glm::mat4 _LightViewProjMatrix;
 
-	glm::mat4 LightViewProjMatrixInv;
+	glm::mat4 _LightViewProjMatrixInv;
 
-	glm::vec4 L;
+	glm::vec4 _L;
 
-	glm::vec4 Radiance;
+	glm::vec4 _Radiance;
 
-	gpu::Buffer LightViewProjBuffer;
+	gpu::Buffer _LightViewProjBuffer;
 
-	gpu::Image ShadowMap;
+	gpu::Image _ShadowMap;
 
-	gpu::Buffer VolumeLightingUniform;
+	gpu::DescriptorSet _DescriptorSet;
 
-	gpu::DescriptorSet DescriptorSet;
-
-	std::vector<MeshDrawCommand> MeshDrawCommands;
+	std::vector<MeshDrawCommand> _MeshDrawCommands;
 };

@@ -1,7 +1,7 @@
 #include "Transform.h"
 
 Transform::Transform(
-	EntityManager& ECS,
+	EntityManager& ecs,
 	Entity Owner,
 	const glm::vec3& Position, 
 	const glm::vec3& Rotation, 
@@ -9,9 +9,9 @@ Transform::Transform(
 	const glm::vec3& InScale
 ) : Owner(Owner)
 {
-	Translate(ECS, Position);
-	Rotate(ECS, Rotation, Angle);
-	Scale(ECS, InScale);
+	Translate(ecs, Position);
+	Rotate(ecs, Rotation, Angle);
+	Scale(ecs, InScale);
 }
 
 Transform::Transform(Transform&& Other)
@@ -53,37 +53,37 @@ glm::mat4 Transform::GetLocalToParent()
 	return LocalToParent;
 }
 
-void Transform::Translate(EntityManager& ECS, const glm::vec3& InPosition)
+void Transform::Translate(EntityManager& ecs, const glm::vec3& InPosition)
 {
 	Position = InPosition;
-	Clean(ECS);
+	Clean(ecs);
 }
 
-void Transform::Rotate(EntityManager& ECS, const glm::vec3& InRotation, float InAngle)
+void Transform::Rotate(EntityManager& ecs, const glm::vec3& InRotation, float InAngle)
 {
 	Rotation = InRotation;
 	Angle = InAngle;
-	Clean(ECS);
+	Clean(ecs);
 }
 
-void Transform::Scale(EntityManager& ECS, const glm::vec3& InScale)
+void Transform::Scale(EntityManager& ecs, const glm::vec3& InScale)
 {
 	ScaleBy = InScale;
-	Clean(ECS);
+	Clean(ecs);
 }
 
-void Transform::SetParent(EntityManager& ECS, Entity NewParent)
+void Transform::SetParent(EntityManager& ecs, Entity NewParent)
 {
-	if (ECS.IsValid(Parent))
+	if (ecs.IsValid(Parent))
 	{
-		Transform& ParentTransform = ECS.GetComponent<Transform>(Parent);
+		Transform& ParentTransform = ecs.GetComponent<Transform>(Parent);
 		ParentTransform.RemoveChild(Owner);
 	}
 
-	Transform& ParentTransform = ECS.GetComponent<Transform>(NewParent);
+	Transform& ParentTransform = ecs.GetComponent<Transform>(NewParent);
 	ParentTransform.AddChild(Owner);
 
-	Clean(ECS);
+	Clean(ecs);
 }
 
 void Transform::AddChild(Entity Child)
@@ -99,19 +99,19 @@ void Transform::RemoveChild(Entity Child)
 	}
 }
 
-void Transform::Clean(EntityManager& ECS)
+void Transform::Clean(EntityManager& ecs)
 {
 	LocalToWorld = GetLocalToParent();
 
-	if (ECS.IsValid(Parent))
+	if (ecs.IsValid(Parent))
 	{
-		const Transform& ParentTransform = ECS.GetComponent<Transform>(Parent);
+		const Transform& ParentTransform = ecs.GetComponent<Transform>(Parent);
 		LocalToWorld = ParentTransform.GetLocalToWorld() * LocalToWorld;
 	}
 
 	std::for_each(Children.begin(), Children.end(), [&] (Entity Child) 
 	{
-		Transform& ChildTransform = ECS.GetComponent<Transform>(Child);
-		ChildTransform.Clean(ECS);
+		Transform& ChildTransform = ecs.GetComponent<Transform>(Child);
+		ChildTransform.Clean(ecs);
 	});
 }

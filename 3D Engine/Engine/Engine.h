@@ -37,7 +37,7 @@ public:
 	gpu::Surface& Surface;
 
 	/** Engine misc. */
-	EntityManager ECS;
+	EntityManager _ECS;
 	AssetManager Assets;
 	Camera Camera;
 };

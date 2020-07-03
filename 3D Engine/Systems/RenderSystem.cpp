@@ -22,7 +22,7 @@ RenderSystem::RenderSystem(Engine& Engine)
 
 void RenderSystem::Start(Engine& Engine)
 {
-	auto& ECS = Engine.ECS;
+	auto& ECS = Engine._ECS;
 	auto& Device = Engine.Device;
 
 	ECS.AddSingletonComponent<RenderSettings>();
@@ -56,7 +56,7 @@ void RenderSystem::Start(Engine& Engine)
 
 void RenderSystem::Update(Engine& Engine)
 {
-	auto& ECS = Engine.ECS;
+	auto& ECS = Engine._ECS;
 	auto& Device = Engine.Device;
 
 	for (auto Entity : ECS.GetEntities<ShadowProxy>())
@@ -75,7 +75,7 @@ void RenderSystem::Update(Engine& Engine)
 
 		Bounds.Box = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 
-		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(MeshProxy.LocalToWorldUniform.GetData());
+		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(MeshProxy._LocalToWorldUniform.GetData());
 		LocalToWorldUniformBuffer->Transform = Transform.GetLocalToWorld();
 		LocalToWorldUniformBuffer->Inverse = glm::inverse(Transform.GetLocalToWorld());
 		LocalToWorldUniformBuffer->InverseTranspose = glm::transpose(LocalToWorldUniformBuffer->Inverse);

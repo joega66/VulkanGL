@@ -2,83 +2,83 @@
 #include <ECS/EntityManager.h>
 #include <Components/RenderSettings.h>
 
-BEGIN_SHADER_STRUCT(PostProcessingData)
+BEGIN_SHADER_STRUCT(PostProcessingParams)
 	SHADER_PARAMETER(float, _ExposureAdjustment)
 	SHADER_PARAMETER(float, _ExposureBias)
-END_SHADER_STRUCT(PostProcessingData)
+END_SHADER_STRUCT(PostProcessingParams)
 
 class PostProcessingCS : public gpu::Shader
 {
 public:
-	PostProcessingCS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	PostProcessingCS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Worker << PostProcessingData::Decl;
+		worker << PostProcessingParams::Decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute };
-		return BaseInfo;
+		static ShaderInfo info = { "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute };
+		return info;
 	}
 };
 
 struct PostProcessingDescriptors
 {
-	gpu::DescriptorImageInfo DisplayColor;
-	gpu::DescriptorImageInfo HDRColor;
+	gpu::DescriptorImageInfo _DisplayColor;
+	gpu::DescriptorImageInfo _HDRColor;
 
 	static auto& GetBindings()
 	{
-		static std::vector<DescriptorBinding> Bindings =
+		static std::vector<DescriptorBinding> bindings =
 		{
 			{ 0, 1, EDescriptorType::StorageImage },
 			{ 1, 1, EDescriptorType::StorageImage },
 		};
-		return Bindings;
+		return bindings;
 	}
 };
 
-void SceneRenderer::ComputePostProcessing(const gpu::Image& DisplayImage, CameraProxy& Camera, gpu::CommandList& CmdList)
+void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	auto& RenderSettings = ECS.GetSingletonComponent<class RenderSettings>();
+	auto& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
-	gpu::DescriptorSetLayout Layout = Device.CreateDescriptorSetLayout(PostProcessingDescriptors::GetBindings().size(), PostProcessingDescriptors::GetBindings().data());
-	gpu::DescriptorSet DescriptorSet = Layout.CreateDescriptorSet(Device);
+	gpu::DescriptorSetLayout layout = _Device.CreateDescriptorSetLayout(PostProcessingDescriptors::GetBindings().size(), PostProcessingDescriptors::GetBindings().data());
+	gpu::DescriptorSet descriptorSet = layout.CreateDescriptorSet(_Device);
 	
-	PostProcessingDescriptors Descriptors;
-	Descriptors.DisplayColor = gpu::DescriptorImageInfo(DisplayImage);
-	Descriptors.HDRColor = gpu::DescriptorImageInfo(Camera.SceneColor);
+	PostProcessingDescriptors descriptors;
+	descriptors._DisplayColor = gpu::DescriptorImageInfo(displayImage);
+	descriptors._HDRColor = gpu::DescriptorImageInfo(camera._SceneColor);
 
-	Layout.UpdateDescriptorSet(Device, DescriptorSet, &Descriptors);
+	layout.UpdateDescriptorSet(_Device, descriptorSet, &descriptors);
 
-	const gpu::Shader* Shader = ShaderLibrary.FindShader<PostProcessingCS>();
+	const gpu::Shader* shader = _ShaderLibrary.FindShader<PostProcessingCS>();
 
-	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.computeShader = Shader;
-	ComputeDesc.Layouts = { Layout };
+	ComputePipelineDesc computeDesc;
+	computeDesc.computeShader = shader;
+	computeDesc.Layouts = { layout };
 
-	gpu::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
+	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
-	CmdList.BindPipeline(Pipeline);
+	cmdList.BindPipeline(pipeline);
 
-	CmdList.BindDescriptorSets(Pipeline, 1, &DescriptorSet.GetHandle());
+	cmdList.BindDescriptorSets(pipeline, 1, &descriptorSet.GetHandle());
 
-	PostProcessingData PostProcessingData;
-	PostProcessingData._ExposureAdjustment = RenderSettings.ExposureAdjustment;
-	PostProcessingData._ExposureBias = RenderSettings.ExposureBias;
+	PostProcessingParams postProcessingParams;
+	postProcessingParams._ExposureAdjustment = settings.ExposureAdjustment;
+	postProcessingParams._ExposureBias = settings.ExposureBias;
 
-	CmdList.PushConstants(Pipeline, Shader, &PostProcessingData);
+	cmdList.PushConstants(pipeline, shader, &postProcessingParams);
 
-	const glm::ivec3 GroupCount(
-		DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u),
-		DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u),
+	const glm::ivec3 groupCount(
+		DivideAndRoundUp(camera._SceneColor.GetWidth(), 8u),
+		DivideAndRoundUp(camera._SceneColor.GetHeight(), 8u),
 		1
 	);
 
-	CmdList.Dispatch(GroupCount.x, GroupCount.y, GroupCount.z);
+	cmdList.Dispatch(groupCount.x, groupCount.y, groupCount.z);
 }

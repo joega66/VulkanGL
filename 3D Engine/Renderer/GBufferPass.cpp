@@ -4,75 +4,75 @@
 #include <ECS/EntityManager.h>
 #include <Engine/Engine.h>
 
-template<EMeshType MeshType>
-class GBufferPassVS : public MeshShader<MeshType>
+template<EMeshType meshType>
+class GBufferPassVS : public MeshShader<meshType>
 {
-	using Base = MeshShader<MeshType>;
+	using Base = MeshShader<meshType>;
 public:
-	GBufferPassVS(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
+	GBufferPassVS(const ShaderCompilationInfo& compilationInfo)
+		: Base(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Base::SetEnvironmentVariables(Worker);
+		Base::SetEnvironmentVariables(worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/GBufferVS.glsl", "main", EShaderStage::Vertex };
-		return BaseInfo;
+		static ShaderInfo info = { "../Shaders/GBufferVS.glsl", "main", EShaderStage::Vertex };
+		return info;
 	}
 };
 
-template<EMeshType MeshType>
-class GBufferPassFS : public MeshShader<MeshType>
+template<EMeshType meshType>
+class GBufferPassFS : public MeshShader<meshType>
 {
-	using Base = MeshShader<MeshType>;
+	using Base = MeshShader<meshType>;
 public:
-	GBufferPassFS(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
+	GBufferPassFS(const ShaderCompilationInfo& compilationInfo)
+		: Base(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Base::SetEnvironmentVariables(Worker);
+		Base::SetEnvironmentVariables(worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/GBufferFS.glsl", "main", EShaderStage::Fragment };
-		return BaseInfo;
+		static ShaderInfo baseInfo = { "../Shaders/GBufferFS.glsl", "main", EShaderStage::Fragment };
+		return baseInfo;
 	}
 };
 
-void CameraProxy::AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy)
+void CameraProxy::AddToGBufferPass(Engine& engine, const MeshProxy& meshProxy)
 {
-	constexpr EMeshType MeshType = EMeshType::StaticMesh;
+	constexpr EMeshType meshType = EMeshType::StaticMesh;
 
-	PipelineStateDesc PSODesc = {};
-	PSODesc.renderPass = GBufferRP;
-	PSODesc.shaderStages.vertex = Engine.ShaderLibrary.FindShader<GBufferPassVS<MeshType>>();
-	PSODesc.shaderStages.fragment = Engine.ShaderLibrary.FindShader<GBufferPassFS<MeshType>>();
-	PSODesc.viewport.width = SceneDepth.GetWidth();
-	PSODesc.viewport.height = SceneDepth.GetHeight();
-	PSODesc.layouts = { CameraDescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Engine.Device.GetTextures().GetLayout(), Engine.Device.GetSamplers().GetLayout() };
+	PipelineStateDesc psoDesc = {};
+	psoDesc.renderPass = _GBufferRP;
+	psoDesc.shaderStages.vertex = engine.ShaderLibrary.FindShader<GBufferPassVS<meshType>>();
+	psoDesc.shaderStages.fragment = engine.ShaderLibrary.FindShader<GBufferPassFS<meshType>>();
+	psoDesc.viewport.width = _SceneDepth.GetWidth();
+	psoDesc.viewport.height = _SceneDepth.GetHeight();
+	psoDesc.layouts = { _CameraDescriptorSet.GetLayout(), meshProxy.GetSurfaceSet().GetLayout(), engine.Device.GetTextures().GetLayout(), engine.Device.GetSamplers().GetLayout() };
 
-	const std::vector<VkDescriptorSet> DescriptorSets =
+	const std::vector<VkDescriptorSet> descriptorSets =
 	{
-		CameraDescriptorSet, MeshProxy.GetSurfaceSet(), Engine.Device.GetTextures().GetSet(), Engine.Device.GetSamplers().GetSet()
+		_CameraDescriptorSet, meshProxy.GetSurfaceSet(), engine.Device.GetTextures().GetSet(), engine.Device.GetSamplers().GetSet()
 	};
 
-	GBufferPass.push_back(MeshDrawCommand(Engine.Device, MeshProxy, PSODesc, DescriptorSets));
+	_GBufferPass.push_back(MeshDrawCommand(engine.Device, meshProxy, psoDesc, descriptorSets));
 }
 
-void SceneRenderer::RenderGBufferPass(CameraProxy& Camera, gpu::CommandList& CmdList)
+void SceneRenderer::RenderGBufferPass(CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	CmdList.BeginRenderPass(Camera.GBufferRP);
+	cmdList.BeginRenderPass(camera._GBufferRP);
 
-	MeshDrawCommand::Draw(CmdList, Camera.GBufferPass);
+	MeshDrawCommand::Draw(cmdList, camera._GBufferPass);
 
-	CmdList.EndRenderPass();
+	cmdList.EndRenderPass();
 }

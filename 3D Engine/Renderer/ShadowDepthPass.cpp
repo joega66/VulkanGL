@@ -4,11 +4,11 @@
 #include "FullscreenQuad.h"
 #include <ECS/EntityManager.h>
 
-void SceneRenderer::RenderShadowDepths(CameraProxy& Camera, gpu::CommandList& CmdList)
+void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	for (auto Entity : ECS.GetEntities<ShadowProxy>())
+	for (auto entity : _ECS.GetEntities<ShadowProxy>())
 	{
-		ShadowProxy& ShadowProxy = ECS.GetComponent<class ShadowProxy>(Entity);
-		ShadowProxy.Render(CmdList);
+		ShadowProxy& shadowProxy = _ECS.GetComponent<ShadowProxy>(entity);
+		shadowProxy.Render(cmdList);
 	}
 }

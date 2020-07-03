@@ -9,7 +9,7 @@
 
 void SceneSystem::Start(Engine& Engine)
 {
-	auto& ECS = Engine.ECS;
+	auto& ECS = Engine._ECS;
 
 	const std::string ScenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");
 	const SceneLoadRequest SceneLoadReq(ScenePath, false);
@@ -37,7 +37,7 @@ void SceneSystem::Start(Engine& Engine)
 
 void SceneSystem::Update(Engine& Engine)
 {
-	auto& ECS = Engine.ECS;
+	auto& ECS = Engine._ECS;
 
 	for (auto& Entity : ECS.GetEntities<SceneLoadRequest>())
 	{
@@ -49,7 +49,7 @@ void SceneSystem::Update(Engine& Engine)
 
 void SceneSystem::HandleSceneLoadRequest(Engine& Engine, const SceneLoadRequest& SceneLoadRequest)
 {
-	auto& ECS = Engine.ECS;
+	auto& ECS = Engine._ECS;
 
 	if (SceneLoadRequest.DestroyOldEntities)
 	{

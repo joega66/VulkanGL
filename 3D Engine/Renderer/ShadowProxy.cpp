@@ -3,145 +3,130 @@
 #include <ECS/EntityManager.h>
 #include "MaterialShader.h"
 
-UNIFORM_STRUCT(LightViewProjUniformData,
-	glm::mat4 LightViewProj;
-	glm::mat4 InvLightViewProj;
+UNIFORM_STRUCT(LightViewProjUniformParams,
+	glm::mat4 _LightViewProj;
+	glm::mat4 _InvLightViewProj;
 );
 
-UNIFORM_STRUCT(VolumeLightingUniformData,
-	glm::ivec4 ShadowMapSize;
-	glm::vec4 L;
-	glm::vec4 Radiance;
-);
-
-ShadowProxy::ShadowProxy(gpu::Device& Device, DescriptorSetLayout<ShadowDescriptors>& ShadowLayout, const DirectionalLight& DirectionalLight)
-	: Width(Platform::GetFloat("Engine.ini", "Shadows", "Width", 400.0f))
-	, ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
-	, ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
+ShadowProxy::ShadowProxy(gpu::Device& device, DescriptorSetLayout<ShadowDescriptors>& shadowLayout, const DirectionalLight& directionalLight)
+	: _Width(Platform::GetFloat("Engine.ini", "Shadows", "Width", 400.0f))
+	, _ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
+	, _ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
 {
-	LightViewProjBuffer = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightViewProjUniformData));
+	_LightViewProjBuffer = device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightViewProjUniformParams));
 
-	const int32 Resolution = Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048);
-	const glm::ivec2 ShadowMapRes(Resolution);
+	const glm::ivec2 shadowMapRes(Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048));
 
-	ShadowMap = Device.CreateImage(ShadowMapRes.x, ShadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-
-	VolumeLightingUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(VolumeLightingUniformData));
+	_ShadowMap = device.CreateImage(shadowMapRes.x, shadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
 	RenderPassDesc rpDesc = {};
 	rpDesc.depthAttachment = gpu::AttachmentView(
-		&ShadowMap,
+		&_ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	rpDesc.renderArea = RenderArea{ glm::ivec2{}, glm::uvec2(ShadowMap.GetWidth(), ShadowMap.GetHeight()) };
+	rpDesc.renderArea = RenderArea{ glm::ivec2{}, glm::uvec2(_ShadowMap.GetWidth(), _ShadowMap.GetHeight()) };
 	
-	RenderPass = Device.CreateRenderPass(rpDesc);
+	_RenderPass = device.CreateRenderPass(rpDesc);
 
-	ShadowDescriptors Descriptors;
-	Descriptors.LightViewProjBuffer = LightViewProjBuffer;
-	Descriptors.VolumeLightingUniform = VolumeLightingUniform;
-
-	DescriptorSet = ShadowLayout.CreateDescriptorSet(Device);
-	ShadowLayout.UpdateDescriptorSet(Device, DescriptorSet, Descriptors);
+	ShadowDescriptors descriptors;
+	descriptors._LightViewProjBuffer = _LightViewProjBuffer;
+	
+	_DescriptorSet = shadowLayout.CreateDescriptorSet(device);
+	shadowLayout.UpdateDescriptorSet(device, _DescriptorSet, descriptors);
 }
 
-void ShadowProxy::Update(gpu::Device& Device, const DirectionalLight& DirectionalLight)
+void ShadowProxy::Update(gpu::Device& device, const DirectionalLight& directionalLight)
 {
-	DepthBiasConstantFactor = DirectionalLight.DepthBiasConstantFactor;
-	DepthBiasSlopeFactor = DirectionalLight.DepthBiasSlopeFactor;
+	_DepthBiasConstantFactor = directionalLight.DepthBiasConstantFactor;
+	_DepthBiasSlopeFactor = directionalLight.DepthBiasSlopeFactor;
 
-	L = glm::vec4(glm::normalize(DirectionalLight.Direction), 1.0f);
-	Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
+	_L = glm::vec4(glm::normalize(directionalLight.Direction), 1.0f);
+	_Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
 
-	VolumeLightingUniformData* VolumeLightingUniformPtr = static_cast<VolumeLightingUniformData*>(VolumeLightingUniform.GetData());
-	VolumeLightingUniformPtr->ShadowMapSize = glm::ivec4(ShadowMap.GetWidth(), ShadowMap.GetHeight(), 0, 0);
-	VolumeLightingUniformPtr->L = L;
-	VolumeLightingUniformPtr->Radiance = Radiance;
+	glm::mat4 lightProjMatrix = glm::ortho(-_Width * 0.5f, _Width * 0.5f, -_Width * 0.5f, _Width * 0.5f, _ZNear, _ZFar);
+	lightProjMatrix[1][1] *= -1;
 
-	glm::mat4 LightProjMatrix = glm::ortho(-Width * 0.5f, Width * 0.5f, -Width * 0.5f, Width * 0.5f, ZNear, ZFar);
-	LightProjMatrix[1][1] *= -1;
+	const glm::mat4 lightViewMatrix = glm::lookAt(directionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	_LightViewProjMatrix = lightProjMatrix * lightViewMatrix;
+	_LightViewProjMatrixInv = glm::inverse(_LightViewProjMatrix);
 
-	const glm::mat4 LightViewMatrix = glm::lookAt(DirectionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	LightViewProjMatrix = LightProjMatrix * LightViewMatrix;
-	LightViewProjMatrixInv = glm::inverse(LightViewProjMatrix);
-
-	LightViewProjUniformData* LightViewProjMatrixPtr = static_cast<LightViewProjUniformData*>(LightViewProjBuffer.GetData());
-	LightViewProjMatrixPtr->LightViewProj = LightViewProjMatrix;
-	LightViewProjMatrixPtr->InvLightViewProj = LightViewProjMatrixInv;
+	LightViewProjUniformParams* lightViewProjMatrixPtr = static_cast<LightViewProjUniformParams*>(_LightViewProjBuffer.GetData());
+	lightViewProjMatrixPtr->_LightViewProj = _LightViewProjMatrix;
+	lightViewProjMatrixPtr->_InvLightViewProj = _LightViewProjMatrixInv;
 }
 
-template<EMeshType MeshType>
-class ShadowDepthVS : public MeshShader<MeshType>
+template<EMeshType meshType>
+class ShadowDepthVS : public MeshShader<meshType>
 {
-	using Base = MeshShader<MeshType>;
+	using Base = MeshShader<meshType>;
 public:
-	ShadowDepthVS(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
+	ShadowDepthVS(const ShaderCompilationInfo& compilationInfo)
+		: Base(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Base::SetEnvironmentVariables(Worker);
+		Base::SetEnvironmentVariables(worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/ShadowDepthVS.glsl", "main", EShaderStage::Vertex };
-		return BaseInfo;
+		static ShaderInfo info = { "../Shaders/ShadowDepthVS.glsl", "main", EShaderStage::Vertex };
+		return info;
 	}
 };
 
-template<EMeshType MeshType>
-class ShadowDepthFS : public MeshShader<MeshType>
+template<EMeshType meshType>
+class ShadowDepthFS : public MeshShader<meshType>
 {
-	using Base = MeshShader<MeshType>;
+	using Base = MeshShader<meshType>;
 public:
-	ShadowDepthFS(const ShaderCompilationInfo& CompilationInfo)
-		: Base(CompilationInfo)
+	ShadowDepthFS(const ShaderCompilationInfo& compilationInfo)
+		: Base(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Base::SetEnvironmentVariables(Worker);
+		Base::SetEnvironmentVariables(worker);
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment };
-		return BaseInfo;
+		static ShaderInfo info = { "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment };
+		return info;
 	}
 };
 
-void ShadowProxy::AddMesh(gpu::Device& Device, gpu::ShaderLibrary& ShaderLibrary, const MeshProxy& MeshProxy)
+void ShadowProxy::AddMesh(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary, const MeshProxy& meshProxy)
 {
-	constexpr EMeshType MeshType = EMeshType::StaticMesh;
+	constexpr EMeshType meshType = EMeshType::StaticMesh;
 
-	PipelineStateDesc PSODesc = {};
-	PSODesc.renderPass = RenderPass;
-	PSODesc.shaderStages.vertex = ShaderLibrary.FindShader<ShadowDepthVS<MeshType>>();
-	PSODesc.shaderStages.fragment = ShaderLibrary.FindShader<ShadowDepthFS<MeshType>>();
-	PSODesc.viewport.width = ShadowMap.GetWidth();
-	PSODesc.viewport.height = ShadowMap.GetHeight();
-	PSODesc.rasterizationState.depthBiasEnable = true;
-	PSODesc.rasterizationState.depthBiasConstantFactor = DepthBiasConstantFactor;
-	PSODesc.rasterizationState.depthBiasSlopeFactor = DepthBiasSlopeFactor;
-	PSODesc.layouts = { DescriptorSet.GetLayout(), MeshProxy.GetSurfaceSet().GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	PipelineStateDesc psoDesc = {};
+	psoDesc.renderPass = _RenderPass;
+	psoDesc.shaderStages.vertex = shaderLibrary.FindShader<ShadowDepthVS<meshType>>();
+	psoDesc.shaderStages.fragment = shaderLibrary.FindShader<ShadowDepthFS<meshType>>();
+	psoDesc.viewport.width = _ShadowMap.GetWidth();
+	psoDesc.viewport.height = _ShadowMap.GetHeight();
+	psoDesc.rasterizationState.depthBiasEnable = true;
+	psoDesc.rasterizationState.depthBiasConstantFactor = _DepthBiasConstantFactor;
+	psoDesc.rasterizationState.depthBiasSlopeFactor = _DepthBiasSlopeFactor;
+	psoDesc.layouts = { _DescriptorSet.GetLayout(), meshProxy.GetSurfaceSet().GetLayout(), device.GetTextures().GetLayout(), device.GetSamplers().GetLayout() };
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { DescriptorSet, MeshProxy.GetSurfaceSet(), Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
-	MeshDrawCommands.push_back(MeshDrawCommand(Device, MeshProxy, PSODesc, DescriptorSets));
+	const std::vector<VkDescriptorSet> descriptorSets = { _DescriptorSet, meshProxy.GetSurfaceSet(), device.GetTextures().GetSet(), device.GetSamplers().GetSet() };
+	_MeshDrawCommands.push_back(MeshDrawCommand(device, meshProxy, psoDesc, descriptorSets));
 }
 
-void ShadowProxy::Render(gpu::CommandList& CmdList)
+void ShadowProxy::Render(gpu::CommandList& cmdList)
 {
-	CmdList.BeginRenderPass(RenderPass);
+	cmdList.BeginRenderPass(_RenderPass);
 
-	MeshDrawCommand::Draw(CmdList, MeshDrawCommands);
+	MeshDrawCommand::Draw(cmdList, _MeshDrawCommands);
 
-	CmdList.EndRenderPass();
+	cmdList.EndRenderPass();
 
-	MeshDrawCommands.clear();
+	_MeshDrawCommands.clear();
 }

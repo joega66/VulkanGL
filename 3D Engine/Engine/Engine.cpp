@@ -71,7 +71,7 @@ void Engine::Main()
 	{
 		_Platform.PollEvents();
 
-		ECS.NotifyComponentEvents();
+		_ECS.NotifyComponentEvents();
 
 		SystemsManager.UpdateSystems(*this);
 		SystemsManager.UpdateRenderSystems(*this);

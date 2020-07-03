@@ -10,23 +10,23 @@ class SceneRenderer
 public:
 	SceneRenderer(Engine& Engine);
 
-	void Render(CameraProxy& Camera);
+	void Render(CameraProxy& camera);
 
 private:
-	gpu::Device& Device;
-	gpu::ShaderLibrary& ShaderLibrary;
-	gpu::Surface& Surface;
-	EntityManager& ECS;
-	AssetManager& Assets;
+	gpu::Device& _Device;
+	gpu::ShaderLibrary& _ShaderLibrary;
+	gpu::Surface& _Surface;
+	EntityManager& _ECS;
+	AssetManager& _Assets;
 	Camera& _Camera;
 
-	void ClearSceneColor(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void RenderGBufferPass(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void RenderShadowDepths(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void ComputeLightingPass(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void ComputeDeferredLight(CameraProxy& Camera, gpu::CommandList& CmdList, const struct LightData& Light);
-	void ComputeSSGI(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void ComputeRayTracing(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void RenderSkybox(CameraProxy& Camera, gpu::CommandList& CmdList);
-	void ComputePostProcessing(const gpu::Image& DisplayImage, CameraProxy& Camera, gpu::CommandList& CmdList);
+	void ClearSceneColor(CameraProxy& camera, gpu::CommandList& cmdList);
+	void RenderGBufferPass(CameraProxy& camera, gpu::CommandList& cmdList);
+	void RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList);
+	void ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList);
+	void ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const struct LightData& light);
+	void ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList);
+	void ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmdList);
+	void RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList);
+	void ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList);
 };

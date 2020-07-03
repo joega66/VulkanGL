@@ -5,7 +5,7 @@ class Transform : public Component
 {
 public:
 	Transform(
-		EntityManager& ECS,
+		EntityManager& ecs,
 		Entity Owner,
 		const glm::vec3& Position = glm::vec3(0.0f), 
 		const glm::vec3& Rotation = glm::vec3(0.0f, 1.0f, 0.0), 
@@ -19,13 +19,13 @@ public:
 	
 	const glm::mat4& GetLocalToWorld() const;
 
-	void Translate(EntityManager& ECS, const glm::vec3& Position);
+	void Translate(EntityManager& ecs, const glm::vec3& Position);
 
-	void Rotate(EntityManager& ECS, const glm::vec3& Axis, float Angle);
+	void Rotate(EntityManager& ecs, const glm::vec3& Axis, float Angle);
 
-	void Scale(EntityManager& ECS, const glm::vec3& ScaleBy);
+	void Scale(EntityManager& ecs, const glm::vec3& ScaleBy);
 
-	void SetParent(EntityManager& ECS, Entity Parent);
+	void SetParent(EntityManager& ecs, Entity Parent);
 
 	void RemoveChild(Entity Child);
 
@@ -34,7 +34,7 @@ public:
 	inline const glm::vec3& GetScale() const { return ScaleBy; }
 	inline float GetAngle() const { return Angle; }
 
-	void Clean(EntityManager& ECS);
+	void Clean(EntityManager& ecs);
 
 private:
 	/** The owning entity. */

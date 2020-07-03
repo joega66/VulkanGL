@@ -18,104 +18,104 @@ END_SHADER_STRUCT(LightData)
 class LightingPassCS : public gpu::Shader
 {
 public:
-	static constexpr uint32 DirectionalLight = 0;
-	static constexpr uint32 PointLight = 1;
+	static constexpr uint32 directionalLight = 0;
+	static constexpr uint32 pointLight = 1;
 
-	LightingPassCS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	LightingPassCS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		Worker << LightData::Decl;
+		worker << LightData::Decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo BaseInfo = { "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute };
-		return BaseInfo;
+		static ShaderInfo info = { "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute };
+		return info;
 	}
 };
 
-void SceneRenderer::ComputeLightingPass(CameraProxy& Camera, gpu::CommandList& CmdList)
+void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	const ImageMemoryBarrier ImageBarrier
+	const ImageMemoryBarrier imageBarrier
 	{
-		Camera.SceneColor,
+		camera._SceneColor,
 		EAccess::ShaderRead | EAccess::ShaderWrite,
 		EAccess::ShaderRead | EAccess::ShaderWrite,
 		EImageLayout::General,
 		EImageLayout::General
 	};
 
-	for (auto Entity : ECS.GetEntities<DirectionalLight>())
+	for (auto entity : _ECS.GetEntities<DirectionalLight>())
 	{
-		const auto& DirectionalLight = ECS.GetComponent<struct DirectionalLight>(Entity);
-		const auto& Shadow = ECS.GetComponent<ShadowProxy>(Entity);
+		const auto& directionalLight = _ECS.GetComponent<DirectionalLight>(entity);
+		const auto& shadow = _ECS.GetComponent<ShadowProxy>(entity);
 
-		LightData Light;
-		Light._L = glm::vec4(glm::normalize(DirectionalLight.Direction), 0.0f);
-		Light._Radiance = glm::vec4(DirectionalLight.Intensity * DirectionalLight.Color, 1.0f);
-		Light._LightViewProj = Shadow.GetLightViewProjMatrix();
-		Light._ShadowMap = Shadow.GetShadowMap().GetTextureID();
-		Light._ShadowMapSampler = Device.CreateSampler({}).GetSamplerID();
+		LightData light;
+		light._L = glm::vec4(glm::normalize(directionalLight.Direction), 0.0f);
+		light._Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
+		light._LightViewProj = shadow.GetLightViewProjMatrix();
+		light._ShadowMap = shadow.GetShadowMap().GetTextureID();
+		light._ShadowMapSampler = _Device.CreateSampler({}).GetSamplerID();
 
-		ComputeDeferredLight(Camera, CmdList, Light);
+		ComputeDeferredLight(camera, cmdList, light);
 
-		CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
+		cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 	}
 
-	for (auto Entity : ECS.GetEntities<PointLight>())
+	for (auto entity : _ECS.GetEntities<PointLight>())
 	{
-		const auto& PointLight = ECS.GetComponent<struct PointLight>(Entity);
-		const auto& LightTransform = ECS.GetComponent<Transform>(Entity);
+		const auto& pointLight = _ECS.GetComponent<PointLight>(entity);
+		const auto& transform = _ECS.GetComponent<Transform>(entity);
 
-		LightData Light;
-		Light._L = glm::vec4(LightTransform.GetPosition(), 1.0f);
-		Light._Radiance = glm::vec4(PointLight.Intensity * PointLight.Color, 1.0f);
+		LightData light;
+		light._L = glm::vec4(transform.GetPosition(), 1.0f);
+		light._Radiance = glm::vec4(pointLight.Intensity * pointLight.Color, 1.0f);
 
-		ComputeDeferredLight(Camera, CmdList, Light);
+		ComputeDeferredLight(camera, cmdList, light);
 
-		CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &ImageBarrier);
+		cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 	}
 
-	ComputeSSGI(Camera, CmdList);
+	ComputeSSGI(camera, cmdList);
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& Camera, gpu::CommandList& CmdList, const LightData& Light)
+void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const LightData& light)
 {
-	const gpu::Shader* Shader = ShaderLibrary.FindShader<LightingPassCS>();
+	const gpu::Shader* shader = _ShaderLibrary.FindShader<LightingPassCS>();
 
-	ComputePipelineDesc ComputeDesc;
-	ComputeDesc.computeShader = Shader;
-	ComputeDesc.specInfo.Add(0, Light._L.w == 0.0f ? LightingPassCS::DirectionalLight : LightingPassCS::PointLight);
-	ComputeDesc.Layouts =
+	ComputePipelineDesc computeDesc;
+	computeDesc.computeShader = shader;
+	computeDesc.specInfo.Add(0, light._L.w == 0.0f ? LightingPassCS::directionalLight : LightingPassCS::pointLight);
+	computeDesc.Layouts =
 	{
-		Camera.CameraDescriptorSet.GetLayout(),
-		Device.GetTextures().GetLayout(),
-		Device.GetSamplers().GetLayout(),
+		camera._CameraDescriptorSet.GetLayout(),
+		_Device.GetTextures().GetLayout(),
+		_Device.GetSamplers().GetLayout(),
 	};
 
-	gpu::Pipeline Pipeline = Device.CreatePipeline(ComputeDesc);
+	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
-	CmdList.BindPipeline(Pipeline);
+	cmdList.BindPipeline(pipeline);
 
-	const std::vector<VkDescriptorSet> DescriptorSets =
+	const std::vector<VkDescriptorSet> descriptorSets =
 	{
-		Camera.CameraDescriptorSet,
-		Device.GetTextures().GetSet(),
-		Device.GetSamplers().GetSet(),
+		camera._CameraDescriptorSet,
+		_Device.GetTextures().GetSet(),
+		_Device.GetSamplers().GetSet(),
 	};
 
-	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
 
-	CmdList.PushConstants(Pipeline, Shader, &Light);
+	cmdList.PushConstants(pipeline, shader, &light);
 
-	const uint32 GroupCountX = DivideAndRoundUp(Camera.SceneColor.GetWidth(), 8u);
-	const uint32 GroupCountY = DivideAndRoundUp(Camera.SceneColor.GetHeight(), 8u);
+	const uint32 groupCountX = DivideAndRoundUp(camera._SceneColor.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(camera._SceneColor.GetHeight(), 8u);
 
-	CmdList.Dispatch(GroupCountX, GroupCountY, 1);
+	cmdList.Dispatch(groupCountX, groupCountY, 1);
 }
 
 BEGIN_SHADER_STRUCT(SSGIParams)
@@ -146,26 +146,26 @@ public:
 
 void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	const gpu::Shader* shader = ShaderLibrary.FindShader<SSGI>();
+	const gpu::Shader* shader = _ShaderLibrary.FindShader<SSGI>();
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;
 	computeDesc.Layouts =
 	{
-		camera.CameraDescriptorSet.GetLayout(),
-		Device.GetTextures().GetLayout(),
-		Device.GetSamplers().GetLayout(),
+		camera._CameraDescriptorSet.GetLayout(),
+		_Device.GetTextures().GetLayout(),
+		_Device.GetSamplers().GetLayout(),
 	};
 
-	gpu::Pipeline pipeline = Device.CreatePipeline(computeDesc);
+	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
 	cmdList.BindPipeline(pipeline);
 
 	const std::vector<VkDescriptorSet> descriptorSets =
 	{
-		camera.CameraDescriptorSet,
-		Device.GetTextures().GetSet(),
-		Device.GetSamplers().GetSet(),
+		camera._CameraDescriptorSet,
+		_Device.GetTextures().GetSet(),
+		_Device.GetSamplers().GetSet(),
 	};
 
 	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
@@ -183,20 +183,20 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 	oldCameraRotation = _Camera.GetRotation();
 
 	SSGIParams ssgiParams;
-	ssgiParams._Skybox = ECS.GetComponent<SkyboxComponent>(ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
-	ssgiParams._SkyboxSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+	ssgiParams._Skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
+	ssgiParams._SkyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 	ssgiParams._FrameNumber = frameNumber++;
 
 	cmdList.PushConstants(pipeline, shader, &ssgiParams);
 
-	const uint32 groupCountX = DivideAndRoundUp(camera.SceneColor.GetWidth(), 8u);
-	const uint32 groupCountY = DivideAndRoundUp(camera.SceneColor.GetHeight(), 8u);
+	const uint32 groupCountX = DivideAndRoundUp(camera._SceneColor.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(camera._SceneColor.GetHeight(), 8u);
 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 
 	const ImageMemoryBarrier barrier
 	{
-		camera.SceneColor,
+		camera._SceneColor,
 		EAccess::ShaderRead | EAccess::ShaderWrite,
 		EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite,
 		EImageLayout::General,

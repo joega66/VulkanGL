@@ -6,20 +6,20 @@ enum class EMeshType
 	StaticMesh
 };
 
-template<EMeshType MeshType>
+template<EMeshType meshType>
 class MeshShader : public gpu::Shader
 {
 public:
-	MeshShader(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	MeshShader(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		if constexpr (MeshType == EMeshType::StaticMesh)
+		if constexpr (meshType == EMeshType::StaticMesh)
 		{
-			Worker.SetDefine("STATIC_MESH");
+			worker.SetDefine("STATIC_MESH");
 		}
 	}
 };

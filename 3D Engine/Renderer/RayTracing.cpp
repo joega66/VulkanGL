@@ -37,7 +37,7 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 {
 	ImageMemoryBarrier imageBarrier
 	{
-		camera.SceneColor,
+		camera._SceneColor,
 		EAccess::None,
 		EAccess::ShaderWrite,
 		EImageLayout::Undefined,
@@ -74,19 +74,19 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 	rayTracingParams._Horizontal = glm::vec4(focusDistance * viewportWidth * u, 0);
 	rayTracingParams._Vertical = glm::vec4(focusDistance * viewportHeight * v, 0);
 	rayTracingParams._LowerLeftCorner = rayTracingParams._Origin - rayTracingParams._Horizontal / 2.0f - rayTracingParams._Vertical / 2.0f - glm::vec4(focusDistance * w, 0);
-	rayTracingParams._Skybox = ECS.GetComponent<SkyboxComponent>(ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
-	rayTracingParams._SkyboxSampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+	rayTracingParams._Skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
+	rayTracingParams._SkyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 	rayTracingParams._FrameNumber = frameNumber++;
 
 	ComputePipelineDesc computeDesc = {};
-	computeDesc.computeShader = ShaderLibrary.FindShader<RayTracingCS>();
-	computeDesc.Layouts = { camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
+	computeDesc.computeShader = _ShaderLibrary.FindShader<RayTracingCS>();
+	computeDesc.Layouts = { camera._CameraDescriptorSet.GetLayout(), _Device.GetTextures().GetLayout(), _Device.GetSamplers().GetLayout() };
 	
-	gpu::Pipeline pipeline = Device.CreatePipeline(computeDesc);
+	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
 	cmdList.BindPipeline(pipeline);
 
-	std::vector<VkDescriptorSet> descriptorSets = { camera.CameraDescriptorSet, Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
+	std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures().GetSet(), _Device.GetSamplers().GetSet() };
 	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);

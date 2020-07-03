@@ -6,46 +6,46 @@ class MeshDrawCommand
 {
 public:
 	MeshDrawCommand(
-		gpu::Device& Device,
-		const MeshProxy& MeshProxy,
-		PipelineStateDesc& PSODesc,
-		const std::vector<VkDescriptorSet>& DescriptorSets)
-		: Submeshes(MeshProxy.GetSubmeshes())
-		, Material(MeshProxy.GetMaterial())
-		, DescriptorSets(DescriptorSets)
+		gpu::Device& device,
+		const MeshProxy& meshProxy,
+		PipelineStateDesc& psoDesc,
+		const std::vector<VkDescriptorSet>& descriptorSets)
+		: _Submeshes(meshProxy.GetSubmeshes())
+		, _Material(meshProxy.GetMaterial())
+		, _DescriptorSets(descriptorSets)
 	{
-		PSODesc.specInfo = MeshProxy.GetSpecializationInfo();
-		PSODesc.pushConstantRanges.push_back(Material->GetPushConstantRange());
-		Pipeline = Device.CreatePipeline(PSODesc);
+		psoDesc.specInfo = meshProxy.GetSpecializationInfo();
+		psoDesc.pushConstantRanges.push_back(_Material->GetPushConstantRange());
+		_Pipeline = device.CreatePipeline(psoDesc);
 	}
 
-	void Draw(gpu::CommandList& CmdList)
+	void Draw(gpu::CommandList& cmdList)
 	{
-		CmdList.BindPipeline(Pipeline);
+		cmdList.BindPipeline(_Pipeline);
 
-		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+		cmdList.BindDescriptorSets(_Pipeline, static_cast<uint32>(_DescriptorSets.size()), _DescriptorSets.data());
 
-		CmdList.PushConstants(Pipeline, EShaderStage::Fragment, 0, sizeof(Material->GetPushConstants()), &Material->GetPushConstants());
+		cmdList.PushConstants(_Pipeline, EShaderStage::Fragment, 0, sizeof(_Material->GetPushConstants()), &_Material->GetPushConstants());
 
-		for (const auto& Submesh : Submeshes)
+		for (const auto& submesh : _Submeshes)
 		{
-			CmdList.BindVertexBuffers(static_cast<uint32>(Submesh.GetVertexBuffers().size()), Submesh.GetVertexBuffers().data());
+			cmdList.BindVertexBuffers(static_cast<uint32>(submesh.GetVertexBuffers().size()), submesh.GetVertexBuffers().data());
 
-			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
+			cmdList.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());
 		}
 	}
 
-	static void Draw(gpu::CommandList& CmdList, std::vector<MeshDrawCommand>& MeshDrawCommands)
+	static void Draw(gpu::CommandList& cmdList, std::vector<MeshDrawCommand>& meshDrawCommands)
 	{
-		for (auto& MeshDrawCommand : MeshDrawCommands)
+		for (auto& meshDrawCommand : meshDrawCommands)
 		{
-			MeshDrawCommand.Draw(CmdList);
+			meshDrawCommand.Draw(cmdList);
 		}
 	}
 
 private:
-	gpu::Pipeline Pipeline;
-	std::vector<VkDescriptorSet> DescriptorSets;
-	const std::vector<Submesh>& Submeshes;
-	const Material* Material;
+	gpu::Pipeline _Pipeline;
+	std::vector<VkDescriptorSet> _DescriptorSets;
+	const std::vector<Submesh>& _Submeshes;
+	const Material* _Material;
 };

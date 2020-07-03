@@ -3,7 +3,7 @@
 #include <Engine/Screen.h>
 #include <Components/Bounds.h>
 
-UNIFORM_STRUCT(CameraUniformBufferShaderParameters,
+UNIFORM_STRUCT(CameraUniformBufferParams,
 	glm::mat4 worldToView;
 	glm::mat4 viewToClip;
 	glm::mat4 worldToClip;
@@ -17,39 +17,39 @@ UNIFORM_STRUCT(CameraUniformBufferShaderParameters,
 	float _pad1;
 );
 
-CameraProxy::CameraProxy(Engine& Engine)
-	: CameraDescriptorSet(Engine.Device)
+CameraProxy::CameraProxy(Engine& engine)
+	: _CameraDescriptorSet(engine.Device)
 {
-	CameraUniformBuffer = Engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBufferShaderParameters));
-	CameraDescriptorSet.CameraUniform = CameraUniformBuffer;
+	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBufferParams));
+	_CameraDescriptorSet._CameraUniform = _CameraUniformBuffer;
 
-	Engine._Screen.OnScreenResize([this, &Engine] (int32 Width, int32 Height)
+	engine._Screen.OnScreenResize([this, &engine] (int32 width, int32 height)
 	{
-		auto& Device = Engine.Device;
-		auto& Surface = Engine.Surface;
+		auto& device = engine.Device;
+		auto& surface = engine.Surface;
 
-		SceneColor = Device.CreateImage(Width, Height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
-		SceneDepth = Device.CreateImage(Width, Height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		_SceneColor = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
+		_SceneDepth = device.CreateImage(width, height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
-		GBuffer0 = Device.CreateImage(Width, Height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-		GBuffer1 = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
+		_GBuffer0 = device.CreateImage(width, height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+		_GBuffer1 = device.CreateImage(width, height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 		
-		_SSGIHistory = Device.CreateImage(Width, Height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
+		_SSGIHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
 
-		CreateSceneRP(Device);
-		CreateGBufferRP(Device);
-		CreateUserInterfaceRP(Device, Surface);
+		CreateSceneRP(device);
+		CreateGBufferRP(device);
+		CreateUserInterfaceRP(device, surface);
 
-		const gpu::Sampler Sampler = Device.CreateSampler({ EFilter::Nearest });
+		const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
 
-		CameraDescriptorSet.SceneDepth = gpu::DescriptorImageInfo(SceneDepth, Sampler);
-		CameraDescriptorSet.GBuffer0 = gpu::DescriptorImageInfo(GBuffer0, Sampler);
-		CameraDescriptorSet.GBuffer1 = gpu::DescriptorImageInfo(GBuffer1, Sampler);
-		CameraDescriptorSet.SceneColor = gpu::DescriptorImageInfo(SceneColor);
-		CameraDescriptorSet._SSGIHistory = gpu::DescriptorImageInfo(_SSGIHistory);
-		CameraDescriptorSet.Update(Device);
+		_CameraDescriptorSet._SceneDepth = gpu::DescriptorImageInfo(_SceneDepth, sampler);
+		_CameraDescriptorSet._GBuffer0 = gpu::DescriptorImageInfo(_GBuffer0, sampler);
+		_CameraDescriptorSet._GBuffer1 = gpu::DescriptorImageInfo(_GBuffer1, sampler);
+		_CameraDescriptorSet._SceneColor = gpu::DescriptorImageInfo(_SceneColor);
+		_CameraDescriptorSet._SSGIHistory = gpu::DescriptorImageInfo(_SSGIHistory);
+		_CameraDescriptorSet.Update(device);
 
-		gpu::CommandList cmdList = Device.CreateCommandList(EQueue::Transfer);
+		gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 
 		const ImageMemoryBarrier imageBarrier
 		{
@@ -62,26 +62,26 @@ CameraProxy::CameraProxy(Engine& Engine)
 
 		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 
-		Device.SubmitCommands(cmdList);
+		device.SubmitCommands(cmdList);
 	});
 }
 
-void CameraProxy::Update(Engine& Engine)
+void CameraProxy::Update(Engine& engine)
 {
-	UpdateCameraUniform(Engine);
-	BuildMeshDrawCommands(Engine);
+	UpdateCameraUniform(engine);
+	BuildMeshDrawCommands(engine);
 }
 
-void CameraProxy::UpdateCameraUniform(Engine& Engine)
+void CameraProxy::UpdateCameraUniform(Engine& engine)
 {
-	const Camera& camera = Engine.Camera;
+	const Camera& camera = engine.Camera;
 
 	const glm::vec3 clipData(
 		camera.GetFarPlane() * camera.GetNearPlane(),
 		camera.GetNearPlane() - camera.GetFarPlane(),
 		camera.GetFarPlane());
 
-	const CameraUniformBufferShaderParameters CameraUniformBufferShaderParameters =
+	const CameraUniformBufferParams cameraUniformBufferParams =
 	{
 		camera.GetWorldToView(),
 		camera.GetViewToClip(),
@@ -96,80 +96,77 @@ void CameraProxy::UpdateCameraUniform(Engine& Engine)
 		0.0f,
 	};
 
-	Platform::Memcpy(CameraUniformBuffer.GetData(), &CameraUniformBufferShaderParameters, sizeof(CameraUniformBufferShaderParameters));
+	Platform::Memcpy(_CameraUniformBuffer.GetData(), &cameraUniformBufferParams, sizeof(cameraUniformBufferParams));
 }
 
-void CameraProxy::BuildMeshDrawCommands(Engine& Engine)
+void CameraProxy::BuildMeshDrawCommands(Engine& engine)
 {
-	GBufferPass.clear();
+	_GBufferPass.clear();
 
-	const FrustumPlanes ViewFrustumPlanes = Engine.Camera.GetFrustumPlanes();
+	const FrustumPlanes viewFrustumPlanes = engine.Camera.GetFrustumPlanes();
 	
-	for (auto Entity : Engine.ECS.GetEntities<MeshProxy>())
+	for (auto entity : engine._ECS.GetEntities<MeshProxy>())
 	{
-		const auto& MeshProxy = Engine.ECS.GetComponent<class MeshProxy>(Entity);
-		const auto& Bounds = Engine.ECS.GetComponent<class Bounds>(Entity);
+		const auto& meshProxy = engine._ECS.GetComponent<MeshProxy>(entity);
+		const auto& bounds = engine._ECS.GetComponent<Bounds>(entity);
 
-		if (Physics::IsBoxInsideFrustum(ViewFrustumPlanes, Bounds.Box))
+		if (Physics::IsBoxInsideFrustum(viewFrustumPlanes, bounds.Box))
 		{
-			AddToGBufferPass(Engine, MeshProxy);
+			AddToGBufferPass(engine, meshProxy);
 		}
 	}
 }
 
-void CameraProxy::CreateSceneRP(gpu::Device& Device)
+void CameraProxy::CreateSceneRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments.push_back(
-		gpu::AttachmentView(&SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General)
-	);
+		gpu::AttachmentView(&_SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General));
 	rpDesc.depthAttachment = gpu::AttachmentView(
-		&SceneDepth,
+		&_SceneDepth,
 		ELoadAction::Load,
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::DepthReadStencilWrite,
-		EImageLayout::DepthReadStencilWrite
-	);
-	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
-	SceneRP = Device.CreateRenderPass(rpDesc);
+		EImageLayout::DepthReadStencilWrite);
+	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(_SceneDepth.GetWidth(), _SceneDepth.GetHeight()) };
+	_SceneRP = device.CreateRenderPass(rpDesc);
 }
 
-void CameraProxy::CreateGBufferRP(gpu::Device& Device)
+void CameraProxy::CreateGBufferRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments =
 	{
-		gpu::AttachmentView(&GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
-		gpu::AttachmentView(&GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
+		gpu::AttachmentView(&_GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
+		gpu::AttachmentView(&_GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
 	};
 	rpDesc.depthAttachment = gpu::AttachmentView(
-		&SceneDepth,
+		&_SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
 		ClearDepthStencilValue{},
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
-	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(SceneDepth.GetWidth(), SceneDepth.GetHeight()) };
-	GBufferRP = Device.CreateRenderPass(rpDesc);
+	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(_SceneDepth.GetWidth(), _SceneDepth.GetHeight()) };
+	_GBufferRP = device.CreateRenderPass(rpDesc);
 }
 
-void CameraProxy::CreateUserInterfaceRP(gpu::Device& Device, gpu::Surface& Surface)
+void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surface)
 {
-	const auto& Images = Surface.GetImages();
+	const auto& images = surface.GetImages();
 
-	UserInterfaceRP.clear();
-	UserInterfaceRP.reserve(Images.size());
+	_UserInterfaceRP.clear();
+	_UserInterfaceRP.reserve(images.size());
 
-	for (const auto& Image : Images)
+	for (const auto& image : images)
 	{
 		// After UI rendering, the image is ready for the present queue.
 		RenderPassDesc rpDesc = {};
 		rpDesc.colorAttachments.push_back(
-			gpu::AttachmentView(&Image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present)
-		);
-		rpDesc.renderArea.extent = { Image.GetWidth(), Image.GetHeight() };
+			gpu::AttachmentView(&image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present));
+		rpDesc.renderArea.extent = { image.GetWidth(), image.GetHeight() };
 
-		UserInterfaceRP.push_back(Device.CreateRenderPass(rpDesc));
+		_UserInterfaceRP.push_back(device.CreateRenderPass(rpDesc));
 	}
 }

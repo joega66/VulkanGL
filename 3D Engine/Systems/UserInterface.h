@@ -16,7 +16,7 @@ struct ImGuiRenderData : public Component
 	gpu::Buffer VertexBuffer;
 	gpu::Buffer IndexBuffer;
 
-	PipelineStateDesc PSODesc = {};
+	PipelineStateDesc psoDesc = {};
 
 	ImGuiRenderData(Engine& Engine);
 

@@ -6,89 +6,89 @@
 class SkyboxVS : public gpu::Shader
 {
 public:
-	SkyboxVS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	SkyboxVS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo Base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
-		return Base;
+		static ShaderInfo base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
+		return base;
 	}
 };
 
 class SkyboxFS : public gpu::Shader
 {
 public:
-	SkyboxFS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	SkyboxFS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
+	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
 	}
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo Base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
-		return Base;
+		static ShaderInfo base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
+		return base;
 	}
 };
 
-void SceneRenderer::RenderSkybox(CameraProxy& Camera, gpu::CommandList& CmdList)
+void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	CmdList.BeginRenderPass(Camera.SceneRP);
+	cmdList.BeginRenderPass(camera._SceneRP);
 
-	const SkyboxVS* VertShader = ShaderLibrary.FindShader<SkyboxVS>();
-	const SkyboxFS* FragShader = ShaderLibrary.FindShader<SkyboxFS>();
+	const SkyboxVS* vertShader = _ShaderLibrary.FindShader<SkyboxVS>();
+	const SkyboxFS* fragShader = _ShaderLibrary.FindShader<SkyboxFS>();
 
-	struct PushConstants
+	struct SkyboxShaderParams
 	{
-		gpu::TextureID Skybox;
-		gpu::SamplerID Sampler;
+		gpu::TextureID _Skybox;
+		gpu::SamplerID _Sampler;
 	};
 	
-	PipelineStateDesc PSODesc = {};
-	PSODesc.renderPass = Camera.SceneRP;
-	PSODesc.depthStencilState.depthTestEnable = true;
-	PSODesc.depthStencilState.depthWriteEnable = true;
-	PSODesc.viewport.width = Camera.SceneColor.GetWidth();
-	PSODesc.viewport.height = Camera.SceneColor.GetHeight();
-	PSODesc.shaderStages = { VertShader, nullptr, nullptr, nullptr, FragShader };
-	PSODesc.layouts = { Camera.CameraDescriptorSet.GetLayout(), Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
-	PSODesc.pushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(PushConstants) });
+	PipelineStateDesc psoDesc = {};
+	psoDesc.renderPass = camera._SceneRP;
+	psoDesc.depthStencilState.depthTestEnable = true;
+	psoDesc.depthStencilState.depthWriteEnable = true;
+	psoDesc.viewport.width = camera._SceneColor.GetWidth();
+	psoDesc.viewport.height = camera._SceneColor.GetHeight();
+	psoDesc.shaderStages = { vertShader, nullptr, nullptr, nullptr, fragShader };
+	psoDesc.layouts = { camera._CameraDescriptorSet.GetLayout(), _Device.GetTextures().GetLayout(), _Device.GetSamplers().GetLayout() };
+	psoDesc.pushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(SkyboxShaderParams) });
 
-	gpu::Pipeline Pipeline = Device.CreatePipeline(PSODesc);
+	gpu::Pipeline pipeline = _Device.CreatePipeline(psoDesc);
 
-	CmdList.BindPipeline(Pipeline);
+	cmdList.BindPipeline(pipeline);
 
-	const std::vector<VkDescriptorSet> DescriptorSets = { Camera.CameraDescriptorSet, Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
-	CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+	const std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures().GetSet(), _Device.GetSamplers().GetSet() };
+	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
 
-	for (auto& Entity : ECS.GetEntities<SkyboxComponent>())
+	for (auto& entity : _ECS.GetEntities<SkyboxComponent>())
 	{
-		auto& Skybox = ECS.GetComponent<SkyboxComponent>(Entity);
+		auto& skybox = _ECS.GetComponent<SkyboxComponent>(entity);
 
-		PushConstants PushConstants;
-		PushConstants.Skybox = Skybox.Skybox->GetImage().GetTextureID();
-		PushConstants.Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+		SkyboxShaderParams skyboxShaderParams;
+		skyboxShaderParams._Skybox = skybox.Skybox->GetImage().GetTextureID();
+		skyboxShaderParams._Sampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 
-		CmdList.PushConstants(Pipeline, EShaderStage::Fragment, 0, sizeof(PushConstants), &PushConstants);
+		cmdList.PushConstants(pipeline, EShaderStage::Fragment, 0, sizeof(skyboxShaderParams), &skyboxShaderParams);
 
-		const StaticMesh* Cube = Assets.GetStaticMesh("Cube");
+		const StaticMesh* cube = _Assets.GetStaticMesh("Cube");
 
-		for (const auto& Submesh : Cube->Submeshes)
+		for (const auto& submesh : cube->Submeshes)
 		{
-			CmdList.BindVertexBuffers(1, &Submesh.GetPositionBuffer());
-			CmdList.DrawIndexed(Submesh.GetIndexBuffer(), Submesh.GetIndexCount(), 1, 0, 0, 0, Submesh.GetIndexType());
+			cmdList.BindVertexBuffers(1, &submesh.GetPositionBuffer());
+			cmdList.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());
 		}
 	}
 
-	CmdList.EndRenderPass();
+	cmdList.EndRenderPass();
 }

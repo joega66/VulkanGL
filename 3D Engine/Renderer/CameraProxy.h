@@ -5,16 +5,16 @@ class Engine;
 
 struct CameraDescriptors
 {
-	gpu::DescriptorBufferInfo CameraUniform;
-	gpu::DescriptorImageInfo SceneDepth;
-	gpu::DescriptorImageInfo GBuffer0;
-	gpu::DescriptorImageInfo GBuffer1;
-	gpu::DescriptorImageInfo SceneColor;
+	gpu::DescriptorBufferInfo _CameraUniform;
+	gpu::DescriptorImageInfo _SceneDepth;
+	gpu::DescriptorImageInfo _GBuffer0;
+	gpu::DescriptorImageInfo _GBuffer1;
+	gpu::DescriptorImageInfo _SceneColor;
 	gpu::DescriptorImageInfo _SSGIHistory;
 
 	static auto& GetBindings()
 	{
-		static std::vector<DescriptorBinding> Bindings =
+		static std::vector<DescriptorBinding> bindings =
 		{
 			{ 0, 1, EDescriptorType::UniformBuffer },
 			{ 1, 1, EDescriptorType::SampledImage },
@@ -23,45 +23,45 @@ struct CameraDescriptors
 			{ 4, 1, EDescriptorType::StorageImage },
 			{ 5, 1, EDescriptorType::StorageImage },
 		};
-		return Bindings;
+		return bindings;
 	}
 };
 
 class CameraProxy
 {
 	friend class Engine;
-	CameraProxy(Engine& Engine);
+	CameraProxy(Engine& engine);
 
 public:
 	CameraProxy(const CameraProxy&) = delete;
 	CameraProxy& operator=(const CameraProxy&) = delete;
 
-	gpu::RenderPass SceneRP;
-	gpu::RenderPass GBufferRP;
-	std::vector<gpu::RenderPass> UserInterfaceRP;
+	gpu::RenderPass _SceneRP;
+	gpu::RenderPass _GBufferRP;
+	std::vector<gpu::RenderPass> _UserInterfaceRP;
 	
-	gpu::Buffer CameraUniformBuffer;
+	gpu::Buffer _CameraUniformBuffer;
 
-	gpu::Image SceneDepth;
-	gpu::Image SceneColor;
-	gpu::Image GBuffer0;
-	gpu::Image GBuffer1;
+	gpu::Image _SceneDepth;
+	gpu::Image _SceneColor;
+	gpu::Image _GBuffer0;
+	gpu::Image _GBuffer1;
 	gpu::Image _SSGIHistory;
 
-	DescriptorSet<CameraDescriptors> CameraDescriptorSet;
+	DescriptorSet<CameraDescriptors> _CameraDescriptorSet;
 
-	std::vector<MeshDrawCommand> GBufferPass;
+	std::vector<MeshDrawCommand> _GBufferPass;
 
-	void Update(Engine& Engine);
+	void Update(Engine& engine);
 
 private:
-	void UpdateCameraUniform(Engine& Engine);
+	void UpdateCameraUniform(Engine& engine);
 
-	void BuildMeshDrawCommands(Engine& Engine);
+	void BuildMeshDrawCommands(Engine& engine);
 
-	void AddToGBufferPass(Engine& Engine, const MeshProxy& MeshProxy);
+	void AddToGBufferPass(Engine& engine, const MeshProxy& meshProxy);
 
-	void CreateSceneRP(gpu::Device& Device);
-	void CreateGBufferRP(gpu::Device& Device);
-	void CreateUserInterfaceRP(gpu::Device& Device, gpu::Surface& Surface);
+	void CreateSceneRP(gpu::Device& device);
+	void CreateGBufferRP(gpu::Device& device);
+	void CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surface);
 };

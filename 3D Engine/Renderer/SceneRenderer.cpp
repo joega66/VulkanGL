@@ -8,66 +8,66 @@
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
 
-SceneRenderer::SceneRenderer(Engine& Engine)
-	: Device(Engine.Device)
-	, ShaderLibrary(Engine.ShaderLibrary)
-	, Surface(Engine.Surface)
-	, ECS(Engine.ECS)
-	, Assets(Engine.Assets)
-	, _Camera(Engine.Camera)
+SceneRenderer::SceneRenderer(Engine& engine)
+	: _Device(engine.Device)
+	, _ShaderLibrary(engine.ShaderLibrary)
+	, _Surface(engine.Surface)
+	, _ECS(engine._ECS)
+	, _Assets(engine.Assets)
+	, _Camera(engine.Camera)
 {
 }
 
-void SceneRenderer::Render(CameraProxy& Camera)
+void SceneRenderer::Render(CameraProxy& camera)
 {
-	const RenderSettings& Settings = ECS.GetSingletonComponent<RenderSettings>();
+	const RenderSettings& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
-	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Graphics);
+	gpu::CommandList cmdList = _Device.CreateCommandList(EQueue::Graphics);
 
-	if (Settings.bRayTracing)
+	if (settings.bRayTracing)
 	{
-		ComputeRayTracing(Camera, CmdList);
+		ComputeRayTracing(camera, cmdList);
 	}
 	else
 	{
-		ClearSceneColor(Camera, CmdList);
+		ClearSceneColor(camera, cmdList);
 
-		RenderGBufferPass(Camera, CmdList);
+		RenderGBufferPass(camera, cmdList);
 
-		RenderShadowDepths(Camera, CmdList);
+		RenderShadowDepths(camera, cmdList);
 
-		ComputeLightingPass(Camera, CmdList);
+		ComputeLightingPass(camera, cmdList);
 
-		RenderSkybox(Camera, CmdList);
+		RenderSkybox(camera, cmdList);
 	}
 
-	const uint32 ImageIndex = Surface.AcquireNextImage(Device);
-	const gpu::Image& DisplayImage = Surface.GetImage(ImageIndex);
-	ImageMemoryBarrier Barrier{ DisplayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
+	const uint32 imageIndex = _Surface.AcquireNextImage(_Device);
+	const gpu::Image& displayImage = _Surface.GetImage(imageIndex);
+	ImageMemoryBarrier barrier{ displayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &Barrier);
+	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &barrier);
 
-	ComputePostProcessing(DisplayImage, Camera, CmdList);
+	ComputePostProcessing(displayImage, camera, cmdList);
 
-	Barrier.srcAccessMask = EAccess::ShaderWrite;
-	Barrier.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
-	Barrier.oldLayout = EImageLayout::General;
-	Barrier.newLayout = EImageLayout::ColorAttachmentOptimal;
+	barrier.srcAccessMask = EAccess::ShaderWrite;
+	barrier.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
+	barrier.oldLayout = EImageLayout::General;
+	barrier.newLayout = EImageLayout::ColorAttachmentOptimal;
 
-	CmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &Barrier);
+	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
 
-	ECS.GetSingletonComponent<ImGuiRenderData>().Render(Device, CmdList, Camera.UserInterfaceRP[ImageIndex]);
+	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, camera._UserInterfaceRP[imageIndex]);
 
-	Surface.Present(Device, ImageIndex, CmdList);
+	_Surface.Present(_Device, imageIndex, cmdList);
 
-	Device.EndFrame();
+	_Device.EndFrame();
 }
 
 void SceneRenderer::ClearSceneColor(CameraProxy& camera, gpu::CommandList& cmdList)
 {
 	ImageMemoryBarrier imageBarrier
 	{
-		camera.SceneColor,
+		camera._SceneColor,
 		EAccess::None,
 		EAccess::TransferWrite,
 		EImageLayout::Undefined,
@@ -76,7 +76,7 @@ void SceneRenderer::ClearSceneColor(CameraProxy& camera, gpu::CommandList& cmdLi
 
 	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &imageBarrier);
 
-	cmdList.ClearColorImage(camera.SceneColor, EImageLayout::TransferDstOptimal, {});
+	cmdList.ClearColorImage(camera._SceneColor, EImageLayout::TransferDstOptimal, {});
 
 	imageBarrier.srcAccessMask = EAccess::TransferWrite;
 	imageBarrier.dstAccessMask = EAccess::ShaderWrite;
