@@ -248,43 +248,26 @@ float Lambertian_ScatteringPDF(HitRecord rec, Ray scattered)
 	return CosinePDF(rec.normal, scattered.direction);
 }
 
-layout(local_size_x = 8, local_size_y = 8) in;
-void main()
+vec3 RayColor(Ray ray, inout uint seed)
 {
-	const ivec2 sceneColorSize = imageSize( _SceneColor );
-	if ( any( greaterThanEqual( gl_GlobalInvocationID.xy, sceneColorSize.xy ) ) )
-		return;
-
-	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
-	
-	uint seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
-
 	vec3 color = vec3(1);
-
-	const float s = ( float(screenCoords.x) /*+ RandomDouble()*/ ) / ( float(sceneColorSize.x) );
-	const float t = 1.0 - ( float(screenCoords.y) /*+ RandomDouble()*/ ) / ( float(sceneColorSize.y) );
-
-	Ray ray;
-	ray.origin = _Origin.xyz;
-	ray.direction = _LowerLeftCorner.xyz + s * _Horizontal.xyz + t * _Vertical.xyz - _Origin.xyz;
-
 	const int maxRayDepth = 8;
 	int rayDepth;
 
-	for (rayDepth = 0; rayDepth < maxRayDepth; rayDepth++)
+	for ( rayDepth = 0; rayDepth < maxRayDepth; rayDepth++ )
 	{
 		HitRecord rec = HitRecord_Init();
-		if ( !TraceRay( ray, rec ) )
+		if ( !TraceRay(ray, rec) )
 		{
 			//color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
 			color *= vec3(0);
-			break;
+			return color;
 		}
 
 		if ( rec.isEmitter )
 		{
 			color *= rec.albedo;
-			break;
+			return color;
 		}
 
 		Ray scattered;
@@ -309,10 +292,37 @@ void main()
 		ray = scattered;
 	}
 
-	if ( rayDepth == maxRayDepth )
+	return vec3(0);
+}
+
+layout(local_size_x = 8, local_size_y = 8) in;
+void main()
+{
+	const ivec2 sceneColorSize = imageSize( _SceneColor );
+	if ( any( greaterThanEqual( gl_GlobalInvocationID.xy, sceneColorSize.xy ) ) )
+		return;
+
+	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
+	
+	uint seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
+
+	const int samplesPerPixel = 1;
+
+	vec3 color = vec3(0);
+
+	for (int i = 0; i < samplesPerPixel; i++)
 	{
-		color = vec3(0);
+		const float s = ( float(screenCoords.x) + RandomFloat(seed) ) / (float(sceneColorSize.x) );
+		const float t = 1.0 - ( float(screenCoords.y) + RandomFloat(seed) ) / (float(sceneColorSize.y) );
+
+		Ray ray;
+		ray.origin = _Origin.xyz;
+		ray.direction = _LowerLeftCorner.xyz + s * _Horizontal.xyz + t * _Vertical.xyz - _Origin.xyz;
+
+		color += RayColor(ray, seed);
 	}
+
+	color /= samplesPerPixel;
 
 	if ( _FrameNumber < 1024 ) // Prevents color banding
 	{
