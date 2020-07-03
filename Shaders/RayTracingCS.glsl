@@ -24,7 +24,20 @@ struct HitRecord
 	vec3 normal;
 	bool frontFace;
 	vec3 albedo;
+	bool isEmitter;
 };
+
+HitRecord HitRecord_Init()
+{
+	HitRecord rec;
+	rec.p = vec3(0);
+	rec.t = 0;
+	rec.normal = vec3(0);
+	rec.frontFace = false;
+	rec.albedo = vec3(0);
+	rec.isEmitter = false;
+	return rec;
+}
 
 void HitRecord_SetFaceNormal(inout HitRecord rec, Ray ray, vec3 outwardNormal)
 {
@@ -128,6 +141,7 @@ struct XZRect
 {
 	float x0, x1, z0, z1, k;
 	vec3 albedo;
+	bool isEmitter;
 };
 
 bool XZRect_Hit(XZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
@@ -143,28 +157,48 @@ bool XZRect_Hit(XZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 	rec.p = Ray_At(r, t);
 	HitRecord_SetFaceNormal(rec, r, vec3(0, 1, 0));
 	rec.albedo = rect.albedo;
+	rec.isEmitter = rect.isEmitter;
 	//rec.uv = glm::dvec2((x - rect.x0) / (rect.x1 - rect.x0), (z - rect.z0) / (rect.z1 - rect.z0));
 	return true;
 }
 
-const int NUM_SPHERES = 2;
-Sphere spheres[NUM_SPHERES] = { { vec3(0, 0, -1), 0.5, vec3(0.5) }, { vec3(0, -100.5, -1), 100, vec3(0.5) } };
+vec3 XZRect_Random(XZRect rect, vec3 origin, inout uint seed)
+{
+	vec3 randomPoint = vec3( RandomFloat(seed, rect.x0, rect.x1), rect.k, RandomFloat(seed, rect.z0, rect.z1) );
+	return randomPoint - origin;
+}
 
-const int NUM_YZ_RECTS = 2;
-YZRect yzRects[NUM_YZ_RECTS] = { { 0, 555, 0, 555, 555, vec3(.12, .45, .15) }, { 0, 555, 0, 555, 0, vec3(.65, .05, .05) } };
+float XZRect_PDF(XZRect rect, vec3 origin, vec3 direction)
+{
+	HitRecord rec;
 
-const int NUM_XZ_RECTS = 2;
-XZRect xzRects[NUM_XZ_RECTS] = { { 0, 555, 0, 555, 0, vec3(.73) }, { 0, 555, 0, 555, 555, vec3(.73) } };
+	if (!XZRect_Hit(rect, Ray(origin, direction), 0.001, INFINITY, rec))
+		return 0;
 
-XYRect xyRect = { 0, 555, 0, 555, 555, vec3(0.73) };
+	float area = (rect.x1 - rect.x0) * (rect.z1 - rect.z0);
+	float distanceSquared = rec.t * rec.t * length2(direction);
+	float cosine = abs(dot(direction, rec.normal) / length(direction));
+
+	return distanceSquared / (cosine * area);
+}
+
+/** @begin Scene */
+
+XZRect lightSource = { 213, 343, 227, 332, 554, vec3(15), true };
+Sphere spheres[] = { { vec3(277.5, 100, 277.5), 100, vec3(0.5) } };
+YZRect yzRects[] = { { 0, 555, 0, 555, 555, vec3(.12, .45, .15) }, { 0, 555, 0, 555, 0, vec3(.65, .05, .05) } };
+XZRect xzRects[] = { { 0, 555, 0, 555, 0, vec3(.73), false }, { 0, 555, 0, 555, 555, vec3(.73), false }, lightSource };
+XYRect xyRects[] = { { 0, 555, 0, 555, 555, vec3(0.73) } };
+
+/** @end Scene */
 
 bool TraceRay(Ray ray, inout HitRecord rec)
 {
-	HitRecord tempRec;
+	HitRecord tempRec = HitRecord_Init();
 	bool hitAnything = false;
 	float closestSoFar = INFINITY;
 
-	for (int i = 0; i < NUM_SPHERES; i++)
+	for (int i = 0; i < spheres.length(); i++)
 	{
 		if (Sphere_Hit(spheres[i], ray, 0.001, closestSoFar, tempRec))
 		{
@@ -173,7 +207,7 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		}
 	}
 
-	for (int i = 0; i < NUM_YZ_RECTS; i++)
+	for (int i = 0; i < yzRects.length(); i++)
 	{
 		if (YZRect_Hit(yzRects[i], ray, 0.001, closestSoFar, tempRec))
 		{
@@ -182,7 +216,7 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		}
 	}
 
-	for (int i = 0; i < NUM_XZ_RECTS; i++)
+	for (int i = 0; i < xzRects.length(); i++)
 	{
 		if (XZRect_Hit(xzRects[i], ray, 0.001, closestSoFar, tempRec))
 		{
@@ -191,22 +225,25 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		}
 	}
 
-	if (XYRect_Hit(xyRect, ray, 0.001, closestSoFar, tempRec))
+	for (int i = 0; i < xyRects.length(); i++)
 	{
-		closestSoFar = tempRec.t;
-		rec = tempRec;
+		if (XYRect_Hit(xyRects[i], ray, 0.001, closestSoFar, tempRec))
+		{
+			closestSoFar = tempRec.t;
+			rec = tempRec;
+		}
 	}
-
+	
 	return closestSoFar != INFINITY;
 }
 
 float CosinePDF(vec3 normal, vec3 direction)
 {
 	const float cosine = dot(normal, normalize(direction));
-	return cosine < 0 ? 0 : cosine / PI;
+	return cosine <= 0 ? 0 : cosine / PI;
 }
 
-float Lambertian_ScatteringPDF(Ray ray, HitRecord rec, Ray scattered)
+float Lambertian_ScatteringPDF(HitRecord rec, Ray scattered)
 {
 	return CosinePDF(rec.normal, scattered.direction);
 }
@@ -231,36 +268,53 @@ void main()
 	ray.origin = _Origin.xyz;
 	ray.direction = _LowerLeftCorner.xyz + s * _Horizontal.xyz + t * _Vertical.xyz - _Origin.xyz;
 
-	const int rayDepth = 8;
+	const int maxRayDepth = 8;
+	int rayDepth;
 
-	for (int i = 0; i < rayDepth; i++)
+	for (rayDepth = 0; rayDepth < maxRayDepth; rayDepth++)
 	{
-		HitRecord rec;
-		if ( TraceRay( ray, rec ) )
+		HitRecord rec = HitRecord_Init();
+		if ( !TraceRay( ray, rec ) )
 		{
-			// Lambertian Scatter
-			ONB onb;
-			ONB_BuildFromW(onb, rec.normal);
+			//color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
+			color *= vec3(0);
+			break;
+		}
 
-			Ray scattered;
-			scattered.origin = rec.p;
-			scattered.direction = ONB_Transform(onb, RandomCosineDirection(seed));
-			
-			const float pdf = CosinePDF(rec.normal, scattered.direction);
+		if ( rec.isEmitter )
+		{
+			color *= rec.albedo;
+			break;
+		}
 
-			// Attenuate
-			color *= rec.albedo/* * Lambertian_ScatteringPDF(ray, rec, scattered) / pdf*/;
+		Ray scattered;
+		scattered.origin = rec.p;
 
-			ray = scattered;
+		if ( RandomFloat(seed) < 0.5 )
+		{
+			scattered.direction = XZRect_Random(lightSource, rec.p, seed);
 		}
 		else
 		{
-			color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
-			break;
+			ONB onb;
+			ONB_BuildFromW(onb, rec.normal);
+			scattered.direction = ONB_Transform(onb, RandomCosineDirection(seed));
 		}
+
+		const float pdf = 0.5 * ( XZRect_PDF(lightSource, rec.p, scattered.direction) + CosinePDF(rec.normal, scattered.direction) );
+
+		// Attenuate
+		color *= rec.albedo * Lambertian_ScatteringPDF(rec, scattered) / pdf;
+
+		ray = scattered;
 	}
 
-	if (_FrameNumber < 1024) // Prevents color banding
+	if ( rayDepth == maxRayDepth )
+	{
+		color = vec3(0);
+	}
+
+	if ( _FrameNumber < 1024 ) // Prevents color banding
 	{
 		const vec4 prevFrameColor = imageLoad(_SceneColor, screenCoords);
 		const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevFrameColor.a)));
