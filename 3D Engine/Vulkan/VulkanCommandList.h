@@ -30,7 +30,7 @@ public:
 
 	void BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline);
 
-	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, uint32 numDescriptorSets, const VkDescriptorSet* descriptorSets);
+	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, std::size_t numDescriptorSets, const VkDescriptorSet* descriptorSets);
 
 	void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, EShaderStage stageFlags, uint32 offset, uint32 size, const void* values);
 

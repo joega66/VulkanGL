@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 #include <shaderc/shaderc.hpp>
+#include <unordered_map>
 
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 {
@@ -48,7 +49,7 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 	}
 }
 
-static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+static std::vector<VertexAttributeDescription> ReflectVertexAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
 {
 	std::vector<VertexAttributeDescription> Descriptions;
 
@@ -76,6 +77,71 @@ static std::vector<VertexAttributeDescription> ParseVertexAttributeDescriptions(
 	}
 
 	return Descriptions;
+}
+
+static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
+	gpu::Device& device, 
+	const spirv_cross::CompilerGLSL& glsl,
+	const spirv_cross::ShaderResources& resources)
+{
+	std::map<uint32, VkDescriptorSetLayout> layouts;
+	std::map<uint32, std::vector<DescriptorBinding>> setBindings;
+
+	for (const auto& resource : resources.separate_images)
+	{
+		const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
+		const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+		if (type.array.size())
+		{
+			layouts.insert({ set, device.GetTextures().GetLayout() });
+		}
+		else
+		{
+			// Only bindless resources use separate images.
+			signal_unimplemented();
+		}
+	}
+
+	for (const auto& resource : resources.separate_samplers)
+	{
+		const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
+		const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+		if (type.array.size())
+		{
+			layouts.insert({ set, device.GetSamplers().GetLayout() });
+		}
+		else
+		{
+			// Only bindless resources use separate samplers.
+			signal_unimplemented();
+		}
+	}
+
+	auto getBindings = [&] (const auto& resources, EDescriptorType descriptorType)
+	{
+		for (const auto& resource : resources)
+		{
+			const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
+			const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			const uint32 binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+			const uint32 descriptorCount = type.array.size() ? type.array[0] : 1;
+			setBindings[set].push_back({ binding, descriptorCount, descriptorType });
+		}
+	};
+
+	getBindings(resources.sampled_images, EDescriptorType::SampledImage);
+	getBindings(resources.storage_images, EDescriptorType::StorageImage);
+	getBindings(resources.uniform_buffers, EDescriptorType::UniformBuffer);
+	getBindings(resources.storage_buffers, EDescriptorType::StorageBuffer);
+
+	for (auto& [set, bindings] : setBindings)
+	{
+		layouts.insert({ set, device.CreateDescriptorSetLayout(bindings.size(), bindings.data()) });
+	}
+
+	return layouts;
 }
 
 class ShadercIncluder : public shaderc::CompileOptions::IncluderInterface
@@ -197,16 +263,20 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 
 	spirv_cross::CompilerGLSL GLSL(Code.data(), Code.size());
 	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
+
 	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = Stage == EShaderStage::Vertex ? 
-		ParseVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
-	const uint64 LastWriteTime = Platform::GetLastWriteTime(Filename);
+		ReflectVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
+
+	const std::map<uint32, VkDescriptorSetLayout> layouts = ReflectDescriptorSetLayouts(Device, GLSL, Resources);
 
 	PushConstantRange PushConstantRange;
 	PushConstantRange.stageFlags = Stage;
 	PushConstantRange.offset = Worker.GetPushConstantOffset();
 	PushConstantRange.size = Worker.GetPushConstantSize();
 
-	return ShaderCompilationInfo(Type, Stage, EntryPoint, Filename, LastWriteTime, Worker, ShaderModule, VertexAttributeDescriptions, PushConstantRange);
+	return ShaderCompilationInfo(
+		Type, Stage, EntryPoint, Filename, Platform::GetLastWriteTime(Filename), Worker,
+		ShaderModule, VertexAttributeDescriptions, layouts, PushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()
@@ -219,7 +289,7 @@ void VulkanShaderLibrary::RecompileShaders()
 		//if (LastWriteTime > CompileInfo.LastWriteTime)
 		{
 			// Destroy the old shader module.
-			vkDestroyShaderModule(Device, static_cast<VkShaderModule>(CompileInfo.module), nullptr);
+			vkDestroyShaderModule(Device, CompileInfo.shaderModule, nullptr);
 
 			const ShaderCompilationInfo NewCompilationInfo = CompileShader(
 				CompileInfo.worker,

@@ -305,7 +305,6 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
-	psoDesc.layouts = { Device.GetTextures().GetLayout(), Device.GetSamplers().GetLayout() };
 	psoDesc.pushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
 	psoDesc.pushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
 
@@ -336,7 +335,7 @@ void ImGuiRenderData::Render(gpu::Device& Device, gpu::CommandList& CmdList, con
 		CmdList.PushConstants(Pipeline, EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation), &ScaleAndTranslation);
 
 		const std::vector<VkDescriptorSet> DescriptorSets = { Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
-		CmdList.BindDescriptorSets(Pipeline, static_cast<uint32>(DescriptorSets.size()), DescriptorSets.data());
+		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
 
 		CmdList.BindVertexBuffers(1, &VertexBuffer);
 

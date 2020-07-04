@@ -61,7 +61,6 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 	psoDesc.viewport.width = camera._SceneColor.GetWidth();
 	psoDesc.viewport.height = camera._SceneColor.GetHeight();
 	psoDesc.shaderStages = { vertShader, nullptr, nullptr, nullptr, fragShader };
-	psoDesc.layouts = { camera._CameraDescriptorSet.GetLayout(), _Device.GetTextures().GetLayout(), _Device.GetSamplers().GetLayout() };
 	psoDesc.pushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(SkyboxShaderParams) });
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(psoDesc);
@@ -69,7 +68,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 	cmdList.BindPipeline(pipeline);
 
 	const std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures().GetSet(), _Device.GetSamplers().GetSet() };
-	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
+	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	for (auto& entity : _ECS.GetEntities<SkyboxComponent>())
 	{

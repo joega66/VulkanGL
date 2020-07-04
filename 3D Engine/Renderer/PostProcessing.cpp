@@ -60,7 +60,6 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;
-	computeDesc.Layouts = { layout };
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 

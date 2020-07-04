@@ -1,6 +1,8 @@
 #pragma once
 #include "GPU/GPUResource.h"
+#include <vulkan/vulkan.h>
 #include <typeindex>
+#include <map>
 
 /** Serializes C++ types to shader types. */
 class ShaderTypeSerializer
@@ -75,7 +77,7 @@ public:
 	{
 		_Defines.push_back(std::make_pair(std::move(define), "1"));
 	}
-
+	
 	/** Get all shader defines. */
 	const ShaderDefines& GetDefines() const
 	{
@@ -117,8 +119,9 @@ public:
 	std::string filename;
 	uint64 lastWriteTime;
 	ShaderCompilerWorker worker;
-	void* module;
+	VkShaderModule shaderModule;
 	std::vector<VertexAttributeDescription> vertexAttributeDescriptions;
+	std::map<uint32, VkDescriptorSetLayout> layouts;
 	PushConstantRange pushConstantRange;
 
 	ShaderCompilationInfo(
@@ -128,8 +131,9 @@ public:
 		const std::string& filename,
 		uint64 lastWriteTime,
 		const ShaderCompilerWorker& worker,
-		void* module,
+		VkShaderModule shaderModule,
 		const std::vector<VertexAttributeDescription>& vertexAttributeDescriptions,
+		const std::map<uint32, VkDescriptorSetLayout>& layouts,
 		const PushConstantRange& pushConstantRange)
 		: type(type)
 		, stage(stage)
@@ -137,8 +141,9 @@ public:
 		, filename(filename)
 		, lastWriteTime(lastWriteTime)
 		, worker(worker)
-		, module(module)
+		, shaderModule(shaderModule)
 		, vertexAttributeDescriptions(vertexAttributeDescriptions)
+		, layouts(layouts)
 		, pushConstantRange(pushConstantRange)
 	{
 	}

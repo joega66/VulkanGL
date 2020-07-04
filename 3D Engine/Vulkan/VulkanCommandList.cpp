@@ -48,14 +48,14 @@ void VulkanCommandList::BindPipeline(const std::shared_ptr<VulkanPipeline>& pipe
 	vkCmdBindPipeline(_CommandBuffer, pipeline->GetPipelineBindPoint(), pipeline->GetPipeline());
 }
 
-void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, uint32 numDescriptorSets, const VkDescriptorSet* descriptorSets)
+void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, std::size_t numDescriptorSets, const VkDescriptorSet* descriptorSets)
 {
 	vkCmdBindDescriptorSets(
 		_CommandBuffer,
 		pipeline->GetPipelineBindPoint(),
 		pipeline->GetPipelineLayout(),
 		0,
-		numDescriptorSets,
+		static_cast<uint32>(numDescriptorSets),
 		descriptorSets,
 		0,
 		nullptr

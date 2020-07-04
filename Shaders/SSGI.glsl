@@ -24,7 +24,7 @@ void main()
 	uint seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
 	
 	const vec3 eyeDir = normalize( _Camera.position - surface.worldPosition );
-	const vec3 scatterDir = reflect(-eyeDir, surface.worldNormal + material.roughness * RandomInUnitSphere( seed ) );
+	const vec3 scatterDir = reflect( -eyeDir, surface.worldNormal + material.roughness * RandomInUnitSphere( seed ) );
 	const vec3 csScatterDir = vec3( normalize( _Camera.worldToView * vec4(scatterDir, 0.0) ) );
 	const vec3 csOrigin = vec3( _Camera.worldToView * vec4(surface.worldPosition, 1) );
 	

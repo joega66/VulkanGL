@@ -80,8 +80,7 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 
 	ComputePipelineDesc computeDesc = {};
 	computeDesc.computeShader = _ShaderLibrary.FindShader<RayTracingCS>();
-	computeDesc.Layouts = { camera._CameraDescriptorSet.GetLayout(), _Device.GetTextures().GetLayout(), _Device.GetSamplers().GetLayout() };
-	
+
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
 	cmdList.BindPipeline(pipeline);

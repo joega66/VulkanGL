@@ -101,7 +101,6 @@ struct PipelineStateDesc
 	std::vector<EDynamicState> dynamicStates;
 	std::vector<VertexAttributeDescription> vertexAttributes;
 	std::vector<VertexBindingDescription> vertexBindings;
-	std::vector<VkDescriptorSetLayout> layouts;
 	std::vector<PushConstantRange> pushConstantRanges;
 
 	friend bool operator==(const PipelineStateDesc& l, const PipelineStateDesc& r)
@@ -169,7 +168,6 @@ struct ComputePipelineDesc
 {
 	const gpu::Shader* computeShader = nullptr;
 	SpecializationInfo specInfo;
-	std::vector<VkDescriptorSetLayout> Layouts;
 
 	inline bool operator==(const ComputePipelineDesc& other) const
 	{

@@ -23,7 +23,7 @@ public:
 	{
 		cmdList.BindPipeline(_Pipeline);
 
-		cmdList.BindDescriptorSets(_Pipeline, static_cast<uint32>(_DescriptorSets.size()), _DescriptorSets.data());
+		cmdList.BindDescriptorSets(_Pipeline, _DescriptorSets.size(), _DescriptorSets.data());
 
 		cmdList.PushConstants(_Pipeline, EShaderStage::Fragment, 0, sizeof(_Material->GetPushConstants()), &_Material->GetPushConstants());
 

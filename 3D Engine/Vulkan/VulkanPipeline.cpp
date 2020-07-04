@@ -10,7 +10,34 @@ gpu::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 		return Iter->second;
 	}
 
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(PSODesc.layouts, PSODesc.pushConstantRanges);
+	std::map<uint32, VkDescriptorSetLayout> layoutsMap;
+	
+	auto getLayouts = [&] (const gpu::Shader* shader)
+	{
+		if (shader)
+		{
+			for (const auto& [set, layout] : shader->compilationInfo.layouts)
+			{
+				layoutsMap.insert({ set, layout });
+			}
+		}
+	};
+
+	getLayouts(PSODesc.shaderStages.vertex);
+	getLayouts(PSODesc.shaderStages.tessControl);
+	getLayouts(PSODesc.shaderStages.tessEval);
+	getLayouts(PSODesc.shaderStages.geometry);
+	getLayouts(PSODesc.shaderStages.fragment);
+
+	std::vector<VkDescriptorSetLayout> layouts;
+	layouts.reserve(layoutsMap.size());
+
+	for (const auto& [set, layout] : layoutsMap)
+	{
+		layouts.push_back(layout);
+	}
+
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(layouts, PSODesc.pushConstantRanges);
 	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	GraphicsPipelineCache[PSODesc] = Pipeline;
 	return Pipeline;
@@ -20,21 +47,26 @@ gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 {
 	auto& MapEntries = ComputeDesc.specInfo.GetMapEntries();
 	auto& Data = ComputeDesc.specInfo.GetData();
-	auto& SetLayouts = ComputeDesc.Layouts;
 
 	struct ComputePipelineHash
 	{
 		Crc ComputeShaderCrc;
 		Crc MapEntriesCrc;
 		Crc MapDataCrc;
-		Crc SetLayoutsCrc;
 	};
+
+	std::vector<VkDescriptorSetLayout> layouts;
+	layouts.reserve(ComputeDesc.computeShader->compilationInfo.layouts.size());
+
+	for (auto& [set, layout] : ComputeDesc.computeShader->compilationInfo.layouts)
+	{
+		layouts.push_back(layout);
+	}
 
 	ComputePipelineHash ComputeHash;
 	ComputeHash.ComputeShaderCrc = Platform::CalculateCrc(ComputeDesc.computeShader, sizeof(ComputeDesc.computeShader));
 	ComputeHash.MapEntriesCrc = Platform::CalculateCrc(MapEntries.data(), MapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry));
 	ComputeHash.MapDataCrc = Platform::CalculateCrc(Data.data(), Data.size());
-	ComputeHash.SetLayoutsCrc = Platform::CalculateCrc(SetLayouts.data(), SetLayouts.size() * sizeof(VkDescriptorSetLayout));
 
 	const Crc Crc = Platform::CalculateCrc(&ComputeHash, sizeof(ComputeHash));
 
@@ -47,7 +79,7 @@ gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 
 	const auto PushConstantRanges = InPushConstantRange.size > 0 ? std::vector{ InPushConstantRange } : std::vector<PushConstantRange>{};
 
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(ComputeDesc.Layouts, PushConstantRanges);
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(layouts, PushConstantRanges);
 
 	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(ComputeDesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
 
@@ -278,7 +310,7 @@ static void CreateShaderStageInfos(const PipelineStateDesc& PSODesc, std::vector
 		const gpu::Shader* Shader = ShaderStages[StageIndex];
 		VkPipelineShaderStageCreateInfo& ShaderStage = ShaderStageInfos[StageIndex];
 		ShaderStage.stage = VulkanStages.at(Shader->compilationInfo.stage);
-		ShaderStage.module = static_cast<VkShaderModule>(Shader->compilationInfo.module);
+		ShaderStage.module = Shader->compilationInfo.shaderModule;
 		ShaderStage.pName = Shader->compilationInfo.entrypoint.data();
 	}
 }
@@ -485,7 +517,7 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	VkPipelineShaderStageCreateInfo& PipelineShaderStageCreateInfo = ComputePipelineCreateInfo.stage;
 	PipelineShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	PipelineShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-	PipelineShaderStageCreateInfo.module = static_cast<VkShaderModule>(ComputeShader->compilationInfo.module);
+	PipelineShaderStageCreateInfo.module = ComputeShader->compilationInfo.shaderModule;
 	PipelineShaderStageCreateInfo.pName = ComputeShader->compilationInfo.entrypoint.data();
 
 	VkSpecializationInfo SpecializationInfo;

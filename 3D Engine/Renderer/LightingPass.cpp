@@ -90,12 +90,6 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;
 	computeDesc.specInfo.Add(0, light._L.w == 0.0f ? LightingPassCS::directionalLight : LightingPassCS::pointLight);
-	computeDesc.Layouts =
-	{
-		camera._CameraDescriptorSet.GetLayout(),
-		_Device.GetTextures().GetLayout(),
-		_Device.GetSamplers().GetLayout(),
-	};
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
@@ -108,7 +102,7 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 		_Device.GetSamplers().GetSet(),
 	};
 
-	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
+	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	cmdList.PushConstants(pipeline, shader, &light);
 
@@ -150,12 +144,6 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;
-	computeDesc.Layouts =
-	{
-		camera._CameraDescriptorSet.GetLayout(),
-		_Device.GetTextures().GetLayout(),
-		_Device.GetSamplers().GetLayout(),
-	};
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
@@ -168,7 +156,7 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 		_Device.GetSamplers().GetSet(),
 	};
 
-	cmdList.BindDescriptorSets(pipeline, static_cast<uint32>(descriptorSets.size()), descriptorSets.data());
+	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	static uint32 frameNumber = 0;
 	static glm::vec3 oldCameraPosition;
