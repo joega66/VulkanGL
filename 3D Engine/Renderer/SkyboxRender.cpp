@@ -22,6 +22,11 @@ public:
 	}
 };
 
+BEGIN_SHADER_STRUCT(SkyboxShaderParams)
+	SHADER_PARAMETER(gpu::TextureID, _Skybox)
+	SHADER_PARAMETER(gpu::SamplerID, _Sampler)
+END_SHADER_STRUCT(SkyboxShaderParams)
+
 class SkyboxFS : public gpu::Shader
 {
 public:
@@ -32,6 +37,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
+		worker << SkyboxShaderParams::decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -48,12 +54,6 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 	const SkyboxVS* vertShader = _ShaderLibrary.FindShader<SkyboxVS>();
 	const SkyboxFS* fragShader = _ShaderLibrary.FindShader<SkyboxFS>();
 
-	struct SkyboxShaderParams
-	{
-		gpu::TextureID _Skybox;
-		gpu::SamplerID _Sampler;
-	};
-	
 	PipelineStateDesc psoDesc = {};
 	psoDesc.renderPass = camera._SceneRP;
 	psoDesc.depthStencilState.depthTestEnable = true;

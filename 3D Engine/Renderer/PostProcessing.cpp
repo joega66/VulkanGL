@@ -17,7 +17,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		worker << PostProcessingParams::Decl;
+		worker << PostProcessingParams::decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()

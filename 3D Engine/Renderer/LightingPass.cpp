@@ -28,7 +28,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		worker << LightData::Decl;
+		worker << LightData::decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -128,7 +128,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		worker << SSGIParams::Decl;
+		worker << SSGIParams::decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()

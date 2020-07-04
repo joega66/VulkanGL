@@ -54,9 +54,9 @@ public:																											\
 			size = sizeof(StructName);																			\
 		}																										\
 	};																											\
-	static Decl##StructName Decl;																				\
+	static Decl##StructName decl;																				\
 };																												\
-StructName::Decl##StructName StructName::Decl;																	\
+StructName::Decl##StructName StructName::decl;																	\
 
 class ShaderCompilerWorker
 {

@@ -23,7 +23,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		worker << RayTracingParams::Decl;
+		worker << RayTracingParams::decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
