@@ -305,8 +305,6 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
-	psoDesc.pushConstantRanges.push_back({ EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation) });
-	psoDesc.pushConstantRanges.push_back({ EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(glm::uvec2) });
 
 	Engine._Screen.OnScreenResize([this, &Device] (int32 Width, int32 Height)
 	{
@@ -332,7 +330,7 @@ void ImGuiRenderData::Render(gpu::Device& Device, gpu::CommandList& CmdList, con
 
 		CmdList.BindPipeline(Pipeline);
 
-		CmdList.PushConstants(Pipeline, EShaderStage::Vertex, 0, sizeof(ScaleAndTranslation), &ScaleAndTranslation);
+		CmdList.PushConstants(Pipeline, psoDesc.shaderStages.vertex, &ScaleAndTranslation);
 
 		const std::vector<VkDescriptorSet> DescriptorSets = { Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
 		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
@@ -368,7 +366,7 @@ void ImGuiRenderData::Render(gpu::Device& Device, gpu::CommandList& CmdList, con
 				CmdList.SetScissor(1, &Scissor);
 
 				const glm::uvec2 PushConstants(*static_cast<uint32*>(DrawCmd->TextureId), SamplerID);
-				CmdList.PushConstants(Pipeline, EShaderStage::Fragment, sizeof(ScaleAndTranslation), sizeof(PushConstants), &PushConstants);
+				CmdList.PushConstants(Pipeline, psoDesc.shaderStages.fragment, &PushConstants);
 
 				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
 			}

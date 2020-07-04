@@ -42,11 +42,6 @@ public:
 	inline bool IsMasked() const { return MaterialMode == EMaterialMode::Masked; };
 	inline const PushConstants& GetPushConstants() const { return PushConstants; }
 	inline const SpecializationInfo& GetSpecializationInfo() const { return mSpecializationInfo; }
-	inline const PushConstantRange& GetPushConstantRange() const 
-	{
-		static PushConstantRange PushConstantRange = { EShaderStage::Fragment, 0, sizeof(PushConstants) };
-		return PushConstantRange;
-	}
 
 private:
 	EMaterialMode MaterialMode;

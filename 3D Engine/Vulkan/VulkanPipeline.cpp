@@ -37,7 +37,23 @@ gpu::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& PSODesc)
 		layouts.push_back(layout);
 	}
 
-	const VkPipelineLayout PipelineLayout = GetPipelineLayout(layouts, PSODesc.pushConstantRanges);
+	std::vector<VkPushConstantRange> pushConstantRanges;
+
+	auto getPushConstantRange = [&] (const gpu::Shader* shader)
+	{
+		if (shader && shader->compilationInfo.pushConstantRange.size > 0)
+		{
+			pushConstantRanges.push_back(shader->compilationInfo.pushConstantRange);
+		}
+	};
+
+	getPushConstantRange(PSODesc.shaderStages.vertex);
+	getPushConstantRange(PSODesc.shaderStages.tessControl);
+	getPushConstantRange(PSODesc.shaderStages.tessEval);
+	getPushConstantRange(PSODesc.shaderStages.geometry);
+	getPushConstantRange(PSODesc.shaderStages.fragment);
+
+	const VkPipelineLayout PipelineLayout = GetPipelineLayout(layouts, pushConstantRanges);
 	auto Pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(PSODesc, PipelineLayout), PipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	GraphicsPipelineCache[PSODesc] = Pipeline;
 	return Pipeline;
@@ -77,7 +93,7 @@ gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& ComputeDesc)
 
 	const auto& InPushConstantRange = ComputeDesc.computeShader->compilationInfo.pushConstantRange;
 
-	const auto PushConstantRanges = InPushConstantRange.size > 0 ? std::vector{ InPushConstantRange } : std::vector<PushConstantRange>{};
+	const auto PushConstantRanges = InPushConstantRange.size > 0 ? std::vector{ InPushConstantRange } : std::vector<VkPushConstantRange>{};
 
 	const VkPipelineLayout PipelineLayout = GetPipelineLayout(layouts, PushConstantRanges);
 
@@ -540,41 +556,17 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& ComputePipelin
 	return Pipeline;
 }
 
-static std::vector<VkPushConstantRange> CreatePushConstantRanges(const std::vector<PushConstantRange>& PushConstantRanges)
-{
-	std::vector<VkPushConstantRange> VulkanPushConstantRanges;
-	VulkanPushConstantRanges.reserve(PushConstantRanges.size());
-
-	for (const auto& PushConstantRange : PushConstantRanges)
-	{
-		VkPushConstantRange VulkanPushConstantRange = {};
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-		VulkanPushConstantRange.stageFlags |= Any(PushConstantRange.stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
-		VulkanPushConstantRange.offset = PushConstantRange.offset;
-		VulkanPushConstantRange.size = PushConstantRange.size;
-		VulkanPushConstantRanges.push_back(VulkanPushConstantRange);
-	}
-	
-	return VulkanPushConstantRanges;
-}
-
 VkPipelineLayout VulkanCache::GetPipelineLayout(
 	const std::vector<VkDescriptorSetLayout>& Layouts, 
-	const std::vector<PushConstantRange>& PushConstantRanges
+	const std::vector<VkPushConstantRange>& PushConstantRanges
 )
 {
 	const Crc Crc0 = Platform::CalculateCrc(Layouts.data(), Layouts.size() * sizeof(Layouts.front()));
-	const Crc Crc1 = Platform::CalculateCrc(PushConstantRanges.data(), PushConstantRanges.size() * sizeof(PushConstantRange));
+	const Crc Crc1 = Platform::CalculateCrc(PushConstantRanges.data(), PushConstantRanges.size() * sizeof(PushConstantRanges[0]));
 
 	Crc Crc = 0;
 	HashCombine(Crc, Crc0);
 	HashCombine(Crc, Crc1);
-
-	const std::vector<VkPushConstantRange> VulkanPushConstantRanges = CreatePushConstantRanges(PushConstantRanges);
 
 	if (auto Iter = PipelineLayoutCache.find(Crc); Iter != PipelineLayoutCache.end())
 	{
@@ -586,10 +578,10 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(
 	PipelineLayoutInfo.setLayoutCount = static_cast<uint32>(Layouts.size());
 	PipelineLayoutInfo.pSetLayouts = Layouts.data();
 
-	if (VulkanPushConstantRanges.size() > 0)
+	if (PushConstantRanges.size() > 0)
 	{
-		PipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32>(VulkanPushConstantRanges.size());
-		PipelineLayoutInfo.pPushConstantRanges = VulkanPushConstantRanges.data();
+		PipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32>(PushConstantRanges.size());
+		PipelineLayoutInfo.pPushConstantRanges = PushConstantRanges.data();
 	}
 
 	VkPipelineLayout PipelineLayout;

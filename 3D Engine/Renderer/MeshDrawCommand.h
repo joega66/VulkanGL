@@ -15,8 +15,8 @@ public:
 		, _DescriptorSets(descriptorSets)
 	{
 		psoDesc.specInfo = meshProxy.GetSpecializationInfo();
-		psoDesc.pushConstantRanges.push_back(_Material->GetPushConstantRange());
 		_Pipeline = device.CreatePipeline(psoDesc);
+		_FragShader = psoDesc.shaderStages.fragment;
 	}
 
 	void Draw(gpu::CommandList& cmdList)
@@ -25,7 +25,7 @@ public:
 
 		cmdList.BindDescriptorSets(_Pipeline, _DescriptorSets.size(), _DescriptorSets.data());
 
-		cmdList.PushConstants(_Pipeline, EShaderStage::Fragment, 0, sizeof(_Material->GetPushConstants()), &_Material->GetPushConstants());
+		cmdList.PushConstants(_Pipeline, _FragShader, &_Material->GetPushConstants());
 
 		for (const auto& submesh : _Submeshes)
 		{
@@ -45,6 +45,7 @@ public:
 
 private:
 	gpu::Pipeline _Pipeline;
+	const gpu::Shader* _FragShader;
 	std::vector<VkDescriptorSet> _DescriptorSets;
 	const std::vector<Submesh>& _Submeshes;
 	const Material* _Material;

@@ -32,8 +32,6 @@ public:
 
 	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, std::size_t numDescriptorSets, const VkDescriptorSet* descriptorSets);
 
-	void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, EShaderStage stageFlags, uint32 offset, uint32 size, const void* values);
-
 	void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values);
 
 	void BindVertexBuffers(uint32 numVertexBuffers, const VulkanBuffer* vertexBuffers);

@@ -62,35 +62,6 @@ void VulkanCommandList::BindDescriptorSets(const std::shared_ptr<VulkanPipeline>
 	);
 }
 
-static VkShaderStageFlags TranslateStageFlags(EShaderStage stageFlags)
-{
-	VkShaderStageFlags VkStageFlags = 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
-	return VkStageFlags;
-}
-
-void VulkanCommandList::PushConstants(
-	const std::shared_ptr<VulkanPipeline>& pipeline, 
-	EShaderStage stageFlags, 
-	uint32 offset, 
-	uint32 size, 
-	const void* values)
-{
-	vkCmdPushConstants(
-		_CommandBuffer,
-		pipeline->GetPipelineLayout(),
-		TranslateStageFlags(stageFlags),
-		offset,
-		size,
-		values
-	);
-}
-
 void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
 {
 	const auto& PushConstantRange = shader->compilationInfo.pushConstantRange;
@@ -98,7 +69,7 @@ void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pip
 	vkCmdPushConstants(
 		_CommandBuffer,
 		pipeline->GetPipelineLayout(),
-		TranslateStageFlags(PushConstantRange.stageFlags),
+		PushConstantRange.stageFlags,
 		PushConstantRange.offset,
 		PushConstantRange.size,
 		values

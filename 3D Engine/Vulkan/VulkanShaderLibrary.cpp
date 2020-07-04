@@ -4,6 +4,18 @@
 #include <shaderc/shaderc.hpp>
 #include <unordered_map>
 
+static VkShaderStageFlags TranslateStageFlags(EShaderStage stageFlags)
+{
+	VkShaderStageFlags VkStageFlags = 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+	VkStageFlags |= Any(stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+	return VkStageFlags;
+}
+
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 {
 	switch (Type.basetype)
@@ -144,6 +156,22 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 	return layouts;
 }
 
+static VkPushConstantRange ReflectPushConstantRange(
+	const spirv_cross::CompilerGLSL& glsl,
+	const spirv_cross::ShaderResources& resources,
+	VkShaderStageFlags stageFlags)
+{
+	for (const auto& pushConstant : resources.push_constant_buffers)
+	{
+		const auto ranges = glsl.get_active_buffer_ranges(pushConstant.id);
+		const spirv_cross::SPIRType& type = glsl.get_type(pushConstant.base_type_id);
+		const std::size_t size = glsl.get_declared_struct_size(type);
+		return { stageFlags, static_cast<uint32>(ranges.front().offset), static_cast<uint32>(size) };
+	}
+
+	return VkPushConstantRange{};
+}
+
 class ShadercIncluder : public shaderc::CompileOptions::IncluderInterface
 {
 public:
@@ -269,14 +297,15 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 
 	const std::map<uint32, VkDescriptorSetLayout> layouts = ReflectDescriptorSetLayouts(Device, GLSL, Resources);
 
-	PushConstantRange PushConstantRange;
-	PushConstantRange.stageFlags = Stage;
-	PushConstantRange.offset = Worker.GetPushConstantOffset();
-	PushConstantRange.size = Worker.GetPushConstantSize();
+	const VkShaderStageFlags vulkanStageFlags = TranslateStageFlags(Stage);
+
+	const VkPushConstantRange pushConstantRange = Worker.GetPushConstantSize() > 0 ? 
+		VkPushConstantRange{ vulkanStageFlags, Worker.GetPushConstantOffset(), Worker.GetPushConstantSize() }
+		: ReflectPushConstantRange(GLSL, Resources, vulkanStageFlags);
 
 	return ShaderCompilationInfo(
 		Type, Stage, EntryPoint, Filename, Platform::GetLastWriteTime(Filename), Worker,
-		ShaderModule, VertexAttributeDescriptions, layouts, PushConstantRange);
+		ShaderModule, VertexAttributeDescriptions, layouts, pushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()

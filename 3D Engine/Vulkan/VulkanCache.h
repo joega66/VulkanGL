@@ -15,7 +15,7 @@ public:
 
 	VkPipelineLayout GetPipelineLayout(
 		const std::vector<VkDescriptorSetLayout>& Layouts, 
-		const std::vector<PushConstantRange>& PushConstantRanges
+		const std::vector<VkPushConstantRange>& PushConstantRanges
 	);
 
 	gpu::Pipeline GetPipeline(const PipelineStateDesc& PSODesc);

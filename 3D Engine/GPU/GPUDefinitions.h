@@ -101,8 +101,7 @@ struct PipelineStateDesc
 	std::vector<EDynamicState> dynamicStates;
 	std::vector<VertexAttributeDescription> vertexAttributes;
 	std::vector<VertexBindingDescription> vertexBindings;
-	std::vector<PushConstantRange> pushConstantRanges;
-
+	
 	friend bool operator==(const PipelineStateDesc& l, const PipelineStateDesc& r)
 	{
 		return l.renderPass == r.renderPass

@@ -61,7 +61,6 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 	psoDesc.viewport.width = camera._SceneColor.GetWidth();
 	psoDesc.viewport.height = camera._SceneColor.GetHeight();
 	psoDesc.shaderStages = { vertShader, nullptr, nullptr, nullptr, fragShader };
-	psoDesc.pushConstantRanges.push_back({ EShaderStage::Fragment, 0, sizeof(SkyboxShaderParams) });
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(psoDesc);
 
@@ -78,7 +77,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 		skyboxShaderParams._Skybox = skybox.Skybox->GetImage().GetTextureID();
 		skyboxShaderParams._Sampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 
-		cmdList.PushConstants(pipeline, EShaderStage::Fragment, 0, sizeof(skyboxShaderParams), &skyboxShaderParams);
+		cmdList.PushConstants(pipeline, fragShader, &skyboxShaderParams);
 
 		const StaticMesh* cube = _Assets.GetStaticMesh("Cube");
 

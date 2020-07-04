@@ -122,7 +122,7 @@ public:
 	VkShaderModule shaderModule;
 	std::vector<VertexAttributeDescription> vertexAttributeDescriptions;
 	std::map<uint32, VkDescriptorSetLayout> layouts;
-	PushConstantRange pushConstantRange;
+	VkPushConstantRange pushConstantRange;
 
 	ShaderCompilationInfo(
 		std::type_index type,
@@ -134,7 +134,7 @@ public:
 		VkShaderModule shaderModule,
 		const std::vector<VertexAttributeDescription>& vertexAttributeDescriptions,
 		const std::map<uint32, VkDescriptorSetLayout>& layouts,
-		const PushConstantRange& pushConstantRange)
+		const VkPushConstantRange& pushConstantRange)
 		: type(type)
 		, stage(stage)
 		, entrypoint(entrypoint)

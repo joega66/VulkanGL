@@ -606,20 +606,6 @@ enum class EShaderStage
 	All = AllGraphics | Compute
 }; ENABLE_BITWISE_OPERATORS(EShaderStage);
 
-struct PushConstantRange
-{
-	EShaderStage stageFlags = EShaderStage::All;
-	uint32 offset = 0;
-	uint32 size = 0;
-
-	bool operator==(const PushConstantRange& other) const
-	{
-		return stageFlags == other.stageFlags
-			&& offset == other.offset
-			&& size == other.size;
-	}
-};
-
 enum class EDynamicState
 {
 	Viewport = 0,
