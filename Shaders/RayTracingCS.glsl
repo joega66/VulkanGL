@@ -1,3 +1,4 @@
+#define CAMERA_SET 0
 #include "CameraCommon.glsl"
 #define CUBEMAP_SET 1
 #define SAMPLER_SET 2

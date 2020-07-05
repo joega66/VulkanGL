@@ -1,4 +1,6 @@
+#define CAMERA_SET 0
 #include "CameraCommon.glsl"
+#define MESH_SET 1
 #include "MeshCommon.glsl"
 #define TEXTURE_SET 2
 #define SAMPLER_SET 3

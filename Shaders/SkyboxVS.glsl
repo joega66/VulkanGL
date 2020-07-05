@@ -1,3 +1,4 @@
+#define CAMERA_SET 0
 #include "CameraCommon.glsl"
 
 layout(location = 0) in vec3 position;

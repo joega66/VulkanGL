@@ -1,3 +1,4 @@
+#define CAMERA_SET 0
 #include "CameraCommon.glsl"
 #include "LightingCommon.glsl"
 #define TEXTURE_SET 1

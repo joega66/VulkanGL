@@ -23,27 +23,29 @@ SURFACE(in) inSurface;
 SURFACE(out) outSurface;
 #endif
 
-#define MESH_SET 1
+#ifdef MESH_SET
 
 layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniform
 {
 	mat4 transform;
 	mat4 inverse;
 	mat4 inverseTranspose;
-} localToWorld;
+} _LocalToWorld;
+
+#endif
 
 #if VERTEX_SHADER
 
 vec4 Surface_GetWorldPosition()
 {
-	return localToWorld.transform * vec4(position, 1.0f);
+	return _LocalToWorld.transform * vec4(position, 1.0f);
 }
 
 void Surface_SetAttributes(in vec4 worldPosition)
 {
 	outSurface.position = worldPosition.xyz;
 	outSurface.uv = uv;
-	outSurface.normal = mat3(localToWorld.inverseTranspose) * normal;
+	outSurface.normal = mat3(_LocalToWorld.inverseTranspose) * normal;
 }
 
 #elif GEOMETRY_SHADER

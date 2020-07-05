@@ -4,7 +4,8 @@
 #include "MaterialInterface.glsl"
 #include "LightingCommon.glsl"
 
-#define CAMERA_SET 0
+#ifdef CAMERA_SET
+
 layout(binding = 0, set = CAMERA_SET) uniform CameraUniform
 {
 	mat4 worldToView;
@@ -56,5 +57,7 @@ vec3 LoadNormal(ivec2 screenCoords)
 {
 	return texelFetch(_GBuffer0, screenCoords, 0).rgb;
 }
+
+#endif
 
 #endif

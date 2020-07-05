@@ -1,3 +1,4 @@
+#define MESH_SET 1
 #include "MeshCommon.glsl"
 
 layout(binding = 0, set = 0) uniform LightViewProjBuffer
