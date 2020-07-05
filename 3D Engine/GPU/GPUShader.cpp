@@ -48,3 +48,27 @@ std::string ShaderTypeSerializer::Serialize<gpu::ImageID>()
 {
 	return "uint";
 }
+
+template<>
+EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::SampledImage>()
+{
+	return EDescriptorType::SampledImage;
+}
+
+template<>
+EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::StorageImage>()
+{
+	return EDescriptorType::StorageImage;
+}
+
+template<>
+EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::UniformBuffer>()
+{
+	return EDescriptorType::UniformBuffer;
+}
+
+template<>
+EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::StorageBuffer>()
+{
+	return EDescriptorType::StorageBuffer;
+}

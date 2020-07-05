@@ -7,13 +7,13 @@
 #include <Components/SkyboxComponent.h>
 #include <Engine/Camera.h>
 
-BEGIN_SHADER_STRUCT(LightData)
+BEGIN_PUSH_CONSTANTS(LightData)
 	SHADER_PARAMETER(glm::vec4, _L)
 	SHADER_PARAMETER(glm::vec4, _Radiance)
 	SHADER_PARAMETER(glm::mat4, _LightViewProj)
 	SHADER_PARAMETER(gpu::TextureID, _ShadowMap)
 	SHADER_PARAMETER(gpu::SamplerID, _ShadowMapSampler)
-END_SHADER_STRUCT(LightData)
+END_PUSH_CONSTANTS(LightData)
 
 class LightingPassCS : public gpu::Shader
 {
@@ -112,11 +112,11 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 }
 
-BEGIN_SHADER_STRUCT(SSGIParams)
+BEGIN_PUSH_CONSTANTS(SSGIParams)
 	SHADER_PARAMETER(gpu::TextureID, _Skybox)
 	SHADER_PARAMETER(gpu::SamplerID, _SkyboxSampler)
 	SHADER_PARAMETER(uint32, _FrameNumber)
-END_SHADER_STRUCT(SSGIParams)
+END_PUSH_CONSTANTS(SSGIParams)
 
 class SSGI : public gpu::Shader
 {

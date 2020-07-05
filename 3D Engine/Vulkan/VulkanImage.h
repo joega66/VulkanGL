@@ -48,6 +48,7 @@ public:
 
 	inline void* GetNativeHandle() { return Image; }
 	inline operator VkImage() const { return Image; }
+	inline operator const VulkanImageView& () const { return ImageView; }
 	inline VkImage GetHandle() const { return Image; }
 	inline const VulkanImageView& GetImageView() const { return ImageView; }
 	inline const VulkanTextureID& GetTextureID() const { return TextureID; }
@@ -101,4 +102,28 @@ public:
 
 private:
 	VkDescriptorImageInfo DescriptorImageInfo = { nullptr };
+};
+
+class VulkanSampler2D
+{
+public:
+	VulkanSampler2D() = default;
+	VulkanSampler2D(const VulkanImageView& imageView, const VulkanSampler& sampler);
+
+	/*bool operator==(const VulkanImage & Image);
+	bool operator!=(const VulkanImage & Image);*/
+
+private:
+	VkDescriptorImageInfo descriptorImageInfo = { nullptr };
+};
+
+class VulkanImage2D
+{
+public:
+	VulkanImage2D() = default;
+	VulkanImage2D(const VulkanImage& image);
+	VulkanImage2D(const VulkanImageView& imageView);
+
+private:
+	VkDescriptorImageInfo descriptorImageInfo = { nullptr };
 };

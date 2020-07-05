@@ -3,30 +3,6 @@
 
 class Engine;
 
-struct CameraDescriptors
-{
-	gpu::DescriptorBufferInfo _CameraUniform;
-	gpu::DescriptorImageInfo _SceneDepth;
-	gpu::DescriptorImageInfo _GBuffer0;
-	gpu::DescriptorImageInfo _GBuffer1;
-	gpu::DescriptorImageInfo _SceneColor;
-	gpu::DescriptorImageInfo _SSGIHistory;
-
-	static auto& GetBindings()
-	{
-		static std::vector<DescriptorBinding> bindings =
-		{
-			{ 0, 1, EDescriptorType::UniformBuffer },
-			{ 1, 1, EDescriptorType::SampledImage },
-			{ 2, 1, EDescriptorType::SampledImage },
-			{ 3, 1, EDescriptorType::SampledImage },
-			{ 4, 1, EDescriptorType::StorageImage },
-			{ 5, 1, EDescriptorType::StorageImage },
-		};
-		return bindings;
-	}
-};
-
 class CameraProxy
 {
 	friend class Engine;
@@ -48,7 +24,7 @@ public:
 	gpu::Image _GBuffer1;
 	gpu::Image _SSGIHistory;
 
-	DescriptorSet<CameraDescriptors> _CameraDescriptorSet;
+	gpu::DescriptorSet _CameraDescriptorSet;
 
 	std::vector<MeshDrawCommand> _GBufferPass;
 

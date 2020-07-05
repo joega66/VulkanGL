@@ -10,53 +10,121 @@ class ShaderTypeSerializer
 public:
 	template<typename T>
 	static std::string Serialize();
+
+	template<typename T>
+	static EDescriptorType GetDescriptorType();
 };
 
-struct ShaderStructDecl
+struct PushConstantSerializedData
 {
 	std::string decl;
 	uint32 size;
 };
 
-#define BEGIN_SHADER_STRUCT(StructName)	\
+/** Begin a push constant definition. */
+#define BEGIN_PUSH_CONSTANTS(StructName)\
 struct StructName						\
 {										\
 private:								\
 	struct FirstMemberId {};			\
 	typedef FirstMemberId				\
 
+/** Define a member of a push constant. */
 #define SHADER_PARAMETER(ShaderType, Name)																		\
 		MemberId##Name;																							\
 public:																											\
 	ShaderType Name;																							\
 private:																										\
-	static void Serialize(MemberId##Name MemberId, std::string& ShaderStruct)									\
+	static void Serialize(MemberId##Name memberId, std::string& shaderStruct)									\
 	{																											\
-		ShaderStruct += ShaderTypeSerializer::Serialize<ShaderType>() + " " + std::string(#Name) + ";";			\
-		Serialize(NextMemberId##Name{}, ShaderStruct);															\
+		shaderStruct += ShaderTypeSerializer::Serialize<ShaderType>() + " " + std::string(#Name) + ";";			\
+		Serialize(NextMemberId##Name{}, shaderStruct);															\
 	}																											\
 	struct NextMemberId##Name {};																				\
 	typedef NextMemberId##Name																					\
 
-#define END_SHADER_STRUCT(StructName)																			\
+/** End push constant definition. */
+#define END_PUSH_CONSTANTS(StructName)																			\
 		LastMemberId;																							\
-	static void Serialize(LastMemberId MemberId, std::string& ShaderStruct) {}									\
+	static void Serialize(LastMemberId memberId, std::string& shaderStruct) {}									\
 public:																											\
 	static std::string Serialize()																				\
 	{																											\
-		std::string ShaderStruct;																				\
-		Serialize(FirstMemberId{}, ShaderStruct);																\
-		return ShaderStruct;																					\
+		std::string shaderStruct;																				\
+		Serialize(FirstMemberId{}, shaderStruct);																\
+		return shaderStruct;																					\
 	}																											\
-	struct Decl##StructName : ShaderStructDecl{																	\
-		Decl##StructName() {																					\
+	struct SerializedData##StructName : PushConstantSerializedData{												\
+		SerializedData##StructName() {																			\
 			decl = Serialize();																					\
 			size = sizeof(StructName);																			\
 		}																										\
 	};																											\
-	static Decl##StructName decl;																				\
+	static SerializedData##StructName decl;																		\
 };																												\
-StructName::Decl##StructName StructName::decl;																	\
+StructName::SerializedData##StructName StructName::decl;														\
+
+/** Begin a descriptor set definition. */
+#define BEGIN_DESCRIPTOR_SET(StructName)\
+struct StructName						\
+{										\
+public:									\
+	StructName() = default;				\
+private:								\
+	struct FirstMemberId {};			\
+	typedef FirstMemberId				\
+
+/** Define a member/binding of a descriptor set. */
+#define DESCRIPTOR(DescriptorType, Name)																		\
+		MemberId##Name;																							\
+public:																											\
+	DescriptorType Name;																						\
+private:																										\
+	static void Serialize(MemberId##Name memberId, std::vector<DescriptorBinding>& bindings)					\
+	{																											\
+		DescriptorBinding binding;																				\
+		binding.binding = static_cast<uint32>(bindings.size());													\
+		binding.descriptorCount = 1;																			\
+		binding.descriptorType = ShaderTypeSerializer::GetDescriptorType<DescriptorType>();						\
+		bindings.push_back(binding);																			\
+		Serialize(NextMemberId##Name{}, bindings);																\
+	}																											\
+	struct NextMemberId##Name {};																				\
+	typedef NextMemberId##Name																					\
+
+/** End descriptor set definition. */
+#define END_DESCRIPTOR_SET(StructName)																			\
+		LastMemberId;																							\
+	static void Serialize(LastMemberId memberId, std::vector<DescriptorBinding>& bindings) {}					\
+public:																											\
+	static std::vector<DescriptorBinding> Serialize()															\
+	{																											\
+		std::vector<DescriptorBinding> bindings;																\
+		Serialize(FirstMemberId{}, bindings);																	\
+		return bindings;																						\
+	}																											\
+	struct SerializedData																						\
+	{																											\
+		std::vector<DescriptorBinding> bindings;																\
+		SerializedData() {																						\
+			bindings = Serialize();																				\
+		}																										\
+	};																											\
+	static gpu::DescriptorSetLayout& GetLayout(gpu::Device& device)												\
+	{																											\
+		static gpu::DescriptorSetLayout layout( device.CreateDescriptorSetLayout( _Serialized.bindings.size(), _Serialized.bindings.data() ) ); \
+		return layout;																							\
+	}																											\
+private:																										\
+	static SerializedData _Serialized;																			\
+};																												\
+
+#define DECLARE_DESCRIPTOR_SET(StructName) \
+	StructName::SerializedData StructName::_Serialized;	\
+
+#define END_DESCRIPTOR_SET_STATIC(StructName)			\
+	END_DESCRIPTOR_SET(StructName)						\
+	DECLARE_DESCRIPTOR_SET(StructName)					\
 
 class ShaderCompilerWorker
 {
@@ -85,7 +153,7 @@ public:
 	}
 
 	/** Define the shader's push constant struct. */
-	inline void operator<<(const ShaderStructDecl& shaderStructDecl)
+	inline void operator<<(const PushConstantSerializedData& shaderStructDecl)
 	{
 		_PushConstantStruct = shaderStructDecl.decl;
 		_PushConstantSize = shaderStructDecl.size;

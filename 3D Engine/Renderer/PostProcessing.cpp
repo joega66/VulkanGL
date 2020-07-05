@@ -1,11 +1,14 @@
+#include "PostProcessing.h"
 #include "SceneRenderer.h"
 #include <ECS/EntityManager.h>
 #include <Components/RenderSettings.h>
 
-BEGIN_SHADER_STRUCT(PostProcessingParams)
+BEGIN_PUSH_CONSTANTS(PostProcessingParams)
 	SHADER_PARAMETER(float, _ExposureAdjustment)
 	SHADER_PARAMETER(float, _ExposureBias)
-END_SHADER_STRUCT(PostProcessingParams)
+END_PUSH_CONSTANTS(PostProcessingParams)
+
+DECLARE_DESCRIPTOR_SET(PostProcessingDescriptors);
 
 class PostProcessingCS : public gpu::Shader
 {
@@ -27,35 +30,16 @@ public:
 	}
 };
 
-struct PostProcessingDescriptors
-{
-	gpu::DescriptorImageInfo _DisplayColor;
-	gpu::DescriptorImageInfo _HDRColor;
-
-	static auto& GetBindings()
-	{
-		static std::vector<DescriptorBinding> bindings =
-		{
-			{ 0, 1, EDescriptorType::StorageImage },
-			{ 1, 1, EDescriptorType::StorageImage },
-		};
-		return bindings;
-	}
-};
-
 void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList)
 {
 	auto& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
-	gpu::DescriptorSetLayout layout = _Device.CreateDescriptorSetLayout(PostProcessingDescriptors::GetBindings().size(), PostProcessingDescriptors::GetBindings().data());
-	gpu::DescriptorSet descriptorSet = layout.CreateDescriptorSet(_Device);
-	
 	PostProcessingDescriptors descriptors;
-	descriptors._DisplayColor = gpu::DescriptorImageInfo(displayImage);
-	descriptors._HDRColor = gpu::DescriptorImageInfo(camera._SceneColor);
+	descriptors._DisplayColor = displayImage;
+	descriptors._HDRColor = camera._SceneColor;
 
-	layout.UpdateDescriptorSet(_Device, descriptorSet, &descriptors);
-
+	_Device.UpdateDescriptorSet(_PostProcessingSet, descriptors);
+	
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<PostProcessingCS>();
 
 	ComputePipelineDesc computeDesc;
@@ -65,7 +49,7 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 
 	cmdList.BindPipeline(pipeline);
 
-	cmdList.BindDescriptorSets(pipeline, 1, &descriptorSet.GetHandle());
+	cmdList.BindDescriptorSets(pipeline, 1, &_PostProcessingSet.GetHandle());
 
 	PostProcessingParams postProcessingParams;
 	postProcessingParams._ExposureAdjustment = settings.ExposureAdjustment;

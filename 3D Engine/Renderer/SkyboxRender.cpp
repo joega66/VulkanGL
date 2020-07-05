@@ -22,10 +22,10 @@ public:
 	}
 };
 
-BEGIN_SHADER_STRUCT(SkyboxShaderParams)
+BEGIN_PUSH_CONSTANTS(SkyboxShaderParams)
 	SHADER_PARAMETER(gpu::TextureID, _Skybox)
 	SHADER_PARAMETER(gpu::SamplerID, _Sampler)
-END_SHADER_STRUCT(SkyboxShaderParams)
+END_PUSH_CONSTANTS(SkyboxShaderParams)
 
 class SkyboxFS : public gpu::Shader
 {

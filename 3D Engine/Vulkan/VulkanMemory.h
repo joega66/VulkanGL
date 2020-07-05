@@ -83,6 +83,24 @@ private:
 	VkDescriptorBufferInfo DescriptorBufferInfo;
 };
 
+class VulkanUniformBuffer : public VulkanDescriptorBufferInfo 
+{
+public:
+	VulkanUniformBuffer() = default;
+	VulkanUniformBuffer(const VulkanBuffer& buffer) : VulkanDescriptorBufferInfo(buffer)
+	{
+	}
+};
+
+class VulkanStorageBuffer : public VulkanDescriptorBufferInfo 
+{
+public:
+	VulkanStorageBuffer() = default;
+	VulkanStorageBuffer(const VulkanBuffer& buffer) : VulkanDescriptorBufferInfo(buffer)
+	{
+	}
+};
+
 class VulkanAllocator
 {
 public:

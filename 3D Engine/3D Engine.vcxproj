@@ -128,6 +128,7 @@
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Renderer\MeshDrawCommand.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
+    <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\ShadowProxy.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\MeshProxy.h" />

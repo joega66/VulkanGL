@@ -105,13 +105,13 @@ VulkanDescriptorSet VulkanDescriptorPoolManager::Allocate(VulkanDevice& Device, 
 	{
 		if (VkDescriptorSet DescriptorSet = DescriptorPool->Allocate(Device, Layout); DescriptorSet != VK_NULL_HANDLE)
 		{
-			return VulkanDescriptorSet(*DescriptorPool, Layout, DescriptorSet);
+			return VulkanDescriptorSet(*DescriptorPool, DescriptorSet);
 		}
 	}
 
 	DescriptorPools.push_back(std::make_unique<VulkanDescriptorPool>(Device, PoolInfo));
 	VulkanDescriptorPool& DescriptorPool = *DescriptorPools.back();
-	return VulkanDescriptorSet(DescriptorPool, Layout, DescriptorPool.Allocate(Device, Layout));
+	return VulkanDescriptorSet(DescriptorPool, DescriptorPool.Allocate(Device, Layout));
 }
 
 void VulkanDescriptorPoolManager::EndFrame(VulkanDevice& Device)
@@ -124,17 +124,14 @@ void VulkanDescriptorPoolManager::EndFrame(VulkanDevice& Device)
 
 VulkanDescriptorSet::VulkanDescriptorSet(
 	VulkanDescriptorPool& DescriptorPool,
-	VkDescriptorSetLayout Layout,
 	VkDescriptorSet DescriptorSet)
 	: DescriptorPool(&DescriptorPool)
-	, Layout(Layout)
 	, DescriptorSet(DescriptorSet)
 {
 }
 
 VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& Other)
 	: DescriptorPool(Other.DescriptorPool)
-	, Layout(Other.Layout)
 	, DescriptorSet(std::exchange(Other.DescriptorSet, nullptr))
 {
 }
@@ -142,7 +139,6 @@ VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& Other)
 VulkanDescriptorSet& VulkanDescriptorSet::operator=(VulkanDescriptorSet&& Other)
 {
 	DescriptorPool = Other.DescriptorPool;
-	Layout = std::exchange(Other.Layout, nullptr);
 	DescriptorSet = std::exchange(Other.DescriptorSet, nullptr);
 	return *this;
 }

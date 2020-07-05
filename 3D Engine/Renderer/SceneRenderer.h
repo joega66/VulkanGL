@@ -20,6 +20,8 @@ private:
 	AssetManager& _Assets;
 	Camera& _Camera;
 
+	gpu::DescriptorSet _PostProcessingSet;
+
 	void ClearSceneColor(CameraProxy& camera, gpu::CommandList& cmdList);
 	void RenderGBufferPass(CameraProxy& camera, gpu::CommandList& cmdList);
 	void RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList);

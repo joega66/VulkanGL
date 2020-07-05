@@ -22,23 +22,23 @@ class VulkanDevice final : public gpu::Device
 public:
 	VulkanDevice(Platform& Platform);
 
-	virtual ~VulkanDevice() override {}
+	~VulkanDevice() override {}
 
-	virtual void EndFrame() override;
+	void EndFrame() override;
 
-	virtual void SubmitCommands(gpu::CommandList& CmdList) override;
+	void SubmitCommands(gpu::CommandList& CmdList) override;
 
-	virtual gpu::CommandList CreateCommandList(EQueue Queue) override;
+	gpu::CommandList CreateCommandList(EQueue Queue) override;
 
-	virtual gpu::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
+	gpu::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
 
-	virtual gpu::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
+	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
 
-	virtual gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
+	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
 
-	virtual gpu::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) override;
+	gpu::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) override;
 
-	virtual gpu::Image CreateImage(
+	gpu::Image CreateImage(
 		uint32 Width,
 		uint32 Height,
 		uint32 Depth,
@@ -47,7 +47,7 @@ public:
 		uint32 MipLevels
 	) override;
 
-	virtual gpu::ImageView CreateImageView(
+	gpu::ImageView CreateImageView(
 		const gpu::Image& Image,
 		uint32 BaseMipLevel,
 		uint32 LevelCount,
@@ -55,19 +55,19 @@ public:
 		uint32 LayerCount
 	) override;
 
-	virtual gpu::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
+	gpu::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
 
-	virtual gpu::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
+	gpu::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
-	virtual gpu::TextureID CreateTextureID(const VulkanImageView& ImageView) override;
+	gpu::TextureID CreateTextureID(const VulkanImageView& ImageView) override;
 	
-	virtual gpu::ImageID CreateImageID(const VulkanImageView& ImageView) override;
+	gpu::ImageID CreateImageID(const VulkanImageView& ImageView) override;
 
-	virtual gpu::BindlessResources& GetTextures() override;
+	gpu::BindlessResources& GetTextures() override;
 
-	virtual gpu::BindlessResources& GetSamplers() override;
+	gpu::BindlessResources& GetSamplers() override;
 
-	virtual gpu::BindlessResources& GetImages() override;
+	gpu::BindlessResources& GetImages() override;
 
 	operator VkDevice() const { return Device; }
 

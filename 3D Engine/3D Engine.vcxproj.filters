@@ -272,6 +272,9 @@
     <ClInclude Include="GPU\GPUShader.h">
       <Filter>Source\GPU</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\PostProcessing.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

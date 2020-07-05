@@ -7,6 +7,7 @@
 #include <Systems/UserInterface.h>
 #include "FullscreenQuad.h"
 #include "ShadowProxy.h"
+#include "PostProcessing.h"
 
 SceneRenderer::SceneRenderer(Engine& engine)
 	: _Device(engine.Device)
@@ -16,6 +17,7 @@ SceneRenderer::SceneRenderer(Engine& engine)
 	, _Assets(engine.Assets)
 	, _Camera(engine.Camera)
 {
+	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
 }
 
 void SceneRenderer::Render(CameraProxy& camera)

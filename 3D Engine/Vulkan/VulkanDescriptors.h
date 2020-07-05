@@ -11,18 +11,16 @@ public:
 	VulkanDescriptorSet& operator=(const VulkanDescriptorSet&) = delete;
 
 	VulkanDescriptorSet() = default;
-	VulkanDescriptorSet(class VulkanDescriptorPool& DescriptorPool, VkDescriptorSetLayout Layout, VkDescriptorSet DescriptorSet);
+	VulkanDescriptorSet(class VulkanDescriptorPool& DescriptorPool, VkDescriptorSet DescriptorSet);
 	VulkanDescriptorSet(VulkanDescriptorSet&& Other);
 	VulkanDescriptorSet& operator=(VulkanDescriptorSet&& Other);
 	~VulkanDescriptorSet();
 
 	inline operator VkDescriptorSet() const { return DescriptorSet; }
 	inline const VkDescriptorSet& GetHandle() const { return DescriptorSet; }
-	inline VkDescriptorSetLayout GetLayout() const { return Layout; }
 
 private:
 	VulkanDescriptorPool* DescriptorPool = nullptr;
-	VkDescriptorSetLayout Layout = nullptr;
 	VkDescriptorSet DescriptorSet = nullptr;
 };
 
@@ -73,10 +71,7 @@ public:
 
 	VulkanDescriptorSetLayout(VulkanDevice& Device, std::size_t NumEntries, const DescriptorBinding* Entries);
 
-	/** Create a descriptor set with this layout. */
 	VulkanDescriptorSet CreateDescriptorSet(gpu::Device& Device);
-
-	/** Update a descriptor set from a descriptor update template. */
 	void UpdateDescriptorSet(gpu::Device& Device, const VulkanDescriptorSet& DescriptorSet, void* Data);
 
 	inline operator VkDescriptorSetLayout() const { return DescriptorSetLayout; }

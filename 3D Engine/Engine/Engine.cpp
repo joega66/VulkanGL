@@ -50,7 +50,7 @@ void Engine::Main()
 	
 	SystemsManager SystemsManager;
 
-	RenderSystem RenderSystem(*this);
+	RenderSystem RenderSystem;
 	SystemsManager.Register(RenderSystem);
 
 	EditorControllerSystem EditorControllerSystem;

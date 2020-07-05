@@ -3,20 +3,6 @@
 #include <GPU/GPU.h>
 #include <ECS/Component.h>
 
-struct ShadowDescriptors
-{
-	gpu::DescriptorBufferInfo _LightViewProjBuffer;
-
-	static const std::vector<DescriptorBinding>& GetBindings()
-	{
-		static std::vector<DescriptorBinding> bindings =
-		{
-			{ 0, 1, EDescriptorType::UniformBuffer },
-		};
-		return bindings;
-	}
-};
-
 class ShadowProxy : public Component
 {
 public:
@@ -26,7 +12,7 @@ public:
 
 	float _ZFar;
 
-	ShadowProxy(gpu::Device& device, DescriptorSetLayout<ShadowDescriptors>& shadowLayout, const struct DirectionalLight& directionalLight);
+	ShadowProxy(gpu::Device& device, const struct DirectionalLight& directionalLight);
 
 	void Update(gpu::Device& device, const struct DirectionalLight& directionalLight);
 

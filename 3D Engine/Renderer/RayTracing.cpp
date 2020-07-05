@@ -3,7 +3,7 @@
 #include <ECS/EntityManager.h>
 #include <Components/SkyboxComponent.h>
 
-BEGIN_SHADER_STRUCT(RayTracingParams)
+BEGIN_PUSH_CONSTANTS(RayTracingParams)
 	SHADER_PARAMETER(glm::vec4, _Origin)
 	SHADER_PARAMETER(glm::vec4, _Horizontal)
 	SHADER_PARAMETER(glm::vec4, _Vertical)
@@ -11,7 +11,7 @@ BEGIN_SHADER_STRUCT(RayTracingParams)
 	SHADER_PARAMETER(gpu::TextureID, _Skybox)
 	SHADER_PARAMETER(gpu::SamplerID, _SkyboxSampler)
 	SHADER_PARAMETER(uint32, _FrameNumber)
-END_SHADER_STRUCT(RayTracingParams)
+END_PUSH_CONSTANTS(RayTracingParams)
 
 class RayTracingCS : public gpu::Shader
 {

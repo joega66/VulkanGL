@@ -25,7 +25,7 @@ namespace gpu
 		virtual gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) = 0;
 
 		virtual gpu::DescriptorSetLayout CreateDescriptorSetLayout(
-			std::size_t numBindings, 
+			std::size_t numBindings,
 			const DescriptorBinding* bindings
 		) = 0;
 
@@ -65,6 +65,29 @@ namespace gpu
 		virtual gpu::BindlessResources& GetSamplers() = 0;
 
 		virtual gpu::BindlessResources& GetImages() = 0;
+
+		template<typename DescriptorSetType>
+		gpu::DescriptorSet CreateDescriptorSet()
+		{
+			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
+			return layout.CreateDescriptorSet(*this);
+		}
+
+		template<typename DescriptorSetType>
+		gpu::DescriptorSet CreateDescriptorSet(DescriptorSetType& descriptors)
+		{
+			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
+			gpu::DescriptorSet set = layout.CreateDescriptorSet(*this);
+			layout.UpdateDescriptorSet(*this, set, &descriptors);
+			return set;
+		}
+
+		template<typename DescriptorSetType>
+		void UpdateDescriptorSet(const gpu::DescriptorSet& set, DescriptorSetType& descriptors)
+		{
+			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
+			layout.UpdateDescriptorSet(*this, set, &descriptors);
+		}
 	};
 
 	/** Compositor interface. Useful for creating a swapchain or letting an SDK control the display, e.g. OpenXR. */
@@ -80,53 +103,3 @@ namespace gpu
 
 	void UploadImageData(gpu::Device& device, const void* srcPixels, const gpu::Image& dstImage);
 }
-
-/** Descriptor set layout helpers. */
-
-template<typename DescriptorSetType>
-class DescriptorSetLayout
-{
-private:
-	gpu::DescriptorSetLayout _DescriptorSetLayout;
-
-public:
-	DescriptorSetLayout(gpu::Device& device)
-	{
-		_DescriptorSetLayout = device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
-	}
-
-	inline gpu::DescriptorSet CreateDescriptorSet(gpu::Device& device)
-	{ 
-		return _DescriptorSetLayout.CreateDescriptorSet(device);
-	}
-
-	inline void UpdateDescriptorSet(gpu::Device& device, const gpu::DescriptorSet& descriptorSet, DescriptorSetType& descriptorWrite)
-	{ 
-		_DescriptorSetLayout.UpdateDescriptorSet(device, descriptorSet, &descriptorWrite);
-	}
-
-	inline operator VkDescriptorSetLayout() const { return _DescriptorSetLayout; }
-};
-
-template<typename DescriptorSetType>
-class DescriptorSet : public DescriptorSetType
-{
-private:
-	gpu::DescriptorSetLayout _DescriptorSetLayout;
-	gpu::DescriptorSet _DescriptorSet;
-
-public:
-	DescriptorSet(gpu::Device& device)
-	{
-		_DescriptorSetLayout = device.CreateDescriptorSetLayout(DescriptorSetType::GetBindings().size(), DescriptorSetType::GetBindings().data());
-		_DescriptorSet = _DescriptorSetLayout.CreateDescriptorSet(device);
-	}
-
-	inline void Update(gpu::Device& device)
-	{ 
-		_DescriptorSetLayout.UpdateDescriptorSet(device, _DescriptorSet, this);
-	}
-
-	inline VkDescriptorSetLayout GetLayout() const { return _DescriptorSetLayout; }
-	inline operator VkDescriptorSet() const { return _DescriptorSet; }
-};

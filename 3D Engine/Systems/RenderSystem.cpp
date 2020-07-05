@@ -14,11 +14,9 @@ UNIFORM_STRUCT(LocalToWorldUniformBuffer,
 	glm::mat4 InverseTranspose;
 );
 
-RenderSystem::RenderSystem(Engine& Engine)
-	: StaticMeshLayout(Engine.Device)
-	, ShadowLayout(Engine.Device)
-{
-}
+BEGIN_DESCRIPTOR_SET(StaticMeshDescriptors)
+	DESCRIPTOR(gpu::UniformBuffer, _LocalToWorldUniform)
+END_DESCRIPTOR_SET_STATIC(StaticMeshDescriptors)
 
 void RenderSystem::Start(Engine& Engine)
 {
@@ -30,10 +28,13 @@ void RenderSystem::Start(Engine& Engine)
 	ECS.OnComponentCreated<StaticMeshComponent>([&] (Entity& Entity, StaticMeshComponent& StaticMeshComponent)
 	{
 		const StaticMesh* StaticMesh = StaticMeshComponent.StaticMesh;
+
 		gpu::Buffer LocalToWorldUniform = Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniformBuffer));
-		StaticMeshDescriptors SurfaceDescriptors = { LocalToWorldUniform };
-		gpu::DescriptorSet SurfaceSet = StaticMeshLayout.CreateDescriptorSet(Device);
-		StaticMeshLayout.UpdateDescriptorSet(Device, SurfaceSet, SurfaceDescriptors);
+
+		StaticMeshDescriptors SurfaceDescriptors;
+		SurfaceDescriptors._LocalToWorldUniform = LocalToWorldUniform;
+
+		gpu::DescriptorSet SurfaceSet = Device.CreateDescriptorSet(SurfaceDescriptors);
 
 		ECS.AddComponent(Entity,
 			MeshProxy(
@@ -50,7 +51,7 @@ void RenderSystem::Start(Engine& Engine)
 
 	ECS.OnComponentCreated<DirectionalLight>([&] (Entity& Entity, DirectionalLight& DirectionalLight)
 	{
-		ECS.AddComponent(Entity, ShadowProxy(Device, ShadowLayout, DirectionalLight));
+		ECS.AddComponent(Entity, ShadowProxy(Device, DirectionalLight));
 	});
 }
 

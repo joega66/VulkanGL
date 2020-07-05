@@ -17,11 +17,20 @@ UNIFORM_STRUCT(CameraUniformBufferParams,
 	float _pad1;
 );
 
+BEGIN_DESCRIPTOR_SET(CameraDescriptors)
+	DESCRIPTOR(gpu::UniformBuffer, _CameraUniform)
+	DESCRIPTOR(gpu::SampledImage, _SceneDepth)
+	DESCRIPTOR(gpu::SampledImage, _GBuffer0)
+	DESCRIPTOR(gpu::SampledImage, _GBuffer1)
+	DESCRIPTOR(gpu::StorageImage, _SceneColor)
+	DESCRIPTOR(gpu::StorageImage, _SSGIHistory)
+END_DESCRIPTOR_SET_STATIC(CameraDescriptors)
+
 CameraProxy::CameraProxy(Engine& engine)
-	: _CameraDescriptorSet(engine.Device)
 {
+	_CameraDescriptorSet = engine.Device.CreateDescriptorSet<CameraDescriptors>();
+
 	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBufferParams));
-	_CameraDescriptorSet._CameraUniform = _CameraUniformBuffer;
 
 	engine._Screen.OnScreenResize([this, &engine] (int32 width, int32 height)
 	{
@@ -42,12 +51,15 @@ CameraProxy::CameraProxy(Engine& engine)
 
 		const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
 
-		_CameraDescriptorSet._SceneDepth = gpu::DescriptorImageInfo(_SceneDepth, sampler);
-		_CameraDescriptorSet._GBuffer0 = gpu::DescriptorImageInfo(_GBuffer0, sampler);
-		_CameraDescriptorSet._GBuffer1 = gpu::DescriptorImageInfo(_GBuffer1, sampler);
-		_CameraDescriptorSet._SceneColor = gpu::DescriptorImageInfo(_SceneColor);
-		_CameraDescriptorSet._SSGIHistory = gpu::DescriptorImageInfo(_SSGIHistory);
-		_CameraDescriptorSet.Update(device);
+		CameraDescriptors cameraDescriptors;
+		cameraDescriptors._CameraUniform = { _CameraUniformBuffer };
+		cameraDescriptors._SceneDepth = { _SceneDepth, sampler };
+		cameraDescriptors._GBuffer0 = { _GBuffer0, sampler };
+		cameraDescriptors._GBuffer1 = { _GBuffer1, sampler };
+		cameraDescriptors._SceneColor = _SceneColor;
+		cameraDescriptors._SSGIHistory = _SSGIHistory;
+		
+		device.UpdateDescriptorSet(_CameraDescriptorSet, cameraDescriptors);
 
 		gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 

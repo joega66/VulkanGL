@@ -362,8 +362,8 @@ VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& Imag
 	DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 }
 
-VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image) 
-	: VulkanDescriptorImageInfo(Image.GetImageView()) 
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image)
+	: VulkanDescriptorImageInfo(Image.GetImageView())
 {
 }
 
@@ -374,7 +374,7 @@ VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImageView& Imag
 	DescriptorImageInfo.imageLayout = ChooseImageLayout(ImageView.GetFormat());
 }
 
-VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler& Sampler) 
+VulkanDescriptorImageInfo::VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler& Sampler)
 	: VulkanDescriptorImageInfo(Image.GetImageView(), Sampler)
 {
 }
@@ -393,4 +393,25 @@ bool VulkanDescriptorImageInfo::operator==(const VulkanImage& Image)
 bool VulkanDescriptorImageInfo::operator!=(const VulkanImage& Image)
 {
 	return !(*this == Image);
+}
+
+VulkanSampler2D::VulkanSampler2D(const VulkanImageView& imageView, const VulkanSampler& sampler)
+{
+	descriptorImageInfo.sampler = sampler.GetHandle();
+	descriptorImageInfo.imageView = imageView.GetHandle();
+	descriptorImageInfo.imageLayout = ChooseImageLayout(imageView.GetFormat());
+}
+
+VulkanImage2D::VulkanImage2D(const VulkanImage& image)
+{
+	descriptorImageInfo.sampler = nullptr;
+	descriptorImageInfo.imageView = image.GetImageView().GetHandle();
+	descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+}
+
+VulkanImage2D::VulkanImage2D(const VulkanImageView& imageView)
+{
+	descriptorImageInfo.sampler = nullptr;
+	descriptorImageInfo.imageView = imageView.GetHandle();
+	descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 }

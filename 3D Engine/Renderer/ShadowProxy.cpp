@@ -8,7 +8,11 @@ UNIFORM_STRUCT(LightViewProjUniformParams,
 	glm::mat4 _InvLightViewProj;
 );
 
-ShadowProxy::ShadowProxy(gpu::Device& device, DescriptorSetLayout<ShadowDescriptors>& shadowLayout, const DirectionalLight& directionalLight)
+BEGIN_DESCRIPTOR_SET(ShadowDescriptors)
+	DESCRIPTOR(gpu::UniformBuffer, _LightViewProjBuffer)
+END_DESCRIPTOR_SET_STATIC(ShadowDescriptors)
+
+ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directionalLight)
 	: _Width(Platform::GetFloat("Engine.ini", "Shadows", "Width", 400.0f))
 	, _ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
 	, _ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
@@ -30,11 +34,10 @@ ShadowProxy::ShadowProxy(gpu::Device& device, DescriptorSetLayout<ShadowDescript
 	
 	_RenderPass = device.CreateRenderPass(rpDesc);
 
-	ShadowDescriptors descriptors;
-	descriptors._LightViewProjBuffer = _LightViewProjBuffer;
+	ShadowDescriptors shadowDescriptors;
+	shadowDescriptors._LightViewProjBuffer = _LightViewProjBuffer;
 	
-	_DescriptorSet = shadowLayout.CreateDescriptorSet(device);
-	shadowLayout.UpdateDescriptorSet(device, _DescriptorSet, descriptors);
+	_DescriptorSet = device.CreateDescriptorSet(shadowDescriptors);
 }
 
 void ShadowProxy::Update(gpu::Device& device, const DirectionalLight& directionalLight)
