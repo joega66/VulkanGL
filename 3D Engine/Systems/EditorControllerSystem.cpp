@@ -5,43 +5,43 @@
 #include <GPU/GPUShader.h>
 #include <imgui/imgui.h>
 
-void EditorControllerSystem::Start(Engine& Engine)
+void EditorControllerSystem::Start(Engine& engine)
 {
-	Engine._Input.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
+	engine._Input.AddShortcut("Recompile Shaders", { EKeyCode::LeftControl, EKeyCode::LeftShift, EKeyCode::Period });
 }
 
-void EditorControllerSystem::Update(Engine& Engine)
+void EditorControllerSystem::Update(Engine& engine)
 {
 	if (ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard)
 	{
 		return;
 	}
 	
-	Cursor& Cursor = Engine._Cursor;
-	Input& Input = Engine._Input;
-	Camera& Camera = Engine.Camera;
+	Cursor& cursor = engine._Cursor;
+	Input& input = engine._Input;
+	Camera& camera = engine.Camera;
 
-	const float DS = Cursor.MouseScrollSpeed * Cursor.MouseScrollDelta.y;
-	Camera.TranslateBy(DS);
+	const float ds = cursor.MouseScrollSpeed * cursor.MouseScrollDelta.y;
+	camera.TranslateBy(ds);
 
-	if (Input.GetKeyDown(EKeyCode::MouseLeft))
+	if (input.GetKeyDown(EKeyCode::MouseLeft))
 	{
 		// Disable the mouse while looking around.
-		Cursor.Mode = ECursorMode::Disabled;
+		cursor.Mode = ECursorMode::Disabled;
 
-		if (!Camera.bFreeze)
+		if (!camera.bFreeze)
 		{
-			const glm::vec2 Degrees = glm::vec2(Cursor.Position.x - Cursor.Last.x, -(Cursor.Last.y - Cursor.Position.y)) * Cursor.Sensitivity;
-			Camera.RotateBy(Degrees);
+			const glm::vec2 degrees = glm::vec2(cursor.Position.x - cursor.Last.x, -(cursor.Last.y - cursor.Position.y)) * cursor.Sensitivity;
+			camera.RotateBy(degrees);
 		}
 	}
-	else if (Input.GetKeyUp(EKeyCode::MouseLeft))
+	else if (input.GetKeyUp(EKeyCode::MouseLeft))
 	{
-		Cursor.Mode = ECursorMode::Normal;
+		cursor.Mode = ECursorMode::Normal;
 	}
 
-	if (Input.GetShortcutUp("Recompile Shaders"))
+	if (input.GetShortcutUp("Recompile Shaders"))
 	{
-		Engine.ShaderLibrary.RecompileShaders();
+		engine.ShaderLibrary.RecompileShaders();
 	}
 }

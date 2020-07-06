@@ -315,20 +315,17 @@ void VulkanShaderLibrary::RecompileShaders()
 		const ShaderCompilationInfo& CompileInfo = Shader->compilationInfo;
 		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.filename);
 
-		//if (LastWriteTime > CompileInfo.LastWriteTime)
+		if (LastWriteTime > CompileInfo.lastWriteTime)
 		{
 			// Destroy the old shader module.
 			vkDestroyShaderModule(Device, CompileInfo.shaderModule, nullptr);
 
-			const ShaderCompilationInfo NewCompilationInfo = CompileShader(
+			Shader->compilationInfo = CompileShader(
 				CompileInfo.worker,
 				CompileInfo.filename, 
 				CompileInfo.entrypoint,
 				CompileInfo.stage, 
-				CompileInfo.type
-			);
-
-			Shader->compilationInfo = NewCompilationInfo;
+				CompileInfo.type);
 		}
 	}
 

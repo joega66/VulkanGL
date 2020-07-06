@@ -1,11 +1,7 @@
 #include "SceneRenderer.h"
-#include <GPU/GPUShader.h>
 #include <Engine/Engine.h>
-#include <Engine/AssetManager.h>
-#include <Engine/Screen.h>
 #include <Components/RenderSettings.h>
 #include <Systems/UserInterface.h>
-#include "FullscreenQuad.h"
 #include "ShadowProxy.h"
 #include "PostProcessing.h"
 

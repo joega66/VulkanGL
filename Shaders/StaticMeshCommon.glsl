@@ -24,14 +24,7 @@ SURFACE(out) outSurface;
 #endif
 
 #ifdef MESH_SET
-
-layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniform
-{
-	mat4 transform;
-	mat4 inverse;
-	mat4 inverseTranspose;
-} _LocalToWorld;
-
+layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniformBlock { LocalToWorldUniform _LocalToWorld; };
 #endif
 
 #if VERTEX_SHADER

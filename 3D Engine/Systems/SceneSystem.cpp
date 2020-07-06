@@ -7,67 +7,67 @@
 #include <Engine/Engine.h>
 #include <Engine/AssetManager.h>
 
-void SceneSystem::Start(Engine& Engine)
+void SceneSystem::Start(Engine& engine)
 {
-	auto& ECS = Engine._ECS;
+	auto& ecs = engine._ECS;
 
-	const std::string ScenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");
-	const SceneLoadRequest SceneLoadReq(ScenePath, false);
+	const std::string scenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");
+	const SceneLoadRequest sceneLoadReq(scenePath, false);
 
-	HandleSceneLoadRequest(Engine, SceneLoadReq);
+	HandleSceneLoadRequest(engine, sceneLoadReq);
 
-	const float64 X = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
-	const float64 Y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
-	const float64 Z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
+	const float64 x = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
+	const float64 y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
+	const float64 z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
-	auto Light = ECS.CreateEntity("DirectionalLight");
-	auto& DirectionalLight = ECS.AddComponent(Light, struct DirectionalLight());
-	DirectionalLight.Intensity = Platform::GetFloat("Engine.ini", "DirectionalLight", "Intensity", 5.0f);
-	DirectionalLight.Direction = glm::vec3(X, Y, Z);
-	DirectionalLight.ShadowType = EShadowType::Soft;
-	DirectionalLight.DepthBiasConstantFactor = 1.75f;
-	DirectionalLight.DepthBiasSlopeFactor = 1.75f;
+	auto light = ecs.CreateEntity("DirectionalLight");
+	auto& directionalLight = ecs.AddComponent(light, DirectionalLight());
+	directionalLight.Intensity = Platform::GetFloat("Engine.ini", "DirectionalLight", "Intensity", 5.0f);
+	directionalLight.Direction = glm::vec3(x, y, z);
+	directionalLight.ShadowType = EShadowType::Soft;
+	directionalLight.DepthBiasConstantFactor = 1.75f;
+	directionalLight.DepthBiasSlopeFactor = 1.75f;
 
-	const std::string SkyboxPath = Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/");
-	Skybox* Skybox = Engine.Assets.LoadSkybox("Default_Skybox", SkyboxPath);
+	const std::string skyboxPath = Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/");
+	Skybox* skybox = engine.Assets.LoadSkybox("Default_Skybox", skyboxPath);
 
-	auto SkyboxEntity = ECS.CreateEntity("Skybox");
-	ECS.AddComponent(SkyboxEntity, SkyboxComponent(Skybox));
+	auto skyboxEntity = ecs.CreateEntity("Skybox");
+	ecs.AddComponent(skyboxEntity, SkyboxComponent(skybox));
 }
 
-void SceneSystem::Update(Engine& Engine)
+void SceneSystem::Update(Engine& engine)
 {
-	auto& ECS = Engine._ECS;
+	auto& ecs = engine._ECS;
 
-	for (auto& Entity : ECS.GetEntities<SceneLoadRequest>())
+	for (auto& entity : ecs.GetEntities<SceneLoadRequest>())
 	{
-		auto& SceneLoadReq = ECS.GetComponent<SceneLoadRequest>(Entity);
-		HandleSceneLoadRequest(Engine, SceneLoadReq);
-		ECS.Destroy(Entity);
+		auto& sceneLoadReq = ecs.GetComponent<SceneLoadRequest>(entity);
+		HandleSceneLoadRequest(engine, sceneLoadReq);
+		ecs.Destroy(entity);
 	}
 }
 
-void SceneSystem::HandleSceneLoadRequest(Engine& Engine, const SceneLoadRequest& SceneLoadRequest)
+void SceneSystem::HandleSceneLoadRequest(Engine& engine, const SceneLoadRequest& sceneLoadRequest)
 {
-	auto& ECS = Engine._ECS;
+	auto& ecs = engine._ECS;
 
-	if (SceneLoadRequest.DestroyOldEntities)
+	if (sceneLoadRequest.destroyOldEntities)
 	{
-		for (auto& Entity : ECS.GetEntities<StaticMeshComponent>())
+		for (auto& entity : ecs.GetEntities<StaticMeshComponent>())
 		{
-			ECS.Destroy(Entity);
+			ecs.Destroy(entity);
 		}
 	}
 
-	const std::vector<const StaticMesh*> Scene = Engine.Assets.LoadStaticMesh(SceneLoadRequest.Path, true);
-	const float Scale = Platform::GetFloat("Engine.ini", "Scene", "Scale", 0.1f);
+	const std::vector<const StaticMesh*> scene = engine.Assets.LoadStaticMesh(sceneLoadRequest.path, true);
+	const float scale = Platform::GetFloat("Engine.ini", "Scene", "Scale", 0.1f);
 
-	for (auto StaticMesh : Scene)
+	for (auto staticMesh : scene)
 	{
-		auto Entity = ECS.CreateEntity(StaticMesh->Name.c_str());
-		ECS.AddComponent(Entity, StaticMeshComponent(StaticMesh, StaticMesh->Materials.front()));
+		auto entity = ecs.CreateEntity(staticMesh->Name.c_str());
+		ecs.AddComponent(entity, StaticMeshComponent(staticMesh, staticMesh->Materials.front()));
 
-		auto& Transform = ECS.GetComponent<class Transform>(Entity);
-		Transform.Scale(ECS, glm::vec3(Scale));
+		auto& transform = ecs.GetComponent<Transform>(entity);
+		transform.Scale(ecs, glm::vec3(scale));
 	}
 }

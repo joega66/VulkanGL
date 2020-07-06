@@ -3,18 +3,17 @@
 #include <ECS/Component.h>
 #include <filesystem>
 
-class SceneLoadRequest : public Component
+struct SceneLoadRequest : public Component
 {
-public:
-	SceneLoadRequest(const std::filesystem::path& Path, bool DestroyOldEntities)
-		: Path(Path), DestroyOldEntities(DestroyOldEntities)
+	SceneLoadRequest(const std::filesystem::path& path, bool destroyOldEntities)
+		: path(path), destroyOldEntities(destroyOldEntities)
 	{
 	}
 
 	/** Path to the new scene. */
-	std::filesystem::path Path;
+	std::filesystem::path path;
 	/** Whether to destroy the old scene entities. */
-	bool DestroyOldEntities = true;
+	bool destroyOldEntities = true;
 };
 
 class Engine;
@@ -27,9 +26,9 @@ class SceneSystem : public ISystem
 {
 	SYSTEM(SceneSystem);
 public:
-	virtual void Start(Engine& Engine) override;
-	virtual void Update(Engine& Engine) override;
+	virtual void Start(Engine& engine) override;
+	virtual void Update(Engine& engine) override;
 
 private:
-	void HandleSceneLoadRequest(Engine& Engine, const SceneLoadRequest& SceneLoadRequest);
+	void HandleSceneLoadRequest(Engine& engine, const SceneLoadRequest& sceneLoadRequest);
 };

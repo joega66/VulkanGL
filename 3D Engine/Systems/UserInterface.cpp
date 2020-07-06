@@ -16,8 +16,8 @@
 class UserInterfaceVS : public gpu::Shader
 {
 public:
-	UserInterfaceVS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	UserInterfaceVS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
@@ -27,16 +27,16 @@ public:
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo Info = { "../Shaders/UserInterfaceVS.glsl", "main", EShaderStage::Vertex };
-		return Info;
+		static ShaderInfo info = { "../Shaders/UserInterfaceVS.glsl", "main", EShaderStage::Vertex };
+		return info;
 	}
 };
 
 class UserInterfaceFS : public gpu::Shader
 {
 public:
-	UserInterfaceFS(const ShaderCompilationInfo& CompilationInfo)
-		: gpu::Shader(CompilationInfo)
+	UserInterfaceFS(const ShaderCompilationInfo& compilationInfo)
+		: gpu::Shader(compilationInfo)
 	{
 	}
 
@@ -46,8 +46,8 @@ public:
 
 	static const ShaderInfo& GetShaderInfo()
 	{
-		static ShaderInfo Info = { "../Shaders/UserInterfaceFS.glsl", "main", EShaderStage::Fragment };
-		return Info;
+		static ShaderInfo info = { "../Shaders/UserInterfaceFS.glsl", "main", EShaderStage::Fragment };
+		return info;
 	}
 };
 
@@ -56,45 +56,45 @@ UserInterface::~UserInterface()
 	ImGui::DestroyContext();
 }
 
-void UserInterface::Start(Engine& Engine)
+void UserInterface::Start(Engine& engine)
 {
 	ImGui::CreateContext();
 
-	ImGui_ImplGlfw_InitForVulkan(Engine._Platform.Window, true);
+	ImGui_ImplGlfw_InitForVulkan(engine._Platform.Window, true);
 
-	ImGuiIO& IO = ImGui::GetIO();
-	IO.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
-	ImGuiStyle& Style = ImGui::GetStyle();
-	Style.FrameBorderSize = 1.0f;
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.FrameBorderSize = 1.0f;
 
 	ImGui::StyleColorsDark();
 
-	Engine._ECS.AddSingletonComponent<ImGuiRenderData>(Engine);
+	engine._ECS.AddSingletonComponent<ImGuiRenderData>(engine);
 }
 
-void UserInterface::Update(Engine& Engine)
+void UserInterface::Update(Engine& engine)
 {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ShowUI(Engine);
+	ShowUI(engine);
 
 	ImGui::ShowDemoWindow();
 
 	ImGui::Render();
 
-	Engine._ECS.GetSingletonComponent<ImGuiRenderData>().Update(Engine.Device);
+	engine._ECS.GetSingletonComponent<ImGuiRenderData>().Update(engine.Device);
 }
 
-void UserInterface::ShowUI(Engine& Engine)
+void UserInterface::ShowUI(Engine& engine)
 {
-	ShowRenderSettings(Engine);
-	ShowMainMenu(Engine);
-	ShowEntities(Engine);
+	ShowRenderSettings(engine);
+	ShowMainMenu(engine);
+	ShowEntities(engine);
 }
 
-void UserInterface::ShowMainMenu(Engine& Engine)
+void UserInterface::ShowMainMenu(Engine& engine)
 {
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -102,10 +102,10 @@ void UserInterface::ShowMainMenu(Engine& Engine)
 		{
 			if (ImGui::MenuItem("Open"))
 			{
-				if (const std::filesystem::path FilePath = Engine._Platform.DisplayFileExplorer(); !FilePath.empty())
+				if (const std::filesystem::path filePath = engine._Platform.DisplayFileExplorer(); !filePath.empty())
 				{
-					auto Message = Engine._ECS.CreateEntity();
-					Engine._ECS.AddComponent(Message, SceneLoadRequest{ FilePath, true });
+					auto message = engine._ECS.CreateEntity();
+					engine._ECS.AddComponent(message, SceneLoadRequest{ filePath, true });
 				}
 			}
 			ImGui::EndMenu();
@@ -114,9 +114,9 @@ void UserInterface::ShowMainMenu(Engine& Engine)
 	}
 }
 
-void UserInterface::ShowRenderSettings(Engine& Engine)
+void UserInterface::ShowRenderSettings(Engine& engine)
 {
-	auto& ECS = Engine._ECS;
+	auto& ecs = engine._ECS;
 	
 	if (!ImGui::Begin("Render Settings"))
 	{
@@ -124,25 +124,25 @@ void UserInterface::ShowRenderSettings(Engine& Engine)
 		return;
 	}
 
-	auto& Settings = ECS.GetSingletonComponent<RenderSettings>();
+	auto& settings = ecs.GetSingletonComponent<RenderSettings>();
 
 	if (ImGui::TreeNode("Camera"))
 	{
-		ImGui::DragFloat("Exposure Adjustment", &Settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
-		ImGui::DragFloat("Exposure Bias", &Settings.ExposureBias, 0.05f, 0.0f, 16.0f);
+		ImGui::DragFloat("Exposure Adjustment", &settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
+		ImGui::DragFloat("Exposure Bias", &settings.ExposureBias, 0.05f, 0.0f, 16.0f);
 		ImGui::TreePop();
 	}
 
 	if (ImGui::TreeNode("Ray Tracing"))
 	{
-		ImGui::Checkbox("Ray Tracing", &Settings.bRayTracing);
+		ImGui::Checkbox("Ray Tracing", &settings.bRayTracing);
 		ImGui::TreePop();
 	}
 
 	ImGui::End();
 }
 
-void UserInterface::ShowEntities(Engine& Engine)
+void UserInterface::ShowEntities(Engine& engine)
 {
 	if (!ImGui::Begin("Entities"))
 	{
@@ -150,118 +150,118 @@ void UserInterface::ShowEntities(Engine& Engine)
 		return;
 	}
 
-	EntityManager& ECS = Engine._ECS;
-	EntityIterator EntityIter = ECS.Iter();
-	static Entity Selected;
-	static ImGuiTextFilter Filter;
+	EntityManager& ecs = engine._ECS;
+	EntityIterator entityIter = ecs.Iter();
+	static Entity selected;
+	static ImGuiTextFilter filter;
 
-	Filter.Draw("");
+	filter.Draw("");
 
-	while (!EntityIter.End())
+	while (!entityIter.End())
 	{
-		auto& Entity = EntityIter.Next();
+		auto& entity = entityIter.Next();
 
-		const auto& Name = ECS.GetName(Entity);
+		const auto& name = ecs.GetName(entity);
 
-		if (Filter.PassFilter(Name.c_str()))
+		if (filter.PassFilter(name.c_str()))
 		{
-			bool IsSelected = ImGui::Selectable(Name.c_str(), Selected == Entity, ImGuiSelectableFlags_AllowDoubleClick);
+			const bool isSelected = ImGui::Selectable(name.c_str(), selected == entity, ImGuiSelectableFlags_AllowDoubleClick);
 
-			if (IsSelected)
+			if (isSelected)
 			{
-				Selected = Entity;
+				selected = entity;
 			}
 			
-			if (IsSelected && ImGui::IsMouseDoubleClicked(0) && ECS.HasComponent<Bounds>(Entity))
+			if (isSelected && ImGui::IsMouseDoubleClicked(0) && ecs.HasComponent<Bounds>(entity))
 			{
-				const auto& Bounds = ECS.GetComponent<class Bounds>(Entity);
-				const glm::vec3 Center = Bounds.Box.GetCenter();
-				Engine.Camera.LookAt(Center);
+				const auto& bounds = ecs.GetComponent<Bounds>(entity);
+				const glm::vec3 center = bounds.Box.GetCenter();
+				engine.Camera.LookAt(center);
 			}
 		}
 	}
 	
 	ImGui::End();
 
-	if (!ImGui::Begin("Components") || !ECS.IsValid(Selected))
+	if (!ImGui::Begin("Components") || !ecs.IsValid(selected))
 	{
 		ImGui::End();
 		return;
 	}
 
-	if (ECS.HasComponent<Transform>(Selected))
+	if (ecs.HasComponent<Transform>(selected))
 	{
 		ImGui::Text("Transform");
 
-		auto& Transform = ECS.GetComponent<class Transform>(Selected);
-		glm::vec3 Position = Transform.GetPosition();
-		glm::vec3 Rotation = Transform.GetRotation();
-		glm::vec3 Scale = Transform.GetScale();
-		float Angle = Transform.GetAngle();
+		auto& transform = ecs.GetComponent<Transform>(selected);
+		glm::vec3 position = transform.GetPosition();
+		glm::vec3 rotation = transform.GetRotation();
+		glm::vec3 scale = transform.GetScale();
+		float angle = transform.GetAngle();
 
-		ImGui::DragFloat3("Position", &Position[0], 0.05f);
-		ImGui::DragFloat3("Rotation", &Rotation[0], 0.05f);
-		ImGui::DragFloat("Angle", &Angle, 1.0f, -180.0, 180.0f);
-		ImGui::DragFloat3("Scale", &Scale[0], 0.05f);
+		ImGui::DragFloat3("Position", &position[0], 0.05f);
+		ImGui::DragFloat3("Rotation", &rotation[0], 0.05f);
+		ImGui::DragFloat("Angle", &angle, 1.0f, -180.0, 180.0f);
+		ImGui::DragFloat3("Scale", &scale[0], 0.05f);
 
-		if (Position != Transform.GetPosition() ||
-			Rotation != Transform.GetRotation() ||
-			Scale != Transform.GetScale() || 
-			Angle != Transform.GetAngle())
+		if (position != transform.GetPosition() ||
+			rotation != transform.GetRotation() ||
+			scale != transform.GetScale() ||
+			angle != transform.GetAngle())
 		{
-			Transform.Translate(ECS, Position);
-			Transform.Rotate(ECS, Rotation, Angle);
-			Transform.Scale(ECS, Scale);
+			transform.Translate(ecs, position);
+			transform.Rotate(ecs, rotation, angle);
+			transform.Scale(ecs, scale);
 		}
 	}
 
-	if (ECS.HasComponent<DirectionalLight>(Selected))
+	if (ecs.HasComponent<DirectionalLight>(selected))
 	{
 		ImGui::Text("Directional Light");
 
-		auto& Light = ECS.GetComponent<DirectionalLight>(Selected);
-		glm::vec3 Direction = Light.Direction;
-		glm::vec3 Color = Light.Color;
-		float Intensity = Light.Intensity;
+		auto& light = ecs.GetComponent<DirectionalLight>(selected);
+		glm::vec3 direction = light.Direction;
+		glm::vec3 color = light.Color;
+		float intensity = light.Intensity;
 
-		ImGui::DragFloat3("Direction", &Direction[0]);
-		ImGui::ColorEdit3("Color", &Color[0]);
-		ImGui::DragFloat("Intensity", &Intensity, 1.0f, 0.0f);
+		ImGui::DragFloat3("Direction", &direction[0]);
+		ImGui::ColorEdit3("Color", &color[0]);
+		ImGui::DragFloat("Intensity", &intensity, 1.0f, 0.0f);
 
-		if (Direction != Light.Direction ||
-			Color != Light.Color ||
-			Intensity != Light.Intensity)
+		if (direction != light.Direction ||
+			color != light.Color ||
+			intensity != light.Intensity)
 		{
-			Light.Direction = Direction;
-			Light.Color = Color;
-			Light.Intensity = Intensity;
+			light.Direction = direction;
+			light.Color = color;
+			light.Intensity = intensity;
 		}
 
-		if (ECS.HasComponent<ShadowProxy>(Selected))
+		if (ecs.HasComponent<ShadowProxy>(selected))
 		{
 			ImGui::Text("Shadows");
-			auto& Shadow = ECS.GetComponent<ShadowProxy>(Selected);
-			ImGui::DragFloat("Width", &Shadow._Width);
-			ImGui::DragFloat("ZNear", &Shadow._ZNear);
-			ImGui::DragFloat("ZFar", &Shadow._ZFar);
+			auto& shadow = ecs.GetComponent<ShadowProxy>(selected);
+			ImGui::DragFloat("Width", &shadow._Width);
+			ImGui::DragFloat("ZNear", &shadow._ZNear);
+			ImGui::DragFloat("ZFar", &shadow._ZFar);
 		}
 	}
 
-	if (ECS.HasComponent<SkyboxComponent>(Selected))
+	if (ecs.HasComponent<SkyboxComponent>(selected))
 	{
 		ImGui::Text("Skybox");
 
-		auto& Device = Engine.Device;
-		auto& SkyboxComp = ECS.GetComponent<SkyboxComponent>(Selected);
-		Skybox* Skybox = SkyboxComp.Skybox;
+		auto& device = engine.Device;
+		auto& skyboxComp = ecs.GetComponent<SkyboxComponent>(selected);
+		Skybox* skybox = skyboxComp.Skybox;
 		
-		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
+		for (uint32 face = CubemapFace_Begin; face != CubemapFace_End; face++)
 		{
-			gpu::TextureID& TextureID = const_cast<gpu::TextureID&>(const_cast<gpu::Image*>(Skybox->GetFaces()[Face])->GetTextureID());
-			ImGui::Text(Skybox::CubemapFaces[Face].c_str());
+			gpu::TextureID& textureID = const_cast<gpu::TextureID&>(const_cast<gpu::Image*>(skybox->GetFaces()[face])->GetTextureID());
+			ImGui::Text(Skybox::CubemapFaces[face].c_str());
 			ImGui::SameLine();
 			ImGui::ImageButton(
-				&TextureID,
+				&textureID,
 				ImVec2(64.0f, 64.0f)
 			);
 		}
@@ -270,27 +270,27 @@ void UserInterface::ShowEntities(Engine& Engine)
 	ImGui::End();
 }
 
-ImGuiRenderData::ImGuiRenderData(Engine& Engine)
+ImGuiRenderData::ImGuiRenderData(Engine& engine)
 {
-	gpu::Device& Device = Engine.Device;
-	ImGuiIO& Imgui = ImGui::GetIO();
+	gpu::Device& device = engine.Device;
+	ImGuiIO& imgui = ImGui::GetIO();
 
-	unsigned char* Pixels;
-	int32 Width, Height;
-	Imgui.Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
+	unsigned char* pixels;
+	int32 width, height;
+	imgui.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	FontImage = Device.CreateImage(Width, Height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	SamplerID = Device.CreateSampler({}).GetSamplerID();
+	fontImage = device.CreateImage(width, height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	samplerID = device.CreateSampler({}).GetSamplerID();
 
-	gpu::UploadImageData(Device, Pixels, FontImage);
+	gpu::UploadImageData(device, pixels, fontImage);
 
-	Imgui.Fonts->TexID = &const_cast<gpu::TextureID&>(FontImage.GetTextureID());
+	imgui.Fonts->TexID = &const_cast<gpu::TextureID&>(fontImage.GetTextureID());
 
 	psoDesc.depthStencilState.depthTestEnable = false;
 	psoDesc.depthStencilState.depthWriteEnable = false;
 	psoDesc.depthStencilState.depthCompareTest = EDepthCompareTest::Always;
-	psoDesc.shaderStages.vertex = Engine.ShaderLibrary.FindShader<UserInterfaceVS>();
-	psoDesc.shaderStages.fragment = Engine.ShaderLibrary.FindShader<UserInterfaceFS>();
+	psoDesc.shaderStages.vertex = engine.ShaderLibrary.FindShader<UserInterfaceVS>();
+	psoDesc.shaderStages.fragment = engine.ShaderLibrary.FindShader<UserInterfaceFS>();
 	psoDesc.colorBlendAttachmentStates.resize(1, {});
 	psoDesc.colorBlendAttachmentStates[0].blendEnable = true;
 	psoDesc.colorBlendAttachmentStates[0].srcColorBlendFactor = EBlendFactor::SRC_ALPHA;
@@ -306,108 +306,108 @@ ImGuiRenderData::ImGuiRenderData(Engine& Engine)
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
 
-	Engine._Screen.OnScreenResize([this, &Device] (int32 Width, int32 Height)
+	engine._Screen.OnScreenResize([this, &device] (int32 width, int32 height)
 	{
-		ImGuiIO& ImGui = ImGui::GetIO();
-		ImGui.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
+		ImGuiIO& imgui = ImGui::GetIO();
+		imgui.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
 
-		psoDesc.viewport.width = Width;
-		psoDesc.viewport.height = Height;
+		psoDesc.viewport.width = width;
+		psoDesc.viewport.height = height;
 	});
 }
 
-void ImGuiRenderData::Render(gpu::Device& Device, gpu::CommandList& CmdList, const gpu::RenderPass& RenderPass)
+void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass)
 {
-	CmdList.BeginRenderPass(RenderPass);
+	cmdList.BeginRenderPass(renderPass);
 
-	const ImDrawData* DrawData = ImGui::GetDrawData();
+	const ImDrawData* drawData = ImGui::GetDrawData();
 
-	if (DrawData->CmdListsCount > 0)
+	if (drawData->CmdListsCount > 0)
 	{
-		psoDesc.renderPass = RenderPass;
+		psoDesc.renderPass = renderPass;
 
-		gpu::Pipeline Pipeline = Device.CreatePipeline(psoDesc);
+		gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
 
-		CmdList.BindPipeline(Pipeline);
+		cmdList.BindPipeline(pipeline);
 
-		CmdList.PushConstants(Pipeline, psoDesc.shaderStages.vertex, &ScaleAndTranslation);
+		cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &scaleAndTranslation);
 
-		const std::vector<VkDescriptorSet> DescriptorSets = { Device.GetTextures().GetSet(), Device.GetSamplers().GetSet() };
-		CmdList.BindDescriptorSets(Pipeline, DescriptorSets.size(), DescriptorSets.data());
+		const std::vector<VkDescriptorSet> descriptorSets = { device.GetTextures().GetSet(), device.GetSamplers().GetSet() };
+		cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
-		CmdList.BindVertexBuffers(1, &VertexBuffer);
+		cmdList.BindVertexBuffers(1, &vertexBuffer);
 
-		const ImVec2 ClipOff = DrawData->DisplayPos;         // (0,0) unless using multi-viewports
-		const ImVec2 ClipScale = DrawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
+		const ImVec2 clipOff = drawData->DisplayPos;         // (0,0) unless using multi-viewports
+		const ImVec2 clipScale = drawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
-		int32 VertexOffset = 0;
-		int32 IndexOffset = 0;
+		int32 vertexOffset = 0;
+		int32 indexOffset = 0;
 
-		for (int32 CmdListIndex = 0; CmdListIndex < DrawData->CmdListsCount; CmdListIndex++)
+		for (int32 cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++)
 		{
-			const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndex];
+			const ImDrawList* drawList = drawData->CmdLists[cmdListIndex];
 
-			for (int32 DrawCmdIndex = 0; DrawCmdIndex < DrawList->CmdBuffer.Size; DrawCmdIndex++)
+			for (int32 drawCmdIndex = 0; drawCmdIndex < drawList->CmdBuffer.Size; drawCmdIndex++)
 			{
-				const ImDrawCmd* DrawCmd = &DrawList->CmdBuffer[DrawCmdIndex];
+				const ImDrawCmd* drawCmd = &drawList->CmdBuffer[drawCmdIndex];
 				
-				ImVec4 ClipRect;
-				ClipRect.x = std::max((DrawCmd->ClipRect.x - ClipOff.x) * ClipScale.x, 0.0f);
-				ClipRect.y = std::max((DrawCmd->ClipRect.y - ClipOff.y) * ClipScale.y, 0.0f);
-				ClipRect.z = (DrawCmd->ClipRect.z - ClipOff.x) * ClipScale.x;
-				ClipRect.w = (DrawCmd->ClipRect.w - ClipOff.y) * ClipScale.y;
+				ImVec4 clipRect;
+				clipRect.x = std::max((drawCmd->ClipRect.x - clipOff.x) * clipScale.x, 0.0f);
+				clipRect.y = std::max((drawCmd->ClipRect.y - clipOff.y) * clipScale.y, 0.0f);
+				clipRect.z = (drawCmd->ClipRect.z - clipOff.x) * clipScale.x;
+				clipRect.w = (drawCmd->ClipRect.w - clipOff.y) * clipScale.y;
 
-				Scissor Scissor;
-				Scissor.offset.x = static_cast<int32_t>(ClipRect.x);
-				Scissor.offset.y = static_cast<int32_t>(ClipRect.y);
-				Scissor.extent.x = static_cast<uint32_t>(ClipRect.z - ClipRect.x);
-				Scissor.extent.y = static_cast<uint32_t>(ClipRect.w - ClipRect.y);
+				Scissor scissor;
+				scissor.offset.x = static_cast<int32_t>(clipRect.x);
+				scissor.offset.y = static_cast<int32_t>(clipRect.y);
+				scissor.extent.x = static_cast<uint32_t>(clipRect.z - clipRect.x);
+				scissor.extent.y = static_cast<uint32_t>(clipRect.w - clipRect.y);
 
-				CmdList.SetScissor(1, &Scissor);
+				cmdList.SetScissor(1, &scissor);
 
-				const glm::uvec2 PushConstants(*static_cast<uint32*>(DrawCmd->TextureId), SamplerID);
-				CmdList.PushConstants(Pipeline, psoDesc.shaderStages.fragment, &PushConstants);
+				const glm::uvec2 pushConstants(*static_cast<uint32*>(drawCmd->TextureId), samplerID);
+				cmdList.PushConstants(pipeline, psoDesc.shaderStages.fragment, &pushConstants);
 
-				CmdList.DrawIndexed(IndexBuffer, DrawCmd->ElemCount, 1, DrawCmd->IdxOffset + IndexOffset, DrawCmd->VtxOffset + VertexOffset, 0, EIndexType::UINT16);
+				cmdList.DrawIndexed(indexBuffer, drawCmd->ElemCount, 1, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset, 0, EIndexType::UINT16);
 			}
 
-			IndexOffset += DrawList->IdxBuffer.Size;
-			VertexOffset += DrawList->VtxBuffer.Size;
+			indexOffset += drawList->IdxBuffer.Size;
+			vertexOffset += drawList->VtxBuffer.Size;
 		}
 	}
 
-	CmdList.EndRenderPass();
+	cmdList.EndRenderPass();
 }
 
-void ImGuiRenderData::Update(gpu::Device& Device)
+void ImGuiRenderData::Update(gpu::Device& device)
 {
-	const ImDrawData* DrawData = ImGui::GetDrawData();
-	const uint32 VertexBufferSize = DrawData->TotalVtxCount * sizeof(ImDrawVert);
-	const uint32 IndexBufferSize = DrawData->TotalIdxCount * sizeof(ImDrawIdx);
+	const ImDrawData* drawData = ImGui::GetDrawData();
+	const uint32 vertexBufferSize = drawData->TotalVtxCount * sizeof(ImDrawVert);
+	const uint32 indexBufferSize = drawData->TotalIdxCount * sizeof(ImDrawIdx);
 
-	if ((VertexBufferSize == 0) || (IndexBufferSize == 0))
+	if ((vertexBufferSize == 0) || (indexBufferSize == 0))
 	{
 		return;
 	}
 
-	VertexBuffer = Device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::HostVisible, VertexBufferSize);
-	ImDrawVert* VertexData = static_cast<ImDrawVert*>(VertexBuffer.GetData());
-	IndexBuffer = Device.CreateBuffer(EBufferUsage::Index | EBufferUsage::HostVisible, IndexBufferSize);
-	ImDrawIdx* IndexData = static_cast<ImDrawIdx*>(IndexBuffer.GetData());
+	vertexBuffer = device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::HostVisible, vertexBufferSize);
+	ImDrawVert* vertexData = static_cast<ImDrawVert*>(vertexBuffer.GetData());
+	indexBuffer = device.CreateBuffer(EBufferUsage::Index | EBufferUsage::HostVisible, indexBufferSize);
+	ImDrawIdx* indexData = static_cast<ImDrawIdx*>(indexBuffer.GetData());
 
-	for (int32 CmdListIndx = 0; CmdListIndx < DrawData->CmdListsCount; CmdListIndx++)
+	for (int32 cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++)
 	{
-		const ImDrawList* DrawList = DrawData->CmdLists[CmdListIndx];
-		Platform::Memcpy(VertexData, DrawList->VtxBuffer.Data, DrawList->VtxBuffer.Size * sizeof(ImDrawVert));
-		Platform::Memcpy(IndexData, DrawList->IdxBuffer.Data, DrawList->IdxBuffer.Size * sizeof(ImDrawIdx));
-		VertexData += DrawList->VtxBuffer.Size;
-		IndexData += DrawList->IdxBuffer.Size;
+		const ImDrawList* drawList = drawData->CmdLists[cmdListIndex];
+		Platform::Memcpy(vertexData, drawList->VtxBuffer.Data, drawList->VtxBuffer.Size * sizeof(ImDrawVert));
+		Platform::Memcpy(indexData, drawList->IdxBuffer.Data, drawList->IdxBuffer.Size * sizeof(ImDrawIdx));
+		vertexData += drawList->VtxBuffer.Size;
+		indexData += drawList->IdxBuffer.Size;
 	}
 
-	ImGuiIO& ImGui = ImGui::GetIO();
+	ImGuiIO& imgui = ImGui::GetIO();
 	
-	ScaleAndTranslation.x = 2.0f / ImGui.DisplaySize.x;
-	ScaleAndTranslation.y = 2.0f / ImGui.DisplaySize.y;
-	ScaleAndTranslation.z = -1.0f - DrawData->DisplayPos.x * ScaleAndTranslation.x;
-	ScaleAndTranslation.w = -1.0f - DrawData->DisplayPos.y * ScaleAndTranslation.y;
+	scaleAndTranslation.x = 2.0f / imgui.DisplaySize.x;
+	scaleAndTranslation.y = 2.0f / imgui.DisplaySize.y;
+	scaleAndTranslation.z = -1.0f - drawData->DisplayPos.x * scaleAndTranslation.x;
+	scaleAndTranslation.w = -1.0f - drawData->DisplayPos.y * scaleAndTranslation.y;
 }

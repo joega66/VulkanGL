@@ -8,21 +8,21 @@ class CameraProxy;
 
 struct ImGuiRenderData : public Component
 {
-	gpu::Image FontImage;
-	gpu::SamplerID SamplerID;
+	gpu::Image fontImage;
+	gpu::SamplerID samplerID;
 
-	glm::vec4 ScaleAndTranslation;
+	glm::vec4 scaleAndTranslation;
 
-	gpu::Buffer VertexBuffer;
-	gpu::Buffer IndexBuffer;
+	gpu::Buffer vertexBuffer;
+	gpu::Buffer indexBuffer;
 
 	PipelineStateDesc psoDesc = {};
 
-	ImGuiRenderData(Engine& Engine);
+	ImGuiRenderData(Engine& engine);
 
-	void Render(gpu::Device& Device, gpu::CommandList& CmdList, const gpu::RenderPass& RenderPass);
+	void Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass);
 
-	void Update(gpu::Device& Device);
+	void Update(gpu::Device& device);
 };
 
 class UserInterface : public IRenderSystem
@@ -30,12 +30,12 @@ class UserInterface : public IRenderSystem
 public:
 	~UserInterface();
 	
-	virtual void Start(Engine& Engine) override;
-	virtual void Update(Engine& Engine) override;
+	virtual void Start(Engine& engine) override;
+	virtual void Update(Engine& engine) override;
 
 private:
-	void ShowUI(Engine& Engine);
-	void ShowMainMenu(Engine& Engine);
-	void ShowRenderSettings(Engine& Engine);
-	void ShowEntities(Engine& Engine);
+	void ShowUI(Engine& engine);
+	void ShowMainMenu(Engine& engine);
+	void ShowRenderSettings(Engine& engine);
+	void ShowEntities(Engine& engine);
 };

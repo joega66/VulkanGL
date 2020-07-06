@@ -7,6 +7,6 @@ class Engine;
 class RenderSystem : public IRenderSystem
 {
 public:
-	virtual void Start(Engine& Engine) override;
-	virtual void Update(Engine& Engine) override;
+	virtual void Start(Engine& engine) override;
+	virtual void Update(Engine& engine) override;
 };
