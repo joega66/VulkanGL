@@ -4,13 +4,13 @@
 #include <Components/SkyboxComponent.h>
 
 BEGIN_PUSH_CONSTANTS(RayTracingParams)
-	SHADER_PARAMETER(glm::vec4, _Origin)
-	SHADER_PARAMETER(glm::vec4, _Horizontal)
-	SHADER_PARAMETER(glm::vec4, _Vertical)
-	SHADER_PARAMETER(glm::vec4, _LowerLeftCorner)
-	SHADER_PARAMETER(gpu::TextureID, _Skybox)
-	SHADER_PARAMETER(gpu::SamplerID, _SkyboxSampler)
-	SHADER_PARAMETER(uint32, _FrameNumber)
+	MEMBER(glm::vec4, _Origin)
+	MEMBER(glm::vec4, _Horizontal)
+	MEMBER(glm::vec4, _Vertical)
+	MEMBER(glm::vec4, _LowerLeftCorner)
+	MEMBER(gpu::TextureID, _Skybox)
+	MEMBER(gpu::SamplerID, _SkyboxSampler)
+	MEMBER(uint32, _FrameNumber)
 END_PUSH_CONSTANTS(RayTracingParams)
 
 class RayTracingCS : public gpu::Shader

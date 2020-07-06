@@ -12,14 +12,8 @@
 namespace gpu
 {
 	using Buffer = VulkanBuffer;
-	using DescriptorBufferInfo = VulkanDescriptorBufferInfo;
-	using UniformBuffer = VulkanUniformBuffer;
-	using StorageBuffer = VulkanStorageBuffer;
 	using Image = VulkanImage;
 	using ImageView = VulkanImageView;
-	using DescriptorImageInfo = VulkanDescriptorImageInfo;
-	using SampledImage = VulkanSampler2D;
-	using StorageImage = VulkanImage2D;
 	using Sampler = VulkanSampler;
 	using DescriptorSet = VulkanDescriptorSet;
 	using DescriptorSetLayout = VulkanDescriptorSetLayout;

@@ -1,6 +1,8 @@
 #include "GPU/GPUShader.h"
 #include "GPU/GPUDefinitions.h"
 
+std::string gShaderStructs;
+
 template<>
 std::string ShaderTypeSerializer::Serialize<uint32>()
 {
@@ -11,6 +13,12 @@ template<>
 std::string ShaderTypeSerializer::Serialize<float>()
 {
 	return "float";
+}
+
+template<>
+std::string ShaderTypeSerializer::Serialize<glm::vec2>()
+{
+	return "vec2";
 }
 
 template<>
@@ -47,28 +55,4 @@ template<>
 std::string ShaderTypeSerializer::Serialize<gpu::ImageID>()
 {
 	return "uint";
-}
-
-template<>
-EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::SampledImage>()
-{
-	return EDescriptorType::SampledImage;
-}
-
-template<>
-EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::StorageImage>()
-{
-	return EDescriptorType::StorageImage;
-}
-
-template<>
-EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::UniformBuffer>()
-{
-	return EDescriptorType::UniformBuffer;
-}
-
-template<>
-EDescriptorType ShaderTypeSerializer::GetDescriptorType<gpu::StorageBuffer>()
-{
-	return EDescriptorType::StorageBuffer;
 }

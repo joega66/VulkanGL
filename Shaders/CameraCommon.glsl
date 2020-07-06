@@ -6,20 +6,7 @@
 
 #ifdef CAMERA_SET
 
-layout(binding = 0, set = CAMERA_SET) uniform CameraUniform
-{
-	mat4 worldToView;
-	mat4 viewToClip;
-	mat4 worldToClip;
-	mat4 clipToWorld;
-	vec3 position;
-	float _pad0;
-	float aspectRatio;
-	float fieldOfView;
-	vec2 screenDims;
-	vec3 clipData;
-	float _pad1;
-} _Camera;
+layout(binding = 0, set = CAMERA_SET) uniform CameraUniformBlock { CameraUniform _Camera; };
 layout(binding = 1, set = CAMERA_SET) uniform sampler2D _SceneDepth;
 layout(binding = 2, set = CAMERA_SET) uniform sampler2D _GBuffer0;
 layout(binding = 3, set = CAMERA_SET) uniform sampler2D _GBuffer1;

@@ -7,13 +7,13 @@
 #include <Components/SkyboxComponent.h>
 #include <Engine/Camera.h>
 
-BEGIN_PUSH_CONSTANTS(LightData)
-	SHADER_PARAMETER(glm::vec4, _L)
-	SHADER_PARAMETER(glm::vec4, _Radiance)
-	SHADER_PARAMETER(glm::mat4, _LightViewProj)
-	SHADER_PARAMETER(gpu::TextureID, _ShadowMap)
-	SHADER_PARAMETER(gpu::SamplerID, _ShadowMapSampler)
-END_PUSH_CONSTANTS(LightData)
+BEGIN_PUSH_CONSTANTS(LightingParams)
+	MEMBER(glm::vec4, _L)
+	MEMBER(glm::vec4, _Radiance)
+	MEMBER(glm::mat4, _LightViewProj)
+	MEMBER(gpu::TextureID, _ShadowMap)
+	MEMBER(gpu::SamplerID, _ShadowMapSampler)
+END_PUSH_CONSTANTS(LightingParams)
 
 class LightingPassCS : public gpu::Shader
 {
@@ -28,7 +28,7 @@ public:
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
-		worker << LightData::decl;
+		worker << LightingParams::decl;
 	}
 
 	static const ShaderInfo& GetShaderInfo()
@@ -54,7 +54,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		const auto& directionalLight = _ECS.GetComponent<DirectionalLight>(entity);
 		const auto& shadow = _ECS.GetComponent<ShadowProxy>(entity);
 
-		LightData light;
+		LightingParams light;
 		light._L = glm::vec4(glm::normalize(directionalLight.Direction), 0.0f);
 		light._Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
 		light._LightViewProj = shadow.GetLightViewProjMatrix();
@@ -71,7 +71,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		const auto& pointLight = _ECS.GetComponent<PointLight>(entity);
 		const auto& transform = _ECS.GetComponent<Transform>(entity);
 
-		LightData light;
+		LightingParams light;
 		light._L = glm::vec4(transform.GetPosition(), 1.0f);
 		light._Radiance = glm::vec4(pointLight.Intensity * pointLight.Color, 1.0f);
 
@@ -83,7 +83,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 	ComputeSSGI(camera, cmdList);
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const LightData& light)
+void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const LightingParams& light)
 {
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<LightingPassCS>();
 
@@ -113,9 +113,9 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 }
 
 BEGIN_PUSH_CONSTANTS(SSGIParams)
-	SHADER_PARAMETER(gpu::TextureID, _Skybox)
-	SHADER_PARAMETER(gpu::SamplerID, _SkyboxSampler)
-	SHADER_PARAMETER(uint32, _FrameNumber)
+	MEMBER(gpu::TextureID, _Skybox)
+	MEMBER(gpu::SamplerID, _SkyboxSampler)
+	MEMBER(uint32, _FrameNumber)
 END_PUSH_CONSTANTS(SSGIParams)
 
 class SSGI : public gpu::Shader

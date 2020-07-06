@@ -3,21 +3,21 @@
 #include <ECS/EntityManager.h>
 #include "MaterialShader.h"
 
-UNIFORM_STRUCT(LightViewProjUniformParams,
-	glm::mat4 _LightViewProj;
-	glm::mat4 _InvLightViewProj;
-);
+BEGIN_UNIFORM_BUFFER(ShadowUniform)
+	MEMBER(glm::mat4, _LightViewProj)
+	MEMBER(glm::mat4, _InvLightViewProj)
+END_UNIFORM_BUFFER(ShadowUniform)
 
 BEGIN_DESCRIPTOR_SET(ShadowDescriptors)
-	DESCRIPTOR(gpu::UniformBuffer, _LightViewProjBuffer)
-END_DESCRIPTOR_SET_STATIC(ShadowDescriptors)
+	DESCRIPTOR(gpu::UniformBuffer<ShadowUniform>, _ShadowUniform)
+END_DESCRIPTOR_SET(ShadowDescriptors)
 
 ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directionalLight)
 	: _Width(Platform::GetFloat("Engine.ini", "Shadows", "Width", 400.0f))
 	, _ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
 	, _ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
 {
-	_LightViewProjBuffer = device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LightViewProjUniformParams));
+	_ShadowUniform = device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(ShadowUniform));
 
 	const glm::ivec2 shadowMapRes(Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048));
 
@@ -35,7 +35,7 @@ ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directiona
 	_RenderPass = device.CreateRenderPass(rpDesc);
 
 	ShadowDescriptors shadowDescriptors;
-	shadowDescriptors._LightViewProjBuffer = _LightViewProjBuffer;
+	shadowDescriptors._ShadowUniform = _ShadowUniform;
 	
 	_DescriptorSet = device.CreateDescriptorSet(shadowDescriptors);
 }
@@ -55,9 +55,9 @@ void ShadowProxy::Update(gpu::Device& device, const DirectionalLight& directiona
 	_LightViewProjMatrix = lightProjMatrix * lightViewMatrix;
 	_LightViewProjMatrixInv = glm::inverse(_LightViewProjMatrix);
 
-	LightViewProjUniformParams* lightViewProjMatrixPtr = static_cast<LightViewProjUniformParams*>(_LightViewProjBuffer.GetData());
-	lightViewProjMatrixPtr->_LightViewProj = _LightViewProjMatrix;
-	lightViewProjMatrixPtr->_InvLightViewProj = _LightViewProjMatrixInv;
+	ShadowUniform* shadowUniform = static_cast<ShadowUniform*>(_ShadowUniform.GetData());
+	shadowUniform->_LightViewProj = _LightViewProjMatrix;
+	shadowUniform->_InvLightViewProj = _LightViewProjMatrixInv;
 }
 
 template<EMeshType meshType>

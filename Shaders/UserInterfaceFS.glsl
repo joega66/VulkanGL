@@ -1,4 +1,3 @@
-#version 450
 #define TEXTURE_SET 0
 #define SAMPLER_SET 1
 #include "SceneResources.glsl"

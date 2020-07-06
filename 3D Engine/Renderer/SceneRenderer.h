@@ -26,7 +26,7 @@ private:
 	void RenderGBufferPass(CameraProxy& camera, gpu::CommandList& cmdList);
 	void RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList);
 	void ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList);
-	void ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const struct LightData& light);
+	void ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const struct LightingParams& light);
 	void ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList);
 	void ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmdList);
 	void RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList);

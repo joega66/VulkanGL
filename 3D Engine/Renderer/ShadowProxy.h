@@ -27,7 +27,7 @@ public:
 	inline const glm::mat4& GetLightViewProjMatrix() const { return _LightViewProjMatrix; }
 	inline const glm::mat4& GetLightViewProjMatrixInv() const { return _LightViewProjMatrixInv; }
 	inline const glm::vec4& GetL() const { return _L; }
-	inline const glm::vec4 GetRadiance() const { return _Radiance; }
+	inline const glm::vec4& GetRadiance() const { return _Radiance; }
 
 private:
 	gpu::RenderPass _RenderPass;
@@ -44,7 +44,7 @@ private:
 
 	glm::vec4 _Radiance;
 
-	gpu::Buffer _LightViewProjBuffer;
+	gpu::Buffer _ShadowUniform;
 
 	gpu::Image _ShadowMap;
 

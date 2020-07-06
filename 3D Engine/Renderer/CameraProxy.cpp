@@ -3,35 +3,35 @@
 #include <Engine/Screen.h>
 #include <Components/Bounds.h>
 
-UNIFORM_STRUCT(CameraUniformBufferParams,
-	glm::mat4 worldToView;
-	glm::mat4 viewToClip;
-	glm::mat4 worldToClip;
-	glm::mat4 clipToWorld;
-	glm::vec3 position;
-	float _pad0;
-	float aspectRatio;
-	float fov;
-	glm::vec2 screenDims;
-	glm::vec3 clipData;
-	float _pad1;
-);
+BEGIN_UNIFORM_BUFFER(CameraUniform)
+	MEMBER(glm::mat4, worldToView)
+	MEMBER(glm::mat4, viewToClip)
+	MEMBER(glm::mat4, worldToClip)
+	MEMBER(glm::mat4, clipToWorld)
+	MEMBER(glm::vec3, position)
+	MEMBER(float, _pad0)
+	MEMBER(float, aspectRatio)
+	MEMBER(float, fov)
+	MEMBER(glm::vec2, screenDims)
+	MEMBER(glm::vec3, clipData)
+	MEMBER(float, _pad1)
+END_UNIFORM_BUFFER(CameraUniform)
 
 BEGIN_DESCRIPTOR_SET(CameraDescriptors)
-	DESCRIPTOR(gpu::UniformBuffer, _CameraUniform)
+	DESCRIPTOR(gpu::UniformBuffer<CameraUniform>, _CameraUniform)
 	DESCRIPTOR(gpu::SampledImage, _SceneDepth)
 	DESCRIPTOR(gpu::SampledImage, _GBuffer0)
 	DESCRIPTOR(gpu::SampledImage, _GBuffer1)
 	DESCRIPTOR(gpu::StorageImage, _SceneColor)
 	DESCRIPTOR(gpu::StorageImage, _SSGIHistory)
-END_DESCRIPTOR_SET_STATIC(CameraDescriptors)
+END_DESCRIPTOR_SET(CameraDescriptors)
 
 CameraProxy::CameraProxy(Engine& engine)
 {
 	_CameraDescriptorSet = engine.Device.CreateDescriptorSet<CameraDescriptors>();
 
-	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniformBufferParams));
-
+	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniform));
+	
 	engine._Screen.OnScreenResize([this, &engine] (int32 width, int32 height)
 	{
 		auto& device = engine.Device;
@@ -93,7 +93,7 @@ void CameraProxy::UpdateCameraUniform(Engine& engine)
 		camera.GetNearPlane() - camera.GetFarPlane(),
 		camera.GetFarPlane());
 
-	const CameraUniformBufferParams cameraUniformBufferParams =
+	const CameraUniform cameraUniform =
 	{
 		camera.GetWorldToView(),
 		camera.GetViewToClip(),
@@ -108,7 +108,7 @@ void CameraProxy::UpdateCameraUniform(Engine& engine)
 		0.0f,
 	};
 
-	Platform::Memcpy(_CameraUniformBuffer.GetData(), &cameraUniformBufferParams, sizeof(cameraUniformBufferParams));
+	Platform::Memcpy(_CameraUniformBuffer.GetData(), &cameraUniform, sizeof(cameraUniform));
 }
 
 void CameraProxy::BuildMeshDrawCommands(Engine& engine)

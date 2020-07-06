@@ -1,5 +1,5 @@
 #pragma once
-#include <GPU/GPUResource.h>
+#include <GPU/GPUShader.h>
 #include <vulkan/vulkan.h>
 #include <optional>
 
@@ -83,24 +83,6 @@ private:
 	VkDescriptorBufferInfo DescriptorBufferInfo;
 };
 
-class VulkanUniformBuffer : public VulkanDescriptorBufferInfo 
-{
-public:
-	VulkanUniformBuffer() = default;
-	VulkanUniformBuffer(const VulkanBuffer& buffer) : VulkanDescriptorBufferInfo(buffer)
-	{
-	}
-};
-
-class VulkanStorageBuffer : public VulkanDescriptorBufferInfo 
-{
-public:
-	VulkanStorageBuffer() = default;
-	VulkanStorageBuffer(const VulkanBuffer& buffer) : VulkanDescriptorBufferInfo(buffer)
-	{
-	}
-};
-
 class VulkanAllocator
 {
 public:
@@ -121,4 +103,26 @@ private:
 	std::vector<std::unique_ptr<VulkanMemory>> MemoryBuffers;
 
 	[[nodiscard]] VulkanMemory AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
+};
+
+namespace gpu
+{
+	template<typename T>
+	class UniformBuffer : public VulkanDescriptorBufferInfo
+	{
+	public:
+		UniformBuffer() = default;
+		UniformBuffer(const VulkanBuffer& buffer) : VulkanDescriptorBufferInfo(buffer) {}
+
+		static EDescriptorType GetDescriptorType() { return EDescriptorType::UniformBuffer; }
+	};
+
+	class StorageBuffer : public VulkanDescriptorBufferInfo
+	{
+	public:
+		StorageBuffer() = default;
+		StorageBuffer(const VulkanBuffer& buffer) : VulkanDescriptorBufferInfo(buffer) {}
+
+		static EDescriptorType GetDescriptorType() { return EDescriptorType::StorageBuffer; }
+	};
 };

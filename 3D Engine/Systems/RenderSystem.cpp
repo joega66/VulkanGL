@@ -8,15 +8,15 @@
 #include <Renderer/MeshProxy.h>
 #include <Renderer/ShadowProxy.h>
 
-UNIFORM_STRUCT(LocalToWorldUniformBuffer,
-	glm::mat4 Transform;
-	glm::mat4 Inverse;
-	glm::mat4 InverseTranspose;
-);
+BEGIN_UNIFORM_BUFFER(LocalToWorldUniformBuffer)
+	MEMBER(glm::mat4, transform)
+	MEMBER(glm::mat4, inverse)
+	MEMBER(glm::mat4, inverseTranspose)
+END_UNIFORM_BUFFER(LocalToWorldUniformBuffer)
 
 BEGIN_DESCRIPTOR_SET(StaticMeshDescriptors)
-	DESCRIPTOR(gpu::UniformBuffer, _LocalToWorldUniform)
-END_DESCRIPTOR_SET_STATIC(StaticMeshDescriptors)
+	DESCRIPTOR(gpu::UniformBuffer<LocalToWorldUniformBuffer>, _LocalToWorldUniform)
+END_DESCRIPTOR_SET(StaticMeshDescriptors)
 
 void RenderSystem::Start(Engine& Engine)
 {
@@ -77,9 +77,9 @@ void RenderSystem::Update(Engine& Engine)
 		Bounds.Box = StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
 
 		LocalToWorldUniformBuffer* LocalToWorldUniformBuffer = static_cast<struct LocalToWorldUniformBuffer*>(MeshProxy._LocalToWorldUniform.GetData());
-		LocalToWorldUniformBuffer->Transform = Transform.GetLocalToWorld();
-		LocalToWorldUniformBuffer->Inverse = glm::inverse(Transform.GetLocalToWorld());
-		LocalToWorldUniformBuffer->InverseTranspose = glm::transpose(LocalToWorldUniformBuffer->Inverse);
+		LocalToWorldUniformBuffer->transform = Transform.GetLocalToWorld();
+		LocalToWorldUniformBuffer->inverse = glm::inverse(Transform.GetLocalToWorld());
+		LocalToWorldUniformBuffer->inverseTranspose = glm::transpose(LocalToWorldUniformBuffer->inverse);
 
 		// Add to the light's shadow depth rendering.
 		for (auto Entity : ECS.GetEntities<ShadowProxy>())

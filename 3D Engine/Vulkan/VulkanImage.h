@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanBindlessResources.h"
-#include <GPU/GPUResource.h>
+#include <GPU/GPUShader.h>
 
 class VulkanDevice;
 
@@ -86,44 +86,30 @@ private:
 	VulkanSamplerID SamplerID = {};
 };
 
-class VulkanDescriptorImageInfo
+namespace gpu
 {
-public:
-	VulkanDescriptorImageInfo() = default;
-	VulkanDescriptorImageInfo(const VulkanImageView& ImageView);
-	VulkanDescriptorImageInfo(const VulkanImage& Image);
-	VulkanDescriptorImageInfo(const VulkanImageView& ImageView, const VulkanSampler& Sampler);
-	VulkanDescriptorImageInfo(const VulkanImage& Image, const VulkanSampler& Sampler);
+	class SampledImage
+	{
+	public:
+		SampledImage() = default;
+		SampledImage(const VulkanImageView& imageView, const VulkanSampler& sampler);
 
-	void SetImage(const VulkanImage& Image);
+		static EDescriptorType GetDescriptorType() { return EDescriptorType::SampledImage; }
 
-	bool operator==(const VulkanImage& Image);
-	bool operator!=(const VulkanImage& Image);
+	private:
+		VkDescriptorImageInfo descriptorImageInfo = { nullptr };
+	};
 
-private:
-	VkDescriptorImageInfo DescriptorImageInfo = { nullptr };
-};
+	class StorageImage
+	{
+	public:
+		StorageImage() = default;
+		StorageImage(const VulkanImage& image);
+		StorageImage(const VulkanImageView& imageView);
 
-class VulkanSampler2D
-{
-public:
-	VulkanSampler2D() = default;
-	VulkanSampler2D(const VulkanImageView& imageView, const VulkanSampler& sampler);
+		static EDescriptorType GetDescriptorType() { return EDescriptorType::StorageImage; }
 
-	/*bool operator==(const VulkanImage & Image);
-	bool operator!=(const VulkanImage & Image);*/
-
-private:
-	VkDescriptorImageInfo descriptorImageInfo = { nullptr };
-};
-
-class VulkanImage2D
-{
-public:
-	VulkanImage2D() = default;
-	VulkanImage2D(const VulkanImage& image);
-	VulkanImage2D(const VulkanImageView& imageView);
-
-private:
-	VkDescriptorImageInfo descriptorImageInfo = { nullptr };
-};
+	private:
+		VkDescriptorImageInfo descriptorImageInfo = { nullptr };
+	};
+}

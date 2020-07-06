@@ -4,11 +4,9 @@
 #include <Components/RenderSettings.h>
 
 BEGIN_PUSH_CONSTANTS(PostProcessingParams)
-	SHADER_PARAMETER(float, _ExposureAdjustment)
-	SHADER_PARAMETER(float, _ExposureBias)
+	MEMBER(float, _ExposureAdjustment)
+	MEMBER(float, _ExposureBias)
 END_PUSH_CONSTANTS(PostProcessingParams)
-
-DECLARE_DESCRIPTOR_SET(PostProcessingDescriptors);
 
 class PostProcessingCS : public gpu::Shader
 {

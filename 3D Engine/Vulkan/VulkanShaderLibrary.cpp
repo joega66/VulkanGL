@@ -253,8 +253,8 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 		CompileOptions.AddMacroDefinition(Define, Value);
 	}
 
-	const std::string ShaderStruct = Worker.GetPushConstantStruct().empty() == false ? 
-		"layout(push_constant) uniform _ShaderStruct{" + Worker.GetPushConstantStruct() + "};\n"
+	const std::string pushConstantDecl = Worker.GetPushConstantMembers().empty() == false ?
+		"layout(push_constant) uniform _ShaderStruct{" + std::string(Worker.GetPushConstantMembers()) + "};\n"
 		: "";
 	
 	shaderc::Compiler Compiler;
@@ -262,7 +262,7 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 
 	do
 	{
-		const std::string SourceText = ShaderStruct + Platform::FileRead(Filename);
+		const std::string SourceText = Platform::FileRead(Filename, pushConstantDecl + gShaderStructs);
 
 		SpvCompilationResult = Compiler.CompileGlslToSpv(SourceText, ShaderKind, Filename.c_str(), EntryPoint.c_str(), CompileOptions);
 

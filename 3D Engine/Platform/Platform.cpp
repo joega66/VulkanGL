@@ -40,7 +40,7 @@ void WindowsPlatform::Exit()
 	exit(-1);
 }
 
-std::string WindowsPlatform::FileRead(const std::string& Filename)
+std::string WindowsPlatform::FileRead(const std::string& Filename, const std::string& prependText)
 {
 	std::ifstream File(Filename, std::ios::ate | std::ios::binary);
 
@@ -48,10 +48,12 @@ std::string WindowsPlatform::FileRead(const std::string& Filename)
 
 	size_t FileSize = static_cast<size_t>(File.tellg());
 	std::string Buffer;
-	Buffer.resize(FileSize);
+	Buffer.resize(FileSize + prependText.size());
+
+	memcpy(Buffer.data(), prependText.data(), prependText.size());
 
 	File.seekg(0);
-	File.read(Buffer.data(), FileSize);
+	File.read(Buffer.data() + prependText.size(), FileSize);
 	File.close();
 
 	return Buffer;
