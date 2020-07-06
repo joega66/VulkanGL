@@ -4,8 +4,8 @@
 #include "MaterialShader.h"
 
 BEGIN_UNIFORM_BUFFER(ShadowUniform)
-	MEMBER(glm::mat4, _LightViewProj)
-	MEMBER(glm::mat4, _InvLightViewProj)
+	MEMBER(glm::mat4, lightViewProj)
+	MEMBER(glm::mat4, invLightViewProj)
 END_UNIFORM_BUFFER(ShadowUniform)
 
 BEGIN_DESCRIPTOR_SET(ShadowDescriptors)
@@ -56,8 +56,8 @@ void ShadowProxy::Update(gpu::Device& device, const DirectionalLight& directiona
 	_LightViewProjMatrixInv = glm::inverse(_LightViewProjMatrix);
 
 	ShadowUniform* shadowUniform = static_cast<ShadowUniform*>(_ShadowUniform.GetData());
-	shadowUniform->_LightViewProj = _LightViewProjMatrix;
-	shadowUniform->_InvLightViewProj = _LightViewProjMatrixInv;
+	shadowUniform->lightViewProj = _LightViewProjMatrix;
+	shadowUniform->invLightViewProj = _LightViewProjMatrixInv;
 }
 
 template<EMeshType meshType>

@@ -1,11 +1,7 @@
 #define MESH_SET 1
 #include "MeshCommon.glsl"
 
-layout(binding = 0, set = 0) uniform LightViewProjBuffer
-{
-	mat4 _LightViewProj;
-	mat4 _InvLightViewProj;
-};
+layout(binding = 0, set = 0) uniform ShadowUniformBlock { ShadowUniform _Shadow; };
 
 void main()
 {
@@ -13,5 +9,5 @@ void main()
 
 	Surface_SetAttributes(worldPosition);
 
-	gl_Position = _LightViewProj * worldPosition;
+	gl_Position = _Shadow.lightViewProj * worldPosition;
 }
