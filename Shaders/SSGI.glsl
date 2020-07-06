@@ -34,9 +34,9 @@ void main()
 	vec3 indirectSpecular = vec3(0);
 
 	const float THICC = 0.1;
-	const float STRIDE = 8.0;
+	const float STRIDE = 16.0;
 	const float JITTER = 0.0;
-	const float STEPS = 75.0;
+	const float STEPS = 25.0;
 
 	if (TraceScreenSpaceRay(
 		csOrigin,

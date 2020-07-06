@@ -21,6 +21,7 @@ enum class EKeyCode : int32
 	A,
 	S,
 	D,
+	Delete,
 };
 
 /** Abstraction around GLFW input callbacks. */

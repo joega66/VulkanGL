@@ -3,6 +3,7 @@
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <Engine/Engine.h>
 #include <Engine/Screen.h>
+#include <Engine/Input.h>
 #include <Components/RenderSettings.h>
 #include <Components/Transform.h>
 #include <Components/Light.h>
@@ -152,10 +153,21 @@ void UserInterface::ShowEntities(Engine& engine)
 
 	EntityManager& ecs = engine._ECS;
 	EntityIterator entityIter = ecs.Iter();
-	static Entity selected;
-	static ImGuiTextFilter filter;
 
-	filter.Draw("");
+	static Entity entitySelected;
+	static Entity entityAfterSelected;
+	static ImGuiTextFilter entitySearchBar;	
+
+	if (ImGui::Button("New Entity"))
+	{
+		LOG("Creating an entity!");
+		entitySelected = ecs.CreateEntity();
+	}
+
+	ImGui::SameLine();
+	entitySearchBar.Draw("");
+
+	Entity prevEntity;
 
 	while (!entityIter.End())
 	{
@@ -163,37 +175,62 @@ void UserInterface::ShowEntities(Engine& engine)
 
 		const auto& name = ecs.GetName(entity);
 
-		if (filter.PassFilter(name.c_str()))
-		{
-			const bool isSelected = ImGui::Selectable(name.c_str(), selected == entity, ImGuiSelectableFlags_AllowDoubleClick);
+		if (!entitySearchBar.PassFilter(name.c_str())) continue;
 
-			if (isSelected)
+		bool isSelected = ImGui::Selectable(name.c_str(), entity == entitySelected, ImGuiSelectableFlags_AllowDoubleClick);
+
+		ImGui::OpenPopupOnItemClick(name.c_str(), ImGuiMouseButton_Right);
+
+		if (ImGui::BeginPopup(name.c_str()))
+		{
+			ImGui::MenuItem(name.c_str(), nullptr, false, false);
+			if (ImGui::MenuItem("Rename"))
 			{
-				selected = entity;
+				// @todo
 			}
-			
-			if (isSelected && ImGui::IsMouseDoubleClicked(0) && ecs.HasComponent<Bounds>(entity))
-			{
-				const auto& bounds = ecs.GetComponent<Bounds>(entity);
-				const glm::vec3 center = bounds.Box.GetCenter();
-				engine.Camera.LookAt(center);
-			}
+			ImGui::EndPopup();
 		}
+
+		if (isSelected)
+		{
+			entitySelected = entity;
+		}
+
+		if (prevEntity == entitySelected)
+		{
+			entityAfterSelected = entity;
+		}
+
+		// Focus on double clicked objects.
+		if (isSelected && ImGui::IsMouseDoubleClicked(0) && ecs.HasComponent<Bounds>(entity))
+		{
+			const auto& bounds = ecs.GetComponent<Bounds>(entity);
+			const glm::vec3 center = bounds.Box.GetCenter();
+			engine.Camera.LookAt(center);
+		}
+
+		prevEntity = entity;
+	}
+
+	if (engine._Input.GetKeyUp(EKeyCode::Delete))
+	{
+		ecs.Destroy(entitySelected);
+		entitySelected = entityAfterSelected;
 	}
 	
 	ImGui::End();
 
-	if (!ImGui::Begin("Components") || !ecs.IsValid(selected))
+	if (!ImGui::Begin("Components") || !ecs.IsValid(entitySelected))
 	{
 		ImGui::End();
 		return;
 	}
 
-	if (ecs.HasComponent<Transform>(selected))
-	{
-		ImGui::Text("Transform");
+	ImGui::Text(ecs.GetName(entitySelected).c_str());
 
-		auto& transform = ecs.GetComponent<Transform>(selected);
+	if (ecs.HasComponent<Transform>(entitySelected) && ImGui::TreeNode("Transform"))
+	{
+		auto& transform = ecs.GetComponent<Transform>(entitySelected);
 		glm::vec3 position = transform.GetPosition();
 		glm::vec3 rotation = transform.GetRotation();
 		glm::vec3 scale = transform.GetScale();
@@ -213,13 +250,13 @@ void UserInterface::ShowEntities(Engine& engine)
 			transform.Rotate(ecs, rotation, angle);
 			transform.Scale(ecs, scale);
 		}
+
+		ImGui::TreePop();
 	}
 
-	if (ecs.HasComponent<DirectionalLight>(selected))
+	if (ecs.HasComponent<DirectionalLight>(entitySelected) && ImGui::TreeNode("Directional Light"))
 	{
-		ImGui::Text("Directional Light");
-
-		auto& light = ecs.GetComponent<DirectionalLight>(selected);
+		auto& light = ecs.GetComponent<DirectionalLight>(entitySelected);
 		glm::vec3 direction = light.Direction;
 		glm::vec3 color = light.Color;
 		float intensity = light.Intensity;
@@ -237,22 +274,22 @@ void UserInterface::ShowEntities(Engine& engine)
 			light.Intensity = intensity;
 		}
 
-		if (ecs.HasComponent<ShadowProxy>(selected))
+		if (ecs.HasComponent<ShadowProxy>(entitySelected))
 		{
 			ImGui::Text("Shadows");
-			auto& shadow = ecs.GetComponent<ShadowProxy>(selected);
+			auto& shadow = ecs.GetComponent<ShadowProxy>(entitySelected);
 			ImGui::DragFloat("Width", &shadow._Width);
 			ImGui::DragFloat("ZNear", &shadow._ZNear);
 			ImGui::DragFloat("ZFar", &shadow._ZFar);
 		}
+
+		ImGui::TreePop();
 	}
 
-	if (ecs.HasComponent<SkyboxComponent>(selected))
+	if (ecs.HasComponent<SkyboxComponent>(entitySelected) && ImGui::TreeNode("Skybox"))
 	{
-		ImGui::Text("Skybox");
-
 		auto& device = engine.Device;
-		auto& skyboxComp = ecs.GetComponent<SkyboxComponent>(selected);
+		auto& skyboxComp = ecs.GetComponent<SkyboxComponent>(entitySelected);
 		Skybox* skybox = skyboxComp.Skybox;
 		
 		for (uint32 face = CubemapFace_Begin; face != CubemapFace_End; face++)
@@ -262,9 +299,10 @@ void UserInterface::ShowEntities(Engine& engine)
 			ImGui::SameLine();
 			ImGui::ImageButton(
 				&textureID,
-				ImVec2(64.0f, 64.0f)
-			);
+				ImVec2(64.0f, 64.0f));
 		}
+
+		ImGui::TreePop();
 	}
 
 	ImGui::End();

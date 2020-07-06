@@ -21,6 +21,7 @@ static std::unordered_map<int32, EKeyCode> GLFWKeyCodes =
 	ENTRY(GLFW_KEY_A, EKeyCode::A)
 	ENTRY(GLFW_KEY_S, EKeyCode::S)
 	ENTRY(GLFW_KEY_D, EKeyCode::D)
+	ENTRY(GLFW_KEY_DELETE, EKeyCode::Delete)
 };
 
 void Input::GLFWKeyboardEvent(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
