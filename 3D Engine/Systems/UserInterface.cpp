@@ -52,6 +52,13 @@ public:
 	}
 };
 
+#define SHOW_COMPONENT(type, ecs, entity, callback)					\
+	if (ecs.HasComponent<type>(entity) && ImGui::TreeNode(#type))	\
+	{																\
+		callback(ecs.GetComponent<type>(entity));					\
+		ImGui::TreePop();											\
+	}																\
+
 UserInterface::~UserInterface()
 {
 	ImGui::DestroyContext();
@@ -160,7 +167,6 @@ void UserInterface::ShowEntities(Engine& engine)
 
 	if (ImGui::Button("New Entity"))
 	{
-		LOG("Creating an entity!");
 		entitySelected = ecs.CreateEntity();
 	}
 
@@ -228,35 +234,57 @@ void UserInterface::ShowEntities(Engine& engine)
 
 	ImGui::Text(ecs.GetName(entitySelected).c_str());
 
-	if (ecs.HasComponent<Transform>(entitySelected) && ImGui::TreeNode("Transform"))
+	ImGui::SameLine();
+
+	if (ImGui::Button("Add Component"))
 	{
-		auto& transform = ecs.GetComponent<Transform>(entitySelected);
-		glm::vec3 position = transform.GetPosition();
-		glm::vec3 rotation = transform.GetRotation();
-		glm::vec3 scale = transform.GetScale();
-		float angle = transform.GetAngle();
-
-		ImGui::DragFloat3("Position", &position[0], 0.05f);
-		ImGui::DragFloat3("Rotation", &rotation[0], 0.05f);
-		ImGui::DragFloat("Angle", &angle, 1.0f, -180.0, 180.0f);
-		ImGui::DragFloat3("Scale", &scale[0], 0.05f);
-
-		if (position != transform.GetPosition() ||
-			rotation != transform.GetRotation() ||
-			scale != transform.GetScale() ||
-			angle != transform.GetAngle())
-		{
-			transform.Translate(ecs, position);
-			transform.Rotate(ecs, rotation, angle);
-			transform.Scale(ecs, scale);
-		}
-
-		ImGui::TreePop();
+		ImGui::OpenPopup("AddComponent");
 	}
 
-	if (ecs.HasComponent<DirectionalLight>(entitySelected) && ImGui::TreeNode("Directional Light"))
+	if (ImGui::BeginPopup("AddComponent"))
 	{
-		auto& light = ecs.GetComponent<DirectionalLight>(entitySelected);
+		if (ImGui::MenuItem("Directional Light"))
+		{
+			ecs.AddComponent<DirectionalLight>(entitySelected, DirectionalLight{});
+		}
+
+		ImGui::EndPopup();
+	}
+
+	SHOW_COMPONENT(Transform, ecs, entitySelected, [&](auto& transform)
+	{
+		glm::vec3 position = transform.GetPosition();
+		glm::vec3 eulerAngles = transform.GetEulerAngles();
+		glm::vec3 scale = transform.GetScale();
+
+		eulerAngles = glm::degrees(eulerAngles);
+
+		static constexpr float translationSpeed = 0.05f;
+		static constexpr float rotationSpeed = 0.05f;
+		static constexpr float scaleSpeed = 0.05f;
+
+		ImGui::DragFloat3("Position", &position[0], translationSpeed);
+		ImGui::DragFloat3("Rotation", &eulerAngles[0], rotationSpeed);
+		ImGui::DragFloat3("Scale", &scale[0], scaleSpeed);
+
+		eulerAngles = glm::radians(eulerAngles);
+
+		const glm::vec3 eulerDeltas(eulerAngles - transform.GetEulerAngles());
+
+		if (position != transform.GetPosition() ||
+			glm::abs(eulerDeltas.x) < 0.001 ||
+			glm::abs(eulerDeltas.y) < 0.001 ||
+			glm::abs(eulerDeltas.z) < 0.001 ||
+			scale != transform.GetScale())
+		{
+			transform.Translate(ecs, position);
+			transform.Rotate(ecs, eulerDeltas);
+			transform.Scale(ecs, scale);
+		}
+	});
+
+	SHOW_COMPONENT(DirectionalLight, ecs, entitySelected, [&] (auto& light)
+	{
 		glm::vec3 direction = light.Direction;
 		glm::vec3 color = light.Color;
 		float intensity = light.Intensity;
@@ -282,16 +310,12 @@ void UserInterface::ShowEntities(Engine& engine)
 			ImGui::DragFloat("ZNear", &shadow._ZNear);
 			ImGui::DragFloat("ZFar", &shadow._ZFar);
 		}
+	});
 
-		ImGui::TreePop();
-	}
-
-	if (ecs.HasComponent<SkyboxComponent>(entitySelected) && ImGui::TreeNode("Skybox"))
+	SHOW_COMPONENT(SkyboxComponent, ecs, entitySelected, [&] (auto& skyboxComp)
 	{
-		auto& device = engine.Device;
-		auto& skyboxComp = ecs.GetComponent<SkyboxComponent>(entitySelected);
 		Skybox* skybox = skyboxComp.Skybox;
-		
+
 		for (uint32 face = CubemapFace_Begin; face != CubemapFace_End; face++)
 		{
 			gpu::TextureID& textureID = const_cast<gpu::TextureID&>(const_cast<gpu::Image*>(skybox->GetFaces()[face])->GetTextureID());
@@ -301,9 +325,7 @@ void UserInterface::ShowEntities(Engine& engine)
 				&textureID,
 				ImVec2(64.0f, 64.0f));
 		}
-
-		ImGui::TreePop();
-	}
+	});
 
 	ImGui::End();
 }

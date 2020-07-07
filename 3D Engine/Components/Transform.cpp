@@ -1,117 +1,124 @@
 #include "Transform.h"
+#include <glm/gtx/euler_angles.hpp>
 
 Transform::Transform(
 	EntityManager& ecs,
-	Entity Owner,
-	const glm::vec3& Position, 
-	const glm::vec3& Rotation, 
-	float Angle, 
-	const glm::vec3& InScale
-) : Owner(Owner)
+	Entity owner,
+	const glm::vec3& position,
+	const glm::vec3& forward,
+	const glm::vec3& scale
+) : _Owner(owner)
 {
-	Translate(ecs, Position);
-	Rotate(ecs, Rotation, Angle);
-	Scale(ecs, InScale);
+	Translate(ecs, position);
+	Rotate(ecs, 0.0f, glm::vec3(0.0, 1.0f, 0.0f));
+	Scale(ecs, scale);
 }
 
-Transform::Transform(Transform&& Other)
-	: Owner(Other.Owner)
-	, Parent(Other.Parent)
-	, Position(Other.Position)
-	, Rotation(Other.Rotation)
-	, Angle(Other.Angle)
-	, ScaleBy(Other.ScaleBy)
-	, LocalToWorld(std::move(Other.LocalToWorld))
-	, Children(std::move(Other.Children))
+Transform::Transform(Transform&& other)
+	: _Owner(other._Owner)
+	, _Parent(other._Parent)
+	, _Position(other._Position)
+	, _Rotation(other._Rotation)
+	, _Scale(other._Scale)
+	, _LocalToWorld(std::move(other._LocalToWorld))
+	, _Children(std::move(other._Children))
 {
 }
 
-Transform& Transform::operator=(Transform&& Other)
+Transform& Transform::operator=(Transform&& other)
 {
-	Owner = Other.Owner;
-	Parent = Other.Parent;
-	Position = Other.Position;
-	Rotation = Other.Rotation;
-	Angle = Other.Angle;
-	ScaleBy = Other.ScaleBy;
-	LocalToWorld = std::move(Other.LocalToWorld);
-	Children = std::move(Other.Children);
+	_Owner = other._Owner;
+	_Parent = other._Parent;
+	_Position = other._Position;
+	_Rotation = other._Rotation;
+	_Scale = other._Scale;
+	_LocalToWorld = std::move(other._LocalToWorld);
+	_Children = std::move(other._Children);
 	return *this;
 }
 
 const glm::mat4& Transform::GetLocalToWorld() const
 {
-	return LocalToWorld;
+	return _LocalToWorld;
 }
 
-glm::mat4 Transform::GetLocalToParent()
+glm::mat4 Transform::GetLocalToParent() const
 {
-	glm::mat4 LocalToParent = glm::translate(glm::mat4(), Position);
-	LocalToParent = glm::rotate(LocalToParent, glm::radians(Angle), Rotation);
-	LocalToParent = glm::scale(LocalToParent, ScaleBy);
-
-	return LocalToParent;
+	glm::mat4 localToParent = glm::translate(glm::mat4(), _Position);
+	localToParent = localToParent * glm::mat4_cast(_Rotation);
+	localToParent = glm::scale(localToParent, _Scale);
+	return localToParent;
 }
 
-void Transform::Translate(EntityManager& ecs, const glm::vec3& InPosition)
+void Transform::Translate(EntityManager& ecs, const glm::vec3& position)
 {
-	Position = InPosition;
+	_Position = position;
 	Clean(ecs);
 }
 
-void Transform::Rotate(EntityManager& ecs, const glm::vec3& InRotation, float InAngle)
+void Transform::Rotate(EntityManager& ecs, const glm::vec3& eulerAngles)
 {
-	Rotation = InRotation;
-	Angle = InAngle;
+	const glm::quat yaw		= glm::normalize(glm::angleAxis(eulerAngles.x, glm::vec3(0, 1, 0)));
+	const glm::quat pitch	= glm::normalize(glm::angleAxis(eulerAngles.y, glm::vec3(1, 0, 0)));
+	const glm::quat roll	= glm::normalize(glm::angleAxis(eulerAngles.z, glm::vec3(0, 0, 1)));
+
+	_Rotation = glm::normalize(_Rotation * yaw);
+	_Rotation = glm::normalize(_Rotation * pitch);
+	_Rotation = glm::normalize(_Rotation * roll);
+}
+
+void Transform::Rotate(EntityManager& ecs, float angle, const glm::vec3& axis)
+{
+	_Rotation = glm::angleAxis(angle, axis);
 	Clean(ecs);
 }
 
-void Transform::Scale(EntityManager& ecs, const glm::vec3& InScale)
+void Transform::Scale(EntityManager& ecs, const glm::vec3& scale)
 {
-	ScaleBy = InScale;
+	_Scale = scale;
 	Clean(ecs);
 }
 
-void Transform::SetParent(EntityManager& ecs, Entity NewParent)
+void Transform::SetParent(EntityManager& ecs, Entity newParent)
 {
-	if (ecs.IsValid(Parent))
+	if (ecs.IsValid(_Parent))
 	{
-		Transform& ParentTransform = ecs.GetComponent<Transform>(Parent);
-		ParentTransform.RemoveChild(Owner);
+		Transform& parentTransform = ecs.GetComponent<Transform>(_Parent);
+		parentTransform.RemoveChild(_Owner);
 	}
 
-	Transform& ParentTransform = ecs.GetComponent<Transform>(NewParent);
-	ParentTransform.AddChild(Owner);
+	Transform& parentTransform = ecs.GetComponent<Transform>(newParent);
+	parentTransform.AddChild(_Owner);
 
 	Clean(ecs);
 }
 
-void Transform::AddChild(Entity Child)
+void Transform::AddChild(Entity child)
 {
-	Children.push_back(Child);
+	_Children.push_back(child);
 }
 
-void Transform::RemoveChild(Entity Child)
+void Transform::RemoveChild(Entity child)
 {
-	if (std::find(Children.begin(), Children.end(), Child) != Children.end())
+	if (std::find(_Children.begin(), _Children.end(), child) != _Children.end())
 	{
-		Children.remove(Child);
+		_Children.remove(child);
 	}
 }
 
 void Transform::Clean(EntityManager& ecs)
 {
-	LocalToWorld = GetLocalToParent();
+	_LocalToWorld = GetLocalToParent();
 
-	if (ecs.IsValid(Parent))
+	if (ecs.IsValid(_Parent))
 	{
-		const Transform& ParentTransform = ecs.GetComponent<Transform>(Parent);
-		LocalToWorld = ParentTransform.GetLocalToWorld() * LocalToWorld;
+		const Transform& parentTransform = ecs.GetComponent<Transform>(_Parent);
+		_LocalToWorld = parentTransform.GetLocalToWorld() * _LocalToWorld;
 	}
 
-	std::for_each(Children.begin(), Children.end(), [&] (Entity Child) 
+	std::for_each(_Children.begin(), _Children.end(), [&] (Entity child) 
 	{
-		Transform& ChildTransform = ecs.GetComponent<Transform>(Child);
-		ChildTransform.Clean(ecs);
+		Transform& childTransform = ecs.GetComponent<Transform>(child);
+		childTransform.Clean(ecs);
 	});
 }

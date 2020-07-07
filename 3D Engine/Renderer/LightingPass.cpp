@@ -66,7 +66,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 	}
 
-	for (auto entity : _ECS.GetEntities<PointLight>())
+	/*for (auto entity : _ECS.GetEntities<PointLight>())
 	{
 		const auto& pointLight = _ECS.GetComponent<PointLight>(entity);
 		const auto& transform = _ECS.GetComponent<Transform>(entity);
@@ -78,7 +78,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		ComputeDeferredLight(camera, cmdList, light);
 
 		cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
-	}
+	}*/
 
 	ComputeSSGI(camera, cmdList);
 }
