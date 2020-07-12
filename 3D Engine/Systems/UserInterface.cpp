@@ -269,35 +269,27 @@ void UserInterface::ShowEntities(Engine& engine)
 
 		eulerAngles = glm::radians(eulerAngles);
 
-		const glm::vec3 eulerDeltas(eulerAngles - transform.GetEulerAngles());
-
-		if (position != transform.GetPosition() ||
-			glm::abs(eulerDeltas.x) < 0.001 ||
-			glm::abs(eulerDeltas.y) < 0.001 ||
-			glm::abs(eulerDeltas.z) < 0.001 ||
-			scale != transform.GetScale())
-		{
+		if (position	!= transform.GetPosition() ||
+			eulerAngles != transform.GetEulerAngles() ||
+			scale		!= transform.GetScale())
+		{			
 			transform.Translate(ecs, position);
-			transform.Rotate(ecs, eulerDeltas);
+			transform.Rotate(ecs, eulerAngles);
 			transform.Scale(ecs, scale);
 		}
 	});
 
 	SHOW_COMPONENT(DirectionalLight, ecs, entitySelected, [&] (auto& light)
 	{
-		glm::vec3 direction = light.Direction;
 		glm::vec3 color = light.Color;
 		float intensity = light.Intensity;
 
-		ImGui::DragFloat3("Direction", &direction[0]);
 		ImGui::ColorEdit3("Color", &color[0]);
 		ImGui::DragFloat("Intensity", &intensity, 1.0f, 0.0f);
 
-		if (direction != light.Direction ||
-			color != light.Color ||
+		if (color != light.Color ||
 			intensity != light.Intensity)
 		{
-			light.Direction = direction;
 			light.Color = color;
 			light.Intensity = intensity;
 		}

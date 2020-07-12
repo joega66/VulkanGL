@@ -14,7 +14,7 @@ public:
 
 	ShadowProxy(gpu::Device& device, const struct DirectionalLight& directionalLight);
 
-	void Update(gpu::Device& device, const struct DirectionalLight& directionalLight);
+	void Update(gpu::Device& device, const struct DirectionalLight& directionalLight, const class Transform& transform);
 
 	/** Add a mesh to the light's shadow depth rendering. */
 	void AddMesh(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary, const MeshProxy& meshProxy);
@@ -26,8 +26,6 @@ public:
 	inline const gpu::DescriptorSet& GetDescriptorSet() const { return _DescriptorSet; }
 	inline const glm::mat4& GetLightViewProjMatrix() const { return _LightViewProjMatrix; }
 	inline const glm::mat4& GetLightViewProjMatrixInv() const { return _LightViewProjMatrixInv; }
-	inline const glm::vec4& GetL() const { return _L; }
-	inline const glm::vec4& GetRadiance() const { return _Radiance; }
 
 private:
 	gpu::RenderPass _RenderPass;
@@ -39,10 +37,6 @@ private:
 	glm::mat4 _LightViewProjMatrix;
 
 	glm::mat4 _LightViewProjMatrixInv;
-
-	glm::vec4 _L;
-
-	glm::vec4 _Radiance;
 
 	gpu::Buffer _ShadowUniform;
 

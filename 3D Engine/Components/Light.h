@@ -19,7 +19,6 @@ struct Light
 
 struct DirectionalLight : public Light, public Component
 {
-	glm::vec3 Direction;
 };
 
 struct PointLight : public Light, public Component

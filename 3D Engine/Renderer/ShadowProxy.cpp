@@ -1,5 +1,6 @@
 #include "ShadowProxy.h"
 #include <Components/Light.h>
+#include <Components/Transform.h>
 #include <ECS/EntityManager.h>
 #include "MaterialShader.h"
 
@@ -40,18 +41,15 @@ ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directiona
 	_DescriptorSet = device.CreateDescriptorSet(shadowDescriptors);
 }
 
-void ShadowProxy::Update(gpu::Device& device, const DirectionalLight& directionalLight)
+void ShadowProxy::Update(gpu::Device& device, const DirectionalLight& directionalLight, const Transform& transform)
 {
 	_DepthBiasConstantFactor = directionalLight.DepthBiasConstantFactor;
 	_DepthBiasSlopeFactor = directionalLight.DepthBiasSlopeFactor;
 
-	_L = glm::vec4(glm::normalize(directionalLight.Direction), 1.0f);
-	_Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
-
 	glm::mat4 lightProjMatrix = glm::ortho(-_Width * 0.5f, _Width * 0.5f, -_Width * 0.5f, _Width * 0.5f, _ZNear, _ZFar);
 	lightProjMatrix[1][1] *= -1;
 
-	const glm::mat4 lightViewMatrix = glm::lookAt(directionalLight.Direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	const glm::mat4 lightViewMatrix = glm::lookAt(transform.GetForward(), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	_LightViewProjMatrix = lightProjMatrix * lightViewMatrix;
 	_LightViewProjMatrixInv = glm::inverse(_LightViewProjMatrix);
 

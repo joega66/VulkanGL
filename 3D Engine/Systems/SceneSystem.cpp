@@ -16,17 +16,19 @@ void SceneSystem::Start(Engine& engine)
 
 	HandleSceneLoadRequest(engine, sceneLoadReq);
 
-	const float64 x = Platform::GetFloat64("Engine.ini", "DirectionalLight", "X", 1.0f);
-	const float64 y = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Y", 1.0f);
-	const float64 z = Platform::GetFloat64("Engine.ini", "DirectionalLight", "Z", 1.0f);
+	auto lightEntity = ecs.CreateEntity("DirectionalLight");
+	auto& directionalLight = ecs.AddComponent(lightEntity, DirectionalLight());
 
-	auto light = ecs.CreateEntity("DirectionalLight");
-	auto& directionalLight = ecs.AddComponent(light, DirectionalLight());
 	directionalLight.Intensity = Platform::GetFloat("Engine.ini", "DirectionalLight", "Intensity", 5.0f);
-	directionalLight.Direction = glm::vec3(x, y, z);
 	directionalLight.ShadowType = EShadowType::Soft;
 	directionalLight.DepthBiasConstantFactor = 1.75f;
 	directionalLight.DepthBiasSlopeFactor = 1.75f;
+
+	const float x = Platform::GetFloat("Engine.ini", "DirectionalLight", "X", 1.0f);
+	const float y = Platform::GetFloat("Engine.ini", "DirectionalLight", "Y", 1.0f);
+	const float z = Platform::GetFloat("Engine.ini", "DirectionalLight", "Z", 1.0f);
+
+	auto& transform = ecs.AddComponent(lightEntity, Transform(ecs, lightEntity, glm::vec3(0), glm::radians(glm::vec3(x, y, z))));
 
 	const std::string skyboxPath = Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/");
 	Skybox* skybox = engine.Assets.LoadSkybox("Default_Skybox", skyboxPath);

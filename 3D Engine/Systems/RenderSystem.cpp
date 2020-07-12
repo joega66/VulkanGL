@@ -62,9 +62,11 @@ void RenderSystem::Update(Engine& engine)
 
 	for (auto entity : ecs.GetEntities<ShadowProxy>())
 	{
-		auto& directionalLight = ecs.GetComponent<DirectionalLight>(entity);
+		const auto& directionalLight = ecs.GetComponent<DirectionalLight>(entity);
+		const auto& transform = ecs.GetComponent<Transform>(entity);
 		auto& shadowProxy = ecs.GetComponent<ShadowProxy>(entity);
-		shadowProxy.Update(device, directionalLight);
+		
+		shadowProxy.Update(device, directionalLight, transform);
 	}
 
 	for (auto& entity : ecs.GetEntities<MeshProxy>())

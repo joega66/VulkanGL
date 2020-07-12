@@ -1,16 +1,18 @@
 #include "Transform.h"
 #include <glm/gtx/euler_angles.hpp>
 
+const glm::vec3 Transform::forward = glm::vec3(0.0f, 0.0f, 1.0f);
+
 Transform::Transform(
 	EntityManager& ecs,
 	Entity owner,
 	const glm::vec3& position,
-	const glm::vec3& forward,
+	const glm::vec3& eulerAngles,
 	const glm::vec3& scale
 ) : _Owner(owner)
 {
 	Translate(ecs, position);
-	Rotate(ecs, 0.0f, glm::vec3(0.0, 1.0f, 0.0f));
+	Rotate(ecs, eulerAngles);
 	Scale(ecs, scale);
 }
 
@@ -58,13 +60,8 @@ void Transform::Translate(EntityManager& ecs, const glm::vec3& position)
 
 void Transform::Rotate(EntityManager& ecs, const glm::vec3& eulerAngles)
 {
-	const glm::quat yaw		= glm::normalize(glm::angleAxis(eulerAngles.x, glm::vec3(0, 1, 0)));
-	const glm::quat pitch	= glm::normalize(glm::angleAxis(eulerAngles.y, glm::vec3(1, 0, 0)));
-	const glm::quat roll	= glm::normalize(glm::angleAxis(eulerAngles.z, glm::vec3(0, 0, 1)));
-
-	_Rotation = glm::normalize(_Rotation * yaw);
-	_Rotation = glm::normalize(_Rotation * pitch);
-	_Rotation = glm::normalize(_Rotation * roll);
+	_Rotation = glm::quat(eulerAngles);
+	Clean(ecs);
 }
 
 void Transform::Rotate(EntityManager& ecs, float angle, const glm::vec3& axis)

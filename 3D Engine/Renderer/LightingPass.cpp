@@ -52,10 +52,11 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 	for (auto entity : _ECS.GetEntities<DirectionalLight>())
 	{
 		const auto& directionalLight = _ECS.GetComponent<DirectionalLight>(entity);
+		const auto& transform = _ECS.GetComponent<Transform>(entity);
 		const auto& shadow = _ECS.GetComponent<ShadowProxy>(entity);
-
+		
 		LightingParams light;
-		light._L = glm::vec4(glm::normalize(directionalLight.Direction), 0.0f);
+		light._L = glm::vec4(transform.GetForward(), 0.0f);
 		light._Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
 		light._LightViewProj = shadow.GetLightViewProjMatrix();
 		light._ShadowMap = shadow.GetShadowMap().GetTextureID();
