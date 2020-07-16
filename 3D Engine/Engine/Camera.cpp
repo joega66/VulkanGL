@@ -113,3 +113,9 @@ FrustumPlanes Camera::GetFrustumPlanes() const
 	};
 	return frustumPlanes;
 }
+
+void Camera::SaveState()
+{
+	_PrevPosition = _Position;
+	_PrevRotation = _Rotation;
+}

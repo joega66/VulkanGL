@@ -384,7 +384,7 @@ void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, con
 
 		cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &scaleAndTranslation);
 
-		const std::vector<VkDescriptorSet> descriptorSets = { device.GetTextures().GetSet(), device.GetSamplers().GetSet() };
+		const std::vector<VkDescriptorSet> descriptorSets = { device.GetTextures(), device.GetSamplers() };
 		cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 		cmdList.BindVertexBuffers(1, &vertexBuffer);

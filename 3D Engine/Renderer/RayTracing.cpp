@@ -58,16 +58,11 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 	const float focusDistance = 1.0;
 
 	static uint32 frameNumber = 0;
-	static glm::vec3 oldCameraPosition;
-	static glm::quat oldCameraRotation;
 
-	if (oldCameraPosition != _Camera.GetPosition() || oldCameraRotation != _Camera.GetRotation())
+	if (_Camera.GetPrevPosition() != _Camera.GetPosition() || _Camera.GetPrevRotation() != _Camera.GetRotation())
 	{
 		frameNumber = 0;
 	}
-
-	oldCameraPosition = _Camera.GetPosition();
-	oldCameraRotation = _Camera.GetRotation();
 
 	RayTracingParams rayTracingParams;
 	rayTracingParams._Origin = glm::vec4(_Camera.GetPosition(), 0);
@@ -85,7 +80,7 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 
 	cmdList.BindPipeline(pipeline);
 
-	std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures().GetSet(), _Device.GetSamplers().GetSet() };
+	std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
 	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);

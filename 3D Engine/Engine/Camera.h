@@ -62,6 +62,12 @@ public:
 	inline float GetNearPlane() const { return _NearPlane; }
 	inline float GetFarPlane() const { return _FarPlane; }
 
+	/** Save state for use in the next frame. */
+	void SaveState();
+
+	inline const glm::vec3& GetPrevPosition() const { return _PrevPosition; }
+	inline const glm::quat& GetPrevRotation() const { return _PrevRotation; }
+
 private:
 	/** Camera width. */
 	uint32 _Width;
@@ -93,4 +99,8 @@ private:
 	/** Near and far planes. */
 	float _NearPlane;
 	float _FarPlane;
+
+	/** Previous state. */
+	glm::vec3 _PrevPosition = {};
+	glm::quat _PrevRotation = {};
 };

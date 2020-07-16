@@ -61,7 +61,7 @@ void CameraProxy::AddToGBufferPass(Engine& engine, const MeshProxy& meshProxy)
 
 	const std::vector<VkDescriptorSet> descriptorSets =
 	{
-		_CameraDescriptorSet, meshProxy.GetSurfaceSet(), engine.Device.GetTextures().GetSet(), engine.Device.GetSamplers().GetSet()
+		_CameraDescriptorSet, meshProxy.GetSurfaceSet(), engine.Device.GetTextures(), engine.Device.GetSamplers()
 	};
 
 	_GBufferPass.push_back(MeshDrawCommand(engine.Device, meshProxy, psoDesc, descriptorSets));

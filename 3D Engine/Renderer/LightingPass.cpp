@@ -99,8 +99,8 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 	const std::vector<VkDescriptorSet> descriptorSets =
 	{
 		camera._CameraDescriptorSet,
-		_Device.GetTextures().GetSet(),
-		_Device.GetSamplers().GetSet(),
+		_Device.GetTextures(),
+		_Device.GetSamplers(),
 	};
 
 	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
@@ -153,23 +153,18 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 	const std::vector<VkDescriptorSet> descriptorSets =
 	{
 		camera._CameraDescriptorSet,
-		_Device.GetTextures().GetSet(),
-		_Device.GetSamplers().GetSet(),
+		_Device.GetTextures(),
+		_Device.GetSamplers(),
 	};
 
 	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	static uint32 frameNumber = 0;
-	static glm::vec3 oldCameraPosition;
-	static glm::quat oldCameraRotation;
 
-	if (oldCameraPosition != _Camera.GetPosition() || oldCameraRotation != _Camera.GetRotation())
+	if (_Camera.GetPrevPosition() != _Camera.GetPosition() || _Camera.GetPrevRotation() != _Camera.GetRotation())
 	{
 		frameNumber = 0;
 	}
-
-	oldCameraPosition = _Camera.GetPosition();
-	oldCameraRotation = _Camera.GetRotation();
 
 	SSGIParams ssgiParams;
 	ssgiParams._Skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();

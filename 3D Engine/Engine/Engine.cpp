@@ -66,6 +66,7 @@ void Engine::Main()
 	SystemsManager.StartSystems(*this);
 
 	CameraProxy CameraProxy(*this);
+	SceneRenderer sceneRenderer(*this);
 
 	while (!_Platform.WindowShouldClose())
 	{
@@ -78,10 +79,11 @@ void Engine::Main()
 
 		CameraProxy.Update(*this);
 
-		SceneRenderer SceneRenderer(*this);
-		SceneRenderer.Render(CameraProxy);
+		sceneRenderer.Render(CameraProxy);
 
 		_Cursor.Update(_Platform);
 		_Input.Update(_Platform);
+
+		Camera.SaveState();
 	}
 }

@@ -44,7 +44,7 @@ public:
 	VulkanImageID CreateImageID(const VulkanImageView& ImageView);
 
 	inline VkDescriptorSetLayout GetLayout() const { return BindlessResourceSetLayout; }
-	inline VkDescriptorSet GetSet() const { return BindlessResources; }
+	inline operator VkDescriptorSet() const { return BindlessResources; }
 
 private:
 	VkDevice Device;

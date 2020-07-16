@@ -73,16 +73,6 @@ private:
 	VkDeviceSize Offset;		// Offset into the memory buffer.
 };
 
-class VulkanDescriptorBufferInfo
-{
-public:
-	VulkanDescriptorBufferInfo() = default;
-	VulkanDescriptorBufferInfo(const VulkanBuffer& Buffer);
-
-private:
-	VkDescriptorBufferInfo DescriptorBufferInfo;
-};
-
 class VulkanAllocator
 {
 public:
@@ -103,6 +93,16 @@ private:
 	std::vector<std::unique_ptr<VulkanMemory>> MemoryBuffers;
 
 	[[nodiscard]] VulkanMemory AllocateMemory(VkDeviceSize Size, VkBufferUsageFlags Usage, VkMemoryPropertyFlags Properties);
+};
+
+class VulkanDescriptorBufferInfo
+{
+public:
+	VulkanDescriptorBufferInfo() = default;
+	VulkanDescriptorBufferInfo(const VulkanBuffer& Buffer);
+
+private:
+	VkDescriptorBufferInfo DescriptorBufferInfo;
 };
 
 namespace gpu

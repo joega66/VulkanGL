@@ -116,7 +116,7 @@ void ShadowProxy::AddMesh(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary
 	psoDesc.rasterizationState.depthBiasConstantFactor = _DepthBiasConstantFactor;
 	psoDesc.rasterizationState.depthBiasSlopeFactor = _DepthBiasSlopeFactor;
 
-	const std::vector<VkDescriptorSet> descriptorSets = { _DescriptorSet, meshProxy.GetSurfaceSet(), device.GetTextures().GetSet(), device.GetSamplers().GetSet() };
+	const std::vector<VkDescriptorSet> descriptorSets = { _DescriptorSet, meshProxy.GetSurfaceSet(), device.GetTextures(), device.GetSamplers() };
 	_MeshDrawCommands.push_back(MeshDrawCommand(device, meshProxy, psoDesc, descriptorSets));
 }
 

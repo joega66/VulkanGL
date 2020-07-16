@@ -8,7 +8,7 @@ class Camera;
 class SceneRenderer
 {
 public:
-	SceneRenderer(Engine& Engine);
+	SceneRenderer(Engine& engine);
 
 	void Render(CameraProxy& camera);
 
