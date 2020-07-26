@@ -37,14 +37,12 @@ vec3 FresnelSchlick(vec3 specularColor, float ndotl)
 }
 
 /* 
- * The normal distribution function (NDF) defines the distribution of the 
- * microfacet surface normals. 
+ * The (Trowbridge-Reitz) normal distribution function (NDF) defines the distribution of the 
+ * microfacet surface normals.
  */
-float TrowbridgeReitzNDF(float ndoth, float roughness)
+float NormalGGX(float ndoth, float roughness)
 {
-	/* AlphaTr = s^2, where s is an artist-manipulated value between 0 and 1. */
-	float alphaTr = roughness * roughness;
-	float nom = alphaTr * alphaTr;
+	float nom = roughness * roughness;
 	float ndoth2 = ndoth * ndoth;
 	float denom = (ndoth2 * (nom - 1.0) + 1.0);
 	denom = PI * denom * denom;
@@ -53,14 +51,12 @@ float TrowbridgeReitzNDF(float ndoth, float roughness)
 }
 
 /* 
- * The geometry function is equal to the possibility that a ray of light in
+ * The (Schlick) geometry function is equal to the possibility that a ray of light in
  * direction l will be reflected into direction v without being shadowed or 
- * masked. 
+ * masked.
  */
-float SchlickGF(float ndotv, float roughness)
+float GeometryGGX(float ndotv, float k)
 {
-	float r = roughness + 1.0;
-	float k = r * r / 8.0;
 	float nom = ndotv;
 	float denom = ndotv * (1.0 - k) + k;
 
@@ -69,16 +65,19 @@ float SchlickGF(float ndotv, float roughness)
 
 float SmithGF(float ndotv, float ndotl, float roughness)
 {
-	float geom1 = SchlickGF(ndotv, roughness);
-	float geom2 = SchlickGF(ndotl, roughness);
+	float k = pow(roughness + 1.0, 2.0) / 8.0;
+	float geom1 = GeometryGGX(ndotv, k);
+	float geom2 = GeometryGGX(ndotl, k);
 
 	return geom1 * geom2;
 }
 
 vec3 Specular_BRDF(BRDFContext brdf, vec3 specularColor, float roughness)
 {
+	roughness *= roughness;
+
 	vec3 fresnel = FresnelSchlick(specularColor, brdf.ndotl);
-	float ndf = TrowbridgeReitzNDF(brdf.ndoth, roughness);
+	float ndf = NormalGGX(brdf.ndoth, roughness);
 	float g = SmithGF(brdf.ndotv, brdf.ndotl, roughness);
 
 	vec3 nom = ndf * g * fresnel;
