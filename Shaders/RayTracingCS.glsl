@@ -18,14 +18,19 @@ vec3 Ray_At(Ray ray, float t)
 	return ray.origin + t * ray.direction;
 }
 
+struct Material
+{
+	vec3 albedo;
+	float roughness;
+	bool isEmitter;
+};
+
 struct HitRecord
 {
 	vec3 p;
 	float t;
 	vec3 normal;
 	bool frontFace;
-	vec3 albedo;
-	bool isEmitter;
 };
 
 HitRecord HitRecord_Init()
@@ -35,8 +40,6 @@ HitRecord HitRecord_Init()
 	rec.t = 0;
 	rec.normal = vec3(0);
 	rec.frontFace = false;
-	rec.albedo = vec3(0);
-	rec.isEmitter = false;
 	return rec;
 }
 
@@ -50,7 +53,6 @@ struct Sphere
 {
 	vec3 center;
 	float radius;
-	vec3 albedo;
 };
 
 bool Sphere_Hit(Sphere sphere, Ray ray, float tMin, float tMax, inout HitRecord rec)
@@ -71,7 +73,6 @@ bool Sphere_Hit(Sphere sphere, Ray ray, float tMin, float tMax, inout HitRecord 
 			rec.p = Ray_At(ray, rec.t);
 			vec3 outwardNormal = (rec.p - sphere.center) / sphere.radius;
 			HitRecord_SetFaceNormal(rec, ray, outwardNormal);
-			rec.albedo = sphere.albedo;
 			/*rec.mat = _Material;
 			rec.uv = GetSphereUV(rec.p);*/
 			return true;
@@ -83,7 +84,6 @@ bool Sphere_Hit(Sphere sphere, Ray ray, float tMin, float tMax, inout HitRecord 
 			rec.p = Ray_At(ray, rec.t);
 			vec3 outwardNormal = (rec.p - sphere.center) / sphere.radius;
 			HitRecord_SetFaceNormal(rec, ray, outwardNormal);
-			rec.albedo = sphere.albedo;
 			/*rec.mat = _Material;
 			rec.uv = GetSphereUV(rec.p);*/
 			return true;
@@ -95,7 +95,6 @@ bool Sphere_Hit(Sphere sphere, Ray ray, float tMin, float tMax, inout HitRecord 
 struct XYRect
 {
 	float x0, x1, y0, y1, k;
-	vec3 albedo;
 };
 
 bool XYRect_Hit(XYRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
@@ -110,7 +109,6 @@ bool XYRect_Hit(XYRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 	rec.t = t;
 	HitRecord_SetFaceNormal(rec, r, vec3(0, 0, 1));
 	rec.p = Ray_At(r, t);
-	rec.albedo = rect.albedo;
 	//rec.uv = vec2((x - rect.x0) / (rect.x1 - rect.x0), (y - rect.y0) / (rect.y1 - rect.y0));
 	return true;
 }
@@ -118,7 +116,6 @@ bool XYRect_Hit(XYRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 struct YZRect
 {
 	float y0, y1, z0, z1, k;
-	vec3 albedo;
 };
 
 bool YZRect_Hit(YZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
@@ -133,7 +130,6 @@ bool YZRect_Hit(YZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 	rec.t = t;
 	rec.p = Ray_At(r, t);
 	HitRecord_SetFaceNormal(rec, r, vec3(1, 0, 0));
-	rec.albedo = rect.albedo;
 	//rec.uv = vec2((y - rect.y0) / (rect.y1 - rect.y0), (z - rect.z0) / (rect.z1 - rect.z0));
 	return true;
 }
@@ -141,8 +137,6 @@ bool YZRect_Hit(YZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 struct XZRect
 {
 	float x0, x1, z0, z1, k;
-	vec3 albedo;
-	bool isEmitter;
 };
 
 bool XZRect_Hit(XZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
@@ -157,8 +151,6 @@ bool XZRect_Hit(XZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 	rec.t = t;
 	rec.p = Ray_At(r, t);
 	HitRecord_SetFaceNormal(rec, r, vec3(0, 1, 0));
-	rec.albedo = rect.albedo;
-	rec.isEmitter = rect.isEmitter;
 	//rec.uv = glm::dvec2((x - rect.x0) / (rect.x1 - rect.x0), (z - rect.z0) / (rect.z1 - rect.z0));
 	return true;
 }
@@ -185,15 +177,51 @@ float XZRect_PDF(XZRect rect, vec3 origin, vec3 direction)
 
 /** @begin Scene */
 
-XZRect lightSource = { 213, 343, 227, 332, 554, vec3(15), true };
-Sphere spheres[] = { { vec3(277.5, 100, 277.5), 100, vec3(0.5) } };
-YZRect yzRects[] = { { 0, 555, 0, 555, 555, vec3(.12, .45, .15) }, { 0, 555, 0, 555, 0, vec3(.65, .05, .05) } };
-XZRect xzRects[] = { { 0, 555, 0, 555, 0, vec3(.73), false }, { 0, 555, 0, 555, 555, vec3(.73), false }, lightSource };
-XYRect xyRects[] = { { 0, 555, 0, 555, 555, vec3(0.73) } };
+XZRect lightSource = { 213, 343, 227, 332, 554 };
+
+Sphere spheres[] = { { vec3(277.5, 100, 277.5), 100 } };
+
+Material sphereMaterials[] =
+{
+	{ vec3(0.5), 0.0, false }
+};
+
+YZRect yzRects[] = 
+{ 
+	{ 0, 555, 0, 555, 555 }, 
+	{ 0, 555, 0, 555, 0 } 
+};
+
+Material yzRectMaterials[] =
+{
+	{ vec3(.12, .45, .15), 0.0, false },
+	{ vec3(.65, .05, .05), 0.0, false },
+};
+
+XZRect xzRects[] = 
+{
+	{ 0, 555, 0, 555, 0 }, 
+	{ 0, 555, 0, 555, 555 }, 
+	lightSource 
+};
+
+Material xzRectMaterials[] =
+{
+	{ vec3(.73), 0.0, false },
+	{ vec3(.73), 0.0, false },
+	{ vec3(15.), 0.0, true },
+};
+
+XYRect xyRects[] = { { 0, 555, 0, 555, 555 } };
+
+Material xyRectMaterials[] =
+{
+	{ vec3(.73), 0.0, false },
+};
 
 /** @end Scene */
 
-bool TraceRay(Ray ray, inout HitRecord rec)
+bool TraceRay(Ray ray, inout HitRecord rec, inout Material mat)
 {
 	HitRecord tempRec = HitRecord_Init();
 	bool hitAnything = false;
@@ -205,6 +233,7 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		{
 			closestSoFar = tempRec.t;
 			rec = tempRec;
+			mat = sphereMaterials[i];
 		}
 	}
 
@@ -214,6 +243,7 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		{
 			closestSoFar = tempRec.t;
 			rec = tempRec;
+			mat = yzRectMaterials[i];
 		}
 	}
 
@@ -223,6 +253,7 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		{
 			closestSoFar = tempRec.t;
 			rec = tempRec;
+			mat = xzRectMaterials[i];
 		}
 	}
 
@@ -232,6 +263,7 @@ bool TraceRay(Ray ray, inout HitRecord rec)
 		{
 			closestSoFar = tempRec.t;
 			rec = tempRec;
+			mat = xyRectMaterials[i];
 		}
 	}
 	
@@ -258,16 +290,17 @@ vec3 RayColor(Ray ray, inout uint seed)
 	for ( rayDepth = 0; rayDepth < maxRayDepth; rayDepth++ )
 	{
 		HitRecord rec = HitRecord_Init();
-		if ( !TraceRay(ray, rec) )
+		Material mat;
+		if ( !TraceRay(ray, rec, mat) )
 		{
 			//color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
 			color *= vec3(0);
 			return color;
 		}
 
-		if ( rec.isEmitter )
+		if ( mat.isEmitter )
 		{
-			color *= rec.albedo;
+			color *= mat.albedo;
 			return color;
 		}
 
@@ -288,7 +321,7 @@ vec3 RayColor(Ray ray, inout uint seed)
 		const float pdf = 0.5 * ( XZRect_PDF(lightSource, rec.p, scattered.direction) + CosinePDF(rec.normal, scattered.direction) );
 
 		// Attenuate
-		color *= rec.albedo * Lambertian_ScatteringPDF(rec, scattered) / pdf;
+		color *= mat.albedo * Lambertian_ScatteringPDF(rec, scattered) / pdf;
 
 		ray = scattered;
 	}
