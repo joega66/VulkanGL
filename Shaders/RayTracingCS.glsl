@@ -161,9 +161,9 @@ bool XZRect_Hit(XZRect rect, Ray r, float tMin, float tMax, inout HitRecord rec)
 	return true;
 }
 
-vec3 XZRect_Random(XZRect rect, vec3 origin, inout uint seed)
+vec3 XZRect_Random(XZRect rect, vec3 origin)
 {
-	vec3 randomPoint = vec3( RandomFloat(seed, rect.x0, rect.x1), rect.k, RandomFloat(seed, rect.z0, rect.z1) );
+	vec3 randomPoint = vec3( RandomFloat(rect.x0, rect.x1), rect.k, RandomFloat(rect.z0, rect.z1) );
 	return randomPoint - origin;
 }
 
@@ -291,9 +291,9 @@ float Lambertian_ScatteringPDF(vec3 normal, vec3 direction)
 }
 
 // Reference: Ray Tracing Gems, Section 16.6.5, GGX DISTRIBUTION
-vec3 GGX_ImportanceSample(inout uint seed, float alpha, inout float cosH)
+vec3 GGX_ImportanceSample(float alpha, inout float cosH)
 {
-	const vec2 u = vec2(RandomFloat(seed), RandomFloat(seed));
+	const vec2 u = vec2(RandomFloat(), RandomFloat());
 
 	cosH = sqrt((1 - u[0]) / ((alpha * alpha - 1) * u[0] + 1));
 	const float sinH = sqrt(1 - cosH * cosH);
@@ -311,7 +311,7 @@ float GGX_ScatteringPDF(float ndf, float vdoth, float cosH)
 	return ndf * cosH / (4 * vdoth);
 }
 
-vec3 RayColor(Ray ray, inout uint seed)
+vec3 RayColor(Ray ray)
 {
 	vec3 color = vec3(1);
 	const int maxRayDepth = 8;
@@ -343,7 +343,7 @@ vec3 RayColor(Ray ray, inout uint seed)
 
 		if (mat.type == MAT_LAMBERTIAN)
 		{
-			const vec3 scatterDir = ONB_Transform(onb, RandomCosineDirection(seed));
+			const vec3 scatterDir = ONB_Transform(onb, RandomCosineDirection());
 
 			scattered.direction = scatterDir;
 
@@ -354,7 +354,7 @@ vec3 RayColor(Ray ray, inout uint seed)
 			const float alpha = mat.roughness * mat.roughness;
 
 			float cosH;
-			const vec3 halfwayDir = ONB_Transform(onb, GGX_ImportanceSample(seed, alpha, cosH));
+			const vec3 halfwayDir = ONB_Transform(onb, GGX_ImportanceSample(alpha, cosH));
 			const vec3 viewDir = normalize(ray.origin - rec.p);
 			const vec3 scatterDir = normalize(2 * dot(viewDir, halfwayDir) * halfwayDir - viewDir);
 			
@@ -396,7 +396,7 @@ void main()
 
 	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
 	
-	uint seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
+	seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
 
 	const int samplesPerPixel = 1;
 
@@ -404,14 +404,14 @@ void main()
 
 	for (int i = 0; i < samplesPerPixel; i++)
 	{
-		const float s = ( float(screenCoords.x) + RandomFloat(seed) ) / (float(sceneColorSize.x) );
-		const float t = 1.0 - ( float(screenCoords.y) + RandomFloat(seed) ) / (float(sceneColorSize.y) );
+		const float s = ( float(screenCoords.x) + RandomFloat() ) / (float(sceneColorSize.x) );
+		const float t = 1.0 - ( float(screenCoords.y) + RandomFloat() ) / (float(sceneColorSize.y) );
 
 		Ray ray;
 		ray.origin = _Origin.xyz;
 		ray.direction = _LowerLeftCorner.xyz + s * _Horizontal.xyz + t * _Vertical.xyz - _Origin.xyz;
 
-		color += RayColor(ray, seed);
+		color += RayColor(ray);
 	}
 
 	color /= samplesPerPixel;
