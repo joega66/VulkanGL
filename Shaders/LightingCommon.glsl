@@ -40,9 +40,9 @@ vec3 FresnelSchlick(vec3 specularColor, float ndotl)
  * The (Trowbridge-Reitz) normal distribution function (NDF) defines the distribution of the 
  * microfacet surface normals.
  */
-float NormalGGX(float ndoth, float roughness)
+float NormalGGX(float ndoth, float alpha)
 {
-	float nom = roughness * roughness;
+	float nom = alpha * alpha;
 	float ndoth2 = ndoth * ndoth;
 	float denom = (ndoth2 * (nom - 1.0) + 1.0);
 	denom = PI * denom * denom;

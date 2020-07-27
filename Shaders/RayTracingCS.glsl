@@ -4,6 +4,7 @@
 #define SAMPLER_SET 2
 #include "SceneResources.glsl"
 #include "RayTracingCommon.glsl"
+#include "LightingCommon.glsl"
 
 const float INFINITY = 1.0f / 0.0f;
 
@@ -18,11 +19,16 @@ vec3 Ray_At(Ray ray, float t)
 	return ray.origin + t * ray.direction;
 }
 
+#define MAT_LAMBERTIAN	0
+#define MAT_GGX			1
+
 struct Material
 {
 	vec3 albedo;
 	float roughness;
+	float metallic;
 	bool isEmitter;
+	int type;
 };
 
 struct HitRecord
@@ -183,10 +189,10 @@ Sphere spheres[] = { { vec3(277.5, 100, 277.5), 100 } };
 
 Material sphereMaterials[] =
 {
-	{ vec3(0.5), 0.0, false }
+	{ vec3(0.5), 0.25, 0.99, false, MAT_GGX }
 };
 
-YZRect yzRects[] = 
+YZRect yzRects[] =
 { 
 	{ 0, 555, 0, 555, 555 }, 
 	{ 0, 555, 0, 555, 0 } 
@@ -194,29 +200,32 @@ YZRect yzRects[] =
 
 Material yzRectMaterials[] =
 {
-	{ vec3(.12, .45, .15), 0.0, false },
-	{ vec3(.65, .05, .05), 0.0, false },
+	{ vec3(.12, .45, .15), 1.0, 0.0, false, MAT_LAMBERTIAN },
+	{ vec3(.65, .05, .05), 1.0, 0.0, false, MAT_LAMBERTIAN },
 };
 
 XZRect xzRects[] = 
 {
 	{ 0, 555, 0, 555, 0 }, 
 	{ 0, 555, 0, 555, 555 }, 
-	lightSource 
+	lightSource
 };
 
 Material xzRectMaterials[] =
 {
-	{ vec3(.73), 0.0, false },
-	{ vec3(.73), 0.0, false },
-	{ vec3(15.), 0.0, true },
+	{ vec3(.73), 1.0, 0.0, false, MAT_LAMBERTIAN },
+	{ vec3(.73), 1.0, 0.0, false, MAT_LAMBERTIAN },
+	{ vec3(150.), 1.0, 0.0, true, MAT_LAMBERTIAN },
 };
 
-XYRect xyRects[] = { { 0, 555, 0, 555, 555 } };
+XYRect xyRects[] = 
+{ 
+	{ 0, 555, 0, 555, 555 } 
+};
 
 Material xyRectMaterials[] =
 {
-	{ vec3(.73), 0.0, false },
+	{ vec3(.73), 1.0, 0.0, false, MAT_LAMBERTIAN },
 };
 
 /** @end Scene */
@@ -276,18 +285,38 @@ float CosinePDF(vec3 normal, vec3 direction)
 	return cosine <= 0 ? 0 : cosine / PI;
 }
 
-float Lambertian_ScatteringPDF(HitRecord rec, Ray scattered)
+float Lambertian_ScatteringPDF(vec3 normal, vec3 direction)
 {
-	return CosinePDF(rec.normal, scattered.direction);
+	return CosinePDF(normal, direction);
+}
+
+// Reference: Ray Tracing Gems, Section 16.6.5, GGX DISTRIBUTION
+vec3 GGX_ImportanceSample(inout uint seed, float alpha, inout float cosH)
+{
+	const vec2 u = vec2(RandomFloat(seed), RandomFloat(seed));
+
+	cosH = sqrt((1 - u[0]) / ((alpha * alpha - 1) * u[0] + 1));
+	const float sinH = sqrt(1 - cosH * cosH);
+	const float phi = 2 * PI * u[1];
+
+	const float x = cos(phi) * sinH;
+	const float y = sin(phi) * sinH;
+	const float z = cosH;
+
+	return normalize(vec3(x, y, z));
+}
+
+float GGX_ScatteringPDF(float ndf, float vdoth, float cosH)
+{
+	return ndf * cosH / (4 * vdoth);
 }
 
 vec3 RayColor(Ray ray, inout uint seed)
 {
 	vec3 color = vec3(1);
 	const int maxRayDepth = 8;
-	int rayDepth;
-
-	for ( rayDepth = 0; rayDepth < maxRayDepth; rayDepth++ )
+	
+	for ( int rayDepth = 0; rayDepth < maxRayDepth; rayDepth++ )
 	{
 		HitRecord rec = HitRecord_Init();
 		Material mat;
@@ -304,24 +333,53 @@ vec3 RayColor(Ray ray, inout uint seed)
 			return color;
 		}
 
+		ONB onb;
+		ONB_BuildFromW(onb, rec.normal);
+
 		Ray scattered;
 		scattered.origin = rec.p;
+	
+		float scatteringPDF;
 
-		if ( RandomFloat(seed) < 0.5 )
+		if (mat.type == MAT_LAMBERTIAN)
 		{
-			scattered.direction = XZRect_Random(lightSource, rec.p, seed);
+			const vec3 scatterDir = ONB_Transform(onb, RandomCosineDirection(seed));
+
+			scattered.direction = scatterDir;
+
+			scatteringPDF = Lambertian_ScatteringPDF(rec.normal, scattered.direction);
 		}
-		else
+		else if (mat.type == MAT_GGX)
 		{
-			ONB onb;
-			ONB_BuildFromW(onb, rec.normal);
-			scattered.direction = ONB_Transform(onb, RandomCosineDirection(seed));
+			const float alpha = mat.roughness * mat.roughness;
+
+			float cosH;
+			const vec3 halfwayDir = ONB_Transform(onb, GGX_ImportanceSample(seed, alpha, cosH));
+			const vec3 viewDir = normalize(ray.origin - rec.p);
+			const vec3 scatterDir = normalize(2 * dot(viewDir, halfwayDir) * halfwayDir - viewDir);
+			
+			scattered.direction = scatterDir;
+
+			const float ndoth = max(dot(rec.normal, halfwayDir), 0);
+			const float ndotv = max(dot(rec.normal, viewDir), 0);
+			const float ndotl = max(dot(rec.normal, scatterDir), 0);
+			const float vdoth = max(dot(viewDir, halfwayDir), 1e-6);
+
+			const float ndf		= NormalGGX(ndoth, alpha);
+			const float g		= SmithGF(ndotv, ndotl, alpha);
+			const vec3	fresnel	= FresnelSchlick(mix(vec3(0.04), mat.albedo, mat.metallic), ndotl);
+
+			const vec3 specular = ( ndf * g * fresnel ) / max( 4.0 * ndotv * ndotl, 1e-6 );
+
+			mat.albedo = specular * ndotl;
+
+			scatteringPDF = GGX_ScatteringPDF(ndf, vdoth, cosH);
 		}
 
-		const float pdf = 0.5 * ( XZRect_PDF(lightSource, rec.p, scattered.direction) + CosinePDF(rec.normal, scattered.direction) );
+		const vec3 threshold = vec3(1);
 
-		// Attenuate
-		color *= mat.albedo * Lambertian_ScatteringPDF(rec, scattered) / pdf;
+		// Clamp sample values to fight fireflies.
+		color *= min( mat.albedo * scatteringPDF, threshold );
 
 		ray = scattered;
 	}
