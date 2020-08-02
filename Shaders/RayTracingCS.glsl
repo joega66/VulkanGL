@@ -7,6 +7,9 @@
 #include "LightingCommon.glsl"
 
 const float INFINITY = 1.0f / 0.0f;
+const int SAMPLES_PER_PIXEL = 1;
+const int MAX_RAY_DEPTH = 8;
+const int MAX_TEMPORAL_SAMPLES = 1024;
 
 struct Ray
 {
@@ -281,7 +284,7 @@ bool TraceRay(Ray ray, inout HitRecord rec, inout Material mat)
 
 float CosinePDF(vec3 normal, vec3 direction)
 {
-	const float cosine = dot(normal, normalize(direction));
+	const float cosine = dot(normal, direction);
 	return cosine <= 0 ? 0 : cosine / PI;
 }
 
@@ -290,33 +293,11 @@ float Lambertian_ScatteringPDF(vec3 normal, vec3 direction)
 	return CosinePDF(normal, direction);
 }
 
-// Reference: Ray Tracing Gems, Section 16.6.5, GGX DISTRIBUTION
-vec3 GGX_ImportanceSample(float alpha, inout float cosH)
-{
-	const vec2 u = vec2(RandomFloat(), RandomFloat());
-
-	cosH = sqrt((1 - u[0]) / ((alpha * alpha - 1) * u[0] + 1));
-	const float sinH = sqrt(1 - cosH * cosH);
-	const float phi = 2 * PI * u[1];
-
-	const float x = cos(phi) * sinH;
-	const float y = sin(phi) * sinH;
-	const float z = cosH;
-
-	return normalize(vec3(x, y, z));
-}
-
-float GGX_ScatteringPDF(float ndf, float vdoth, float cosH)
-{
-	return ndf * cosH / (4 * vdoth);
-}
-
 vec3 RayColor(Ray ray)
 {
 	vec3 color = vec3(1);
-	const int maxRayDepth = 8;
-	
-	for ( int rayDepth = 0; rayDepth < maxRayDepth; rayDepth++ )
+
+	for ( int rayDepth = 0; rayDepth < MAX_RAY_DEPTH; rayDepth++ )
 	{
 		HitRecord rec = HitRecord_Init();
 		Material mat;
@@ -343,10 +324,7 @@ vec3 RayColor(Ray ray)
 
 		if (mat.type == MAT_LAMBERTIAN)
 		{
-			const vec3 scatterDir = ONB_Transform(onb, RandomCosineDirection());
-
-			scattered.direction = scatterDir;
-
+			scattered.direction = ONB_Transform(onb, RandomCosineDirection());
 			scatteringPDF = Lambertian_ScatteringPDF(rec.normal, scattered.direction);
 		}
 		else if (mat.type == MAT_GGX)
@@ -357,7 +335,7 @@ vec3 RayColor(Ray ray)
 			const vec3 halfwayDir = ONB_Transform(onb, GGX_ImportanceSample(alpha, cosH));
 			const vec3 viewDir = normalize(ray.origin - rec.p);
 			const vec3 scatterDir = normalize(2 * dot(viewDir, halfwayDir) * halfwayDir - viewDir);
-			
+
 			scattered.direction = scatterDir;
 
 			const float ndoth = max(dot(rec.normal, halfwayDir), 0);
@@ -367,9 +345,8 @@ vec3 RayColor(Ray ray)
 
 			const float ndf		= NormalGGX(ndoth, alpha);
 			const float g		= SmithGF(ndotv, ndotl, alpha);
-			const vec3	fresnel	= FresnelSchlick(mix(vec3(0.04), mat.albedo, mat.metallic), ndotl);
-
-			const vec3 specular = ( ndf * g * fresnel ) / max( 4.0 * ndotv * ndotl, 1e-6 );
+			const vec3 fresnel	= FresnelSchlick(mix(vec3(0.04), mat.albedo, mat.metallic), ndotl);
+			const vec3 specular = (ndf * g * fresnel) / max(4.0 * ndotv * ndotl, 1e-6);
 
 			mat.albedo = specular * ndotl;
 
@@ -398,14 +375,12 @@ void main()
 	
 	seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
 
-	const int samplesPerPixel = 1;
-
 	vec3 color = vec3(0);
 
-	for (int i = 0; i < samplesPerPixel; i++)
+	for (int i = 0; i < SAMPLES_PER_PIXEL; i++)
 	{
-		const float s = ( float(screenCoords.x) + RandomFloat() ) / (float(sceneColorSize.x) );
-		const float t = 1.0 - ( float(screenCoords.y) + RandomFloat() ) / (float(sceneColorSize.y) );
+		const float s = ( float(screenCoords.x) + RandomFloat() ) / ( float(sceneColorSize.x) );
+		const float t = 1.0 - ( float(screenCoords.y) + RandomFloat() ) / ( float(sceneColorSize.y) );
 
 		Ray ray;
 		ray.origin = _Origin.xyz;
@@ -414,9 +389,9 @@ void main()
 		color += RayColor(ray);
 	}
 
-	color /= samplesPerPixel;
-
-	if ( _FrameNumber < 1024 ) // Prevents color banding
+	color /= SAMPLES_PER_PIXEL;
+	
+	if ( _FrameNumber < MAX_TEMPORAL_SAMPLES ) // Prevents color banding
 	{
 		const vec4 prevFrameColor = imageLoad(_SceneColor, screenCoords);
 		const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevFrameColor.a)));

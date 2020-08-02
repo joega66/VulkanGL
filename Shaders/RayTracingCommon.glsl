@@ -36,7 +36,7 @@ void ONB_BuildFromW(inout ONB onb, vec3 n)
 
 vec3 ONB_Transform(inout ONB onb, vec3 p)
 {
-	return p.x * onb.axis[0] + p.y * onb.axis[1] + p.z * onb.axis[2];
+	return normalize( p.x * onb.axis[0] + p.y * onb.axis[1] + p.z * onb.axis[2] );
 }
 
 /** Length squared. */
@@ -101,6 +101,41 @@ vec3 RandomCosineDirection()
 	const float y = sin(phi) * sqrt(r2);
 
 	return vec3(x, y, z);
+}
+
+float VanDerCorpus(uint bits)
+{
+	bits = (bits << 16u) | (bits >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	return float(bits) * 2.3283064365386963e-10;
+}
+
+vec2 Hammersley(uint sampleIndex, const uint numSamples)
+{
+	return vec2(VanDerCorpus(sampleIndex), float(sampleIndex) / float(numSamples));
+}
+
+// Reference: Ray Tracing Gems, Section 16.6.5, GGX DISTRIBUTION
+vec3 GGX_ImportanceSample(float alpha, inout float cosH)
+{
+	const vec2 u = vec2(RandomFloat(), RandomFloat());
+	cosH = sqrt((1 - u[0]) / ((alpha * alpha - 1) * u[0] + 1));
+	const float sinH = sqrt(1 - cosH * cosH);
+	const float phi = 2 * PI * u[1];
+
+	const float x = cos(phi) * sinH;
+	const float y = sin(phi) * sinH;
+	const float z = cosH;
+
+	return normalize(vec3(x, y, z));
+}
+
+float GGX_ScatteringPDF(float ndf, float vdoth, float cosH)
+{
+	return ndf * cosH / (4 * vdoth);
 }
 
 #endif

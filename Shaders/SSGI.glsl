@@ -23,15 +23,22 @@ void main()
 	UnpackGBuffers(screenUV, screenCoords, surface, material);
 
 	seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
-	
+
+	ONB onb;
+	ONB_BuildFromW(onb, surface.worldNormal);
+
+	const float alpha = material.roughness * material.roughness;
+
+	float cosH;
 	const vec3 eyeDir = normalize( _Camera.position - surface.worldPosition );
-	const vec3 scatterDir = reflect( -eyeDir, surface.worldNormal + material.roughness * RandomInUnitSphere() );
+	const vec3 halfwayDir = ONB_Transform( onb, GGX_ImportanceSample( alpha, cosH ) );
+	const vec3 scatterDir = normalize( 2 * dot( eyeDir, halfwayDir ) * halfwayDir - eyeDir );
 	const vec3 csScatterDir = vec3( normalize( _Camera.worldToView * vec4(scatterDir, 0.0) ) );
 	const vec3 csOrigin = vec3( _Camera.worldToView * vec4(surface.worldPosition, 1) );
 	
 	vec2 hitPixel;
 	vec3 csHitPoint;
-	vec3 indirectSpecular = vec3(0);
+	vec3 li = vec3(0);
 
 	const float THICC = 0.1;
 	const float STRIDE = 16.0;
@@ -54,20 +61,32 @@ void main()
 		csHitPoint)
 		)
 	{
-		indirectSpecular = imageLoad(_SceneColor, ivec2(hitPixel)).rgb;
+		li = imageLoad(_SceneColor, ivec2(hitPixel)).rgb;
 
 		const vec3 hitNormal = LoadNormal(ivec2(hitPixel));
-		indirectSpecular *= dot( hitNormal, scatterDir ) > 0.0 ? 0.0 : 1.0;
-		indirectSpecular *= dot( hitNormal, surface.worldNormal ) > 0.9 ? 0.0 : 1.0;
-
-		//float confidence = smoothstep(0, THICC, distance(csOrigin, csHitPoint));
+		li *= dot( hitNormal, scatterDir ) > 0.0 ? 0.0 : 1.0;
+		li *= dot( hitNormal, surface.worldNormal ) > 0.9 ? 0.0 : 1.0;
 	}
 	else
 	{
-		//indirectSpecular = SampleCubemap(_Skybox, _SkyboxSampler, scatterDir ).rgb;
+		//li = SampleCubemap(_Skybox, _SkyboxSampler, scatterDir ).rgb;
 	}
 
-	indirectSpecular *= material.baseColor;
+	const float ndoth = max(dot(surface.worldNormal, halfwayDir), 0);
+	const float ndotv = max(dot(surface.worldNormal, eyeDir), 0);
+	const float ndotl = max(dot(surface.worldNormal, scatterDir), 0);
+	const float vdoth = max(dot(eyeDir, halfwayDir), 1e-6);
+
+	const float ndf		= NormalGGX(ndoth, alpha);
+	const float g		= SmithGF(ndotv, ndotl, alpha);
+	const vec3 fresnel	= FresnelSchlick(material.specularColor, ndotl);
+	const vec3 specular = (ndf * g * fresnel) / max(4.0 * ndotv * ndotl, 1e-6);
+
+	const float scatteringPDF = GGX_ScatteringPDF(ndf, vdoth, cosH);
+
+	const vec3 threshold = vec3(1);
+
+	vec3 indirectSpecular = min(li * specular * ndotl / scatteringPDF, threshold);
 
 	const vec4 prevSSGIColor = imageLoad(_SSGIHistory, screenCoords);
 	const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSGIColor.a)));

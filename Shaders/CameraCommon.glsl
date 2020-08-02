@@ -35,7 +35,7 @@ void UnpackGBuffers(vec2 screenUV, ivec2 screenCoords, inout SurfaceData surface
 
 	material.baseColor = gBuffer1Data.rgb;
 	material.metallic = gBuffer0Data.a;
-	material.roughness = gBuffer1Data.a;
+	material.roughness = clamp( gBuffer1Data.a, 1e-1, 1.0 );
 	material.specularColor = mix(vec3(0.04), material.baseColor, material.metallic);
 	material.diffuseColor = Diffuse_BRDF(material.baseColor);
 }
