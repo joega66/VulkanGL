@@ -24,12 +24,14 @@ vec3 Ray_At(Ray ray, float t)
 
 #define MAT_LAMBERTIAN	0
 #define MAT_GGX			1
+#define MAT_DIELECTRIC	2
 
 struct Material
 {
 	vec3 albedo;
 	float roughness;
 	float metallic;
+	float refractiveIndex;
 	bool isEmitter;
 	int type;
 };
@@ -55,7 +57,7 @@ HitRecord HitRecord_Init()
 void HitRecord_SetFaceNormal(inout HitRecord rec, Ray ray, vec3 outwardNormal)
 {
 	rec.frontFace = dot(ray.direction, outwardNormal) < 0;
-	rec.normal = rec.frontFace ? outwardNormal : -outwardNormal;
+	rec.normal = rec.frontFace ? normalize(outwardNormal) : normalize(-outwardNormal);
 }
 
 struct Sphere
@@ -188,11 +190,14 @@ float XZRect_PDF(XZRect rect, vec3 origin, vec3 direction)
 
 XZRect lightSource = { 213, 343, 227, 332, 554 };
 
-Sphere spheres[] = { { vec3(277.5, 100, 277.5), 100 } };
+Sphere spheres[] = 
+{ 
+	{ vec3(277.5, 100, 277.5), 100 },
+};
 
 Material sphereMaterials[] =
 {
-	{ vec3(0.5), 0.25, 0.99, false, MAT_GGX }
+	{ vec3(1.0), 0.25, 0.99, 1.1, false, MAT_DIELECTRIC },
 };
 
 YZRect yzRects[] =
@@ -203,8 +208,8 @@ YZRect yzRects[] =
 
 Material yzRectMaterials[] =
 {
-	{ vec3(.12, .45, .15), 1.0, 0.0, false, MAT_LAMBERTIAN },
-	{ vec3(.65, .05, .05), 1.0, 0.0, false, MAT_LAMBERTIAN },
+	{ vec3(.12, .45, .15), 1.0, 0.0, 0, false, MAT_LAMBERTIAN },
+	{ vec3(.65, .05, .05), 1.0, 0.0, 0, false, MAT_LAMBERTIAN },
 };
 
 XZRect xzRects[] = 
@@ -216,9 +221,9 @@ XZRect xzRects[] =
 
 Material xzRectMaterials[] =
 {
-	{ vec3(.73), 1.0, 0.0, false, MAT_LAMBERTIAN },
-	{ vec3(.73), 1.0, 0.0, false, MAT_LAMBERTIAN },
-	{ vec3(150.), 1.0, 0.0, true, MAT_LAMBERTIAN },
+	{ vec3(.73), 1.0, 0.0, 0, false, MAT_LAMBERTIAN },
+	{ vec3(.73), 1.0, 0.0, 0, false, MAT_LAMBERTIAN },
+	{ vec3(150.), 1.0, 0.0, 0, true, MAT_LAMBERTIAN },
 };
 
 XYRect xyRects[] = 
@@ -228,7 +233,7 @@ XYRect xyRects[] =
 
 Material xyRectMaterials[] =
 {
-	{ vec3(.73), 1.0, 0.0, false, MAT_LAMBERTIAN },
+	{ vec3(.73), 1.0, 0.0, 0, false, MAT_LAMBERTIAN },
 };
 
 /** @end Scene */
@@ -303,8 +308,8 @@ vec3 RayColor(Ray ray)
 		Material mat;
 		if ( !TraceRay(ray, rec, mat) )
 		{
-			//color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
-			color *= vec3(0);
+			color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
+			//color *= vec3(0);
 			return color;
 		}
 
@@ -351,6 +356,32 @@ vec3 RayColor(Ray ray)
 			mat.albedo = specular * ndotl;
 
 			scatteringPDF = GGX_ScatteringPDF(ndf, vdoth, cosH);
+		}
+		else if (mat.type == MAT_DIELECTRIC)
+		{
+			const float eta = rec.frontFace ? 1.0 / mat.refractiveIndex : mat.refractiveIndex;
+			const vec3 unitDirection = normalize(ray.direction);
+			const float cosTheta = min(dot(-unitDirection, rec.normal), 1.0);
+			const float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+			if (eta * sinTheta > 1.0)
+			{
+				scattered.direction = reflect(unitDirection, rec.normal);
+			}
+			else
+			{
+				const float reflectChance = Schlick(cosTheta, eta);
+				if (RandomFloat() < reflectChance)
+				{
+					scattered.direction = reflect(unitDirection, rec.normal);
+				}
+				else
+				{
+					scattered.direction = refract(unitDirection, rec.normal, eta);
+				}
+			}
+
+			scatteringPDF = 1.0;
 		}
 
 		const vec3 threshold = vec3(1);

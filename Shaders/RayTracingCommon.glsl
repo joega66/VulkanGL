@@ -46,7 +46,7 @@ float length2(vec3 x)
 }
 
 uint seed;
-uint WangHash()
+uint RandomNext()
 {
 	seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
 	seed *= uint(9);
@@ -59,7 +59,7 @@ uint WangHash()
 /** Generate a random float [0...1] */
 float RandomFloat()
 {
-	return float(WangHash()) / 4294967296.0;
+	return float(RandomNext()) / 4294967296.0;
 }
 
 float RandomFloat(float min, float max)
@@ -136,6 +136,13 @@ vec3 GGX_ImportanceSample(float alpha, inout float cosH)
 float GGX_ScatteringPDF(float ndf, float vdoth, float cosH)
 {
 	return ndf * cosH / (4 * vdoth);
+}
+
+float Schlick(float cosTheta, float refractiveIndex)
+{
+	float r0 = (1 - refractiveIndex) / (1 + refractiveIndex);
+	r0 = r0 * r0;
+	return r0 + (1 - r0) * pow((1 - cosTheta), 5);
 }
 
 #endif
