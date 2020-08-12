@@ -1,5 +1,6 @@
 #include "SceneRenderer.h"
 #include <Engine/Engine.h>
+#include <Engine/Screen.h>
 #include <Components/RenderSettings.h>
 #include <Systems/UserInterface.h>
 #include "ShadowProxy.h"
@@ -13,6 +14,11 @@ SceneRenderer::SceneRenderer(Engine& engine)
 	, _Assets(engine.Assets)
 	, _Camera(engine.Camera)
 {
+	engine._Screen.OnScreenResize([this] (int32 width, int32 height)
+	{
+		_Surface.Resize(width, height, EImageUsage::Attachment | EImageUsage::Storage);
+	});
+
 	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
 }
 
@@ -39,7 +45,7 @@ void SceneRenderer::Render(CameraProxy& camera)
 		RenderSkybox(camera, cmdList);
 	}
 
-	const uint32 imageIndex = _Surface.AcquireNextImage(_Device);
+	const uint32 imageIndex = _Surface.AcquireNextImage();
 	const gpu::Image& displayImage = _Surface.GetImage(imageIndex);
 	ImageMemoryBarrier barrier{ displayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
@@ -56,7 +62,7 @@ void SceneRenderer::Render(CameraProxy& camera)
 
 	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, camera._UserInterfaceRP[imageIndex]);
 
-	_Surface.Present(_Device, imageIndex, cmdList);
+	_Surface.Present(imageIndex, cmdList);
 
 	_Device.EndFrame();
 }

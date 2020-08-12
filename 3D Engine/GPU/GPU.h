@@ -94,9 +94,9 @@ namespace gpu
 	class Surface
 	{
 	public:
-		virtual uint32 AcquireNextImage(gpu::Device& device) = 0;
-		virtual void Present(gpu::Device& device, uint32 imageIndex, gpu::CommandList& cmdList) = 0;
-		virtual void Resize(gpu::Device& device, uint32 screenWidth, uint32 screenHeight) = 0;
+		virtual uint32 AcquireNextImage() = 0;
+		virtual void Present(uint32 imageIndex, gpu::CommandList& cmdList) = 0;
+		virtual void Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) = 0;
 		virtual const gpu::Image& GetImage(uint32 imageIndex) = 0;
 		virtual const std::vector<gpu::Image>& GetImages() = 0;
 	};

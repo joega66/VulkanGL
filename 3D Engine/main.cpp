@@ -27,8 +27,6 @@ int main(int argc, char* argv[])
 
 	Device->CreateLogicalDevice();
 
-	Surface->Init(*Device);
-
 	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderLibrary, *Surface);
 	Engine.Main();
 

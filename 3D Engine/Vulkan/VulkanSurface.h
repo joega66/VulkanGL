@@ -5,51 +5,48 @@
 class VulkanSurface : public gpu::Surface
 {
 public:
-	VulkanSurface(Platform& Platform, VulkanDevice& Device);
-
-	/** Some initialization that needs to happen using the logical device. 
-	  * This is kinda janky and will get removed when gpu::Semaphore comes.
-	  */
-	void Init(VulkanDevice& Device);
+	VulkanSurface(Platform& platform, VulkanDevice& device);
 
 	/** Get the next image index. */
-	virtual uint32 AcquireNextImage(gpu::Device& Device) override;
+	uint32 AcquireNextImage() override;
 
 	/** Present the image to the display engine. */
-	virtual void Present(gpu::Device& Device, uint32 ImageIndex, gpu::CommandList& CmdList) override;
+	void Present(uint32 imageIndex, gpu::CommandList& cmdList) override;
 
 	/** Create a new swapchain (if within surface capabilities.) */
-	virtual void Resize(gpu::Device& Device, uint32 ScreenWidth, uint32 ScreenHeight) override;
+	void Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) override;
 
 	/** Get the swapchain image. */
-	virtual const gpu::Image& GetImage(uint32 ImageIndex) override;
+	const gpu::Image& GetImage(uint32 imageIndex) override;
 
 	/** Get all images in the swapchain. */
-	virtual const std::vector<gpu::Image>& GetImages() override;
+	const std::vector<gpu::Image>& GetImages() override;
 
-	operator VkSurfaceKHR() { return Surface; }
+	operator VkSurfaceKHR() { return _Surface; }
 
-	inline VkSurfaceFormatKHR GetFormat() const { return SurfaceFormat; }
-	inline VkPresentModeKHR GetPresentMode() const { return PresentMode; }
+	inline VkSurfaceFormatKHR GetFormat() const { return _SurfaceFormat; }
+	inline VkPresentModeKHR GetPresentMode() const { return _PresentMode; }
 
 private:
-	VkSurfaceKHR Surface;
+	VulkanDevice& _Device;
 
-	VkSurfaceFormatKHR SurfaceFormat;
+	VkSurfaceKHR _Surface;
 
-	VkPresentModeKHR PresentMode;
+	VkSurfaceFormatKHR _SurfaceFormat;
+
+	VkPresentModeKHR _PresentMode;
 
 	/** The swapchain. */
-	VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
+	VkSwapchainKHR _Swapchain = VK_NULL_HANDLE;
 
 	/** Swapchain images. */
-	std::vector<gpu::Image> Images;
+	std::vector<gpu::Image> _Images;
 
 	/** @todo Move me to the SceneRenderer. */
-	VkSemaphore ImageAvailableSem = VK_NULL_HANDLE;
-	VkSemaphore RenderEndSem = VK_NULL_HANDLE;
+	VkSemaphore _ImageAvailableSem = VK_NULL_HANDLE;
+	VkSemaphore _RenderEndSem = VK_NULL_HANDLE;
 
 	/** Present queue. */
-	VkQueue PresentQueue = VK_NULL_HANDLE;
-	uint32 PresentIndex = -1;
+	VkQueue _PresentQueue = VK_NULL_HANDLE;
+	uint32 _PresentIndex = -1;
 };

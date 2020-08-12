@@ -43,11 +43,9 @@ Engine::Engine(
 
 void Engine::Main()
 {
-	_Screen.OnScreenResize([this] (int32 Width, int32 Height)
-	{
-		Surface.Resize(Device, Width, Height);
-	});
-	
+	SceneRenderer sceneRenderer(*this);
+	CameraProxy cameraProxy(*this);
+
 	SystemsManager SystemsManager;
 
 	RenderSystem RenderSystem;
@@ -65,9 +63,6 @@ void Engine::Main()
 	SystemsManager.StartRenderSystems(*this);
 	SystemsManager.StartSystems(*this);
 
-	CameraProxy CameraProxy(*this);
-	SceneRenderer sceneRenderer(*this);
-
 	while (!_Platform.WindowShouldClose())
 	{
 		_Platform.PollEvents();
@@ -77,9 +72,9 @@ void Engine::Main()
 		SystemsManager.UpdateSystems(*this);
 		SystemsManager.UpdateRenderSystems(*this);
 
-		CameraProxy.Update(*this);
+		cameraProxy.Update(*this);
 
-		sceneRenderer.Render(CameraProxy);
+		sceneRenderer.Render(cameraProxy);
 
 		_Cursor.Update(_Platform);
 		_Input.Update(_Platform);
