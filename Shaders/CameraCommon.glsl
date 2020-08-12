@@ -14,11 +14,10 @@ layout(binding = 4, set = CAMERA_SET, rgba16f) uniform image2D _SceneColor;
 layout(binding = 5, set = CAMERA_SET, rgba16f) uniform image2D _SSGIHistory;
 
 /** Transform from screen space to world space. */
-vec3 ScreenToWorld(vec2 screenUV)
+vec3 ScreenToWorld(vec2 screenUV, float depth)
 {
-	float depth = texture(_SceneDepth, screenUV).r;
-	vec2 clipSpace = (screenUV - 0.5f) * 2.0f;
-	vec4 clipSpaceH = vec4(clipSpace, depth, 1.0f);
+	const vec2 clipSpace = (screenUV - 0.5f) * 2.0f;
+	const vec4 clipSpaceH = vec4(clipSpace, depth, 1.0f);
 	vec4 worldSpace = _Camera.clipToWorld * clipSpaceH;
 	worldSpace.xyz /= worldSpace.w;
 	return worldSpace.xyz;
@@ -30,7 +29,9 @@ void UnpackGBuffers(vec2 screenUV, ivec2 screenCoords, inout SurfaceData surface
 	const vec4 gBuffer0Data = texelFetch(_GBuffer0, screenCoords, 0);
 	const vec4 gBuffer1Data = texelFetch(_GBuffer1, screenCoords, 0);
 
-	surface.worldPosition = ScreenToWorld(screenUV);
+	surface.depth = texture(_SceneDepth, screenUV).r;
+
+	surface.worldPosition = ScreenToWorld(screenUV, surface.depth);
 	surface.worldNormal = gBuffer0Data.rgb;
 
 	material.baseColor = gBuffer1Data.rgb;

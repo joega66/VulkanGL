@@ -67,6 +67,7 @@ public:
 
 	inline const glm::vec3& GetPrevPosition() const { return _PrevPosition; }
 	inline const glm::quat& GetPrevRotation() const { return _PrevRotation; }
+	inline const glm::mat4& GetPrevWorldToClip() const { return _PrevWorldToClip; }
 
 private:
 	/** Camera width. */
@@ -95,6 +96,9 @@ private:
 
 	/** Transforms points from view to clip space. */
 	glm::mat4 _ViewToClip;
+	
+	/** Previous frame's world-to-clip matrix. */
+	glm::mat4 _PrevWorldToClip = {};
 	
 	/** Near and far planes. */
 	float _NearPlane;

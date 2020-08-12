@@ -6,6 +6,7 @@ struct SurfaceData
 	vec3 worldPosition;
 	vec3 worldNormal;
 	vec2 uv;
+	float depth;
 };
 
 #endif

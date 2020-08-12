@@ -5,9 +5,9 @@
 #include "SceneResources.glsl"
 #include "RayTracingCommon.glsl"
 #include "LightingCommon.glsl"
+#include "Common.glsl"
 
 const float INFINITY = 1.0f / 0.0f;
-const int SAMPLES_PER_PIXEL = 1;
 const int MAX_RAY_DEPTH = 8;
 const int MAX_TEMPORAL_SAMPLES = 1024;
 
@@ -22,9 +22,9 @@ vec3 Ray_At(Ray ray, float t)
 	return ray.origin + t * ray.direction;
 }
 
-#define MAT_LAMBERTIAN	0
-#define MAT_GGX			1
-#define MAT_DIELECTRIC	2
+#define MAT_LAMBERTIAN	1
+#define MAT_GGX			2
+#define MAT_DIELECTRIC	3
 
 struct Material
 {
@@ -197,7 +197,7 @@ Sphere spheres[] =
 
 Material sphereMaterials[] =
 {
-	{ vec3(1.0), 0.25, 0.99, 1.1, false, MAT_DIELECTRIC },
+	{ vec3(1.0), 0.25, 0.99, 1.1, false, MAT_LAMBERTIAN },
 };
 
 YZRect yzRects[] =
@@ -285,17 +285,6 @@ bool TraceRay(Ray ray, inout HitRecord rec, inout Material mat)
 	}
 	
 	return closestSoFar != INFINITY;
-}
-
-float CosinePDF(vec3 normal, vec3 direction)
-{
-	const float cosine = dot(normal, direction);
-	return cosine <= 0 ? 0 : cosine / PI;
-}
-
-float Lambertian_ScatteringPDF(vec3 normal, vec3 direction)
-{
-	return CosinePDF(normal, direction);
 }
 
 vec3 RayColor(Ray ray)
@@ -404,14 +393,13 @@ void main()
 
 	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
 	
-	seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
+	seed = RandomInit(screenCoords, _FrameNumber);
 
 	vec3 color = vec3(0);
 
-	for (int i = 0; i < SAMPLES_PER_PIXEL; i++)
 	{
-		const float s = ( float(screenCoords.x) + RandomFloat() ) / ( float(sceneColorSize.x) );
-		const float t = 1.0 - ( float(screenCoords.y) + RandomFloat() ) / ( float(sceneColorSize.y) );
+		const float s = (float(screenCoords.x) + RandomFloat()) / (float(sceneColorSize.x));
+		const float t = 1.0 - (float(screenCoords.y) + RandomFloat()) / (float(sceneColorSize.y));
 
 		Ray ray;
 		ray.origin = _Origin.xyz;
@@ -419,10 +407,28 @@ void main()
 
 		color += RayColor(ray);
 	}
-
-	color /= SAMPLES_PER_PIXEL;
 	
-	if ( _FrameNumber < MAX_TEMPORAL_SAMPLES ) // Prevents color banding
+	// History reprojection
+	/*const vec4 clipSpaceH = _Camera.worldToClip * vec4(closestHitInfo.position, 1.0);
+	const vec3 clipSpace = clipSpaceH.xyz / clipSpaceH.w;
+
+	const vec4 prevClipSpaceH = _Camera.prevWorldToClip * vec4(closestHitInfo.position, 1.0);
+	const vec3 prevClipSpace = prevClipSpaceH.xyz / prevClipSpaceH.w;
+
+	const vec2 prevNormalized = (prevClipSpace.xy / 2.0) + 0.5;
+	const ivec2 prevScreenCoords = ivec2(prevNormalized * vec2(sceneColorSize));
+	
+	const float prevClosestHitDepth = imageLoad(_RTDepth, prevScreenCoords).r;
+
+	const float csNormalZ = normalize(mat3(_Camera.worldToView) * closestHitInfo.normal).z;
+
+	const float epsilon = 0.003 + 0.017 * abs(csNormalZ);
+
+	const float error = abs(1 - LinearizeDepth(prevClipSpace.z, _Camera.clipData) / LinearizeDepth(prevClosestHitDepth, _Camera.clipData));
+	
+	const bool isOffscreen = any(lessThan(prevNormalized, vec2(0))) || any(greaterThan(prevNormalized, vec2(1)));*/
+
+	if (_FrameNumber < MAX_TEMPORAL_SAMPLES) // Prevents color banding
 	{
 		const vec4 prevFrameColor = imageLoad(_SceneColor, screenCoords);
 		const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevFrameColor.a)));

@@ -8,6 +8,7 @@ BEGIN_UNIFORM_BUFFER(CameraUniform)
 	MEMBER(glm::mat4, viewToClip)
 	MEMBER(glm::mat4, worldToClip)
 	MEMBER(glm::mat4, clipToWorld)
+	MEMBER(glm::mat4, prevWorldToClip)
 	MEMBER(glm::vec3, position)
 	MEMBER(float, _pad0)
 	MEMBER(float, aspectRatio)
@@ -62,17 +63,18 @@ CameraProxy::CameraProxy(Engine& engine)
 		device.UpdateDescriptorSet(_CameraDescriptorSet, cameraDescriptors);
 
 		gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
+		
+		ImageMemoryBarrier barriers[] = { { _SSGIHistory } };
 
-		const ImageMemoryBarrier imageBarrier
+		for (auto& barrier : barriers)
 		{
-			_SSGIHistory,
-			EAccess::None,
-			EAccess::ShaderRead | EAccess::ShaderWrite,
-			EImageLayout::Undefined,
-			EImageLayout::General
-		};
+			barrier.srcAccessMask = EAccess::None;
+			barrier.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+			barrier.oldLayout = EImageLayout::Undefined;
+			barrier.newLayout = EImageLayout::General;
+		}
 
-		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, ARRAY_SIZE(barriers), barriers);
 
 		device.SubmitCommands(cmdList);
 	});
@@ -93,12 +95,15 @@ void CameraProxy::UpdateCameraUniform(Engine& engine)
 		camera.GetNearPlane() - camera.GetFarPlane(),
 		camera.GetFarPlane());
 
+	const glm::mat4 clipToWorld = glm::inverse(camera.GetWorldToClip());
+
 	const CameraUniform cameraUniform =
 	{
 		camera.GetWorldToView(),
 		camera.GetViewToClip(),
 		camera.GetWorldToClip(),
-		glm::inverse(camera.GetWorldToClip()),
+		clipToWorld,
+		camera.GetPrevWorldToClip(),
 		camera.GetPosition(),
 		0.0f,
 		camera.GetAspectRatio(),

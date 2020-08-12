@@ -118,4 +118,5 @@ void Camera::SaveState()
 {
 	_PrevPosition = _Position;
 	_PrevRotation = _Rotation;
+	_PrevWorldToClip = GetWorldToClip();
 }

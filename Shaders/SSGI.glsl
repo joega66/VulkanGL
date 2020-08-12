@@ -22,7 +22,7 @@ void main()
 
 	UnpackGBuffers(screenUV, screenCoords, surface, material);
 
-	seed = uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + _FrameNumber * uint(26699)) | uint(1);
+	seed = RandomInit(screenCoords, _FrameNumber);
 
 	ONB onb;
 	ONB_BuildFromW(onb, surface.worldNormal);

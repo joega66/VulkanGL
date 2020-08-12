@@ -45,8 +45,12 @@ float length2(vec3 x)
 	return dot(x, x);
 }
 
-uint seed;
-uint RandomNext()
+uint RandomInit(ivec2 screenCoords, uint frameNumber)
+{
+	return uint(uint(screenCoords.x) * uint(1973) + uint(screenCoords.y) * uint(9277) + frameNumber * uint(26699)) | uint(1);
+}
+
+uint RandomNext(inout uint seed)
 {
 	seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
 	seed *= uint(9);
@@ -56,10 +60,17 @@ uint RandomNext()
 	return seed;
 }
 
-/** Generate a random float [0...1] */
+/** Generate a random float [0...1]. */
+float RandomFloat(inout uint seed)
+{
+	return float(RandomNext(seed)) / 4294967296.0;
+}
+
+uint seed;
+/** Generate a random float [0...1] using the global seed. */
 float RandomFloat()
 {
-	return float(RandomNext()) / 4294967296.0;
+	return float(RandomNext(seed)) / 4294967296.0;
 }
 
 float RandomFloat(float min, float max)
@@ -143,6 +154,17 @@ float Schlick(float cosTheta, float refractiveIndex)
 	float r0 = (1 - refractiveIndex) / (1 + refractiveIndex);
 	r0 = r0 * r0;
 	return r0 + (1 - r0) * pow((1 - cosTheta), 5);
+}
+
+float CosinePDF(vec3 normal, vec3 direction)
+{
+	const float cosine = dot(normal, direction);
+	return cosine <= 0 ? 0 : cosine / PI;
+}
+
+float Lambertian_ScatteringPDF(vec3 normal, vec3 direction)
+{
+	return CosinePDF(normal, direction);
 }
 
 #endif
