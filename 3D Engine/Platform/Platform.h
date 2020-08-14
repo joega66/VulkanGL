@@ -58,6 +58,9 @@ public:
 	bool WindowShouldClose() const;
 	void PollEvents() const;
 
+	/** HWND */
+	void* GetWindow() const;
+
 	static void Exit();
 	static EMBReturn DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality = EMBModality::TASKMODAL);
 

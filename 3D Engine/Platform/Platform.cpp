@@ -35,6 +35,11 @@ void WindowsPlatform::PollEvents() const
 	glfwPollEvents();
 }
 
+void* WindowsPlatform::GetWindow() const
+{
+	return glfwGetWin32Window(Window);
+}
+
 void WindowsPlatform::Exit()
 {
 	exit(-1);
@@ -310,7 +315,7 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 
 std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 {
-	const HWND Hwnd = glfwGetWin32Window(Window);
+	const HWND Hwnd = (HWND)GetWindow();
 
 	OPENFILENAME OFN;
 	std::array<char, 1024> File;

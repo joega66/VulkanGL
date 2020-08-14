@@ -20,7 +20,7 @@ static const std::vector<const char*> DeviceExtensions =
 class VulkanDevice final : public gpu::Device
 {
 public:
-	VulkanDevice(Platform& Platform);
+	VulkanDevice();
 
 	~VulkanDevice() override {}
 

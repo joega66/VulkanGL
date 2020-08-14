@@ -1,6 +1,12 @@
 #include "VulkanSurface.h"
 #include "VulkanDevice.h"
-#include <GLFW/glfw3.h>
+
+#if _WIN32
+#include <Windows.h>
+#undef min
+#undef max
+#include <vulkan/vulkan_win32.h>
+#endif
 
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
 	const std::vector<VkSurfaceFormatKHR>& availableFormats,
@@ -55,11 +61,30 @@ static VkExtent2D ChooseSwapExtent(uint32 width, uint32 height, const VkSurfaceC
 	}
 }
 
+static VkSurfaceKHR CreateSurface(Platform& platform, VulkanDevice& device)
+{
+	VkSurfaceKHR surface;
+
+#if _WIN32
+	PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>
+		(vkGetInstanceProcAddr(device.GetInstance(), "vkCreateWin32SurfaceKHR"));
+
+	check( vkCreateWin32SurfaceKHR, "Failed to get proc address vkCreateWin32SurfaceKHR" );
+
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+	surfaceCreateInfo.hwnd = static_cast<HWND>(platform.GetWindow());
+
+	vulkan( vkCreateWin32SurfaceKHR(device.GetInstance(), &surfaceCreateInfo, nullptr, &surface) );
+#endif
+
+	return surface;
+}
+
 VulkanSurface::VulkanSurface(Platform& platform, VulkanDevice& device)
 	: _Device(device)
+	, _Surface(CreateSurface(platform, device))
 {
-	vulkan(glfwCreateWindowSurface(_Device.GetInstance(), platform.Window, nullptr, &_Surface));
-
 	uint32 queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(_Device.GetPhysicalDevice(), &queueFamilyCount, nullptr);
 

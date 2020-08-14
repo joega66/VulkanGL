@@ -1,5 +1,4 @@
 #include "VulkanDevice.h"
-#include <GLFW/glfw3.h>
 #include <unordered_set>
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& ValidationLayers)
@@ -31,21 +30,6 @@ static bool CheckValidationLayerSupport(const std::vector<const char*>& Validati
 	return true;
 }
 
-static std::vector<const char*> GetRequiredExtensions(bool bUseValidationLayers)
-{
-	uint32 GLFWExtensionCount = 0;
-	const char** GLFWExtensions;
-	GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount);
-	std::vector<const char*> Extensions(GLFWExtensions, GLFWExtensions + GLFWExtensionCount);
-
-	if (bUseValidationLayers)
-	{
-		Extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-	}
-
-	return Extensions;
-}
-
 static VkInstance CreateInstance(const std::vector<const char*>& ValidationLayers, bool bUseValidationLayers)
 {
 	if (bUseValidationLayers && !CheckValidationLayerSupport(ValidationLayers))
@@ -60,8 +44,19 @@ static VkInstance CreateInstance(const std::vector<const char*>& ValidationLayer
 	ApplicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	ApplicationInfo.apiVersion = VK_API_VERSION_1_2;
 
-	auto Extensions = GetRequiredExtensions(bUseValidationLayers);
+	std::vector<const char*> Extensions;
+
+	if (bUseValidationLayers)
+	{
+		Extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	}
+
 	Extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+	Extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+
+#if _WIN32
+	Extensions.push_back("VK_KHR_win32_surface");
+#endif
 
 	VkInstanceCreateInfo InstanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 	InstanceInfo.pApplicationInfo = &ApplicationInfo;
@@ -180,7 +175,7 @@ static VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures(VkPhysicalDevice Physi
 	return Features;
 }
 
-VulkanDevice::VulkanDevice(Platform& Platform)
+VulkanDevice::VulkanDevice()
 	: Instance(CreateInstance(ValidationLayers, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false)))
 	, DebugReportCallback(CreateDebugReportCallback(Instance, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false)))
 	, PhysicalDevice(SelectPhysicalDevice(Instance, DeviceExtensions))

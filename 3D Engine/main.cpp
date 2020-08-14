@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 	GLFWWindowUserPointer WindowUserPointer{ &Cursor, &Input, &Screen };
 	glfwSetWindowUserPointer(Platform.Window, &WindowUserPointer);
 
-	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>(Platform);
+	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>();
 	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, *Device);
 	std::unique_ptr<VulkanShaderLibrary> ShaderLibrary = std::make_unique<VulkanShaderLibrary>(*Device);
 
