@@ -6,18 +6,18 @@ class VulkanDevice;
 class VulkanShaderLibrary final : public gpu::ShaderLibrary
 {
 public:
-	VulkanShaderLibrary(VulkanDevice& Device);
+	VulkanShaderLibrary(VulkanDevice& device);
 
-	virtual void RecompileShaders() override;
+	void RecompileShaders() override;
 
 private:
-	virtual ShaderCompilationInfo CompileShader(
-		const ShaderCompilerWorker& Worker,
-		const std::string& Filename,
-		const std::string& EntryPoint,
-		EShaderStage Stage,
-		std::type_index Type
+	ShaderCompilationInfo CompileShader(
+		const ShaderCompilerWorker& worker,
+		const std::string& filename,
+		const std::string& entryPoint,
+		EShaderStage stage,
+		std::type_index type
 	) override;
 
-	VulkanDevice& Device;
+	VulkanDevice& _Device;
 };

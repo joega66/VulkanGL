@@ -6,22 +6,22 @@
 
 static VkShaderStageFlags TranslateStageFlags(EShaderStage stageFlags)
 {
-	VkShaderStageFlags VkStageFlags = 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-	VkStageFlags |= Any(stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
-	return VkStageFlags;
+	VkShaderStageFlags vulkanStageFlags = 0;
+	vulkanStageFlags |= Any(stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
+	vulkanStageFlags |= Any(stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
+	vulkanStageFlags |= Any(stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
+	vulkanStageFlags |= Any(stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
+	vulkanStageFlags |= Any(stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+	vulkanStageFlags |= Any(stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
+	return vulkanStageFlags;
 }
 
-static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
+static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& type)
 {
-	switch (Type.basetype)
+	switch (type.basetype)
 	{
 	case spirv_cross::SPIRType::BaseType::Int:
-		switch (Type.width)
+		switch (type.width)
 		{
 		case 1:
 			return VK_FORMAT_R32_SINT;
@@ -33,7 +33,7 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 			return VK_FORMAT_R32G32B32A32_SINT;
 		}
 	case spirv_cross::SPIRType::BaseType::UInt:
-		switch (Type.width)
+		switch (type.width)
 		{
 		case 1:
 			return VK_FORMAT_R32_UINT;
@@ -45,7 +45,7 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 			return VK_FORMAT_R32G32B32A32_UINT;
 		}
 	case spirv_cross::SPIRType::BaseType::Float:
-		switch (Type.vecsize)
+		switch (type.vecsize)
 		{
 		case 1:
 			return VK_FORMAT_R32_SFLOAT;
@@ -61,34 +61,36 @@ static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& Type)
 	}
 }
 
-static std::vector<VertexAttributeDescription> ReflectVertexAttributeDescriptions(const spirv_cross::CompilerGLSL& GLSL, const spirv_cross::ShaderResources& Resources)
+static std::vector<VertexAttributeDescription> ReflectVertexAttributeDescriptions(
+	const spirv_cross::CompilerGLSL& glsl, 
+	const spirv_cross::ShaderResources& resources)
 {
-	std::vector<VertexAttributeDescription> Descriptions;
+	std::vector<VertexAttributeDescription> descriptions;
 
-	for (auto& Resource : Resources.stage_inputs)
+	for (auto& resource : resources.stage_inputs)
 	{
-		VertexAttributeDescription Description = {};
-		Description.location = GLSL.get_decoration(Resource.id, spv::DecorationLocation);
-		Description.format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(GLSL.get_type(Resource.type_id)));
-		Description.offset = 0;
+		VertexAttributeDescription description = {};
+		description.location = glsl.get_decoration(resource.id, spv::DecorationLocation);
+		description.format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(glsl.get_type(resource.type_id)));
+		description.offset = 0;
 
-		Descriptions.push_back(Description);
+		descriptions.push_back(description);
 	}
 
 	// This sorting saves from having to figure out
 	// a mapping between layout(location = ...) and buffer binding point
-	std::sort(Descriptions.begin(), Descriptions.end(),
-		[] (const VertexAttributeDescription& LHS, const VertexAttributeDescription& RHS)
+	std::sort(descriptions.begin(), descriptions.end(),
+		[] (const VertexAttributeDescription& lhs, const VertexAttributeDescription& rhs)
 	{
-		return LHS.location < RHS.location;
+		return lhs.location < rhs.location;
 	});
 
-	for (uint32_t Binding = 0; Binding < Descriptions.size(); Binding++)
+	for (uint32_t binding = 0; binding < descriptions.size(); binding++)
 	{
-		Descriptions[Binding].binding = Binding;
+		descriptions[binding].binding = binding;
 	}
 
-	return Descriptions;
+	return descriptions;
 }
 
 static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
@@ -169,7 +171,7 @@ static VkPushConstantRange ReflectPushConstantRange(
 		return { stageFlags, static_cast<uint32>(ranges.front().offset), static_cast<uint32>(size) };
 	}
 
-	return VkPushConstantRange{};
+	return {};
 }
 
 class ShadercIncluder : public shaderc::CompileOptions::IncluderInterface
@@ -181,153 +183,172 @@ public:
 		const char* requestingSource,
 		size_t includeDepth) override
 	{
-		static const std::string ShaderPath = "../Shaders/";
+		static const std::string shaderPath = "../Shaders/";
 
-		auto& SourceName = SourceNames.emplace_back(ShaderPath + std::string(requestedSource));
+		auto& sourceName = _SourceNames.emplace_back(shaderPath + std::string(requestedSource));
 
-		if (auto Iter = Includes.find(SourceName); Iter != Includes.end())
+		if (auto iter = _Includes.find(sourceName); iter != _Includes.end())
 		{
-			return &Iter->second;
+			return &iter->second;
 		}
 		else
 		{
-			auto& Source = Sources.emplace_back(Platform::FileRead(SourceName));
-			auto Include = Includes.emplace(SourceName, shaderc_include_result{ SourceName.c_str(), SourceName.size(), Source.c_str(), Source.size() });
-			return &Include.first->second;
+			auto& source = _Sources.emplace_back(Platform::FileRead(sourceName));
+			auto include = _Includes.emplace(sourceName, shaderc_include_result{ sourceName.c_str(), sourceName.size(), source.c_str(), source.size() });
+			return &include.first->second;
 		}
 	}
 
 	void ReleaseInclude(shaderc_include_result* data) override {}
 
 private:
-	std::list<std::string> SourceNames;
-	std::list<std::string> Sources;
-	std::unordered_map<std::string, shaderc_include_result> Includes;
+	std::list<std::string> _SourceNames;
+	std::list<std::string> _Sources;
+	std::unordered_map<std::string, shaderc_include_result> _Includes;
 };
 
-VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& Device)
-	: Device(Device)
+VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& device)
+	: _Device(device)
 {
 }
 
 ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
-	const ShaderCompilerWorker& Worker,
-	const std::string& Filename,
-	const std::string& EntryPoint,
-	EShaderStage Stage,
-	std::type_index Type
+	const ShaderCompilerWorker& worker,
+	const std::string& filename,
+	const std::string& entryPoint,
+	EShaderStage stage,
+	std::type_index type
 )
 {
-	auto Includer = std::make_unique<ShadercIncluder>();
+	shaderc::CompileOptions compileOptions;
+	compileOptions.SetForcedVersionProfile(450, shaderc_profile::shaderc_profile_none);
+	compileOptions.SetIncluder(std::make_unique<ShadercIncluder>());
 
-	shaderc::CompileOptions CompileOptions;
-	CompileOptions.SetForcedVersionProfile(450, shaderc_profile::shaderc_profile_none);
-	CompileOptions.SetIncluder(std::move(Includer));
-
-	const shaderc_shader_kind ShaderKind = [&] ()
+	const shaderc_shader_kind shaderKind = [&] ()
 	{
-		switch (Stage)
+		switch (stage)
 		{
 		case EShaderStage::Vertex:
-			CompileOptions.AddMacroDefinition("VERTEX_SHADER", "1");
+			compileOptions.AddMacroDefinition("VERTEX_SHADER", "1");
 			return shaderc_vertex_shader;
 		case EShaderStage::TessControl:
-			CompileOptions.AddMacroDefinition("TESSCONTROL_SHADER", "1");
+			compileOptions.AddMacroDefinition("TESSCONTROL_SHADER", "1");
 			return shaderc_tess_control_shader;
 		case EShaderStage::TessEvaluation:
-			CompileOptions.AddMacroDefinition("TESSEVAL_SHADER", "1");
+			compileOptions.AddMacroDefinition("TESSEVAL_SHADER", "1");
 			return shaderc_tess_evaluation_shader;
 		case EShaderStage::Geometry:
-			CompileOptions.AddMacroDefinition("GEOMETRY_SHADER", "1");
+			compileOptions.AddMacroDefinition("GEOMETRY_SHADER", "1");
 			return shaderc_geometry_shader;
 		case EShaderStage::Fragment:
-			CompileOptions.AddMacroDefinition("FRAGMENT_SHADER", "1");
+			compileOptions.AddMacroDefinition("FRAGMENT_SHADER", "1");
 			return shaderc_fragment_shader;
 		default: // Compute
 			return shaderc_compute_shader;
 		}
 	}();
 
-	for (const auto& [Define, Value] : Worker.GetDefines())
+	for (const auto& [define, value] : worker.GetDefines())
 	{
-		CompileOptions.AddMacroDefinition(Define, Value);
+		compileOptions.AddMacroDefinition(define, value);
 	}
 
-	const std::string pushConstantDecl = Worker.GetPushConstantMembers().empty() == false ?
-		"layout(push_constant) uniform _ShaderStruct{" + std::string(Worker.GetPushConstantMembers()) + "};\n"
-		: "";
-	
-	shaderc::Compiler Compiler;
-	shaderc::SpvCompilationResult SpvCompilationResult;
+	const auto pushConstantDecl = [&] () -> std::string
+	{
+		if (!worker.GetPushConstantMembers().empty())
+		{
+			return "layout(push_constant) uniform _ShaderStruct{" + std::string(worker.GetPushConstantMembers()) + "};\n";
+		}
+		
+		return "";
+	}();
+
+	const std::string globalShaderStructs = pushConstantDecl + gShaderStructs;
+
+	shaderc::Compiler compiler;
+	shaderc::SpvCompilationResult spvCompilationResult;
 
 	do
 	{
-		const std::string SourceText = Platform::FileRead(Filename, pushConstantDecl + gShaderStructs);
+		const std::string sourceText = Platform::FileRead(filename, globalShaderStructs);
 
-		SpvCompilationResult = Compiler.CompileGlslToSpv(SourceText, ShaderKind, Filename.c_str(), EntryPoint.c_str(), CompileOptions);
+		spvCompilationResult = compiler.CompileGlslToSpv(sourceText, shaderKind, filename.c_str(), entryPoint.c_str(), compileOptions);
 
-		if (SpvCompilationResult.GetNumErrors() > 0)
+		if (spvCompilationResult.GetNumErrors() > 0)
 		{
-			const EMBReturn Ret = Platform::DisplayMessageBox(
+			const EMBReturn ret = Platform::DisplayMessageBox(
 				EMBType::RETRYCANCEL, EMBIcon::WARNING, 
-				"Failed to compile " + Filename + "\n\n" + SpvCompilationResult.GetErrorMessage().c_str(), "Shader Compiler"
+				"Failed to compile " + filename + "\n\n" + spvCompilationResult.GetErrorMessage().c_str(), "Shader Compiler"
 			);
 
-			if (Ret == EMBReturn::CANCEL)
+			if (ret == EMBReturn::CANCEL)
 			{
 				Platform::Exit();
 			}
 		}
-	} while (SpvCompilationResult.GetNumErrors() > 0);
+	} while (spvCompilationResult.GetNumErrors() > 0);
 
-	std::vector<uint32> Code(SpvCompilationResult.begin(), SpvCompilationResult.end());
+	std::vector<uint32> code(spvCompilationResult.begin(), spvCompilationResult.end());
 
-	VkShaderModuleCreateInfo CreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-	CreateInfo.codeSize = Code.size() * sizeof(uint32);
-	CreateInfo.pCode = Code.data();
+	VkShaderModuleCreateInfo shaderModuleCreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+	shaderModuleCreateInfo.codeSize = code.size() * sizeof(uint32);
+	shaderModuleCreateInfo.pCode = code.data();
 
-	VkShaderModule ShaderModule;
-	vulkan(vkCreateShaderModule(Device, &CreateInfo, nullptr, &ShaderModule));
+	VkShaderModule shaderModule;
+	vulkan(vkCreateShaderModule(_Device, &shaderModuleCreateInfo, nullptr, &shaderModule));
 
-	spirv_cross::CompilerGLSL GLSL(Code.data(), Code.size());
-	spirv_cross::ShaderResources Resources = GLSL.get_shader_resources();
+	const spirv_cross::CompilerGLSL glsl(code.data(), code.size());
+	const spirv_cross::ShaderResources resources = glsl.get_shader_resources();
 
-	const std::vector<VertexAttributeDescription> VertexAttributeDescriptions = Stage == EShaderStage::Vertex ? 
-		ReflectVertexAttributeDescriptions(GLSL, Resources) : std::vector<VertexAttributeDescription>{};
+	const auto vertexAttributeDescriptions = [&] () -> std::vector<VertexAttributeDescription>
+	{
+		if (stage == EShaderStage::Vertex)
+		{
+			return ReflectVertexAttributeDescriptions(glsl, resources);
+		}
 
-	const std::map<uint32, VkDescriptorSetLayout> layouts = ReflectDescriptorSetLayouts(Device, GLSL, Resources);
+		return {};
+	}();
 
-	const VkShaderStageFlags vulkanStageFlags = TranslateStageFlags(Stage);
+	const auto layouts = ReflectDescriptorSetLayouts(_Device, glsl, resources);
 
-	const VkPushConstantRange pushConstantRange = Worker.GetPushConstantSize() > 0 ? 
-		VkPushConstantRange{ vulkanStageFlags, Worker.GetPushConstantOffset(), Worker.GetPushConstantSize() }
-		: ReflectPushConstantRange(GLSL, Resources, vulkanStageFlags);
+	const auto vulkanStageFlags = TranslateStageFlags(stage);
+
+	const auto pushConstantRange = [&] () -> VkPushConstantRange
+	{
+		if (worker.GetPushConstantSize() == 0)
+		{
+			return ReflectPushConstantRange(glsl, resources, vulkanStageFlags);
+		}
+
+		return { vulkanStageFlags, worker.GetPushConstantOffset(), worker.GetPushConstantSize() };
+	}();
 
 	return ShaderCompilationInfo(
-		Type, Stage, EntryPoint, Filename, Platform::GetLastWriteTime(Filename), Worker,
-		ShaderModule, VertexAttributeDescriptions, layouts, pushConstantRange);
+		type, stage, entryPoint, filename, Platform::GetLastWriteTime(filename), worker,
+		shaderModule, vertexAttributeDescriptions, layouts, pushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()
 {
-	for (const auto& [ShaderType, Shader] : _Shaders)
+	for (const auto& [shaderType, shader] : _Shaders)
 	{
-		const ShaderCompilationInfo& CompileInfo = Shader->compilationInfo;
-		const uint64 LastWriteTime = Platform::GetLastWriteTime(CompileInfo.filename);
+		const ShaderCompilationInfo& compileInfo = shader->compilationInfo;
+		const uint64 lastWriteTime = Platform::GetLastWriteTime(compileInfo.filename);
 
-		if (LastWriteTime > CompileInfo.lastWriteTime)
+		if (lastWriteTime > compileInfo.lastWriteTime)
 		{
 			// Destroy the old shader module.
-			vkDestroyShaderModule(Device, CompileInfo.shaderModule, nullptr);
+			vkDestroyShaderModule(_Device, compileInfo.shaderModule, nullptr);
 
-			Shader->compilationInfo = CompileShader(
-				CompileInfo.worker,
-				CompileInfo.filename, 
-				CompileInfo.entrypoint,
-				CompileInfo.stage, 
-				CompileInfo.type);
+			shader->compilationInfo = CompileShader(
+				compileInfo.worker,
+				compileInfo.filename,
+				compileInfo.entrypoint,
+				compileInfo.stage,
+				compileInfo.type);
 		}
 	}
 
-	Device.GetCache().RecompilePipelines();
+	_Device.GetCache().RecompilePipelines();
 }
