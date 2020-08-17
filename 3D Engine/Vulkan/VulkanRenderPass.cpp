@@ -1,47 +1,47 @@
 #include "VulkanRenderPass.h"
 #include "VulkanDevice.h"
 
-std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPassDesc& RPDesc)
+std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPassDesc& rpDesc)
 {
-	std::size_t Seed;
+	std::size_t seed;
 
-	for (const auto& ColorAttachment : RPDesc.colorAttachments)
+	for (const auto& colorAttachment : rpDesc.colorAttachments)
 	{
-		HashCombine(Seed, ColorAttachment.initialLayout);
-		HashCombine(Seed, ColorAttachment.finalLayout);
-		HashCombine(Seed, ColorAttachment.loadAction);
-		HashCombine(Seed, ColorAttachment.storeAction);
+		HashCombine(seed, colorAttachment.initialLayout);
+		HashCombine(seed, colorAttachment.finalLayout);
+		HashCombine(seed, colorAttachment.loadAction);
+		HashCombine(seed, colorAttachment.storeAction);
 	}
 
-	HashCombine(Seed, RPDesc.depthAttachment.initialLayout);
-	HashCombine(Seed, RPDesc.depthAttachment.finalLayout);
-	HashCombine(Seed, RPDesc.depthAttachment.loadAction);
-	HashCombine(Seed, RPDesc.depthAttachment.storeAction);
+	HashCombine(seed, rpDesc.depthAttachment.initialLayout);
+	HashCombine(seed, rpDesc.depthAttachment.finalLayout);
+	HashCombine(seed, rpDesc.depthAttachment.loadAction);
+	HashCombine(seed, rpDesc.depthAttachment.storeAction);
 
-	VkRenderPass RenderPass = VK_NULL_HANDLE;
+	VkRenderPass renderPass = VK_NULL_HANDLE;
 
-	if (auto Iter = RenderPassCache.find(Seed); Iter != RenderPassCache.end())
+	if (auto iter = RenderPassCache.find(seed); iter != RenderPassCache.end())
 	{
-		RenderPass = Iter->second;
+		renderPass = iter->second;
 	}
 
-	if (RenderPass == VK_NULL_HANDLE)
+	if (renderPass == VK_NULL_HANDLE)
 	{
-		RenderPass = CreateRenderPass(RPDesc);
-		RenderPassCache.emplace(Seed, RenderPass);
+		renderPass = CreateRenderPass(rpDesc);
+		RenderPassCache.emplace(seed, renderPass);
 	}
 
-	const VkFramebuffer Framebuffer = CreateFramebuffer(RenderPass, RPDesc);
-	return { RenderPass, Framebuffer };
+	const VkFramebuffer framebuffer = CreateFramebuffer(renderPass, rpDesc);
+	return { renderPass, framebuffer };
 }
 
-static VkAttachmentLoadOp GetVulkanLoadOp(ELoadAction LoadAction)
+static VkAttachmentLoadOp GetVulkanLoadOp(ELoadAction loadAction)
 {
-	if (LoadAction == ELoadAction::Clear)
+	if (loadAction == ELoadAction::Clear)
 	{
 		return VK_ATTACHMENT_LOAD_OP_CLEAR;
 	}
-	else if (LoadAction == ELoadAction::Load)
+	else if (loadAction == ELoadAction::Load)
 	{
 		return VK_ATTACHMENT_LOAD_OP_LOAD;
 	}
@@ -51,9 +51,9 @@ static VkAttachmentLoadOp GetVulkanLoadOp(ELoadAction LoadAction)
 	}
 }
 
-static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction StoreAction)
+static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction storeAction)
 {
-	if (StoreAction == EStoreAction::Store)
+	if (storeAction == EStoreAction::Store)
 	{
 		return VK_ATTACHMENT_STORE_OP_STORE;
 	}
@@ -63,194 +63,194 @@ static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction StoreAction)
 	}
 }
 
-VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& RPDesc)
+VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 {
-	std::vector<VkAttachmentDescription> Descriptions;
-	std::vector<VkAttachmentReference> ColorRefs;
-	ColorRefs.reserve(RPDesc.colorAttachments.size());
+	std::vector<VkAttachmentDescription> descriptions;
+	std::vector<VkAttachmentReference> colorRefs;
+	colorRefs.reserve(rpDesc.colorAttachments.size());
 
-	VkAttachmentReference DepthRef = {};
+	VkAttachmentReference depthRef = {};
 
-	if (RPDesc.depthAttachment.image)
+	if (rpDesc.depthAttachment.image)
 	{
-		Descriptions.reserve(RPDesc.colorAttachments.size() + 1);
+		descriptions.reserve(rpDesc.colorAttachments.size() + 1);
 	}
 	else
 	{
-		Descriptions.reserve(RPDesc.colorAttachments.size());
+		descriptions.reserve(rpDesc.colorAttachments.size());
 	}
 
-	for (uint32 AttachmentIndex = 0; AttachmentIndex < RPDesc.colorAttachments.size(); AttachmentIndex++)
+	for (uint32 attachmentIndex = 0; attachmentIndex < rpDesc.colorAttachments.size(); attachmentIndex++)
 	{
-		const gpu::AttachmentView& ColorAttachment = RPDesc.colorAttachments[AttachmentIndex];
-		const gpu::Image* Image = ColorAttachment.image;
+		const gpu::AttachmentView& colorAttachment = rpDesc.colorAttachments[attachmentIndex];
+		const gpu::Image* image = colorAttachment.image;
 
-		check(Image && Any(Image->GetUsage() & EImageUsage::Attachment), "Color target is invalid.");
-		check(Image->IsColor(), "Color target was not created in color format.");
+		check(image && Any(image->GetUsage() & EImageUsage::Attachment), "Color target is invalid.");
+		check(image->IsColor(), "Color target was not created in color format.");
 
-		VkAttachmentDescription ColorDescription = {};
-		ColorDescription.format = Image->GetVulkanFormat();
-		ColorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		ColorDescription.loadOp = GetVulkanLoadOp(ColorAttachment.loadAction);
-		ColorDescription.storeOp = GetVulkanStoreOp(ColorAttachment.storeAction);
-		ColorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		ColorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ColorDescription.initialLayout = VulkanImage::GetVulkanLayout(ColorAttachment.initialLayout);
-		ColorDescription.finalLayout = VulkanImage::GetVulkanLayout(ColorAttachment.finalLayout);
-		Descriptions.push_back(ColorDescription);
+		VkAttachmentDescription colorDescription = {};
+		colorDescription.format = image->GetVulkanFormat();
+		colorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorDescription.loadOp = GetVulkanLoadOp(colorAttachment.loadAction);
+		colorDescription.storeOp = GetVulkanStoreOp(colorAttachment.storeAction);
+		colorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorDescription.initialLayout = VulkanImage::GetVulkanLayout(colorAttachment.initialLayout);
+		colorDescription.finalLayout = VulkanImage::GetVulkanLayout(colorAttachment.finalLayout);
+		descriptions.push_back(colorDescription);
 
-		ColorRefs.push_back({ AttachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
+		colorRefs.push_back({ attachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 	}
 
-	if (RPDesc.depthAttachment.image)
+	if (rpDesc.depthAttachment.image)
 	{
-		const gpu::Image* DepthImage = RPDesc.depthAttachment.image;
+		const gpu::Image* depthImage = rpDesc.depthAttachment.image;
 
-		check(DepthImage && Any(DepthImage->GetUsage() & EImageUsage::Attachment), "Depth target is invalid.");
-		check(DepthImage->IsDepth() || DepthImage->IsStencil(), "Depth target was not created in a depth layout.");
+		check(depthImage && Any(depthImage->GetUsage() & EImageUsage::Attachment), "Depth target is invalid.");
+		check(depthImage->IsDepth() || depthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
-		VkAttachmentLoadOp LoadOp = GetVulkanLoadOp(RPDesc.depthAttachment.loadAction);
-		VkAttachmentStoreOp StoreOp = GetVulkanStoreOp(RPDesc.depthAttachment.storeAction);
+		VkAttachmentLoadOp loadOp = GetVulkanLoadOp(rpDesc.depthAttachment.loadAction);
+		VkAttachmentStoreOp storeOp = GetVulkanStoreOp(rpDesc.depthAttachment.storeAction);
 
-		VkAttachmentDescription DepthDescription = {};
-		DepthDescription.format = DepthImage->GetVulkanFormat();
-		DepthDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		DepthDescription.loadOp = DepthImage->IsDepth() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		DepthDescription.storeOp = DepthImage->IsDepth() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		DepthDescription.stencilLoadOp = DepthImage->IsStencil() ? LoadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		DepthDescription.stencilStoreOp = DepthImage->IsStencil() ? StoreOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		DepthDescription.initialLayout = VulkanImage::GetVulkanLayout(RPDesc.depthAttachment.initialLayout);
-		DepthDescription.finalLayout = VulkanImage::GetVulkanLayout(RPDesc.depthAttachment.finalLayout);
-		Descriptions.push_back(DepthDescription);
+		VkAttachmentDescription depthDescription = {};
+		depthDescription.format = depthImage->GetVulkanFormat();
+		depthDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthDescription.loadOp = depthImage->IsDepth() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthDescription.storeOp = depthImage->IsDepth() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthDescription.stencilLoadOp = depthImage->IsStencil() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthDescription.stencilStoreOp = depthImage->IsStencil() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthDescription.initialLayout = VulkanImage::GetVulkanLayout(rpDesc.depthAttachment.initialLayout);
+		depthDescription.finalLayout = VulkanImage::GetVulkanLayout(rpDesc.depthAttachment.finalLayout);
+		descriptions.push_back(depthDescription);
 
-		DepthRef.attachment = static_cast<uint32>(RPDesc.colorAttachments.size());
-		DepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthRef.attachment = static_cast<uint32>(rpDesc.colorAttachments.size());
+		depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	}
 
-	VkSubpassDescription Subpass = {};
-	Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	Subpass.pColorAttachments = ColorRefs.data();
-	Subpass.colorAttachmentCount = static_cast<uint32>(ColorRefs.size());
-	Subpass.pDepthStencilAttachment = !RPDesc.depthAttachment.image ? nullptr : &DepthRef;
+	VkSubpassDescription subpass = {};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.pColorAttachments = colorRefs.data();
+	subpass.colorAttachmentCount = static_cast<uint32>(colorRefs.size());
+	subpass.pDepthStencilAttachment = !rpDesc.depthAttachment.image ? nullptr : &depthRef;
 
-	std::array<VkSubpassDependency, 2> Dependencies;
+	std::array<VkSubpassDependency, 2> dependencies;
 
-	Dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	Dependencies[0].dstSubpass = 0;
-	Dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	Dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	Dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	Dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	Dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependencies[0].dstSubpass = 0;
+	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-	Dependencies[1].srcSubpass = 0;
-	Dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	Dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	Dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	Dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	Dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	Dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	dependencies[1].srcSubpass = 0;
+	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-	VkRenderPassCreateInfo RenderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-	RenderPassInfo.pAttachments = Descriptions.data();
-	RenderPassInfo.attachmentCount = static_cast<uint32>(Descriptions.size());
-	RenderPassInfo.subpassCount = 1;
-	RenderPassInfo.pSubpasses = &Subpass;
-	RenderPassInfo.pDependencies = Dependencies.data();
-	RenderPassInfo.dependencyCount = static_cast<uint32>(Dependencies.size());
+	VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+	renderPassInfo.pAttachments = descriptions.data();
+	renderPassInfo.attachmentCount = static_cast<uint32>(descriptions.size());
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.pDependencies = dependencies.data();
+	renderPassInfo.dependencyCount = static_cast<uint32>(dependencies.size());
 
-	VkRenderPass RenderPass;
-	vulkan(vkCreateRenderPass(Device, &RenderPassInfo, nullptr, &RenderPass));
+	VkRenderPass renderPass;
+	vulkan(vkCreateRenderPass(Device, &renderPassInfo, nullptr, &renderPass));
 
-	return RenderPass;
+	return renderPass;
 }
 
-VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass RenderPass, const RenderPassDesc& RPDesc) const
+VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass renderPass, const RenderPassDesc& rpDesc) const
 {
-	std::vector<VkImageView> AttachmentViews;
+	std::vector<VkImageView> attachmentViews;
 
-	if (RPDesc.depthAttachment.image)
+	if (rpDesc.depthAttachment.image)
 	{
-		AttachmentViews.reserve(RPDesc.colorAttachments.size() + 1);
+		attachmentViews.reserve(rpDesc.colorAttachments.size() + 1);
 	}
 	else
 	{
-		AttachmentViews.reserve(RPDesc.colorAttachments.size());
+		attachmentViews.reserve(rpDesc.colorAttachments.size());
 	}
 
-	for (uint32 ColorAttachmentIndex = 0; ColorAttachmentIndex < RPDesc.colorAttachments.size(); ColorAttachmentIndex++)
+	for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < rpDesc.colorAttachments.size(); colorAttachmentIndex++)
 	{
-		const gpu::Image* Image = RPDesc.colorAttachments[ColorAttachmentIndex].image;
-		AttachmentViews.push_back(Image->GetImageView().GetHandle());
+		const gpu::Image* image = rpDesc.colorAttachments[colorAttachmentIndex].image;
+		attachmentViews.push_back(image->GetImageView().GetHandle());
 	}
 
-	if (RPDesc.depthAttachment.image)
+	if (rpDesc.depthAttachment.image)
 	{
-		const gpu::Image* Image = RPDesc.depthAttachment.image;
-		AttachmentViews.push_back(Image->GetImageView().GetHandle());
+		const gpu::Image* image = rpDesc.depthAttachment.image;
+		attachmentViews.push_back(image->GetImageView().GetHandle());
 	}
 
-	VkFramebufferCreateInfo FramebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-	FramebufferInfo.renderPass = RenderPass;
-	FramebufferInfo.pAttachments = AttachmentViews.data();
-	FramebufferInfo.attachmentCount = static_cast<uint32>(AttachmentViews.size());
-	FramebufferInfo.width = RPDesc.renderArea.extent.x;
-	FramebufferInfo.height = RPDesc.renderArea.extent.y;
-	FramebufferInfo.layers = 1;
+	VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+	framebufferInfo.renderPass = renderPass;
+	framebufferInfo.pAttachments = attachmentViews.data();
+	framebufferInfo.attachmentCount = static_cast<uint32>(attachmentViews.size());
+	framebufferInfo.width = rpDesc.renderArea.extent.x;
+	framebufferInfo.height = rpDesc.renderArea.extent.y;
+	framebufferInfo.layers = 1;
 
-	VkFramebuffer Framebuffer;
-	vulkan(vkCreateFramebuffer(Device, &FramebufferInfo, nullptr, &Framebuffer));
+	VkFramebuffer framebuffer;
+	vulkan(vkCreateFramebuffer(Device, &framebufferInfo, nullptr, &framebuffer));
 
-	return Framebuffer;
+	return framebuffer;
 }
 
 VulkanRenderPass::VulkanRenderPass(
-	VulkanDevice& Device,
-	VkRenderPass RenderPass, 
-	VkFramebuffer Framebuffer, 
-	const VkRect2D& RenderArea,
-	const std::vector<VkClearValue>& ClearValues,
-	uint32 NumAttachments) 
-	: Device(&Device)
-	, RenderPass(RenderPass)
-	, Framebuffer(Framebuffer)
-	, RenderArea(RenderArea)
-	, ClearValues(std::move(ClearValues))
-	, NumAttachments(NumAttachments)
+	VulkanDevice& device,
+	VkRenderPass renderPass, 
+	VkFramebuffer framebuffer, 
+	const VkRect2D& renderArea,
+	const std::vector<VkClearValue>& clearValues,
+	uint32 numAttachments) 
+	: _Device(&device)
+	, _RenderPass(renderPass)
+	, _Framebuffer(framebuffer)
+	, _RenderArea(renderArea)
+	, _ClearValues(std::move(clearValues))
+	, _NumAttachments(numAttachments)
 {
 }
 
 VulkanRenderPass::~VulkanRenderPass()
 {
-	if (Device)
+	if (_Device)
 	{
-		vkDestroyFramebuffer(*Device, Framebuffer, nullptr);
+		vkDestroyFramebuffer(*_Device, _Framebuffer, nullptr);
 	}
 }
 
-VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& Other)
-	: Device(std::exchange(Other.Device, nullptr))
-	, RenderPass(std::exchange(Other.RenderPass, nullptr))
-	, Framebuffer(std::exchange(Other.Framebuffer, nullptr))
-	, RenderArea(Other.RenderArea)
-	, ClearValues(std::move(Other.ClearValues))
-	, NumAttachments(Other.NumAttachments)
+VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& other)
+	: _Device(std::exchange(other._Device, nullptr))
+	, _RenderPass(std::exchange(other._RenderPass, nullptr))
+	, _Framebuffer(std::exchange(other._Framebuffer, nullptr))
+	, _RenderArea(other._RenderArea)
+	, _ClearValues(std::move(other._ClearValues))
+	, _NumAttachments(other._NumAttachments)
 {
 }
 
-VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& Other)
+VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& other)
 {
-	Device = std::exchange(Other.Device, nullptr);
-	RenderPass = std::exchange(Other.RenderPass, nullptr);
-	Framebuffer = std::exchange(Other.Framebuffer, nullptr);
-	RenderArea = Other.RenderArea;
-	ClearValues = std::move(Other.ClearValues);
-	NumAttachments = Other.NumAttachments;
+	_Device = std::exchange(other._Device, nullptr);
+	_RenderPass = std::exchange(other._RenderPass, nullptr);
+	_Framebuffer = std::exchange(other._Framebuffer, nullptr);
+	_RenderArea = other._RenderArea;
+	_ClearValues = std::move(other._ClearValues);
+	_NumAttachments = other._NumAttachments;
 	return *this;
 }
 
-VulkanRenderPassView::VulkanRenderPassView(const VulkanRenderPass& RenderPass)
-	: RenderPass(RenderPass.GetRenderPass())
-	, NumAttachments(RenderPass.GetNumAttachments())
+VulkanRenderPassView::VulkanRenderPassView(const VulkanRenderPass& renderPass)
+	: _RenderPass(renderPass.GetRenderPass())
+	, _NumAttachments(renderPass.GetNumAttachments())
 {
 }

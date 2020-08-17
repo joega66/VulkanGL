@@ -10,42 +10,42 @@ public:
 	VulkanRenderPass() = default;
 
 	VulkanRenderPass(
-		VulkanDevice& Device,
-		VkRenderPass RenderPass,
-		VkFramebuffer Framebuffer,
-		const VkRect2D& RenderArea,
-		const std::vector<VkClearValue>& ClearValues,
-		uint32 NumAttachments
+		VulkanDevice& device,
+		VkRenderPass renderPass,
+		VkFramebuffer framebuffer,
+		const VkRect2D& renderArea,
+		const std::vector<VkClearValue>& clearValues,
+		uint32 numAttachments
 	);
 	~VulkanRenderPass();
-	VulkanRenderPass(VulkanRenderPass&& Other);
-	VulkanRenderPass& operator=(VulkanRenderPass&& Other);
+	VulkanRenderPass(VulkanRenderPass&& other);
+	VulkanRenderPass& operator=(VulkanRenderPass&& other);
 	VulkanRenderPass(const VulkanRenderPass&) = delete;
 	VulkanRenderPass& operator=(const VulkanRenderPass&) = delete;
 
-	inline VkRenderPass GetRenderPass() const { return RenderPass; }
-	inline VkFramebuffer GetFramebuffer() const { return Framebuffer; }
-	inline const VkRect2D& GetRenderArea() const { return RenderArea; }
-	inline const std::vector<VkClearValue>& GetClearValues() const { return ClearValues; }
-	inline uint32 GetNumAttachments() const { return NumAttachments; }
+	inline VkRenderPass GetRenderPass() const { return _RenderPass; }
+	inline VkFramebuffer GetFramebuffer() const { return _Framebuffer; }
+	inline const VkRect2D& GetRenderArea() const { return _RenderArea; }
+	inline const std::vector<VkClearValue>& GetClearValues() const { return _ClearValues; }
+	inline uint32 GetNumAttachments() const { return _NumAttachments; }
 
 private:
-	const VulkanDevice* Device;
+	const VulkanDevice* _Device;
 
 	/** The Vulkan render pass. */
-	VkRenderPass RenderPass;
+	VkRenderPass _RenderPass;
 
 	/** The Vulkan framebuffer. */
-	VkFramebuffer Framebuffer;
+	VkFramebuffer _Framebuffer;
 
 	/** Render area. */
-	VkRect2D RenderArea;
+	VkRect2D _RenderArea;
 
 	/** Clear values to be used. */
-	std::vector<VkClearValue> ClearValues;
+	std::vector<VkClearValue> _ClearValues;
 
 	/** Number of color attachments. */
-	uint32 NumAttachments;
+	uint32 _NumAttachments;
 };
 
 /** 
@@ -57,13 +57,13 @@ class VulkanRenderPassView
 {
 public:
 	VulkanRenderPassView() = default;
-	VulkanRenderPassView(const VulkanRenderPass& RenderPass);
-	inline VkRenderPass GetRenderPass() const { return RenderPass; }
-	inline uint32 GetNumAttachments() const { return NumAttachments; }
+	VulkanRenderPassView(const VulkanRenderPass& renderPass);
+	inline VkRenderPass GetRenderPass() const { return _RenderPass; }
+	inline uint32 GetNumAttachments() const { return _NumAttachments; }
 
-	inline bool operator==(const VulkanRenderPassView& Other) const { return RenderPass == Other.RenderPass; }
+	inline bool operator==(const VulkanRenderPassView& other) const { return _RenderPass == other._RenderPass; }
 
 private:
-	VkRenderPass RenderPass = nullptr;
-	uint32 NumAttachments;
+	VkRenderPass _RenderPass = nullptr;
+	uint32 _NumAttachments;
 };
