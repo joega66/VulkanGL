@@ -20,12 +20,14 @@ int main(int argc, char* argv[])
 
 	GLFWWindowUserPointer WindowUserPointer{ &Cursor, &Input, &Screen };
 	glfwSetWindowUserPointer(Platform.Window, &WindowUserPointer);
+	
+	DeviceDesc deviceDesc = {};
+	deviceDesc.windowHandle = Platform.GetWindow();
+	deviceDesc.enableValidationLayers = Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false);
 
-	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>();
-	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(Platform, *Device);
+	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>(deviceDesc);
+	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(*Device);
 	std::unique_ptr<VulkanShaderLibrary> ShaderLibrary = std::make_unique<VulkanShaderLibrary>(*Device);
-
-	Device->CreateLogicalDevice();
 
 	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderLibrary, *Surface);
 	Engine.Main();

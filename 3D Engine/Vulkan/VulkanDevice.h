@@ -20,7 +20,7 @@ static const std::vector<const char*> DeviceExtensions =
 class VulkanDevice final : public gpu::Device
 {
 public:
-	VulkanDevice();
+	VulkanDevice(const DeviceDesc& deviceDesc);
 
 	~VulkanDevice() override {}
 
@@ -73,20 +73,21 @@ public:
 
 	inline const VkPhysicalDevice& GetPhysicalDevice() const { return PhysicalDevice; }
 	inline const VkInstance& GetInstance() const { return Instance; }
+	inline VkSurfaceKHR GetSurface() const { return _Surface; }
 	inline const VkPhysicalDeviceProperties& GetProperties() const { return Properties; }
 	inline const VkPhysicalDeviceFeatures& GetFeatures() const { return Features; }
 	inline VulkanCache& GetCache() { return VulkanCache; }
 	inline VulkanQueues& GetQueues() { return Queues; }
 	inline VulkanDescriptorPoolManager& GetDescriptorPoolManager() { return DescriptorPoolManager; }
 	
-	void CreateLogicalDevice();
-
 private:
 	VkInstance Instance;
 
 	VkDebugReportCallbackEXT DebugReportCallback;
 
 	VkPhysicalDevice PhysicalDevice;
+
+	VkSurfaceKHR _Surface;
 
 	VulkanQueues Queues;
 

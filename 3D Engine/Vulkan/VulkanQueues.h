@@ -1,43 +1,46 @@
 #pragma once
-#include <Platform/Platform.h>
+#include <GPU/GPUResource.h>
 #include <vulkan/vulkan.h>
 #include <unordered_set>
+
+class VulkanDevice;
 
 class VulkanQueues
 {
 public:
 	/** Finds the queue families for the physical device. */
-	VulkanQueues(VkPhysicalDevice Device);
+	VulkanQueues(VulkanDevice& device);
 
 	/** Gets the queues and creates the command pools. */
-	void Create(VkDevice Device);
+	void Create(VkDevice device);
 
 	/** Checks if the queues are complete for rendering. */
 	bool IsComplete() const;
 
 	/** Gets the queue with these queue flags. */
-	VkQueue GetQueue(VkQueueFlags QueueFlags) const;
+	VkQueue GetQueue(VkQueueFlags queueFlags) const;
 
 	/** Get a command pool that has the queue flags. */
-	VkCommandPool GetCommandPool(VkQueueFlags QueueFlags) const;
+	VkCommandPool GetCommandPool(VkQueueFlags queueFlags) const;
 
-	/** Get the graphics index. */
-	inline int32 GetGraphicsIndex() const { return GraphicsIndex; }
+	inline int32 GetGraphicsIndex() const { return _GraphicsIndex; }
+	inline int32 GetPresentIndex() const { return _PresentIndex; }
+	inline VkQueue GetPresentQueue() const { return _PresentQueue; }
 
 	/** Gets the unique families for logical device creation. */
 	std::unordered_set<int32> GetUniqueFamilies() const;
 
-	/** Request that a queue family is created with the logical device. */
-	void RequestQueueFamily(int32 QueueFamilyIndex);
-
 private:
-	std::vector<int32> RequestedQueueFamilies;
+	std::vector<int32> _RequestedQueueFamilies;
 
-	int32 GraphicsIndex = -1;
-	int32 TransferIndex = -1;
+	int32 _GraphicsIndex = -1;
+	int32 _TransferIndex = -1;
+	int32 _PresentIndex = -1;
 	
-	VkQueue GraphicsQueue;
-	VkCommandPool GraphicsPool;
-	VkQueue TransferQueue;
-	VkCommandPool TransferPool;
+	VkQueue _GraphicsQueue;
+	VkCommandPool _GraphicsPool;
+	VkQueue _TransferQueue;
+	VkCommandPool _TransferPool;
+
+	VkQueue _PresentQueue;
 };

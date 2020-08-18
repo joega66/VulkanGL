@@ -1,13 +1,6 @@
 #include "VulkanSurface.h"
 #include "VulkanDevice.h"
 
-#if _WIN32
-#include <Windows.h>
-#undef min
-#undef max
-#include <vulkan/vulkan_win32.h>
-#endif
-
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
 	const std::vector<VkSurfaceFormatKHR>& availableFormats,
 	const VkSurfaceFormatKHR& bestSurfaceFormat)
@@ -61,54 +54,9 @@ static VkExtent2D ChooseSwapExtent(uint32 width, uint32 height, const VkSurfaceC
 	}
 }
 
-static VkSurfaceKHR CreateSurface(Platform& platform, VulkanDevice& device)
-{
-	VkSurfaceKHR surface;
-
-#if _WIN32
-	PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>
-		(vkGetInstanceProcAddr(device.GetInstance(), "vkCreateWin32SurfaceKHR"));
-
-	check( vkCreateWin32SurfaceKHR, "Failed to get proc address vkCreateWin32SurfaceKHR" );
-
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-	surfaceCreateInfo.hwnd = static_cast<HWND>(platform.GetWindow());
-
-	vulkan( vkCreateWin32SurfaceKHR(device.GetInstance(), &surfaceCreateInfo, nullptr, &surface) );
-#endif
-
-	return surface;
-}
-
-VulkanSurface::VulkanSurface(Platform& platform, VulkanDevice& device)
+VulkanSurface::VulkanSurface(VulkanDevice& device)
 	: _Device(device)
-	, _Surface(CreateSurface(platform, device))
 {
-	uint32 queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(_Device.GetPhysicalDevice(), &queueFamilyCount, nullptr);
-
-	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(_Device.GetPhysicalDevice(), &queueFamilyCount, queueFamilies.data());
-
-	// Find the present index.
-	for (uint32 queueFamilyIndex = 0; queueFamilyIndex < queueFamilies.size(); queueFamilyIndex++)
-	{
-		const VkQueueFamilyProperties& queueFamily = queueFamilies[queueFamilyIndex];
-
-		VkBool32 hasPresentSupport = false;
-		vulkan( vkGetPhysicalDeviceSurfaceSupportKHR(_Device.GetPhysicalDevice(), queueFamilyIndex, _Surface, &hasPresentSupport) );
-
-		if (hasPresentSupport)
-		{
-			_PresentIndex = queueFamilyIndex;
-			break;
-		}
-	}
-
-	check(_PresentIndex != -1, "No present family index found!");
-
-	_Device.GetQueues().RequestQueueFamily(_PresentIndex);
 }
 
 uint32 VulkanSurface::AcquireNextImage()
@@ -156,8 +104,10 @@ void VulkanSurface::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 	presentInfo.pSwapchains = &_Swapchain;
 	presentInfo.swapchainCount = 1;
 	presentInfo.pImageIndices = &imageIndex;
+	
+	VkQueue presentQueue = _Device.GetQueues().GetPresentQueue();
 
-	if (const VkResult result = vkQueuePresentKHR(_PresentQueue, &presentInfo); result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	if (const VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo); result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		signal_unimplemented();
 	}
@@ -166,7 +116,7 @@ void VulkanSurface::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 		vulkan(result);
 	}
 
-	vulkan(vkQueueWaitIdle(_PresentQueue));
+	vulkan(vkQueueWaitIdle(presentQueue));
 }
 
 struct SwapchainSupportDetails
@@ -199,11 +149,6 @@ struct SwapchainSupportDetails
 
 void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage)
 {
-	if (_PresentQueue == VK_NULL_HANDLE)
-	{
-		vkGetDeviceQueue(_Device, _PresentIndex, 0, &_PresentQueue);
-	}
-
 	if (_ImageAvailableSem == VK_NULL_HANDLE)
 	{
 		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -211,7 +156,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 		vulkan(vkCreateSemaphore(_Device, &semaphoreInfo, nullptr, &_RenderEndSem));
 	}
 	
-	const SwapchainSupportDetails swapchainSupport(_Device.GetPhysicalDevice(), _Surface);
+	const SwapchainSupportDetails swapchainSupport(_Device.GetPhysicalDevice(), _Device.GetSurface());
 
 	_SurfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats, { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR });
 
@@ -227,7 +172,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 	}
 	
 	VkSwapchainCreateInfoKHR swapchainInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	swapchainInfo.surface = _Surface;
+	swapchainInfo.surface = _Device.GetSurface();
 	swapchainInfo.minImageCount = imageCount;
 	swapchainInfo.imageFormat = _SurfaceFormat.format;
 	swapchainInfo.imageColorSpace = _SurfaceFormat.colorSpace;
@@ -247,7 +192,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 	const uint32 queueFamilyIndices[] = 
 	{ 
 		static_cast<uint32>(_Device.GetQueues().GetGraphicsIndex()),
-		static_cast<uint32>(_PresentIndex)
+		static_cast<uint32>(_Device.GetQueues().GetPresentIndex())
 	};
 
 	if (queueFamilyIndices[0] != queueFamilyIndices[1])

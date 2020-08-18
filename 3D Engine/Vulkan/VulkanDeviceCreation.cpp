@@ -1,4 +1,10 @@
 #include "VulkanDevice.h"
+
+#if _WIN32
+#include <Windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
+
 #include <unordered_set>
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& ValidationLayers)
@@ -175,14 +181,101 @@ static VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures(VkPhysicalDevice Physi
 	return Features;
 }
 
-VulkanDevice::VulkanDevice()
-	: Instance(CreateInstance(ValidationLayers, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false)))
-	, DebugReportCallback(CreateDebugReportCallback(Instance, Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false)))
+static VkSurfaceKHR CreateSurface(void* windowHandle, VkInstance instance)
+{
+	if (windowHandle == nullptr)
+	{
+		return nullptr;
+	}
+
+	VkSurfaceKHR surface;
+
+#if _WIN32
+	PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>
+		(vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
+
+	check(vkCreateWin32SurfaceKHR, "Failed to get proc address vkCreateWin32SurfaceKHR");
+
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+	surfaceCreateInfo.hwnd = static_cast<HWND>(windowHandle);
+
+	vulkan(vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface));
+#endif
+
+	return surface;
+}
+
+VulkanDevice::VulkanDevice(const DeviceDesc& deviceDesc)
+	: Instance(CreateInstance(ValidationLayers, deviceDesc.enableValidationLayers))
+	, DebugReportCallback(CreateDebugReportCallback(Instance, deviceDesc.enableValidationLayers))
 	, PhysicalDevice(SelectPhysicalDevice(Instance, DeviceExtensions))
-	, Queues(PhysicalDevice)
+	, _Surface(CreateSurface(deviceDesc.windowHandle, Instance))
+	, Queues(*this)
 	, Allocator(*this)
 	, Properties(GetPhysicalDeviceProperties(PhysicalDevice))
 	, Features(GetPhysicalDeviceFeatures(PhysicalDevice))
 	, VulkanCache(*this)
 {
+	/** Create the logical device. */
+	const std::unordered_set<int32> UniqueQueueFamilies = Queues.GetUniqueFamilies();
+	const float QueuePriority = 1.0f;
+	std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
+
+	for (int32 QueueFamily : UniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo QueueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+		QueueCreateInfo.queueFamilyIndex = QueueFamily;
+		QueueCreateInfo.queueCount = 1;
+		QueueCreateInfo.pQueuePriorities = &QueuePriority;
+		QueueCreateInfos.push_back(QueueCreateInfo);
+	}
+
+	VkPhysicalDeviceFeatures Features = {};
+	Features.samplerAnisotropy = VK_TRUE;
+	Features.geometryShader = VK_TRUE;
+	Features.fragmentStoresAndAtomics = VK_TRUE;
+	Features.vertexPipelineStoresAndAtomics = VK_TRUE;
+	Features.shaderStorageImageWriteWithoutFormat = VK_TRUE;
+
+	VkPhysicalDeviceDescriptorIndexingFeatures DescriptorIndexingFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES };
+	DescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+	DescriptorIndexingFeatures.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
+	DescriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+	DescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+	DescriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
+
+	VkPhysicalDeviceFeatures2 Features2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+	Features2.pNext = &DescriptorIndexingFeatures;
+	Features2.features = Features;
+
+	VkDeviceCreateInfo DeviceInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+	DeviceInfo.pNext = &Features2;
+	DeviceInfo.queueCreateInfoCount = static_cast<uint32>(QueueCreateInfos.size());
+	DeviceInfo.pQueueCreateInfos = QueueCreateInfos.data();
+	DeviceInfo.enabledExtensionCount = static_cast<uint32>(DeviceExtensions.size());
+	DeviceInfo.ppEnabledExtensionNames = DeviceExtensions.data();
+
+	if (deviceDesc.enableValidationLayers)
+	{
+		DeviceInfo.enabledLayerCount = static_cast<uint32>(ValidationLayers.size());
+		DeviceInfo.ppEnabledLayerNames = ValidationLayers.data();
+	}
+	else
+	{
+		DeviceInfo.enabledLayerCount = 0;
+	}
+
+	vulkan(vkCreateDevice(PhysicalDevice, &DeviceInfo, nullptr, &Device));
+
+	Queues.Create(Device);
+
+	BindlessTextures = std::make_shared<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 65556);
+	gBindlessTextures = BindlessTextures;
+
+	BindlessSamplers = std::make_shared<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_SAMPLER, 1024);
+	gBindlessSamplers = BindlessSamplers;
+
+	BindlessImages = std::make_shared<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
+	gBindlessImages = BindlessImages;
 }

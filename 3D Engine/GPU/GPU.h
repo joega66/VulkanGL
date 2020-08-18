@@ -7,6 +7,12 @@ struct StructName								\
 	Members										\
 }; static_assert(sizeof(StructName) % 16 == 0);	\
 
+struct DeviceDesc
+{
+	void* windowHandle;
+	bool enableValidationLayers;
+};
+
 namespace gpu
 {
 	class Device

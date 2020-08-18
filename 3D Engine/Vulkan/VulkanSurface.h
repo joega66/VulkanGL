@@ -5,7 +5,7 @@
 class VulkanSurface : public gpu::Surface
 {
 public:
-	VulkanSurface(Platform& platform, VulkanDevice& device);
+	VulkanSurface(VulkanDevice& device);
 
 	/** Get the next image index. */
 	uint32 AcquireNextImage() override;
@@ -22,15 +22,11 @@ public:
 	/** Get all images in the swapchain. */
 	const std::vector<gpu::Image>& GetImages() override;
 
-	operator VkSurfaceKHR() { return _Surface; }
-
 	inline VkSurfaceFormatKHR GetFormat() const { return _SurfaceFormat; }
 	inline VkPresentModeKHR GetPresentMode() const { return _PresentMode; }
 
 private:
 	VulkanDevice& _Device;
-
-	VkSurfaceKHR _Surface;
 
 	VkSurfaceFormatKHR _SurfaceFormat;
 
@@ -45,8 +41,4 @@ private:
 	/** @todo Move me to the SceneRenderer. */
 	VkSemaphore _ImageAvailableSem = VK_NULL_HANDLE;
 	VkSemaphore _RenderEndSem = VK_NULL_HANDLE;
-
-	/** Present queue. */
-	VkQueue _PresentQueue = VK_NULL_HANDLE;
-	uint32 _PresentIndex = -1;
 };

@@ -1,53 +1,58 @@
 #include "VulkanQueues.h"
+#include <Vulkan/VulkanDevice.h>
 
-static inline bool HasQueue(const VkQueueFamilyProperties& QueueFamily, VkQueueFlags QueueFlags)
+VulkanQueues::VulkanQueues(VulkanDevice& device)
 {
-	return QueueFamily.queueCount > 0 && QueueFamily.queueFlags & QueueFlags;
-}
+	uint32 queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device.GetPhysicalDevice(), &queueFamilyCount, nullptr);
 
-VulkanQueues::VulkanQueues(VkPhysicalDevice Device)
-{
-	uint32 QueueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamilyCount, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device.GetPhysicalDevice(), &queueFamilyCount, queueFamilies.data());
 
-	std::vector<VkQueueFamilyProperties> QueueFamilies(QueueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamilyCount, QueueFamilies.data());
-
-	// Find a queue family with graphics, compute, and present.
-	for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)
+	auto GetQueueFamilyIndex = [&] (VkQueueFlags queueFlags)
 	{
-		const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
+		int32 queueFamilyIndex = 0;
 
-		if (HasQueue(QueueFamily, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
+		for (const auto& queueFamily : queueFamilies)
 		{
-			GraphicsIndex = QueueFamilyIndex;
-			break;
-		}
-	}
-
-	if (const bool UseTransferQueue = Platform::GetBool("Engine.ini", "Renderer", "UseTransferQueue", false); UseTransferQueue)
-	{
-		// Check if a separate transfer queue is available.
-		for (int32 QueueFamilyIndex = 0; QueueFamilyIndex < static_cast<int32>(QueueFamilies.size()); QueueFamilyIndex++)
-		{
-			const VkQueueFamilyProperties& QueueFamily = QueueFamilies[QueueFamilyIndex];
-			if (QueueFamilyIndex != GraphicsIndex && HasQueue(QueueFamily, VK_QUEUE_TRANSFER_BIT))
+			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & queueFlags)
 			{
-				TransferIndex = QueueFamilyIndex;
+				return queueFamilyIndex;
+			}
+
+			queueFamilyIndex++;
+		}
+
+		return -1;
+	};
+
+	_GraphicsIndex = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+
+	_TransferIndex = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+
+	if (device.GetSurface() != nullptr)
+	{
+		for (uint32 queueFamilyIndex = 0; queueFamilyIndex < queueFamilies.size(); queueFamilyIndex++)
+		{
+			const VkQueueFamilyProperties& queueFamily = queueFamilies[queueFamilyIndex];
+
+			VkBool32 hasPresentSupport = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device.GetPhysicalDevice(), queueFamilyIndex, device.GetSurface(), &hasPresentSupport);
+
+			if (hasPresentSupport)
+			{
+				_PresentIndex = queueFamilyIndex;
 				break;
 			}
 		}
+
+		check(_PresentIndex != -1, "No present family index found!!");
 	}
 
-	// If none was found, use the graphics queue for transfers.
-	if (TransferIndex == -1)
+	// If no transfer queue was found, use the graphics queue.
+	if (_TransferIndex == -1)
 	{
-		TransferIndex = GraphicsIndex;
-	}
-
-	if (TransferIndex != GraphicsIndex)
-	{
-		LOG("Using separate transfer and graphics queues.");
+		_TransferIndex = _GraphicsIndex;
 	}
 
 	check(IsComplete(), "The queue families are not complete.");
@@ -69,8 +74,9 @@ static VkCommandPool CreateCommandPool(
 
 void VulkanQueues::Create(VkDevice Device)
 {
-	vkGetDeviceQueue(Device, GraphicsIndex, 0, &GraphicsQueue);
-	vkGetDeviceQueue(Device, TransferIndex, 0, &TransferQueue);
+	vkGetDeviceQueue(Device, _GraphicsIndex, 0, &_GraphicsQueue);
+	vkGetDeviceQueue(Device, _TransferIndex, 0, &_TransferQueue);
+	vkGetDeviceQueue(Device, _PresentIndex, 0, &_PresentQueue);
 	
 	const std::unordered_set<int32> UniqueQueueFamilies = GetUniqueFamilies();
 
@@ -78,32 +84,32 @@ void VulkanQueues::Create(VkDevice Device)
 	{
 		VkCommandPool CommandPool = CreateCommandPool(Device, QueueFamilyIndex);
 
-		if (GraphicsIndex == QueueFamilyIndex)
+		if (_GraphicsIndex == QueueFamilyIndex)
 		{
-			GraphicsPool = CommandPool;
+			_GraphicsPool = CommandPool;
 		}
 
-		if (TransferIndex == QueueFamilyIndex)
+		if (_TransferIndex == QueueFamilyIndex)
 		{
-			TransferPool = CommandPool;
+			_TransferPool = CommandPool;
 		}
 	}
 }
 
 bool VulkanQueues::IsComplete() const
 {
-	return GraphicsIndex >= 0 && TransferIndex >= 0;
+	return _GraphicsIndex >= 0 && _TransferIndex >= 0;
 }
 
 VkQueue VulkanQueues::GetQueue(VkQueueFlags QueueFlags) const
 {
 	if (QueueFlags & VK_QUEUE_TRANSFER_BIT)
 	{
-		return TransferQueue;
+		return _TransferQueue;
 	}
 	else
 	{
-		return GraphicsQueue;
+		return _GraphicsQueue;
 	}
 }
 
@@ -111,11 +117,11 @@ VkCommandPool VulkanQueues::GetCommandPool(VkQueueFlags QueueFlags) const
 {
 	if (QueueFlags & VK_QUEUE_TRANSFER_BIT)
 	{
-		return TransferPool;
+		return _TransferPool;
 	}
 	else
 	{
-		return GraphicsPool;
+		return _GraphicsPool;
 	}
 }
 
@@ -123,19 +129,10 @@ std::unordered_set<int32> VulkanQueues::GetUniqueFamilies() const
 {
 	std::unordered_set<int32> UniqueQueueFamilies =
 	{
-		GraphicsIndex,
-		TransferIndex,
+		_GraphicsIndex,
+		_TransferIndex,
+		_PresentIndex,
 	};
 
-	std::for_each(RequestedQueueFamilies.begin(), RequestedQueueFamilies.end(), [&] (const auto& Index)
-	{
-		UniqueQueueFamilies.emplace(Index);
-	});
-
 	return UniqueQueueFamilies;
-}
-
-void VulkanQueues::RequestQueueFamily(int32 QueueFamilyIndex)
-{
-	RequestedQueueFamilies.push_back(QueueFamilyIndex);
 }
