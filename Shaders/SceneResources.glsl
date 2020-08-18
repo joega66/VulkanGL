@@ -35,19 +35,19 @@ layout(binding = 0, set = IMAGE_3D_SET) uniform image3D _Images3D[];
 
 vec4 Load(uint textureID, ivec2 location)
 {
-	return texelFetch(_Textures[nonuniformEXT(textureID)], location, 0);
+	return texelFetch(_Textures[textureID], location, 0);
 }
 
 ivec2 TextureSize(uint textureID, int level)
 {
-	return textureSize(_Textures[nonuniformEXT(textureID)], level);
+	return textureSize(_Textures[textureID], level);
 }
 
 #if defined(SAMPLER_SET)
 
 vec4 Sample2D(uint textureID, uint samplerID, vec2 uv)
 {
-	return texture(sampler2D(_Textures[nonuniformEXT(textureID)], _Samplers[nonuniformEXT(samplerID)]), uv);
+	return texture(sampler2D(_Textures[textureID], _Samplers[samplerID]), uv);
 }
 
 #endif
@@ -56,25 +56,27 @@ vec4 Sample2D(uint textureID, uint samplerID, vec2 uv)
 
 #if defined(TEXTURE_3D_SET)
 
-vec4 TexelFetch(uint textureID, ivec3 location, int level)
+vec4 TexelFetch(uint textureID, ivec3 location, level)
 {
-	return texelFetch(_Textures3D[nonuniformEXT(textureID)], location, level);
+	return texelFetch(_Textures3D[textureID], location, level);
 }
 
 #endif
 
 #if defined(CUBEMAP_SET)
+
 vec4 SampleCubemap(uint textureID, uint samplerID, vec3 uv)
 {
-	return texture(samplerCube(_Cubemaps[nonuniformEXT(textureID)], _Samplers[nonuniformEXT(samplerID)]), uv);
+	return texture(samplerCube(_Cubemaps[textureID], _Samplers[samplerID]), uv);
 }
+
 #endif
 
 #if defined(IMAGE_3D_SET)
 
 void ImageStore(uint imageID, ivec3 location, vec4 value)
 {
-	imageStore(_Images3D[nonuniformEXT(imageID)], location, value);
+	imageStore(_Images3D[imageID], location, value);
 }
 
 #endif
