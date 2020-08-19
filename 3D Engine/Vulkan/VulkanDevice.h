@@ -80,6 +80,17 @@ public:
 	inline VulkanQueues& GetQueues() { return Queues; }
 	inline VulkanDescriptorPoolManager& GetDescriptorPoolManager() { return DescriptorPoolManager; }
 	
+
+	static inline VkAccessFlags GetAccessFlags(EAccess access) 
+	{ 
+		return VkAccessFlags(access); 
+	}
+
+	static inline VkPipelineStageFlags GetPipelineStageFlags(EPipelineStage pipelineStage)
+	{
+		return VkPipelineStageFlags(pipelineStage);
+	}
+
 private:
 	VkInstance Instance;
 

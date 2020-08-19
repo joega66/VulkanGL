@@ -4,18 +4,6 @@
 #include <shaderc/shaderc.hpp>
 #include <unordered_map>
 
-static VkShaderStageFlags TranslateStageFlags(EShaderStage stageFlags)
-{
-	VkShaderStageFlags vulkanStageFlags = 0;
-	vulkanStageFlags |= Any(stageFlags & EShaderStage::Vertex) ? VK_SHADER_STAGE_VERTEX_BIT : 0;
-	vulkanStageFlags |= Any(stageFlags & EShaderStage::TessControl) ? VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT : 0;
-	vulkanStageFlags |= Any(stageFlags & EShaderStage::TessEvaluation) ? VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT : 0;
-	vulkanStageFlags |= Any(stageFlags & EShaderStage::Geometry) ? VK_SHADER_STAGE_GEOMETRY_BIT : 0;
-	vulkanStageFlags |= Any(stageFlags & EShaderStage::Fragment) ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-	vulkanStageFlags |= Any(stageFlags & EShaderStage::Compute) ? VK_SHADER_STAGE_COMPUTE_BIT : 0;
-	return vulkanStageFlags;
-}
-
 static VkFormat GetFormatFromBaseType(const spirv_cross::SPIRType& type)
 {
 	switch (type.basetype)
@@ -69,10 +57,12 @@ static std::vector<VertexAttributeDescription> ReflectVertexAttributeDescription
 
 	for (auto& resource : resources.stage_inputs)
 	{
-		VertexAttributeDescription description = {};
-		description.location = glsl.get_decoration(resource.id, spv::DecorationLocation);
-		description.format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(glsl.get_type(resource.type_id)));
-		description.offset = 0;
+		const VertexAttributeDescription description =
+		{
+			.location = glsl.get_decoration(resource.id, spv::DecorationLocation),
+			.format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(glsl.get_type(resource.type_id))),
+			.offset = 0,
+		};
 
 		descriptions.push_back(description);
 	}
@@ -288,7 +278,7 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 		}
 	} while (spvCompilationResult.GetNumErrors() > 0);
 
-	std::vector<uint32> code(spvCompilationResult.begin(), spvCompilationResult.end());
+	const std::vector<uint32> code(spvCompilationResult.begin(), spvCompilationResult.end());
 
 	VkShaderModuleCreateInfo shaderModuleCreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 	shaderModuleCreateInfo.codeSize = code.size() * sizeof(uint32);
@@ -312,7 +302,7 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 
 	const auto layouts = ReflectDescriptorSetLayouts(_Device, glsl, resources);
 
-	const auto vulkanStageFlags = TranslateStageFlags(stage);
+	const auto vulkanStageFlags = static_cast<VkShaderStageFlags>(stage);
 
 	const auto pushConstantRange = [&] () -> VkPushConstantRange
 	{

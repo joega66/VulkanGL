@@ -133,7 +133,7 @@ void VulkanCommandList::ClearColorImage(const VulkanImage& image, EImageLayout i
 	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
 
-	vkCmdClearColorImage(_CommandBuffer, image, VulkanImage::GetVulkanLayout(imageLayout), reinterpret_cast<const VkClearColorValue*>(&color), 1, &Range);
+	vkCmdClearColorImage(_CommandBuffer, image, VulkanImage::GetLayout(imageLayout), reinterpret_cast<const VkClearColorValue*>(&color), 1, &Range);
 }
 
 void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue)
@@ -145,17 +145,7 @@ void VulkanCommandList::ClearDepthStencilImage(const VulkanImage& image, EImageL
 	Range.baseArrayLayer = 0;
 	Range.layerCount = 1;
 	
-	vkCmdClearDepthStencilImage(_CommandBuffer, image, VulkanImage::GetVulkanLayout(imageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&depthStencilValue), 1, &Range);
-}
-
-static inline VkAccessFlags GetVulkanAccessFlags(EAccess access)
-{
-	return VkAccessFlags(access);
-}
-
-static inline VkPipelineStageFlags GetVulkanPipelineStageFlags(EPipelineStage pipelineStage)
-{
-	return VkPipelineStageFlags(pipelineStage);
+	vkCmdClearDepthStencilImage(_CommandBuffer, image, VulkanImage::GetLayout(imageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&depthStencilValue), 1, &Range);
 }
 
 void VulkanCommandList::PipelineBarrier(
@@ -175,8 +165,8 @@ void VulkanCommandList::PipelineBarrier(
 		const VulkanBuffer& Buffer = BufferBarrier.buffer;
 
 		VkBufferMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
-		Barrier.srcAccessMask = GetVulkanAccessFlags(BufferBarrier.srcAccessMask);
-		Barrier.dstAccessMask = GetVulkanAccessFlags(BufferBarrier.dstAccessMask);
+		Barrier.srcAccessMask = VulkanDevice::GetAccessFlags(BufferBarrier.srcAccessMask);
+		Barrier.dstAccessMask = VulkanDevice::GetAccessFlags(BufferBarrier.dstAccessMask);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.buffer = Buffer.GetHandle();
@@ -195,10 +185,10 @@ void VulkanCommandList::PipelineBarrier(
 		const gpu::Image& Image = ImageBarrier.image;
 
 		VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-		Barrier.srcAccessMask = GetVulkanAccessFlags(ImageBarrier.srcAccessMask);
-		Barrier.dstAccessMask = GetVulkanAccessFlags(ImageBarrier.dstAccessMask);
-		Barrier.oldLayout = VulkanImage::GetVulkanLayout(ImageBarrier.oldLayout);
-		Barrier.newLayout = VulkanImage::GetVulkanLayout(ImageBarrier.newLayout);
+		Barrier.srcAccessMask = VulkanDevice::GetAccessFlags(ImageBarrier.srcAccessMask);
+		Barrier.dstAccessMask = VulkanDevice::GetAccessFlags(ImageBarrier.dstAccessMask);
+		Barrier.oldLayout = VulkanImage::GetLayout(ImageBarrier.oldLayout);
+		Barrier.newLayout = VulkanImage::GetLayout(ImageBarrier.newLayout);
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.image = Image;
@@ -213,8 +203,8 @@ void VulkanCommandList::PipelineBarrier(
 	
 	vkCmdPipelineBarrier(
 		_CommandBuffer,
-		GetVulkanPipelineStageFlags(srcStageMask),
-		GetVulkanPipelineStageFlags(dstStageMask),
+		VulkanDevice::GetPipelineStageFlags(srcStageMask),
+		VulkanDevice::GetPipelineStageFlags(dstStageMask),
 		0,
 		0, nullptr,
 		static_cast<uint32>(VulkanBufferBarriers.size()), VulkanBufferBarriers.data(),
@@ -277,7 +267,7 @@ void VulkanCommandList::CopyBufferToImage(
 		Regions.push_back(Region);
 	}
 
-	vkCmdCopyBufferToImage(_CommandBuffer, srcBuffer.GetHandle(), dstImage, VulkanImage::GetVulkanLayout(dstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
+	vkCmdCopyBufferToImage(_CommandBuffer, srcBuffer.GetHandle(), dstImage, VulkanImage::GetLayout(dstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
 }
 
 void VulkanCommandList::BlitImage(
@@ -307,9 +297,9 @@ void VulkanCommandList::BlitImage(
 	vkCmdBlitImage(
 		_CommandBuffer,
 		srcImage,
-		VulkanImage::GetVulkanLayout(srcImageLayout),
+		VulkanImage::GetLayout(srcImageLayout),
 		dstImage,
-		VulkanImage::GetVulkanLayout(dstImageLayout),
+		VulkanImage::GetLayout(dstImageLayout),
 		1,
 		&Region,
 		VulkanImage::GetVulkanFilter(filter)
@@ -367,9 +357,9 @@ void VulkanCommandList::CopyImage(
 	vkCmdCopyImage(
 		_CommandBuffer,
 		srcImage,
-		VulkanImage::GetVulkanLayout(srcImageLayout),
+		VulkanImage::GetLayout(srcImageLayout),
 		dstImage,
-		VulkanImage::GetVulkanLayout(dstImageLayout),
+		VulkanImage::GetLayout(dstImageLayout),
 		1,
 		&Region
 	);

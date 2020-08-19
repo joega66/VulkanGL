@@ -147,6 +147,10 @@ void CameraProxy::CreateSceneRP(gpu::Device& device)
 		EImageLayout::DepthReadStencilWrite,
 		EImageLayout::DepthReadStencilWrite);
 	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(_SceneDepth.GetWidth(), _SceneDepth.GetHeight()) };
+	rpDesc.srcStageMask = EPipelineStage::ComputeShader;
+	rpDesc.dstStageMask = EPipelineStage::ComputeShader;
+	rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
 	_SceneRP = device.CreateRenderPass(rpDesc);
 }
 
@@ -166,6 +170,11 @@ void CameraProxy::CreateGBufferRP(gpu::Device& device)
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
 	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(_SceneDepth.GetWidth(), _SceneDepth.GetHeight()) };
+	rpDesc.srcStageMask = EPipelineStage::TopOfPipe;
+	rpDesc.dstStageMask = EPipelineStage::ComputeShader;
+	rpDesc.srcAccessMask = EAccess::None;
+	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+
 	_GBufferRP = device.CreateRenderPass(rpDesc);
 }
 
@@ -183,6 +192,10 @@ void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surfa
 		rpDesc.colorAttachments.push_back(
 			gpu::AttachmentView(&image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present));
 		rpDesc.renderArea.extent = { image.GetWidth(), image.GetHeight() };
+		rpDesc.srcStageMask = EPipelineStage::ComputeShader;
+		rpDesc.dstStageMask = EPipelineStage::ColorAttachmentOutput;
+		rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+		rpDesc.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
 
 		_UserInterfaceRP.push_back(device.CreateRenderPass(rpDesc));
 	}

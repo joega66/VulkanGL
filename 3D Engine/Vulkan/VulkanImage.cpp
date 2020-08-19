@@ -173,7 +173,7 @@ EFormat VulkanImage::GetEngineFormat(VkFormat Format)
 	return VulkanToEngineFormat[Format];
 }
 
-VkImageLayout VulkanImage::GetVulkanLayout(EImageLayout Layout)
+VkImageLayout VulkanImage::GetLayout(EImageLayout Layout)
 {
 	static std::unordered_map<EImageLayout, VkImageLayout> VulkanLayout =
 	{

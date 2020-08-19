@@ -32,6 +32,10 @@ ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directiona
 		EImageLayout::Undefined,
 		EImageLayout::DepthReadStencilWrite);
 	rpDesc.renderArea = RenderArea{ glm::ivec2{}, glm::uvec2(_ShadowMap.GetWidth(), _ShadowMap.GetHeight()) };
+	rpDesc.srcStageMask = EPipelineStage::TopOfPipe;
+	rpDesc.dstStageMask = EPipelineStage::ComputeShader;
+	rpDesc.srcAccessMask = EAccess::None;
+	rpDesc.dstAccessMask = EAccess::ShaderRead;
 	
 	_RenderPass = device.CreateRenderPass(rpDesc);
 

@@ -59,7 +59,7 @@ public:
 	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);
 	static VkFormat GetVulkanFormat(EFormat Format);
 	static EFormat GetEngineFormat(VkFormat Format);
-	static VkImageLayout GetVulkanLayout(EImageLayout Layout);
+	static VkImageLayout GetLayout(EImageLayout Layout);
 	static bool IsDepthLayout(VkImageLayout Layout);
 	static VkFilter GetVulkanFilter(EFilter Filter);
 

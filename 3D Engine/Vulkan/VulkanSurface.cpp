@@ -87,25 +87,31 @@ void VulkanSurface::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 
 	const VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &_ImageAvailableSem;
-	submitInfo.pWaitDstStageMask = &waitDstStageMask;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &cmdList._CommandBuffer;
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &_RenderEndSem;
-
+	const VkSubmitInfo submitInfo = 
+	{ 
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &_ImageAvailableSem,
+		.pWaitDstStageMask = &waitDstStageMask,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &cmdList._CommandBuffer,
+		.signalSemaphoreCount = 1,
+		.pSignalSemaphores = &_RenderEndSem,
+	};
+	
 	vulkan(vkQueueSubmit(cmdList._Queue, 1, &submitInfo, VK_NULL_HANDLE));
 
-	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-	presentInfo.pWaitSemaphores = &_RenderEndSem;
-	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pSwapchains = &_Swapchain;
-	presentInfo.swapchainCount = 1;
-	presentInfo.pImageIndices = &imageIndex;
+	const VkPresentInfoKHR presentInfo = 
+	{ 
+		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+		.waitSemaphoreCount = 1,
+		.pWaitSemaphores = &_RenderEndSem,
+		.swapchainCount = 1,
+		.pSwapchains = &_Swapchain,
+		.pImageIndices = &imageIndex,
+	};
 	
-	VkQueue presentQueue = _Device.GetQueues().GetPresentQueue();
+	const VkQueue presentQueue = _Device.GetQueues().GetPresentQueue();
 
 	if (const VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo); result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
@@ -206,7 +212,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 		swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
 
-	VkSwapchainKHR oldSwapchain = _Swapchain;
+	const VkSwapchainKHR oldSwapchain = _Swapchain;
 
 	swapchainInfo.preTransform = swapchainSupport.capabilities.currentTransform;
 	swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;

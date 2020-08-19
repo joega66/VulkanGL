@@ -136,15 +136,15 @@ enum class EImageUsage
 
 enum class ELoadAction
 {
-	DontCare,
+	Load,
 	Clear,
-	Load
+	DontCare
 };
 
 enum class EStoreAction
 {
-	DontCare,
-	Store
+	Store,
+	DontCare
 };
 
 struct ClearDepthStencilValue

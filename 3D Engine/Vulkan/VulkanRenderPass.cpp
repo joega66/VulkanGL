@@ -4,7 +4,7 @@
 std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPassDesc& rpDesc)
 {
 	std::size_t seed;
-
+	
 	for (const auto& colorAttachment : rpDesc.colorAttachments)
 	{
 		HashCombine(seed, colorAttachment.initialLayout);
@@ -37,30 +37,25 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPa
 
 static VkAttachmentLoadOp GetVulkanLoadOp(ELoadAction loadAction)
 {
-	if (loadAction == ELoadAction::Clear)
+	static const VkAttachmentLoadOp loadOps[] =
 	{
-		return VK_ATTACHMENT_LOAD_OP_CLEAR;
-	}
-	else if (loadAction == ELoadAction::Load)
-	{
-		return VK_ATTACHMENT_LOAD_OP_LOAD;
-	}
-	else // ELoadAction::DontCare
-	{
-		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	}
+		VK_ATTACHMENT_LOAD_OP_LOAD,
+		VK_ATTACHMENT_LOAD_OP_CLEAR,
+		VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+	};
+
+	return loadOps[static_cast<uint32>(loadAction)];
 }
 
 static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction storeAction)
 {
-	if (storeAction == EStoreAction::Store)
+	static const VkAttachmentStoreOp storeOps[] =
 	{
-		return VK_ATTACHMENT_STORE_OP_STORE;
-	}
-	else // EStoreAction::DontCare
-	{
-		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	}
+		VK_ATTACHMENT_STORE_OP_STORE,
+		VK_ATTACHMENT_STORE_OP_DONT_CARE,
+	};
+
+	return storeOps[static_cast<uint32>(storeAction)];
 }
 
 VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
@@ -88,16 +83,16 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 		check(image && Any(image->GetUsage() & EImageUsage::Attachment), "Color target is invalid.");
 		check(image->IsColor(), "Color target was not created in color format.");
 
-		VkAttachmentDescription colorDescription = {};
-		colorDescription.format = image->GetVulkanFormat();
-		colorDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorDescription.loadOp = GetVulkanLoadOp(colorAttachment.loadAction);
-		colorDescription.storeOp = GetVulkanStoreOp(colorAttachment.storeAction);
-		colorDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorDescription.initialLayout = VulkanImage::GetVulkanLayout(colorAttachment.initialLayout);
-		colorDescription.finalLayout = VulkanImage::GetVulkanLayout(colorAttachment.finalLayout);
-		descriptions.push_back(colorDescription);
+		descriptions.push_back({
+			.format = image->GetVulkanFormat(),
+			.samples = VK_SAMPLE_COUNT_1_BIT,
+			.loadOp = GetVulkanLoadOp(colorAttachment.loadAction),
+			.storeOp = GetVulkanStoreOp(colorAttachment.storeAction),
+			.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+			.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			.initialLayout = VulkanImage::GetLayout(colorAttachment.initialLayout),
+			.finalLayout = VulkanImage::GetLayout(colorAttachment.finalLayout),
+		});
 
 		colorRefs.push_back({ attachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 	}
@@ -109,58 +104,67 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 		check(depthImage && Any(depthImage->GetUsage() & EImageUsage::Attachment), "Depth target is invalid.");
 		check(depthImage->IsDepth() || depthImage->IsStencil(), "Depth target was not created in a depth layout.");
 
-		VkAttachmentLoadOp loadOp = GetVulkanLoadOp(rpDesc.depthAttachment.loadAction);
-		VkAttachmentStoreOp storeOp = GetVulkanStoreOp(rpDesc.depthAttachment.storeAction);
+		const VkAttachmentLoadOp loadOp = GetVulkanLoadOp(rpDesc.depthAttachment.loadAction);
+		const VkAttachmentStoreOp storeOp = GetVulkanStoreOp(rpDesc.depthAttachment.storeAction);
 
-		VkAttachmentDescription depthDescription = {};
-		depthDescription.format = depthImage->GetVulkanFormat();
-		depthDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		depthDescription.loadOp = depthImage->IsDepth() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthDescription.storeOp = depthImage->IsDepth() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthDescription.stencilLoadOp = depthImage->IsStencil() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthDescription.stencilStoreOp = depthImage->IsStencil() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthDescription.initialLayout = VulkanImage::GetVulkanLayout(rpDesc.depthAttachment.initialLayout);
-		depthDescription.finalLayout = VulkanImage::GetVulkanLayout(rpDesc.depthAttachment.finalLayout);
-		descriptions.push_back(depthDescription);
+		descriptions.push_back({
+			.format = depthImage->GetVulkanFormat(),
+			.samples = VK_SAMPLE_COUNT_1_BIT,
+			.loadOp = depthImage->IsDepth() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+			.storeOp = depthImage->IsDepth() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			.stencilLoadOp = depthImage->IsStencil() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+			.stencilStoreOp = depthImage->IsStencil() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			.initialLayout = VulkanImage::GetLayout(rpDesc.depthAttachment.initialLayout),
+			.finalLayout = VulkanImage::GetLayout(rpDesc.depthAttachment.finalLayout),
+		});
 
 		depthRef.attachment = static_cast<uint32>(rpDesc.colorAttachments.size());
 		depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	}
 
-	VkSubpassDescription subpass = {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.pColorAttachments = colorRefs.data();
-	subpass.colorAttachmentCount = static_cast<uint32>(colorRefs.size());
-	subpass.pDepthStencilAttachment = !rpDesc.depthAttachment.image ? nullptr : &depthRef;
+	const VkSubpassDescription subpass = 
+	{
+		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+		.colorAttachmentCount = static_cast<uint32>(colorRefs.size()),
+		.pColorAttachments = colorRefs.data(),
+		.pDepthStencilAttachment = !rpDesc.depthAttachment.image ? nullptr : &depthRef,
+	};
+	
+	const VkSubpassDependency dependencies[] =
+	{
+		{
+			.srcSubpass = VK_SUBPASS_EXTERNAL,
+			.dstSubpass = 0,
+			.srcStageMask = VulkanDevice::GetPipelineStageFlags(rpDesc.srcStageMask),
+			.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccessMask = VulkanDevice::GetAccessFlags(rpDesc.srcAccessMask),
+			.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+			.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+		},
+		{
+			.srcSubpass = 0,
+			.dstSubpass = VK_SUBPASS_EXTERNAL,
+			.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.dstStageMask = VulkanDevice::GetPipelineStageFlags(rpDesc.dstStageMask),
+			.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+			.dstAccessMask = VulkanDevice::GetAccessFlags(rpDesc.dstAccessMask),
+			.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
+		}
+	};
 
-	std::array<VkSubpassDependency, 2> dependencies;
-
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	dependencies[1].srcSubpass = 0;
-	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-	renderPassInfo.pAttachments = descriptions.data();
-	renderPassInfo.attachmentCount = static_cast<uint32>(descriptions.size());
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.pDependencies = dependencies.data();
-	renderPassInfo.dependencyCount = static_cast<uint32>(dependencies.size());
-
+	const VkRenderPassCreateInfo renderPassCreateInfo = 
+	{ 
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+		.attachmentCount = static_cast<uint32>(descriptions.size()),
+		.pAttachments = descriptions.data(),
+		.subpassCount = 1,
+		.pSubpasses = &subpass,
+		.dependencyCount = static_cast<uint32>(ARRAY_SIZE(dependencies)),
+		.pDependencies = dependencies,
+	};
+	
 	VkRenderPass renderPass;
-	vulkan(vkCreateRenderPass(Device, &renderPassInfo, nullptr, &renderPass));
+	vulkan(vkCreateRenderPass(Device, &renderPassCreateInfo, nullptr, &renderPass));
 
 	return renderPass;
 }
@@ -190,16 +194,19 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass renderPass, const Rend
 		attachmentViews.push_back(image->GetImageView().GetHandle());
 	}
 
-	VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-	framebufferInfo.renderPass = renderPass;
-	framebufferInfo.pAttachments = attachmentViews.data();
-	framebufferInfo.attachmentCount = static_cast<uint32>(attachmentViews.size());
-	framebufferInfo.width = rpDesc.renderArea.extent.x;
-	framebufferInfo.height = rpDesc.renderArea.extent.y;
-	framebufferInfo.layers = 1;
-
+	const VkFramebufferCreateInfo framebufferCreateInfo = 
+	{
+		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+		.renderPass = renderPass,
+		.attachmentCount = static_cast<uint32>(attachmentViews.size()),
+		.pAttachments = attachmentViews.data(),
+		.width = rpDesc.renderArea.extent.x,
+		.height = rpDesc.renderArea.extent.y,
+		.layers = 1,
+	};
+	
 	VkFramebuffer framebuffer;
-	vulkan(vkCreateFramebuffer(Device, &framebufferInfo, nullptr, &framebuffer));
+	vulkan(vkCreateFramebuffer(Device, &framebufferCreateInfo, nullptr, &framebuffer));
 
 	return framebuffer;
 }
