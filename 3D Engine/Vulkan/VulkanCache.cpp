@@ -60,14 +60,14 @@ void VulkanCache::RecompilePipelines()
 {
 	for (auto& [PSODesc, Pipeline] : GraphicsPipelineCache)
 	{
-		vkDestroyPipeline(Device, Pipeline->Pipeline, nullptr);
-		Pipeline->Pipeline = CreatePipeline(PSODesc, Pipeline->PipelineLayout);
+		vkDestroyPipeline(Device, Pipeline->_Pipeline, nullptr);
+		Pipeline->_Pipeline = CreatePipeline(PSODesc, Pipeline->_PipelineLayout);
 	}
 
 	for (auto& [Crc, Pipeline] : ComputePipelineCache)
 	{
-		vkDestroyPipeline(Device, Pipeline->Pipeline, nullptr);
-		Pipeline->Pipeline = CreatePipeline(CrcToComputeDesc[Crc], Pipeline->PipelineLayout);
+		vkDestroyPipeline(Device, Pipeline->_Pipeline, nullptr);
+		Pipeline->_Pipeline = CreatePipeline(CrcToComputeDesc[Crc], Pipeline->_PipelineLayout);
 	}
 }
 

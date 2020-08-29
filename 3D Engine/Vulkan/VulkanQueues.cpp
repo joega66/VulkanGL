@@ -59,39 +59,39 @@ VulkanQueues::VulkanQueues(VulkanDevice& device)
 }
 
 static VkCommandPool CreateCommandPool(
-	VkDevice Device,
-	uint32 QueueFamilyIndex)
+	VkDevice device,
+	uint32 queueFamilyIndex)
 {
-	VkCommandPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-	PoolInfo.queueFamilyIndex = QueueFamilyIndex;
-	PoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	VkCommandPoolCreateInfo commandPoolCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+	commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
+	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-	VkCommandPool CommandPool;
-	vkCreateCommandPool(Device, &PoolInfo, nullptr, &CommandPool);
+	VkCommandPool commandPool;
+	vkCreateCommandPool(device, &commandPoolCreateInfo, nullptr, &commandPool);
 
-	return CommandPool;
+	return commandPool;
 }
 
-void VulkanQueues::Create(VkDevice Device)
+void VulkanQueues::Create(VkDevice device)
 {
-	vkGetDeviceQueue(Device, _GraphicsIndex, 0, &_GraphicsQueue);
-	vkGetDeviceQueue(Device, _TransferIndex, 0, &_TransferQueue);
-	vkGetDeviceQueue(Device, _PresentIndex, 0, &_PresentQueue);
+	vkGetDeviceQueue(device, _GraphicsIndex, 0, &_GraphicsQueue);
+	vkGetDeviceQueue(device, _TransferIndex, 0, &_TransferQueue);
+	vkGetDeviceQueue(device, _PresentIndex, 0, &_PresentQueue);
 	
-	const std::unordered_set<int32> UniqueQueueFamilies = GetUniqueFamilies();
+	const std::unordered_set<int32> uniqueQueueFamilies = GetUniqueFamilies();
 
-	for (auto QueueFamilyIndex : UniqueQueueFamilies)
+	for (auto queueFamilyIndex : uniqueQueueFamilies)
 	{
-		VkCommandPool CommandPool = CreateCommandPool(Device, QueueFamilyIndex);
+		const VkCommandPool commandPool = CreateCommandPool(device, queueFamilyIndex);
 
-		if (_GraphicsIndex == QueueFamilyIndex)
+		if (_GraphicsIndex == queueFamilyIndex)
 		{
-			_GraphicsPool = CommandPool;
+			_GraphicsPool = commandPool;
 		}
 
-		if (_TransferIndex == QueueFamilyIndex)
+		if (_TransferIndex == queueFamilyIndex)
 		{
-			_TransferPool = CommandPool;
+			_TransferPool = commandPool;
 		}
 	}
 }

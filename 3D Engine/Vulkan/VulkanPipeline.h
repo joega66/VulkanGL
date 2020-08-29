@@ -10,19 +10,19 @@ public:
 	VulkanPipeline() = delete;
 	VulkanPipeline(const VulkanPipeline&) = delete;
 	VulkanPipeline& operator=(const VulkanPipeline&) = delete;
-	VulkanPipeline(VulkanDevice& Device, 
-		VkPipeline Pipeline, 
-		VkPipelineLayout PipelineLayout, 
-		VkPipelineBindPoint PipelineBindPoint);
+	VulkanPipeline(VulkanDevice& device, 
+		VkPipeline pipeline, 
+		VkPipelineLayout pipelineLayout, 
+		VkPipelineBindPoint pipelineBindPoint);
 	~VulkanPipeline();
 
-	inline VkPipeline GetPipeline() const { return Pipeline; }
-	inline VkPipelineLayout GetPipelineLayout() const { return PipelineLayout; }
-	inline VkPipelineBindPoint GetPipelineBindPoint() const { return PipelineBindPoint; }
+	inline VkPipeline GetPipeline() const { return _Pipeline; }
+	inline VkPipelineLayout GetPipelineLayout() const { return _PipelineLayout; }
+	inline VkPipelineBindPoint GetPipelineBindPoint() const { return _PipelineBindPoint; }
 
 private:
-	VulkanDevice& Device;
-	VkPipeline Pipeline = VK_NULL_HANDLE;
-	VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
-	VkPipelineBindPoint PipelineBindPoint;
+	VulkanDevice& _Device;
+	VkPipeline _Pipeline = VK_NULL_HANDLE;
+	VkPipelineLayout _PipelineLayout = VK_NULL_HANDLE;
+	VkPipelineBindPoint _PipelineBindPoint;
 };

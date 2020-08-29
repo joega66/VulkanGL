@@ -74,7 +74,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 	{
 		descriptions.reserve(rpDesc.colorAttachments.size());
 	}
-
+	
 	for (uint32 attachmentIndex = 0; attachmentIndex < rpDesc.colorAttachments.size(); attachmentIndex++)
 	{
 		const gpu::AttachmentView& colorAttachment = rpDesc.colorAttachments[attachmentIndex];

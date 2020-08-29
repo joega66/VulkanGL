@@ -358,23 +358,11 @@ struct StencilOpState
 	}
 };
 
-enum class EDepthCompareTest
-{
-	Never,
-	Less,
-	Equal,
-	LEqual,
-	Greater,
-	NEqual,
-	GEqual,
-	Always
-};
-
 struct DepthStencilState
 {
 	bool depthTestEnable = true;
 	bool depthWriteEnable = true;
-	EDepthCompareTest depthCompareTest = EDepthCompareTest::LEqual;
+	ECompareOp depthCompareTest = ECompareOp::LessOrEqual;
 	bool depthBoundsTestEnable = false;
 	bool stencilTestEnable = false;
 	StencilOpState front = {};
@@ -411,10 +399,10 @@ enum class EFrontFace
 
 enum class ECullMode
 {
-	None,
-	Front,
-	Back,
-	FrontAndBack
+	None			= 0,
+	Front			= 0x00000001,
+	Back			= 0x00000002,
+	FrontAndBack	= 0x00000003,
 };
 
 struct RasterizationState
@@ -572,11 +560,11 @@ namespace gpu { class Shader; }
 
 struct ShaderStages
 {
-	const gpu::Shader* vertex = nullptr;
-	const gpu::Shader* tessControl = nullptr;
-	const gpu::Shader* tessEval = nullptr;
-	const gpu::Shader* geometry = nullptr;
-	const gpu::Shader* fragment = nullptr;
+	const gpu::Shader* vertex		= nullptr;
+	const gpu::Shader* tessControl	= nullptr;
+	const gpu::Shader* tessEval		= nullptr;
+	const gpu::Shader* geometry		= nullptr;
+	const gpu::Shader* fragment		= nullptr;
 
 	friend bool operator==(const ShaderStages& l, const ShaderStages& r)
 	{
@@ -595,28 +583,28 @@ struct ShaderStages
 
 enum class EShaderStage
 {
-	None = 0,
-	Vertex = 1 << 0,
-	TessControl = 1 << 1,
-	TessEvaluation = 1 << 2,
-	Geometry = 1 << 3,
-	Fragment = 1 << 4,
-	Compute = 1 << 5,
-	AllGraphics = Vertex | TessControl | TessEvaluation | Geometry | Fragment,
-	All = AllGraphics | Compute
+	None			= 0,
+	Vertex			= 0x00000001,
+	TessControl		= 0x00000002,
+	TessEvaluation	= 0x00000004,
+	Geometry		= 0x00000008,
+	Fragment		= 0x00000010,
+	Compute			= 0x00000020,
+	AllGraphics		= Vertex | TessControl | TessEvaluation | Geometry | Fragment,
+	All				= AllGraphics | Compute
 }; ENABLE_BITWISE_OPERATORS(EShaderStage);
 
 enum class EDynamicState
 {
-	Viewport = 0,
-	Scissor = 1,
-	LineWidth = 2,
-	DepthBias = 3,
-	BlendConstants = 4,
-	DepthBounds = 5,
-	StencilCompareMask = 6,
-	StencilWriteMask = 7,
-	StencilReference = 8,
+	Viewport			= 0,
+	Scissor				= 1,
+	LineWidth			= 2,
+	DepthBias			= 3,
+	BlendConstants		= 4,
+	DepthBounds			= 5,
+	StencilCompareMask	= 6,
+	StencilWriteMask	= 7,
+	StencilReference	= 8,
 };
 
 class SpecializationInfo

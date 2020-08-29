@@ -340,7 +340,7 @@ ImGuiRenderData::ImGuiRenderData(Engine& engine)
 
 	psoDesc.depthStencilState.depthTestEnable = false;
 	psoDesc.depthStencilState.depthWriteEnable = false;
-	psoDesc.depthStencilState.depthCompareTest = EDepthCompareTest::Always;
+	psoDesc.depthStencilState.depthCompareTest = ECompareOp::Always;
 	psoDesc.shaderStages.vertex = engine.ShaderLibrary.FindShader<UserInterfaceVS>();
 	psoDesc.shaderStages.fragment = engine.ShaderLibrary.FindShader<UserInterfaceFS>();
 	psoDesc.colorBlendAttachmentStates.resize(1, {});
