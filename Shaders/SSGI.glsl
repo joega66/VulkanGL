@@ -16,7 +16,7 @@ void main()
 
 	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
 	const vec2 screenUV = vec2(screenCoords) / vec2(sceneColorSize);
-
+	
 	SurfaceData surface;
 	MaterialData material;
 
@@ -40,10 +40,10 @@ void main()
 	vec3 csHitPoint;
 	vec3 li = vec3(0);
 
-	const float THICC = 0.1;
-	const float STRIDE = 16.0;
-	const float JITTER = 0.0;
-	const float STEPS = 25.0;
+	const float thicc = 0.1;
+	const float stride = 16.0;
+	const float jitter = RandomFloat();
+	const float steps = 25.0;
 
 	if (TraceScreenSpaceRay(
 		csOrigin,
@@ -52,14 +52,9 @@ void main()
 		_SceneDepth,
 		vec2(sceneColorSize),
 		_Camera.clipData,
-		THICC,
-		STRIDE,
-		JITTER,
-		STEPS,
-		-_Camera.clipData.z, // max distance
-		hitPixel,
-		csHitPoint)
-		)
+		thicc, stride, jitter, steps,
+		-_Camera.clipData.z,
+		hitPixel, csHitPoint))
 	{
 		li = imageLoad(_SceneColor, ivec2(hitPixel)).rgb;
 

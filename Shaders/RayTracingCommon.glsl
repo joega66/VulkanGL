@@ -10,7 +10,9 @@ float CubeRoot(float x)
 	float y = sign(x) * uintBitsToFloat(floatBitsToUint(abs(x)) / 3u + 0x2a514067u);
 
 	for (int i = 0; i < NEWTON_ITER; ++i)
+	{
 		y = (2. * y + x / (y * y)) * .333333333;
+	}
 
 	for (int i = 0; i < HALLEY_ITER; ++i)
 	{
