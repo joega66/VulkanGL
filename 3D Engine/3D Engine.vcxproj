@@ -138,6 +138,7 @@
     <ClInclude Include="Systems\SceneSystem.h" />
     <ClInclude Include="Systems\RenderSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />
+    <ClInclude Include="Vulkan\vk_mem_alloc.h" />
     <ClInclude Include="Vulkan\VulkanBindlessResources.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
     <ClInclude Include="Vulkan\VulkanDescriptors.h" />

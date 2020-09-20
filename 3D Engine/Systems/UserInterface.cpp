@@ -442,9 +442,9 @@ void ImGuiRenderData::Update(gpu::Device& device)
 		return;
 	}
 
-	vertexBuffer = device.CreateBuffer(EBufferUsage::Vertex | EBufferUsage::HostVisible, vertexBufferSize);
+	vertexBuffer = device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::CPU_TO_GPU, vertexBufferSize);
 	ImDrawVert* vertexData = static_cast<ImDrawVert*>(vertexBuffer.GetData());
-	indexBuffer = device.CreateBuffer(EBufferUsage::Index | EBufferUsage::HostVisible, indexBufferSize);
+	indexBuffer = device.CreateBuffer(EBufferUsage::Index, EMemoryUsage::CPU_TO_GPU, indexBufferSize);
 	ImDrawIdx* indexData = static_cast<ImDrawIdx*>(indexBuffer.GetData());
 
 	for (int32 cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++)

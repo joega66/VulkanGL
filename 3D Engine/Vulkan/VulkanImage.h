@@ -1,6 +1,7 @@
 #pragma once
 #include "VulkanBindlessResources.h"
 #include <GPU/GPUShader.h>
+#include "vk_mem_alloc.h"
 
 class VulkanDevice;
 
@@ -11,18 +12,18 @@ public:
 	VulkanImageView& operator=(const VulkanImageView&) = delete;
 
 	VulkanImageView() = default;
-	VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format);
-	VulkanImageView(VulkanImageView&& Other);
-	VulkanImageView& operator=(VulkanImageView&& Other);
+	VulkanImageView(VulkanDevice& device, VkImageView imageView, EFormat format);
+	VulkanImageView(VulkanImageView&& other);
+	VulkanImageView& operator=(VulkanImageView&& other);
 	~VulkanImageView();
 
-	inline VkImageView GetHandle() const { return ImageView; }
-	inline EFormat GetFormat() const { return Format; }
+	inline VkImageView GetHandle() const { return _ImageView; }
+	inline EFormat GetFormat() const { return _Format; }
 
 private:
-	VkDevice Device = VK_NULL_HANDLE;
-	VkImageView ImageView = nullptr;
-	EFormat Format;
+	VkDevice _Device = VK_NULL_HANDLE;
+	VkImageView _ImageView = nullptr;
+	EFormat _Format;
 };
 
 class VulkanImage : public gpu::ImagePrivate
@@ -32,58 +33,61 @@ public:
 	VulkanImage& operator=(const VulkanImage&) = delete;
 
 	VulkanImage() = default;
-	VulkanImage(VulkanDevice& Device
-		, VkImage Image
-		, VkDeviceMemory Memory
-		, EFormat Format
-		, uint32 Width
-		, uint32 Height
-		, uint32 Depth
-		, EImageUsage Usage
-		, uint32 MipLevels
-	);
-	VulkanImage(VulkanImage&& Other);
-	VulkanImage& operator=(VulkanImage&& Other);
+	VulkanImage(
+		VulkanDevice& device
+		, VmaAllocator allocator
+		, VmaAllocation allocation
+		, const VmaAllocationInfo& allocationInfo
+		, VkImage image
+		, EFormat format
+		, uint32 width
+		, uint32 height
+		, uint32 depth
+		, EImageUsage usage
+		, uint32 mipLevels);
+	VulkanImage(VulkanImage&& other);
+	VulkanImage& operator=(VulkanImage&& other);
 	~VulkanImage();
 
-	inline void* GetNativeHandle() { return Image; }
-	inline operator VkImage() const { return Image; }
-	inline operator const VulkanImageView& () const { return ImageView; }
-	inline VkImage GetHandle() const { return Image; }
-	inline const VulkanImageView& GetImageView() const { return ImageView; }
-	inline const VulkanTextureID& GetTextureID() const { return TextureID; }
-	inline const VulkanImageID& GetImageID() const { return ImageID; }
+	inline void* GetNativeHandle() { return _Image; }
+	inline operator VkImage() const { return _Image; }
+	inline operator const VulkanImageView& () const { return _ImageView; }
+	inline VkImage GetHandle() const { return _Image; }
+	inline const VulkanImageView& GetImageView() const { return _ImageView; }
+	inline const VulkanTextureID& GetTextureID() const { return _TextureID; }
+	inline const VulkanImageID& GetImageID() const { return _ImageID; }
 	VkFormat GetVulkanFormat() const;
 	VkImageAspectFlags GetVulkanAspect() const;
 	
-	static VkFormat FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format);
-	static VkFormat GetVulkanFormat(EFormat Format);
-	static EFormat GetEngineFormat(VkFormat Format);
-	static VkImageLayout GetLayout(EImageLayout Layout);
-	static bool IsDepthLayout(VkImageLayout Layout);
-	static VkFilter GetVulkanFilter(EFilter Filter);
+	static VkFormat FindSupportedDepthFormat(VulkanDevice& device, EFormat format);
+	static VkFormat GetVulkanFormat(EFormat format);
+	static EFormat GetEngineFormat(VkFormat format);
+	static VkImageLayout GetLayout(EImageLayout layout);
+	static bool IsDepthLayout(VkImageLayout layout);
+	static VkFilter GetVulkanFilter(EFilter filter);
 
 private:
-	VkDevice Device = VK_NULL_HANDLE;
-	VkImage Image = nullptr;
-	VulkanImageView ImageView = {};
-	VulkanTextureID TextureID = {};
-	VulkanImageID ImageID = {};
-	VkDeviceMemory Memory = nullptr;
+	VmaAllocator _Allocator;
+	VmaAllocation _Allocation;
+	VmaAllocationInfo _AllocationInfo;
+	VkImage _Image = nullptr;
+	VulkanImageView _ImageView = {};
+	VulkanTextureID _TextureID = {};
+	VulkanImageID _ImageID = {};
 };
 
 class VulkanSampler
 {
 public:
 	VulkanSampler() = default;
-	VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc);
+	VulkanSampler(VulkanDevice& device, const SamplerDesc& samplerDesc);
 
-	inline VkSampler GetHandle() const { return Sampler; }
-	inline const VulkanSamplerID& GetSamplerID() const { return SamplerID; }
+	inline VkSampler GetHandle() const { return _Sampler; }
+	inline const VulkanSamplerID& GetSamplerID() const { return _SamplerID; }
 
 private:
-	VkSampler Sampler = nullptr;
-	VulkanSamplerID SamplerID = {};
+	VkSampler _Sampler = nullptr;
+	VulkanSamplerID _SamplerID = {};
 };
 
 namespace gpu
@@ -97,7 +101,7 @@ namespace gpu
 		static EDescriptorType GetDescriptorType() { return EDescriptorType::SampledImage; }
 
 	private:
-		VkDescriptorImageInfo descriptorImageInfo = { nullptr };
+		VkDescriptorImageInfo _DescriptorImageInfo = { nullptr };
 	};
 
 	class StorageImage
@@ -110,6 +114,6 @@ namespace gpu
 		static EDescriptorType GetDescriptorType() { return EDescriptorType::StorageImage; }
 
 	private:
-		VkDescriptorImageInfo descriptorImageInfo = { nullptr };
+		VkDescriptorImageInfo _DescriptorImageInfo = { nullptr };
 	};
 }

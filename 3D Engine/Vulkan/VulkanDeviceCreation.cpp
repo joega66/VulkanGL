@@ -212,7 +212,6 @@ VulkanDevice::VulkanDevice(const DeviceDesc& deviceDesc)
 	, PhysicalDevice(SelectPhysicalDevice(Instance, DeviceExtensions))
 	, _Surface(CreateSurface(deviceDesc.windowHandle, Instance))
 	, Queues(*this)
-	, Allocator(*this)
 	, Properties(GetPhysicalDeviceProperties(PhysicalDevice))
 	, Features(GetPhysicalDeviceFeatures(PhysicalDevice))
 	, VulkanCache(*this)
@@ -269,6 +268,15 @@ VulkanDevice::VulkanDevice(const DeviceDesc& deviceDesc)
 	vulkan(vkCreateDevice(PhysicalDevice, &DeviceInfo, nullptr, &Device));
 
 	Queues.Create(Device);
+	
+	const VmaAllocatorCreateInfo allocatorInfo =
+	{
+		.physicalDevice = PhysicalDevice,
+		.device = Device,
+		.instance = Instance
+	};
+
+	vulkan(vmaCreateAllocator(&allocatorInfo, &_Allocator));
 
 	BindlessTextures = std::make_shared<VulkanBindlessResources>(Device, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 65556);
 	gBindlessTextures = BindlessTextures;

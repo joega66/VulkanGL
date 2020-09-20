@@ -157,7 +157,7 @@ void AssetManager::CreateDebugImages(gpu::Device& Device)
 		0, 0, 0, 0, // Black
 	};
 
-	gpu::Buffer StagingBuffer = Device.CreateBuffer(EBufferUsage::Transfer, Colors.size(), Colors.data());
+	gpu::Buffer StagingBuffer = Device.CreateBuffer({}, EMemoryUsage::CPU_ONLY, Colors.size(), Colors.data());
 
 	AssetManager::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);

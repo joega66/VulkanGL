@@ -91,19 +91,19 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	auto& NormalData = Model.buffers[NormalView.buffer];
 	auto& UvData = Model.buffers[UvView.buffer];
 	
-	gpu::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, IndexView.byteLength);
-	gpu::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, PositionView.byteLength);
-	gpu::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, UvView.byteLength);
-	gpu::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, NormalView.byteLength);
+	gpu::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, EMemoryUsage::GPU_ONLY, IndexView.byteLength);
+	gpu::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, PositionView.byteLength);
+	gpu::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, UvView.byteLength);
+	gpu::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, NormalView.byteLength);
 
 	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	uint64 SrcOffset = 0;
 
 	gpu::Buffer StagingBuffer = Device.CreateBuffer(
-		EBufferUsage::Transfer,
-		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength
-	);
+		{},
+		EMemoryUsage::CPU_ONLY,
+		IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength);
 
 	uint8* Memmapped = static_cast<uint8*>(StagingBuffer.GetData());
 

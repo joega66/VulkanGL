@@ -46,18 +46,66 @@ gpu::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t Num
 	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);
 }
 
-VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data)
+VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data)
 {
-	VkBufferUsageFlags VulkanUsage = 0;
-	VulkanUsage |= Any(Usage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
-	VulkanUsage |= Any(Usage & EBufferUsage::Vertex) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
-	VulkanUsage |= Any(Usage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
-	VulkanUsage |= Any(Usage & EBufferUsage::Index) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
-	VulkanUsage |= Any(Usage & EBufferUsage::Uniform) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
-	VulkanUsage |= !Any(Usage & EBufferUsage::HostVisible) && !Any(Usage & EBufferUsage::Transfer) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0;
-	VulkanUsage |= Any(Usage & EBufferUsage::Transfer) ? VK_BUFFER_USAGE_TRANSFER_SRC_BIT : 0;
+	VkBufferUsageFlags vulkanBufferUsage = 0;
+	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
+	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Vertex) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
+	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Index) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
+	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Uniform) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
 
-	return Allocator.Allocate(Size, VulkanUsage, Usage, Data);
+	VmaAllocationCreateInfo allocInfo = {};
+
+	if (memoryUsage == EMemoryUsage::GPU_ONLY)
+	{
+		vulkanBufferUsage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	}
+	else if (memoryUsage == EMemoryUsage::CPU_ONLY)
+	{
+		vulkanBufferUsage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	}
+	else if (memoryUsage == EMemoryUsage::CPU_TO_GPU)
+	{
+		allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	}
+	else if (memoryUsage == EMemoryUsage::GPU_TO_CPU)
+	{
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	}
+	else
+	{
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	}
+
+	const VkBufferCreateInfo bufferInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.size = size,
+		.usage = vulkanBufferUsage,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+	};
+
+	VkBuffer buffer;
+	VmaAllocation allocation;
+	VmaAllocationInfo allocationInfo;
+	vmaCreateBuffer(_Allocator, &bufferInfo, &allocInfo, &buffer, &allocation, &allocationInfo);
+
+	VulkanBuffer newBuffer(_Allocator, buffer, allocation, allocationInfo, size, bufferUsage);
+
+	if (data)
+	{
+		Platform::Memcpy(newBuffer.GetData(), data, static_cast<size_t>(newBuffer.GetSize()));
+	}
+
+	return newBuffer;
 }
 
 gpu::Image VulkanDevice::CreateImage(
@@ -66,25 +114,24 @@ gpu::Image VulkanDevice::CreateImage(
 	uint32 Depth,
 	EFormat Format,
 	EImageUsage UsageFlags,
-	uint32 MipLevels
-)
+	uint32 MipLevels)
 {
 	if (gpu::Image::IsDepth(Format))
 	{
 		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(*this, Format));
 	}
 
-	VkImageCreateInfo Info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	Info.imageType = Depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
-	Info.extent.width = Width;
-	Info.extent.height = Height;
-	Info.extent.depth = Depth;
-	Info.mipLevels = MipLevels;
-	Info.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
-	Info.format = VulkanImage::GetVulkanFormat(Format);
-	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	Info.usage = [&] ()
+	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	imageInfo.imageType = Depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
+	imageInfo.extent.width = Width;
+	imageInfo.extent.height = Height;
+	imageInfo.extent.depth = Depth;
+	imageInfo.mipLevels = MipLevels;
+	imageInfo.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
+	imageInfo.format = VulkanImage::GetVulkanFormat(Format);
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.usage = [&] ()
 	{
 		VkFlags Usage = 0;
 
@@ -100,22 +147,24 @@ gpu::Image VulkanDevice::CreateImage(
 
 		return Usage;
 	}();
-	Info.flags = Any(UsageFlags & EImageUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
-	Info.samples = VK_SAMPLE_COUNT_1_BIT;
-	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.flags = Any(UsageFlags & EImageUsage::Cubemap) ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VkImage Image;
-	vulkan(vkCreateImage(Device, &Info, nullptr, &Image));
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	VkMemoryRequirements MemRequirements = {};
-	vkGetImageMemoryRequirements(Device, Image, &MemRequirements);
-
-	const VkDeviceMemory Memory = Allocator.AllocateMemory(MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemRequirements.size);
-	vulkan(vkBindImageMemory(Device, Image, Memory, 0));
-
-	return VulkanImage(*this
-		, Image
-		, Memory
+	VkImage image;
+	VmaAllocation allocation;
+	VmaAllocationInfo allocationInfo;
+	vmaCreateImage(_Allocator, &imageInfo, &allocInfo, &image, &allocation, &allocationInfo);
+	
+	return VulkanImage(
+		*this
+		, _Allocator
+		, allocation
+		, allocationInfo
+		, image
 		, Format
 		, Width
 		, Height

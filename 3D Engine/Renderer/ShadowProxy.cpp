@@ -18,7 +18,7 @@ ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directiona
 	, _ZNear(Platform::GetFloat("Engine.ini", "Shadows", "ZNear", 1.0f))
 	, _ZFar(Platform::GetFloat("Engine.ini", "Shadows", "ZFar", 96.0f))
 {
-	_ShadowUniform = device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(ShadowUniform));
+	_ShadowUniform = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(ShadowUniform));
 
 	const glm::ivec2 shadowMapRes(Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048));
 

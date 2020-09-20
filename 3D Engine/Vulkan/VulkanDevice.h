@@ -5,6 +5,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanCommandList.h"
 #include "VulkanBindlessResources.h"
+#include "vk_mem_alloc.h"
 
 static const std::vector<const char*> ValidationLayers =
 {
@@ -36,7 +37,7 @@ public:
 
 	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
 
-	gpu::Buffer CreateBuffer(EBufferUsage Usage, uint64 Size, const void* Data = nullptr) override;
+	gpu::Buffer CreateBuffer(EBufferUsage Usage, EMemoryUsage memoryUsage, uint64 Size, const void* Data = nullptr) override;
 
 	gpu::Image CreateImage(
 		uint32 Width,
@@ -102,7 +103,7 @@ private:
 
 	VulkanQueues Queues;
 
-	VulkanAllocator Allocator;
+	VmaAllocator _Allocator;
 
 	VkPhysicalDeviceProperties Properties;
 

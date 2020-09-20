@@ -275,6 +275,9 @@
     <ClInclude Include="Renderer\PostProcessing.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\vk_mem_alloc.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

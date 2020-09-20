@@ -29,7 +29,7 @@ void RenderSystem::Start(Engine& engine)
 	{
 		const StaticMesh* staticMesh = staticMeshComponent.StaticMesh;
 
-		gpu::Buffer localToWorldUniform = device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(LocalToWorldUniform));
+		gpu::Buffer localToWorldUniform = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(LocalToWorldUniform));
 
 		StaticMeshDescriptors surfaceDescriptors;
 		surfaceDescriptors._LocalToWorldUniform = localToWorldUniform;

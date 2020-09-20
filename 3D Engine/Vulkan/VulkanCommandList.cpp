@@ -78,12 +78,11 @@ void VulkanCommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pip
 
 void VulkanCommandList::BindVertexBuffers(uint32 numVertexBuffers, const VulkanBuffer* vertexBuffers)
 {
-	std::vector<VkDeviceSize> Offsets(numVertexBuffers);
+	std::vector<VkDeviceSize> Offsets(numVertexBuffers, 0);
 	std::vector<VkBuffer> Buffers(numVertexBuffers);
 
 	for (uint32 Location = 0; Location < numVertexBuffers; Location++)
 	{
-		Offsets[Location] = vertexBuffers[Location].GetOffset();
 		Buffers[Location] = vertexBuffers[Location].GetHandle();
 	}
 
@@ -99,7 +98,7 @@ void VulkanCommandList::DrawIndexed(
 	uint32 firstInstance,
 	EIndexType indexType)
 {
-	vkCmdBindIndexBuffer(_CommandBuffer, indexBuffer.GetHandle(), indexBuffer.GetOffset(), static_cast<VkIndexType>(indexType));
+	vkCmdBindIndexBuffer(_CommandBuffer, indexBuffer.GetHandle(), 0, static_cast<VkIndexType>(indexType));
 	vkCmdDrawIndexed(_CommandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
@@ -113,7 +112,7 @@ void VulkanCommandList::DrawIndirect(const VulkanBuffer& buffer, uint32 offset, 
 	vkCmdDrawIndirect(
 		_CommandBuffer,
 		buffer.GetHandle(),
-		buffer.GetOffset() + offset,
+		offset,
 		drawCount,
 		drawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0
 	);
@@ -170,7 +169,7 @@ void VulkanCommandList::PipelineBarrier(
 		Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		Barrier.buffer = Buffer.GetHandle();
-		Barrier.offset = Buffer.GetOffset();
+		Barrier.offset = 0;
 		Barrier.size = Buffer.GetSize();
 
 		VulkanBufferBarriers.push_back(Barrier);
@@ -232,7 +231,7 @@ void VulkanCommandList::CopyBufferToImage(
 			// VkImageSubresourceRange(3) Manual Page:
 			// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
 			VkBufferImageCopy& Region = Regions[LayerIndex];
-			Region.bufferOffset = LayerIndex * FaceSize + srcBuffer.GetOffset();
+			Region.bufferOffset = LayerIndex * FaceSize;
 			Region.bufferRowLength = 0;
 			Region.bufferImageHeight = 0;
 			Region.imageSubresource.aspectMask = dstImage.GetVulkanAspect();
@@ -250,7 +249,7 @@ void VulkanCommandList::CopyBufferToImage(
 	else
 	{
 		VkBufferImageCopy Region = {};
-		Region.bufferOffset = bufferOffset + srcBuffer.GetOffset();
+		Region.bufferOffset = bufferOffset;
 		Region.bufferRowLength = 0;
 		Region.bufferImageHeight = 0;
 		Region.imageSubresource.aspectMask = dstImage.GetVulkanAspect();
@@ -322,8 +321,8 @@ void VulkanCommandList::CopyBuffer(
 {
 	const VkBufferCopy Region = 
 	{ 
-		srcBuffer.GetOffset() + srcOffset, 
-		dstBuffer.GetOffset() + dstOffset,
+		srcOffset, 
+		dstOffset,
 		size
 	};
 

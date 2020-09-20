@@ -2,7 +2,7 @@
 #include "VulkanDevice.h"
 #include <unordered_set>
 
-static std::unordered_map<EFormat, VkFormat> EngineToVulkanFormat =
+static std::unordered_map<EFormat, VkFormat> gEngineToVulkanFormat =
 {
 	ENTRY(EFormat::UNDEFINED, VK_FORMAT_UNDEFINED)
 	ENTRY(EFormat::R8_UNORM, VK_FORMAT_R8_UNORM)
@@ -58,124 +58,128 @@ static std::unordered_map<EFormat, VkFormat> EngineToVulkanFormat =
 	ENTRY(EFormat::BC2_UNORM_BLOCK, VK_FORMAT_BC2_UNORM_BLOCK)
 };
 
-static std::unordered_map<VkFormat, EFormat> VulkanToEngineFormat = [&] ()
+static std::unordered_map<VkFormat, EFormat> gVulkanToEngineFormat = [&] ()
 {
 	std::unordered_map<VkFormat, EFormat> ReverseMap;
-	std::for_each(EngineToVulkanFormat.begin(), EngineToVulkanFormat.end(), [&ReverseMap] (const auto& Pair)
+	std::for_each(gEngineToVulkanFormat.begin(), gEngineToVulkanFormat.end(), [&ReverseMap] (const auto& Pair)
 	{
 		ReverseMap[Pair.second] = Pair.first;
 	});
 	return ReverseMap;
 }();
 
-VulkanImageView::VulkanImageView(VulkanDevice& Device, VkImageView ImageView, EFormat Format)
-	: Device(Device)
-	, ImageView(ImageView)
-	, Format(Format)
+VulkanImageView::VulkanImageView(VulkanDevice& device, VkImageView imageView, EFormat format)
+	: _Device(device)
+	, _ImageView(imageView)
+	, _Format(format)
 {
 }
 
-VulkanImageView::VulkanImageView(VulkanImageView&& Other)
-	: Device(Other.Device)
-	, ImageView(std::exchange(Other.ImageView, nullptr))
-	, Format(Other.Format)
+VulkanImageView::VulkanImageView(VulkanImageView&& other)
+	: _Device(other._Device)
+	, _ImageView(std::exchange(other._ImageView, nullptr))
+	, _Format(other._Format)
 {
 }
 
-VulkanImageView& VulkanImageView::operator=(VulkanImageView&& Other)
+VulkanImageView& VulkanImageView::operator=(VulkanImageView&& other)
 {
-	Device = Other.Device;
-	ImageView = std::exchange(Other.ImageView, nullptr);
-	Format = Other.Format;
+	_Device = other._Device;
+	_ImageView = std::exchange(other._ImageView, nullptr);
+	_Format = other._Format;
 	return *this;
 }
 
 VulkanImageView::~VulkanImageView()
 {
-	if (ImageView)
+	if (_ImageView)
 	{
-		vkDestroyImageView(Device, ImageView, nullptr);
+		vkDestroyImageView(_Device, _ImageView, nullptr);
 	}
 }
 
 VulkanImage::VulkanImage(VulkanDevice& Device
-	, VkImage Image
-	, VkDeviceMemory Memory
-	, EFormat Format
-	, uint32 Width
-	, uint32 Height
-	, uint32 Depth
-	, EImageUsage Usage
-	, uint32 MipLevels) 
-	: Device(Device)
-	, Image(Image)
-	, Memory(Memory)
-	, gpu::ImagePrivate(Format, Width, Height, Depth, Usage, MipLevels)
+	, VmaAllocator allocator
+	, VmaAllocation allocation
+	, const VmaAllocationInfo& allocationInfo
+	, VkImage image
+	, EFormat format
+	, uint32 width
+	, uint32 height
+	, uint32 depth
+	, EImageUsage usage
+	, uint32 mipLevels) 
+	: _Allocator(allocator)
+	, _Allocation(allocation)
+	, _AllocationInfo(allocationInfo)
+	, _Image(image)
+	, gpu::ImagePrivate(format, width, height, depth, usage, mipLevels)
 {
-	ImageView = Device.CreateImageView(*this, 0, MipLevels, 0, Any(Usage & EImageUsage::Cubemap) ? 6 : 1);
+	_ImageView = Device.CreateImageView(*this, 0, mipLevels, 0, Any(usage & EImageUsage::Cubemap) ? 6 : 1);
 
-	if (Any(Usage & EImageUsage::Sampled))
+	if (Any(usage & EImageUsage::Sampled))
 	{
-		TextureID = Device.CreateTextureID(ImageView);
+		_TextureID = Device.CreateTextureID(_ImageView);
 	}
-	if (Any(Usage & EImageUsage::Storage))
+	if (Any(usage & EImageUsage::Storage))
 	{
-		ImageID = Device.CreateImageID(ImageView);
+		_ImageID = Device.CreateImageID(_ImageView);
 	}
 }
 
-VulkanImage::VulkanImage(VulkanImage&& Other)
-	: Image(std::exchange(Other.Image, nullptr))
-	, ImageView(std::move(Other.ImageView))
-	, TextureID(std::move(Other.TextureID))
-	, ImageID(std::move(Other.ImageID))
-	, Memory(Other.Memory)
-	, Device(Other.Device)
-	, ImagePrivate(Other)
+VulkanImage::VulkanImage(VulkanImage&& other)
+	: _Allocator(std::exchange(other._Allocator, nullptr))
+	, _Allocation(std::exchange(other._Allocation, nullptr))
+	, _AllocationInfo(std::exchange(other._AllocationInfo, {}))
+	, _Image(std::exchange(other._Image, nullptr))
+	, _ImageView(std::move(other._ImageView))
+	, _TextureID(std::move(other._TextureID))
+	, _ImageID(std::move(other._ImageID))
+	, ImagePrivate(other)
 {
 }
 
-VulkanImage& VulkanImage::operator=(VulkanImage&& Other)
+VulkanImage& VulkanImage::operator=(VulkanImage&& other)
 {
-	Image = std::exchange(Other.Image, nullptr);
-	ImageView = std::move(Other.ImageView);
-	TextureID = std::move(Other.TextureID);
-	ImageID = std::move(Other.ImageID);
-	Memory = Other.Memory;
-	Device = Other.Device;
-	_Format = Other._Format;
-	_Width = Other._Width;
-	_Height = Other._Height;
-	_Depth = Other._Depth;
-	_Usage = Other._Usage;
-	_MipLevels = Other._MipLevels;
+	_Allocator = std::exchange(other._Allocator, nullptr);
+	_Allocation = std::exchange(other._Allocation, nullptr);
+	_AllocationInfo = std::exchange(other._AllocationInfo, {});
+	_Image = std::exchange(other._Image, nullptr);
+	_ImageView = std::move(other._ImageView);
+	_TextureID = std::move(other._TextureID);
+	_ImageID = std::move(other._ImageID);
+	_Format = other._Format;
+	_Width = other._Width;
+	_Height = other._Height;
+	_Depth = other._Depth;
+	_Usage = other._Usage;
+	_MipLevels = other._MipLevels;
 	return *this;
 }
 
 VulkanImage::~VulkanImage()
 {
-	if (Image != nullptr)
+	if (_Allocation != nullptr)
 	{
-		TextureID.Release();
-		ImageID.Release();
-		vkDestroyImage(Device, Image, nullptr);
-		vkFreeMemory(Device, Memory, nullptr);
+		_TextureID.Release();
+		_ImageID.Release();
+		vmaDestroyImage(_Allocator, _Image, _Allocation);
 	}
 }
 
-VkFormat VulkanImage::GetVulkanFormat(EFormat Format)
+VkFormat VulkanImage::GetVulkanFormat(EFormat format)
 {
-	return EngineToVulkanFormat[Format];
+	return gEngineToVulkanFormat[format];
 }
 
-EFormat VulkanImage::GetEngineFormat(VkFormat Format)
+EFormat VulkanImage::GetEngineFormat(VkFormat format)
 {
-	return VulkanToEngineFormat[Format];
+	return gVulkanToEngineFormat[format];
 }
 
-VkImageLayout VulkanImage::GetLayout(EImageLayout Layout)
+VkImageLayout VulkanImage::GetLayout(EImageLayout layout)
 {
-	static std::unordered_map<EImageLayout, VkImageLayout> VulkanLayout =
+	static std::unordered_map<EImageLayout, VkImageLayout> vulkanLayout =
 	{
 		ENTRY(EImageLayout::Undefined, VK_IMAGE_LAYOUT_UNDEFINED)
 		ENTRY(EImageLayout::General, VK_IMAGE_LAYOUT_GENERAL)
@@ -191,89 +195,89 @@ VkImageLayout VulkanImage::GetLayout(EImageLayout Layout)
 		ENTRY(EImageLayout::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
 	};
 
-	return VulkanLayout[Layout];
+	return vulkanLayout[layout];
 }
 
-bool VulkanImage::IsDepthLayout(VkImageLayout Layout)
+bool VulkanImage::IsDepthLayout(VkImageLayout layout)
 {
-	static const std::unordered_set<VkImageLayout> VulkanDepthLayouts =
+	static const std::unordered_set<VkImageLayout> vulkanDepthLayouts =
 	{
 		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 		, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
 		, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
 		, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
 	};
-	return VulkanDepthLayouts.contains(Layout);
+	return vulkanDepthLayouts.contains(layout);
 }
 
-VkFilter VulkanImage::GetVulkanFilter(EFilter Filter)
+VkFilter VulkanImage::GetVulkanFilter(EFilter filter)
 {
-	static const VkFilter VulkanFilters[] =
+	static const VkFilter vulkanFilters[] =
 	{
 		VK_FILTER_NEAREST,
 		VK_FILTER_LINEAR,
 		VK_FILTER_CUBIC_IMG
 	};
 
-	return VulkanFilters[static_cast<uint32>(Filter)];
+	return vulkanFilters[static_cast<uint32>(filter)];
 }
 
 VkFormat VulkanImage::GetVulkanFormat() const
 {
-	return EngineToVulkanFormat[_Format];
+	return gEngineToVulkanFormat[_Format];
 }
 
 VkImageAspectFlags VulkanImage::GetVulkanAspect() const
 {
-	VkFlags Flags = 0;
+	VkImageAspectFlags flags = 0;
 	if (IsDepthStencil())
 	{
-		Flags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		flags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 	}
 	else if (IsDepth())
 	{
-		Flags = VK_IMAGE_ASPECT_DEPTH_BIT;
+		flags = VK_IMAGE_ASPECT_DEPTH_BIT;
 	}
 	else if (IsStencil())
 	{
-		Flags = VK_IMAGE_ASPECT_STENCIL_BIT;
+		flags = VK_IMAGE_ASPECT_STENCIL_BIT;
 	}
 	else
 	{
-		Flags = VK_IMAGE_ASPECT_COLOR_BIT;
+		flags = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
-	return Flags;
+	return flags;
 }
 
-static VkFormat FindSupportedFormat(VulkanDevice& Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
+static VkFormat FindSupportedFormat(VulkanDevice& device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
-	for (VkFormat Format : Candidates)
+	for (VkFormat format : candidates)
 	{
-		VkFormatProperties Props;
-		vkGetPhysicalDeviceFormatProperties(Device.GetPhysicalDevice(), Format, &Props);
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(device.GetPhysicalDevice(), format, &props);
 
-		if (Tiling == VK_IMAGE_TILING_LINEAR && (Props.linearTilingFeatures & Features) == Features)
+		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
 		{
-			return Format;
+			return format;
 		}
-		else if (Tiling == VK_IMAGE_TILING_OPTIMAL && (Props.optimalTilingFeatures & Features) == Features)
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
 		{
-			return Format;
+			return format;
 		}
 	}
 
 	fail("Failed to find supported format.");
 }
 
-VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat Format)
+VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& device, EFormat format)
 {
-	const auto Candidates = [&] () -> std::vector<VkFormat>
+	const auto candidates = [&] () -> std::vector<VkFormat>
 	{
-		if (gpu::Image::IsDepthStencil(Format))
+		if (gpu::Image::IsDepthStencil(format))
 		{
 			return
 			{
-				VulkanImage::GetVulkanFormat(Format),
+				VulkanImage::GetVulkanFormat(format),
 				VK_FORMAT_D32_SFLOAT_S8_UINT,
 				VK_FORMAT_D24_UNORM_S8_UINT,
 				VK_FORMAT_D16_UNORM_S8_UINT
@@ -283,25 +287,25 @@ VkFormat VulkanImage::FindSupportedDepthFormat(VulkanDevice& Device, EFormat For
 		{
 			return
 			{
-				VulkanImage::GetVulkanFormat(Format),
+				VulkanImage::GetVulkanFormat(format),
 				VK_FORMAT_D32_SFLOAT,
 				VK_FORMAT_D16_UNORM
 			};
 		}
 	}();
 
-	return FindSupportedFormat(Device, Candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	return FindSupportedFormat(device, candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDesc)
+VulkanSampler::VulkanSampler(VulkanDevice& device, const SamplerDesc& samplerDesc)
 {
-	static const VkSamplerMipmapMode VulkanMipmapModes[] =
+	static const VkSamplerMipmapMode vulkanMipmapModes[] =
 	{
 		VK_SAMPLER_MIPMAP_MODE_NEAREST,
 		VK_SAMPLER_MIPMAP_MODE_LINEAR
 	};
 
-	static const VkSamplerAddressMode VulkanAddressModes[] =
+	static const VkSamplerAddressMode vulkanAddressModes[] =
 	{
 		VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
@@ -310,42 +314,42 @@ VulkanSampler::VulkanSampler(VulkanDevice& Device, const SamplerDesc& SamplerDes
 		VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 	};
 
-	const VkFilter Filter = VulkanImage::GetVulkanFilter(SamplerDesc.filter);
-	const VkSamplerMipmapMode SMM = VulkanMipmapModes[static_cast<uint32>(SamplerDesc.smm)];
-	const VkSamplerAddressMode SAM = VulkanAddressModes[static_cast<uint32>(SamplerDesc.sam)];
+	const VkFilter filter = VulkanImage::GetVulkanFilter(samplerDesc.filter);
+	const VkSamplerMipmapMode smm = vulkanMipmapModes[static_cast<uint32>(samplerDesc.smm)];
+	const VkSamplerAddressMode sam = vulkanAddressModes[static_cast<uint32>(samplerDesc.sam)];
 
-	VkSamplerCreateInfo SamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-	SamplerInfo.magFilter = Filter;
-	SamplerInfo.minFilter = Filter;
-	SamplerInfo.mipmapMode = SMM;
-	SamplerInfo.addressModeU = SAM;
-	SamplerInfo.addressModeV = SAM;
-	SamplerInfo.addressModeW = SAM;
-	SamplerInfo.anisotropyEnable = Device.GetFeatures().samplerAnisotropy;
-	SamplerInfo.maxAnisotropy = Device.GetFeatures().samplerAnisotropy ? Device.GetProperties().limits.maxSamplerAnisotropy : 1.0f;
-	SamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-	SamplerInfo.unnormalizedCoordinates = VK_FALSE;
-	SamplerInfo.compareEnable = VK_FALSE;
-	SamplerInfo.compareOp = VK_COMPARE_OP_NEVER;
-	SamplerInfo.minLod = SamplerDesc.minLod;
-	SamplerInfo.maxLod = SamplerDesc.maxLod;
+	VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+	samplerInfo.magFilter = filter;
+	samplerInfo.minFilter = filter;
+	samplerInfo.mipmapMode = smm;
+	samplerInfo.addressModeU = sam;
+	samplerInfo.addressModeV = sam;
+	samplerInfo.addressModeW = sam;
+	samplerInfo.anisotropyEnable = device.GetFeatures().samplerAnisotropy;
+	samplerInfo.maxAnisotropy = device.GetFeatures().samplerAnisotropy ? device.GetProperties().limits.maxSamplerAnisotropy : 1.0f;
+	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+	samplerInfo.unnormalizedCoordinates = VK_FALSE;
+	samplerInfo.compareEnable = VK_FALSE;
+	samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
+	samplerInfo.minLod = samplerDesc.minLod;
+	samplerInfo.maxLod = samplerDesc.maxLod;
 
-	vulkan(vkCreateSampler(Device, &SamplerInfo, nullptr, &Sampler));
+	vulkan(vkCreateSampler(device, &samplerInfo, nullptr, &_Sampler));
 
-	SamplerID = Device.GetSamplers().CreateSamplerID(*this);
+	_SamplerID = device.GetSamplers().CreateSamplerID(*this);
 }
 
-static VkImageLayout ChooseImageLayout(EFormat Format)
+static VkImageLayout ChooseImageLayout(EFormat format)
 {
-	if (gpu::ImagePrivate::IsColor(Format))
+	if (gpu::ImagePrivate::IsColor(format))
 	{
 		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
-	else if (gpu::ImagePrivate::IsDepthStencil(Format))
+	else if (gpu::ImagePrivate::IsDepthStencil(format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 	}
-	else if (gpu::ImagePrivate::IsDepth(Format))
+	else if (gpu::ImagePrivate::IsDepth(format))
 	{
 		return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 	}
@@ -359,22 +363,22 @@ namespace gpu
 {
 	SampledImage::SampledImage(const VulkanImageView& imageView, const VulkanSampler& sampler)
 	{
-		descriptorImageInfo.sampler = sampler.GetHandle();
-		descriptorImageInfo.imageView = imageView.GetHandle();
-		descriptorImageInfo.imageLayout = ChooseImageLayout(imageView.GetFormat());
+		_DescriptorImageInfo.sampler = sampler.GetHandle();
+		_DescriptorImageInfo.imageView = imageView.GetHandle();
+		_DescriptorImageInfo.imageLayout = ChooseImageLayout(imageView.GetFormat());
 	}
 
 	StorageImage::StorageImage(const VulkanImage& image)
 	{
-		descriptorImageInfo.sampler = nullptr;
-		descriptorImageInfo.imageView = image.GetImageView().GetHandle();
-		descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		_DescriptorImageInfo.sampler = nullptr;
+		_DescriptorImageInfo.imageView = image.GetImageView().GetHandle();
+		_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 	}
 
 	StorageImage::StorageImage(const VulkanImageView& imageView)
 	{
-		descriptorImageInfo.sampler = nullptr;
-		descriptorImageInfo.imageView = imageView.GetHandle();
-		descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		_DescriptorImageInfo.sampler = nullptr;
+		_DescriptorImageInfo.imageView = imageView.GetHandle();
+		_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 	}
 };

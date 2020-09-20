@@ -115,13 +115,19 @@ enum class EBufferUsage
 {
 	None,
 	Indirect = 1 << 0,
-	HostVisible = 1 << 1,
-	Vertex = 1 << 2,
-	Storage = 1 << 3,
-	Index = 1 << 4,
-	Uniform = 1 << 5,
-	Transfer = 1 << 6,
+	Vertex = 1 << 1,
+	Storage = 1 << 2,
+	Index = 1 << 3,
+	Uniform = 1 << 4,
 }; ENABLE_BITWISE_OPERATORS(EBufferUsage);
+
+enum class EMemoryUsage
+{
+	GPU_ONLY,	// Resource will be read or written on the device only; transfer destination
+	CPU_ONLY,	// Resource will be used as transfer source
+	CPU_TO_GPU, // Resource will change every frame, written on CPU, read on GPU
+	GPU_TO_CPU, // Resource will be written on the device and read on the host
+};
 
 enum class EImageUsage
 {

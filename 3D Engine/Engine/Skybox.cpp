@@ -47,8 +47,8 @@ Skybox::Skybox(gpu::Device& Device, const std::array<const gpu::Image*, 6>& Imag
 		EImageLayout::TransferDstOptimal
 	};
 
-	CmdList.PipelineBarrier(EPipelineStage::Host, EPipelineStage::Transfer, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
-	CmdList.PipelineBarrier(EPipelineStage::Host, EPipelineStage::Transfer, 0, nullptr, 1, &DstImageBarrier);
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &DstImageBarrier);
 
 	for (uint32 FaceIndex = 0; FaceIndex < Images.size(); FaceIndex++)
 	{

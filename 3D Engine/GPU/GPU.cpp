@@ -2,7 +2,7 @@
 
 void gpu::UploadImageData(gpu::Device& device, const void* srcPixels, const gpu::Image& dstImage)
 {
-	gpu::Buffer stagingBuffer = device.CreateBuffer(EBufferUsage::Transfer, dstImage.GetSize(), srcPixels);
+	gpu::Buffer stagingBuffer = device.CreateBuffer({}, EMemoryUsage::CPU_ONLY, dstImage.GetSize(), srcPixels);
 
 	gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 

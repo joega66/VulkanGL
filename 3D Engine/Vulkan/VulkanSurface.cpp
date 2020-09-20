@@ -233,15 +233,18 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 
 	for (auto& image : images)
 	{
-		_Images.push_back(gpu::Image(_Device
-			, image
-			, VkDeviceMemory()
-			, VulkanImage::GetEngineFormat(_SurfaceFormat.format)
-			, extent.width
-			, extent.height
-			, 1
-			, imageUsage
-			, 1
+		_Images.push_back(gpu::Image(
+			_Device,
+			nullptr,
+			nullptr,
+			{},
+			image,
+			VulkanImage::GetEngineFormat(_SurfaceFormat.format),
+			extent.width,
+			extent.height,
+			1,
+			imageUsage,
+			1
 		));
 	}
 }

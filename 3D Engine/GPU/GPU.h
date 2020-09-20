@@ -36,7 +36,8 @@ namespace gpu
 		) = 0;
 
 		virtual gpu::Buffer CreateBuffer(
-			EBufferUsage usage, 
+			EBufferUsage bufferUsage, 
+			EMemoryUsage memoryUsage,
 			uint64 size, 
 			const void* data = nullptr
 		) = 0;

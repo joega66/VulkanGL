@@ -31,7 +31,7 @@ CameraProxy::CameraProxy(Engine& engine)
 {
 	_CameraDescriptorSet = engine.Device.CreateDescriptorSet<CameraDescriptors>();
 
-	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform | EBufferUsage::HostVisible, sizeof(CameraUniform));
+	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(CameraUniform));
 	
 	engine._Screen.OnScreenResize([this, &engine] (int32 width, int32 height)
 	{
