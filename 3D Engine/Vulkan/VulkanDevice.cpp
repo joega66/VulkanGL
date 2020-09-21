@@ -196,7 +196,7 @@ gpu::ImageView VulkanDevice::CreateImageView(
 	VkImageView ImageView;
 	vulkan(vkCreateImageView(Device, &ImageViewCreateInfo, nullptr, &ImageView));
 
-	return gpu::ImageView(*this, ImageView, Image.GetFormat());
+	return gpu::ImageView(*this, ImageView, Image.GetUsage(), Image.GetFormat());
 }
 
 gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)

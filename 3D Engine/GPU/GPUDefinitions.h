@@ -6,7 +6,6 @@
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanBuffer.h"
 #include "Vulkan/VulkanDescriptors.h"
-#include "Vulkan/VulkanBindlessResources.h"
 #include "Vulkan/VulkanPipeline.h"
 
 namespace gpu

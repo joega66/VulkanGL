@@ -1,5 +1,5 @@
 #pragma once
-#include "VulkanBindlessResources.h"
+#include "VulkanBindlessDescriptors.h"
 #include <GPU/GPUShader.h>
 #include <vulkan/vulkan.h>
 #include "vk_mem_alloc.h"
@@ -15,17 +15,21 @@ namespace gpu
 		ImageView& operator=(const ImageView&) = delete;
 
 		ImageView() = default;
-		ImageView(VulkanDevice& device, VkImageView imageView, EFormat format);
+		ImageView(VulkanDevice& device, VkImageView imageView, EImageUsage usage, EFormat format);
 		ImageView(ImageView&& other);
 		ImageView& operator=(ImageView&& other);
 		~ImageView();
 
 		inline VkImageView GetHandle() const { return _ImageView; }
 		inline EFormat GetFormat() const { return _Format; }
+		inline const TextureID& GetTextureID() const { return _TextureID; }
+		inline const ImageID& GetImageID() const { return _ImageID; }
 
 	private:
-		VkDevice _Device = VK_NULL_HANDLE;
+		VkDevice _Device = nullptr;
 		VkImageView _ImageView = nullptr;
+		TextureID _TextureID = {};
+		ImageID _ImageID = {};
 		EFormat _Format;
 	};
 
@@ -52,13 +56,12 @@ namespace gpu
 		Image& operator=(Image&& other);
 		~Image();
 
-		inline void* GetNativeHandle() { return _Image; }
 		inline operator VkImage() const { return _Image; }
 		inline operator const ImageView& () const { return _ImageView; }
 		inline VkImage GetHandle() const { return _Image; }
 		inline const ImageView& GetImageView() const { return _ImageView; }
-		inline const TextureID& GetTextureID() const { return _TextureID; }
-		inline const ImageID& GetImageID() const { return _ImageID; }
+		inline const TextureID& GetTextureID() const { return _ImageView.GetTextureID(); }
+		inline const ImageID& GetImageID() const { return _ImageView.GetImageID(); }
 		VkFormat GetVulkanFormat() const;
 		VkImageAspectFlags GetVulkanAspect() const;
 
@@ -75,8 +78,6 @@ namespace gpu
 		VmaAllocationInfo _AllocationInfo;
 		VkImage _Image = nullptr;
 		ImageView _ImageView = {};
-		TextureID _TextureID = {};
-		ImageID _ImageID = {};
 	};
 
 	class Sampler

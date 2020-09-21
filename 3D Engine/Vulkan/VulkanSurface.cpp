@@ -186,7 +186,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 	swapchainInfo.imageArrayLayers = 1;
 	swapchainInfo.imageUsage = [&] ()
 	{
-		VkImageUsageFlags imageUsageFlags;
+		VkImageUsageFlags imageUsageFlags = 0;
 		imageUsageFlags |= Any(imageUsage & EImageUsage::Attachment) ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : 0;
 		imageUsageFlags |= Any(imageUsage & EImageUsage::Sampled) ? VK_IMAGE_USAGE_SAMPLED_BIT : 0;
 		imageUsageFlags |= Any(imageUsage & EImageUsage::Storage) ? VK_IMAGE_USAGE_STORAGE_BIT : 0;

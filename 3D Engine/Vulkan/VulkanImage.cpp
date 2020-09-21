@@ -70,16 +70,26 @@ namespace gpu
 		return reverseMap;
 	}();
 
-	ImageView::ImageView(VulkanDevice& device, VkImageView imageView, EFormat format)
+	ImageView::ImageView(VulkanDevice& device, VkImageView imageView, EImageUsage usage, EFormat format)
 		: _Device(device)
 		, _ImageView(imageView)
 		, _Format(format)
 	{
+		if (Any(usage & EImageUsage::Sampled))
+		{
+			_TextureID = device.CreateTextureID(*this);
+		}
+		if (Any(usage & EImageUsage::Storage))
+		{
+			_ImageID = device.CreateImageID(*this);
+		}
 	}
 
 	ImageView::ImageView(ImageView&& other)
 		: _Device(other._Device)
 		, _ImageView(std::exchange(other._ImageView, nullptr))
+		, _TextureID(std::exchange(other._TextureID, {}))
+		, _ImageID(std::exchange(other._ImageID, {}))
 		, _Format(other._Format)
 	{
 	}
@@ -88,6 +98,8 @@ namespace gpu
 	{
 		_Device = other._Device;
 		_ImageView = std::exchange(other._ImageView, nullptr);
+		_TextureID = std::exchange(other._TextureID, {});
+		_ImageID = std::exchange(other._ImageID, {});
 		_Format = other._Format;
 		return *this;
 	}
@@ -96,6 +108,8 @@ namespace gpu
 	{
 		if (_ImageView)
 		{
+			_TextureID.Release();
+			_ImageID.Release();
 			vkDestroyImageView(_Device, _ImageView, nullptr);
 		}
 	}
@@ -119,15 +133,6 @@ namespace gpu
 		, ImagePrivate(format, width, height, depth, usage, mipLevels)
 	{
 		_ImageView = device.CreateImageView(*this, 0, mipLevels, 0, Any(usage & EImageUsage::Cubemap) ? 6 : 1);
-
-		if (Any(usage & EImageUsage::Sampled))
-		{
-			_TextureID = device.CreateTextureID(_ImageView);
-		}
-		if (Any(usage & EImageUsage::Storage))
-		{
-			_ImageID = device.CreateImageID(_ImageView);
-		}
 	}
 
 	Image::Image(Image&& other)
@@ -136,8 +141,6 @@ namespace gpu
 		, _AllocationInfo(std::exchange(other._AllocationInfo, {}))
 		, _Image(std::exchange(other._Image, nullptr))
 		, _ImageView(std::move(other._ImageView))
-		, _TextureID(std::move(other._TextureID))
-		, _ImageID(std::move(other._ImageID))
 		, ImagePrivate(other)
 	{
 	}
@@ -149,8 +152,6 @@ namespace gpu
 		_AllocationInfo = std::exchange(other._AllocationInfo, {});
 		_Image = std::exchange(other._Image, nullptr);
 		_ImageView = std::move(other._ImageView);
-		_TextureID = std::move(other._TextureID);
-		_ImageID = std::move(other._ImageID);
 		_Format = other._Format;
 		_Width = other._Width;
 		_Height = other._Height;
@@ -164,8 +165,6 @@ namespace gpu
 	{
 		if (_Allocation != nullptr)
 		{
-			_TextureID.Release();
-			_ImageID.Release();
 			vmaDestroyImage(_Allocator, _Image, _Allocation);
 		}
 	}

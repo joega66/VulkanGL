@@ -1,4 +1,4 @@
-#include "VulkanBindlessResources.h"
+#include "VulkanBindlessDescriptors.h"
 #include "VulkanDevice.h"
 
 std::weak_ptr<gpu::BindlessDescriptors> gBindlessTextures;

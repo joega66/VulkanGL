@@ -203,9 +203,6 @@
     <ClInclude Include="Systems\SceneSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanBindlessResources.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\CameraProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -276,6 +273,9 @@
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Vulkan\VulkanBuffer.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\VulkanBindlessDescriptors.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
@@ -406,9 +406,6 @@
     <ClCompile Include="Systems\SceneSystem.cpp">
       <Filter>Source\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="Vulkan\VulkanBindlessResources.cpp">
-      <Filter>Source\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\GBufferPass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
@@ -449,6 +446,9 @@
       <Filter>Source\GPU</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanBuffer.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanBindlessDescriptors.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>

@@ -63,7 +63,7 @@
     <ClCompile Include="Systems\SceneSystem.cpp" />
     <ClCompile Include="Systems\RenderSystem.cpp" />
     <ClCompile Include="Systems\UserInterface.cpp" />
-    <ClCompile Include="Vulkan\VulkanBindlessResources.cpp" />
+    <ClCompile Include="Vulkan\VulkanBindlessDescriptors.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
     <ClCompile Include="Vulkan\VulkanDescriptors.cpp" />
     <ClCompile Include="Vulkan\VulkanCache.cpp" />
@@ -139,7 +139,7 @@
     <ClInclude Include="Systems\RenderSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />
     <ClInclude Include="Vulkan\vk_mem_alloc.h" />
-    <ClInclude Include="Vulkan\VulkanBindlessResources.h" />
+    <ClInclude Include="Vulkan\VulkanBindlessDescriptors.h" />
     <ClInclude Include="Vulkan\VulkanCommandList.h" />
     <ClInclude Include="Vulkan\VulkanDescriptors.h" />
     <ClInclude Include="Vulkan\VulkanCache.h" />

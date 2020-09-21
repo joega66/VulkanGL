@@ -4,7 +4,7 @@
 #include "VulkanCache.h"
 #include "VulkanRenderPass.h"
 #include "VulkanCommandList.h"
-#include "VulkanBindlessResources.h"
+#include "VulkanBindlessDescriptors.h"
 #include "vk_mem_alloc.h"
 
 static const std::vector<const char*> ValidationLayers =
