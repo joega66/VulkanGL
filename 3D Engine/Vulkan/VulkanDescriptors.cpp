@@ -42,169 +42,172 @@ void VulkanCache::UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet,
 	p_vkUpdateDescriptorSetWithTemplateKHR(Device, DescriptorSet, DescriptorUpdateTemplate, Data);
 }
 
-VulkanDescriptorPool::VulkanDescriptorPool(VulkanDevice& Device, const VkDescriptorPoolCreateInfo& CreateInfo)
+namespace gpu
 {
-	vulkan(vkCreateDescriptorPool(Device, &CreateInfo, nullptr, &DescriptorPool));
-	DescriptorSetsWaitingToBeFreed.reserve(VulkanDescriptorPoolManager::SetsPerPool);
-}
-
-VkDescriptorSet VulkanDescriptorPool::Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout)
-{
-	if (NumDescriptorSets < VulkanDescriptorPoolManager::SetsPerPool)
+	DescriptorPool::DescriptorPool(VulkanDevice& Device, const VkDescriptorPoolCreateInfo& CreateInfo)
 	{
-		VkDescriptorSetAllocateInfo AllocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-		AllocInfo.descriptorPool = DescriptorPool;
-		AllocInfo.descriptorSetCount = 1;
-		AllocInfo.pSetLayouts = &Layout;
-
-		VkDescriptorSet DescriptorSet;
-		vulkan(vkAllocateDescriptorSets(Device, &AllocInfo, &DescriptorSet));
-		NumDescriptorSets++;
-		return DescriptorSet;
-	}
-	else
-	{
-		return VK_NULL_HANDLE;
-	}
-}
-
-void VulkanDescriptorPool::Free(VkDescriptorSet DescriptorSet)
-{
-	DescriptorSetsWaitingToBeFreed.push_back(DescriptorSet);
-}
-
-void VulkanDescriptorPool::EndFrame(VulkanDevice& Device)
-{
-	if (!DescriptorSetsWaitingToBeFreed.empty())
-	{
-		vkFreeDescriptorSets(Device, DescriptorPool, static_cast<uint32>(DescriptorSetsWaitingToBeFreed.size()), DescriptorSetsWaitingToBeFreed.data());
-		NumDescriptorSets -= static_cast<uint32>(DescriptorSetsWaitingToBeFreed.size());
-		DescriptorSetsWaitingToBeFreed.clear();
-	}
-}
-
-VulkanDescriptorPoolManager::VulkanDescriptorPoolManager()
-{
-	for (VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_BEGIN_RANGE; DescriptorType < VK_DESCRIPTOR_TYPE_RANGE_SIZE;)
-	{
-		VkDescriptorPoolSize& PoolSize = PoolSizes[DescriptorType];
-		PoolSize.descriptorCount = SetsPerPool;
-		PoolSize.type = DescriptorType;
-		DescriptorType = VkDescriptorType(DescriptorType + 1);
+		vulkan(vkCreateDescriptorPool(Device, &CreateInfo, nullptr, &_DescriptorPool));
+		DescriptorSetsWaitingToBeFreed.reserve(DescriptorPoolManager::SetsPerPool);
 	}
 
-	PoolInfo.pPoolSizes = PoolSizes.data();
-	PoolInfo.poolSizeCount = static_cast<uint32>(PoolSizes.size());
-	PoolInfo.maxSets = SetsPerPool;
-	PoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-}
-
-VulkanDescriptorSet VulkanDescriptorPoolManager::Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout)
-{
-	for (auto& DescriptorPool : DescriptorPools)
+	VkDescriptorSet DescriptorPool::Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout)
 	{
-		if (VkDescriptorSet DescriptorSet = DescriptorPool->Allocate(Device, Layout); DescriptorSet != VK_NULL_HANDLE)
+		if (NumDescriptorSets < DescriptorPoolManager::SetsPerPool)
 		{
-			return VulkanDescriptorSet(*DescriptorPool, DescriptorSet);
+			VkDescriptorSetAllocateInfo AllocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+			AllocInfo.descriptorPool = _DescriptorPool;
+			AllocInfo.descriptorSetCount = 1;
+			AllocInfo.pSetLayouts = &Layout;
+
+			VkDescriptorSet DescriptorSet;
+			vulkan(vkAllocateDescriptorSets(Device, &AllocInfo, &DescriptorSet));
+			NumDescriptorSets++;
+			return DescriptorSet;
+		}
+		else
+		{
+			return VK_NULL_HANDLE;
 		}
 	}
 
-	DescriptorPools.push_back(std::make_unique<VulkanDescriptorPool>(Device, PoolInfo));
-	VulkanDescriptorPool& DescriptorPool = *DescriptorPools.back();
-	return VulkanDescriptorSet(DescriptorPool, DescriptorPool.Allocate(Device, Layout));
-}
-
-void VulkanDescriptorPoolManager::EndFrame(VulkanDevice& Device)
-{
-	for (auto& DescriptorPool : DescriptorPools)
+	void DescriptorPool::Free(VkDescriptorSet DescriptorSet)
 	{
-		DescriptorPool->EndFrame(Device);
-	}
-}
-
-VulkanDescriptorSet::VulkanDescriptorSet(
-	VulkanDescriptorPool& DescriptorPool,
-	VkDescriptorSet DescriptorSet)
-	: DescriptorPool(&DescriptorPool)
-	, DescriptorSet(DescriptorSet)
-{
-}
-
-VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet&& Other)
-	: DescriptorPool(Other.DescriptorPool)
-	, DescriptorSet(std::exchange(Other.DescriptorSet, nullptr))
-{
-}
-
-VulkanDescriptorSet& VulkanDescriptorSet::operator=(VulkanDescriptorSet&& Other)
-{
-	DescriptorPool = Other.DescriptorPool;
-	DescriptorSet = std::exchange(Other.DescriptorSet, nullptr);
-	return *this;
-}
-
-VulkanDescriptorSet::~VulkanDescriptorSet()
-{
-	if (DescriptorSet != nullptr)
-	{
-		DescriptorPool->Free(DescriptorSet);
-	}
-}
-
-VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(
-	VulkanDevice& Device,
-	std::size_t NumBindings,
-	const DescriptorBinding* Bindings)
-{
-	static const VkDescriptorType DescriptorTypes[] =
-	{
-		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-	};
-
-	std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
-	DescriptorUpdateTemplateEntries.reserve(NumBindings);
-
-	std::vector<VkDescriptorSetLayoutBinding> DescriptorSetLayoutBindings;
-	DescriptorSetLayoutBindings.reserve(NumBindings);
-	
-	uint32 StructSize = 0;
-
-	for (std::size_t BindingIndex = 0; BindingIndex < NumBindings; BindingIndex++)
-	{
-		const DescriptorBinding& Binding = Bindings[BindingIndex];
-		VkDescriptorUpdateTemplateEntry DescriptorUpdateTemplateEntry = {};
-		DescriptorUpdateTemplateEntry.dstBinding = Binding.binding;
-		DescriptorUpdateTemplateEntry.descriptorCount = Binding.descriptorCount;
-		DescriptorUpdateTemplateEntry.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.descriptorType)];
-		DescriptorUpdateTemplateEntry.offset = StructSize;
-
-		StructSize += (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER || DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ?
-			sizeof(VkDescriptorBufferInfo) : sizeof(VkDescriptorImageInfo));
-
-		DescriptorUpdateTemplateEntries.push_back(DescriptorUpdateTemplateEntry);
-
-		VkDescriptorSetLayoutBinding DescriptorSetLayoutBinding;
-		DescriptorSetLayoutBinding.binding = Binding.binding;
-		DescriptorSetLayoutBinding.descriptorCount = Binding.descriptorCount;
-		DescriptorSetLayoutBinding.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.descriptorType)];
-		DescriptorSetLayoutBinding.pImmutableSamplers = nullptr;
-		DescriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
-
-		DescriptorSetLayoutBindings.push_back(DescriptorSetLayoutBinding);
+		DescriptorSetsWaitingToBeFreed.push_back(DescriptorSet);
 	}
 
-	std::tie(DescriptorSetLayout, DescriptorUpdateTemplate) = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings, DescriptorUpdateTemplateEntries);
-}
+	void DescriptorPool::EndFrame(VulkanDevice& Device)
+	{
+		if (!DescriptorSetsWaitingToBeFreed.empty())
+		{
+			vkFreeDescriptorSets(Device, _DescriptorPool, static_cast<uint32>(DescriptorSetsWaitingToBeFreed.size()), DescriptorSetsWaitingToBeFreed.data());
+			NumDescriptorSets -= static_cast<uint32>(DescriptorSetsWaitingToBeFreed.size());
+			DescriptorSetsWaitingToBeFreed.clear();
+		}
+	}
 
-VulkanDescriptorSet VulkanDescriptorSetLayout::CreateDescriptorSet(gpu::Device& Device)
-{
-	return static_cast<VulkanDevice&>(Device).GetDescriptorPoolManager().Allocate(static_cast<VulkanDevice&>(Device), DescriptorSetLayout);
-}
+	DescriptorPoolManager::DescriptorPoolManager()
+	{
+		for (VkDescriptorType DescriptorType = VK_DESCRIPTOR_TYPE_BEGIN_RANGE; DescriptorType < VK_DESCRIPTOR_TYPE_RANGE_SIZE;)
+		{
+			VkDescriptorPoolSize& PoolSize = PoolSizes[DescriptorType];
+			PoolSize.descriptorCount = SetsPerPool;
+			PoolSize.type = DescriptorType;
+			DescriptorType = VkDescriptorType(DescriptorType + 1);
+		}
 
-void VulkanDescriptorSetLayout::UpdateDescriptorSet(gpu::Device& Device, const VulkanDescriptorSet& DescriptorSet, void* Struct)
-{
-	static_cast<VulkanDevice&>(Device).GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetHandle(), DescriptorUpdateTemplate, Struct);
-}
+		PoolInfo.pPoolSizes = PoolSizes.data();
+		PoolInfo.poolSizeCount = static_cast<uint32>(PoolSizes.size());
+		PoolInfo.maxSets = SetsPerPool;
+		PoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	}
+
+	DescriptorSet DescriptorPoolManager::Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout)
+	{
+		for (auto& DescriptorPool : DescriptorPools)
+		{
+			if (VkDescriptorSet descriptorSet = DescriptorPool->Allocate(Device, Layout); descriptorSet != VK_NULL_HANDLE)
+			{
+				return DescriptorSet(*DescriptorPool, descriptorSet);
+			}
+		}
+
+		DescriptorPools.push_back(std::make_unique<DescriptorPool>(Device, PoolInfo));
+		DescriptorPool& DescriptorPool = *DescriptorPools.back();
+		return DescriptorSet(DescriptorPool, DescriptorPool.Allocate(Device, Layout));
+	}
+
+	void DescriptorPoolManager::EndFrame(VulkanDevice& Device)
+	{
+		for (auto& DescriptorPool : DescriptorPools)
+		{
+			DescriptorPool->EndFrame(Device);
+		}
+	}
+
+	DescriptorSet::DescriptorSet(
+		class DescriptorPool& descriptorPool,
+		VkDescriptorSet descriptorSet)
+		: DescriptorPool(&descriptorPool)
+		, _DescriptorSet(descriptorSet)
+	{
+	}
+
+	DescriptorSet::DescriptorSet(DescriptorSet&& Other)
+		: DescriptorPool(Other.DescriptorPool)
+		, _DescriptorSet(std::exchange(Other._DescriptorSet, nullptr))
+	{
+	}
+
+	DescriptorSet& DescriptorSet::operator=(DescriptorSet&& Other)
+	{
+		DescriptorPool = Other.DescriptorPool;
+		_DescriptorSet = std::exchange(Other._DescriptorSet, nullptr);
+		return *this;
+	}
+
+	DescriptorSet::~DescriptorSet()
+	{
+		if (_DescriptorSet != nullptr)
+		{
+			DescriptorPool->Free(_DescriptorSet);
+		}
+	}
+
+	DescriptorSetLayout::DescriptorSetLayout(
+		VulkanDevice& Device,
+		std::size_t NumBindings,
+		const DescriptorBinding* Bindings)
+	{
+		static const VkDescriptorType DescriptorTypes[] =
+		{
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		};
+
+		std::vector<VkDescriptorUpdateTemplateEntry> DescriptorUpdateTemplateEntries;
+		DescriptorUpdateTemplateEntries.reserve(NumBindings);
+
+		std::vector<VkDescriptorSetLayoutBinding> DescriptorSetLayoutBindings;
+		DescriptorSetLayoutBindings.reserve(NumBindings);
+
+		uint32 StructSize = 0;
+
+		for (std::size_t BindingIndex = 0; BindingIndex < NumBindings; BindingIndex++)
+		{
+			const DescriptorBinding& Binding = Bindings[BindingIndex];
+			VkDescriptorUpdateTemplateEntry DescriptorUpdateTemplateEntry = {};
+			DescriptorUpdateTemplateEntry.dstBinding = Binding.binding;
+			DescriptorUpdateTemplateEntry.descriptorCount = Binding.descriptorCount;
+			DescriptorUpdateTemplateEntry.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.descriptorType)];
+			DescriptorUpdateTemplateEntry.offset = StructSize;
+
+			StructSize += (DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER || DescriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ?
+				sizeof(VkDescriptorBufferInfo) : sizeof(VkDescriptorImageInfo));
+
+			DescriptorUpdateTemplateEntries.push_back(DescriptorUpdateTemplateEntry);
+
+			VkDescriptorSetLayoutBinding DescriptorSetLayoutBinding;
+			DescriptorSetLayoutBinding.binding = Binding.binding;
+			DescriptorSetLayoutBinding.descriptorCount = Binding.descriptorCount;
+			DescriptorSetLayoutBinding.descriptorType = DescriptorTypes[static_cast<uint32>(Binding.descriptorType)];
+			DescriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+			DescriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+
+			DescriptorSetLayoutBindings.push_back(DescriptorSetLayoutBinding);
+		}
+
+		std::tie(_DescriptorSetLayout, DescriptorUpdateTemplate) = Device.GetCache().GetDescriptorSetLayout(DescriptorSetLayoutBindings, DescriptorUpdateTemplateEntries);
+	}
+
+	DescriptorSet DescriptorSetLayout::CreateDescriptorSet(gpu::Device& Device)
+	{
+		return static_cast<VulkanDevice&>(Device).GetDescriptorPoolManager().Allocate(static_cast<VulkanDevice&>(Device), _DescriptorSetLayout);
+	}
+
+	void DescriptorSetLayout::UpdateDescriptorSet(gpu::Device& Device, const DescriptorSet& DescriptorSet, void* Struct)
+	{
+		static_cast<VulkanDevice&>(Device).GetCache().UpdateDescriptorSetWithTemplate(DescriptorSet.GetHandle(), DescriptorUpdateTemplate, Struct);
+	}
+};

@@ -65,9 +65,6 @@
     <ClInclude Include="Vulkan\VulkanImage.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanMemory.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Platform\Platform.h">
       <Filter>Source\Platforms</Filter>
     </ClInclude>
@@ -278,6 +275,9 @@
     <ClInclude Include="Vulkan\vk_mem_alloc.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanBuffer.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -287,9 +287,6 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanImage.cpp">
-      <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanMemory.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Platform\Platform.cpp">
@@ -450,6 +447,9 @@
     </ClCompile>
     <ClCompile Include="GPU\GPUShader.cpp">
       <Filter>Source\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanBuffer.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

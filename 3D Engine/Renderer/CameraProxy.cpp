@@ -138,8 +138,8 @@ void CameraProxy::CreateSceneRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments.push_back(
-		gpu::AttachmentView(&_SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General));
-	rpDesc.depthAttachment = gpu::AttachmentView(
+		AttachmentView(&_SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General));
+	rpDesc.depthAttachment = AttachmentView(
 		&_SceneDepth,
 		ELoadAction::Load,
 		EStoreAction::Store,
@@ -159,10 +159,10 @@ void CameraProxy::CreateGBufferRP(gpu::Device& device)
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments =
 	{
-		gpu::AttachmentView(&_GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
-		gpu::AttachmentView(&_GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
+		AttachmentView(&_GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
+		AttachmentView(&_GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
 	};
-	rpDesc.depthAttachment = gpu::AttachmentView(
+	rpDesc.depthAttachment = AttachmentView(
 		&_SceneDepth,
 		ELoadAction::Clear,
 		EStoreAction::Store,
@@ -190,7 +190,7 @@ void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surfa
 		// After UI rendering, the image is ready for the present queue.
 		RenderPassDesc rpDesc = {};
 		rpDesc.colorAttachments.push_back(
-			gpu::AttachmentView(&image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present));
+			AttachmentView(&image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present));
 		rpDesc.renderArea.extent = { image.GetWidth(), image.GetHeight() };
 		rpDesc.srcStageMask = EPipelineStage::ComputeShader;
 		rpDesc.dstStageMask = EPipelineStage::ColorAttachmentOutput;

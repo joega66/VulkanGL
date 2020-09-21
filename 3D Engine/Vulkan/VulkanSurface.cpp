@@ -239,7 +239,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 			nullptr,
 			{},
 			image,
-			VulkanImage::GetEngineFormat(_SurfaceFormat.format),
+			gpu::Image::GetEngineFormat(_SurfaceFormat.format),
 			extent.width,
 			extent.height,
 			1,

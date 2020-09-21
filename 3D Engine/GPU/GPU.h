@@ -67,11 +67,11 @@ namespace gpu
 
 		virtual gpu::ImageID CreateImageID(const gpu::ImageView& imageView) = 0;
 
-		virtual gpu::BindlessResources& GetTextures() = 0;
+		virtual gpu::BindlessDescriptors& GetTextures() = 0;
 
-		virtual gpu::BindlessResources& GetSamplers() = 0;
+		virtual gpu::BindlessDescriptors& GetSamplers() = 0;
 
-		virtual gpu::BindlessResources& GetImages() = 0;
+		virtual gpu::BindlessDescriptors& GetImages() = 0;
 
 		template<typename DescriptorSetType>
 		gpu::DescriptorSet CreateDescriptorSet()

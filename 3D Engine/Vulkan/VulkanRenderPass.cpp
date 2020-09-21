@@ -77,7 +77,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 	
 	for (uint32 attachmentIndex = 0; attachmentIndex < rpDesc.colorAttachments.size(); attachmentIndex++)
 	{
-		const gpu::AttachmentView& colorAttachment = rpDesc.colorAttachments[attachmentIndex];
+		const AttachmentView& colorAttachment = rpDesc.colorAttachments[attachmentIndex];
 		const gpu::Image* image = colorAttachment.image;
 
 		check(image && Any(image->GetUsage() & EImageUsage::Attachment), "Color target is invalid.");
@@ -90,8 +90,8 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 			.storeOp = GetVulkanStoreOp(colorAttachment.storeAction),
 			.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 			.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			.initialLayout = VulkanImage::GetLayout(colorAttachment.initialLayout),
-			.finalLayout = VulkanImage::GetLayout(colorAttachment.finalLayout),
+			.initialLayout = gpu::Image::GetLayout(colorAttachment.initialLayout),
+			.finalLayout = gpu::Image::GetLayout(colorAttachment.finalLayout),
 		});
 
 		colorRefs.push_back({ attachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
@@ -114,8 +114,8 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 			.storeOp = depthImage->IsDepth() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE,
 			.stencilLoadOp = depthImage->IsStencil() ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 			.stencilStoreOp = depthImage->IsStencil() ? storeOp : VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			.initialLayout = VulkanImage::GetLayout(rpDesc.depthAttachment.initialLayout),
-			.finalLayout = VulkanImage::GetLayout(rpDesc.depthAttachment.finalLayout),
+			.initialLayout = gpu::Image::GetLayout(rpDesc.depthAttachment.initialLayout),
+			.finalLayout = gpu::Image::GetLayout(rpDesc.depthAttachment.finalLayout),
 		});
 
 		depthRef.attachment = static_cast<uint32>(rpDesc.colorAttachments.size());
@@ -211,53 +211,56 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass renderPass, const Rend
 	return framebuffer;
 }
 
-VulkanRenderPass::VulkanRenderPass(
-	VulkanDevice& device,
-	VkRenderPass renderPass, 
-	VkFramebuffer framebuffer, 
-	const VkRect2D& renderArea,
-	const std::vector<VkClearValue>& clearValues,
-	uint32 numAttachments) 
-	: _Device(&device)
-	, _RenderPass(renderPass)
-	, _Framebuffer(framebuffer)
-	, _RenderArea(renderArea)
-	, _ClearValues(std::move(clearValues))
-	, _NumAttachments(numAttachments)
+namespace gpu
 {
-}
-
-VulkanRenderPass::~VulkanRenderPass()
-{
-	if (_Device)
+	RenderPass::RenderPass(
+		VulkanDevice& device,
+		VkRenderPass renderPass,
+		VkFramebuffer framebuffer,
+		const VkRect2D& renderArea,
+		const std::vector<VkClearValue>& clearValues,
+		uint32 numAttachments)
+		: _Device(&device)
+		, _RenderPass(renderPass)
+		, _Framebuffer(framebuffer)
+		, _RenderArea(renderArea)
+		, _ClearValues(std::move(clearValues))
+		, _NumAttachments(numAttachments)
 	{
-		vkDestroyFramebuffer(*_Device, _Framebuffer, nullptr);
 	}
-}
 
-VulkanRenderPass::VulkanRenderPass(VulkanRenderPass&& other)
-	: _Device(std::exchange(other._Device, nullptr))
-	, _RenderPass(std::exchange(other._RenderPass, nullptr))
-	, _Framebuffer(std::exchange(other._Framebuffer, nullptr))
-	, _RenderArea(other._RenderArea)
-	, _ClearValues(std::move(other._ClearValues))
-	, _NumAttachments(other._NumAttachments)
-{
-}
+	RenderPass::~RenderPass()
+	{
+		if (_Device)
+		{
+			vkDestroyFramebuffer(*_Device, _Framebuffer, nullptr);
+		}
+	}
 
-VulkanRenderPass& VulkanRenderPass::operator=(VulkanRenderPass&& other)
-{
-	_Device = std::exchange(other._Device, nullptr);
-	_RenderPass = std::exchange(other._RenderPass, nullptr);
-	_Framebuffer = std::exchange(other._Framebuffer, nullptr);
-	_RenderArea = other._RenderArea;
-	_ClearValues = std::move(other._ClearValues);
-	_NumAttachments = other._NumAttachments;
-	return *this;
-}
+	RenderPass::RenderPass(RenderPass&& other)
+		: _Device(std::exchange(other._Device, nullptr))
+		, _RenderPass(std::exchange(other._RenderPass, nullptr))
+		, _Framebuffer(std::exchange(other._Framebuffer, nullptr))
+		, _RenderArea(other._RenderArea)
+		, _ClearValues(std::move(other._ClearValues))
+		, _NumAttachments(other._NumAttachments)
+	{
+	}
 
-VulkanRenderPassView::VulkanRenderPassView(const VulkanRenderPass& renderPass)
-	: _RenderPass(renderPass.GetRenderPass())
-	, _NumAttachments(renderPass.GetNumAttachments())
-{
-}
+	RenderPass& RenderPass::operator=(RenderPass&& other)
+	{
+		_Device = std::exchange(other._Device, nullptr);
+		_RenderPass = std::exchange(other._RenderPass, nullptr);
+		_Framebuffer = std::exchange(other._Framebuffer, nullptr);
+		_RenderArea = other._RenderArea;
+		_ClearValues = std::move(other._ClearValues);
+		_NumAttachments = other._NumAttachments;
+		return *this;
+	}
+
+	RenderPassView::RenderPassView(const RenderPass& renderPass)
+		: _RenderPass(renderPass.GetRenderPass())
+		, _NumAttachments(renderPass.GetNumAttachments())
+	{
+	}
+};

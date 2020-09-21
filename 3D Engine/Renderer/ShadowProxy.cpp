@@ -23,9 +23,9 @@ ShadowProxy::ShadowProxy(gpu::Device& device, const DirectionalLight& directiona
 	const glm::ivec2 shadowMapRes(Platform::GetInt("Engine.ini", "Shadows", "Resolution", 2048));
 
 	_ShadowMap = device.CreateImage(shadowMapRes.x, shadowMapRes.y, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-
+	
 	RenderPassDesc rpDesc = {};
-	rpDesc.depthAttachment = gpu::AttachmentView(
+	rpDesc.depthAttachment = AttachmentView(
 		&_ShadowMap,
 		ELoadAction::Clear, EStoreAction::Store,
 		ClearDepthStencilValue{},

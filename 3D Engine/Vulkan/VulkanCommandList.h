@@ -3,101 +3,106 @@
 #include <vulkan/vulkan.h>
 
 class VulkanDevice;
-class VulkanBuffer;
-class VulkanImage;
 struct ImageMemoryBarrier;
 struct BufferMemoryBarrier;
 class VulkanPipeline;
 
-class VulkanCommandList
+namespace gpu
 {
-	VulkanCommandList(const VulkanCommandList&) = delete;
-	VulkanCommandList& operator=(const VulkanCommandList&) = delete;
-public:
-	VkQueue _Queue;
+	class Buffer;
+	class Image;
+	class RenderPass;
 
-	VkCommandPool _CommandPool;
+	class CommandList
+	{
+		CommandList(const CommandList&) = delete;
+		CommandList& operator=(const CommandList&) = delete;
+	public:
+		VkQueue _Queue;
 
-	VkCommandBuffer _CommandBuffer;
+		VkCommandPool _CommandPool;
 
-	VulkanCommandList(VulkanDevice& device, VkQueueFlags queueFlags);
+		VkCommandBuffer _CommandBuffer;
 
-	~VulkanCommandList();
+		CommandList(VulkanDevice& device, VkQueueFlags queueFlags);
 
-	void BeginRenderPass(const class VulkanRenderPass& renderPass);
+		~CommandList();
 
-	void EndRenderPass();
+		void BeginRenderPass(const RenderPass& renderPass);
 
-	void BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline);
+		void EndRenderPass();
 
-	void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, std::size_t numDescriptorSets, const VkDescriptorSet* descriptorSets);
+		void BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline);
 
-	void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values);
+		void BindDescriptorSets(const std::shared_ptr<VulkanPipeline>& pipeline, std::size_t numDescriptorSets, const VkDescriptorSet* descriptorSets);
 
-	void BindVertexBuffers(uint32 numVertexBuffers, const VulkanBuffer* vertexBuffers);
+		void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values);
 
-	void DrawIndexed(
-		const VulkanBuffer& indexBuffer,
-		uint32 indexCount, 
-		uint32 instanceCount, 
-		uint32 firstIndex, 
-		uint32 vertexOffset, 
-		uint32 firstInstance,
-		EIndexType indexType
-	);
+		void BindVertexBuffers(uint32 numVertexBuffers, const Buffer* vertexBuffers);
 
-	void Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance);
+		void DrawIndexed(
+			const Buffer& indexBuffer,
+			uint32 indexCount,
+			uint32 instanceCount,
+			uint32 firstIndex,
+			uint32 vertexOffset,
+			uint32 firstInstance,
+			EIndexType indexType
+		);
 
-	void DrawIndirect(const VulkanBuffer& buffer, uint32 offset, uint32 drawCount);
+		void Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance);
 
-	void Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ);
+		void DrawIndirect(const Buffer& buffer, uint32 offset, uint32 drawCount);
 
-	void ClearColorImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearColorValue& Color);
+		void Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ);
 
-	void ClearDepthStencilImage(const VulkanImage& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);
+		void ClearColorImage(const Image& Image, EImageLayout ImageLayout, const ClearColorValue& Color);
 
-	void PipelineBarrier(
-		EPipelineStage SrcStageMask,
-		EPipelineStage DstStageMask,
-		std::size_t NumBufferBarriers,
-		const BufferMemoryBarrier* BufferBarriers,
-		std::size_t NumImageBarriers,
-		const ImageMemoryBarrier* ImageBarriers
-	);
+		void ClearDepthStencilImage(const Image& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);
 
-	void CopyBufferToImage(
-		const VulkanBuffer& SrcBuffer, 
-		uint32 BufferOffset, 
-		const VulkanImage& DstImage,
-		EImageLayout DstImageLayout
-	);
+		void PipelineBarrier(
+			EPipelineStage SrcStageMask,
+			EPipelineStage DstStageMask,
+			std::size_t NumBufferBarriers,
+			const BufferMemoryBarrier* BufferBarriers,
+			std::size_t NumImageBarriers,
+			const ImageMemoryBarrier* ImageBarriers
+		);
 
-	void BlitImage(
-		const VulkanImage& SrcImage,
-		EImageLayout SrcImageLayout,
-		const VulkanImage& DstImage,
-		EImageLayout DstImageLayout,
-		EFilter Filter
-	);
+		void CopyBufferToImage(
+			const Buffer& SrcBuffer,
+			uint32 BufferOffset,
+			const Image& DstImage,
+			EImageLayout DstImageLayout
+		);
 
-	void SetScissor(uint32 ScissorCount, const Scissor* Scissors);
+		void BlitImage(
+			const Image& SrcImage,
+			EImageLayout SrcImageLayout,
+			const Image& DstImage,
+			EImageLayout DstImageLayout,
+			EFilter Filter
+		);
 
-	void CopyBuffer(
-		const VulkanBuffer& SrcBuffer,
-		const VulkanBuffer& DstBuffer,
-		uint64 SrcOffset,
-		uint64 DstOffset,
-		uint64 Size
-	);
+		void SetScissor(uint32 ScissorCount, const Scissor* Scissors);
 
-	void CopyImage(
-		const VulkanImage& SrcImage,
-		EImageLayout SrcImageLayout,
-		const VulkanImage& DstImage,
-		EImageLayout DstImageLayout,
-		uint32 DstArrayLayer
-	);
+		void CopyBuffer(
+			const Buffer& SrcBuffer,
+			const Buffer& DstBuffer,
+			uint64 SrcOffset,
+			uint64 DstOffset,
+			uint64 Size
+		);
 
-private:
-	VulkanDevice& _Device;
+		void CopyImage(
+			const Image& SrcImage,
+			EImageLayout SrcImageLayout,
+			const Image& DstImage,
+			EImageLayout DstImageLayout,
+			uint32 DstArrayLayer
+		);
+
+	private:
+		VulkanDevice& _Device;
+	};
 };

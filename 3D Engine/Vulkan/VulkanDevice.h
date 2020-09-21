@@ -60,15 +60,15 @@ public:
 
 	gpu::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
 
-	gpu::TextureID CreateTextureID(const VulkanImageView& ImageView) override;
+	gpu::TextureID CreateTextureID(const gpu::ImageView& ImageView) override;
 	
-	gpu::ImageID CreateImageID(const VulkanImageView& ImageView) override;
+	gpu::ImageID CreateImageID(const gpu::ImageView& ImageView) override;
 
-	gpu::BindlessResources& GetTextures() override;
+	gpu::BindlessDescriptors& GetTextures() override;
 
-	gpu::BindlessResources& GetSamplers() override;
+	gpu::BindlessDescriptors& GetSamplers() override;
 
-	gpu::BindlessResources& GetImages() override;
+	gpu::BindlessDescriptors& GetImages() override;
 
 	operator VkDevice() const { return Device; }
 
@@ -79,9 +79,8 @@ public:
 	inline const VkPhysicalDeviceFeatures& GetFeatures() const { return Features; }
 	inline VulkanCache& GetCache() { return VulkanCache; }
 	inline VulkanQueues& GetQueues() { return Queues; }
-	inline VulkanDescriptorPoolManager& GetDescriptorPoolManager() { return DescriptorPoolManager; }
+	inline gpu::DescriptorPoolManager& GetDescriptorPoolManager() { return DescriptorPoolManager; }
 	
-
 	static inline VkAccessFlags GetAccessFlags(EAccess access) 
 	{ 
 		return VkAccessFlags(access); 
@@ -113,13 +112,13 @@ private:
 
 	VkDevice Device;
 
-	VulkanDescriptorPoolManager DescriptorPoolManager;
+	gpu::DescriptorPoolManager DescriptorPoolManager;
 
-	std::shared_ptr<VulkanBindlessResources> BindlessTextures;
+	std::shared_ptr<gpu::BindlessDescriptors> BindlessTextures;
 
-	std::shared_ptr<VulkanBindlessResources> BindlessSamplers;
+	std::shared_ptr<gpu::BindlessDescriptors> BindlessSamplers;
 
-	std::shared_ptr<VulkanBindlessResources> BindlessImages;
+	std::shared_ptr<gpu::BindlessDescriptors> BindlessImages;
 };
 
 #define vulkan(Result) \

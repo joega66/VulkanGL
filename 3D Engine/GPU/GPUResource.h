@@ -230,24 +230,6 @@ struct DescriptorBinding
 
 namespace gpu
 {
-	class BufferPrivate
-	{
-	public:
-		BufferPrivate() = default;
-		BufferPrivate(EBufferUsage usage, uint32 size)
-			: _Usage(usage)
-			, _Size(size)
-		{
-		}
-
-		inline EBufferUsage GetUsage() const { return _Usage; }
-		inline uint32 GetSize() const { return _Size; }
-
-	protected:
-		EBufferUsage _Usage;
-		uint32 _Size;
-	};
-
 	class ImagePrivate
 	{
 	public:

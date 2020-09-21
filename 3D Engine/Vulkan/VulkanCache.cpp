@@ -18,7 +18,7 @@ gpu::Sampler VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
 	}
 	else
 	{
-		SamplerCache.emplace(Crc, VulkanSampler(Device, SamplerDesc));
+		SamplerCache.emplace(Crc, gpu::Sampler(Device, SamplerDesc));
 		return SamplerCache.at(Crc);
 	}
 }

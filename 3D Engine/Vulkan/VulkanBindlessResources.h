@@ -2,73 +2,75 @@
 #include <Engine/Types.h>
 #include <vulkan/vulkan.h>
 
-class VulkanImageView;
-class VulkanSampler;
-
-#define DECLARE_VULKAN_RESOURCE_ID(ResourceType) \
-class ResourceType \
+#define DECLARE_DESCRIPTOR_INDEX_TYPE(DescriptorIndexType) \
+class DescriptorIndexType \
 { \
 public: \
-	ResourceType() = default; \
-	ResourceType(uint32 ID); \
+	DescriptorIndexType() = default; \
+	DescriptorIndexType(uint32 descriptorIndex); \
 	void Release(); \
-	inline const uint32& Get() const { return ID; } \
-	inline operator uint32() const { return ID; } \
+	inline const uint32& Get() const { return _DescriptorIndex; } \
+	inline operator uint32() const { return _DescriptorIndex; } \
 protected: \
-	uint32 ID; \
+	uint32 _DescriptorIndex; \
 }; \
 
-DECLARE_VULKAN_RESOURCE_ID(VulkanTextureID);
-DECLARE_VULKAN_RESOURCE_ID(VulkanSamplerID);
-DECLARE_VULKAN_RESOURCE_ID(VulkanImageID);
-
-class VulkanBindlessResources
+namespace gpu
 {
-	friend class VulkanDevice;		// EndFrame
-	friend class VulkanTextureID;	// FreeResourceID
-	friend class VulkanSamplerID;	// FreeResourceID
-	friend class VulkanSampler;		// CreateSamplerID
-	friend class VulkanImageID;		// FreeResourceID
+	DECLARE_DESCRIPTOR_INDEX_TYPE(TextureID);
+	DECLARE_DESCRIPTOR_INDEX_TYPE(SamplerID);
+	DECLARE_DESCRIPTOR_INDEX_TYPE(ImageID);
 
-public:
-	VulkanBindlessResources(const VulkanBindlessResources&) = delete;
-	VulkanBindlessResources& operator=(const VulkanBindlessResources&) = delete;
+	class ImageView;
+	class Sampler;
 
-	VulkanBindlessResources(VkDevice Device, VkDescriptorType ResourceType, uint32 ResourceCount);
-	~VulkanBindlessResources();
+	class BindlessDescriptors
+	{
+		friend class TextureID;
+		friend class SamplerID;
+		friend class Sampler;
+		friend class ImageID;
 
-	/** Create a texture ID for indexing into the texture2D array. */
-	VulkanTextureID CreateTextureID(const VulkanImageView& ImageView);
+	public:
+		BindlessDescriptors(const BindlessDescriptors&) = delete;
+		BindlessDescriptors& operator=(const BindlessDescriptors&) = delete;
 
-	/** Create an image ID for indexing into the storage image array. */
-	VulkanImageID CreateImageID(const VulkanImageView& ImageView);
+		BindlessDescriptors(VkDevice device, VkDescriptorType descriptorType, uint32 descriptorCount);
+		~BindlessDescriptors();
 
-	inline VkDescriptorSetLayout GetLayout() const { return BindlessResourceSetLayout; }
-	inline operator VkDescriptorSet() const { return BindlessResources; }
+		/** Create a texture ID for indexing into the texture2D array. */
+		TextureID CreateTextureID(const ImageView& imageView);
 
-private:
-	VkDevice Device;
-	const uint32 ResourceCount;
-	VkDescriptorSetLayout BindlessResourceSetLayout;
-	VkDescriptorPool BindlessResourceDescriptorPool;
-	VkDescriptorSet BindlessResources;
-	uint32 CurrNumBindlessResources = 0;
-	std::list<uint32> Available;
-	std::list<uint32> Released;
+		/** Create an image ID for indexing into the storage image array. */
+		ImageID CreateImageID(const ImageView& imageView);
 
-	/** Creates a SamplerID. Samplers call this automatically. */
-	VulkanSamplerID CreateSamplerID(const VulkanSampler& Sampler);
+		/** Called in VulkanDevice::EndFrame(). */
+		void EndFrame();
 
-	/** Allocates an ID into a bindless resource table. */
-	uint32 AllocateResourceID();
+		inline VkDescriptorSetLayout GetLayout() const { return _DescriptorSetLayout; }
+		inline operator VkDescriptorSet() const { return _DescriptorSet; }
 
-	/** Release an ID. */
-	void Release(uint32 ResourceID);
+	private:
+		VkDevice _Device;
+		const uint32 _MaxDescriptorCount;
+		VkDescriptorSetLayout _DescriptorSetLayout;
+		VkDescriptorPool _DescriptorPool;
+		VkDescriptorSet _DescriptorSet;
+		uint32 _NumDescriptors = 0;
+		std::list<uint32> _Available;
+		std::list<uint32> _Released;
 
-	/** Called in VulkanDevice::EndFrame(). */
-	void EndFrame();
+		/** Creates a SamplerID. Samplers call this automatically. */
+		SamplerID CreateSamplerID(const Sampler& sampler);
+
+		/** Allocates an index into a bindless descriptor table. */
+		uint32 AllocateDescriptorIndex();
+
+		/** Release a descriptor index. */
+		void Release(uint32 descriptorIndex);
+	};
 };
 
-extern std::weak_ptr<VulkanBindlessResources> gBindlessTextures;
-extern std::weak_ptr<VulkanBindlessResources> gBindlessSamplers;
-extern std::weak_ptr<VulkanBindlessResources> gBindlessImages;
+extern std::weak_ptr<gpu::BindlessDescriptors> gBindlessTextures;
+extern std::weak_ptr<gpu::BindlessDescriptors> gBindlessSamplers;
+extern std::weak_ptr<gpu::BindlessDescriptors> gBindlessImages;

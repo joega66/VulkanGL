@@ -60,7 +60,7 @@ static std::vector<VertexAttributeDescription> ReflectVertexAttributeDescription
 		const VertexAttributeDescription description =
 		{
 			.location = glsl.get_decoration(resource.id, spv::DecorationLocation),
-			.format = VulkanImage::GetEngineFormat(GetFormatFromBaseType(glsl.get_type(resource.type_id))),
+			.format = gpu::Image::GetEngineFormat(GetFormatFromBaseType(glsl.get_type(resource.type_id))),
 			.offset = 0,
 		};
 

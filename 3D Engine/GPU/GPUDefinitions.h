@@ -4,72 +4,60 @@
 
 #include "Vulkan/VulkanRenderPass.h"
 #include "Vulkan/VulkanImage.h"
-#include "Vulkan/VulkanMemory.h"
+#include "Vulkan/VulkanBuffer.h"
 #include "Vulkan/VulkanDescriptors.h"
 #include "Vulkan/VulkanBindlessResources.h"
 #include "Vulkan/VulkanPipeline.h"
 
 namespace gpu
 {
-	using Buffer = VulkanBuffer;
-	using Image = VulkanImage;
-	using ImageView = VulkanImageView;
-	using Sampler = VulkanSampler;
-	using DescriptorSet = VulkanDescriptorSet;
-	using DescriptorSetLayout = VulkanDescriptorSetLayout;
 	using Pipeline = std::shared_ptr<VulkanPipeline>;
-	using RenderPass = VulkanRenderPass;
-	using RenderPassView = VulkanRenderPassView;
-	using BindlessResources = VulkanBindlessResources;
-	using TextureID = VulkanTextureID;
-	using SamplerID = VulkanSamplerID;
-	using ImageID = VulkanImageID;
-
-	struct AttachmentView
-	{
-		const gpu::Image* image = nullptr;
-		ClearColorValue clearColor = {};
-		ClearDepthStencilValue clearDepthStencil = {};
-		ELoadAction loadAction = ELoadAction::DontCare;
-		EStoreAction storeAction = EStoreAction::DontCare;
-		EImageLayout initialLayout = EImageLayout::Undefined;
-		EImageLayout finalLayout = EImageLayout::Undefined;
-
-		AttachmentView() = default;
-
-		AttachmentView(
-			const gpu::Image* image, 
-			ELoadAction loadAction, 
-			EStoreAction storeAction, 
-			const ClearColorValue& clearValue, 
-			EImageLayout initialLayout, 
-			EImageLayout finalLayout)
-			: image(image)
-			, clearColor(clearValue)
-			, loadAction(loadAction)
-			, storeAction(storeAction)
-			, initialLayout(initialLayout)
-			, finalLayout(finalLayout)
-		{
-		}
-
-		AttachmentView(
-			const gpu::Image* image, 
-			ELoadAction loadAction, 
-			EStoreAction storeAction, 
-			const ClearDepthStencilValue& clearValue, 
-			EImageLayout initialLayout, 
-			EImageLayout finalLayout)
-			: image(image)
-			, clearDepthStencil(clearValue)
-			, loadAction(loadAction)
-			, storeAction(storeAction)
-			, initialLayout(initialLayout)
-			, finalLayout(finalLayout)
-		{
-		}
-	};
 }
+
+struct AttachmentView
+{
+	const gpu::Image* image = nullptr;
+	ClearColorValue clearColor = {};
+	ClearDepthStencilValue clearDepthStencil = {};
+	ELoadAction loadAction = ELoadAction::DontCare;
+	EStoreAction storeAction = EStoreAction::DontCare;
+	EImageLayout initialLayout = EImageLayout::Undefined;
+	EImageLayout finalLayout = EImageLayout::Undefined;
+
+	AttachmentView() = default;
+
+	AttachmentView(
+		const gpu::Image* image,
+		ELoadAction loadAction,
+		EStoreAction storeAction,
+		const ClearColorValue& clearValue,
+		EImageLayout initialLayout,
+		EImageLayout finalLayout)
+		: image(image)
+		, clearColor(clearValue)
+		, loadAction(loadAction)
+		, storeAction(storeAction)
+		, initialLayout(initialLayout)
+		, finalLayout(finalLayout)
+	{
+	}
+
+	AttachmentView(
+		const gpu::Image* image,
+		ELoadAction loadAction,
+		EStoreAction storeAction,
+		const ClearDepthStencilValue& clearValue,
+		EImageLayout initialLayout,
+		EImageLayout finalLayout)
+		: image(image)
+		, clearDepthStencil(clearValue)
+		, loadAction(loadAction)
+		, storeAction(storeAction)
+		, initialLayout(initialLayout)
+		, finalLayout(finalLayout)
+	{
+	}
+};
 
 struct RenderArea
 {
@@ -79,8 +67,8 @@ struct RenderArea
 
 struct RenderPassDesc
 {
-	std::vector<gpu::AttachmentView>	colorAttachments;
-	gpu::AttachmentView					depthAttachment;
+	std::vector<AttachmentView>	colorAttachments;
+	AttachmentView					depthAttachment;
 	RenderArea							renderArea;
 	EPipelineStage						srcStageMask;
 	EPipelineStage						dstStageMask;
@@ -196,8 +184,3 @@ struct ImageMemoryBarrier
 };
 
 #include "Vulkan/VulkanCommandList.h"
-
-namespace gpu
-{
-	using CommandList = VulkanCommandList;
-}

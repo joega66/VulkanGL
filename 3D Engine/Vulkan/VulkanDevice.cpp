@@ -28,7 +28,7 @@ gpu::CommandList VulkanDevice::CreateCommandList(EQueue Queue)
 {
 	// @todo Transfer, AsyncCompute Queues
 	const VkQueueFlags QueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
-	return VulkanCommandList(*this, QueueFlags);
+	return gpu::CommandList(*this, QueueFlags);
 }
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& PSODesc)
@@ -43,10 +43,10 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& ComputePip
 
 gpu::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries)
 {
-	return VulkanDescriptorSetLayout(*this, NumEntries, Entries);
+	return gpu::DescriptorSetLayout(*this, NumEntries, Entries);
 }
 
-VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data)
+gpu::Buffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data)
 {
 	VkBufferUsageFlags vulkanBufferUsage = 0;
 	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
@@ -98,11 +98,11 @@ VulkanBuffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage m
 	VmaAllocationInfo allocationInfo;
 	vmaCreateBuffer(_Allocator, &bufferInfo, &allocInfo, &buffer, &allocation, &allocationInfo);
 
-	VulkanBuffer newBuffer(_Allocator, buffer, allocation, allocationInfo, size, bufferUsage);
+	gpu::Buffer newBuffer(_Allocator, buffer, allocation, allocationInfo, size, bufferUsage);
 
 	if (data)
 	{
-		Platform::Memcpy(newBuffer.GetData(), data, static_cast<size_t>(newBuffer.GetSize()));
+		Platform::Memcpy(newBuffer.GetData(), data, newBuffer.GetSize());
 	}
 
 	return newBuffer;
@@ -118,7 +118,7 @@ gpu::Image VulkanDevice::CreateImage(
 {
 	if (gpu::Image::IsDepth(Format))
 	{
-		Format = VulkanImage::GetEngineFormat(VulkanImage::FindSupportedDepthFormat(*this, Format));
+		Format = gpu::Image::GetEngineFormat(gpu::Image::FindSupportedDepthFormat(*this, Format));
 	}
 
 	VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
@@ -128,7 +128,7 @@ gpu::Image VulkanDevice::CreateImage(
 	imageInfo.extent.depth = Depth;
 	imageInfo.mipLevels = MipLevels;
 	imageInfo.arrayLayers = Any(UsageFlags & EImageUsage::Cubemap) ? 6 : 1;
-	imageInfo.format = VulkanImage::GetVulkanFormat(Format);
+	imageInfo.format = gpu::Image::GetVulkanFormat(Format);
 	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = [&] ()
@@ -159,7 +159,7 @@ gpu::Image VulkanDevice::CreateImage(
 	VmaAllocationInfo allocationInfo;
 	vmaCreateImage(_Allocator, &imageInfo, &allocInfo, &image, &allocation, &allocationInfo);
 	
-	return VulkanImage(
+	return gpu::Image(
 		*this
 		, _Allocator
 		, allocation
@@ -196,7 +196,7 @@ gpu::ImageView VulkanDevice::CreateImageView(
 	VkImageView ImageView;
 	vulkan(vkCreateImageView(Device, &ImageViewCreateInfo, nullptr, &ImageView));
 
-	return VulkanImageView(*this, ImageView, Image.GetFormat());
+	return gpu::ImageView(*this, ImageView, Image.GetFormat());
 }
 
 gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& SamplerDesc)
@@ -253,30 +253,30 @@ gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& RPDesc)
 		}
 	}
 
-	return VulkanRenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.colorAttachments.size()));
+	return gpu::RenderPass(*this, RenderPass, Framebuffer, RenderArea, ClearValues, static_cast<uint32>(RPDesc.colorAttachments.size()));
 }
 
-gpu::TextureID VulkanDevice::CreateTextureID(const VulkanImageView& ImageView)
+gpu::TextureID VulkanDevice::CreateTextureID(const gpu::ImageView& ImageView)
 {
 	return BindlessTextures->CreateTextureID(ImageView);
 }
 
-gpu::ImageID VulkanDevice::CreateImageID(const VulkanImageView& ImageView)
+gpu::ImageID VulkanDevice::CreateImageID(const gpu::ImageView& ImageView)
 {
 	return BindlessImages->CreateImageID(ImageView);
 }
 
-gpu::BindlessResources& VulkanDevice::GetTextures()
+gpu::BindlessDescriptors& VulkanDevice::GetTextures()
 {
 	return *BindlessTextures;
 }
 
-gpu::BindlessResources& VulkanDevice::GetSamplers()
+gpu::BindlessDescriptors& VulkanDevice::GetSamplers()
 {
 	return *BindlessSamplers;
 }
 
-gpu::BindlessResources& VulkanDevice::GetImages()
+gpu::BindlessDescriptors& VulkanDevice::GetImages()
 {
 	return *BindlessImages;
 }

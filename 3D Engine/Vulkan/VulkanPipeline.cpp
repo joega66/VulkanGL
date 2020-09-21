@@ -326,7 +326,7 @@ static void CreateVertexInputState(
 		outVertexAttributes.push_back({
 			.location	= static_cast<uint32>(vertexAttribute.location),
 			.binding	= vertexAttribute.binding,
-			.format		= VulkanImage::GetVulkanFormat(vertexAttribute.format),
+			.format		= gpu::Image::GetVulkanFormat(vertexAttribute.format),
 			.offset		= vertexAttribute.offset
 		});
 	}
@@ -339,7 +339,7 @@ static void CreateVertexInputState(
 		{
 			outVertexBindings.push_back({
 				.binding = vertexAttribute.binding,
-				.stride = VulkanImage::GetSize(vertexAttribute.format),
+				.stride = gpu::Image::GetSize(vertexAttribute.format),
 				.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 			});
 		}
