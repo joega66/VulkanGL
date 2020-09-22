@@ -39,11 +39,6 @@ Transform& Transform::operator=(Transform&& other)
 	return *this;
 }
 
-const glm::mat4& Transform::GetLocalToWorld() const
-{
-	return _LocalToWorld;
-}
-
 glm::mat4 Transform::GetLocalToParent() const
 {
 	glm::mat4 localToParent = glm::translate(glm::mat4(), _Position);

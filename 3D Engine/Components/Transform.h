@@ -18,8 +18,6 @@ public:
 
 	Transform& operator=(Transform&& other);
 	
-	const glm::mat4& GetLocalToWorld() const;
-
 	void Translate(EntityManager& ecs, const glm::vec3& position);
 
 	void Rotate(EntityManager& ecs, const glm::vec3& eulerAngles);
@@ -37,8 +35,7 @@ public:
 	inline const glm::vec3& GetScale() const { return _Scale; }
 	inline const glm::vec3 GetEulerAngles() const { return glm::eulerAngles(_Rotation); }
 	inline const glm::vec3 GetForward() const { return glm::normalize( _Rotation * forward ); }
-
-	void Clean(EntityManager& ecs);
+	inline const glm::mat4& GetLocalToWorld() const { return _LocalToWorld; }
 
 private:
 	/** The owning entity. */
@@ -65,4 +62,6 @@ private:
 	void AddChild(Entity child);
 
 	glm::mat4 GetLocalToParent() const;
+
+	void Clean(EntityManager& ecs);
 };

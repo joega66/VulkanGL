@@ -77,11 +77,11 @@ namespace gpu
 	{
 		if (Any(usage & EImageUsage::Sampled))
 		{
-			_TextureID = device.CreateTextureID(*this);
+			_TextureID = device.GetTextures().CreateTextureID(*this);
 		}
 		if (Any(usage & EImageUsage::Storage))
 		{
-			_ImageID = device.CreateImageID(*this);
+			_ImageID = device.GetImages().CreateImageID(*this);
 		}
 	}
 

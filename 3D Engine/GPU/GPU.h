@@ -63,10 +63,6 @@ namespace gpu
 
 		virtual gpu::RenderPass CreateRenderPass(const RenderPassDesc& rpDesc) = 0;
 
-		virtual gpu::TextureID CreateTextureID(const gpu::ImageView& imageView) = 0;
-
-		virtual gpu::ImageID CreateImageID(const gpu::ImageView& imageView) = 0;
-
 		virtual gpu::BindlessDescriptors& GetTextures() = 0;
 
 		virtual gpu::BindlessDescriptors& GetSamplers() = 0;

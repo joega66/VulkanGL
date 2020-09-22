@@ -37,8 +37,6 @@ public:
 
 	void RecompilePipelines();
 
-	static const char* GetVulkanErrorString(VkResult Result);
-
 private:
 	VulkanDevice& Device;
 

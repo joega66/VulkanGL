@@ -7,17 +7,6 @@
 #include "VulkanBindlessDescriptors.h"
 #include "vk_mem_alloc.h"
 
-static const std::vector<const char*> ValidationLayers =
-{
-	"VK_LAYER_LUNARG_standard_validation"
-};
-
-static const std::vector<const char*> DeviceExtensions =
-{
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
-};
-
 class VulkanDevice final : public gpu::Device
 {
 public:
@@ -27,42 +16,38 @@ public:
 
 	void EndFrame() override;
 
-	void SubmitCommands(gpu::CommandList& CmdList) override;
+	void SubmitCommands(gpu::CommandList& cmdList) override;
 
-	gpu::CommandList CreateCommandList(EQueue Queue) override;
+	gpu::CommandList CreateCommandList(EQueue queue) override;
 
-	gpu::Pipeline CreatePipeline(const PipelineStateDesc& PSODesc) override;
+	gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) override;
 
-	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& ComputePipelineDesc) override;
+	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) override;
 
-	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t NumEntries, const DescriptorBinding* Entries) override;
+	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings) override;
 
-	gpu::Buffer CreateBuffer(EBufferUsage Usage, EMemoryUsage memoryUsage, uint64 Size, const void* Data = nullptr) override;
+	gpu::Buffer CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data = nullptr) override;
 
 	gpu::Image CreateImage(
-		uint32 Width,
-		uint32 Height,
-		uint32 Depth,
-		EFormat Format,
-		EImageUsage UsageFlags,
-		uint32 MipLevels
+		uint32 width,
+		uint32 height,
+		uint32 depth,
+		EFormat format,
+		EImageUsage imageUsage,
+		uint32 mipLevels
 	) override;
 
 	gpu::ImageView CreateImageView(
-		const gpu::Image& Image,
-		uint32 BaseMipLevel,
-		uint32 LevelCount,
-		uint32 BaseArrayLayer,
-		uint32 LayerCount
+		const gpu::Image& image, 
+		uint32 baseMipLevel, 
+		uint32 levelCount, 
+		uint32 baseArrayLayer, 
+		uint32 layerCount
 	) override;
 
-	gpu::Sampler CreateSampler(const SamplerDesc& SamplerDesc) override;
+	gpu::Sampler CreateSampler(const SamplerDesc& samplerDesc) override;
 
-	gpu::RenderPass CreateRenderPass(const RenderPassDesc& RPDesc) override;
-
-	gpu::TextureID CreateTextureID(const gpu::ImageView& ImageView) override;
-	
-	gpu::ImageID CreateImageID(const gpu::ImageView& ImageView) override;
+	gpu::RenderPass CreateRenderPass(const RenderPassDesc& rpDesc) override;
 
 	gpu::BindlessDescriptors& GetTextures() override;
 
@@ -70,56 +55,60 @@ public:
 
 	gpu::BindlessDescriptors& GetImages() override;
 
-	operator VkDevice() const { return Device; }
+	operator VkDevice() const { return _Device; }
 
-	inline const VkPhysicalDevice& GetPhysicalDevice() const { return PhysicalDevice; }
-	inline const VkInstance& GetInstance() const { return Instance; }
+	inline const VkPhysicalDevice& GetPhysicalDevice() const { return _PhysicalDevice; }
+	inline const VkInstance& GetInstance() const { return _Instance; }
 	inline VkSurfaceKHR GetSurface() const { return _Surface; }
-	inline const VkPhysicalDeviceProperties& GetProperties() const { return Properties; }
-	inline const VkPhysicalDeviceFeatures& GetFeatures() const { return Features; }
-	inline VulkanCache& GetCache() { return VulkanCache; }
-	inline VulkanQueues& GetQueues() { return Queues; }
-	inline gpu::DescriptorPoolManager& GetDescriptorPoolManager() { return DescriptorPoolManager; }
+	inline const VkPhysicalDeviceProperties& GetProperties() const { return _PhysicalDeviceProperties; }
+	inline const VkPhysicalDeviceFeatures& GetFeatures() const { return _PhysicalDeviceFeatures; }
+	inline VulkanCache& GetCache() { return _VulkanCache; }
+	inline VulkanQueues& GetQueues() { return _Queues; }
+	inline gpu::DescriptorPoolManager& GetDescriptorPoolManager() { return _DescriptorPoolManager; }
 	
 	static inline VkAccessFlags GetAccessFlags(EAccess access) 
-	{ 
+	{
+		// VkAccessFlags exactly match Access.
 		return VkAccessFlags(access); 
 	}
 
 	static inline VkPipelineStageFlags GetPipelineStageFlags(EPipelineStage pipelineStage)
 	{
+		// VkPipelineStageFlags exactly match PipelineStage.
 		return VkPipelineStageFlags(pipelineStage);
 	}
 
+	static const char* GetErrorString(VkResult result);
+
 private:
-	VkInstance Instance;
+	VkInstance _Instance;
 
-	VkDebugReportCallbackEXT DebugReportCallback;
+	VkDebugReportCallbackEXT _DebugReportCallback;
 
-	VkPhysicalDevice PhysicalDevice;
+	VkPhysicalDevice _PhysicalDevice;
 
 	VkSurfaceKHR _Surface;
 
-	VulkanQueues Queues;
+	VulkanQueues _Queues;
 
 	VmaAllocator _Allocator;
 
-	VkPhysicalDeviceProperties Properties;
+	VkPhysicalDeviceProperties _PhysicalDeviceProperties;
 
-	VkPhysicalDeviceFeatures Features;
+	VkPhysicalDeviceFeatures _PhysicalDeviceFeatures;
 
-	VulkanCache VulkanCache;
+	VulkanCache _VulkanCache;
 
-	VkDevice Device;
+	VkDevice _Device;
 
-	gpu::DescriptorPoolManager DescriptorPoolManager;
+	gpu::DescriptorPoolManager _DescriptorPoolManager;
 
-	std::shared_ptr<gpu::BindlessDescriptors> BindlessTextures;
+	std::shared_ptr<gpu::BindlessDescriptors> _BindlessTextures;
 
-	std::shared_ptr<gpu::BindlessDescriptors> BindlessSamplers;
+	std::shared_ptr<gpu::BindlessDescriptors> _BindlessSamplers;
 
-	std::shared_ptr<gpu::BindlessDescriptors> BindlessImages;
+	std::shared_ptr<gpu::BindlessDescriptors> _BindlessImages;
 };
 
-#define vulkan(Result) \
-	check(Result == VK_SUCCESS, "%s", VulkanCache::GetVulkanErrorString(Result));
+#define vulkan(result) \
+	check(result == VK_SUCCESS, "%s", VulkanDevice::GetErrorString(result));
