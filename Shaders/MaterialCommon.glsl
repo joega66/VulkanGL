@@ -5,7 +5,7 @@
 
 layout(push_constant) uniform MaterialConstants
 {
-	uint baseColor;
+	layout(offset = 4) uint baseColor;
 	uint metallicRoughness;
 	uint normal;
 	uint emissive;

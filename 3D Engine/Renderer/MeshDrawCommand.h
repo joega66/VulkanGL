@@ -13,9 +13,11 @@ public:
 		: _Submeshes(meshProxy.GetSubmeshes())
 		, _Material(meshProxy.GetMaterial())
 		, _DescriptorSets(descriptorSets)
+		, _SurfaceID(meshProxy._SurfaceID)
 	{
 		psoDesc.specInfo = meshProxy.GetSpecializationInfo();
 		_Pipeline = device.CreatePipeline(psoDesc);
+		_VertShader = psoDesc.shaderStages.vertex;
 		_FragShader = psoDesc.shaderStages.fragment;
 	}
 
@@ -24,6 +26,9 @@ public:
 		cmdList.BindPipeline(_Pipeline);
 
 		cmdList.BindDescriptorSets(_Pipeline, _DescriptorSets.size(), _DescriptorSets.data());
+
+		const glm::uvec4 surfaceID(_SurfaceID);
+		cmdList.PushConstants(_Pipeline, _VertShader, &surfaceID);
 
 		cmdList.PushConstants(_Pipeline, _FragShader, &_Material->GetPushConstants());
 
@@ -45,8 +50,10 @@ public:
 
 private:
 	gpu::Pipeline _Pipeline;
+	const gpu::Shader* _VertShader;
 	const gpu::Shader* _FragShader;
 	std::vector<VkDescriptorSet> _DescriptorSets;
 	const std::vector<Submesh>& _Submeshes;
 	const Material* _Material;
+	uint32 _SurfaceID;
 };

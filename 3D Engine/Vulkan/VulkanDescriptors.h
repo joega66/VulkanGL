@@ -74,7 +74,8 @@ namespace gpu
 		DescriptorSetLayout(VulkanDevice& device, std::size_t numBindings, const DescriptorBinding* bindings);
 
 		DescriptorSet CreateDescriptorSet(gpu::Device& device);
-		void UpdateDescriptorSet(gpu::Device& device, const DescriptorSet& descriptorSet, void* data);
+
+		void UpdateDescriptorSet(gpu::Device& device, const DescriptorSet& descriptorSet, const void* data);
 
 		inline operator VkDescriptorSetLayout() const { return _DescriptorSetLayout; }
 

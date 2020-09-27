@@ -211,8 +211,8 @@ namespace gpu
 		return static_cast<VulkanDevice&>(device).GetDescriptorPoolManager().Allocate(static_cast<VulkanDevice&>(device), _DescriptorSetLayout);
 	}
 
-	void DescriptorSetLayout::UpdateDescriptorSet(gpu::Device& device, const DescriptorSet& descriptorSet, void* descriptorUpdateTemplateStruct)
+	void DescriptorSetLayout::UpdateDescriptorSet(gpu::Device& device, const DescriptorSet& descriptorSet, const void* data)
 	{
-		static_cast<VulkanDevice&>(device).GetCache().UpdateDescriptorSetWithTemplate(descriptorSet.GetHandle(), _DescriptorUpdateTemplate, descriptorUpdateTemplateStruct);
+		static_cast<VulkanDevice&>(device).GetCache().UpdateDescriptorSetWithTemplate(descriptorSet.GetHandle(), _DescriptorUpdateTemplate, data);
 	}
 };

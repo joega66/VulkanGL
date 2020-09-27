@@ -1,5 +1,6 @@
 #pragma once
 #include <ECS/System.h>
+#include <GPU/GPU.h>
 
 class Engine;
 
@@ -9,4 +10,7 @@ class RenderSystem : public IRenderSystem
 public:
 	virtual void Start(Engine& engine) override;
 	virtual void Update(Engine& engine) override;
+
+	gpu::DescriptorSet _SurfaceSet;
+	gpu::Buffer _SurfaceBuffer;
 };

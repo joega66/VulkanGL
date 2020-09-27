@@ -8,21 +8,18 @@ class MeshProxy : public Component
 public:
 	MeshProxy(
 		const Material* material,
-		gpu::DescriptorSet&& surfaceSet,
-		const std::vector<Submesh>& submeshes,
-		gpu::Buffer&& localToWorldUniform
+		const std::vector<Submesh>& submeshes
 	);
 
 	inline const std::vector<Submesh>& GetSubmeshes() const { return *_Submeshes; }
 	inline const Material* GetMaterial() const { return _Material; }
-	inline const gpu::DescriptorSet& GetSurfaceSet() const { return _SurfaceSet; }
+	inline const gpu::DescriptorSet& GetSurfaceSet() const { return *_SurfaceSet; }
 	inline const SpecializationInfo& GetSpecializationInfo() const { return _Material->GetSpecializationInfo(); }
 	
-	/** Local to world uniform. */
-	gpu::Buffer _LocalToWorldUniform;
+	const gpu::DescriptorSet* _SurfaceSet;
+	uint32 _SurfaceID;
 
 private:
 	const std::vector<Submesh>* _Submeshes;
 	const Material* _Material;
-	gpu::DescriptorSet _SurfaceSet;
 };

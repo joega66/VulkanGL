@@ -24,21 +24,27 @@ SURFACE(out) outSurface;
 #endif
 
 #ifdef MESH_SET
-layout(binding = 0, set = MESH_SET) uniform LocalToWorldUniformBlock { LocalToWorldUniform _LocalToWorld; };
+#extension GL_EXT_nonuniform_qualifier : require
+layout(binding = 0, set = MESH_SET) readonly buffer SurfaceBuffer { LocalToWorldUniform _LocalToWorld[]; };
 #endif
 
 #if VERTEX_SHADER
 
+layout(push_constant) uniform SurfaceConstants
+{
+	layout(offset = 0) uint _SurfaceID;
+};
+
 vec4 Surface_GetWorldPosition()
 {
-	return _LocalToWorld.transform * vec4(position, 1.0f);
+	return _LocalToWorld[_SurfaceID.x].transform * vec4(position, 1.0f);
 }
 
 void Surface_SetAttributes(in vec4 worldPosition)
 {
 	outSurface.position = worldPosition.xyz;
 	outSurface.uv = uv;
-	outSurface.normal = mat3(_LocalToWorld.inverseTranspose) * normal;
+	outSurface.normal = mat3(_LocalToWorld[_SurfaceID.x].inverseTranspose) * normal;
 }
 
 #elif GEOMETRY_SHADER

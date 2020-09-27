@@ -77,7 +77,7 @@ namespace gpu
 		}
 
 		template<typename DescriptorSetType>
-		gpu::DescriptorSet CreateDescriptorSet(DescriptorSetType& descriptors)
+		gpu::DescriptorSet CreateDescriptorSet(const DescriptorSetType& descriptors)
 		{
 			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
 			gpu::DescriptorSet set = layout.CreateDescriptorSet(*this);
@@ -86,7 +86,7 @@ namespace gpu
 		}
 
 		template<typename DescriptorSetType>
-		void UpdateDescriptorSet(const gpu::DescriptorSet& set, DescriptorSetType& descriptors)
+		void UpdateDescriptorSet(const gpu::DescriptorSet& set, const DescriptorSetType& descriptors)
 		{
 			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
 			layout.UpdateDescriptorSet(*this, set, &descriptors);

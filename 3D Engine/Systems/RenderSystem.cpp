@@ -15,7 +15,7 @@ BEGIN_UNIFORM_BUFFER(LocalToWorldUniform)
 END_UNIFORM_BUFFER(LocalToWorldUniform)
 
 BEGIN_DESCRIPTOR_SET(StaticMeshDescriptors)
-	DESCRIPTOR(gpu::UniformBuffer<LocalToWorldUniform>, _LocalToWorldUniform)
+	DESCRIPTOR(gpu::StorageBuffer, _LocalToWorldBuffer)
 END_DESCRIPTOR_SET(StaticMeshDescriptors)
 
 void RenderSystem::Start(Engine& engine)
@@ -25,23 +25,17 @@ void RenderSystem::Start(Engine& engine)
 
 	ecs.AddSingletonComponent<RenderSettings>();
 
+	_SurfaceSet = device.CreateDescriptorSet<StaticMeshDescriptors>();
+
 	ecs.OnComponentCreated<StaticMeshComponent>([&] (Entity& entity, StaticMeshComponent& staticMeshComponent)
 	{
 		const StaticMesh* staticMesh = staticMeshComponent.StaticMesh;
 
-		gpu::Buffer localToWorldUniform = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(LocalToWorldUniform));
-
-		StaticMeshDescriptors surfaceDescriptors;
-		surfaceDescriptors._LocalToWorldUniform = localToWorldUniform;
-
-		gpu::DescriptorSet surfaceSet = device.CreateDescriptorSet(surfaceDescriptors);
-
 		ecs.AddComponent(entity,
 			MeshProxy(
 				staticMeshComponent.Material,
-				std::move(surfaceSet),
-				staticMesh->Submeshes,
-				std::move(localToWorldUniform))
+				staticMesh->Submeshes
+			)
 		);
 
 		auto& bounds = ecs.AddComponent(entity, Bounds());
@@ -69,19 +63,33 @@ void RenderSystem::Update(Engine& engine)
 		shadowProxy.Update(device, directionalLight, transform);
 	}
 
-	for (auto& entity : ecs.GetEntities<MeshProxy>())
+	auto entities = ecs.GetEntities<MeshProxy>();
+
+	_SurfaceBuffer = device.CreateBuffer(EBufferUsage::Storage, EMemoryUsage::CPU_TO_GPU, entities.size() * sizeof(LocalToWorldUniform));
+	
+	StaticMeshDescriptors descriptors;
+	descriptors._LocalToWorldBuffer = _SurfaceBuffer;
+
+	device.UpdateDescriptorSet(_SurfaceSet, descriptors);
+
+	uint32 surfaceId = 0;
+
+	for (auto& entity : entities)
 	{
 		auto& meshProxy = ecs.GetComponent<MeshProxy>(entity);
 		const auto& transform = ecs.GetComponent<Transform>(entity);
 		auto& bounds = ecs.GetComponent<Bounds>(entity);
-		const StaticMesh* staticMesh = ecs.GetComponent<StaticMeshComponent>(entity).StaticMesh;
+		const auto staticMesh = ecs.GetComponent<StaticMeshComponent>(entity).StaticMesh;
 
 		bounds.Box = staticMesh->GetBounds().Transform(transform.GetLocalToWorld());
 
-		auto* localToWorldUniformBuffer = static_cast<LocalToWorldUniform*>(meshProxy._LocalToWorldUniform.GetData());
+		auto* localToWorldUniformBuffer = reinterpret_cast<LocalToWorldUniform*>(_SurfaceBuffer.GetData()) + surfaceId;
 		localToWorldUniformBuffer->transform = transform.GetLocalToWorld();
 		localToWorldUniformBuffer->inverse = glm::inverse(transform.GetLocalToWorld());
 		localToWorldUniformBuffer->inverseTranspose = glm::transpose(localToWorldUniformBuffer->inverse);
+
+		meshProxy._SurfaceSet = &_SurfaceSet;
+		meshProxy._SurfaceID = surfaceId++;
 
 		// Add to the light's shadow depth rendering.
 		for (auto entity : ecs.GetEntities<ShadowProxy>())
