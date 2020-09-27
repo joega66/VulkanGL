@@ -66,26 +66,3 @@ void SceneRenderer::Render(CameraProxy& camera)
 
 	_Device.EndFrame();
 }
-
-void SceneRenderer::ClearSceneColor(CameraProxy& camera, gpu::CommandList& cmdList)
-{
-	ImageMemoryBarrier imageBarrier
-	{
-		camera._SceneColor,
-		EAccess::None,
-		EAccess::TransferWrite,
-		EImageLayout::Undefined,
-		EImageLayout::TransferDstOptimal
-	};
-
-	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &imageBarrier);
-
-	cmdList.ClearColorImage(camera._SceneColor, EImageLayout::TransferDstOptimal, {});
-
-	imageBarrier.srcAccessMask = EAccess::TransferWrite;
-	imageBarrier.dstAccessMask = EAccess::ShaderWrite;
-	imageBarrier.oldLayout = EImageLayout::TransferDstOptimal;
-	imageBarrier.newLayout = EImageLayout::General;
-
-	cmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
-}

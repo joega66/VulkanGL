@@ -67,12 +67,12 @@ struct RenderArea
 struct RenderPassDesc
 {
 	std::vector<AttachmentView>	colorAttachments;
-	AttachmentView					depthAttachment;
-	RenderArea							renderArea;
-	EPipelineStage						srcStageMask;
-	EPipelineStage						dstStageMask;
-	EAccess								srcAccessMask;
-	EAccess								dstAccessMask;
+	AttachmentView				depthAttachment;
+	RenderArea					renderArea;
+	EPipelineStage				srcStageMask;
+	EPipelineStage				dstStageMask;
+	EAccess						srcAccessMask;
+	EAccess						dstAccessMask;
 };
 
 struct PipelineStateDesc

@@ -76,8 +76,6 @@ vec3 ComputeSSR(ivec2 screenCoords, SurfaceData surface, ONB onb, MaterialData m
 
 vec3 ComputeSSGI(ivec2 screenCoords, SurfaceData surface, ONB onb, MaterialData material, float alpha)
 {
-	/*const vec3 scatterDir = RandomCosineDirection();
-	const vec3 csScatterDir = vec3(normalize(_Camera.worldToView * vec4(scatterDir, 0.0)));*/
 	const vec3 scatterDir = ONB_Transform(onb, RandomCosineDirection());
 	const vec3 csScatterDir = vec3(normalize(_Camera.worldToView * vec4(scatterDir, 0.0)));
 	const vec3 csOrigin = vec3(_Camera.worldToView * vec4(surface.worldPosition, 1));

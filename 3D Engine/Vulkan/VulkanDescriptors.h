@@ -16,15 +16,15 @@ namespace gpu
 
 		DescriptorSet() = default;
 		DescriptorSet(class DescriptorPool& descriptorPool, VkDescriptorSet descriptorSet);
-		DescriptorSet(DescriptorSet&& Other);
-		DescriptorSet& operator=(DescriptorSet&& Other);
+		DescriptorSet(DescriptorSet&& other);
+		DescriptorSet& operator=(DescriptorSet&& other);
 		~DescriptorSet();
 
 		inline operator VkDescriptorSet() const { return _DescriptorSet; }
 		inline const VkDescriptorSet& GetHandle() const { return _DescriptorSet; }
 
 	private:
-		DescriptorPool* DescriptorPool = nullptr;
+		DescriptorPool* _DescriptorPool = nullptr;
 		VkDescriptorSet _DescriptorSet = nullptr;
 	};
 
@@ -32,38 +32,38 @@ namespace gpu
 	class DescriptorPool
 	{
 	public:
-		DescriptorPool(VulkanDevice& Device, const VkDescriptorPoolCreateInfo& CreateInfo);
+		DescriptorPool(VulkanDevice& device, const VkDescriptorPoolCreateInfo& descriptorPoolInfo);
 
 		/** Allocate a descriptor set. */
-		[[nodiscard]] VkDescriptorSet Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
+		[[nodiscard]] VkDescriptorSet Allocate(VulkanDevice& device, VkDescriptorSetLayout layout);
 
 		/** Queue a descriptor set to be freed. */
-		void Free(VkDescriptorSet DescriptorSet);
+		void Free(VkDescriptorSet descriptorSet);
 
 		/** Free all the descriptor sets waiting to be freed. */
-		void EndFrame(VulkanDevice& Device);
+		void EndFrame(VulkanDevice& device);
 
 	private:
 		VkDescriptorPool _DescriptorPool;
-		uint32 NumDescriptorSets = 0;
-		std::vector<VkDescriptorSet> DescriptorSetsWaitingToBeFreed;
+		uint32 _NumDescriptorSets = 0;
+		std::vector<VkDescriptorSet> _DescriptorSetsWaitingToBeFreed;
 	};
 
 	class DescriptorPoolManager
 	{
 	public:
-		static constexpr uint32 SetsPerPool = 1024;
+		static constexpr uint32 SETS_PER_POOL = 1024;
 
 		DescriptorPoolManager();
 
-		DescriptorSet Allocate(VulkanDevice& Device, VkDescriptorSetLayout Layout);
+		DescriptorSet Allocate(VulkanDevice& device, VkDescriptorSetLayout layout);
 
-		void EndFrame(VulkanDevice& Device);
+		void EndFrame(VulkanDevice& device);
 
 	private:
-		std::vector<std::unique_ptr<DescriptorPool>> DescriptorPools;
-		std::array<VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE> PoolSizes;
-		VkDescriptorPoolCreateInfo PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+		std::vector<std::unique_ptr<DescriptorPool>> _DescriptorPools;
+		std::array<VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE> _PoolSizes;
+		VkDescriptorPoolCreateInfo _PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 	};
 
 	class DescriptorSetLayout
@@ -71,16 +71,15 @@ namespace gpu
 	public:
 		DescriptorSetLayout() = default;
 
-		DescriptorSetLayout(VulkanDevice& Device, std::size_t NumEntries, const DescriptorBinding* Entries);
+		DescriptorSetLayout(VulkanDevice& device, std::size_t numBindings, const DescriptorBinding* bindings);
 
-		DescriptorSet CreateDescriptorSet(gpu::Device& Device);
-		void UpdateDescriptorSet(gpu::Device& Device, const DescriptorSet& DescriptorSet, void* Data);
+		DescriptorSet CreateDescriptorSet(gpu::Device& device);
+		void UpdateDescriptorSet(gpu::Device& device, const DescriptorSet& descriptorSet, void* data);
 
 		inline operator VkDescriptorSetLayout() const { return _DescriptorSetLayout; }
-		inline VkDescriptorSetLayout GetHandle() const { return _DescriptorSetLayout; }
 
 	private:
 		VkDescriptorSetLayout _DescriptorSetLayout = VK_NULL_HANDLE;
-		VkDescriptorUpdateTemplate DescriptorUpdateTemplate = VK_NULL_HANDLE;
+		VkDescriptorUpdateTemplate _DescriptorUpdateTemplate = VK_NULL_HANDLE;
 	};
 };
