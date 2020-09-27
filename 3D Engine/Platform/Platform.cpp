@@ -188,7 +188,7 @@ void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string&
 		fail("The process could not be started...");
 	}
 
-	for (uint32 i = 0; i < ARRAY_SIZE(Pipes); i++)
+	for (uint32 i = 0; i < std::size(Pipes); i++)
 	{
 		CloseHandle(Pipes[i]);
 	}

@@ -49,13 +49,13 @@ public:
 
 void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 {
-	cmdList.BeginRenderPass(camera._SceneRP);
+	cmdList.BeginRenderPass(camera._SkyboxRP);
 
 	const SkyboxVS* vertShader = _ShaderLibrary.FindShader<SkyboxVS>();
 	const SkyboxFS* fragShader = _ShaderLibrary.FindShader<SkyboxFS>();
 
 	PipelineStateDesc psoDesc = {};
-	psoDesc.renderPass = camera._SceneRP;
+	psoDesc.renderPass = camera._SkyboxRP;
 	psoDesc.depthStencilState.depthTestEnable = true;
 	psoDesc.depthStencilState.depthWriteEnable = true;
 	psoDesc.viewport.width = camera._SceneColor.GetWidth();

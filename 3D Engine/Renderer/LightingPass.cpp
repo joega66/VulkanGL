@@ -42,12 +42,16 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 {
 	const ImageMemoryBarrier imageBarrier
 	{
-		camera._SceneColor,
+		camera._DirectLighting,
+		EAccess::None,
 		EAccess::ShaderRead | EAccess::ShaderWrite,
-		EAccess::ShaderRead | EAccess::ShaderWrite,
-		EImageLayout::General,
+		EImageLayout::Undefined,
 		EImageLayout::General
 	};
+
+	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+
+	bool isFirstLight = true;
 
 	for (auto entity : _ECS.GetEntities<DirectionalLight>())
 	{
@@ -62,35 +66,20 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		light._ShadowMap = shadow.GetShadowMap().GetTextureID();
 		light._ShadowMapSampler = _Device.CreateSampler({}).GetSamplerID();
 
-		ComputeDeferredLight(camera, cmdList, light);
+		ComputeDeferredLight(camera, cmdList, light, isFirstLight);
 
-		cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+		isFirstLight = false;
 	}
-
-	/*for (auto entity : _ECS.GetEntities<PointLight>())
-	{
-		const auto& pointLight = _ECS.GetComponent<PointLight>(entity);
-		const auto& transform = _ECS.GetComponent<Transform>(entity);
-
-		LightingParams light;
-		light._L = glm::vec4(transform.GetPosition(), 1.0f);
-		light._Radiance = glm::vec4(pointLight.Intensity * pointLight.Color, 1.0f);
-
-		ComputeDeferredLight(camera, cmdList, light);
-
-		cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
-	}*/
-
-	ComputeSSGI(camera, cmdList);
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const LightingParams& light)
+void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const LightingParams& light, bool isFirstLight)
 {
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<LightingPassCS>();
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;
 	computeDesc.specInfo.Add(0, light._L.w == 0.0f ? LightingPassCS::directionalLight : LightingPassCS::pointLight);
+	computeDesc.specInfo.Add(1, static_cast<int>(isFirstLight));
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
@@ -107,8 +96,8 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 
 	cmdList.PushConstants(pipeline, shader, &light);
 
-	const uint32 groupCountX = DivideAndRoundUp(camera._SceneColor.GetWidth(), 8u);
-	const uint32 groupCountY = DivideAndRoundUp(camera._SceneColor.GetHeight(), 8u);
+	const uint32 groupCountX = DivideAndRoundUp(camera._DirectLighting.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(camera._DirectLighting.GetHeight(), 8u);
 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 }
@@ -141,6 +130,17 @@ public:
 
 void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 {
+	const ImageMemoryBarrier startBarrier
+	{
+		camera._SceneColor,
+		EAccess::None,
+		EAccess::ShaderWrite,
+		EImageLayout::Undefined,
+		EImageLayout::General
+	};
+
+	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &startBarrier);
+
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<SSGI>();
 
 	ComputePipelineDesc computeDesc;
@@ -178,14 +178,14 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 
-	const ImageMemoryBarrier barrier
+	const ImageMemoryBarrier endBarrier
 	{
 		camera._SceneColor,
-		EAccess::ShaderRead | EAccess::ShaderWrite,
-		EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite,
+		EAccess::ShaderWrite,
+		EAccess::ShaderRead,
 		EImageLayout::General,
 		EImageLayout::General
 	};
 
-	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
+	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &endBarrier);
 }

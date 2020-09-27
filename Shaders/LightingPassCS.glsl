@@ -9,6 +9,7 @@
 #define POINT_LIGHT 1
 
 layout(constant_id = 0) const uint _LIGHT_TYPE = 0;
+layout(constant_id = 1) const int _IS_FIRST_LIGHT = 0;
 
 void GetDirectionalLightParams(inout LightData light)
 {
@@ -54,7 +55,7 @@ float ShadowPCF(vec3 worldPosition)
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 sceneColorSize = imageSize(_SceneColor);
+	const ivec2 sceneColorSize = imageSize(_DirectLighting);
 	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, sceneColorSize.xy)))
 		return;
 
@@ -85,7 +86,12 @@ void main()
 
 	ld *= ShadowPCF(surface.worldPosition);
 
-	vec3 ldTotal = ld + imageLoad(_SceneColor, screenCoords).rgb;
+	vec3 ldTotal = ld;
 
-	imageStore(_SceneColor, screenCoords, vec4(ldTotal, 1.0));
+	if ( _IS_FIRST_LIGHT == 0 )
+	{
+		ldTotal += imageLoad(_DirectLighting, screenCoords).rgb;
+	}
+
+	imageStore(_DirectLighting, screenCoords, vec4(ldTotal, 1.0));
 }

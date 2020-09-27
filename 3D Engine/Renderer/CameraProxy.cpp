@@ -24,7 +24,9 @@ BEGIN_DESCRIPTOR_SET(CameraDescriptors)
 	DESCRIPTOR(gpu::SampledImage, _GBuffer0)
 	DESCRIPTOR(gpu::SampledImage, _GBuffer1)
 	DESCRIPTOR(gpu::StorageImage, _SceneColor)
+	DESCRIPTOR(gpu::StorageImage, _SSRHistory)
 	DESCRIPTOR(gpu::StorageImage, _SSGIHistory)
+	DESCRIPTOR(gpu::StorageImage, _DirectLighting)
 END_DESCRIPTOR_SET(CameraDescriptors)
 
 CameraProxy::CameraProxy(Engine& engine)
@@ -38,16 +40,19 @@ CameraProxy::CameraProxy(Engine& engine)
 		auto& device = engine.Device;
 		auto& surface = engine.Surface;
 
+		_DirectLighting = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage);
+
 		_SceneColor = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
 		_SceneDepth = device.CreateImage(width, height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 
 		_GBuffer0 = device.CreateImage(width, height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
 		_GBuffer1 = device.CreateImage(width, height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
 		
+		_SSRHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
 		_SSGIHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
 
-		CreateSceneRP(device);
 		CreateGBufferRP(device);
+		CreateSkyboxRP(device);
 		CreateUserInterfaceRP(device, surface);
 
 		const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
@@ -58,13 +63,15 @@ CameraProxy::CameraProxy(Engine& engine)
 		cameraDescriptors._GBuffer0 = { _GBuffer0, sampler };
 		cameraDescriptors._GBuffer1 = { _GBuffer1, sampler };
 		cameraDescriptors._SceneColor = _SceneColor;
+		cameraDescriptors._SSRHistory = _SSRHistory;
 		cameraDescriptors._SSGIHistory = _SSGIHistory;
+		cameraDescriptors._DirectLighting = _DirectLighting;
 		
 		device.UpdateDescriptorSet(_CameraDescriptorSet, cameraDescriptors);
 
 		gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 		
-		ImageMemoryBarrier barriers[] = { { _SSGIHistory } };
+		ImageMemoryBarrier barriers[] = { { _SSRHistory }, { _SSGIHistory } };
 
 		for (auto& barrier : barriers)
 		{
@@ -74,7 +81,7 @@ CameraProxy::CameraProxy(Engine& engine)
 			barrier.newLayout = EImageLayout::General;
 		}
 
-		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, ARRAY_SIZE(barriers), barriers);
+		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, std::size(barriers), barriers);
 
 		device.SubmitCommands(cmdList);
 	});
@@ -134,26 +141,6 @@ void CameraProxy::BuildMeshDrawCommands(Engine& engine)
 	}
 }
 
-void CameraProxy::CreateSceneRP(gpu::Device& device)
-{
-	RenderPassDesc rpDesc = {};
-	rpDesc.colorAttachments.push_back(
-		AttachmentView(&_SceneColor, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General));
-	rpDesc.depthAttachment = AttachmentView(
-		&_SceneDepth,
-		ELoadAction::Load,
-		EStoreAction::Store,
-		ClearDepthStencilValue{},
-		EImageLayout::DepthReadStencilWrite,
-		EImageLayout::DepthReadStencilWrite);
-	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(_SceneDepth.GetWidth(), _SceneDepth.GetHeight()) };
-	rpDesc.srcStageMask = EPipelineStage::ComputeShader;
-	rpDesc.dstStageMask = EPipelineStage::ComputeShader;
-	rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
-	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
-	_SceneRP = device.CreateRenderPass(rpDesc);
-}
-
 void CameraProxy::CreateGBufferRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
@@ -176,6 +163,26 @@ void CameraProxy::CreateGBufferRP(gpu::Device& device)
 	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
 
 	_GBufferRP = device.CreateRenderPass(rpDesc);
+}
+
+void CameraProxy::CreateSkyboxRP(gpu::Device& device)
+{
+	RenderPassDesc rpDesc = {};
+	rpDesc.colorAttachments.push_back(
+		AttachmentView(&_DirectLighting, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General));
+	rpDesc.depthAttachment = AttachmentView(
+		&_SceneDepth,
+		ELoadAction::Load,
+		EStoreAction::Store,
+		ClearDepthStencilValue{},
+		EImageLayout::DepthReadStencilWrite,
+		EImageLayout::DepthReadStencilWrite);
+	rpDesc.renderArea = RenderArea{ glm::ivec2(), glm::uvec2(_SceneDepth.GetWidth(), _SceneDepth.GetHeight()) };
+	rpDesc.srcStageMask = EPipelineStage::ComputeShader;
+	rpDesc.dstStageMask = EPipelineStage::ComputeShader;
+	rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+	_SkyboxRP = device.CreateRenderPass(rpDesc);
 }
 
 void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surface)

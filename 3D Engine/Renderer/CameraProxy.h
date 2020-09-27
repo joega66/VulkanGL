@@ -12,7 +12,7 @@ public:
 	CameraProxy(const CameraProxy&) = delete;
 	CameraProxy& operator=(const CameraProxy&) = delete;
 
-	gpu::RenderPass _SceneRP;
+	gpu::RenderPass _SkyboxRP;
 	gpu::RenderPass _GBufferRP;
 	std::vector<gpu::RenderPass> _UserInterfaceRP;
 	
@@ -22,7 +22,9 @@ public:
 	gpu::Image _SceneColor;
 	gpu::Image _GBuffer0;
 	gpu::Image _GBuffer1;
+	gpu::Image _SSRHistory;
 	gpu::Image _SSGIHistory;
+	gpu::Image _DirectLighting;
 
 	gpu::DescriptorSet _CameraDescriptorSet;
 
@@ -37,7 +39,7 @@ private:
 
 	void AddToGBufferPass(Engine& engine, const MeshProxy& meshProxy);
 
-	void CreateSceneRP(gpu::Device& device);
 	void CreateGBufferRP(gpu::Device& device);
+	void CreateSkyboxRP(gpu::Device& device);
 	void CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surface);
 };

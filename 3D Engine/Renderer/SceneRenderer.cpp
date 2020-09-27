@@ -34,8 +34,6 @@ void SceneRenderer::Render(CameraProxy& camera)
 	}
 	else
 	{
-		ClearSceneColor(camera, cmdList);
-
 		RenderGBufferPass(camera, cmdList);
 
 		RenderShadowDepths(camera, cmdList);
@@ -43,6 +41,8 @@ void SceneRenderer::Render(CameraProxy& camera)
 		ComputeLightingPass(camera, cmdList);
 
 		RenderSkybox(camera, cmdList);
+
+		ComputeSSGI(camera, cmdList);
 	}
 
 	const uint32 imageIndex = _Surface.AcquireNextImage();

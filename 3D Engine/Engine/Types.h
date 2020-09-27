@@ -27,12 +27,6 @@ inline void HashCombine(SeedType& Seed, const T& V)
 	Seed ^= Hasher(V) + 0x9e3779b9 + (Seed << 6) + (Seed >> 2);
 }
 
-template<typename T, std::size_t N>
-constexpr std::size_t ARRAY_SIZE(T(&)[N])
-{
-	return N;
-}
-
 #define ENABLE_BITWISE_OPERATORS(T) \
 inline constexpr T operator~ (T a) { return (T)~(int)a; } \
 inline constexpr T operator| (T a, T b) { return (T)((int)a | (int)b); } \

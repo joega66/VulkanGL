@@ -11,7 +11,9 @@ layout(binding = 1, set = CAMERA_SET) uniform sampler2D _SceneDepth;
 layout(binding = 2, set = CAMERA_SET) uniform sampler2D _GBuffer0;
 layout(binding = 3, set = CAMERA_SET) uniform sampler2D _GBuffer1;
 layout(binding = 4, set = CAMERA_SET, rgba16f) uniform image2D _SceneColor;
-layout(binding = 5, set = CAMERA_SET, rgba16f) uniform image2D _SSGIHistory;
+layout(binding = 5, set = CAMERA_SET, rgba16f) uniform image2D _SSRHistory;
+layout(binding = 6, set = CAMERA_SET, rgba16f) uniform image2D _SSGIHistory;
+layout(binding = 7, set = CAMERA_SET, rgba16f) uniform image2D _DirectLighting;
 
 /** Transform from screen space to world space. */
 vec3 ScreenToWorld(vec2 screenUV, float depth)

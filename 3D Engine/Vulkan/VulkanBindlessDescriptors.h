@@ -60,11 +60,11 @@ namespace gpu
 		std::list<uint32> _Available;
 		std::list<uint32> _Released;
 
-		/** Creates a SamplerID. Samplers call this automatically. */
+		/** Create a SamplerID. */
 		SamplerID CreateSamplerID(const Sampler& sampler);
 
-		/** Allocates an index into a bindless descriptor table. */
-		uint32 AllocateDescriptorIndex();
+		/** Allocate an index into a bindless descriptor table. */
+		uint32 Allocate();
 
 		/** Release a descriptor index. */
 		void Release(uint32 descriptorIndex);

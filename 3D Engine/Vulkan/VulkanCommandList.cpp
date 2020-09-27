@@ -78,17 +78,17 @@ namespace gpu
 		);
 	}
 
-	void CommandList::BindVertexBuffers(uint32 numVertexBuffers, const Buffer* vertexBuffers)
+	void CommandList::BindVertexBuffers(std::size_t numVertexBuffers, const Buffer* vertexBuffers)
 	{
-		std::vector<VkDeviceSize> Offsets(numVertexBuffers, 0);
-		std::vector<VkBuffer> Buffers(numVertexBuffers);
+		std::vector<VkDeviceSize> offsets(numVertexBuffers, 0);
+		std::vector<VkBuffer> buffers(numVertexBuffers);
 
-		for (uint32 Location = 0; Location < numVertexBuffers; Location++)
+		for (uint32 location = 0; location < numVertexBuffers; location++)
 		{
-			Buffers[Location] = vertexBuffers[Location].GetHandle();
+			buffers[location] = vertexBuffers[location].GetHandle();
 		}
 
-		vkCmdBindVertexBuffers(_CommandBuffer, 0, static_cast<uint32>(Buffers.size()), Buffers.data(), Offsets.data());
+		vkCmdBindVertexBuffers(_CommandBuffer, 0, static_cast<uint32>(buffers.size()), buffers.data(), offsets.data());
 	}
 
 	void CommandList::DrawIndexed(
@@ -321,14 +321,14 @@ namespace gpu
 		uint64 size
 	)
 	{
-		const VkBufferCopy Region =
+		const VkBufferCopy region =
 		{
 			srcOffset,
 			dstOffset,
 			size
 		};
 
-		vkCmdCopyBuffer(_CommandBuffer, srcBuffer.GetHandle(), dstBuffer.GetHandle(), 1, &Region);
+		vkCmdCopyBuffer(_CommandBuffer, srcBuffer.GetHandle(), dstBuffer.GetHandle(), 1, &region);
 	}
 
 	void CommandList::CopyImage(

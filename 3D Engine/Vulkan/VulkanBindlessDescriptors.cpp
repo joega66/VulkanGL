@@ -117,7 +117,7 @@ namespace gpu
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet = _DescriptorSet,
 			.dstBinding = 0,
-			.dstArrayElement = AllocateDescriptorIndex(),
+			.dstArrayElement = Allocate(),
 			.descriptorCount = 1,
 			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
 			.pImageInfo = &imageInfo,
@@ -137,7 +137,7 @@ namespace gpu
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet = _DescriptorSet,
 			.dstBinding = 0,
-			.dstArrayElement = AllocateDescriptorIndex(),
+			.dstArrayElement = Allocate(),
 			.descriptorCount = 1,
 			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
 			.pImageInfo = &imageInfo,
@@ -157,7 +157,7 @@ namespace gpu
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet = _DescriptorSet,
 			.dstBinding = 0,
-			.dstArrayElement = AllocateDescriptorIndex(),
+			.dstArrayElement = Allocate(),
 			.descriptorCount = 1,
 			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
 			.pImageInfo = &imageInfo,
@@ -168,7 +168,7 @@ namespace gpu
 		return SamplerID(writeDescriptorSet.dstArrayElement);
 	}
 
-	uint32 BindlessDescriptors::AllocateDescriptorIndex()
+	uint32 BindlessDescriptors::Allocate()
 	{
 		uint32 dstArrayElement;
 

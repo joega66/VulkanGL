@@ -38,7 +38,7 @@ namespace gpu
 
 		void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values);
 
-		void BindVertexBuffers(uint32 numVertexBuffers, const Buffer* vertexBuffers);
+		void BindVertexBuffers(std::size_t numVertexBuffers, const Buffer* vertexBuffers);
 
 		void DrawIndexed(
 			const Buffer& indexBuffer,
@@ -54,52 +54,52 @@ namespace gpu
 
 		void DrawIndirect(const Buffer& buffer, uint32 offset, uint32 drawCount);
 
-		void Dispatch(uint32 GroupCountX, uint32 GroupCountY, uint32 GroupCountZ);
+		void Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ);
 
-		void ClearColorImage(const Image& Image, EImageLayout ImageLayout, const ClearColorValue& Color);
+		void ClearColorImage(const Image& image, EImageLayout imageLayout, const ClearColorValue& color);
 
-		void ClearDepthStencilImage(const Image& Image, EImageLayout ImageLayout, const ClearDepthStencilValue& DepthStencilValue);
+		void ClearDepthStencilImage(const Image& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue);
 
 		void PipelineBarrier(
-			EPipelineStage SrcStageMask,
-			EPipelineStage DstStageMask,
-			std::size_t NumBufferBarriers,
-			const BufferMemoryBarrier* BufferBarriers,
-			std::size_t NumImageBarriers,
-			const ImageMemoryBarrier* ImageBarriers
+			EPipelineStage srcStageMask,
+			EPipelineStage dstStageMask,
+			std::size_t numBufferBarriers,
+			const BufferMemoryBarrier* bufferBarriers,
+			std::size_t numImageBarriers,
+			const ImageMemoryBarrier* imageBarriers
 		);
 
 		void CopyBufferToImage(
-			const Buffer& SrcBuffer,
-			uint32 BufferOffset,
-			const Image& DstImage,
-			EImageLayout DstImageLayout
+			const Buffer& srcBuffer,
+			uint32 bufferOffset,
+			const Image& dstImage,
+			EImageLayout dstImageLayout
 		);
 
 		void BlitImage(
-			const Image& SrcImage,
-			EImageLayout SrcImageLayout,
-			const Image& DstImage,
-			EImageLayout DstImageLayout,
-			EFilter Filter
+			const Image& srcImage,
+			EImageLayout srcImageLayout,
+			const Image& dstImage,
+			EImageLayout dstImageLayout,
+			EFilter filter
 		);
 
-		void SetScissor(uint32 ScissorCount, const Scissor* Scissors);
+		void SetScissor(uint32 scissorCount, const Scissor* scissors);
 
 		void CopyBuffer(
-			const Buffer& SrcBuffer,
-			const Buffer& DstBuffer,
-			uint64 SrcOffset,
-			uint64 DstOffset,
-			uint64 Size
+			const Buffer& srcBuffer,
+			const Buffer& dstBuffer,
+			uint64 srcOffset,
+			uint64 dstOffset,
+			uint64 size
 		);
 
 		void CopyImage(
-			const Image& SrcImage,
-			EImageLayout SrcImageLayout,
-			const Image& DstImage,
-			EImageLayout DstImageLayout,
-			uint32 DstArrayLayer
+			const Image& srcImage,
+			EImageLayout srcImageLayout,
+			const Image& dstImage,
+			EImageLayout dstImageLayout,
+			uint32 dstArrayLayer
 		);
 
 	private:

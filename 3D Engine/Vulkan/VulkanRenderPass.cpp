@@ -159,7 +159,7 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 		.pAttachments = descriptions.data(),
 		.subpassCount = 1,
 		.pSubpasses = &subpass,
-		.dependencyCount = static_cast<uint32>(ARRAY_SIZE(dependencies)),
+		.dependencyCount = static_cast<uint32>(std::size(dependencies)),
 		.pDependencies = dependencies,
 	};
 	
