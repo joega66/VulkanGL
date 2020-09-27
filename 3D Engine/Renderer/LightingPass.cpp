@@ -128,11 +128,11 @@ public:
 	}
 };
 
-void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
+void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
 {
 	const ImageMemoryBarrier startBarrier
 	{
-		camera._SceneColor,
+		cameraProxy._SceneColor,
 		EAccess::None,
 		EAccess::ShaderWrite,
 		EImageLayout::Undefined,
@@ -152,7 +152,7 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	const std::vector<VkDescriptorSet> descriptorSets =
 	{
-		camera._CameraDescriptorSet,
+		cameraProxy._CameraDescriptorSet,
 		_Device.GetTextures(),
 		_Device.GetSamplers(),
 	};
@@ -161,7 +161,7 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	static uint32 frameNumber = 0;
 
-	if (_Camera.GetPrevPosition() != _Camera.GetPosition() || _Camera.GetPrevRotation() != _Camera.GetRotation())
+	if (camera.GetPrevPosition() != camera.GetPosition() || camera.GetPrevRotation() != camera.GetRotation())
 	{
 		frameNumber = 0;
 	}
@@ -173,14 +173,14 @@ void SceneRenderer::ComputeSSGI(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	cmdList.PushConstants(pipeline, shader, &ssgiParams);
 
-	const uint32 groupCountX = DivideAndRoundUp(camera._SceneColor.GetWidth(), 8u);
-	const uint32 groupCountY = DivideAndRoundUp(camera._SceneColor.GetHeight(), 8u);
+	const uint32 groupCountX = DivideAndRoundUp(cameraProxy._SceneColor.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(cameraProxy._SceneColor.GetHeight(), 8u);
 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 
 	const ImageMemoryBarrier endBarrier
 	{
-		camera._SceneColor,
+		cameraProxy._SceneColor,
 		EAccess::ShaderWrite,
 		EAccess::ShaderRead,
 		EImageLayout::General,

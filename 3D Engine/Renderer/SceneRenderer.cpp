@@ -7,12 +7,11 @@
 #include "PostProcessing.h"
 
 SceneRenderer::SceneRenderer(Engine& engine)
-	: _Device(engine.Device)
+	: _Device(engine._Device)
 	, _ShaderLibrary(engine.ShaderLibrary)
 	, _Surface(engine.Surface)
 	, _ECS(engine._ECS)
 	, _Assets(engine.Assets)
-	, _Camera(engine.Camera)
 {
 	engine._Screen.OnScreenResize([this] (int32 width, int32 height)
 	{
@@ -22,19 +21,22 @@ SceneRenderer::SceneRenderer(Engine& engine)
 	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
 }
 
-void SceneRenderer::Render(CameraProxy& camera)
+void SceneRenderer::Render()
 {
 	const RenderSettings& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
 	gpu::CommandList cmdList = _Device.CreateCommandList(EQueue::Graphics);
 
+	auto& view = _ECS.GetComponent<Camera>(_ECS.GetEntities<Camera>().front());
+	auto& camera = _ECS.GetComponent<CameraProxy>(_ECS.GetEntities<CameraProxy>().front());
+	
 	if (settings.bRayTracing)
 	{
-		ComputeRayTracing(camera, cmdList);
+		ComputeRayTracing(view, camera, cmdList);
 	}
 	else
 	{
-		RenderGBufferPass(camera, cmdList);
+		RenderGBufferPass(view, camera, cmdList);
 
 		RenderShadowDepths(camera, cmdList);
 
@@ -42,7 +44,7 @@ void SceneRenderer::Render(CameraProxy& camera)
 
 		RenderSkybox(camera, cmdList);
 
-		ComputeSSGI(camera, cmdList);
+		ComputeSSGI(view, camera, cmdList);
 	}
 
 	const uint32 imageIndex = _Surface.AcquireNextImage();

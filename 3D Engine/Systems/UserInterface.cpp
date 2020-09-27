@@ -92,7 +92,7 @@ void UserInterface::Update(Engine& engine)
 
 	ImGui::Render();
 
-	engine._ECS.GetSingletonComponent<ImGuiRenderData>().Update(engine.Device);
+	engine._ECS.GetSingletonComponent<ImGuiRenderData>().Update(engine._Device);
 }
 
 void UserInterface::ShowUI(Engine& engine)
@@ -212,7 +212,12 @@ void UserInterface::ShowEntities(Engine& engine)
 		{
 			const auto& bounds = ecs.GetComponent<Bounds>(entity);
 			const glm::vec3 center = bounds.Box.GetCenter();
-			engine.Camera.LookAt(center);
+
+			for (auto entity : ecs.GetEntities<Camera>())
+			{
+				auto& camera = ecs.GetComponent<Camera>(entity);
+				camera.LookAt(center);
+			}
 		}
 
 		prevEntity = entity;
@@ -324,7 +329,7 @@ void UserInterface::ShowEntities(Engine& engine)
 
 ImGuiRenderData::ImGuiRenderData(Engine& engine)
 {
-	gpu::Device& device = engine.Device;
+	gpu::Device& device = engine._Device;
 	ImGuiIO& imgui = ImGui::GetIO();
 
 	unsigned char* pixels;

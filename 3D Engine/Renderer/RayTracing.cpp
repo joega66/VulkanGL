@@ -33,11 +33,11 @@ public:
 	}
 };
 
-void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmdList)
+void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
 {
 	ImageMemoryBarrier imageBarrier
 	{
-		camera._SceneColor,
+		cameraProxy._SceneColor,
 		EAccess::None,
 		EAccess::ShaderWrite,
 		EImageLayout::Undefined,
@@ -46,26 +46,26 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 
 	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 
-	const float theta = glm::radians(_Camera.GetFOV());
+	const float theta = glm::radians(camera.GetFOV());
 	const float h = glm::tan(theta / 2.0f);
 	const float viewportHeight = 2.0f * h;
-	const float viewportWidth = _Camera.GetAspectRatio() * viewportHeight;
+	const float viewportWidth = camera.GetAspectRatio() * viewportHeight;
 
-	const glm::vec3 w = glm::normalize(_Camera.GetForward());
-	const glm::vec3 u = glm::normalize(glm::cross(_Camera.GetWorldUp(), w));
+	const glm::vec3 w = glm::normalize(camera.GetForward());
+	const glm::vec3 u = glm::normalize(glm::cross(camera.GetWorldUp(), w));
 	const glm::vec3 v = glm::cross(w, u);
 
 	const float focusDistance = 1.0;
 
 	static uint32 frameNumber = 0;
 
-	if (_Camera.GetPrevPosition() != _Camera.GetPosition() || _Camera.GetPrevRotation() != _Camera.GetRotation())
+	if (camera.GetPrevPosition() != camera.GetPosition() || camera.GetPrevRotation() != camera.GetRotation())
 	{
 		frameNumber = 0;
 	}
 
 	RayTracingParams rayTracingParams;
-	rayTracingParams._Origin = glm::vec4(_Camera.GetPosition(), 0);
+	rayTracingParams._Origin = glm::vec4(camera.GetPosition(), 0);
 	rayTracingParams._Horizontal = glm::vec4(focusDistance * viewportWidth * u, 0);
 	rayTracingParams._Vertical = glm::vec4(focusDistance * viewportHeight * v, 0);
 	rayTracingParams._LowerLeftCorner = rayTracingParams._Origin - rayTracingParams._Horizontal / 2.0f - rayTracingParams._Vertical / 2.0f - glm::vec4(focusDistance * w, 0);
@@ -80,13 +80,13 @@ void SceneRenderer::ComputeRayTracing(CameraProxy& camera, gpu::CommandList& cmd
 
 	cmdList.BindPipeline(pipeline);
 
-	std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
+	std::vector<VkDescriptorSet> descriptorSets = { cameraProxy._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
 	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
 
 	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
 
-	const uint32 groupCountX = DivideAndRoundUp(_Camera.GetWidth(), 8u);
-	const uint32 groupCountY = DivideAndRoundUp(_Camera.GetHeight(), 8u);
+	const uint32 groupCountX = DivideAndRoundUp(camera.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(camera.GetHeight(), 8u);
 
 	cmdList.Dispatch(groupCountX, groupCountY, 1);
 

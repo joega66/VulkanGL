@@ -1,7 +1,6 @@
 #include "CameraProxy.h"
-#include <Engine/Engine.h>
 #include <Engine/Screen.h>
-#include <Components/Bounds.h>
+#include <Engine/Camera.h>
 
 BEGIN_UNIFORM_BUFFER(CameraUniform)
 	MEMBER(glm::mat4, worldToView)
@@ -29,17 +28,14 @@ BEGIN_DESCRIPTOR_SET(CameraDescriptors)
 	DESCRIPTOR(gpu::StorageImage, _DirectLighting)
 END_DESCRIPTOR_SET(CameraDescriptors)
 
-CameraProxy::CameraProxy(Engine& engine)
+CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Surface& surface)
 {
-	_CameraDescriptorSet = engine.Device.CreateDescriptorSet<CameraDescriptors>();
+	_CameraDescriptorSet = device.CreateDescriptorSet<CameraDescriptors>();
 
-	_CameraUniformBuffer = engine.Device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(CameraUniform));
+	_CameraUniformBuffer = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(CameraUniform));
 	
-	engine._Screen.OnScreenResize([this, &engine] (int32 width, int32 height)
+	screen.OnScreenResize([this, &device, &surface] (int32 width, int32 height)
 	{
-		auto& device = engine.Device;
-		auto& surface = engine.Surface;
-
 		_DirectLighting = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage);
 
 		_SceneColor = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
@@ -87,16 +83,13 @@ CameraProxy::CameraProxy(Engine& engine)
 	});
 }
 
-void CameraProxy::Update(Engine& engine)
+void CameraProxy::Update(const Camera& camera, Engine& engine)
 {
-	UpdateCameraUniform(engine);
-	BuildMeshDrawCommands(engine);
+	UpdateCameraUniform(camera, engine);
 }
 
-void CameraProxy::UpdateCameraUniform(Engine& engine)
+void CameraProxy::UpdateCameraUniform(const Camera& camera, Engine& engine)
 {
-	const Camera& camera = engine.Camera;
-
 	const glm::vec3 clipData(
 		camera.GetFarPlane() * camera.GetNearPlane(),
 		camera.GetNearPlane() - camera.GetFarPlane(),
@@ -121,24 +114,6 @@ void CameraProxy::UpdateCameraUniform(Engine& engine)
 	};
 
 	Platform::Memcpy(_CameraUniformBuffer.GetData(), &cameraUniform, sizeof(cameraUniform));
-}
-
-void CameraProxy::BuildMeshDrawCommands(Engine& engine)
-{
-	_GBufferPass.clear();
-
-	const FrustumPlanes viewFrustumPlanes = engine.Camera.GetFrustumPlanes();
-	
-	for (auto entity : engine._ECS.GetEntities<MeshProxy>())
-	{
-		const auto& meshProxy = engine._ECS.GetComponent<MeshProxy>(entity);
-		const auto& bounds = engine._ECS.GetComponent<Bounds>(entity);
-
-		if (Physics::IsBoxInsideFrustum(viewFrustumPlanes, bounds.Box))
-		{
-			AddToGBufferPass(engine, meshProxy);
-		}
-	}
 }
 
 void CameraProxy::CreateGBufferRP(gpu::Device& device)

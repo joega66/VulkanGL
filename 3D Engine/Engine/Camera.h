@@ -1,8 +1,9 @@
 #pragma once
 #include <Physics/Physics.h>
+#include <ECS/Component.h>
 #include <glm/gtx/quaternion.hpp>
 
-class Camera
+class Camera : public Component
 {
 public:
 	/** Freeze/Unfreeze the camera. */

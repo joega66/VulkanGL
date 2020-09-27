@@ -144,13 +144,13 @@ void main()
 
 	const float alpha = material.roughness * material.roughness;
 
-	const vec3 indirectDiffuse = ComputeSSGI(screenCoords, surface, onb, material, alpha);
+	//const vec3 indirectDiffuse = ComputeSSGI(screenCoords, surface, onb, material, alpha);
 
 	const vec3 indirectSpecular = ComputeSSR(screenCoords, surface, onb, material, alpha);
 
 	const vec3 directLighting = imageLoad(_DirectLighting, screenCoords).rgb;
 
-	const vec3 lo = indirectDiffuse + indirectSpecular + directLighting;
+	const vec3 lo = /*indirectDiffuse + */indirectSpecular + directLighting;
 
 	imageStore(_SceneColor, screenCoords, vec4(lo, 1.0));
 }

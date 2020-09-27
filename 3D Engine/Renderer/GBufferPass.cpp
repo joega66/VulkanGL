@@ -3,6 +3,8 @@
 #include "SceneRenderer.h"
 #include <ECS/EntityManager.h>
 #include <Engine/Engine.h>
+#include <Components/Bounds.h>
+#include <Renderer/MeshDrawCommand.h>
 
 template<EMeshType meshType>
 class GBufferPassVS : public MeshShader<meshType>
@@ -48,30 +50,40 @@ public:
 	}
 };
 
-void CameraProxy::AddToGBufferPass(Engine& engine, const MeshProxy& meshProxy)
+void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
 {
-	constexpr EMeshType meshType = EMeshType::StaticMesh;
+	cmdList.BeginRenderPass(cameraProxy._GBufferRP);
 
-	PipelineStateDesc psoDesc = {};
-	psoDesc.renderPass = _GBufferRP;
-	psoDesc.shaderStages.vertex = engine.ShaderLibrary.FindShader<GBufferPassVS<meshType>>();
-	psoDesc.shaderStages.fragment = engine.ShaderLibrary.FindShader<GBufferPassFS<meshType>>();
-	psoDesc.viewport.width = _SceneDepth.GetWidth();
-	psoDesc.viewport.height = _SceneDepth.GetHeight();
+	const FrustumPlanes viewFrustumPlanes = camera.GetFrustumPlanes();
 
-	const std::vector<VkDescriptorSet> descriptorSets =
+	std::vector<MeshDrawCommand> gBufferPass;
+
+	for (auto entity : _ECS.GetEntities<MeshProxy>())
 	{
-		_CameraDescriptorSet, meshProxy.GetSurfaceSet(), engine.Device.GetTextures(), engine.Device.GetSamplers()
-	};
+		const auto& meshProxy = _ECS.GetComponent<MeshProxy>(entity);
+		const auto& bounds = _ECS.GetComponent<Bounds>(entity);
 
-	_GBufferPass.push_back(MeshDrawCommand(engine.Device, meshProxy, psoDesc, descriptorSets));
-}
+		if (Physics::IsBoxInsideFrustum(viewFrustumPlanes, bounds.Box))
+		{
+			constexpr EMeshType meshType = EMeshType::StaticMesh;
 
-void SceneRenderer::RenderGBufferPass(CameraProxy& camera, gpu::CommandList& cmdList)
-{
-	cmdList.BeginRenderPass(camera._GBufferRP);
+			PipelineStateDesc psoDesc = {};
+			psoDesc.renderPass = cameraProxy._GBufferRP;
+			psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<GBufferPassVS<meshType>>();
+			psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<GBufferPassFS<meshType>>();
+			psoDesc.viewport.width = cameraProxy._SceneDepth.GetWidth();
+			psoDesc.viewport.height = cameraProxy._SceneDepth.GetHeight();
 
-	MeshDrawCommand::Draw(cmdList, camera._GBufferPass);
+			const std::vector<VkDescriptorSet> descriptorSets =
+			{
+				cameraProxy._CameraDescriptorSet, meshProxy.GetSurfaceSet(), _Device.GetTextures(), _Device.GetSamplers()
+			};
+
+			gBufferPass.push_back(MeshDrawCommand(_Device, meshProxy, psoDesc, descriptorSets));
+		}
+	}
+
+	MeshDrawCommand::Draw(cmdList, gBufferPass);
 
 	cmdList.EndRenderPass();
 }

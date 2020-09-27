@@ -32,12 +32,11 @@ public:
 	Screen& _Screen;
 	
 	/** GPU/GPU.h implementations. */
-	gpu::Device& Device;
+	gpu::Device& _Device;
 	gpu::ShaderLibrary& ShaderLibrary;
 	gpu::Surface& Surface;
 
 	/** Engine misc. */
 	EntityManager _ECS;
 	AssetManager Assets;
-	Camera Camera;
 };

@@ -21,30 +21,16 @@ Engine::Engine(
 	, _Cursor(InCursor)
 	, _Input(InInput)
 	, _Screen(InScreen)
-	, Device(InDevice)
+	, _Device(InDevice)
 	, ShaderLibrary(InShaderLibrary)
 	, Surface(InSurface)
 	, Assets(InDevice)
-	, Camera(
-		InScreen,
-		glm::vec3(
-			Platform::GetFloat("Engine.ini", "Camera", "LookFromX", 0.0f),
-			Platform::GetFloat("Engine.ini", "Camera", "LookFromY", 0.0f),
-			Platform::GetFloat("Engine.ini", "Camera", "LookFromZ", 0.0f)
-		),
-		glm::vec3(
-			Platform::GetFloat("Engine.ini", "Camera", "LookAtX", 0.0f),
-			Platform::GetFloat("Engine.ini", "Camera", "LookAtY", 0.0f),
-			Platform::GetFloat("Engine.ini", "Camera", "LookAtZ", 0.0f)
-		)
-	)
 {
 }
 
 void Engine::Main()
 {
 	SceneRenderer sceneRenderer(*this);
-	CameraProxy cameraProxy(*this);
 
 	SystemsManager SystemsManager;
 
@@ -72,13 +58,16 @@ void Engine::Main()
 		SystemsManager.UpdateSystems(*this);
 		SystemsManager.UpdateRenderSystems(*this);
 
-		cameraProxy.Update(*this);
-
-		sceneRenderer.Render(cameraProxy);
+		sceneRenderer.Render();
 
 		_Cursor.Update(_Platform);
 		_Input.Update(_Platform);
 
-		Camera.SaveState();
+		// @todo Move me.
+		for (auto entity : _ECS.GetEntities<Camera>())
+		{
+			auto& camera = _ECS.GetComponent<Camera>(entity);
+			camera.SaveState();
+		}
 	}
 }

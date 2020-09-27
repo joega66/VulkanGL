@@ -1,16 +1,15 @@
 #pragma once
-#include "MeshDrawCommand.h"
+#include <ECS/Component.h>
+#include <GPU/GPU.h>
 
 class Engine;
+class Screen;
+class Camera;
 
-class CameraProxy
+class CameraProxy : public Component
 {
-	friend class Engine;
-	CameraProxy(Engine& engine);
-
 public:
-	CameraProxy(const CameraProxy&) = delete;
-	CameraProxy& operator=(const CameraProxy&) = delete;
+	CameraProxy(Screen& screen, gpu::Device& device, gpu::Surface& surface);
 
 	gpu::RenderPass _SkyboxRP;
 	gpu::RenderPass _GBufferRP;
@@ -28,16 +27,10 @@ public:
 
 	gpu::DescriptorSet _CameraDescriptorSet;
 
-	std::vector<MeshDrawCommand> _GBufferPass;
-
-	void Update(Engine& engine);
+	void Update(const Camera& camera, Engine& engine);
 
 private:
-	void UpdateCameraUniform(Engine& engine);
-
-	void BuildMeshDrawCommands(Engine& engine);
-
-	void AddToGBufferPass(Engine& engine, const MeshProxy& meshProxy);
+	void UpdateCameraUniform(const Camera& camera, Engine& engine);
 
 	void CreateGBufferRP(gpu::Device& device);
 	void CreateSkyboxRP(gpu::Device& device);

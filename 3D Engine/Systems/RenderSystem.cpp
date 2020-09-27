@@ -7,6 +7,7 @@
 #include <Components/Bounds.h>
 #include <Renderer/MeshProxy.h>
 #include <Renderer/ShadowProxy.h>
+#include <Renderer/CameraProxy.h>
 
 BEGIN_UNIFORM_BUFFER(LocalToWorldUniform)
 	MEMBER(glm::mat4, transform)
@@ -21,11 +22,18 @@ END_DESCRIPTOR_SET(StaticMeshDescriptors)
 void RenderSystem::Start(Engine& engine)
 {
 	auto& ecs = engine._ECS;
-	auto& device = engine.Device;
+	auto& device = engine._Device;
+	auto& surface = engine.Surface;
+	auto& screen = engine._Screen;
 
 	ecs.AddSingletonComponent<RenderSettings>();
 
 	_SurfaceSet = device.CreateDescriptorSet<StaticMeshDescriptors>();
+
+	ecs.OnComponentCreated<Camera>([&] (Entity& entity, Camera& camera)
+	{
+		ecs.AddComponent(entity, CameraProxy(screen, device, surface));
+	});
 
 	ecs.OnComponentCreated<StaticMeshComponent>([&] (Entity& entity, StaticMeshComponent& staticMeshComponent)
 	{
@@ -52,7 +60,7 @@ void RenderSystem::Start(Engine& engine)
 void RenderSystem::Update(Engine& engine)
 {
 	auto& ecs = engine._ECS;
-	auto& device = engine.Device;
+	auto& device = engine._Device;
 
 	for (auto entity : ecs.GetEntities<ShadowProxy>())
 	{
@@ -95,7 +103,15 @@ void RenderSystem::Update(Engine& engine)
 		for (auto entity : ecs.GetEntities<ShadowProxy>())
 		{
 			auto& shadowProxy = ecs.GetComponent<ShadowProxy>(entity);
-			shadowProxy.AddMesh(engine.Device, engine.ShaderLibrary, meshProxy);
+			shadowProxy.AddMesh(engine._Device, engine.ShaderLibrary, meshProxy);
 		}
+	}
+
+	for (auto entity : ecs.GetEntities<Camera>())
+	{
+		auto& camera = ecs.GetComponent<Camera>(entity);
+		auto& cameraProxy = ecs.GetComponent<CameraProxy>(entity);
+
+		cameraProxy.Update(camera, engine);
 	}
 }

@@ -11,11 +11,24 @@ void SceneSystem::Start(Engine& engine)
 {
 	auto& ecs = engine._ECS;
 
+	// Create the camera.
+	auto cameraEntity = ecs.CreateEntity("Camera");
+	ecs.AddComponent(cameraEntity, Camera(
+		engine._Screen,
+		glm::vec3(Platform::GetFloat("Engine.ini", "Camera", "LookFromX", 0.0f),
+				  Platform::GetFloat("Engine.ini", "Camera", "LookFromY", 0.0f),
+				  Platform::GetFloat("Engine.ini", "Camera", "LookFromZ", 0.0f)),
+		glm::vec3(Platform::GetFloat("Engine.ini", "Camera", "LookAtX", 0.0f),
+				  Platform::GetFloat("Engine.ini", "Camera", "LookAtY", 0.0f),
+				  Platform::GetFloat("Engine.ini", "Camera", "LookAtZ", 0.0f))));
+
+	// Load the scene.
 	const std::string scenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");
 	const SceneLoadRequest sceneLoadReq(scenePath, false);
 
 	HandleSceneLoadRequest(engine, sceneLoadReq);
 
+	// Create the directional light.
 	auto lightEntity = ecs.CreateEntity("DirectionalLight");
 	auto& directionalLight = ecs.AddComponent(lightEntity, DirectionalLight());
 
@@ -30,6 +43,7 @@ void SceneSystem::Start(Engine& engine)
 
 	auto& transform = ecs.AddComponent(lightEntity, Transform(ecs, lightEntity, glm::vec3(0), glm::radians(glm::vec3(x, y, z))));
 
+	// Create the skybox.
 	const std::string skyboxPath = Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/");
 	Skybox* skybox = engine.Assets.LoadSkybox("Default_Skybox", skyboxPath);
 
