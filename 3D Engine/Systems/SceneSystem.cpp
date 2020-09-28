@@ -2,7 +2,6 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 #include <Components/Light.h>
-#include <Components/Bounds.h>
 #include <Components/SkyboxComponent.h>
 #include <Engine/Engine.h>
 #include <Engine/AssetManager.h>

@@ -122,12 +122,6 @@
     <ClInclude Include="Vulkan\VulkanQueues.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\MeshProxy.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\MeshDrawCommand.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\ShadowProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -206,9 +200,6 @@
     <ClInclude Include="Renderer\CameraProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Components\Bounds.h">
-      <Filter>Source\Components</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Skybox.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -278,6 +269,9 @@
     <ClInclude Include="Vulkan\VulkanBindlessDescriptors.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\Surface.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -342,9 +336,6 @@
     </ClCompile>
     <ClCompile Include="Engine\Input.cpp">
       <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\MeshProxy.cpp">
-      <Filter>Source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\ShadowDepthPass.cpp">
       <Filter>Source\Renderer</Filter>

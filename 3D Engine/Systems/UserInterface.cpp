@@ -8,7 +8,6 @@
 #include <Components/Transform.h>
 #include <Components/Light.h>
 #include <Components/StaticMeshComponent.h>
-#include <Components/Bounds.h>
 #include <Components/SkyboxComponent.h>
 #include <Systems/SceneSystem.h>
 #include <Renderer/CameraProxy.h>
@@ -208,15 +207,16 @@ void UserInterface::ShowEntities(Engine& engine)
 		}
 
 		// Focus on double clicked objects.
-		if (isSelected && ImGui::IsMouseDoubleClicked(0) && ecs.HasComponent<Bounds>(entity))
+		if (isSelected && ImGui::IsMouseDoubleClicked(0) && ecs.HasComponent<StaticMeshComponent>(entity))
 		{
-			const auto& bounds = ecs.GetComponent<Bounds>(entity);
-			const glm::vec3 center = bounds.Box.GetCenter();
+			const auto& transform = ecs.GetComponent<Transform>(entity);
+			const auto& staticMesh = ecs.GetComponent<StaticMeshComponent>(entity);
+			const BoundingBox boundingBox = staticMesh.StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
 
 			for (auto entity : ecs.GetEntities<Camera>())
 			{
 				auto& camera = ecs.GetComponent<Camera>(entity);
-				camera.LookAt(center);
+				camera.LookAt(boundingBox.GetCenter());
 			}
 		}
 

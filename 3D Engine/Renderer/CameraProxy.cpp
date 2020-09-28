@@ -83,12 +83,12 @@ CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Surface& surf
 	});
 }
 
-void CameraProxy::Update(const Camera& camera, Engine& engine)
+void CameraProxy::Update(const Camera& camera)
 {
-	UpdateCameraUniform(camera, engine);
+	UpdateCameraUniform(camera);
 }
 
-void CameraProxy::UpdateCameraUniform(const Camera& camera, Engine& engine)
+void CameraProxy::UpdateCameraUniform(const Camera& camera)
 {
 	const glm::vec3 clipData(
 		camera.GetFarPlane() * camera.GetNearPlane(),

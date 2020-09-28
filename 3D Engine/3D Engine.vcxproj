@@ -54,7 +54,6 @@
     <ClCompile Include="Renderer\RayTracing.cpp" />
     <ClCompile Include="Renderer\ShadowProxy.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
-    <ClCompile Include="Renderer\MeshProxy.cpp" />
     <ClCompile Include="Renderer\CameraProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
@@ -98,7 +97,6 @@
     <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_cross.hpp" />
     <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
-    <ClInclude Include="Components\Bounds.h" />
     <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\RenderSettings.h" />
     <ClInclude Include="Components\SkyboxComponent.h" />
@@ -126,12 +124,11 @@
     <ClInclude Include="GPU\GPUShader.h" />
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
-    <ClInclude Include="Renderer\MeshDrawCommand.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
     <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\ShadowProxy.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
-    <ClInclude Include="Renderer\MeshProxy.h" />
+    <ClInclude Include="Renderer\Surface.h" />
     <ClInclude Include="Renderer\CameraProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />

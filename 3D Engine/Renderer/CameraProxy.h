@@ -2,7 +2,6 @@
 #include <ECS/Component.h>
 #include <GPU/GPU.h>
 
-class Engine;
 class Screen;
 class Camera;
 
@@ -27,10 +26,10 @@ public:
 
 	gpu::DescriptorSet _CameraDescriptorSet;
 
-	void Update(const Camera& camera, Engine& engine);
+	void Update(const Camera& camera);
 
 private:
-	void UpdateCameraUniform(const Camera& camera, Engine& engine);
+	void UpdateCameraUniform(const Camera& camera);
 
 	void CreateGBufferRP(gpu::Device& device);
 	void CreateSkyboxRP(gpu::Device& device);
