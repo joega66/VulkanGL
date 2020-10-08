@@ -134,9 +134,6 @@
     <ClInclude Include="Vulkan\VulkanRenderPass.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanSurface.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Systems\RenderSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
@@ -272,6 +269,9 @@
     <ClInclude Include="Components\Camera.h">
       <Filter>Source\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanCompositor.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -348,9 +348,6 @@
     </ClCompile>
     <ClCompile Include="Components\Transform.cpp">
       <Filter>Source\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanSurface.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCache.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -441,6 +438,9 @@
     </ClCompile>
     <ClCompile Include="Components\Camera.cpp">
       <Filter>Source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanCompositor.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

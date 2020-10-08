@@ -8,7 +8,7 @@ class Camera;
 class CameraProxy : public Component
 {
 public:
-	CameraProxy(Screen& screen, gpu::Device& device, gpu::Surface& surface);
+	CameraProxy(Screen& screen, gpu::Device& device, gpu::Compositor& compositor);
 
 	gpu::RenderPass _SkyboxRP;
 	gpu::RenderPass _GBufferRP;
@@ -33,5 +33,5 @@ private:
 
 	void CreateGBufferRP(gpu::Device& device);
 	void CreateSkyboxRP(gpu::Device& device);
-	void CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surface);
+	void CreateUserInterfaceRP(gpu::Device& device, gpu::Compositor& swapchain);
 };

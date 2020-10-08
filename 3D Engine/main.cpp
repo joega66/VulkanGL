@@ -1,7 +1,7 @@
 #include <Engine/Engine.h>
 #include <Vulkan/VulkanDevice.h>
 #include <Vulkan/VulkanShaderLibrary.h>
-#include <Vulkan/VulkanSurface.h>
+#include <Vulkan/VulkanCompositor.h>
 #include <Engine/Screen.h>
 #include <Engine/Input.h>
 #include <Engine/Cursor.h>
@@ -26,10 +26,10 @@ int main(int argc, char* argv[])
 	deviceDesc.enableValidationLayers = Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false);
 
 	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>(deviceDesc);
-	std::unique_ptr<VulkanSurface> Surface = std::make_unique<VulkanSurface>(*Device);
+	std::unique_ptr<VulkanCompositor> compositor = std::make_unique<VulkanCompositor>(*Device);
 	std::unique_ptr<VulkanShaderLibrary> ShaderLibrary = std::make_unique<VulkanShaderLibrary>(*Device);
 
-	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderLibrary, *Surface);
+	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderLibrary, *compositor);
 	Engine.Main();
 
 	return 0;

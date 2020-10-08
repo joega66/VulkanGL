@@ -16,14 +16,14 @@ Engine::Engine(
 	Screen& InScreen,
 	gpu::Device& InDevice, 
 	gpu::ShaderLibrary& InShaderLibrary,
-	gpu::Surface& InSurface
+	gpu::Compositor& compositor
 ) : _Platform(InPlatform)
 	, _Cursor(InCursor)
 	, _Input(InInput)
 	, _Screen(InScreen)
 	, _Device(InDevice)
 	, ShaderLibrary(InShaderLibrary)
-	, Surface(InSurface)
+	, _Compositor(compositor)
 	, Assets(InDevice)
 {
 }

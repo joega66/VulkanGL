@@ -2,10 +2,10 @@
 #include <GPU/GPU.h>
 #include "VulkanImage.h"
 
-class VulkanSurface : public gpu::Surface
+class VulkanCompositor : public gpu::Compositor
 {
 public:
-	VulkanSurface(VulkanDevice& device);
+	VulkanCompositor(VulkanDevice& device);
 
 	/** Get the next image index. */
 	uint32 AcquireNextImage() override;
@@ -15,9 +15,6 @@ public:
 
 	/** Create a new swapchain (if within surface capabilities.) */
 	void Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) override;
-
-	/** Get the swapchain image. */
-	const gpu::Image& GetImage(uint32 imageIndex) override;
 
 	/** Get all images in the swapchain. */
 	const std::vector<gpu::Image>& GetImages() override;

@@ -74,7 +74,7 @@
     <ClCompile Include="Vulkan\VulkanQueues.cpp" />
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="Vulkan\VulkanShaderLibrary.cpp" />
-    <ClCompile Include="Vulkan\VulkanSurface.cpp" />
+    <ClCompile Include="Vulkan\VulkanCompositor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ThirdParty\imgui\examples\imgui_impl_glfw.h" />
@@ -147,7 +147,7 @@
     <ClInclude Include="Vulkan\VulkanQueues.h" />
     <ClInclude Include="Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="Vulkan\VulkanShaderLibrary.h" />
-    <ClInclude Include="Vulkan\VulkanSurface.h" />
+    <ClInclude Include="Vulkan\VulkanCompositor.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Config\Engine.ini" />

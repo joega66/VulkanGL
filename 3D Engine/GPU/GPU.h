@@ -94,13 +94,12 @@ namespace gpu
 	};
 
 	/** Compositor interface. Useful for creating a swapchain or letting an SDK control the display, e.g. OpenXR. */
-	class Surface
+	class Compositor
 	{
 	public:
 		virtual uint32 AcquireNextImage() = 0;
 		virtual void Present(uint32 imageIndex, gpu::CommandList& cmdList) = 0;
 		virtual void Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) = 0;
-		virtual const gpu::Image& GetImage(uint32 imageIndex) = 0;
 		virtual const std::vector<gpu::Image>& GetImages() = 0;
 	};
 

@@ -22,7 +22,7 @@ void RenderSystem::Start(Engine& engine)
 {
 	auto& ecs = engine._ECS;
 	auto& device = engine._Device;
-	auto& surface = engine.Surface;
+	auto& compositor = engine._Compositor;
 	auto& screen = engine._Screen;
 
 	ecs.AddSingletonComponent<RenderSettings>();
@@ -31,7 +31,7 @@ void RenderSystem::Start(Engine& engine)
 
 	ecs.OnComponentCreated<Camera>([&] (Entity& entity, Camera& camera)
 	{
-		ecs.AddComponent(entity, CameraProxy(screen, device, surface));
+		ecs.AddComponent(entity, CameraProxy(screen, device, compositor));
 	});
 
 	ecs.OnComponentCreated<DirectionalLight>([&] (Entity& entity, DirectionalLight& directionalLight)

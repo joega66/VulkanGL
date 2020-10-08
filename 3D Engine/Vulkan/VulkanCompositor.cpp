@@ -1,4 +1,4 @@
-#include "VulkanSurface.h"
+#include "VulkanCompositor.h"
 #include "VulkanDevice.h"
 
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
@@ -54,12 +54,12 @@ static VkExtent2D ChooseSwapExtent(uint32 width, uint32 height, const VkSurfaceC
 	}
 }
 
-VulkanSurface::VulkanSurface(VulkanDevice& device)
+VulkanCompositor::VulkanCompositor(VulkanDevice& device)
 	: _Device(device)
 {
 }
 
-uint32 VulkanSurface::AcquireNextImage()
+uint32 VulkanCompositor::AcquireNextImage()
 {
 	uint32 imageIndex;
 
@@ -81,7 +81,7 @@ uint32 VulkanSurface::AcquireNextImage()
 	return imageIndex;
 }
 
-void VulkanSurface::Present(uint32 imageIndex, gpu::CommandList& cmdList)
+void VulkanCompositor::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 {
 	vulkan(vkEndCommandBuffer(cmdList._CommandBuffer));
 
@@ -153,7 +153,7 @@ struct SwapchainSupportDetails
 	}
 };
 
-void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage)
+void VulkanCompositor::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage)
 {
 	if (_ImageAvailableSem == VK_NULL_HANDLE)
 	{
@@ -249,12 +249,7 @@ void VulkanSurface::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage 
 	}
 }
 
-const gpu::Image& VulkanSurface::GetImage(uint32 imageIndex)
-{
-	return _Images[imageIndex];
-}
-
-const std::vector<gpu::Image>& VulkanSurface::GetImages()
+const std::vector<gpu::Image>& VulkanCompositor::GetImages()
 {
 	return _Images;
 }

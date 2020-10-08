@@ -1,6 +1,5 @@
 #include "VulkanDevice.h"
 #include "VulkanRenderPass.h"
-#include "VulkanSurface.h"
 #include <unordered_set>
 
 void VulkanDevice::EndFrame()

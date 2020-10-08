@@ -9,13 +9,13 @@
 SceneRenderer::SceneRenderer(Engine& engine)
 	: _Device(engine._Device)
 	, _ShaderLibrary(engine.ShaderLibrary)
-	, _Surface(engine.Surface)
+	, _Compositor(engine._Compositor)
 	, _ECS(engine._ECS)
 	, _Assets(engine.Assets)
 {
 	engine._Screen.OnScreenResize([this] (int32 width, int32 height)
 	{
-		_Surface.Resize(width, height, EImageUsage::Attachment | EImageUsage::Storage);
+		_Compositor.Resize(width, height, EImageUsage::Attachment | EImageUsage::Storage);
 	});
 
 	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
@@ -47,8 +47,8 @@ void SceneRenderer::Render()
 		ComputeSSGI(view, camera, cmdList);
 	}
 
-	const uint32 imageIndex = _Surface.AcquireNextImage();
-	const gpu::Image& displayImage = _Surface.GetImage(imageIndex);
+	const uint32 imageIndex = _Compositor.AcquireNextImage();
+	const gpu::Image& displayImage = _Compositor.GetImages()[imageIndex];
 	ImageMemoryBarrier barrier{ displayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
 	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &barrier);
@@ -64,7 +64,7 @@ void SceneRenderer::Render()
 
 	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, camera._UserInterfaceRP[imageIndex]);
 
-	_Surface.Present(imageIndex, cmdList);
+	_Compositor.Present(imageIndex, cmdList);
 
 	_Device.EndFrame();
 }

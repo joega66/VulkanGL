@@ -28,13 +28,13 @@ BEGIN_DESCRIPTOR_SET(CameraDescriptors)
 	DESCRIPTOR(gpu::StorageImage, _DirectLighting)
 END_DESCRIPTOR_SET(CameraDescriptors)
 
-CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Surface& surface)
+CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Compositor& compositor)
 {
 	_CameraDescriptorSet = device.CreateDescriptorSet<CameraDescriptors>();
 
 	_CameraUniformBuffer = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(CameraUniform));
 	
-	screen.OnScreenResize([this, &device, &surface] (int32 width, int32 height)
+	screen.OnScreenResize([this, &device, &compositor] (int32 width, int32 height)
 	{
 		_DirectLighting = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage);
 
@@ -49,7 +49,7 @@ CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Surface& surf
 
 		CreateGBufferRP(device);
 		CreateSkyboxRP(device);
-		CreateUserInterfaceRP(device, surface);
+		CreateUserInterfaceRP(device, compositor);
 
 		const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
 
@@ -160,9 +160,9 @@ void CameraProxy::CreateSkyboxRP(gpu::Device& device)
 	_SkyboxRP = device.CreateRenderPass(rpDesc);
 }
 
-void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Surface& surface)
+void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Compositor& compositor)
 {
-	const auto& images = surface.GetImages();
+	const auto& images = compositor.GetImages();
 
 	_UserInterfaceRP.clear();
 	_UserInterfaceRP.reserve(images.size());
