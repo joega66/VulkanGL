@@ -20,7 +20,7 @@ namespace gpu
 
 		inline uint64 GetSize() const { return _Size; }
 		inline void* GetData() { return _AllocationInfo.pMappedData; }
-		inline VkBuffer GetHandle() const { return _Buffer; }
+		inline operator const VkBuffer&() const { return _Buffer; }
 
 	private:
 		VmaAllocator _Allocator;

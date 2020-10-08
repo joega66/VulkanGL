@@ -24,7 +24,12 @@ namespace gpu
 
 		VkCommandBuffer _CommandBuffer;
 
-		CommandList(VulkanDevice& device, VkQueueFlags queueFlags);
+		CommandList(
+			VulkanDevice& device,
+			VkQueue queue,
+			VkCommandPool commandPool,
+			VkCommandBuffer commandBuffer
+		);
 
 		~CommandList();
 

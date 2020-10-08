@@ -49,7 +49,7 @@ namespace gpu
 
 	DescriptorBufferInfo::DescriptorBufferInfo(const Buffer& buffer)
 	{
-		_DescriptorBufferInfo.buffer = buffer.GetHandle();
+		_DescriptorBufferInfo.buffer = buffer;
 		_DescriptorBufferInfo.offset = 0;
 		_DescriptorBufferInfo.range = buffer.GetSize();
 	}

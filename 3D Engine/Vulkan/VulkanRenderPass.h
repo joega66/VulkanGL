@@ -19,6 +19,7 @@ namespace gpu
 			const std::vector<VkClearValue>& clearValues,
 			uint32 numAttachments
 		);
+
 		~RenderPass();
 		RenderPass(RenderPass&& other);
 		RenderPass& operator=(RenderPass&& other);

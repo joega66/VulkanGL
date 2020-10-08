@@ -5,22 +5,16 @@
 
 namespace gpu
 {
-	CommandList::CommandList(VulkanDevice& device, VkQueueFlags queueFlags)
+	CommandList::CommandList(
+		VulkanDevice& device, 
+		VkQueue queue,
+		VkCommandPool commandPool,
+		VkCommandBuffer commandBuffer)
 		: _Device(device)
-		, _Queue(device.GetQueues().GetQueue(queueFlags))
-		, _CommandPool(device.GetQueues().GetCommandPool(queueFlags))
+		, _Queue(queue)
+		, _CommandPool(commandPool)
+		, _CommandBuffer(commandBuffer)
 	{
-		VkCommandBufferAllocateInfo CommandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-		CommandBufferInfo.commandPool = _CommandPool;
-		CommandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		CommandBufferInfo.commandBufferCount = 1;
-
-		vulkan(vkAllocateCommandBuffers(_Device, &CommandBufferInfo, &_CommandBuffer));
-
-		VkCommandBufferBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vulkan(vkBeginCommandBuffer(_CommandBuffer, &BeginInfo));
 	}
 
 	CommandList::~CommandList()
@@ -30,14 +24,21 @@ namespace gpu
 
 	void CommandList::BeginRenderPass(const RenderPass& renderPass)
 	{
-		VkRenderPassBeginInfo BeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		BeginInfo.renderPass = renderPass.GetRenderPass();
-		BeginInfo.framebuffer = renderPass.GetFramebuffer();
-		BeginInfo.renderArea = renderPass.GetRenderArea();
-		BeginInfo.pClearValues = renderPass.GetClearValues().data();
-		BeginInfo.clearValueCount = static_cast<uint32>(renderPass.GetClearValues().size());
-
-		vkCmdBeginRenderPass(_CommandBuffer, &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		const VkRenderPassBeginInfo renderPassBeginInfo = 
+		{ 
+			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.renderPass = renderPass.GetRenderPass(),
+			.framebuffer = renderPass.GetFramebuffer(),
+			.renderArea = renderPass.GetRenderArea(),
+			.clearValueCount = static_cast<uint32>(renderPass.GetClearValues().size()),
+			.pClearValues = renderPass.GetClearValues().data(),
+		};
+		
+		vkCmdBeginRenderPass(
+			_CommandBuffer, 
+			&renderPassBeginInfo, 
+			VK_SUBPASS_CONTENTS_INLINE
+		);
 	}
 
 	void CommandList::EndRenderPass()
@@ -47,7 +48,11 @@ namespace gpu
 
 	void CommandList::BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline)
 	{
-		vkCmdBindPipeline(_CommandBuffer, pipeline->GetPipelineBindPoint(), pipeline->GetPipeline());
+		vkCmdBindPipeline(
+			_CommandBuffer, 
+			pipeline->GetPipelineBindPoint(), 
+			pipeline->GetPipeline()
+		);
 	}
 
 	void CommandList::BindDescriptorSets(
@@ -63,19 +68,20 @@ namespace gpu
 			static_cast<uint32>(numDescriptorSets),
 			descriptorSets,
 			0,
-			nullptr);
+			nullptr
+		);
 	}
 
 	void CommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
 	{
-		const auto& PushConstantRange = shader->compilationInfo.pushConstantRange;
+		const auto& pushConstantRange = shader->compilationInfo.pushConstantRange;
 
 		vkCmdPushConstants(
 			_CommandBuffer,
 			pipeline->GetPipelineLayout(),
-			PushConstantRange.stageFlags,
-			PushConstantRange.offset,
-			PushConstantRange.size,
+			pushConstantRange.stageFlags,
+			pushConstantRange.offset,
+			pushConstantRange.size,
 			values
 		);
 	}
@@ -87,7 +93,7 @@ namespace gpu
 
 		for (uint32 location = 0; location < numVertexBuffers; location++)
 		{
-			buffers[location] = vertexBuffers[location].GetHandle();
+			buffers[location] = vertexBuffers[location];
 		}
 
 		vkCmdBindVertexBuffers(_CommandBuffer, 0, static_cast<uint32>(buffers.size()), buffers.data(), offsets.data());
@@ -102,7 +108,7 @@ namespace gpu
 		uint32 firstInstance,
 		EIndexType indexType)
 	{
-		vkCmdBindIndexBuffer(_CommandBuffer, indexBuffer.GetHandle(), 0, static_cast<VkIndexType>(indexType));
+		vkCmdBindIndexBuffer(_CommandBuffer, indexBuffer, 0, static_cast<VkIndexType>(indexType));
 		vkCmdDrawIndexed(_CommandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
@@ -115,7 +121,7 @@ namespace gpu
 	{
 		vkCmdDrawIndirect(
 			_CommandBuffer,
-			buffer.GetHandle(),
+			buffer,
 			offset,
 			drawCount,
 			drawCount > 1 ? sizeof(VkDrawIndirectCommand) : 0
@@ -129,26 +135,30 @@ namespace gpu
 
 	void CommandList::ClearColorImage(const Image& image, EImageLayout imageLayout, const ClearColorValue& color)
 	{
-		VkImageSubresourceRange Range = {};
-		Range.aspectMask = image.GetVulkanAspect();
-		Range.baseMipLevel = 0;
-		Range.levelCount = image.GetMipLevels();
-		Range.baseArrayLayer = 0;
-		Range.layerCount = 1;
-
-		vkCmdClearColorImage(_CommandBuffer, image, Image::GetLayout(imageLayout), reinterpret_cast<const VkClearColorValue*>(&color), 1, &Range);
+		const VkImageSubresourceRange range = 
+		{
+			.aspectMask = image.GetVulkanAspect(),
+			.baseMipLevel = 0,
+			.levelCount = image.GetMipLevels(),
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+		
+		vkCmdClearColorImage(_CommandBuffer, image, Image::GetLayout(imageLayout), reinterpret_cast<const VkClearColorValue*>(&color), 1, &range);
 	}
 
 	void CommandList::ClearDepthStencilImage(const Image& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue)
 	{
-		VkImageSubresourceRange Range = {};
-		Range.aspectMask = image.GetVulkanAspect();
-		Range.baseMipLevel = 0;
-		Range.levelCount = 1;
-		Range.baseArrayLayer = 0;
-		Range.layerCount = 1;
-
-		vkCmdClearDepthStencilImage(_CommandBuffer, image, Image::GetLayout(imageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&depthStencilValue), 1, &Range);
+		const VkImageSubresourceRange range = 
+		{
+			.aspectMask = image.GetVulkanAspect(),
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+		
+		vkCmdClearDepthStencilImage(_CommandBuffer, image, Image::GetLayout(imageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&depthStencilValue), 1, &range);
 	}
 
 	void CommandList::PipelineBarrier(
@@ -159,49 +169,52 @@ namespace gpu
 		std::size_t numImageBarriers,
 		const ImageMemoryBarrier* imageBarriers)
 	{
-		std::vector<VkBufferMemoryBarrier> VulkanBufferBarriers;
-		VulkanBufferBarriers.reserve(numBufferBarriers);
+		std::vector<VkBufferMemoryBarrier> vulkanBufferBarriers;
+		vulkanBufferBarriers.reserve(numBufferBarriers);
 
-		for (std::size_t BarrierIndex = 0; BarrierIndex < numBufferBarriers; BarrierIndex++)
+		for (std::size_t i = 0; i < numBufferBarriers; i++)
 		{
-			const BufferMemoryBarrier& BufferBarrier = bufferBarriers[BarrierIndex];
-			const Buffer& Buffer = BufferBarrier.buffer;
-
-			VkBufferMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
-			Barrier.srcAccessMask = VulkanDevice::GetAccessFlags(BufferBarrier.srcAccessMask);
-			Barrier.dstAccessMask = VulkanDevice::GetAccessFlags(BufferBarrier.dstAccessMask);
-			Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			Barrier.buffer = Buffer.GetHandle();
-			Barrier.offset = 0;
-			Barrier.size = Buffer.GetSize();
-
-			VulkanBufferBarriers.push_back(Barrier);
+			const VkBufferMemoryBarrier bufferBarrier = 
+			{ 
+				.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+				.srcAccessMask = VulkanDevice::GetAccessFlags(bufferBarriers[i].srcAccessMask),
+				.dstAccessMask = VulkanDevice::GetAccessFlags(bufferBarriers[i].dstAccessMask),
+				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.buffer = bufferBarriers[i].buffer,
+				.offset = 0,
+				.size = bufferBarriers[i].buffer.GetSize(),
+			};
+			
+			vulkanBufferBarriers.push_back(bufferBarrier);
 		}
 
-		std::vector<VkImageMemoryBarrier> VulkanImageBarriers;
-		VulkanImageBarriers.reserve(numImageBarriers);
+		std::vector<VkImageMemoryBarrier> vulkanImageBarriers;
+		vulkanImageBarriers.reserve(numImageBarriers);
 
-		for (std::size_t BarrierIndex = 0; BarrierIndex < numImageBarriers; BarrierIndex++)
+		for (std::size_t i = 0; i < numImageBarriers; i++)
 		{
-			const ImageMemoryBarrier& ImageBarrier = imageBarriers[BarrierIndex];
-			const gpu::Image& Image = ImageBarrier.image;
-
-			VkImageMemoryBarrier Barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-			Barrier.srcAccessMask = VulkanDevice::GetAccessFlags(ImageBarrier.srcAccessMask);
-			Barrier.dstAccessMask = VulkanDevice::GetAccessFlags(ImageBarrier.dstAccessMask);
-			Barrier.oldLayout = Image::GetLayout(ImageBarrier.oldLayout);
-			Barrier.newLayout = Image::GetLayout(ImageBarrier.newLayout);
-			Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			Barrier.image = Image;
-			Barrier.subresourceRange.aspectMask = Image.GetVulkanAspect();
-			Barrier.subresourceRange.baseMipLevel = ImageBarrier.baseMipLevel;
-			Barrier.subresourceRange.levelCount = ImageBarrier.levelCount;
-			Barrier.subresourceRange.baseArrayLayer = 0;
-			Barrier.subresourceRange.layerCount = Any(Image.GetUsage() & EImageUsage::Cubemap) ? 6 : 1;
-
-			VulkanImageBarriers.push_back(Barrier);
+			const VkImageMemoryBarrier imageBarrier = 
+			{ 
+				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+				.srcAccessMask = VulkanDevice::GetAccessFlags(imageBarriers[i].srcAccessMask),
+				.dstAccessMask = VulkanDevice::GetAccessFlags(imageBarriers[i].dstAccessMask),
+				.oldLayout = Image::GetLayout(imageBarriers[i].oldLayout),
+				.newLayout = Image::GetLayout(imageBarriers[i].newLayout),
+				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.image = imageBarriers[i].image,
+				.subresourceRange = 
+				{
+					.aspectMask = imageBarriers[i].image.GetVulkanAspect(),
+					.baseMipLevel = imageBarriers[i].baseMipLevel,
+					.levelCount = imageBarriers[i].levelCount,
+					.baseArrayLayer = 0,
+					.layerCount = Any(imageBarriers[i].image.GetUsage() & EImageUsage::Cubemap) ? 6u : 1u,
+				}
+			};
+			
+			vulkanImageBarriers.push_back(imageBarrier);
 		}
 
 		vkCmdPipelineBarrier(
@@ -210,8 +223,8 @@ namespace gpu
 			VulkanDevice::GetPipelineStageFlags(dstStageMask),
 			0,
 			0, nullptr,
-			static_cast<uint32>(VulkanBufferBarriers.size()), VulkanBufferBarriers.data(),
-			static_cast<uint32>(VulkanImageBarriers.size()), VulkanImageBarriers.data()
+			static_cast<uint32>(vulkanBufferBarriers.size()), vulkanBufferBarriers.data(),
+			static_cast<uint32>(vulkanImageBarriers.size()), vulkanImageBarriers.data()
 		);
 	}
 
@@ -222,55 +235,71 @@ namespace gpu
 		EImageLayout dstImageLayout
 	)
 	{
-		std::vector<VkBufferImageCopy> Regions;
+		std::vector<VkBufferImageCopy> regions;
 
 		if (Any(dstImage.GetUsage() & EImageUsage::Cubemap))
 		{
-			const uint32 FaceSize = dstImage.GetSize() / 6;
+			constexpr uint32 numFaces = 6;
 
-			Regions.resize(6, {});
+			regions.reserve(numFaces);
 
-			for (uint32 LayerIndex = 0; LayerIndex < Regions.size(); LayerIndex++)
+			const uint32 faceSize = dstImage.GetSize() / numFaces;
+
+			for (uint32 i = 0; i < numFaces; i++)
 			{
 				// VkImageSubresourceRange(3) Manual Page:
 				// "...the layers of the image view starting at baseArrayLayer correspond to faces in the order +X, -X, +Y, -Y, +Z, -Z"
-				VkBufferImageCopy& Region = Regions[LayerIndex];
-				Region.bufferOffset = LayerIndex * FaceSize;
-				Region.bufferRowLength = 0;
-				Region.bufferImageHeight = 0;
-				Region.imageSubresource.aspectMask = dstImage.GetVulkanAspect();
-				Region.imageSubresource.mipLevel = 0;
-				Region.imageSubresource.baseArrayLayer = LayerIndex;
-				Region.imageSubresource.layerCount = 1;
-				Region.imageOffset = { 0, 0, 0 };
-				Region.imageExtent = {
-					dstImage.GetWidth(),
-					dstImage.GetHeight(),
-					dstImage.GetDepth()
-				};
+				regions.push_back({
+					.bufferOffset = i * faceSize,
+					.bufferRowLength = 0,
+					.bufferImageHeight = 0,
+					.imageSubresource =
+					{
+						.aspectMask = dstImage.GetVulkanAspect(),
+						.mipLevel = 0,
+						.baseArrayLayer = i,
+						.layerCount = 1,
+					},
+					.imageOffset = { 0, 0, 0 },
+					.imageExtent = 
+					{
+						.width = dstImage.GetWidth(),
+						.height = dstImage.GetHeight(),
+						.depth = dstImage.GetDepth()
+					}
+				});
 			}
 		}
 		else
 		{
-			VkBufferImageCopy Region = {};
-			Region.bufferOffset = bufferOffset;
-			Region.bufferRowLength = 0;
-			Region.bufferImageHeight = 0;
-			Region.imageSubresource.aspectMask = dstImage.GetVulkanAspect();
-			Region.imageSubresource.mipLevel = 0;
-			Region.imageSubresource.baseArrayLayer = 0;
-			Region.imageSubresource.layerCount = 1;
-			Region.imageOffset = { 0, 0, 0 };
-			Region.imageExtent = {
-				dstImage.GetWidth(),
-				dstImage.GetHeight(),
-				dstImage.GetDepth()
-			};
-
-			Regions.push_back(Region);
+			regions.push_back({ 
+				.bufferOffset = bufferOffset,
+				.bufferRowLength = 0,
+				.bufferImageHeight = 0,
+				.imageSubresource =
+				{
+					.aspectMask = dstImage.GetVulkanAspect(),
+					.mipLevel = 0,
+					.baseArrayLayer = 0,
+					.layerCount = 1,
+				},
+				.imageOffset = { 0, 0, 0 },
+				.imageExtent =
+				{
+					.width = dstImage.GetWidth(),
+					.height = dstImage.GetHeight(),
+					.depth = dstImage.GetDepth()
+				}
+			});
 		}
 
-		vkCmdCopyBufferToImage(_CommandBuffer, srcBuffer.GetHandle(), dstImage, Image::GetLayout(dstImageLayout), static_cast<uint32>(Regions.size()), Regions.data());
+		vkCmdCopyBufferToImage(
+			_CommandBuffer, 
+			srcBuffer, 
+			dstImage, 
+			Image::GetLayout(dstImageLayout), 
+			static_cast<uint32>(regions.size()), regions.data()
+		);
 	}
 
 	void CommandList::BlitImage(
@@ -278,24 +307,27 @@ namespace gpu
 		EImageLayout srcImageLayout,
 		const Image& dstImage,
 		EImageLayout dstImageLayout,
-		EFilter filter
-	)
+		EFilter filter)
 	{
-		VkImageBlit Region = {};
-		Region.srcSubresource.aspectMask = srcImage.GetVulkanAspect();
-		Region.srcSubresource.mipLevel = 0;
-		Region.srcSubresource.baseArrayLayer = 0;
-		Region.srcSubresource.layerCount = 1;
-		Region.dstSubresource.aspectMask = dstImage.GetVulkanAspect();
-		Region.dstSubresource.mipLevel = 0;
-		Region.dstSubresource.baseArrayLayer = 0;
-		Region.dstSubresource.layerCount = 1;
-		Region.srcOffsets[1].x = srcImage.GetWidth();
-		Region.srcOffsets[1].y = srcImage.GetHeight();
-		Region.srcOffsets[1].z = 1;
-		Region.dstOffsets[1].x = dstImage.GetWidth();
-		Region.dstOffsets[1].y = dstImage.GetHeight();
-		Region.dstOffsets[1].z = 1;
+		VkImageBlit region = {};
+
+		region.srcSubresource.aspectMask = srcImage.GetVulkanAspect();
+		region.srcSubresource.mipLevel = 0;
+		region.srcSubresource.baseArrayLayer = 0;
+		region.srcSubresource.layerCount = 1;
+
+		region.srcOffsets[1].x = srcImage.GetWidth();
+		region.srcOffsets[1].y = srcImage.GetHeight();
+		region.srcOffsets[1].z = 1;
+
+		region.dstSubresource.aspectMask = dstImage.GetVulkanAspect();
+		region.dstSubresource.mipLevel = 0;
+		region.dstSubresource.baseArrayLayer = 0;
+		region.dstSubresource.layerCount = 1;
+
+		region.dstOffsets[1].x = dstImage.GetWidth();
+		region.dstOffsets[1].y = dstImage.GetHeight();
+		region.dstOffsets[1].z = 1;
 
 		vkCmdBlitImage(
 			_CommandBuffer,
@@ -304,7 +336,7 @@ namespace gpu
 			dstImage,
 			Image::GetLayout(dstImageLayout),
 			1,
-			&Region,
+			&region,
 			Image::GetVulkanFilter(filter)
 		);
 	}
@@ -320,8 +352,7 @@ namespace gpu
 		const Buffer& dstBuffer,
 		uint64 srcOffset,
 		uint64 dstOffset,
-		uint64 size
-	)
+		uint64 size)
 	{
 		const VkBufferCopy region =
 		{
@@ -330,7 +361,7 @@ namespace gpu
 			size
 		};
 
-		vkCmdCopyBuffer(_CommandBuffer, srcBuffer.GetHandle(), dstBuffer.GetHandle(), 1, &region);
+		vkCmdCopyBuffer(_CommandBuffer, srcBuffer, dstBuffer, 1, &region);
 	}
 
 	void CommandList::CopyImage(
@@ -338,24 +369,23 @@ namespace gpu
 		EImageLayout srcImageLayout,
 		const Image& dstImage,
 		EImageLayout dstImageLayout,
-		uint32 dstArrayLayer
-	)
+		uint32 dstArrayLayer)
 	{
-		VkImageCopy Region = {};
+		VkImageCopy region = {};
 
-		Region.srcSubresource.aspectMask = srcImage.GetVulkanAspect();
-		Region.srcSubresource.mipLevel = 0;
-		Region.srcSubresource.baseArrayLayer = 0;
-		Region.srcSubresource.layerCount = 1;
+		region.srcSubresource.aspectMask = srcImage.GetVulkanAspect();
+		region.srcSubresource.mipLevel = 0;
+		region.srcSubresource.baseArrayLayer = 0;
+		region.srcSubresource.layerCount = 1;
 
-		Region.dstSubresource.aspectMask = dstImage.GetVulkanAspect();
-		Region.dstSubresource.mipLevel = 0;
-		Region.dstSubresource.baseArrayLayer = dstArrayLayer;
-		Region.dstSubresource.layerCount = 1;
+		region.dstSubresource.aspectMask = dstImage.GetVulkanAspect();
+		region.dstSubresource.mipLevel = 0;
+		region.dstSubresource.baseArrayLayer = dstArrayLayer;
+		region.dstSubresource.layerCount = 1;
 
-		Region.extent.width = srcImage.GetWidth();
-		Region.extent.height = srcImage.GetHeight();
-		Region.extent.depth = 1;
+		region.extent.width = srcImage.GetWidth();
+		region.extent.height = srcImage.GetHeight();
+		region.extent.depth = 1;
 
 		vkCmdCopyImage(
 			_CommandBuffer,
@@ -364,7 +394,7 @@ namespace gpu
 			dstImage,
 			Image::GetLayout(dstImageLayout),
 			1,
-			&Region
+			&region
 		);
 	}
 };
