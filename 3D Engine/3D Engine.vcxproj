@@ -28,6 +28,7 @@
     <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_cfg.cpp" />
     <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_cross.cpp" />
     <ClCompile Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.cpp" />
+    <ClCompile Include="Components\Camera.cpp" />
     <ClCompile Include="Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="ECS\Entity.cpp" />
@@ -42,7 +43,6 @@
     <ClCompile Include="Engine\Skybox.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
     <ClCompile Include="Engine\Timers.cpp" />
-    <ClCompile Include="Engine\Camera.cpp" />
     <ClCompile Include="GPU\GPU.cpp" />
     <ClCompile Include="GPU\GPUResource.cpp" />
     <ClCompile Include="GPU\GPUShader.cpp" />
@@ -97,6 +97,7 @@
     <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_cross.hpp" />
     <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.hpp" />
     <ClInclude Include="..\ThirdParty\tiny_gltf.h" />
+    <ClInclude Include="Components\Camera.h" />
     <ClInclude Include="Components\Light.h" />
     <ClInclude Include="Components\RenderSettings.h" />
     <ClInclude Include="Components\SkyboxComponent.h" />
@@ -117,7 +118,6 @@
     <ClInclude Include="Engine\StaticMesh.h" />
     <ClInclude Include="Engine\Timers.h" />
     <ClInclude Include="Engine\Types.h" />
-    <ClInclude Include="Engine\Camera.h" />
     <ClInclude Include="GPU\GPU.h" />
     <ClInclude Include="GPU\GPUDefinitions.h" />
     <ClInclude Include="GPU\GPUResource.h" />

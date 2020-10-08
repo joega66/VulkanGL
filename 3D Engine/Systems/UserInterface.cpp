@@ -320,7 +320,19 @@ void UserInterface::ShowEntities(Engine& engine)
 			ImGui::SameLine();
 			ImGui::ImageButton(
 				&textureID,
-				ImVec2(64.0f, 64.0f));
+				ImVec2(64.0f, 64.0f)
+			);
+		}
+	});
+
+	SHOW_COMPONENT(Camera, ecs, entitySelected, [&] (auto& camera)
+	{
+		float fieldOfView = camera.GetFieldOfView();
+		ImGui::InputFloat("Field of view", &fieldOfView, 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue);
+		
+		if (fieldOfView != camera.GetFieldOfView())
+		{
+			camera.SetFieldOfView(fieldOfView);
 		}
 	});
 

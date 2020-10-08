@@ -14,7 +14,7 @@ public:
 		const glm::vec3& lookFrom = glm::vec3(0.0f),
 		const glm::vec3& lookAt = glm::vec3(0.0f),
 		const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f),
-		float fov = 45.0f
+		float fieldOfView = 45.0f
 	);
 
 	/** Get the width of the camera pixels. */
@@ -41,6 +41,9 @@ public:
 	/** Rotate the camera to look at the point. */
 	void LookAt(const glm::vec3& point);
 
+	/** Set the field-of-view. */
+	void SetFieldOfView(float degrees);
+
 	/** Get the World-to-View matrix. */
 	inline const glm::mat4& GetWorldToView() const { return _WorldToView; }
 	/** Get the View-to-Projective matrix. */
@@ -56,7 +59,7 @@ public:
 	/** Get the world up vector. */
 	inline const glm::vec3& GetWorldUp() const { return _WorldUp; }
 	/** Get the FOV. */
-	inline float GetFOV() const { return _Fov; }
+	inline float GetFieldOfView() const { return _FieldOfView; }
 	/** Get the combined clipping planes in model space. */
 	FrustumPlanes GetFrustumPlanes() const;
 	/** Get the near/far planes. */
@@ -92,8 +95,8 @@ private:
 	/** World up vector. */
 	glm::vec3 _WorldUp;
 
-	/** Camera FOV. */
-	float _Fov;
+	/** Camera FOV in degrees. */
+	float _FieldOfView;
 
 	/** Transforms points from view to clip space. */
 	glm::mat4 _ViewToClip;
@@ -108,4 +111,7 @@ private:
 	/** Previous state. */
 	glm::vec3 _PrevPosition = {};
 	glm::quat _PrevRotation = {};
+
+	/** Create the view-to-clip matrix from scratch. */
+	void CreateViewToClip();
 };

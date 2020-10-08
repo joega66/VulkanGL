@@ -137,9 +137,6 @@
     <ClInclude Include="Vulkan\VulkanSurface.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Camera.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Systems\RenderSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
@@ -272,6 +269,9 @@
     <ClInclude Include="Renderer\Surface.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Components\Camera.h">
+      <Filter>Source\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -351,9 +351,6 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanSurface.cpp">
       <Filter>Source\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Camera.cpp">
-      <Filter>Source\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCache.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -441,6 +438,9 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanBindlessDescriptors.cpp">
       <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\Camera.cpp">
+      <Filter>Source\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

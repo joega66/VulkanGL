@@ -1,5 +1,5 @@
 #include "SceneRenderer.h"
-#include <Engine/Camera.h>
+#include <Components/Camera.h>
 #include <ECS/EntityManager.h>
 #include <Components/SkyboxComponent.h>
 
@@ -46,7 +46,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 
 	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 
-	const float theta = glm::radians(camera.GetFOV());
+	const float theta = glm::radians(camera.GetFieldOfView());
 	const float h = glm::tan(theta / 2.0f);
 	const float viewportHeight = 2.0f * h;
 	const float viewportWidth = camera.GetAspectRatio() * viewportHeight;

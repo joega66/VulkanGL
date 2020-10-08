@@ -5,7 +5,7 @@
 #include <Components/Light.h>
 #include <Components/Transform.h>
 #include <Components/SkyboxComponent.h>
-#include <Engine/Camera.h>
+#include <Components/Camera.h>
 
 BEGIN_PUSH_CONSTANTS(LightingParams)
 	MEMBER(glm::vec4, _L)

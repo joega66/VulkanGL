@@ -1,6 +1,6 @@
 #include "CameraProxy.h"
 #include <Engine/Screen.h>
-#include <Engine/Camera.h>
+#include <Components/Camera.h>
 
 BEGIN_UNIFORM_BUFFER(CameraUniform)
 	MEMBER(glm::mat4, worldToView)
@@ -107,7 +107,7 @@ void CameraProxy::UpdateCameraUniform(const Camera& camera)
 		camera.GetPosition(),
 		0.0f,
 		camera.GetAspectRatio(),
-		camera.GetFOV(),
+		camera.GetFieldOfView(),
 		glm::vec2(camera.GetWidth(), camera.GetHeight()),
 		clipData,
 		0.0f,

@@ -224,7 +224,7 @@ namespace gpu
 		, _RenderPass(renderPass)
 		, _Framebuffer(framebuffer)
 		, _RenderArea(renderArea)
-		, _ClearValues(std::move(clearValues))
+		, _ClearValues(clearValues)
 		, _NumAttachments(numAttachments)
 	{
 	}
@@ -242,7 +242,7 @@ namespace gpu
 		, _RenderPass(std::exchange(other._RenderPass, nullptr))
 		, _Framebuffer(std::exchange(other._Framebuffer, nullptr))
 		, _RenderArea(other._RenderArea)
-		, _ClearValues(std::move(other._ClearValues))
+		, _ClearValues(other._ClearValues)
 		, _NumAttachments(other._NumAttachments)
 	{
 	}
@@ -253,7 +253,7 @@ namespace gpu
 		_RenderPass = std::exchange(other._RenderPass, nullptr);
 		_Framebuffer = std::exchange(other._Framebuffer, nullptr);
 		_RenderArea = other._RenderArea;
-		_ClearValues = std::move(other._ClearValues);
+		_ClearValues = other._ClearValues;
 		_NumAttachments = other._NumAttachments;
 		return *this;
 	}

@@ -1,15 +1,15 @@
 #include "Camera.h"
-#include "Screen.h"
+#include "Engine/Screen.h"
 
 Camera::Camera(
 	Screen& screen, 
 	const glm::vec3& lookFrom,
 	const glm::vec3& lookAt,
 	const glm::vec3& up, 
-	float fov)
+	float fieldOfView)
 	: _Position(lookFrom)
 	, _WorldUp(up)
-	, _Fov(fov)
+	, _FieldOfView(fieldOfView)
 	, _NearPlane(0.1f)
 	, _FarPlane(1000.0f)
 {
@@ -19,8 +19,7 @@ Camera::Camera(
 	{
 		_Width = width;
 		_Height = height;
-		_ViewToClip = glm::perspective(glm::radians(_Fov), static_cast<float>(_Width) / static_cast<float>(_Height), _NearPlane, _FarPlane);
-		_ViewToClip[1][1] *= -1;
+		CreateViewToClip();
 	});
 }
 
@@ -99,6 +98,12 @@ void Camera::LookAt(const glm::vec3& point)
 	_Rotation = glm::quat_cast(_WorldToView);
 }
 
+void Camera::SetFieldOfView(float degrees)
+{
+	_FieldOfView = degrees;
+	CreateViewToClip();
+}
+
 FrustumPlanes Camera::GetFrustumPlanes() const
 {
 	const glm::mat4 worldToClip = glm::transpose(GetWorldToClip());
@@ -119,4 +124,10 @@ void Camera::SaveState()
 	_PrevPosition = _Position;
 	_PrevRotation = _Rotation;
 	_PrevWorldToClip = GetWorldToClip();
+}
+
+void Camera::CreateViewToClip()
+{
+	_ViewToClip = glm::perspective(glm::radians(_FieldOfView), static_cast<float>(_Width) / static_cast<float>(_Height), _NearPlane, _FarPlane);
+	_ViewToClip[1][1] *= -1;
 }

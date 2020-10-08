@@ -2,7 +2,7 @@
 #include <Platform/Platform.h>
 #include <ECS/EntityManager.h>
 #include "AssetManager.h"
-#include "Camera.h"
+#include "Components/Camera.h"
 
 class Cursor;
 class Input;
