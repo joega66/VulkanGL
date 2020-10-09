@@ -1,5 +1,6 @@
 #pragma once
 #include <Platform/Platform.h>
+#include <variant>
 
 enum class EFormat
 {
@@ -159,12 +160,7 @@ struct ClearDepthStencilValue
 	uint32	stencilClear = 0;
 };
 
-struct ClearColorValue
-{
-	float	float32[4]	= { 0.0f, 0.0f, 0.0f, 0.0f };
-	int32	int32[4]	= { 0, 0, 0, 0 };
-	uint32	uint32[4]	= { 0, 0, 0, 0 };
-};
+using ClearColorValue = std::variant<std::array<float, 4>, std::array<int32, 4>, std::array<uint32, 4>>;
 
 enum class EImageLayout
 {

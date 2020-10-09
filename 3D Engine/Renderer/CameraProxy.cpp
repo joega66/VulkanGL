@@ -157,6 +157,7 @@ void CameraProxy::CreateSkyboxRP(gpu::Device& device)
 	rpDesc.dstStageMask = EPipelineStage::ComputeShader;
 	rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
 	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+
 	_SkyboxRP = device.CreateRenderPass(rpDesc);
 }
 

@@ -242,10 +242,22 @@ gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& rpDesc)
 
 	for (std::size_t i = 0; i < rpDesc.colorAttachments.size(); i++)
 	{
-		const auto& clearValue = rpDesc.colorAttachments[i].clearColor;
-		memcpy(clearValues[i].color.float32, clearValue.float32, sizeof(clearValue.float32));
-		memcpy(clearValues[i].color.int32, clearValue.int32, sizeof(clearValue.int32));
-		memcpy(clearValues[i].color.uint32, clearValue.uint32, sizeof(clearValue.uint32));
+		std::visit([&] (auto&& arg)
+		{
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, std::array<float, 4>>)
+			{
+				memcpy(clearValues[i].color.float32, arg.data(), sizeof(clearValues[i].color.float32));
+			}
+			else if constexpr (std::is_same_v<T, std::array<int32, 4>>)
+			{
+				memcpy(clearValues[i].color.int32, arg.data(), sizeof(clearValues[i].color.int32));
+			}
+			else if constexpr (std::is_same_v<T, std::array<uint32, 4>>)
+			{
+				memcpy(clearValues[i].color.uint32, arg.data(), sizeof(clearValues[i].color.uint32));
+			}
+		}, rpDesc.colorAttachments[i].clearColor);
 	}
 
 	if (rpDesc.depthAttachment.image)
