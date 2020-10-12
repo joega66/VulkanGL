@@ -186,12 +186,12 @@ void AssetManager::CreateDebugImages(gpu::Device& Device)
 	for (auto& Barrier : Barriers)
 	{
 		Barrier.srcAccessMask = EAccess::TransferWrite;
-		Barrier.dstAccessMask = EAccess::ShaderRead;
+		Barrier.dstAccessMask = EAccess::MemoryRead;
 		Barrier.oldLayout = EImageLayout::TransferDstOptimal;
 		Barrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, Barriers.size(), Barriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, Barriers.size(), Barriers.data());
 
 	Device.SubmitCommands(CmdList);
 }

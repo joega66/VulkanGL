@@ -111,7 +111,7 @@ void VulkanCompositor::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 		.pImageIndices = &imageIndex,
 	};
 	
-	const VkQueue presentQueue = _Device.GetQueues().GetPresentQueue();
+	const VkQueue presentQueue = _Device.GetQueues().GetQueue(EQueue::Present).queue;
 
 	if (const VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo); result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
@@ -197,14 +197,14 @@ void VulkanCompositor::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsa
 
 	const uint32 queueFamilyIndices[] = 
 	{ 
-		static_cast<uint32>(_Device.GetQueues().GetGraphicsIndex()),
-		static_cast<uint32>(_Device.GetQueues().GetPresentIndex())
+		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Graphics).queueFamilyIndex),
+		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Present).queueFamilyIndex)
 	};
 
 	if (queueFamilyIndices[0] != queueFamilyIndices[1])
 	{
 		swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-		swapchainInfo.queueFamilyIndexCount = 2;
+		swapchainInfo.queueFamilyIndexCount = static_cast<uint32>(std::size(queueFamilyIndices));
 		swapchainInfo.pQueueFamilyIndices = queueFamilyIndices;
 	}
 	else

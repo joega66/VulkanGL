@@ -64,18 +64,18 @@ Skybox::Skybox(gpu::Device& Device, const std::array<const gpu::Image*, 6>& Imag
 	for (auto& SrcImageBarrier : SrcImageBarriers)
 	{
 		SrcImageBarrier.srcAccessMask = EAccess::TransferRead;
-		SrcImageBarrier.dstAccessMask = EAccess::ShaderRead;
+		SrcImageBarrier.dstAccessMask = EAccess::MemoryRead;
 		SrcImageBarrier.oldLayout = EImageLayout::TransferSrcOptimal;
 		SrcImageBarrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 
 	DstImageBarrier.srcAccessMask = EAccess::TransferWrite;
-	DstImageBarrier.dstAccessMask = EAccess::ShaderRead;
+	DstImageBarrier.dstAccessMask = EAccess::MemoryRead;
 	DstImageBarrier.oldLayout = EImageLayout::TransferDstOptimal;
 	DstImageBarrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &DstImageBarrier);
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, SrcImageBarriers.size(), SrcImageBarriers.data());
+	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &DstImageBarrier);
 
 	Device.SubmitCommands(CmdList);
 }

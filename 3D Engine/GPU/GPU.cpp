@@ -13,11 +13,11 @@ void gpu::UploadImageData(gpu::Device& device, const void* srcPixels, const gpu:
 	cmdList.CopyBufferToImage(stagingBuffer, 0, dstImage, EImageLayout::TransferDstOptimal);
 
 	barrier.srcAccessMask = EAccess::TransferWrite;
-	barrier.dstAccessMask = EAccess::ShaderRead;
+	barrier.dstAccessMask = EAccess::MemoryRead;
 	barrier.oldLayout = EImageLayout::TransferDstOptimal;
 	barrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 
-	cmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::FragmentShader, 0, nullptr, 1, &barrier);
+	cmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, 1, &barrier);
 
 	device.SubmitCommands(cmdList);
 }

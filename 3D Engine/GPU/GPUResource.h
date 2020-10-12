@@ -665,4 +665,6 @@ enum class EQueue
 	Graphics,
 	Compute,
 	Transfer,
+	Present,
+	Num
 };

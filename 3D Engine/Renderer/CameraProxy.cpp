@@ -72,12 +72,12 @@ CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Compositor& c
 		for (auto& barrier : barriers)
 		{
 			barrier.srcAccessMask = EAccess::None;
-			barrier.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+			barrier.dstAccessMask = EAccess::MemoryRead | EAccess::MemoryWrite;
 			barrier.oldLayout = EImageLayout::Undefined;
 			barrier.newLayout = EImageLayout::General;
 		}
 
-		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, std::size(barriers), barriers);
+		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::TopOfPipe, 0, nullptr, std::size(barriers), barriers);
 
 		device.SubmitCommands(cmdList);
 	});

@@ -26,10 +26,10 @@ void VulkanDevice::SubmitCommands(gpu::CommandList& cmdList)
 
 gpu::CommandList VulkanDevice::CreateCommandList(EQueue queue)
 {
-	const VkQueueFlags queueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+	const VulkanQueue& vulkanQueue = _Queues.GetQueue(queue);
 
 	VkCommandBufferAllocateInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	commandBufferInfo.commandPool = _Queues.GetCommandPool(queueFlags);
+	commandBufferInfo.commandPool = vulkanQueue.commandPool;
 	commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferInfo.commandBufferCount = 1;
 
@@ -41,7 +41,7 @@ gpu::CommandList VulkanDevice::CreateCommandList(EQueue queue)
 
 	vulkan(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-	return gpu::CommandList(*this, _Queues.GetQueue(queueFlags), commandBufferInfo.commandPool, commandBuffer);
+	return gpu::CommandList(*this, vulkanQueue.queue, vulkanQueue.commandPool, commandBuffer);
 }
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
