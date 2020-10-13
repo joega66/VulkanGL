@@ -53,6 +53,8 @@ void Engine::Main()
 	{
 		_Platform.PollEvents();
 
+		_Screen.CallEvents();
+
 		_ECS.NotifyComponentEvents();
 
 		SystemsManager.UpdateSystems(*this);

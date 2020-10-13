@@ -1,6 +1,7 @@
 #pragma once
 #include <ECS/System.h>
 #include <GPU/GPU.h>
+#include <Engine/Screen.h>
 
 class Engine;
 
@@ -8,8 +9,10 @@ class Engine;
 class RenderSystem : public IRenderSystem
 {
 public:
-	virtual void Start(Engine& engine) override;
-	virtual void Update(Engine& engine) override;
+	void Start(Engine& engine) override;
+	void Update(Engine& engine) override;
+
+	std::shared_ptr<ScreenResizeEvent> _ScreenResizeEvent;
 
 	gpu::DescriptorSet _SurfaceSet;
 	gpu::Buffer _SurfaceBuffer;

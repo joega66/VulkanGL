@@ -31,12 +31,22 @@ void RenderSystem::Start(Engine& engine)
 
 	ecs.OnComponentCreated<Camera>([&] (Entity& entity, Camera& camera)
 	{
-		ecs.AddComponent(entity, CameraProxy(screen, device, compositor));
+		auto& renderCamera = ecs.AddComponent(entity, CameraProxy(device));
+		renderCamera.Resize(device, screen.GetWidth(), screen.GetHeight());
 	});
 
 	ecs.OnComponentCreated<DirectionalLight>([&] (Entity& entity, DirectionalLight& directionalLight)
 	{
 		ecs.AddComponent(entity, ShadowProxy(device, directionalLight));
+	});
+
+	_ScreenResizeEvent = screen.OnScreenResize([&] (uint32 width, uint32 height)
+	{
+		for (auto entity : ecs.GetEntities<CameraProxy>())
+		{
+			auto& renderCamera = ecs.GetComponent<CameraProxy>(entity);
+			renderCamera.Resize(device, width, height);
+		}
 	});
 }
 

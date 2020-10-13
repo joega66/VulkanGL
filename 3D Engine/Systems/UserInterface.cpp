@@ -77,7 +77,17 @@ void UserInterface::Start(Engine& engine)
 
 	ImGui::StyleColorsDark();
 
-	engine._ECS.AddSingletonComponent<ImGuiRenderData>(engine);
+	engine._ECS.AddSingletonComponent<ImGuiRenderData>(engine._Device, engine.ShaderLibrary);
+
+	_ScreenResizeEvent = engine._Screen.OnScreenResize([&] (int32 width, int32 height)
+	{
+		ImGuiIO& imgui = ImGui::GetIO();
+		imgui.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+
+		auto& renderData = engine._ECS.GetSingletonComponent<ImGuiRenderData>();
+		renderData.psoDesc.viewport.width = width;
+		renderData.psoDesc.viewport.height = height;
+	});
 }
 
 void UserInterface::Update(Engine& engine)
@@ -339,9 +349,8 @@ void UserInterface::ShowEntities(Engine& engine)
 	ImGui::End();
 }
 
-ImGuiRenderData::ImGuiRenderData(Engine& engine)
+ImGuiRenderData::ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary)
 {
-	gpu::Device& device = engine._Device;
 	ImGuiIO& imgui = ImGui::GetIO();
 
 	unsigned char* pixels;
@@ -358,8 +367,8 @@ ImGuiRenderData::ImGuiRenderData(Engine& engine)
 	psoDesc.depthStencilState.depthTestEnable = false;
 	psoDesc.depthStencilState.depthWriteEnable = false;
 	psoDesc.depthStencilState.depthCompareTest = ECompareOp::Always;
-	psoDesc.shaderStages.vertex = engine.ShaderLibrary.FindShader<UserInterfaceVS>();
-	psoDesc.shaderStages.fragment = engine.ShaderLibrary.FindShader<UserInterfaceFS>();
+	psoDesc.shaderStages.vertex = shaderLibrary.FindShader<UserInterfaceVS>();
+	psoDesc.shaderStages.fragment = shaderLibrary.FindShader<UserInterfaceFS>();
 	psoDesc.colorBlendAttachmentStates.resize(1, {});
 	psoDesc.colorBlendAttachmentStates[0].blendEnable = true;
 	psoDesc.colorBlendAttachmentStates[0].srcColorBlendFactor = EBlendFactor::SRC_ALPHA;
@@ -374,15 +383,6 @@ ImGuiRenderData::ImGuiRenderData(Engine& engine)
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
-
-	engine._Screen.OnScreenResize([this, &device] (int32 width, int32 height)
-	{
-		ImGuiIO& imgui = ImGui::GetIO();
-		imgui.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-
-		psoDesc.viewport.width = width;
-		psoDesc.viewport.height = height;
-	});
 }
 
 void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass)

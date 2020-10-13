@@ -1,5 +1,4 @@
 #include "CameraProxy.h"
-#include <Engine/Screen.h>
 #include <Components/Camera.h>
 
 BEGIN_UNIFORM_BUFFER(CameraUniform)
@@ -28,64 +27,63 @@ BEGIN_DESCRIPTOR_SET(CameraDescriptors)
 	DESCRIPTOR(gpu::StorageImage, _DirectLighting)
 END_DESCRIPTOR_SET(CameraDescriptors)
 
-CameraProxy::CameraProxy(Screen& screen, gpu::Device& device, gpu::Compositor& compositor)
+CameraProxy::CameraProxy(gpu::Device& device)
 {
 	_CameraDescriptorSet = device.CreateDescriptorSet<CameraDescriptors>();
-
 	_CameraUniformBuffer = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(CameraUniform));
-	
-	screen.OnScreenResize([this, &device, &compositor] (int32 width, int32 height)
-	{
-		_DirectLighting = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage);
-
-		_SceneColor = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
-		_SceneDepth = device.CreateImage(width, height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-
-		_GBuffer0 = device.CreateImage(width, height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
-		_GBuffer1 = device.CreateImage(width, height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
-		
-		_SSRHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
-		_SSGIHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
-
-		CreateGBufferRP(device);
-		CreateSkyboxRP(device);
-		CreateUserInterfaceRP(device, compositor);
-
-		const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
-
-		CameraDescriptors cameraDescriptors;
-		cameraDescriptors._CameraUniform = { _CameraUniformBuffer };
-		cameraDescriptors._SceneDepth = { _SceneDepth, sampler };
-		cameraDescriptors._GBuffer0 = { _GBuffer0, sampler };
-		cameraDescriptors._GBuffer1 = { _GBuffer1, sampler };
-		cameraDescriptors._SceneColor = _SceneColor;
-		cameraDescriptors._SSRHistory = _SSRHistory;
-		cameraDescriptors._SSGIHistory = _SSGIHistory;
-		cameraDescriptors._DirectLighting = _DirectLighting;
-		
-		device.UpdateDescriptorSet(_CameraDescriptorSet, cameraDescriptors);
-
-		gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
-		
-		ImageMemoryBarrier barriers[] = { { _SSRHistory }, { _SSGIHistory } };
-
-		for (auto& barrier : barriers)
-		{
-			barrier.srcAccessMask = EAccess::None;
-			barrier.dstAccessMask = EAccess::MemoryRead | EAccess::MemoryWrite;
-			barrier.oldLayout = EImageLayout::Undefined;
-			barrier.newLayout = EImageLayout::General;
-		}
-
-		cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::TopOfPipe, 0, nullptr, std::size(barriers), barriers);
-
-		device.SubmitCommands(cmdList);
-	});
 }
 
 void CameraProxy::Update(const Camera& camera)
 {
 	UpdateCameraUniform(camera);
+}
+
+void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
+{
+	_DirectLighting = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage);
+
+	_SceneColor = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage | EImageUsage::TransferDst);
+	_SceneDepth = device.CreateImage(width, height, 1, EFormat::D32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+
+	_GBuffer0 = device.CreateImage(width, height, 1, EFormat::R32G32B32A32_SFLOAT, EImageUsage::Attachment | EImageUsage::Sampled);
+	_GBuffer1 = device.CreateImage(width, height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Attachment | EImageUsage::Sampled);
+
+	_SSRHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
+	_SSGIHistory = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Storage);
+
+	CreateGBufferRP(device);
+
+	CreateSkyboxRP(device);
+
+	const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
+
+	CameraDescriptors cameraDescriptors;
+	cameraDescriptors._CameraUniform = { _CameraUniformBuffer };
+	cameraDescriptors._SceneDepth = { _SceneDepth, sampler };
+	cameraDescriptors._GBuffer0 = { _GBuffer0, sampler };
+	cameraDescriptors._GBuffer1 = { _GBuffer1, sampler };
+	cameraDescriptors._SceneColor = _SceneColor;
+	cameraDescriptors._SSRHistory = _SSRHistory;
+	cameraDescriptors._SSGIHistory = _SSGIHistory;
+	cameraDescriptors._DirectLighting = _DirectLighting;
+
+	device.UpdateDescriptorSet(_CameraDescriptorSet, cameraDescriptors);
+
+	gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
+
+	ImageMemoryBarrier barriers[] = { { _SSRHistory }, { _SSGIHistory } };
+
+	for (auto& barrier : barriers)
+	{
+		barrier.srcAccessMask = EAccess::None;
+		barrier.dstAccessMask = EAccess::MemoryRead | EAccess::MemoryWrite;
+		barrier.oldLayout = EImageLayout::Undefined;
+		barrier.newLayout = EImageLayout::General;
+	}
+
+	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::TopOfPipe, 0, nullptr, std::size(barriers), barriers);
+
+	device.SubmitCommands(cmdList);
 }
 
 void CameraProxy::UpdateCameraUniform(const Camera& camera)
@@ -121,8 +119,8 @@ void CameraProxy::CreateGBufferRP(gpu::Device& device)
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments =
 	{
-		AttachmentView(&_GBuffer0, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
-		AttachmentView(&_GBuffer1, ELoadAction::Clear, EStoreAction::Store, ClearColorValue{}, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
+		AttachmentView(&_GBuffer0, ELoadAction::Clear, EStoreAction::Store, std::array<float, 4>{ 0.0f }, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal),
+		AttachmentView(&_GBuffer1, ELoadAction::Clear, EStoreAction::Store, std::array<float, 4>{ 0.0f }, EImageLayout::Undefined, EImageLayout::ShaderReadOnlyOptimal)
 	};
 	rpDesc.depthAttachment = AttachmentView(
 		&_SceneDepth,
@@ -144,7 +142,7 @@ void CameraProxy::CreateSkyboxRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments.push_back(
-		AttachmentView(&_DirectLighting, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::General, EImageLayout::General));
+		AttachmentView(&_DirectLighting, ELoadAction::Load, EStoreAction::Store, std::array<float, 4>{ 0.0f }, EImageLayout::General, EImageLayout::General));
 	rpDesc.depthAttachment = AttachmentView(
 		&_SceneDepth,
 		ELoadAction::Load,
@@ -159,27 +157,4 @@ void CameraProxy::CreateSkyboxRP(gpu::Device& device)
 	rpDesc.dstAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
 
 	_SkyboxRP = device.CreateRenderPass(rpDesc);
-}
-
-void CameraProxy::CreateUserInterfaceRP(gpu::Device& device, gpu::Compositor& compositor)
-{
-	const auto& images = compositor.GetImages();
-
-	_UserInterfaceRP.clear();
-	_UserInterfaceRP.reserve(images.size());
-
-	for (const auto& image : images)
-	{
-		// After UI rendering, the image is ready for the present queue.
-		RenderPassDesc rpDesc = {};
-		rpDesc.colorAttachments.push_back(
-			AttachmentView(&image, ELoadAction::Load, EStoreAction::Store, ClearColorValue{}, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present));
-		rpDesc.renderArea.extent = { image.GetWidth(), image.GetHeight() };
-		rpDesc.srcStageMask = EPipelineStage::ComputeShader;
-		rpDesc.dstStageMask = EPipelineStage::ColorAttachmentOutput;
-		rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
-		rpDesc.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
-
-		_UserInterfaceRP.push_back(device.CreateRenderPass(rpDesc));
-	}
 }

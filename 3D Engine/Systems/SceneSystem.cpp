@@ -13,13 +13,21 @@ void SceneSystem::Start(Engine& engine)
 	// Create the camera.
 	auto cameraEntity = ecs.CreateEntity("Camera");
 	ecs.AddComponent(cameraEntity, Camera(
-		engine._Screen,
 		glm::vec3(Platform::GetFloat("Engine.ini", "Camera", "LookFromX", 0.0f),
 				  Platform::GetFloat("Engine.ini", "Camera", "LookFromY", 0.0f),
 				  Platform::GetFloat("Engine.ini", "Camera", "LookFromZ", 0.0f)),
 		glm::vec3(Platform::GetFloat("Engine.ini", "Camera", "LookAtX", 0.0f),
 				  Platform::GetFloat("Engine.ini", "Camera", "LookAtY", 0.0f),
 				  Platform::GetFloat("Engine.ini", "Camera", "LookAtZ", 0.0f))));
+
+	_ScreenResizeEvent = engine._Screen.OnScreenResize([&] (uint32 width, uint32 height)
+	{
+		for (auto entity : ecs.GetEntities<Camera>())
+		{
+			auto& camera = ecs.GetComponent<Camera>(entity);
+			camera.Resize(width, height);
+		}
+	});
 
 	// Load the scene.
 	const std::string scenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");

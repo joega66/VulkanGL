@@ -2,6 +2,7 @@
 #include <ECS/System.h>
 #include <ECS/Component.h>
 #include <GPU/GPU.h>
+#include <Engine/Screen.h>
 
 class Engine;
 class CameraProxy;
@@ -18,7 +19,7 @@ struct ImGuiRenderData : public Component
 
 	PipelineStateDesc psoDesc = {};
 
-	ImGuiRenderData(Engine& engine);
+	ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
 
 	void Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass);
 
@@ -30,10 +31,12 @@ class UserInterface : public IRenderSystem
 public:
 	~UserInterface();
 	
-	virtual void Start(Engine& engine) override;
-	virtual void Update(Engine& engine) override;
+	void Start(Engine& engine) override;
+	void Update(Engine& engine) override;
 
 private:
+	std::shared_ptr<ScreenResizeEvent> _ScreenResizeEvent;
+
 	void ShowUI(Engine& engine);
 	void ShowMainMenu(Engine& engine);
 	void ShowRenderSettings(Engine& engine);

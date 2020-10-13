@@ -1,5 +1,6 @@
 #pragma once
 #include <GPU/GPU.h>
+#include <Engine/Screen.h>
 #include "CameraProxy.h"
 
 class Engine;
@@ -20,6 +21,10 @@ private:
 	gpu::Compositor& _Compositor;
 	EntityManager& _ECS;
 	AssetManager& _Assets;
+
+	std::shared_ptr<ScreenResizeEvent> _ScreenResizeEvent;
+
+	std::vector<gpu::RenderPass> _UserInterfaceRP;
 
 	gpu::DescriptorSet _PostProcessingSet;
 

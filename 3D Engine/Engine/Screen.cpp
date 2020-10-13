@@ -1,37 +1,60 @@
 #include "Screen.h"
 #include <GLFW/glfw3.h>
 
-void Screen::GLFWScreenSizeChangedEvent(GLFWwindow* Window, int32 PixelWidth, int32 PixelHeight)
+void Screen::GLFWScreenSizeChangedEvent(GLFWwindow* window, int32 pixelWidth, int32 pixelHeight)
 {
-	const Screen* Screen = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Screen;
-	Screen->FireScreenResizeEvents(PixelWidth, PixelHeight);
+	Screen* screen = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->Screen;
+	screen->_IsDirty = true;
+	screen->_PixelWidth = pixelWidth;
+	screen->_PixelHeight = pixelHeight;
 }
 
-Screen::Screen(Platform& Platform)
-	: Window(Platform.Window)
+Screen::Screen(Platform& platform)
+	: _Window(platform.Window)
 {
-	glfwSetFramebufferSizeCallback(Window, GLFWScreenSizeChangedEvent);
+	glfwSetFramebufferSizeCallback(_Window, GLFWScreenSizeChangedEvent);
 
-	int32 PixelWidth, PixelHeight;
-	glfwGetFramebufferSize(Window, &PixelWidth, &PixelHeight);
+	int32 pixelWidth, pixelHeight;
+	glfwGetFramebufferSize(_Window, &pixelWidth, &pixelHeight);
 
-	FireScreenResizeEvents(PixelWidth, PixelHeight);
+	_PixelWidth = pixelWidth;
+	_PixelHeight = pixelHeight;
 }
 
-void Screen::OnScreenResize(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event)
+std::shared_ptr<ScreenResizeEvent> Screen::OnScreenResize(ScreenResizeEvent&& eventLambda)
 {
-	int32 PixelWidth, PixelHeight;
-	glfwGetFramebufferSize(Window, &PixelWidth, &PixelHeight);
+	int32 pixelWidth, pixelHeight;
+	glfwGetFramebufferSize(_Window, &pixelWidth, &pixelHeight);
 
-	Event(PixelWidth, PixelHeight);
+	auto event = std::make_shared<ScreenResizeEvent>(eventLambda);
 
-	ScreenResizeEvents.push_back(Event);
+	(*event)(pixelWidth, pixelHeight);
+
+	_ScreenResizeEvents.push_back(event);
+
+	return event;
 }
 
-void Screen::FireScreenResizeEvents(uint32 PixelWidth, uint32 PixelHeight) const
+void Screen::CallEvents()
 {
-	for (auto& Event : ScreenResizeEvents)
+	if (!_IsDirty)
 	{
-		Event(PixelWidth, PixelHeight);
+		return;
+	}
+
+	_IsDirty = false;
+
+	for (auto iter = _ScreenResizeEvents.begin(); iter != _ScreenResizeEvents.end();)
+	{
+		if (iter->expired())
+		{
+			iter = _ScreenResizeEvents.erase(iter);
+		}
+		else
+		{
+			auto event = iter->lock();
+			(*event)(_PixelWidth, _PixelHeight);
+			iter++;
+		}
 	}
 }

@@ -1,8 +1,6 @@
 #include "Camera.h"
-#include "Engine/Screen.h"
 
 Camera::Camera(
-	Screen& screen, 
 	const glm::vec3& lookFrom,
 	const glm::vec3& lookAt,
 	const glm::vec3& up, 
@@ -14,13 +12,13 @@ Camera::Camera(
 	, _FarPlane(1000.0f)
 {
 	LookAt(lookAt);
+}
 
-	screen.OnScreenResize([&] (uint32 width, uint32 height)
-	{
-		_Width = width;
-		_Height = height;
-		CreateViewToClip();
-	});
+void Camera::Resize(uint32 width, uint32 height)
+{
+	_Width = width;
+	_Height = height;
+	CreateViewToClip();
 }
 
 Ray Camera::ScreenPointToRay(const glm::vec2& screenPosition) const

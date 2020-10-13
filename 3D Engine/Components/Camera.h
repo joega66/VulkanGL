@@ -10,12 +10,14 @@ public:
 	bool bFreeze = false;
 
 	Camera(
-		class Screen& screen,
 		const glm::vec3& lookFrom = glm::vec3(0.0f),
 		const glm::vec3& lookAt = glm::vec3(0.0f),
 		const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f),
 		float fieldOfView = 45.0f
 	);
+
+	/** Resize the camera. */
+	void Resize(uint32 width, uint32 height);
 
 	/** Get the width of the camera pixels. */
 	inline uint32 GetWidth() const { return _Width; }

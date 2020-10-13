@@ -8,12 +8,11 @@ class Camera;
 class CameraProxy : public Component
 {
 public:
-	CameraProxy(Screen& screen, gpu::Device& device, gpu::Compositor& compositor);
+	CameraProxy(gpu::Device& device);
 
-	gpu::RenderPass _SkyboxRP;
 	gpu::RenderPass _GBufferRP;
-	std::vector<gpu::RenderPass> _UserInterfaceRP;
-	
+	gpu::RenderPass _SkyboxRP;
+
 	gpu::Buffer _CameraUniformBuffer;
 
 	gpu::Image _SceneDepth;
@@ -28,10 +27,12 @@ public:
 
 	void Update(const Camera& camera);
 
+	void Resize(gpu::Device& device, uint32 width, uint32 height);
+
 private:
 	void UpdateCameraUniform(const Camera& camera);
 
 	void CreateGBufferRP(gpu::Device& device);
+
 	void CreateSkyboxRP(gpu::Device& device);
-	void CreateUserInterfaceRP(gpu::Device& device, gpu::Compositor& swapchain);
 };

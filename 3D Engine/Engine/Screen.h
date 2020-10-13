@@ -2,25 +2,34 @@
 #include <Platform/Platform.h>
 #include <functional>
 
+using ScreenResizeEvent = std::function<void(uint32 pixelWidth, uint32 pixelHeight)>;
+
 /** Abstraction of GLFW window resize events. */
 class Screen
 {
 public:
 	/** Set GLFW screen resize callback. */
-	Screen(Platform& Platform);
+	Screen(Platform& platform);
 	
-	/** Set an event to be fired. */
-	void OnScreenResize(const std::function<void(int32 PixelWidth, int32 PixelHeight)>& Event);
+	/** Set a screen resize event. */
+	[[nodiscard]] std::shared_ptr<ScreenResizeEvent> OnScreenResize(ScreenResizeEvent&& eventLambda);
+
+	/** Call window resize events. */
+	void CallEvents();
+
+	inline uint32 GetWidth() const { return _PixelWidth; }
+	inline uint32 GetHeight() const { return _PixelHeight; }
 
 private:
-	struct GLFWwindow* Window;
+	struct GLFWwindow* _Window;
+
+	bool _IsDirty = false;
+	uint32 _PixelWidth;
+	uint32 _PixelHeight;
 
 	/** List of events to be fired. */
-	std::list<std::function<void(int32 PixelWidth, int32 PixelHeight)>> ScreenResizeEvents;
-
-	/** Fire all window resize events. */
-	void FireScreenResizeEvents(uint32 PixelWidth, uint32 PixelHeight) const;
+	std::list<std::weak_ptr<ScreenResizeEvent>> _ScreenResizeEvents;
 
 	/** The GLFW callback. */
-	static void GLFWScreenSizeChangedEvent(struct GLFWwindow* Window, int32 PixelWidth, int32 PixelHeight);
+	static void GLFWScreenSizeChangedEvent(struct GLFWwindow* window, int32 pixelWidth, int32 pixelHeight);
 };

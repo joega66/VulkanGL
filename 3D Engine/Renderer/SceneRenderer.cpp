@@ -1,6 +1,5 @@
 #include "SceneRenderer.h"
 #include <Engine/Engine.h>
-#include <Engine/Screen.h>
 #include <Components/RenderSettings.h>
 #include <Systems/UserInterface.h>
 #include "ShadowProxy.h"
@@ -13,9 +12,29 @@ SceneRenderer::SceneRenderer(Engine& engine)
 	, _ECS(engine._ECS)
 	, _Assets(engine.Assets)
 {
-	engine._Screen.OnScreenResize([this] (int32 width, int32 height)
+	_ScreenResizeEvent = engine._Screen.OnScreenResize([this] (int32 width, int32 height)
 	{
 		_Compositor.Resize(width, height, EImageUsage::Attachment | EImageUsage::Storage);
+
+		const auto& images = _Compositor.GetImages();
+
+		_UserInterfaceRP.clear();
+		_UserInterfaceRP.reserve(images.size());
+
+		for (const auto& image : images)
+		{
+			// After UI rendering, the image is ready for the present queue.
+			RenderPassDesc rpDesc = {};
+			rpDesc.colorAttachments.push_back(
+				AttachmentView(&image, ELoadAction::Load, EStoreAction::Store, std::array<float, 4>{ 0.0f }, EImageLayout::ColorAttachmentOptimal, EImageLayout::Present));
+			rpDesc.renderArea.extent = { image.GetWidth(), image.GetHeight() };
+			rpDesc.srcStageMask = EPipelineStage::ComputeShader;
+			rpDesc.dstStageMask = EPipelineStage::ColorAttachmentOutput;
+			rpDesc.srcAccessMask = EAccess::ShaderRead | EAccess::ShaderWrite;
+			rpDesc.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
+
+			_UserInterfaceRP.push_back(_Device.CreateRenderPass(rpDesc));
+		}
 	});
 
 	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
@@ -62,7 +81,7 @@ void SceneRenderer::Render()
 
 	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
 
-	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, camera._UserInterfaceRP[imageIndex]);
+	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, _UserInterfaceRP[imageIndex]);
 
 	_Compositor.Present(imageIndex, cmdList);
 
