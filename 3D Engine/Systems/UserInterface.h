@@ -4,9 +4,6 @@
 #include <GPU/GPU.h>
 #include <Engine/Screen.h>
 
-class Engine;
-class CameraProxy;
-
 struct ImGuiRenderData : public Component
 {
 	gpu::Image fontImage;

@@ -4,8 +4,6 @@
 #include <Engine/Screen.h>
 #include <filesystem>
 
-class Engine;
-
 struct SceneLoadRequest : public Component
 {
 	SceneLoadRequest(const std::filesystem::path& path, bool destroyOldEntities)
@@ -15,23 +13,17 @@ struct SceneLoadRequest : public Component
 
 	/** Path to the new scene. */
 	std::filesystem::path path;
-	/** Whether to destroy the old scene entities. */
+
+	/** Whether to destroy the old entities. */
 	bool destroyOldEntities = true;
 };
 
-/** 
-  * The scene system loads the initial scene from the .ini file and 
-  * handles requests to load new scene files.
-  */
 class SceneSystem : public ISystem
 {
-	SYSTEM(SceneSystem);
 public:
 	void Start(Engine& engine) override;
 	void Update(Engine& engine) override;
 
 private:
 	std::shared_ptr<ScreenResizeEvent> _ScreenResizeEvent;
-
-	void HandleSceneLoadRequest(Engine& engine, const SceneLoadRequest& sceneLoadRequest);
 };

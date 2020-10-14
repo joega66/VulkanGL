@@ -2,8 +2,10 @@
 #include <Renderer/CameraProxy.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/SceneSystem.h>
-#include <Systems/RenderSystem.h>
+#include <Systems/SurfaceSystem.h>
 #include <Systems/UserInterface.h>
+#include <Systems/CameraSystem.h>
+#include <Systems/ShadowSystem.h>
 #include <Engine/Screen.h>
 #include <Engine/Cursor.h>
 #include <Engine/Input.h>
@@ -34,8 +36,14 @@ void Engine::Main()
 
 	SystemsManager SystemsManager;
 
-	RenderSystem RenderSystem;
-	SystemsManager.Register(RenderSystem);
+	SurfaceSystem surfaceSystem;
+	SystemsManager.Register(surfaceSystem);
+
+	CameraSystem cameraSystem;
+	SystemsManager.Register(cameraSystem);
+
+	ShadowSystem shadowSystem;
+	SystemsManager.Register(shadowSystem);
 
 	EditorControllerSystem EditorControllerSystem;
 	SystemsManager.Register(EditorControllerSystem);

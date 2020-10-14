@@ -31,9 +31,3 @@ private:
 	std::vector<std::reference_wrapper<ISystem>> Systems;
 	std::vector<std::reference_wrapper<IRenderSystem>> RenderSystems;
 };
-
-#define SYSTEM(SystemName) \
-	public: \
-	SystemName& operator=(const SystemName&) = delete; \
-	SystemName(const SystemName&) = delete; \
-	SystemName() = default; \

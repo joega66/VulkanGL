@@ -1,12 +1,8 @@
-#include "RenderSystem.h"
+#include "SurfaceSystem.h"
 #include <Engine/Engine.h>
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
-#include <Components/Light.h>
-#include <Components/RenderSettings.h>
 #include <Renderer/Surface.h>
-#include <Renderer/ShadowProxy.h>
-#include <Renderer/CameraProxy.h>
 
 BEGIN_UNIFORM_BUFFER(LocalToWorldUniform)
 	MEMBER(glm::mat4, transform)
@@ -18,51 +14,16 @@ BEGIN_DESCRIPTOR_SET(StaticMeshDescriptors)
 	DESCRIPTOR(gpu::StorageBuffer, _LocalToWorldBuffer)
 END_DESCRIPTOR_SET(StaticMeshDescriptors)
 
-void RenderSystem::Start(Engine& engine)
+void SurfaceSystem::Start(Engine& engine)
 {
-	auto& ecs = engine._ECS;
 	auto& device = engine._Device;
-	auto& compositor = engine._Compositor;
-	auto& screen = engine._Screen;
-
-	ecs.AddSingletonComponent<RenderSettings>();
-
 	_SurfaceSet = device.CreateDescriptorSet<StaticMeshDescriptors>();
-
-	ecs.OnComponentCreated<Camera>([&] (Entity& entity, Camera& camera)
-	{
-		auto& renderCamera = ecs.AddComponent(entity, CameraProxy(device));
-		renderCamera.Resize(device, screen.GetWidth(), screen.GetHeight());
-	});
-
-	ecs.OnComponentCreated<DirectionalLight>([&] (Entity& entity, DirectionalLight& directionalLight)
-	{
-		ecs.AddComponent(entity, ShadowProxy(device, directionalLight));
-	});
-
-	_ScreenResizeEvent = screen.OnScreenResize([&] (uint32 width, uint32 height)
-	{
-		for (auto entity : ecs.GetEntities<CameraProxy>())
-		{
-			auto& renderCamera = ecs.GetComponent<CameraProxy>(entity);
-			renderCamera.Resize(device, width, height);
-		}
-	});
 }
 
-void RenderSystem::Update(Engine& engine)
+void SurfaceSystem::Update(Engine& engine)
 {
 	auto& ecs = engine._ECS;
 	auto& device = engine._Device;
-
-	for (auto entity : ecs.GetEntities<ShadowProxy>())
-	{
-		const auto& directionalLight = ecs.GetComponent<DirectionalLight>(entity);
-		const auto& transform = ecs.GetComponent<Transform>(entity);
-		auto& shadowProxy = ecs.GetComponent<ShadowProxy>(entity);
-		
-		shadowProxy.Update(device, directionalLight, transform);
-	}
 
 	for (auto entity : ecs.GetEntities<SurfaceGroup>())
 	{
@@ -95,13 +56,5 @@ void RenderSystem::Update(Engine& engine)
 		localToWorldUniformBuffer->inverseTranspose = glm::transpose(localToWorldUniformBuffer->inverse);
 
 		surfaceGroup.AddSurface(Surface(surfaceId++, staticMesh.Material, staticMesh.StaticMesh->Submeshes, boundingBox));
-	}
-
-	for (auto entity : ecs.GetEntities<Camera>())
-	{
-		auto& camera = ecs.GetComponent<Camera>(entity);
-		auto& cameraProxy = ecs.GetComponent<CameraProxy>(entity);
-
-		cameraProxy.Update(camera);
 	}
 }

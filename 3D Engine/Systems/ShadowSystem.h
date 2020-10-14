@@ -1,7 +1,7 @@
 #pragma once
 #include <ECS/System.h>
 
-class EditorControllerSystem : public ISystem
+class ShadowSystem : public IRenderSystem
 {
 public:
 	void Start(Engine& engine) override;

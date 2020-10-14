@@ -58,9 +58,11 @@
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
+    <ClCompile Include="Systems\CameraSystem.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\SceneSystem.cpp" />
-    <ClCompile Include="Systems\RenderSystem.cpp" />
+    <ClCompile Include="Systems\SurfaceSystem.cpp" />
+    <ClCompile Include="Systems\ShadowSystem.cpp" />
     <ClCompile Include="Systems\UserInterface.cpp" />
     <ClCompile Include="Vulkan\VulkanBindlessDescriptors.cpp" />
     <ClCompile Include="Vulkan\VulkanCommandList.cpp" />
@@ -131,9 +133,11 @@
     <ClInclude Include="Renderer\Surface.h" />
     <ClInclude Include="Renderer\CameraProxy.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
+    <ClInclude Include="Systems\CameraSystem.h" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
     <ClInclude Include="Systems\SceneSystem.h" />
-    <ClInclude Include="Systems\RenderSystem.h" />
+    <ClInclude Include="Systems\SurfaceSystem.h" />
+    <ClInclude Include="Systems\ShadowSystem.h" />
     <ClInclude Include="Systems\UserInterface.h" />
     <ClInclude Include="Vulkan\vk_mem_alloc.h" />
     <ClInclude Include="Vulkan\VulkanBindlessDescriptors.h" />

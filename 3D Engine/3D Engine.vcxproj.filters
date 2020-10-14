@@ -134,9 +134,6 @@
     <ClInclude Include="Vulkan\VulkanRenderPass.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Systems\RenderSystem.h">
-      <Filter>Source\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanCache.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -272,6 +269,15 @@
     <ClInclude Include="Vulkan\VulkanCompositor.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Systems\ShadowSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\CameraSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems\SurfaceSystem.h">
+      <Filter>Source\Systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -358,9 +364,6 @@
     <ClCompile Include="Vulkan\VulkanDevice.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Systems\RenderSystem.cpp">
-      <Filter>Source\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="..\ThirdParty\imgui\imgui.cpp">
       <Filter>ThirdParty\Imgui</Filter>
     </ClCompile>
@@ -441,6 +444,15 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanCompositor.cpp">
       <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\ShadowSystem.cpp">
+      <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\CameraSystem.cpp">
+      <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Systems\SurfaceSystem.cpp">
+      <Filter>Source\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

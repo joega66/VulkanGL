@@ -3,12 +3,15 @@
 #include <Components/Transform.h>
 #include <Components/Light.h>
 #include <Components/SkyboxComponent.h>
+#include <Components/RenderSettings.h>
 #include <Engine/Engine.h>
 #include <Engine/AssetManager.h>
 
 void SceneSystem::Start(Engine& engine)
 {
 	auto& ecs = engine._ECS;
+
+	ecs.AddSingletonComponent<RenderSettings>();
 
 	// Create the camera.
 	auto cameraEntity = ecs.CreateEntity("Camera");
@@ -29,11 +32,8 @@ void SceneSystem::Start(Engine& engine)
 		}
 	});
 
-	// Load the scene.
-	const std::string scenePath = Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf");
-	const SceneLoadRequest sceneLoadReq(scenePath, false);
-
-	HandleSceneLoadRequest(engine, sceneLoadReq);
+	auto sceneLoadEntity = ecs.CreateEntity();
+	ecs.AddComponent(sceneLoadEntity, SceneLoadRequest(Platform::GetString("Engine.ini", "Scene", "Path", "../Assets/Meshes/Sponza/Sponza.gltf"), false));
 
 	// Create the directional light.
 	auto lightEntity = ecs.CreateEntity("DirectionalLight");
@@ -48,13 +48,11 @@ void SceneSystem::Start(Engine& engine)
 	const float y = Platform::GetFloat("Engine.ini", "DirectionalLight", "Y", 1.0f);
 	const float z = Platform::GetFloat("Engine.ini", "DirectionalLight", "Z", 1.0f);
 
-	auto& transform = ecs.AddComponent(lightEntity, Transform(ecs, lightEntity, glm::vec3(0), glm::radians(glm::vec3(x, y, z))));
+	ecs.AddComponent(lightEntity, Transform(ecs, lightEntity, glm::vec3(0), glm::radians(glm::vec3(x, y, z))));
 
 	// Create the skybox.
-	const std::string skyboxPath = Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/");
-	Skybox* skybox = engine.Assets.LoadSkybox("Default_Skybox", skyboxPath);
-
 	auto skyboxEntity = ecs.CreateEntity("Skybox");
+	Skybox* skybox = engine.Assets.LoadSkybox("Default_Skybox", Platform::GetString("Engine.ini", "Scene", "Skybox", "../Assets/Cube_Maps/White_Cliff_Top/"));
 	ecs.AddComponent(skyboxEntity, SkyboxComponent(skybox));
 }
 
@@ -64,33 +62,29 @@ void SceneSystem::Update(Engine& engine)
 
 	for (auto& entity : ecs.GetEntities<SceneLoadRequest>())
 	{
-		auto& sceneLoadReq = ecs.GetComponent<SceneLoadRequest>(entity);
-		HandleSceneLoadRequest(engine, sceneLoadReq);
-		ecs.Destroy(entity);
-	}
-}
-
-void SceneSystem::HandleSceneLoadRequest(Engine& engine, const SceneLoadRequest& sceneLoadRequest)
-{
-	auto& ecs = engine._ECS;
-
-	if (sceneLoadRequest.destroyOldEntities)
-	{
-		for (auto& entity : ecs.GetEntities<StaticMeshComponent>())
+		const auto& sceneLoadRequest = ecs.GetComponent<SceneLoadRequest>(entity);
+		
+		if (sceneLoadRequest.destroyOldEntities)
 		{
-			ecs.Destroy(entity);
+			for (auto& entity : ecs.GetEntities<StaticMeshComponent>())
+			{
+				ecs.Destroy(entity);
+			}
 		}
-	}
 
-	const std::vector<const StaticMesh*> scene = engine.Assets.LoadStaticMesh(sceneLoadRequest.path, true);
-	const float scale = Platform::GetFloat("Engine.ini", "Scene", "Scale", 0.1f);
+		const std::vector<const StaticMesh*> scene = engine.Assets.LoadStaticMesh(sceneLoadRequest.path, true);
 
-	for (auto staticMesh : scene)
-	{
-		auto entity = ecs.CreateEntity(staticMesh->Name.c_str());
-		ecs.AddComponent(entity, StaticMeshComponent(staticMesh, staticMesh->Materials.front()));
+		const float scale = Platform::GetFloat("Engine.ini", "Scene", "Scale", 0.1f);
 
-		auto& transform = ecs.GetComponent<Transform>(entity);
-		transform.Scale(ecs, glm::vec3(scale));
+		for (auto staticMesh : scene)
+		{
+			auto entity = ecs.CreateEntity(staticMesh->Name.c_str());
+			ecs.AddComponent(entity, StaticMeshComponent(staticMesh, staticMesh->Materials.front()));
+
+			auto& transform = ecs.GetComponent<Transform>(entity);
+			transform.Scale(ecs, glm::vec3(scale));
+		}
+
+		ecs.Destroy(entity);
 	}
 }

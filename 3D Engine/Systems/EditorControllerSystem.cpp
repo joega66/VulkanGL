@@ -17,8 +17,8 @@ void EditorControllerSystem::Update(Engine& engine)
 		return;
 	}
 	
-	Cursor& cursor = engine._Cursor;
-	Input& input = engine._Input;
+	auto& cursor = engine._Cursor;
+	auto& input = engine._Input;
 	auto& ecs = engine._ECS;
 
 	for (auto entity : ecs.GetEntities<Camera>())
