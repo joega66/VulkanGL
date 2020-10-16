@@ -1,10 +1,11 @@
 #include "VulkanCache.h"
+#include "VulkanInstance.h"
 #include "VulkanDevice.h"
 
 VulkanCache::VulkanCache(VulkanDevice& Device)
 	: Device(Device)
-	, p_vkUpdateDescriptorSetWithTemplateKHR((PFN_vkUpdateDescriptorSetWithTemplateKHR)
-		vkGetInstanceProcAddr(Device.GetInstance(), "vkUpdateDescriptorSetWithTemplateKHR"))
+	, p_vkUpdateDescriptorSetWithTemplateKHR(reinterpret_cast<PFN_vkUpdateDescriptorSetWithTemplateKHR>
+		(vkGetInstanceProcAddr(Device.GetInstance(), "vkUpdateDescriptorSetWithTemplateKHR")))
 {
 }
 
@@ -45,8 +46,7 @@ VulkanCache::~VulkanCache()
 		vkDestroyRenderPass(Device, RenderPass, nullptr);
 	}
 
-	PFN_vkDestroyDescriptorUpdateTemplateKHR p_vkDestroyDescriptorUpdateTemplateKHR = 
-		(PFN_vkDestroyDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR");
+	auto p_vkDestroyDescriptorUpdateTemplateKHR = reinterpret_cast<PFN_vkDestroyDescriptorUpdateTemplateKHR>(vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR"));
 
 	for (const auto&[Crc, SetLayoutPair] : SetLayoutCache)
 	{

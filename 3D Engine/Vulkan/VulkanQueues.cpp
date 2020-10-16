@@ -1,6 +1,7 @@
 #include "VulkanQueues.h"
-#include <Vulkan/VulkanDevice.h>
-#include <Vulkan/VulkanCommandList.h>
+#include "VulkanPhysicalDevice.h"
+#include "VulkanDevice.h"
+#include "VulkanCommandList.h"
 
 VulkanQueues::VulkanQueues(VulkanDevice& device)
 {
@@ -31,23 +32,6 @@ VulkanQueues::VulkanQueues(VulkanDevice& device)
 	_Queues[(std::size_t)EQueue::Graphics]._QueueFamilyIndex = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 
 	_Queues[(std::size_t)EQueue::Transfer]._QueueFamilyIndex = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
-
-	if (device.GetSurface() != nullptr)
-	{
-		for (uint32 queueFamilyIndex = 0; queueFamilyIndex < queueFamilies.size(); queueFamilyIndex++)
-		{
-			VkBool32 hasPresentSupport = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device.GetPhysicalDevice(), queueFamilyIndex, device.GetSurface(), &hasPresentSupport);
-
-			if (hasPresentSupport)
-			{
-				_Queues[(std::size_t)EQueue::Present]._QueueFamilyIndex = queueFamilyIndex;
-				break;
-			}
-		}
-
-		check(_Queues[(std::size_t)EQueue::Present]._QueueFamilyIndex != -1, "No present family index found!!");
-	}
 
 	// If no transfer queue was found, use the graphics queue.
 	if (_Queues[(std::size_t)EQueue::Transfer]._QueueFamilyIndex == -1)

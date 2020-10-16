@@ -1,4 +1,5 @@
 #include "VulkanDescriptors.h"
+#include "VulkanInstance.h"
 #include "VulkanDevice.h"
 
 std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> VulkanCache::GetDescriptorSetLayout(
@@ -26,8 +27,7 @@ std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> VulkanCache::GetDes
 	descriptorUpdateTemplateInfo.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET;
 	descriptorUpdateTemplateInfo.descriptorSetLayout = descriptorSetLayout;
 
-	PFN_vkCreateDescriptorUpdateTemplateKHR p_vkCreateDescriptorUpdateTemplateKHR = 
-		(PFN_vkCreateDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkCreateDescriptorUpdateTemplateKHR");
+	auto p_vkCreateDescriptorUpdateTemplateKHR = (PFN_vkCreateDescriptorUpdateTemplateKHR)vkGetInstanceProcAddr(Device.GetInstance(), "vkCreateDescriptorUpdateTemplateKHR");
 
 	VkDescriptorUpdateTemplate descriptorUpdateTemplate;
 	p_vkCreateDescriptorUpdateTemplateKHR(Device, &descriptorUpdateTemplateInfo, nullptr, &descriptorUpdateTemplate);

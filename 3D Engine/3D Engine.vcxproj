@@ -72,6 +72,8 @@
     <ClCompile Include="Vulkan\VulkanDevice.cpp" />
     <ClCompile Include="Vulkan\VulkanImage.cpp" />
     <ClCompile Include="Vulkan\VulkanBuffer.cpp" />
+    <ClCompile Include="Vulkan\VulkanInstance.cpp" />
+    <ClCompile Include="Vulkan\VulkanPhysicalDevice.cpp" />
     <ClCompile Include="Vulkan\VulkanPipeline.cpp" />
     <ClCompile Include="Vulkan\VulkanQueues.cpp" />
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp" />
@@ -147,6 +149,8 @@
     <ClInclude Include="Vulkan\VulkanDevice.h" />
     <ClInclude Include="Vulkan\VulkanImage.h" />
     <ClInclude Include="Vulkan\VulkanBuffer.h" />
+    <ClInclude Include="Vulkan\VulkanInstance.h" />
+    <ClInclude Include="Vulkan\VulkanPhysicalDevice.h" />
     <ClInclude Include="Vulkan\VulkanPipeline.h" />
     <ClInclude Include="Vulkan\VulkanQueues.h" />
     <ClInclude Include="Vulkan\VulkanRenderPass.h" />

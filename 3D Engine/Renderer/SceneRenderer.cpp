@@ -14,7 +14,7 @@ SceneRenderer::SceneRenderer(Engine& engine)
 {
 	_ScreenResizeEvent = engine._Screen.OnScreenResize([this] (int32 width, int32 height)
 	{
-		_Compositor.Resize(width, height, EImageUsage::Attachment | EImageUsage::Storage);
+		_Compositor.Resize(_Device, width, height, EImageUsage::Attachment | EImageUsage::Storage);
 
 		const auto& images = _Compositor.GetImages();
 
@@ -66,7 +66,7 @@ void SceneRenderer::Render()
 		ComputeSSGI(view, camera, cmdList);
 	}
 
-	const uint32 imageIndex = _Compositor.AcquireNextImage();
+	const uint32 imageIndex = _Compositor.AcquireNextImage(_Device);
 	const gpu::Image& displayImage = _Compositor.GetImages()[imageIndex];
 	ImageMemoryBarrier barrier{ displayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
@@ -83,7 +83,7 @@ void SceneRenderer::Render()
 
 	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, _UserInterfaceRP[imageIndex]);
 
-	_Compositor.Present(imageIndex, cmdList);
+	_Compositor.Present(_Device, imageIndex, cmdList);
 
 	_Device.EndFrame();
 }

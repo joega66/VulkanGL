@@ -278,6 +278,12 @@
     <ClInclude Include="Systems\SurfaceSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanInstance.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\VulkanPhysicalDevice.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -453,6 +459,12 @@
     </ClCompile>
     <ClCompile Include="Systems\SurfaceSystem.cpp">
       <Filter>Source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanInstance.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanPhysicalDevice.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

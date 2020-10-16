@@ -1,4 +1,6 @@
 #include <Engine/Engine.h>
+#include <Vulkan/VulkanInstance.h>
+#include <Vulkan/VulkanPhysicalDevice.h>
 #include <Vulkan/VulkanDevice.h>
 #include <Vulkan/VulkanShaderLibrary.h>
 #include <Vulkan/VulkanCompositor.h>
@@ -9,28 +11,26 @@
 
 int main(int argc, char* argv[])
 {
-	Platform Platform(
-		Platform::GetInt("Engine.ini", "Renderer", "WindowSizeX", 720), 
+	Platform platform(
+		Platform::GetInt("Engine.ini", "Renderer", "WindowSizeX", 720),
 		Platform::GetInt("Engine.ini", "Renderer", "WindowSizeY", 720)
 	);
 
-	Cursor Cursor(Platform);
-	Input Input(Platform);
-	Screen Screen(Platform);
+	Cursor cursor(platform);
+	Input input(platform);
+	Screen screen(platform);
 
-	GLFWWindowUserPointer WindowUserPointer{ &Cursor, &Input, &Screen };
-	glfwSetWindowUserPointer(Platform.Window, &WindowUserPointer);
-	
-	DeviceDesc deviceDesc = {};
-	deviceDesc.windowHandle = Platform.GetWindow();
-	deviceDesc.enableValidationLayers = Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false);
+	GLFWWindowUserPointer windowUserPointer{ &cursor, &input, &screen };
+	glfwSetWindowUserPointer(platform.Window, &windowUserPointer);
 
-	std::unique_ptr<VulkanDevice> Device = std::make_unique<VulkanDevice>(deviceDesc);
-	std::unique_ptr<VulkanCompositor> compositor = std::make_unique<VulkanCompositor>(*Device);
-	std::unique_ptr<VulkanShaderLibrary> ShaderLibrary = std::make_unique<VulkanShaderLibrary>(*Device);
+	VulkanInstance instance(Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false));
+	VulkanPhysicalDevice physicalDevice(instance);
+	VulkanCompositor compositor(instance, physicalDevice, platform.GetWindow());
+	VulkanDevice device(instance, physicalDevice, { compositor.GetPresentIndex() });
+	VulkanShaderLibrary shaderLibrary(device);
 
-	Engine Engine(Platform, Cursor, Input, Screen, *Device, *ShaderLibrary, *compositor);
-	Engine.Main();
+	Engine engine(platform, cursor, input, screen, device, shaderLibrary, compositor);
+	engine.Main();
 
 	return 0;
 }

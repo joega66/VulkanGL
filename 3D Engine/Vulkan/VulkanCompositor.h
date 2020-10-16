@@ -2,37 +2,43 @@
 #include <GPU/GPU.h>
 #include "VulkanImage.h"
 
+class VulkanInstance;
+class VulkanPhysicalDevice;
+
 class VulkanCompositor : public gpu::Compositor
 {
 public:
-	VulkanCompositor(VulkanDevice& device);
+	VulkanCompositor(VulkanInstance& instance, VulkanPhysicalDevice& physicalDevice, void* windowHandle);
 
 	/** Get the next image index. */
-	uint32 AcquireNextImage() override;
+	uint32 AcquireNextImage(gpu::Device& device) override;
 
 	/** Present the image to the display engine. */
-	void Present(uint32 imageIndex, gpu::CommandList& cmdList) override;
+	void Present(gpu::Device& device, uint32 imageIndex, gpu::CommandList& cmdList) override;
 
 	/** Create a new swapchain (if within surface capabilities.) */
-	void Resize(uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) override;
+	void Resize(gpu::Device& device, uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) override;
 
 	/** Get all images in the swapchain. */
 	const std::vector<gpu::Image>& GetImages() override;
-
+	
 	inline VkSurfaceFormatKHR GetFormat() const { return _SurfaceFormat; }
 	inline VkPresentModeKHR GetPresentMode() const { return _PresentMode; }
+	inline uint32 GetPresentIndex() const { return _PresentIndex; }
 
 private:
-	VulkanDevice& _Device;
+	VkSurfaceKHR _Surface;
+
+	uint32 _PresentIndex = -1;
+
+	VkQueue _PresentQueue = VK_NULL_HANDLE;
 
 	VkSurfaceFormatKHR _SurfaceFormat;
 
 	VkPresentModeKHR _PresentMode;
 
-	/** The swapchain. */
-	VkSwapchainKHR _Swapchain = VK_NULL_HANDLE;
+	VkSwapchainKHR _Swapchain;
 
-	/** Swapchain images. */
 	std::vector<gpu::Image> _Images;
 
 	/** @todo Move me to the SceneRenderer. */

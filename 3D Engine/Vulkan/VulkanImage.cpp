@@ -1,4 +1,5 @@
 #include "VulkanImage.h"
+#include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
 #include <unordered_set>
 
@@ -327,8 +328,8 @@ namespace gpu
 		samplerInfo.addressModeU = sam;
 		samplerInfo.addressModeV = sam;
 		samplerInfo.addressModeW = sam;
-		samplerInfo.anisotropyEnable = device.GetFeatures().samplerAnisotropy;
-		samplerInfo.maxAnisotropy = device.GetFeatures().samplerAnisotropy ? device.GetProperties().limits.maxSamplerAnisotropy : 1.0f;
+		samplerInfo.anisotropyEnable = device.GetPhysicalDevice().GetFeatures().samplerAnisotropy;
+		samplerInfo.maxAnisotropy = device.GetPhysicalDevice().GetFeatures().samplerAnisotropy ? device.GetPhysicalDevice().GetProperties().limits.maxSamplerAnisotropy : 1.0f;
 		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		samplerInfo.compareEnable = VK_FALSE;

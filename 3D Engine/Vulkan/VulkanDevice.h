@@ -7,10 +7,13 @@
 #include "VulkanBindlessDescriptors.h"
 #include "vk_mem_alloc.h"
 
+class VulkanInstance;
+class VulkanPhysicalDevice;
+
 class VulkanDevice final : public gpu::Device
 {
 public:
-	VulkanDevice(const DeviceDesc& deviceDesc);
+	VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physicalDevice, std::vector<uint32> queueFamilyIndices);
 
 	~VulkanDevice() override {}
 
@@ -57,11 +60,8 @@ public:
 
 	operator VkDevice() const { return _Device; }
 
-	inline const VkPhysicalDevice& GetPhysicalDevice() const { return _PhysicalDevice; }
-	inline const VkInstance& GetInstance() const { return _Instance; }
-	inline VkSurfaceKHR GetSurface() const { return _Surface; }
-	inline const VkPhysicalDeviceProperties& GetProperties() const { return _PhysicalDeviceProperties; }
-	inline const VkPhysicalDeviceFeatures& GetFeatures() const { return _PhysicalDeviceFeatures; }
+	inline VulkanInstance& GetInstance() { return _Instance; }
+	inline const VulkanPhysicalDevice& GetPhysicalDevice() const { return _PhysicalDevice; }
 	inline VulkanCache& GetCache() { return _VulkanCache; }
 	inline VulkanQueues& GetQueues() { return _Queues; }
 	inline gpu::DescriptorPoolManager& GetDescriptorPoolManager() { return _DescriptorPoolManager; }
@@ -80,22 +80,16 @@ public:
 
 	static const char* GetErrorString(VkResult result);
 
+	static const std::vector<const char*>& GetRequiredExtensions();
+
 private:
-	VkInstance _Instance;
+	VulkanInstance& _Instance;
 
-	VkDebugReportCallbackEXT _DebugReportCallback;
-
-	VkPhysicalDevice _PhysicalDevice;
-
-	VkSurfaceKHR _Surface;
-
+	VulkanPhysicalDevice& _PhysicalDevice;
+	
 	VulkanQueues _Queues;
 
 	VmaAllocator _Allocator;
-
-	VkPhysicalDeviceProperties _PhysicalDeviceProperties;
-
-	VkPhysicalDeviceFeatures _PhysicalDeviceFeatures;
 
 	VulkanCache _VulkanCache;
 
