@@ -157,15 +157,15 @@ void AssetManager::CreateDebugImages(gpu::Device& Device)
 		0, 0, 0, 0, // Black
 	};
 
-	gpu::Buffer StagingBuffer = Device.CreateBuffer({}, EMemoryUsage::CPU_ONLY, Colors.size(), Colors.data());
+	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+
+	auto StagingBuffer = CmdList.CreateStagingBuffer(Colors.size(), Colors.data());
 
 	AssetManager::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 	AssetManager::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-
-	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> Barriers
 	{
@@ -180,7 +180,7 @@ void AssetManager::CreateDebugImages(gpu::Device& Device)
 
 	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
 	{
-		CmdList.CopyBufferToImage(StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].image, EImageLayout::TransferDstOptimal);
+		CmdList.CopyBufferToImage(*StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].image, EImageLayout::TransferDstOptimal);
 	}
 
 	for (auto& Barrier : Barriers)

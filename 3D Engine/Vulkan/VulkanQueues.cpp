@@ -1,5 +1,6 @@
 #include "VulkanQueues.h"
 #include <Vulkan/VulkanDevice.h>
+#include <Vulkan/VulkanCommandList.h>
 
 VulkanQueues::VulkanQueues(VulkanDevice& device)
 {
@@ -9,13 +10,11 @@ VulkanQueues::VulkanQueues(VulkanDevice& device)
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device.GetPhysicalDevice(), &queueFamilyCount, queueFamilies.data());
 
-	std::vector<VkQueueFamilyProperties> unusedQueueFamilies = queueFamilies;
-
-	auto GetQueueFamilyIndex = [&] (VkQueueFlags queueFlags)
+	auto GetQueueFamilyIndex = [&queueFamilies] (VkQueueFlags queueFlags)
 	{
 		int32 queueFamilyIndex = 0;
 
-		for (auto& queueFamily : unusedQueueFamilies)
+		for (auto& queueFamily : queueFamilies)
 		{
 			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & queueFlags)
 			{
@@ -29,33 +28,31 @@ VulkanQueues::VulkanQueues(VulkanDevice& device)
 		return -1;
 	};
 
-	_Queues[(std::size_t)EQueue::Graphics].queueFamilyIndex = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	_Queues[(std::size_t)EQueue::Graphics]._QueueFamilyIndex = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 
-	_Queues[(std::size_t)EQueue::Transfer].queueFamilyIndex = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+	_Queues[(std::size_t)EQueue::Transfer]._QueueFamilyIndex = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
 
 	if (device.GetSurface() != nullptr)
 	{
 		for (uint32 queueFamilyIndex = 0; queueFamilyIndex < queueFamilies.size(); queueFamilyIndex++)
 		{
-			const VkQueueFamilyProperties& queueFamily = queueFamilies[queueFamilyIndex];
-
 			VkBool32 hasPresentSupport = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device.GetPhysicalDevice(), queueFamilyIndex, device.GetSurface(), &hasPresentSupport);
 
 			if (hasPresentSupport)
 			{
-				_Queues[(std::size_t)EQueue::Present].queueFamilyIndex = queueFamilyIndex;
+				_Queues[(std::size_t)EQueue::Present]._QueueFamilyIndex = queueFamilyIndex;
 				break;
 			}
 		}
 
-		check(_Queues[(std::size_t)EQueue::Present].queueFamilyIndex != -1, "No present family index found!!");
+		check(_Queues[(std::size_t)EQueue::Present]._QueueFamilyIndex != -1, "No present family index found!!");
 	}
 
 	// If no transfer queue was found, use the graphics queue.
-	if (_Queues[(std::size_t)EQueue::Transfer].queueFamilyIndex == -1)
+	if (_Queues[(std::size_t)EQueue::Transfer]._QueueFamilyIndex == -1)
 	{
-		_Queues[(std::size_t)EQueue::Transfer].queueFamilyIndex = _Queues[(std::size_t)EQueue::Graphics].queueFamilyIndex;
+		_Queues[(std::size_t)EQueue::Transfer]._QueueFamilyIndex = _Queues[(std::size_t)EQueue::Graphics]._QueueFamilyIndex;
 	}
 }
 
@@ -77,9 +74,9 @@ void VulkanQueues::Create(VkDevice device)
 {
 	for (auto& queue : _Queues)
 	{
-		if (queue.queueFamilyIndex != -1)
+		if (queue._QueueFamilyIndex != -1)
 		{
-			vkGetDeviceQueue(device, queue.queueFamilyIndex, 0, &queue.queue);
+			vkGetDeviceQueue(device, queue._QueueFamilyIndex, 0, &queue._Queue);
 		}
 	}
 	
@@ -91,9 +88,9 @@ void VulkanQueues::Create(VkDevice device)
 
 		for (auto& queue : _Queues)
 		{
-			if (queue.queueFamilyIndex == queueFamilyIndex)
+			if (queue._QueueFamilyIndex == queueFamilyIndex)
 			{
-				queue.commandPool = commandPool;
+				queue._CommandPool = commandPool;
 			}
 		}
 	}
@@ -105,11 +102,43 @@ std::unordered_set<int32> VulkanQueues::GetUniqueFamilies() const
 
 	for (auto& queue : _Queues)
 	{
-		if (queue.queueFamilyIndex != -1)
+		if (queue._QueueFamilyIndex != -1)
 		{
-			uniqueQueueFamilies.insert(queue.queueFamilyIndex);
+			uniqueQueueFamilies.insert(queue._QueueFamilyIndex);
 		}
 	}
 
 	return uniqueQueueFamilies;
+}
+
+void VulkanQueue::Submit(const gpu::CommandList& cmdList)
+{
+	vulkan(vkEndCommandBuffer(cmdList._CommandBuffer));
+
+	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &cmdList._CommandBuffer;
+
+	vulkan(vkQueueSubmit(_Queue, 1, &submitInfo, VK_NULL_HANDLE));
+
+	_InFlightCmdBufs.push_back(cmdList._CommandBuffer);
+}
+
+void VulkanQueue::WaitIdle(VkDevice device)
+{
+	if (_InFlightCmdBufs.size() > 0)
+	{
+		vulkan(vkQueueWaitIdle(_Queue));
+
+		vkFreeCommandBuffers(device, _CommandPool, _InFlightCmdBufs.size(), _InFlightCmdBufs.data());
+
+		_InFlightCmdBufs.clear();
+
+		_InFlightStagingBuffers.clear();
+	}
+}
+
+void VulkanQueue::AddInFlightStagingBuffer(std::shared_ptr<gpu::Buffer> stagingBuffer)
+{
+	_InFlightStagingBuffers.push_back(stagingBuffer);
 }

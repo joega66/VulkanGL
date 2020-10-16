@@ -6,6 +6,7 @@ class VulkanDevice;
 struct ImageMemoryBarrier;
 struct BufferMemoryBarrier;
 class VulkanPipeline;
+class VulkanQueue;
 
 namespace gpu
 {
@@ -18,20 +19,15 @@ namespace gpu
 		CommandList(const CommandList&) = delete;
 		CommandList& operator=(const CommandList&) = delete;
 	public:
-		VkQueue _Queue;
-
-		VkCommandPool _CommandPool;
+		VulkanQueue& _Queue;
 
 		VkCommandBuffer _CommandBuffer;
 
 		CommandList(
 			VulkanDevice& device,
-			VkQueue queue,
-			VkCommandPool commandPool,
+			VulkanQueue& queue,
 			VkCommandBuffer commandBuffer
 		);
-
-		~CommandList();
 
 		void BeginRenderPass(const RenderPass& renderPass);
 
@@ -42,11 +38,19 @@ namespace gpu
 		void BindDescriptorSets(
 			const std::shared_ptr<VulkanPipeline>& pipeline, 
 			std::size_t numDescriptorSets, 
-			const VkDescriptorSet* descriptorSets);
+			const VkDescriptorSet* descriptorSets
+		);
 
-		void PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values);
+		void PushConstants(
+			const std::shared_ptr<VulkanPipeline>& pipeline, 
+			const Shader* shader, 
+			const void* values
+		);
 
-		void BindVertexBuffers(std::size_t numVertexBuffers, const Buffer* vertexBuffers);
+		void BindVertexBuffers(
+			std::size_t numVertexBuffers, 
+			const Buffer* vertexBuffers
+		);
 
 		void DrawIndexed(
 			const Buffer& indexBuffer,
@@ -58,15 +62,36 @@ namespace gpu
 			EIndexType indexType
 		);
 
-		void Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance);
+		void Draw(
+			uint32 vertexCount, 
+			uint32 instanceCount, 
+			uint32 firstVertex, 
+			uint32 firstInstance
+		);
 
-		void DrawIndirect(const Buffer& buffer, uint32 offset, uint32 drawCount);
+		void DrawIndirect(
+			const Buffer& buffer, 
+			uint32 offset, 
+			uint32 drawCount
+		);
 
-		void Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ);
+		void Dispatch(
+			uint32 groupCountX, 
+			uint32 groupCountY, 
+			uint32 groupCountZ
+		);
 
-		void ClearColorImage(const Image& image, EImageLayout imageLayout, const ClearColorValue& color);
+		void ClearColorImage(
+			const Image& image, 
+			EImageLayout imageLayout, 
+			const ClearColorValue& color
+		);
 
-		void ClearDepthStencilImage(const Image& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue);
+		void ClearDepthStencilImage(
+			const Image& image, 
+			EImageLayout imageLayout, 
+			const ClearDepthStencilValue& depthStencilValue
+		);
 
 		void PipelineBarrier(
 			EPipelineStage srcStageMask,
@@ -92,7 +117,10 @@ namespace gpu
 			EFilter filter
 		);
 
-		void SetScissor(uint32 scissorCount, const Scissor* scissors);
+		void SetScissor(
+			uint32 scissorCount, 
+			const Scissor* scissors
+		);
 
 		void CopyBuffer(
 			const Buffer& srcBuffer,
@@ -108,6 +136,11 @@ namespace gpu
 			const Image& dstImage,
 			EImageLayout dstImageLayout,
 			uint32 dstArrayLayer
+		);
+
+		std::shared_ptr<Buffer> CreateStagingBuffer(
+			uint64 size, 
+			const void* data = nullptr
 		);
 
 	private:

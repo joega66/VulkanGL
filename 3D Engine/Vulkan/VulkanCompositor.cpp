@@ -85,6 +85,8 @@ void VulkanCompositor::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 {
 	vulkan(vkEndCommandBuffer(cmdList._CommandBuffer));
 
+	_Device.GetQueues().GetQueue(EQueue::Transfer).WaitIdle(_Device);
+
 	const VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	const VkSubmitInfo submitInfo = 
@@ -99,7 +101,7 @@ void VulkanCompositor::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 		.pSignalSemaphores = &_RenderEndSem,
 	};
 	
-	vulkan(vkQueueSubmit(cmdList._Queue, 1, &submitInfo, VK_NULL_HANDLE));
+	vulkan(vkQueueSubmit(cmdList._Queue.GetQueue(), 1, &submitInfo, VK_NULL_HANDLE));
 
 	const VkPresentInfoKHR presentInfo = 
 	{ 
@@ -111,7 +113,7 @@ void VulkanCompositor::Present(uint32 imageIndex, gpu::CommandList& cmdList)
 		.pImageIndices = &imageIndex,
 	};
 	
-	const VkQueue presentQueue = _Device.GetQueues().GetQueue(EQueue::Present).queue;
+	const VkQueue presentQueue = _Device.GetQueues().GetQueue(EQueue::Present).GetQueue();
 
 	if (const VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo); result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
@@ -197,8 +199,8 @@ void VulkanCompositor::Resize(uint32 screenWidth, uint32 screenHeight, EImageUsa
 
 	const uint32 queueFamilyIndices[] = 
 	{ 
-		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Graphics).queueFamilyIndex),
-		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Present).queueFamilyIndex)
+		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Graphics).GetQueueFamilyIndex()),
+		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Present).GetQueueFamilyIndex())
 	};
 
 	if (queueFamilyIndices[0] != queueFamilyIndices[1])

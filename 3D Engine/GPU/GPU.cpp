@@ -2,15 +2,15 @@
 
 void gpu::UploadImageData(gpu::Device& device, const void* srcPixels, const gpu::Image& dstImage)
 {
-	gpu::Buffer stagingBuffer = device.CreateBuffer({}, EMemoryUsage::CPU_ONLY, dstImage.GetSize(), srcPixels);
-
 	gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
+
+	auto stagingBuffer = cmdList.CreateStagingBuffer(dstImage.GetSize(), srcPixels);
 
 	ImageMemoryBarrier barrier{ dstImage, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal };
 
 	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, 1, &barrier);
 
-	cmdList.CopyBufferToImage(stagingBuffer, 0, dstImage, EImageLayout::TransferDstOptimal);
+	cmdList.CopyBufferToImage(*stagingBuffer, 0, dstImage, EImageLayout::TransferDstOptimal);
 
 	barrier.srcAccessMask = EAccess::TransferWrite;
 	barrier.dstAccessMask = EAccess::MemoryRead;

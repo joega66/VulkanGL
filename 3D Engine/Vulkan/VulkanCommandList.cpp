@@ -1,25 +1,19 @@
 #include "VulkanCommandList.h"
 #include "VulkanDevice.h"
+#include "VulkanQueues.h"
 #include <GPU/GPUShader.h>
 #include <GPU/GPUDefinitions.h>
 
 namespace gpu
 {
 	CommandList::CommandList(
-		VulkanDevice& device, 
-		VkQueue queue,
-		VkCommandPool commandPool,
+		VulkanDevice& device,
+		VulkanQueue& queue,
 		VkCommandBuffer commandBuffer)
 		: _Device(device)
 		, _Queue(queue)
-		, _CommandPool(commandPool)
 		, _CommandBuffer(commandBuffer)
 	{
-	}
-
-	CommandList::~CommandList()
-	{
-		vkFreeCommandBuffers(_Device, _CommandPool, 1, &_CommandBuffer);
 	}
 
 	void CommandList::BeginRenderPass(const RenderPass& renderPass)
@@ -396,5 +390,12 @@ namespace gpu
 			1,
 			&region
 		);
+	}
+
+	std::shared_ptr<gpu::Buffer> CommandList::CreateStagingBuffer(uint64 size, const void* data)
+	{
+		auto stagingBuffer = std::make_shared<gpu::Buffer>(_Device.CreateBuffer(EBufferUsage::None, EMemoryUsage::CPU_ONLY, size, data));
+		_Queue.AddInFlightStagingBuffer(stagingBuffer);
+		return stagingBuffer;
 	}
 };

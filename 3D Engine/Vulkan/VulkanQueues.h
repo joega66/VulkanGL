@@ -5,11 +5,36 @@
 
 class VulkanDevice;
 
-struct VulkanQueue
+namespace gpu 
+{ 
+	class CommandList;
+	class Buffer;
+}
+
+class VulkanQueue
 {
-	int32 queueFamilyIndex = -1;
-	VkQueue queue;
-	VkCommandPool commandPool;
+	friend class VulkanQueues;
+public:
+	void Submit(const gpu::CommandList& cmdList);
+
+	void WaitIdle(VkDevice device);
+
+	void AddInFlightStagingBuffer(std::shared_ptr<gpu::Buffer> stagingBuffer);
+
+	inline int32 GetQueueFamilyIndex() const { return _QueueFamilyIndex; }
+	inline VkQueue GetQueue() const { return _Queue; }
+	inline VkCommandPool GetCommandPool() const { return _CommandPool; }
+
+private:
+	int32 _QueueFamilyIndex = -1;
+
+	VkQueue _Queue;
+
+	VkCommandPool _CommandPool;
+
+	std::vector<std::shared_ptr<gpu::Buffer>> _InFlightStagingBuffers;
+
+	std::vector<VkCommandBuffer> _InFlightCmdBufs;
 };
 
 class VulkanQueues
@@ -22,7 +47,7 @@ public:
 	void Create(VkDevice device);
 
 	/** Get this queue. */
-	const VulkanQueue& GetQueue(EQueue queue) const { return _Queues[static_cast<std::size_t>(queue)]; }
+	VulkanQueue& GetQueue(EQueue queue) { return _Queues[static_cast<std::size_t>(queue)]; }
 
 	/** Gets the unique families for logical device creation. */
 	std::unordered_set<int32> GetUniqueFamilies() const;
