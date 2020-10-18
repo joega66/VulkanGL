@@ -1,6 +1,6 @@
 #include "VulkanCommandList.h"
 #include "VulkanDevice.h"
-#include "VulkanQueues.h"
+#include "VulkanQueue.h"
 #include <GPU/GPUShader.h>
 #include <GPU/GPUDefinitions.h>
 

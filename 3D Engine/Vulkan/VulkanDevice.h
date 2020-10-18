@@ -1,6 +1,6 @@
 #pragma once
 #include <GPU/GPU.h>
-#include "VulkanQueues.h"
+#include "VulkanQueue.h"
 #include "VulkanCache.h"
 #include "VulkanRenderPass.h"
 #include "VulkanCommandList.h"
@@ -62,8 +62,9 @@ public:
 
 	inline VulkanInstance& GetInstance() { return _Instance; }
 	inline const VulkanPhysicalDevice& GetPhysicalDevice() const { return _PhysicalDevice; }
+	inline VulkanQueue& GetGraphicsQueue() { return _GraphicsQueue; }
+	inline VulkanQueue& GetTransferQueue() { return _TransferQueue; }
 	inline VulkanCache& GetCache() { return _VulkanCache; }
-	inline VulkanQueues& GetQueues() { return _Queues; }
 	inline gpu::DescriptorPoolManager& GetDescriptorPoolManager() { return _DescriptorPoolManager; }
 	
 	static inline VkAccessFlags GetAccessFlags(EAccess access) 
@@ -86,10 +87,12 @@ private:
 	VulkanInstance& _Instance;
 
 	VulkanPhysicalDevice& _PhysicalDevice;
-	
-	VulkanQueues _Queues;
 
 	VmaAllocator _Allocator;
+
+	VulkanQueue _GraphicsQueue;
+
+	VulkanQueue _TransferQueue;
 
 	VulkanCache _VulkanCache;
 

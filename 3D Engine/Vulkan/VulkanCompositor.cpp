@@ -127,7 +127,7 @@ void VulkanCompositor::Present(gpu::Device& device, uint32 imageIndex, gpu::Comm
 	vulkan(vkEndCommandBuffer(cmdList._CommandBuffer));
 
 	// @todo This is super duper nasty
-	_Device.GetQueues().GetQueue(EQueue::Transfer).WaitIdle(_Device);
+	_Device.GetTransferQueue().WaitIdle(_Device);
 
 	const VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -246,7 +246,7 @@ void VulkanCompositor::Resize(gpu::Device& device, uint32 screenWidth, uint32 sc
 
 	const uint32 queueFamilyIndices[] = 
 	{ 
-		static_cast<uint32>(_Device.GetQueues().GetQueue(EQueue::Graphics).GetQueueFamilyIndex()),
+		static_cast<uint32>(_Device.GetGraphicsQueue().GetQueueFamilyIndex()),
 		_PresentIndex
 	};
 

@@ -119,9 +119,6 @@
     <ClInclude Include="Systems\EditorControllerSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanQueues.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\ShadowProxy.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
@@ -284,6 +281,9 @@
     <ClInclude Include="Vulkan\VulkanPhysicalDevice.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanQueue.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -339,9 +339,6 @@
     </ClCompile>
     <ClCompile Include="Systems\EditorControllerSystem.cpp">
       <Filter>Source\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanQueues.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Cursor.cpp">
       <Filter>Source\Engine</Filter>
@@ -464,6 +461,9 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanPhysicalDevice.cpp">
+      <Filter>Source\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanQueue.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>

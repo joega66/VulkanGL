@@ -17,10 +17,42 @@ const std::vector<const char*>& VulkanDevice::GetRequiredExtensions()
 VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physicalDevice, std::vector<uint32> queueFamilyIndices)
 	: _Instance(instance)
 	, _PhysicalDevice(physicalDevice)
-	, _Queues(*this)
 	, _VulkanCache(*this)
 {
-	std::unordered_set<int32> uniqueQueueFamilies = _Queues.GetUniqueFamilies();
+	uint32 queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(_PhysicalDevice, &queueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(_PhysicalDevice, &queueFamilyCount, queueFamilies.data());
+
+	auto GetQueueFamilyIndex = [&queueFamilies] (VkQueueFlags queueFlags)
+	{
+		int32 queueFamilyIndex = 0;
+
+		for (auto& queueFamily : queueFamilies)
+		{
+			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & queueFlags)
+			{
+				queueFamily.queueCount = 0;
+				return queueFamilyIndex;
+			}
+
+			queueFamilyIndex++;
+		}
+
+		return -1;
+	};
+
+	const int32 graphicsIndex = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+
+	int32 transferIndex = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+
+	if (transferIndex == -1)
+	{
+		transferIndex = graphicsIndex;
+	}
+
+	std::unordered_set<int32> uniqueQueueFamilies = { graphicsIndex, transferIndex };
 	for (auto queueFamilyIndex : queueFamilyIndices)
 	{
 		uniqueQueueFamilies.insert(queueFamilyIndex);
@@ -86,7 +118,8 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 
 	vulkan(vkCreateDevice(_PhysicalDevice, &deviceInfo, nullptr, &_Device));
 
-	_Queues.Create(_Device);
+	_GraphicsQueue = VulkanQueue(_Device, graphicsIndex);
+	_TransferQueue = VulkanQueue(_Device, transferIndex);
 	
 	const VmaAllocatorCreateInfo allocatorInfo =
 	{
