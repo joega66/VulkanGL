@@ -36,4 +36,8 @@ private:
 	std::vector<std::shared_ptr<gpu::Buffer>> _InFlightStagingBuffers;
 
 	std::vector<VkCommandBuffer> _InFlightCmdBufs;
+
+	VkSemaphore _TimelineSemaphore;
+
+	uint64 _TimelineSemaphoreValue = 0;
 };

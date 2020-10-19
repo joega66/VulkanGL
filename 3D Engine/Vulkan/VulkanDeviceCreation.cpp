@@ -78,10 +78,17 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 		.fragmentStoresAndAtomics = true,
 		.shaderStorageImageWriteWithoutFormat = true
 	};
+
+	VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphoreFeatures =
+	{
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES,
+		.timelineSemaphore = true,
+	};
 	
 	VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures = 
 	{ 
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
+		.pNext = &timelineSemaphoreFeatures,
 		.shaderSampledImageArrayNonUniformIndexing = true,
 		.shaderStorageImageArrayNonUniformIndexing = true,
 		.descriptorBindingPartiallyBound = true,
