@@ -21,6 +21,12 @@ public:
 
 	void SubmitCommands(gpu::CommandList& cmdList) override;
 
+	void SubmitCommands(
+		gpu::CommandList& cmdList,
+		const gpu::Semaphore& waitSemaphore,
+		const gpu::Semaphore& signalSemaphore
+	) override;
+
 	gpu::CommandList CreateCommandList(EQueue queue) override;
 
 	gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) override;
@@ -57,6 +63,8 @@ public:
 	gpu::BindlessDescriptors& GetSamplers() override;
 
 	gpu::BindlessDescriptors& GetImages() override;
+
+	gpu::Semaphore CreateSemaphore() override;
 
 	operator VkDevice() const { return _Device; }
 

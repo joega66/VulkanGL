@@ -92,6 +92,8 @@ namespace gpu
 
 	DescriptorPoolManager::DescriptorPoolManager()
 	{
+		constexpr VkDescriptorType VK_DESCRIPTOR_TYPE_BEGIN_RANGE = VK_DESCRIPTOR_TYPE_SAMPLER;
+
 		for (VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_BEGIN_RANGE; descriptorType < VK_DESCRIPTOR_TYPE_RANGE_SIZE;)
 		{
 			VkDescriptorPoolSize& poolSize = _PoolSizes[descriptorType];

@@ -28,6 +28,9 @@ private:
 
 	gpu::DescriptorSet _PostProcessingSet;
 
+	gpu::Semaphore _AcquireNextImageSem;
+	gpu::Semaphore _EndOfFrameSem;
+
 	void RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList);
 	void RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList);
 	void ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList);

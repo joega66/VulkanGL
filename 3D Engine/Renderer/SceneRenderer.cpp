@@ -38,10 +38,15 @@ SceneRenderer::SceneRenderer(Engine& engine)
 	});
 
 	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
+
+	_AcquireNextImageSem = _Device.CreateSemaphore();
+	_EndOfFrameSem = _Device.CreateSemaphore();
 }
 
 void SceneRenderer::Render()
 {
+	const uint32 imageIndex = _Compositor.AcquireNextImage(_Device, _AcquireNextImageSem);
+
 	const RenderSettings& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
 	gpu::CommandList cmdList = _Device.CreateCommandList(EQueue::Graphics);
@@ -66,7 +71,6 @@ void SceneRenderer::Render()
 		ComputeSSGI(view, camera, cmdList);
 	}
 
-	const uint32 imageIndex = _Compositor.AcquireNextImage(_Device);
 	const gpu::Image& displayImage = _Compositor.GetImages()[imageIndex];
 	ImageMemoryBarrier barrier{ displayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
@@ -83,7 +87,9 @@ void SceneRenderer::Render()
 
 	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, _UserInterfaceRP[imageIndex]);
 
-	_Compositor.Present(_Device, imageIndex, cmdList);
+	_Device.SubmitCommands(cmdList, _AcquireNextImageSem, _EndOfFrameSem);
+
+	_Compositor.QueuePresent(_Device, imageIndex, _EndOfFrameSem);
 
 	_Device.EndFrame();
 }

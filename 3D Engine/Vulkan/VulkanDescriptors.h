@@ -62,6 +62,7 @@ namespace gpu
 
 	private:
 		std::vector<std::unique_ptr<DescriptorPool>> _DescriptorPools;
+		static constexpr std::size_t VK_DESCRIPTOR_TYPE_RANGE_SIZE = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1; // @todo This is super duper nasty.
 		std::array<VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE> _PoolSizes;
 		VkDescriptorPoolCreateInfo _PoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
 	};

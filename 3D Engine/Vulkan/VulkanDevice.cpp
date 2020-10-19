@@ -13,24 +13,28 @@ void VulkanDevice::EndFrame()
 
 void VulkanDevice::SubmitCommands(gpu::CommandList& cmdList)
 {
-	cmdList._Queue.Submit(cmdList);
+	SubmitCommands(cmdList, gpu::Semaphore(), gpu::Semaphore());
+}
+
+void VulkanDevice::SubmitCommands(
+	gpu::CommandList& cmdList, 
+	const gpu::Semaphore& waitSemaphore, 
+	const gpu::Semaphore& signalSemaphore)
+{
+	if (cmdList._Queue.GetQueue() == _GraphicsQueue.GetQueue())
+	{
+		_TransferQueue.WaitSemaphores(_Device);
+	}
+
+	cmdList._Queue.Submit(cmdList, waitSemaphore, signalSemaphore);
 }
 
 gpu::CommandList VulkanDevice::CreateCommandList(EQueue queueType)
 {
-	VulkanQueue* queue = [&]()
-	{
-		switch (queueType)
-		{
-		case EQueue::Transfer:
-			return &_TransferQueue;
-		default:
-			return &_GraphicsQueue;
-		}
-	}();
+	VulkanQueue& queue = queueType == EQueue::Transfer ? _TransferQueue : _GraphicsQueue;
 
 	VkCommandBufferAllocateInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	commandBufferInfo.commandPool = queue->GetCommandPool();
+	commandBufferInfo.commandPool = queue.GetCommandPool();
 	commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferInfo.commandBufferCount = 1;
 
@@ -42,7 +46,7 @@ gpu::CommandList VulkanDevice::CreateCommandList(EQueue queueType)
 
 	vulkan(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-	return gpu::CommandList(*this, *queue, commandBuffer);
+	return gpu::CommandList(*this, queue, commandBuffer);
 }
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
@@ -294,6 +298,11 @@ gpu::BindlessDescriptors& VulkanDevice::GetSamplers()
 gpu::BindlessDescriptors& VulkanDevice::GetImages()
 {
 	return *_BindlessImages;
+}
+
+gpu::Semaphore VulkanDevice::CreateSemaphore()
+{
+	return gpu::Semaphore(_Device);
 }
 
 const char* VulkanDevice::GetErrorString(VkResult result)

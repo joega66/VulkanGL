@@ -18,6 +18,12 @@ namespace gpu
 
 		virtual void SubmitCommands(gpu::CommandList& cmdList) = 0;
 
+		virtual void SubmitCommands(
+			gpu::CommandList& cmdList,
+			const gpu::Semaphore& waitSemaphore,
+			const gpu::Semaphore& signalSemaphore
+		) = 0;
+
 		virtual gpu::CommandList CreateCommandList(EQueue queue) = 0;
 
 		virtual gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) = 0;
@@ -85,14 +91,16 @@ namespace gpu
 			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
 			layout.UpdateDescriptorSet(*this, set, &descriptors);
 		}
+
+		virtual gpu::Semaphore CreateSemaphore() = 0;
 	};
 
 	/** Compositor interface. Useful for creating a swapchain or letting an SDK control the display, e.g. OpenXR. */
 	class Compositor
 	{
 	public:
-		virtual uint32 AcquireNextImage(gpu::Device& device) = 0;
-		virtual void Present(gpu::Device& device, uint32 imageIndex, gpu::CommandList& cmdList) = 0;
+		virtual uint32 AcquireNextImage(gpu::Device& device, gpu::Semaphore& semaphore) = 0;
+		virtual void QueuePresent(gpu::Device& device, uint32 imageIndex, gpu::Semaphore& waitSemaphore) = 0;
 		virtual void Resize(gpu::Device& device, uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage) = 0;
 		virtual const std::vector<gpu::Image>& GetImages() = 0;
 	};

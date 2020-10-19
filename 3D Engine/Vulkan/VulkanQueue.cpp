@@ -1,6 +1,7 @@
 #include "VulkanQueue.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanCommandList.h"
+#include "VulkanSemaphore.h"
 
 VulkanQueue::VulkanQueue(VkDevice device, int32 queueFamilyIndex)
 	: _QueueFamilyIndex(queueFamilyIndex)
@@ -35,34 +36,47 @@ VulkanQueue::VulkanQueue(VkDevice device, int32 queueFamilyIndex)
 	}
 }
 
-void VulkanQueue::Submit(const gpu::CommandList& cmdList)
+void VulkanQueue::Submit(
+	const gpu::CommandList& cmdList,
+	const gpu::Semaphore& waitSemaphore,
+	const gpu::Semaphore& signalSemaphore)
 {
 	vkEndCommandBuffer(cmdList._CommandBuffer);
 
-	const uint64 waitSemaphoreValue = _TimelineSemaphoreValue++;
+	const auto waitSemaphoreValues = waitSemaphore.Get() == VK_NULL_HANDLE ? 
+		std::vector{ _TimelineSemaphoreValue } : std::vector{ _TimelineSemaphoreValue, 0llu };
+
+	const auto waitSemaphores = waitSemaphore.Get() == VK_NULL_HANDLE ?
+		std::vector{ _TimelineSemaphore } : std::vector{ _TimelineSemaphore, waitSemaphore.Get() };
+
+	const auto signalSemaphoreValues = signalSemaphore.Get() == VK_NULL_HANDLE ?
+		std::vector{ ++_TimelineSemaphoreValue } : std::vector{ ++_TimelineSemaphoreValue, 0llu };
+
+	const auto signalSemaphores = signalSemaphore.Get() == VK_NULL_HANDLE ?
+		std::vector{ _TimelineSemaphore } : std::vector{ _TimelineSemaphore, signalSemaphore.Get() };
 
 	const VkTimelineSemaphoreSubmitInfo timelineSemaphoreSubmitInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO,
-		.waitSemaphoreValueCount = 1,
-		.pWaitSemaphoreValues = &waitSemaphoreValue,
-		.signalSemaphoreValueCount = 1,
-		.pSignalSemaphoreValues = &_TimelineSemaphoreValue
+		.waitSemaphoreValueCount = static_cast<uint32>(waitSemaphoreValues.size()),
+		.pWaitSemaphoreValues = waitSemaphoreValues.data(),
+		.signalSemaphoreValueCount = static_cast<uint32>(signalSemaphoreValues.size()),
+		.pSignalSemaphoreValues = signalSemaphoreValues.data()
 	};
 
-	constexpr VkPipelineStageFlags waitDstStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	const std::vector<VkPipelineStageFlags> waitDstStage(waitSemaphores.size(), VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
 	const VkSubmitInfo submitInfo = 
 	{ 
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.pNext = &timelineSemaphoreSubmitInfo,
-		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &_TimelineSemaphore,
-		.pWaitDstStageMask = &waitDstStage,
+		.waitSemaphoreCount = static_cast<uint32>(waitSemaphores.size()),
+		.pWaitSemaphores = waitSemaphores.data(),
+		.pWaitDstStageMask = waitDstStage.data(),
 		.commandBufferCount = 1,
 		.pCommandBuffers = &cmdList._CommandBuffer,
-		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &_TimelineSemaphore,
+		.signalSemaphoreCount = static_cast<uint32>(signalSemaphores.size()),
+		.pSignalSemaphores = signalSemaphores.data(),
 	};
 
 	vkQueueSubmit(_Queue, 1, &submitInfo, VK_NULL_HANDLE);
@@ -70,7 +84,7 @@ void VulkanQueue::Submit(const gpu::CommandList& cmdList)
 	_InFlightCmdBufs.push_back(cmdList._CommandBuffer);
 }
 
-void VulkanQueue::WaitIdle(VkDevice device)
+void VulkanQueue::WaitSemaphores(VkDevice device)
 {
 	if (_InFlightCmdBufs.size() > 0)
 	{
@@ -84,15 +98,20 @@ void VulkanQueue::WaitIdle(VkDevice device)
 
 		vkWaitSemaphores(device, &semaphoreWaitInfo, UINT64_MAX);
 
-		vkFreeCommandBuffers(device, _CommandPool, static_cast<uint32>(_InFlightCmdBufs.size()), _InFlightCmdBufs.data());
-
-		_InFlightCmdBufs.clear();
-
-		_InFlightStagingBuffers.clear();
+		GiveUpInFlightResources(device);
 	}
 }
 
 void VulkanQueue::AddInFlightStagingBuffer(std::shared_ptr<gpu::Buffer> stagingBuffer)
 {
-	_InFlightStagingBuffers.push_back(stagingBuffer);
+	_InFlightStagingBufs.push_back(stagingBuffer);
+}
+
+void VulkanQueue::GiveUpInFlightResources(VkDevice device)
+{
+	vkFreeCommandBuffers(device, _CommandPool, static_cast<uint32>(_InFlightCmdBufs.size()), _InFlightCmdBufs.data());
+
+	_InFlightCmdBufs.clear();
+
+	_InFlightStagingBufs.clear();
 }

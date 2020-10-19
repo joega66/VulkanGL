@@ -98,14 +98,14 @@ VulkanCompositor::VulkanCompositor(VulkanInstance& instance, VulkanPhysicalDevic
 	check(_PresentIndex != -1, "No present index found!!");
 }
 
-uint32 VulkanCompositor::AcquireNextImage(gpu::Device& device)
+uint32 VulkanCompositor::AcquireNextImage(gpu::Device& device, gpu::Semaphore& semaphore)
 {
 	uint32 imageIndex;
 
 	if (const VkResult result = vkAcquireNextImageKHR(static_cast<VulkanDevice&>(device),
 		_Swapchain,
 		std::numeric_limits<uint32>::max(),
-		_ImageAvailableSem,
+		semaphore.Get(),
 		VK_NULL_HANDLE,
 		&imageIndex); result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
@@ -120,36 +120,15 @@ uint32 VulkanCompositor::AcquireNextImage(gpu::Device& device)
 	return imageIndex;
 }
 
-void VulkanCompositor::Present(gpu::Device& device, uint32 imageIndex, gpu::CommandList& cmdList)
+void VulkanCompositor::QueuePresent(gpu::Device& device, uint32 imageIndex, gpu::Semaphore& waitSemaphore)
 {
 	auto& _Device = static_cast<VulkanDevice&>(device);
-
-	vulkan(vkEndCommandBuffer(cmdList._CommandBuffer));
-
-	// @todo This is super duper nasty
-	_Device.GetTransferQueue().WaitIdle(_Device);
-
-	const VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-	const VkSubmitInfo submitInfo = 
-	{ 
-		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &_ImageAvailableSem,
-		.pWaitDstStageMask = &waitDstStageMask,
-		.commandBufferCount = 1,
-		.pCommandBuffers = &cmdList._CommandBuffer,
-		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &_RenderEndSem,
-	};
-	
-	vulkan(vkQueueSubmit(cmdList._Queue.GetQueue(), 1, &submitInfo, VK_NULL_HANDLE));
 
 	const VkPresentInfoKHR presentInfo = 
 	{ 
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.waitSemaphoreCount = 1,
-		.pWaitSemaphores = &_RenderEndSem,
+		.pWaitSemaphores = &waitSemaphore.Get(),
 		.swapchainCount = 1,
 		.pSwapchains = &_Swapchain,
 		.pImageIndices = &imageIndex,
@@ -170,6 +149,8 @@ void VulkanCompositor::Present(gpu::Device& device, uint32 imageIndex, gpu::Comm
 	}
 
 	vulkan(vkQueueWaitIdle(_PresentQueue));
+
+	_Device.GetGraphicsQueue().GiveUpInFlightResources(_Device);
 }
 
 struct SwapchainSupportDetails
@@ -203,14 +184,6 @@ struct SwapchainSupportDetails
 void VulkanCompositor::Resize(gpu::Device& device, uint32 screenWidth, uint32 screenHeight, EImageUsage imageUsage)
 {
 	auto& _Device = static_cast<VulkanDevice&>(device);
-
-	if (_ImageAvailableSem == VK_NULL_HANDLE)
-	{
-		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		vulkan(vkCreateSemaphore(_Device, &semaphoreInfo, nullptr, &_ImageAvailableSem));
-		vulkan(vkCreateSemaphore(_Device, &semaphoreInfo, nullptr, &_RenderEndSem));
-	}
-	
 	const SwapchainSupportDetails swapchainSupport(_Device.GetPhysicalDevice(), _Surface);
 
 	_SurfaceFormat = ChooseSwapSurfaceFormat(swapchainSupport.formats, { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR });
