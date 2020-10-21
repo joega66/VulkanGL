@@ -84,7 +84,7 @@ static std::vector<VertexAttributeDescription> ReflectVertexAttributeDescription
 }
 
 static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
-	gpu::Device& device, 
+	VulkanDevice& device, 
 	const spirv_cross::CompilerGLSL& glsl,
 	const spirv_cross::ShaderResources& resources)
 {
@@ -98,7 +98,7 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 
 		if (type.array.size())
 		{
-			layouts.insert({ set, device.GetTextures().GetLayout() });
+			layouts.insert({ set, device._BindlessTextures->GetLayout() });
 		}
 		else
 		{
@@ -114,7 +114,7 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 
 		if (type.array.size())
 		{
-			layouts.insert({ set, device.GetSamplers().GetLayout() });
+			layouts.insert({ set, device._BindlessSamplers->GetLayout() });
 		}
 		else
 		{

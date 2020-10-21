@@ -137,12 +137,7 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 
 	vulkan(vmaCreateAllocator(&allocatorInfo, &_Allocator));
 	
-	_BindlessTextures = std::make_shared<gpu::BindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 65556);
-	gBindlessTextures = _BindlessTextures;
-
-	_BindlessSamplers = std::make_shared<gpu::BindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLER, 1024);
-	gBindlessSamplers = _BindlessSamplers;
-
-	_BindlessImages = std::make_shared<gpu::BindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
-	gBindlessImages = _BindlessImages;
+	_BindlessTextures = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 65556);
+	_BindlessSamplers = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLER, 1024);
+	_BindlessImages = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
 }

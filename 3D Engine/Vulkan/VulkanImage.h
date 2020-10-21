@@ -20,17 +20,17 @@ namespace gpu
 		ImageView& operator=(ImageView&& other);
 		~ImageView();
 
-		inline VkImageView GetHandle() const { return _ImageView; }
+		inline operator const VkImageView&() const { return _ImageView; }
 		inline EFormat GetFormat() const { return _Format; }
 		inline const TextureID& GetTextureID() const { return _TextureID; }
 		inline const ImageID& GetImageID() const { return _ImageID; }
 
 	private:
-		VkDevice _Device = nullptr;
-		VkImageView _ImageView = nullptr;
-		TextureID _TextureID = {};
-		ImageID _ImageID = {};
-		EFormat _Format;
+		VulkanDevice*	_Device = nullptr;
+		VkImageView		_ImageView = nullptr;
+		TextureID		_TextureID = {};
+		ImageID			_ImageID = {};
+		EFormat			_Format = EFormat::UNDEFINED;
 	};
 
 	class Image : public gpu::ImagePrivate
@@ -58,7 +58,6 @@ namespace gpu
 
 		inline operator VkImage() const { return _Image; }
 		inline operator const ImageView& () const { return _ImageView; }
-		inline VkImage GetHandle() const { return _Image; }
 		inline const ImageView& GetImageView() const { return _ImageView; }
 		inline const TextureID& GetTextureID() const { return _ImageView.GetTextureID(); }
 		inline const ImageID& GetImageID() const { return _ImageView.GetImageID(); }
@@ -73,11 +72,11 @@ namespace gpu
 		static VkFilter GetVulkanFilter(EFilter filter);
 
 	private:
-		VmaAllocator _Allocator;
-		VmaAllocation _Allocation;
-		VmaAllocationInfo _AllocationInfo;
-		VkImage _Image = nullptr;
-		ImageView _ImageView = {};
+		VmaAllocator		_Allocator;
+		VmaAllocation		_Allocation;
+		VmaAllocationInfo	_AllocationInfo;
+		VkImage				_Image = nullptr;
+		ImageView			_ImageView = {};
 	};
 
 	class Sampler
@@ -86,7 +85,7 @@ namespace gpu
 		Sampler() = default;
 		Sampler(VulkanDevice& device, const SamplerDesc& samplerDesc);
 
-		inline VkSampler GetHandle() const { return _Sampler; }
+		inline operator const VkSampler&() const { return _Sampler; }
 		inline const SamplerID& GetSamplerID() const { return _SamplerID; }
 
 	private:

@@ -17,9 +17,9 @@ Material::Material(
 	const gpu::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
 	PushConstants.BaseColor = BaseColor->GetTextureID();
-	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID().Get() : 0;
-	PushConstants.Normal = Normal ? Normal->GetTextureID().Get() : 0;
-	PushConstants.Emissive = Emissive ? Emissive->GetTextureID().Get() : 0;
+	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID() : gpu::TextureID{};
+	PushConstants.Normal = Normal ? Normal->GetTextureID() : gpu::TextureID{};
+	PushConstants.Emissive = Emissive ? Emissive->GetTextureID() : gpu::TextureID{};
 	PushConstants.Sampler = Sampler.GetSamplerID();
 
 	PushConstants.Metallic = Metallic;

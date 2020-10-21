@@ -72,17 +72,17 @@ namespace gpu
 	}();
 
 	ImageView::ImageView(VulkanDevice& device, VkImageView imageView, EImageUsage usage, EFormat format)
-		: _Device(device)
+		: _Device(&device)
 		, _ImageView(imageView)
 		, _Format(format)
 	{
 		if (Any(usage & EImageUsage::Sampled))
 		{
-			_TextureID = device.GetTextures().CreateTextureID(*this);
+			_TextureID = device._BindlessTextures->CreateTextureID(*this);
 		}
 		if (Any(usage & EImageUsage::Storage))
 		{
-			_ImageID = device.GetImages().CreateImageID(*this);
+			_ImageID = device._BindlessImages->CreateImageID(*this);
 		}
 	}
 
@@ -109,9 +109,17 @@ namespace gpu
 	{
 		if (_ImageView)
 		{
-			_TextureID.Release();
-			_ImageID.Release();
-			vkDestroyImageView(_Device, _ImageView, nullptr);
+			if (_TextureID.IsValid() && _Device->_BindlessTextures)
+			{
+				_Device->_BindlessTextures->Release(_TextureID);
+			}
+
+			if (_ImageID.IsValid() && _Device->_BindlessImages)
+			{
+				_Device->_BindlessImages->Release(_ImageID);
+			}
+			
+			vkDestroyImageView(*_Device, _ImageView, nullptr);
 		}
 	}
 
@@ -339,7 +347,7 @@ namespace gpu
 
 		vulkan(vkCreateSampler(device, &samplerInfo, nullptr, &_Sampler));
 
-		_SamplerID = device.GetSamplers().CreateSamplerID(*this);
+		_SamplerID = device._BindlessSamplers->CreateSamplerID(*this);
 	}
 
 	static VkImageLayout ChooseImageLayout(EFormat format)
@@ -364,22 +372,22 @@ namespace gpu
 
 	SampledImage::SampledImage(const ImageView& imageView, const Sampler& sampler)
 	{
-		_DescriptorImageInfo.sampler = sampler.GetHandle();
-		_DescriptorImageInfo.imageView = imageView.GetHandle();
+		_DescriptorImageInfo.sampler = sampler;
+		_DescriptorImageInfo.imageView = imageView;
 		_DescriptorImageInfo.imageLayout = ChooseImageLayout(imageView.GetFormat());
 	}
 
 	StorageImage::StorageImage(const Image& image)
 	{
 		_DescriptorImageInfo.sampler = nullptr;
-		_DescriptorImageInfo.imageView = image.GetImageView().GetHandle();
+		_DescriptorImageInfo.imageView = image.GetImageView();
 		_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 	}
 
 	StorageImage::StorageImage(const ImageView& imageView)
 	{
 		_DescriptorImageInfo.sampler = nullptr;
-		_DescriptorImageInfo.imageView = imageView.GetHandle();
+		_DescriptorImageInfo.imageView = imageView;
 		_DescriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 	}
 };

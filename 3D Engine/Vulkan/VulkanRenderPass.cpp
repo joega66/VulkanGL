@@ -185,13 +185,13 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass renderPass, const Rend
 	for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < rpDesc.colorAttachments.size(); colorAttachmentIndex++)
 	{
 		const gpu::Image* image = rpDesc.colorAttachments[colorAttachmentIndex].image;
-		attachmentViews.push_back(image->GetImageView().GetHandle());
+		attachmentViews.push_back(image->GetImageView());
 	}
 
 	if (rpDesc.depthAttachment.image)
 	{
 		const gpu::Image* image = rpDesc.depthAttachment.image;
-		attachmentViews.push_back(image->GetImageView().GetHandle());
+		attachmentViews.push_back(image->GetImageView());
 	}
 
 	const VkFramebufferCreateInfo framebufferCreateInfo = 

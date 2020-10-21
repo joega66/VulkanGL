@@ -58,11 +58,11 @@ public:
 
 	gpu::RenderPass CreateRenderPass(const RenderPassDesc& rpDesc) override;
 
-	gpu::BindlessDescriptors& GetTextures() override;
+	VkDescriptorSet GetTextures() override;
 
-	gpu::BindlessDescriptors& GetSamplers() override;
+	VkDescriptorSet GetSamplers() override;
 
-	gpu::BindlessDescriptors& GetImages() override;
+	VkDescriptorSet GetImages() override;
 
 	gpu::Semaphore CreateSemaphore() override;
 
@@ -91,6 +91,12 @@ public:
 
 	static const std::vector<const char*>& GetRequiredExtensions();
 
+	std::unique_ptr<VulkanBindlessDescriptors> _BindlessTextures;
+
+	std::unique_ptr<VulkanBindlessDescriptors> _BindlessSamplers;
+
+	std::unique_ptr<VulkanBindlessDescriptors> _BindlessImages;
+
 private:
 	VulkanInstance& _Instance;
 
@@ -107,12 +113,6 @@ private:
 	VkDevice _Device;
 
 	gpu::DescriptorPoolManager _DescriptorPoolManager;
-
-	std::shared_ptr<gpu::BindlessDescriptors> _BindlessTextures;
-
-	std::shared_ptr<gpu::BindlessDescriptors> _BindlessSamplers;
-
-	std::shared_ptr<gpu::BindlessDescriptors> _BindlessImages;
 };
 
 #define vulkan(result) \
