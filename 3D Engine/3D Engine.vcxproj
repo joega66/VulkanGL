@@ -130,7 +130,6 @@
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
-    <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\ShadowProxy.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\Surface.h" />

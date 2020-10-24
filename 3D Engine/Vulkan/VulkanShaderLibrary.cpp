@@ -253,7 +253,7 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 		return "";
 	}();
 
-	const std::string globalShaderStructs = pushConstantDecl + gShaderStructs;
+	const std::string globalShaderStructs = pushConstantDecl + gpu::GetRegisteredShaderStructs();
 
 	shaderc::Compiler compiler;
 	shaderc::SpvCompilationResult spvCompilationResult;

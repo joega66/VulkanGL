@@ -3,7 +3,6 @@
 #include <Components/RenderSettings.h>
 #include <Systems/UserInterface.h>
 #include "ShadowProxy.h"
-#include "PostProcessing.h"
 
 SceneRenderer::SceneRenderer(Engine& engine)
 	: _Device(engine._Device)
@@ -36,8 +35,6 @@ SceneRenderer::SceneRenderer(Engine& engine)
 			_UserInterfaceRP.push_back(_Device.CreateRenderPass(rpDesc));
 		}
 	});
-
-	_PostProcessingSet = _Device.CreateDescriptorSet<PostProcessingDescriptors>();
 
 	_AcquireNextImageSem = _Device.CreateSemaphore();
 	_EndOfFrameSem = _Device.CreateSemaphore();

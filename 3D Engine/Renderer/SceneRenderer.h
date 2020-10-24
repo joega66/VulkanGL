@@ -26,8 +26,6 @@ private:
 
 	std::vector<gpu::RenderPass> _UserInterfaceRP;
 
-	gpu::DescriptorSet _PostProcessingSet;
-
 	gpu::Semaphore _AcquireNextImageSem;
 	gpu::Semaphore _EndOfFrameSem;
 

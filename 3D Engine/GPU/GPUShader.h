@@ -4,6 +4,11 @@
 #include <typeindex>
 #include <map>
 
+namespace gpu
+{
+	class DescriptorSetLayout;
+}
+
 /** Serializes C++ types to shader types. */
 class ShaderTypeSerializer
 {
@@ -12,23 +17,33 @@ public:
 	static std::string Serialize();
 };
 
-struct UniformBlockSerialized
+/** Shader struct serialization data. */
+struct ShaderStructSerialized
 {
 	std::string type;
 	std::string members;
 	std::string structStr;
-	uint32 size;
+	uint32		size;
 };
 
-struct PushConstantSerialized : public UniformBlockSerialized
+/** Descriptor set serialization data. */
+struct DescriptorSetSerialized
 {
+	std::vector<DescriptorBinding> bindings;
 };
 
-struct UniformBufferSerialized : public UniformBlockSerialized
+struct RegisteredDescriptorSetType
 {
+	gpu::DescriptorSetLayout& layout;
+	std::vector<DescriptorBinding>& bindings;
 };
 
-extern std::string gShaderStructs;
+namespace gpu
+{
+	std::string& GetRegisteredShaderStructs();
+
+	std::vector<RegisteredDescriptorSetType>& GetRegisteredDescriptorSetTypes();
+}
 
 #define BEGIN_UNIFORM_BLOCK(StructName)	\
 struct StructName						\
@@ -52,7 +67,7 @@ private:																										\
 	typedef NextMemberId##Name																					\
 
 /** End push constant block. */
-#define END_UNIFORM_BLOCK(StructName, SerializedStruct)															\
+#define END_UNIFORM_BLOCK(StructName)																			\
 		LastMemberId;																							\
 	static void Serialize(LastMemberId memberId, std::string& members) {}										\
 public:																											\
@@ -62,33 +77,39 @@ public:																											\
 		Serialize(FirstMemberId{}, members);																	\
 		return members;																							\
 	}																											\
-	struct SerializedData : SerializedStruct{																	\
+	struct SerializedData : ShaderStructSerialized{																\
 		SerializedData() {																						\
 			type = std::string(#StructName);																	\
 			members = Serialize();																				\
 			size = sizeof(StructName);																			\
 			structStr = "struct " + type + "{" + members + "};\n";												\
-			gShaderStructs += structStr;																		\
+			auto& registrar = gpu::GetRegisteredShaderStructs();												\
+			registrar += structStr;																				\
 		}																										\
 	};																											\
 	static SerializedData decl;																					\
 };																												\
 StructName::SerializedData StructName::decl;																	\
 
-struct DescriptorsSerialized
-{
-	std::vector<DescriptorBinding> bindings;
-};
+#define BEGIN_UNIFORM_BUFFER(StructName)	\
+	BEGIN_UNIFORM_BLOCK(StructName)
+#define END_UNIFORM_BUFFER(StructName)		\
+	END_UNIFORM_BLOCK(StructName)
+
+#define BEGIN_PUSH_CONSTANTS(StructName)	\
+	BEGIN_UNIFORM_BLOCK(StructName)
+#define END_PUSH_CONSTANTS(StructName)		\
+	END_UNIFORM_BLOCK(StructName)
 
 /** Begin a descriptor set declaration. */
-#define BEGIN_DESCRIPTOR_SET(StructName)\
-struct StructName						\
-{										\
-public:									\
-	StructName() = default;				\
-private:								\
-	struct FirstMemberId {};			\
-	typedef FirstMemberId				\
+#define BEGIN_DESCRIPTOR_SET(StructName)	\
+struct StructName							\
+{											\
+public:										\
+	StructName() = default;					\
+private:									\
+	struct FirstMemberId {};				\
+	typedef FirstMemberId					\
 
 /** Declare a descriptor binding in a descriptor set. */
 #define DESCRIPTOR(DescriptorType, Name)																		\
@@ -96,7 +117,7 @@ private:								\
 public:																											\
 	DescriptorType Name;																						\
 private:																										\
-	static void Serialize(MemberId##Name memberId, DescriptorsSerialized& data)									\
+	static void Serialize(MemberId##Name memberId, DescriptorSetSerialized& data)								\
 	{																											\
 		DescriptorBinding binding;																				\
 		binding.binding = static_cast<uint32>(data.bindings.size());											\
@@ -111,42 +132,28 @@ private:																										\
 /** End descriptor set declaration. */
 #define END_DESCRIPTOR_SET(StructName)																			\
 		LastMemberId;																							\
-	static void Serialize(LastMemberId memberId, DescriptorsSerialized& data) {}								\
+	static void Serialize(LastMemberId memberId, DescriptorSetSerialized& data) {}								\
 public:																											\
-	static DescriptorsSerialized Serialize()																	\
+	static DescriptorSetSerialized Serialize()																	\
 	{																											\
-		DescriptorsSerialized data;																				\
+		DescriptorSetSerialized data;																			\
 		Serialize(FirstMemberId{}, data);																		\
 		return data;																							\
 	}																											\
-	struct SerializedData : public DescriptorsSerialized 														\
+	struct SerializedData : public DescriptorSetSerialized 														\
 	{																											\
 		SerializedData() {																						\
 			auto data = Serialize();																			\
 			bindings = std::move(data.bindings);																\
+			auto& registrar = gpu::GetRegisteredDescriptorSetTypes();											\
+			registrar.push_back({ StructName::layout, bindings });												\
 		}																										\
 	};																											\
-	static SerializedData& GetSerialized()																		\
-	{																											\
-		static SerializedData data;																				\
-		return data;																							\
-	}																											\
-	static gpu::DescriptorSetLayout& GetLayout(gpu::Device& device)												\
-	{																											\
-		static gpu::DescriptorSetLayout layout( device.CreateDescriptorSetLayout( GetSerialized().bindings.size(), GetSerialized().bindings.data() ) ); \
-		return layout;																							\
-	}																											\
+	static SerializedData decl;																					\
+	static gpu::DescriptorSetLayout layout;																		\
 };																												\
-
-#define BEGIN_UNIFORM_BUFFER(StructName) \
-	BEGIN_UNIFORM_BLOCK(StructName)
-#define END_UNIFORM_BUFFER(StructName) \
-	END_UNIFORM_BLOCK(StructName, UniformBufferSerialized)
-
-#define BEGIN_PUSH_CONSTANTS(StructName) \
-	BEGIN_UNIFORM_BLOCK(StructName)	
-#define END_PUSH_CONSTANTS(StructName) \
-	END_UNIFORM_BLOCK(StructName, PushConstantSerialized)
+StructName::SerializedData StructName::decl;																	\
+gpu::DescriptorSetLayout StructName::layout;																	\
 
 class ShaderCompilerWorker
 {
@@ -175,10 +182,10 @@ public:
 	}
 	
 	/** Define the shader's push constant block. */
-	inline void operator<<(const PushConstantSerialized& pushConstantSerialized)
+	inline void operator<<(const ShaderStructSerialized& shaderStructSerialized)
 	{
-		_PushConstantMembers = pushConstantSerialized.members;
-		_PushConstantSize = pushConstantSerialized.size;
+		_PushConstantMembers = shaderStructSerialized.members;
+		_PushConstantSize = shaderStructSerialized.size;
 	}
 
 	/** Get the shader's push constant struct. */
@@ -300,3 +307,5 @@ namespace gpu
 
 	};
 }
+
+//#define REGISTER_SHADER( )

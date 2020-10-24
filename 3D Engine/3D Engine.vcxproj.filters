@@ -245,9 +245,6 @@
     <ClInclude Include="GPU\GPUShader.h">
       <Filter>Source\GPU</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\PostProcessing.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\vk_mem_alloc.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>

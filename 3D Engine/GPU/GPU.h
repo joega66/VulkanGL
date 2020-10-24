@@ -72,24 +72,21 @@ namespace gpu
 		template<typename DescriptorSetType>
 		gpu::DescriptorSet CreateDescriptorSet()
 		{
-			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
-			return layout.CreateDescriptorSet(*this);
+			return DescriptorSetType::layout.CreateDescriptorSet(*this);
 		}
 
 		template<typename DescriptorSetType>
 		gpu::DescriptorSet CreateDescriptorSet(const DescriptorSetType& descriptors)
 		{
-			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
-			gpu::DescriptorSet set = layout.CreateDescriptorSet(*this);
-			layout.UpdateDescriptorSet(*this, set, &descriptors);
+			gpu::DescriptorSet set = DescriptorSetType::layout.CreateDescriptorSet(*this);
+			DescriptorSetType::layout.UpdateDescriptorSet(*this, set, &descriptors);
 			return set;
 		}
 
 		template<typename DescriptorSetType>
 		void UpdateDescriptorSet(const gpu::DescriptorSet& set, const DescriptorSetType& descriptors)
 		{
-			gpu::DescriptorSetLayout& layout = DescriptorSetType::GetLayout(*this);
-			layout.UpdateDescriptorSet(*this, set, &descriptors);
+			DescriptorSetType::layout.UpdateDescriptorSet(*this, set, &descriptors);
 		}
 
 		virtual gpu::Semaphore CreateSemaphore() = 0;

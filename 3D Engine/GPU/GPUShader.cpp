@@ -1,8 +1,6 @@
 #include "GPU/GPUShader.h"
 #include "GPU/GPUDefinitions.h"
 
-std::string gShaderStructs;
-
 template<>
 std::string ShaderTypeSerializer::Serialize<uint32>()
 {
@@ -55,4 +53,16 @@ template<>
 std::string ShaderTypeSerializer::Serialize<gpu::ImageID>()
 {
 	return "uint";
+}
+
+std::string& gpu::GetRegisteredShaderStructs()
+{
+	static std::string registrar = "";
+	return registrar;
+}
+
+std::vector<RegisteredDescriptorSetType>& gpu::GetRegisteredDescriptorSetTypes()
+{
+	static std::vector<RegisteredDescriptorSetType> registrar;
+	return registrar;
 }

@@ -1,4 +1,3 @@
-#include "PostProcessing.h"
 #include "SceneRenderer.h"
 #include <ECS/EntityManager.h>
 #include <Components/RenderSettings.h>
@@ -7,6 +6,11 @@ BEGIN_PUSH_CONSTANTS(PostProcessingParams)
 	MEMBER(float, _ExposureAdjustment)
 	MEMBER(float, _ExposureBias)
 END_PUSH_CONSTANTS(PostProcessingParams)
+
+BEGIN_DESCRIPTOR_SET(PostProcessingDescriptors)
+	DESCRIPTOR(gpu::StorageImage, _DisplayColor)
+	DESCRIPTOR(gpu::StorageImage, _HDRColor)
+END_DESCRIPTOR_SET(PostProcessingDescriptors)
 
 class PostProcessingCS : public gpu::Shader
 {
@@ -30,13 +34,15 @@ public:
 
 void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList)
 {
+	static gpu::DescriptorSet postProcessingSet(_Device.CreateDescriptorSet<PostProcessingDescriptors>());
+
 	auto& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
 	PostProcessingDescriptors descriptors;
 	descriptors._DisplayColor = displayImage;
 	descriptors._HDRColor = camera._SceneColor;
 
-	_Device.UpdateDescriptorSet(_PostProcessingSet, descriptors);
+	_Device.UpdateDescriptorSet(postProcessingSet, descriptors);
 	
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<PostProcessingCS>();
 
@@ -47,7 +53,7 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 
 	cmdList.BindPipeline(pipeline);
 
-	cmdList.BindDescriptorSets(pipeline, 1, &_PostProcessingSet.GetHandle());
+	cmdList.BindDescriptorSets(pipeline, 1, &postProcessingSet.GetHandle());
 
 	PostProcessingParams postProcessingParams;
 	postProcessingParams._ExposureAdjustment = settings.ExposureAdjustment;
