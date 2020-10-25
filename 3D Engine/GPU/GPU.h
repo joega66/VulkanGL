@@ -63,11 +63,11 @@ namespace gpu
 
 		virtual gpu::RenderPass CreateRenderPass(const RenderPassDesc& rpDesc) = 0;
 
-		virtual VkDescriptorSet GetTextures() = 0;
+		virtual VkDescriptorSet& GetTextures() = 0;
 
-		virtual VkDescriptorSet GetSamplers() = 0;
+		virtual VkDescriptorSet& GetSamplers() = 0;
 
-		virtual VkDescriptorSet GetImages() = 0;
+		virtual VkDescriptorSet& GetImages() = 0;
 
 		template<typename DescriptorSetType>
 		gpu::DescriptorSet CreateDescriptorSet()

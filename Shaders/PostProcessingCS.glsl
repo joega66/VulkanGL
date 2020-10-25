@@ -1,8 +1,5 @@
-#define TEXTURE_SET 1
+#define IMAGE_SET 0
 #include "SceneResources.glsl"
-
-layout(binding = 0, set = 0, rgba8) uniform writeonly image2D _DisplayColor;
-layout(binding = 1, set = 0, rgba16f) uniform readonly image2D _HDRColor;
 
 vec3 Uncharted2ToneMapping(vec3 x)
 {
@@ -25,13 +22,13 @@ vec3 ApplyGammaCorrection(vec3 color)
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 imageSize = imageSize(_DisplayColor);
+	const ivec2 imageSize = ImageSize(_DisplayColor);
 	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, imageSize.xy)))
 		return;
 
 	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
 
-	vec3 color = imageLoad(_HDRColor, screenCoords).rgb;
+	vec3 color = ImageLoad(_HDRColor, screenCoords).rgb;
 
 	color *= _ExposureAdjustment;
 
@@ -45,5 +42,5 @@ void main()
 
 	color = ApplyGammaCorrection(color);
 
-	imageStore(_DisplayColor, screenCoords, vec4(color, 1.0));
+	ImageStore(_DisplayColor, screenCoords, vec4(color, 1.0));
 }

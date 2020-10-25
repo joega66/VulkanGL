@@ -285,17 +285,17 @@ gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& rpDesc)
 	return gpu::RenderPass(*this, renderPass, framebuffer, renderArea, clearValues, static_cast<uint32>(rpDesc.colorAttachments.size()));
 }
 
-VkDescriptorSet VulkanDevice::GetTextures()
+VkDescriptorSet& VulkanDevice::GetTextures()
 {
 	return *_BindlessTextures;
 }
 
-VkDescriptorSet VulkanDevice::GetSamplers()
+VkDescriptorSet& VulkanDevice::GetSamplers()
 {
 	return *_BindlessSamplers;
 }
 
-VkDescriptorSet VulkanDevice::GetImages()
+VkDescriptorSet& VulkanDevice::GetImages()
 {
 	return *_BindlessImages;
 }

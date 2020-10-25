@@ -58,11 +58,11 @@ public:
 
 	gpu::RenderPass CreateRenderPass(const RenderPassDesc& rpDesc) override;
 
-	VkDescriptorSet GetTextures() override;
+	VkDescriptorSet& GetTextures() override;
 
-	VkDescriptorSet GetSamplers() override;
+	VkDescriptorSet& GetSamplers() override;
 
-	VkDescriptorSet GetImages() override;
+	VkDescriptorSet& GetImages() override;
 
 	gpu::Semaphore CreateSemaphore() override;
 

@@ -49,7 +49,7 @@ public:
 	void Release(uint32 descriptorIndex);
 
 	inline VkDescriptorSetLayout GetLayout() const { return _DescriptorSetLayout; }
-	inline operator VkDescriptorSet() const { return _DescriptorSet; }
+	inline operator VkDescriptorSet&() { return _DescriptorSet; }
 
 private:
 	VkDevice				_Device;

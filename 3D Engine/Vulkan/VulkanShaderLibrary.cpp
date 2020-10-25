@@ -123,6 +123,17 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 		}
 	}
 
+	for (const auto& resource : resources.storage_images)
+	{
+		const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
+		const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+		if (type.array.size())
+		{
+			layouts.insert({ set, device._BindlessImages->GetLayout() });
+		}
+	}
+
 	auto getBindings = [&] (const auto& resources, EDescriptorType descriptorType)
 	{
 		for (const auto& resource : resources)

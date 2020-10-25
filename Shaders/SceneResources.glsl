@@ -7,7 +7,7 @@
 #extension GL_EXT_samplerless_texture_functions : require
 #endif
 
-#if defined(IMAGE_3D_SET)
+#if defined (IMAGE_SET) || defined(IMAGE_3D_SET)
 #extension GL_EXT_shader_image_load_formatted : require
 #endif
 
@@ -25,6 +25,10 @@ layout(binding = 0, set = SAMPLER_SET) uniform sampler _Samplers[];
 
 #ifdef CUBEMAP_SET
 layout(binding = 0, set = CUBEMAP_SET) uniform textureCube _Cubemaps[];
+#endif
+
+#ifdef IMAGE_SET
+layout(binding = 0, set = IMAGE_SET) uniform image2D _Images[];
 #endif
 
 #ifdef IMAGE_3D_SET
@@ -68,6 +72,25 @@ vec4 TexelFetch(uint textureID, ivec3 location, level)
 vec4 SampleCubemap(uint textureID, uint samplerID, vec3 uv)
 {
 	return texture(samplerCube(_Cubemaps[textureID], _Samplers[samplerID]), uv);
+}
+
+#endif
+
+#if defined(IMAGE_SET)
+
+vec4 ImageLoad(uint imageID, ivec2 location)
+{
+	return imageLoad(_Images[imageID], location);
+}
+
+void ImageStore(uint imageID, ivec2 location, vec4 value)
+{
+	imageStore(_Images[imageID], location, value);
+}
+
+ivec2 ImageSize(uint imageID)
+{
+	return imageSize(_Images[imageID]);
 }
 
 #endif
