@@ -161,7 +161,6 @@
   <ItemGroup>
     <None Include="..\Config\Engine.ini" />
     <None Include="..\Shaders\Common.glsl" />
-    <None Include="..\Shaders\FullscreenFS.glsl" />
     <None Include="..\Shaders\FullscreenVS.glsl" />
     <None Include="..\Shaders\GBufferFS.glsl" />
     <None Include="..\Shaders\GBufferVS.glsl" />

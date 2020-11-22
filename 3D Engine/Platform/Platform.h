@@ -71,11 +71,11 @@ public:
 	std::filesystem::path DisplayFileExplorer();
 
 	// File I/O
-	static std::string FileRead(const std::string& Filename, const std::string& prependText = "");
+	static std::string FileRead(const std::filesystem::path& path, const std::string& prependText = "");
 	static void FileDelete(const std::string& Filename);
 	static void FileRename(const std::string& Old, const std::string& New);
 	static bool FileExists(const std::string& Filename);
-	static uint64 GetLastWriteTime(const std::string& Filename);
+	static uint64 GetLastWriteTime(const std::filesystem::path& path);
 
 	// Logging
 	static void WriteLog(const std::string& Log);

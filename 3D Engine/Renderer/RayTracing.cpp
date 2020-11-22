@@ -16,6 +16,7 @@ END_PUSH_CONSTANTS(RayTracingParams)
 class RayTracingCS : public gpu::Shader
 {
 public:
+	RayTracingCS() = default;
 	RayTracingCS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -25,13 +26,9 @@ public:
 	{
 		worker << RayTracingParams::decl;
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo baseInfo = { "../Shaders/RayTracingCS.glsl", "main", EShaderStage::Compute };
-		return baseInfo;
-	}
 };
+
+REGISTER_SHADER(RayTracingCS, "../Shaders/RayTracingCS.glsl", "main", EShaderStage::Compute);
 
 void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
 {
@@ -80,8 +77,8 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 
 	cmdList.BindPipeline(pipeline);
 
-	std::vector<VkDescriptorSet> descriptorSets = { cameraProxy._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
-	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
+	const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
 

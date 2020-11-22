@@ -200,20 +200,28 @@ private:
 	std::string_view _PushConstantMembers;
 };
 
-struct ShaderInfo
+
+struct ShaderCompilationTask
 {
-	std::string filename;
-	std::string entrypoint;
-	EShaderStage stage;
+	std::type_index			typeIndex;
+	gpu::Shader*			shader;
+	std::filesystem::path	path;
+	std::string				entrypoint;
+	EShaderStage			stage;
+	ShaderCompilerWorker	worker;
 };
+
+namespace gpu
+{
+	std::vector<ShaderCompilationTask>& GetShaderCompilationTasks();
+}
 
 class ShaderCompilationInfo
 {
 public:
-	std::type_index type;
-	EShaderStage stage;
+	std::filesystem::path path;
 	std::string entrypoint;
-	std::string filename;
+	EShaderStage stage;
 	uint64 lastWriteTime;
 	ShaderCompilerWorker worker;
 	VkShaderModule shaderModule;
@@ -221,21 +229,20 @@ public:
 	std::map<uint32, VkDescriptorSetLayout> layouts;
 	VkPushConstantRange pushConstantRange;
 
+	ShaderCompilationInfo() = default;
 	ShaderCompilationInfo(
-		std::type_index type,
 		EShaderStage stage, 
 		const std::string& entrypoint,
-		const std::string& filename,
+		const std::filesystem::path& path,
 		uint64 lastWriteTime,
 		const ShaderCompilerWorker& worker,
 		VkShaderModule shaderModule,
 		const std::vector<VertexAttributeDescription>& vertexAttributeDescriptions,
 		const std::map<uint32, VkDescriptorSetLayout>& layouts,
 		const VkPushConstantRange& pushConstantRange)
-		: type(type)
-		, stage(stage)
+		: stage(stage)
 		, entrypoint(entrypoint)
-		, filename(filename)
+		, path(path)
 		, lastWriteTime(lastWriteTime)
 		, worker(worker)
 		, shaderModule(shaderModule)
@@ -253,6 +260,7 @@ namespace gpu
 	public:
 		ShaderCompilationInfo compilationInfo;
 
+		Shader() = default;
 		Shader(const ShaderCompilationInfo& compilationInfo)
 			: compilationInfo(compilationInfo)
 		{
@@ -263,7 +271,7 @@ namespace gpu
 		}
 	};
 
-	/** The shader library compiles shaders and caches them by typename. */
+	/** The shader library compiles statically registered shaders and caches them by type index. */
 	class ShaderLibrary
 	{
 	public:
@@ -271,21 +279,8 @@ namespace gpu
 		template<typename ShaderType>
 		const ShaderType* FindShader()
 		{
-			std::type_index type = std::type_index(typeid(ShaderType));
-
-			if (_Shaders.contains(type))
-			{
-				return static_cast<const ShaderType*>(_Shaders[type].get());
-			}
-			else
-			{
-				ShaderCompilerWorker worker;
-				ShaderType::SetEnvironmentVariables(worker);
-				const auto& [filename, entrypoint, stage] = ShaderType::GetShaderInfo();
-				const ShaderCompilationInfo compilationInfo = CompileShader(worker, filename, entrypoint, stage, type);
-				_Shaders.emplace(compilationInfo.type, std::make_unique<ShaderType>(compilationInfo));
-				return static_cast<const ShaderType*>(_Shaders[compilationInfo.type].get());
-			}
+			const std::type_index typeIndex = std::type_index(typeid(ShaderType));
+			return static_cast<ShaderType*>(_Shaders[typeIndex]);
 		}
 
 		/** Recompile cached shaders. */
@@ -295,7 +290,7 @@ namespace gpu
 		/** Compile the shader. */
 		virtual ShaderCompilationInfo CompileShader(
 			const ShaderCompilerWorker& worker,
-			const std::string& filename,
+			const std::filesystem::path& path,
 			const std::string& entryPoint,
 			EShaderStage stage,
 			std::type_index type
@@ -303,9 +298,27 @@ namespace gpu
 
 	protected:
 		/** Cached shaders. */
-		std::unordered_map<std::type_index, std::unique_ptr<gpu::Shader>> _Shaders;
+		std::unordered_map<std::type_index, gpu::Shader*> _Shaders;
 
 	};
 }
 
-//#define REGISTER_SHADER( )
+#define REGISTER_SHADER(Type, path, entrypoint, stage)	\
+class __##Type##CompilationTask							\
+{														\
+public:													\
+	__##Type##CompilationTask()							\
+	{													\
+		static Type shader;								\
+		ShaderCompilationTask task = {					\
+			.typeIndex = std::type_index(typeid(Type)), \
+			.shader = &shader,							\
+			.path = path,								\
+			.entrypoint = entrypoint,					\
+			.stage = stage,								\
+		};												\
+		Type::SetEnvironmentVariables(task.worker);		\
+		gpu::GetShaderCompilationTasks().push_back(task); \
+	} \
+	static __##Type##CompilationTask task; \
+}; __##Type##CompilationTask __##Type##CompilationTask::task;

@@ -6,6 +6,7 @@
 class SkyboxVS : public gpu::Shader
 {
 public:
+	SkyboxVS() = default;
 	SkyboxVS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -14,13 +15,9 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo base = { "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex };
-		return base;
-	}
 };
+
+REGISTER_SHADER(SkyboxVS, "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex);
 
 BEGIN_PUSH_CONSTANTS(SkyboxShaderParams)
 	MEMBER(gpu::TextureID, _Skybox)
@@ -30,6 +27,7 @@ END_PUSH_CONSTANTS(SkyboxShaderParams)
 class SkyboxFS : public gpu::Shader
 {
 public:
+	SkyboxFS() = default;
 	SkyboxFS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -39,13 +37,9 @@ public:
 	{
 		worker << SkyboxShaderParams::decl;
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo base = { "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment };
-		return base;
-	}
 };
+
+REGISTER_SHADER(SkyboxFS, "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment);
 
 void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 {
@@ -66,8 +60,8 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	cmdList.BindPipeline(pipeline);
 
-	const std::vector<VkDescriptorSet> descriptorSets = { camera._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
-	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
+	const VkDescriptorSet descriptorSets[] = { camera._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 	for (auto& entity : _ECS.GetEntities<SkyboxComponent>())
 	{

@@ -12,6 +12,7 @@ END_PUSH_CONSTANTS(PostProcessingParams)
 class PostProcessingCS : public gpu::Shader
 {
 public:
+	PostProcessingCS() = default;
 	PostProcessingCS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -21,13 +22,9 @@ public:
 	{
 		worker << PostProcessingParams::decl;
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute };
-		return info;
-	}
 };
+
+REGISTER_SHADER(PostProcessingCS, "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute);
 
 void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList)
 {

@@ -66,3 +66,9 @@ std::vector<RegisteredDescriptorSetType>& gpu::GetRegisteredDescriptorSetTypes()
 	static std::vector<RegisteredDescriptorSetType> registrar;
 	return registrar;
 }
+
+std::vector<ShaderCompilationTask>& gpu::GetShaderCompilationTasks()
+{
+	static std::vector<ShaderCompilationTask> tasks;
+	return tasks;
+}

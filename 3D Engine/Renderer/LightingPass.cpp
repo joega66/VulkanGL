@@ -21,6 +21,7 @@ public:
 	static constexpr uint32 directionalLight = 0;
 	static constexpr uint32 pointLight = 1;
 
+	LightingPassCS() = default;
 	LightingPassCS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -30,13 +31,9 @@ public:
 	{
 		worker << LightingParams::decl;
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute };
-		return info;
-	}
 };
+
+REGISTER_SHADER(LightingPassCS, "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute);
 
 void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList)
 {
@@ -85,14 +82,14 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 
 	cmdList.BindPipeline(pipeline);
 
-	const std::vector<VkDescriptorSet> descriptorSets =
+	const VkDescriptorSet descriptorSets[] =
 	{
 		camera._CameraDescriptorSet,
 		_Device.GetTextures(),
 		_Device.GetSamplers(),
 	};
 
-	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 	cmdList.PushConstants(pipeline, shader, &light);
 
@@ -111,6 +108,7 @@ END_PUSH_CONSTANTS(SSGIParams)
 class SSGI : public gpu::Shader
 {
 public:
+	SSGI() = default;
 	SSGI(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -120,13 +118,9 @@ public:
 	{
 		worker << SSGIParams::decl;
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo baseInfo = { "../Shaders/SSGI.glsl", "main", EShaderStage::Compute };
-		return baseInfo;
-	}
 };
+
+REGISTER_SHADER(SSGI, "../Shaders/SSGI.glsl", "main", EShaderStage::Compute);
 
 void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
 {
@@ -150,14 +144,14 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 
 	cmdList.BindPipeline(pipeline);
 
-	const std::vector<VkDescriptorSet> descriptorSets =
+	const VkDescriptorSet descriptorSets[] =
 	{
 		cameraProxy._CameraDescriptorSet,
 		_Device.GetTextures(),
 		_Device.GetSamplers(),
 	};
 
-	cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 	static uint32 frameNumber = 0;
 

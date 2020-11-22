@@ -5,11 +5,11 @@
 #include "Surface.h"
 #include <ECS/EntityManager.h>
 
-template<EMeshType meshType>
-class ShadowDepthVS : public MeshShader<meshType>
+class ShadowDepthVS : public MeshShader
 {
-	using Base = MeshShader<meshType>;
+	using Base = MeshShader;
 public:
+	ShadowDepthVS() = default;
 	ShadowDepthVS(const ShaderCompilationInfo& compilationInfo)
 		: Base(compilationInfo)
 	{
@@ -19,19 +19,15 @@ public:
 	{
 		Base::SetEnvironmentVariables(worker);
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/ShadowDepthVS.glsl", "main", EShaderStage::Vertex };
-		return info;
-	}
 };
 
-template<EMeshType meshType>
-class ShadowDepthFS : public MeshShader<meshType>
+REGISTER_SHADER(ShadowDepthVS, "../Shaders/ShadowDepthVS.glsl", "main", EShaderStage::Vertex);
+
+class ShadowDepthFS : public MeshShader
 {
-	using Base = MeshShader<meshType>;
+	using Base = MeshShader;
 public:
+	ShadowDepthFS() = default;
 	ShadowDepthFS(const ShaderCompilationInfo& compilationInfo)
 		: Base(compilationInfo)
 	{
@@ -41,13 +37,9 @@ public:
 	{
 		Base::SetEnvironmentVariables(worker);
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment };
-		return info;
-	}
 };
+
+REGISTER_SHADER(ShadowDepthFS, "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment);
 
 void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList)
 {
@@ -65,12 +57,10 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 
 			surfaceGroup.Draw<false>(_Device, cmdList, std::size(descriptorSets), descriptorSets, [&] ()
 			{
-				constexpr EMeshType meshType = EMeshType::StaticMesh;
-
 				PipelineStateDesc psoDesc = {};
 				psoDesc.renderPass = shadowProxy.GetRenderPass();
-				psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<ShadowDepthVS<meshType>>();
-				psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<ShadowDepthFS<meshType>>();
+				psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<ShadowDepthVS>();
+				psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<ShadowDepthFS>();
 				psoDesc.viewport.width = shadowProxy.GetShadowMap().GetWidth();
 				psoDesc.viewport.height = shadowProxy.GetShadowMap().GetHeight();
 				psoDesc.rasterizationState.depthBiasEnable = true;

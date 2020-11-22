@@ -16,6 +16,7 @@
 class UserInterfaceVS : public gpu::Shader
 {
 public:
+	UserInterfaceVS() = default;
 	UserInterfaceVS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -24,17 +25,14 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/UserInterfaceVS.glsl", "main", EShaderStage::Vertex };
-		return info;
-	}
 };
+
+REGISTER_SHADER(UserInterfaceVS, "../Shaders/UserInterfaceVS.glsl", "main", EShaderStage::Vertex);
 
 class UserInterfaceFS : public gpu::Shader
 {
 public:
+	UserInterfaceFS() = default;
 	UserInterfaceFS(const ShaderCompilationInfo& compilationInfo)
 		: gpu::Shader(compilationInfo)
 	{
@@ -43,13 +41,9 @@ public:
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/UserInterfaceFS.glsl", "main", EShaderStage::Fragment };
-		return info;
-	}
 };
+
+REGISTER_SHADER(UserInterfaceFS, "../Shaders/UserInterfaceFS.glsl", "main", EShaderStage::Fragment);
 
 #define SHOW_COMPONENT(type, ecs, entity, callback)					\
 	if (ecs.HasComponent<type>(entity) && ImGui::TreeNode(#type))	\
@@ -401,8 +395,8 @@ void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, con
 
 		cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &scaleAndTranslation);
 
-		const std::vector<VkDescriptorSet> descriptorSets = { device.GetTextures(), device.GetSamplers() };
-		cmdList.BindDescriptorSets(pipeline, descriptorSets.size(), descriptorSets.data());
+		const VkDescriptorSet descriptorSets[] = { device.GetTextures(), device.GetSamplers() };
+		cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 		cmdList.BindVertexBuffers(1, &vertexBuffer);
 

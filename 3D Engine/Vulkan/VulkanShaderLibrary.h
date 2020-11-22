@@ -13,7 +13,7 @@ public:
 private:
 	ShaderCompilationInfo CompileShader(
 		const ShaderCompilerWorker& worker,
-		const std::string& filename,
+		const std::filesystem::path& path,
 		const std::string& entryPoint,
 		EShaderStage stage,
 		std::type_index type

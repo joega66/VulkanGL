@@ -45,11 +45,11 @@ void WindowsPlatform::Exit()
 	exit(-1);
 }
 
-std::string WindowsPlatform::FileRead(const std::string& Filename, const std::string& prependText)
+std::string WindowsPlatform::FileRead(const std::filesystem::path& path, const std::string& prependText)
 {
-	std::ifstream File(Filename, std::ios::ate | std::ios::binary);
+	std::ifstream File(path, std::ios::ate | std::ios::binary);
 
-	check(File.is_open(), "Failed to open file %s", Filename.c_str());
+	check(File.is_open(), "Failed to open file %s", path.c_str());
 
 	size_t FileSize = static_cast<size_t>(File.tellg());
 	std::string Buffer;
@@ -80,9 +80,9 @@ bool WindowsPlatform::FileExists(const std::string& Filename)
 	return std::filesystem::is_regular_file(Filename);
 }
 
-uint64 WindowsPlatform::GetLastWriteTime(const std::string& Filename)
+uint64 WindowsPlatform::GetLastWriteTime(const std::filesystem::path& path)
 {
-	const uint64 LastWriteTime = std::filesystem::last_write_time(Filename).time_since_epoch().count();
+	const uint64 LastWriteTime = std::filesystem::last_write_time(path).time_since_epoch().count();
 	return LastWriteTime;
 }
 

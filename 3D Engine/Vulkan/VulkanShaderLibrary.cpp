@@ -211,11 +211,19 @@ private:
 VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& device)
 	: _Device(device)
 {
+	// Compile all statically registered shaders.
+	auto& tasks = gpu::GetShaderCompilationTasks();
+	for (auto& task : tasks)
+	{
+		const auto compilationResult = CompileShader(task.worker, task.path, task.entrypoint, task.stage, task.typeIndex);
+		task.shader->compilationInfo = compilationResult;
+		_Shaders.emplace(task.typeIndex, task.shader);
+	}
 }
 
 ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 	const ShaderCompilerWorker& worker,
-	const std::string& filename,
+	const std::filesystem::path& path,
 	const std::string& entryPoint,
 	EShaderStage stage,
 	std::type_index type
@@ -271,15 +279,15 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 
 	do
 	{
-		const std::string sourceText = Platform::FileRead(filename, globalShaderStructs);
+		const std::string sourceText = Platform::FileRead(path, globalShaderStructs);
 
-		spvCompilationResult = compiler.CompileGlslToSpv(sourceText, shaderKind, filename.c_str(), entryPoint.c_str(), compileOptions);
+		spvCompilationResult = compiler.CompileGlslToSpv(sourceText, shaderKind, path.string().c_str(), entryPoint.c_str(), compileOptions);
 
 		if (spvCompilationResult.GetNumErrors() > 0)
 		{
 			const EMBReturn ret = Platform::DisplayMessageBox(
 				EMBType::RETRYCANCEL, EMBIcon::WARNING, 
-				"Failed to compile " + filename + "\n\n" + spvCompilationResult.GetErrorMessage().c_str(), "Shader Compiler"
+				"Failed to compile " + path.string() + "\n\n" + spvCompilationResult.GetErrorMessage().c_str(), "Shader Compiler"
 			);
 
 			if (ret == EMBReturn::CANCEL)
@@ -325,31 +333,30 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 		return { vulkanStageFlags, worker.GetPushConstantOffset(), worker.GetPushConstantSize() };
 	}();
 
-	return ShaderCompilationInfo(
-		type, stage, entryPoint, filename, Platform::GetLastWriteTime(filename), worker,
+	return ShaderCompilationInfo(stage, entryPoint, path, Platform::GetLastWriteTime(path), worker,
 		shaderModule, vertexAttributeDescriptions, layouts, pushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()
 {
-	for (const auto& [shaderType, shader] : _Shaders)
-	{
-		const ShaderCompilationInfo& compileInfo = shader->compilationInfo;
-		const uint64 lastWriteTime = Platform::GetLastWriteTime(compileInfo.filename);
+	//for (const auto& [shaderType, shader] : _Shaders)
+	//{
+	//	const ShaderCompilationInfo& compileInfo = shader->compilationInfo;
+	//	const uint64 lastWriteTime = Platform::GetLastWriteTime(compileInfo.path);
 
-		if (lastWriteTime > compileInfo.lastWriteTime)
-		{
-			// Destroy the old shader module.
-			vkDestroyShaderModule(_Device, compileInfo.shaderModule, nullptr);
+	//	if (lastWriteTime > compileInfo.lastWriteTime)
+	//	{
+	//		// Destroy the old shader module.
+	//		vkDestroyShaderModule(_Device, compileInfo.shaderModule, nullptr);
 
-			shader->compilationInfo = CompileShader(
-				compileInfo.worker,
-				compileInfo.filename,
-				compileInfo.entrypoint,
-				compileInfo.stage,
-				compileInfo.type);
-		}
-	}
+	//		shader->compilationInfo = CompileShader(
+	//			compileInfo.worker,
+	//			compileInfo.path,
+	//			compileInfo.entrypoint,
+	//			compileInfo.stage,
+	//			compileInfo.type);
+	//	}
+	//}
 
 	_Device.GetCache().RecompilePipelines();
 }

@@ -5,11 +5,11 @@
 #include <Engine/Engine.h>
 #include <Renderer/Surface.h>
 
-template<EMeshType meshType>
-class GBufferPassVS : public MeshShader<meshType>
+class GBufferPassVS : public MeshShader
 {
-	using Base = MeshShader<meshType>;
+	using Base = MeshShader;
 public:
+	GBufferPassVS() = default;
 	GBufferPassVS(const ShaderCompilationInfo& compilationInfo)
 		: Base(compilationInfo)
 	{
@@ -19,19 +19,15 @@ public:
 	{
 		Base::SetEnvironmentVariables(worker);
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo info = { "../Shaders/GBufferVS.glsl", "main", EShaderStage::Vertex };
-		return info;
-	}
 };
 
-template<EMeshType meshType>
-class GBufferPassFS : public MeshShader<meshType>
+REGISTER_SHADER(GBufferPassVS, "../Shaders/GBufferVS.glsl", "main", EShaderStage::Vertex);
+
+class GBufferPassFS : public MeshShader
 {
-	using Base = MeshShader<meshType>;
+	using Base = MeshShader;
 public:
+	GBufferPassFS() = default;
 	GBufferPassFS(const ShaderCompilationInfo& compilationInfo)
 		: Base(compilationInfo)
 	{
@@ -41,13 +37,9 @@ public:
 	{
 		Base::SetEnvironmentVariables(worker);
 	}
-
-	static const ShaderInfo& GetShaderInfo()
-	{
-		static ShaderInfo baseInfo = { "../Shaders/GBufferFS.glsl", "main", EShaderStage::Fragment };
-		return baseInfo;
-	}
 };
+
+REGISTER_SHADER(GBufferPassFS, "../Shaders/GBufferFS.glsl", "main", EShaderStage::Fragment);
 
 void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
 {
@@ -63,12 +55,10 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 
 		surfaceGroup.Draw<true>(_Device, cmdList, std::size(descriptorSets), descriptorSets, [&] ()
 		{
-			constexpr EMeshType meshType = EMeshType::StaticMesh;
-
 			PipelineStateDesc psoDesc = {};
 			psoDesc.renderPass = cameraProxy._GBufferRP;
-			psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<GBufferPassVS<meshType>>();
-			psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<GBufferPassFS<meshType>>();
+			psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<GBufferPassVS>();
+			psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<GBufferPassFS>();
 			psoDesc.viewport.width = cameraProxy._SceneDepth.GetWidth();
 			psoDesc.viewport.height = cameraProxy._SceneDepth.GetHeight();
 

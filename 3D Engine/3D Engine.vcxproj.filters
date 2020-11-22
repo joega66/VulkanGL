@@ -471,9 +471,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Shaders\FullscreenFS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\FullscreenVS.glsl">
       <Filter>Shaders</Filter>
     </None>

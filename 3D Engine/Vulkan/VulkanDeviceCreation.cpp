@@ -141,6 +141,7 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	_BindlessSamplers = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLER, 1024);
 	_BindlessImages = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
 
+	// Create all descriptor set layouts.
 	auto& descriptorSetTypes = gpu::GetRegisteredDescriptorSetTypes();
 	for (auto& descriptorSetType : descriptorSetTypes)
 	{
