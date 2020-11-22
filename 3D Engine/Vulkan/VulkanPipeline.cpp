@@ -16,7 +16,7 @@ gpu::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& psoDesc)
 	{
 		if (shader)
 		{
-			for (const auto& [set, layout] : shader->compilationInfo.layouts)
+			for (const auto& [set, layout] : shader->compilationResult.layouts)
 			{
 				layoutsMap.insert({ set, layout });
 			}
@@ -41,9 +41,9 @@ gpu::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& psoDesc)
 
 	auto getPushConstantRange = [&] (const gpu::Shader* shader)
 	{
-		if (shader && shader->compilationInfo.pushConstantRange.size > 0)
+		if (shader && shader->compilationResult.pushConstantRange.size > 0)
 		{
-			pushConstantRanges.push_back(shader->compilationInfo.pushConstantRange);
+			pushConstantRanges.push_back(shader->compilationResult.pushConstantRange);
 		}
 	};
 
@@ -72,9 +72,9 @@ gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& computeDesc)
 	};
 
 	std::vector<VkDescriptorSetLayout> layouts;
-	layouts.reserve(computeDesc.computeShader->compilationInfo.layouts.size());
+	layouts.reserve(computeDesc.computeShader->compilationResult.layouts.size());
 
-	for (auto& [set, layout] : computeDesc.computeShader->compilationInfo.layouts)
+	for (auto& [set, layout] : computeDesc.computeShader->compilationResult.layouts)
 	{
 		layouts.push_back(layout);
 	}
@@ -93,7 +93,7 @@ gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& computeDesc)
 		return iter->second;
 	}
 
-	const auto& pushConstantRange = computeDesc.computeShader->compilationInfo.pushConstantRange;
+	const auto& pushConstantRange = computeDesc.computeShader->compilationResult.pushConstantRange;
 
 	const auto pushConstantRanges = pushConstantRange.size > 0 ? std::vector{ pushConstantRange } : std::vector<VkPushConstantRange>{};
 
@@ -270,9 +270,9 @@ static void CreateShaderStages(const PipelineStateDesc& psoDesc, std::vector<VkP
 
 		shaderStages.push_back({
 			.sType	= VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.stage	= static_cast<VkShaderStageFlagBits>(shader->compilationInfo.stage),
-			.module = shader->compilationInfo.shaderModule,
-			.pName	= shader->compilationInfo.entrypoint.data(),
+			.stage	= static_cast<VkShaderStageFlagBits>(shader->compilationResult.stage),
+			.module = shader->compilationResult.shaderModule,
+			.pName	= shader->compilationResult.entrypoint.data(),
 		});
 	};
 
@@ -316,7 +316,7 @@ static void CreateVertexInputState(
 	// If no vertex attributes were provided in the PSO desc, use the ones from shader reflection.
 	const std::vector<VertexAttributeDescription>& vertexAttributes =
 		psoDesc.vertexAttributes.empty() ? 
-		psoDesc.shaderStages.vertex->compilationInfo.vertexAttributeDescriptions : 
+		psoDesc.shaderStages.vertex->compilationResult.vertexAttributeDescriptions : 
 		psoDesc.vertexAttributes;
 
 	outVertexAttributes.reserve(vertexAttributes.size());
@@ -470,8 +470,8 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& computeDesc, V
 	VkPipelineShaderStageCreateInfo& stage = pipelineInfo.stage;
 	stage			= { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	stage.stage		= VK_SHADER_STAGE_COMPUTE_BIT;
-	stage.module	= computeDesc.computeShader->compilationInfo.shaderModule;
-	stage.pName		= computeDesc.computeShader->compilationInfo.entrypoint.data();
+	stage.module	= computeDesc.computeShader->compilationResult.shaderModule;
+	stage.pName		= computeDesc.computeShader->compilationResult.entrypoint.data();
 
 	VkSpecializationInfo specializationInfo;
 

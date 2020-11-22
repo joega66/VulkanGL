@@ -215,18 +215,16 @@ VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& device)
 	auto& tasks = gpu::GetShaderCompilationTasks();
 	for (auto& task : tasks)
 	{
-		const auto compilationResult = CompileShader(task.worker, task.path, task.entrypoint, task.stage, task.typeIndex);
-		task.shader->compilationInfo = compilationResult;
+		task.shader->compilationResult = CompileShader(task.worker, task.path, task.entrypoint, task.stage);
 		_Shaders.emplace(task.typeIndex, task.shader);
 	}
 }
 
-ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
+ShaderCompilationResult VulkanShaderLibrary::CompileShader(
 	const ShaderCompilerWorker& worker,
 	const std::filesystem::path& path,
-	const std::string& entryPoint,
-	EShaderStage stage,
-	std::type_index type
+	const std::string& entrypoint,
+	EShaderStage stage
 )
 {
 	shaderc::CompileOptions compileOptions;
@@ -281,7 +279,7 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 	{
 		const std::string sourceText = Platform::FileRead(path, globalShaderStructs);
 
-		spvCompilationResult = compiler.CompileGlslToSpv(sourceText, shaderKind, path.string().c_str(), entryPoint.c_str(), compileOptions);
+		spvCompilationResult = compiler.CompileGlslToSpv(sourceText, shaderKind, path.string().c_str(), entrypoint.c_str(), compileOptions);
 
 		if (spvCompilationResult.GetNumErrors() > 0)
 		{
@@ -333,30 +331,29 @@ ShaderCompilationInfo VulkanShaderLibrary::CompileShader(
 		return { vulkanStageFlags, worker.GetPushConstantOffset(), worker.GetPushConstantSize() };
 	}();
 
-	return ShaderCompilationInfo(stage, entryPoint, path, Platform::GetLastWriteTime(path), worker,
+	return ShaderCompilationResult(path, entrypoint, stage, Platform::GetLastWriteTime(path), worker,
 		shaderModule, vertexAttributeDescriptions, layouts, pushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()
 {
-	//for (const auto& [shaderType, shader] : _Shaders)
-	//{
-	//	const ShaderCompilationInfo& compileInfo = shader->compilationInfo;
-	//	const uint64 lastWriteTime = Platform::GetLastWriteTime(compileInfo.path);
+	for (const auto& [typeIndex, shader] : _Shaders)
+	{
+		const auto& compilationResult = shader->compilationResult;
+		const uint64 lastWriteTime = Platform::GetLastWriteTime(compilationResult.path);
 
-	//	if (lastWriteTime > compileInfo.lastWriteTime)
-	//	{
-	//		// Destroy the old shader module.
-	//		vkDestroyShaderModule(_Device, compileInfo.shaderModule, nullptr);
+		if (lastWriteTime > compilationResult.lastWriteTime)
+		{
+			// Destroy the old shader module.
+			vkDestroyShaderModule(_Device, compilationResult.shaderModule, nullptr);
 
-	//		shader->compilationInfo = CompileShader(
-	//			compileInfo.worker,
-	//			compileInfo.path,
-	//			compileInfo.entrypoint,
-	//			compileInfo.stage,
-	//			compileInfo.type);
-	//	}
-	//}
+			shader->compilationResult = CompileShader(
+				compilationResult.worker,
+				compilationResult.path,
+				compilationResult.entrypoint,
+				compilationResult.stage);
+		}
+	}
 
 	_Device.GetCache().RecompilePipelines();
 }

@@ -13,10 +13,6 @@ class PostProcessingCS : public gpu::Shader
 {
 public:
 	PostProcessingCS() = default;
-	PostProcessingCS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{

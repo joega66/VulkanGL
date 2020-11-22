@@ -11,13 +11,11 @@ public:
 	void RecompileShaders() override;
 
 private:
-	ShaderCompilationInfo CompileShader(
+	ShaderCompilationResult CompileShader(
 		const ShaderCompilerWorker& worker,
 		const std::filesystem::path& path,
-		const std::string& entryPoint,
-		EShaderStage stage,
-		std::type_index type
-	) override;
+		const std::string& entrypoint,
+		EShaderStage stage) override;
 
 	VulkanDevice& _Device;
 };

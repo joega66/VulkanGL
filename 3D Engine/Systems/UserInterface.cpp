@@ -17,10 +17,6 @@ class UserInterfaceVS : public gpu::Shader
 {
 public:
 	UserInterfaceVS() = default;
-	UserInterfaceVS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{
@@ -33,10 +29,6 @@ class UserInterfaceFS : public gpu::Shader
 {
 public:
 	UserInterfaceFS() = default;
-	UserInterfaceFS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
 	{

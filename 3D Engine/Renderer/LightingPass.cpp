@@ -22,10 +22,6 @@ public:
 	static constexpr uint32 pointLight = 1;
 
 	LightingPassCS() = default;
-	LightingPassCS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
@@ -109,10 +105,6 @@ class SSGI : public gpu::Shader
 {
 public:
 	SSGI() = default;
-	SSGI(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{

@@ -111,7 +111,7 @@ struct PipelineStateDesc
 
 	bool HasShader(const gpu::Shader* shader) const
 	{
-		switch (shader->compilationInfo.stage)
+		switch (shader->compilationResult.stage)
 		{
 		case EShaderStage::Vertex:
 			return shaderStages.vertex == shader;

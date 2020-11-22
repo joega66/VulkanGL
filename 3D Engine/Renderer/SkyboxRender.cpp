@@ -7,10 +7,6 @@ class SkyboxVS : public gpu::Shader
 {
 public:
 	SkyboxVS() = default;
-	SkyboxVS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
@@ -28,10 +24,6 @@ class SkyboxFS : public gpu::Shader
 {
 public:
 	SkyboxFS() = default;
-	SkyboxFS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{

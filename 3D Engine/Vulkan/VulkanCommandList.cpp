@@ -68,7 +68,7 @@ namespace gpu
 
 	void CommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
 	{
-		const auto& pushConstantRange = shader->compilationInfo.pushConstantRange;
+		const auto& pushConstantRange = shader->compilationResult.pushConstantRange;
 
 		vkCmdPushConstants(
 			_CommandBuffer,

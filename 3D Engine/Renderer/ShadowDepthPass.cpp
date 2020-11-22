@@ -10,10 +10,6 @@ class ShadowDepthVS : public MeshShader
 	using Base = MeshShader;
 public:
 	ShadowDepthVS() = default;
-	ShadowDepthVS(const ShaderCompilationInfo& compilationInfo)
-		: Base(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
@@ -28,10 +24,6 @@ class ShadowDepthFS : public MeshShader
 	using Base = MeshShader;
 public:
 	ShadowDepthFS() = default;
-	ShadowDepthFS(const ShaderCompilationInfo& compilationInfo)
-		: Base(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{

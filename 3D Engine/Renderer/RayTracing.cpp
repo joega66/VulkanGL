@@ -17,10 +17,6 @@ class RayTracingCS : public gpu::Shader
 {
 public:
 	RayTracingCS() = default;
-	RayTracingCS(const ShaderCompilationInfo& compilationInfo)
-		: gpu::Shader(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{

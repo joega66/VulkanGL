@@ -200,7 +200,6 @@ private:
 	std::string_view _PushConstantMembers;
 };
 
-
 struct ShaderCompilationTask
 {
 	std::type_index			typeIndex;
@@ -216,39 +215,43 @@ namespace gpu
 	std::vector<ShaderCompilationTask>& GetShaderCompilationTasks();
 }
 
-class ShaderCompilationInfo
+/** Result of shader compilation. */
+class ShaderCompilationResult
 {
 public:
+	/** Path to the shader. */
 	std::filesystem::path path;
+
+	/** Shader entrypoint. */
 	std::string entrypoint;
+
+	/** Shader stage. */
 	EShaderStage stage;
+
+	/** Last time the shader file was written, Platform::GetLastWriteTime(). */
 	uint64 lastWriteTime;
+
+	/** Result of SetEnvironmentVariables. */
 	ShaderCompilerWorker worker;
+
+	/** Vulkan shader handle. */
 	VkShaderModule shaderModule;
+
+	/** (Vertex shader only.) Reflected vertex attribute descriptions. PSOs use this if none were provided in the PSO description. */
 	std::vector<VertexAttributeDescription> vertexAttributeDescriptions;
+
+	/** Reflected descriptor set layouts. */
 	std::map<uint32, VkDescriptorSetLayout> layouts;
+
+	/** Reflected push constant range. */
 	VkPushConstantRange pushConstantRange;
 
-	ShaderCompilationInfo() = default;
-	ShaderCompilationInfo(
-		EShaderStage stage, 
-		const std::string& entrypoint,
-		const std::filesystem::path& path,
-		uint64 lastWriteTime,
-		const ShaderCompilerWorker& worker,
-		VkShaderModule shaderModule,
-		const std::vector<VertexAttributeDescription>& vertexAttributeDescriptions,
-		const std::map<uint32, VkDescriptorSetLayout>& layouts,
-		const VkPushConstantRange& pushConstantRange)
-		: stage(stage)
-		, entrypoint(entrypoint)
-		, path(path)
-		, lastWriteTime(lastWriteTime)
-		, worker(worker)
-		, shaderModule(shaderModule)
-		, vertexAttributeDescriptions(vertexAttributeDescriptions)
-		, layouts(layouts)
-		, pushConstantRange(pushConstantRange)
+	ShaderCompilationResult() = default;
+	ShaderCompilationResult(const std::filesystem::path& path, const std::string& entrypoint, EShaderStage stage, uint64 lastWriteTime,
+		const ShaderCompilerWorker& worker, VkShaderModule shaderModule, const std::vector<VertexAttributeDescription>& vertexAttributeDescriptions,
+		const std::map<uint32, VkDescriptorSetLayout>& layouts, const VkPushConstantRange& pushConstantRange)
+		: stage(stage), entrypoint(entrypoint), path(path), lastWriteTime(lastWriteTime), worker(worker), shaderModule(shaderModule)
+		, vertexAttributeDescriptions(vertexAttributeDescriptions), layouts(layouts), pushConstantRange(pushConstantRange)
 	{
 	}
 };
@@ -258,13 +261,9 @@ namespace gpu
 	class Shader
 	{
 	public:
-		ShaderCompilationInfo compilationInfo;
+		ShaderCompilationResult compilationResult;
 
 		Shader() = default;
-		Shader(const ShaderCompilationInfo& compilationInfo)
-			: compilationInfo(compilationInfo)
-		{
-		}
 
 		static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 		{
@@ -288,22 +287,19 @@ namespace gpu
 
 	private:
 		/** Compile the shader. */
-		virtual ShaderCompilationInfo CompileShader(
+		virtual ShaderCompilationResult CompileShader(
 			const ShaderCompilerWorker& worker,
 			const std::filesystem::path& path,
-			const std::string& entryPoint,
-			EShaderStage stage,
-			std::type_index type
-		) = 0;
+			const std::string& entrypoint,
+			EShaderStage stage) = 0;
 
 	protected:
 		/** Cached shaders. */
 		std::unordered_map<std::type_index, gpu::Shader*> _Shaders;
-
 	};
 }
 
-#define REGISTER_SHADER(Type, path, entrypoint, stage)	\
+#define REGISTER_SHADER(Type, Path, Entrypoint, Stage)	\
 class __##Type##CompilationTask							\
 {														\
 public:													\
@@ -313,9 +309,9 @@ public:													\
 		ShaderCompilationTask task = {					\
 			.typeIndex = std::type_index(typeid(Type)), \
 			.shader = &shader,							\
-			.path = path,								\
-			.entrypoint = entrypoint,					\
-			.stage = stage,								\
+			.path = Path,								\
+			.entrypoint = Entrypoint,					\
+			.stage = Stage,								\
 		};												\
 		Type::SetEnvironmentVariables(task.worker);		\
 		gpu::GetShaderCompilationTasks().push_back(task); \

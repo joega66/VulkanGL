@@ -10,10 +10,6 @@ class GBufferPassVS : public MeshShader
 	using Base = MeshShader;
 public:
 	GBufferPassVS() = default;
-	GBufferPassVS(const ShaderCompilationInfo& compilationInfo)
-		: Base(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
@@ -28,10 +24,6 @@ class GBufferPassFS : public MeshShader
 	using Base = MeshShader;
 public:
 	GBufferPassFS() = default;
-	GBufferPassFS(const ShaderCompilationInfo& compilationInfo)
-		: Base(compilationInfo)
-	{
-	}
 
 	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
 	{
