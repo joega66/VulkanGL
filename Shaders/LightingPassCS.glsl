@@ -11,29 +11,31 @@
 layout(constant_id = 0) const uint _LIGHT_TYPE = 0;
 layout(constant_id = 1) const int _IS_FIRST_LIGHT = 0;
 
+layout(push_constant) uniform Params { LightingParams _Params; };
+
 void GetDirectionalLightParams(inout LightData light)
 {
-	light.l = _L.xyz;
-	light.radiance = _Radiance.rgb;
+	light.l = _Params._L.xyz;
+	light.radiance = _Params._Radiance.rgb;
 }
 
 void GetPointLightParams(inout LightData light, SurfaceData surface)
 {
-	const vec3 fragToLight = _L.xyz - surface.worldPosition;
+	const vec3 fragToLight = _Params._L.xyz - surface.worldPosition;
 	const float distance = length(fragToLight);
 	const float attenuation = 1.0 / (distance * distance);
 
 	light.l = normalize(fragToLight);
-	light.radiance = _Radiance.rgb * attenuation;
+	light.radiance = _Params._Radiance.rgb * attenuation;
 }
 
 float ShadowPCF(vec3 worldPosition)
 {
-	vec4 lightSpace = _LightViewProj * vec4(worldPosition, 1.0f);
+	vec4 lightSpace = _Params._LightViewProj * vec4(worldPosition, 1.0f);
 	lightSpace.xyz /= lightSpace.w;
 	lightSpace.xy = (lightSpace.xy + 1.0f) * 0.5f;
 	float currentDepth = lightSpace.z;
-	vec2 texelSize = 1.0 / vec2( TextureSize(_ShadowMap, 0) );
+	vec2 texelSize = 1.0 / vec2( TextureSize(_Params._ShadowMap, 0) );
 
 	float shadowFactor = 0.0;
 
@@ -41,7 +43,7 @@ float ShadowPCF(vec3 worldPosition)
 	{
 		for (int y = -1; y <= 1; y++)
 		{
-			float shadowDepth = Sample2D(_ShadowMap, _ShadowMapSampler, lightSpace.xy + vec2(x, y) * texelSize).r;
+			float shadowDepth = Sample2D(_Params._ShadowMap, _Params._ShadowMapSampler, lightSpace.xy + vec2(x, y) * texelSize).r;
 			float depthTest = currentDepth > shadowDepth ? 1.0f : 0.0f;
 			shadowFactor += depthTest;
 		}

@@ -180,18 +180,6 @@ public:
 	{
 		return _Defines;
 	}
-	
-	/** Define the shader's push constant block. */
-	inline void operator<<(const ShaderStructSerialized& shaderStructSerialized)
-	{
-		_PushConstantMembers = shaderStructSerialized.members;
-		_PushConstantSize = shaderStructSerialized.size;
-	}
-
-	/** Get the shader's push constant struct. */
-	inline uint32 GetPushConstantOffset() const { return _PushConstantOffset; }
-	inline uint32 GetPushConstantSize() const { return _PushConstantSize; }
-	inline std::string_view GetPushConstantMembers() const { return _PushConstantMembers; }
 
 private:
 	ShaderDefines _Defines;

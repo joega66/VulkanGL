@@ -5,7 +5,9 @@
 layout(location = 0) in vec3 inPosition;
 layout(location = 0) out vec4 outColor;
 
+layout(push_constant) uniform Params { SkyboxParams _Params; };
+
 void main()
 {
-	outColor = SampleCubemap(_Skybox, _Sampler, inPosition);
+	outColor = SampleCubemap(_Params._Skybox, _Params._Sampler, inPosition);
 }

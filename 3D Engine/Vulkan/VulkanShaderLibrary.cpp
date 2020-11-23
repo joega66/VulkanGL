@@ -218,6 +218,7 @@ VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& device)
 		task.shader->compilationResult = CompileShader(task.worker, task.path, task.entrypoint, task.stage);
 		_Shaders.emplace(task.typeIndex, task.shader);
 	}
+	tasks.clear();
 }
 
 ShaderCompilationResult VulkanShaderLibrary::CompileShader(
@@ -260,17 +261,7 @@ ShaderCompilationResult VulkanShaderLibrary::CompileShader(
 		compileOptions.AddMacroDefinition(define, value);
 	}
 
-	const auto pushConstantDecl = [&] () -> std::string
-	{
-		if (!worker.GetPushConstantMembers().empty())
-		{
-			return "layout(push_constant) uniform _ShaderStruct{" + std::string(worker.GetPushConstantMembers()) + "};\n";
-		}
-		
-		return "";
-	}();
-
-	const std::string globalShaderStructs = pushConstantDecl + gpu::GetRegisteredShaderStructs();
+	const auto& globalShaderStructs = gpu::GetRegisteredShaderStructs();
 
 	shaderc::Compiler compiler;
 	shaderc::SpvCompilationResult spvCompilationResult;
@@ -317,22 +308,12 @@ ShaderCompilationResult VulkanShaderLibrary::CompileShader(
 		return {};
 	}();
 
-	const auto layouts = ReflectDescriptorSetLayouts(_Device, glsl, resources);
+	const auto descriptorSetLayouts = ReflectDescriptorSetLayouts(_Device, glsl, resources);
 
-	const auto vulkanStageFlags = static_cast<VkShaderStageFlags>(stage);
-
-	const auto pushConstantRange = [&] () -> VkPushConstantRange
-	{
-		if (worker.GetPushConstantSize() == 0)
-		{
-			return ReflectPushConstantRange(glsl, resources, vulkanStageFlags);
-		}
-
-		return { vulkanStageFlags, worker.GetPushConstantOffset(), worker.GetPushConstantSize() };
-	}();
-
+	const auto pushConstantRange = ReflectPushConstantRange(glsl, resources, static_cast<VkShaderStageFlags>(stage));
+	
 	return ShaderCompilationResult(path, entrypoint, stage, Platform::GetLastWriteTime(path), worker,
-		shaderModule, vertexAttributeDescriptions, layouts, pushConstantRange);
+		shaderModule, vertexAttributeDescriptions, descriptorSetLayouts, pushConstantRange);
 }
 
 void VulkanShaderLibrary::RecompileShaders()

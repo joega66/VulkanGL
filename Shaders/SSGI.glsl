@@ -7,6 +7,8 @@
 #include "SSGICommon.glsl"
 #include "RayTracingCommon.glsl"
 
+layout(push_constant) uniform Params { SSGIParams _Params; };
+
 vec3 ComputeSSR(ivec2 screenCoords, SurfaceData surface, ONB onb, MaterialData material, float alpha)
 {
 	float cosH;
@@ -65,7 +67,7 @@ vec3 ComputeSSR(ivec2 screenCoords, SurfaceData surface, ONB onb, MaterialData m
 
 	const vec4 prevSSRColor = imageLoad(_SSRHistory, screenCoords);
 
-	const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSRColor.a)));
+	const float blend = (_Params._FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSRColor.a)));
 
 	indirectSpecular = mix(prevSSRColor.rgb, indirectSpecular, blend);
 
@@ -113,7 +115,7 @@ vec3 ComputeSSGI(ivec2 screenCoords, SurfaceData surface, ONB onb, MaterialData 
 
 	const vec4 prevSSGIColor = imageLoad(_SSGIHistory, screenCoords);
 
-	const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSGIColor.a)));
+	const float blend = (_Params._FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevSSGIColor.a)));
 
 	indirectDiffuse = mix(prevSSGIColor.rgb, indirectDiffuse, blend);
 
@@ -137,7 +139,7 @@ void main()
 
 	UnpackGBuffers(screenUV, screenCoords, surface, material);
 
-	seed = RandomInit(screenCoords, _FrameNumber);
+	seed = RandomInit(screenCoords, _Params._FrameNumber);
 
 	ONB onb;
 	ONB_BuildFromW(onb, surface.worldNormal);

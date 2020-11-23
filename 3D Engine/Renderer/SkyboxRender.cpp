@@ -15,20 +15,15 @@ public:
 
 REGISTER_SHADER(SkyboxVS, "../Shaders/SkyboxVS.glsl", "main", EShaderStage::Vertex);
 
-BEGIN_PUSH_CONSTANTS(SkyboxShaderParams)
+BEGIN_PUSH_CONSTANTS(SkyboxParams)
 	MEMBER(gpu::TextureID, _Skybox)
 	MEMBER(gpu::SamplerID, _Sampler)
-END_PUSH_CONSTANTS(SkyboxShaderParams)
+END_PUSH_CONSTANTS(SkyboxParams)
 
 class SkyboxFS : public gpu::Shader
 {
 public:
 	SkyboxFS() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
-	{
-		worker << SkyboxShaderParams::decl;
-	}
 };
 
 REGISTER_SHADER(SkyboxFS, "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment);
@@ -59,11 +54,11 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 	{
 		auto& skybox = _ECS.GetComponent<SkyboxComponent>(entity);
 
-		SkyboxShaderParams skyboxShaderParams;
-		skyboxShaderParams._Skybox = skybox.Skybox->GetImage().GetTextureID();
-		skyboxShaderParams._Sampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+		SkyboxParams skyboxParams;
+		skyboxParams._Skybox = skybox.Skybox->GetImage().GetTextureID();
+		skyboxParams._Sampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
 
-		cmdList.PushConstants(pipeline, fragShader, &skyboxShaderParams);
+		cmdList.PushConstants(pipeline, fragShader, &skyboxParams);
 
 		const StaticMesh* cube = _Assets.GetStaticMesh("Cube");
 

@@ -22,11 +22,6 @@ public:
 	static constexpr uint32 pointLight = 1;
 
 	LightingPassCS() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
-	{
-		worker << LightingParams::decl;
-	}
 };
 
 REGISTER_SHADER(LightingPassCS, "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute);
@@ -105,11 +100,6 @@ class SSGI : public gpu::Shader
 {
 public:
 	SSGI() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
-	{
-		worker << SSGIParams::decl;
-	}
 };
 
 REGISTER_SHADER(SSGI, "../Shaders/SSGI.glsl", "main", EShaderStage::Compute);

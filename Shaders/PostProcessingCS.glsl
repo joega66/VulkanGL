@@ -19,20 +19,22 @@ vec3 ApplyGammaCorrection(vec3 color)
 	return color;
 }
 
+layout(push_constant) uniform Params { PostProcessingParams _Params; };
+
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 imageSize = ImageSize(_DisplayColor);
+	const ivec2 imageSize = ImageSize(_Params._DisplayColor);
 	if (any(greaterThanEqual(gl_GlobalInvocationID.xy, imageSize.xy)))
 		return;
 
 	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
 
-	vec3 color = ImageLoad(_HDRColor, screenCoords).rgb;
+	vec3 color = ImageLoad(_Params._HDRColor, screenCoords).rgb;
 
-	color *= _ExposureAdjustment;
+	color *= _Params._ExposureAdjustment;
 
-	color = Uncharted2ToneMapping(color * _ExposureBias);
+	color = Uncharted2ToneMapping(color * _Params._ExposureBias);
 
 	const float w = 11.2;
 
@@ -42,5 +44,5 @@ void main()
 
 	color = ApplyGammaCorrection(color);
 
-	ImageStore(_DisplayColor, screenCoords, vec4(color, 1.0));
+	ImageStore(_Params._DisplayColor, screenCoords, vec4(color, 1.0));
 }

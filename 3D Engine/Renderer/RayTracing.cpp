@@ -17,11 +17,6 @@ class RayTracingCS : public gpu::Shader
 {
 public:
 	RayTracingCS() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
-	{
-		worker << RayTracingParams::decl;
-	}
 };
 
 REGISTER_SHADER(RayTracingCS, "../Shaders/RayTracingCS.glsl", "main", EShaderStage::Compute);

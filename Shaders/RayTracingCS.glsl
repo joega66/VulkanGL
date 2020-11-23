@@ -11,6 +11,8 @@ const float INFINITY = 1.0f / 0.0f;
 const int MAX_RAY_DEPTH = 8;
 const int MAX_TEMPORAL_SAMPLES = 1024;
 
+layout(push_constant) uniform Params { RayTracingParams _Params; };
+
 struct Ray
 {
 	vec3 origin;
@@ -297,7 +299,7 @@ vec3 RayColor(Ray ray)
 		Material mat;
 		if ( !TraceRay(ray, rec, mat) )
 		{
-			color *= SampleCubemap(_Skybox, _SkyboxSampler, ray.direction).rgb;
+			color *= SampleCubemap(_Params._Skybox, _Params._SkyboxSampler, ray.direction).rgb;
 			//color *= vec3(0);
 			return color;
 		}
@@ -387,13 +389,13 @@ vec3 RayColor(Ray ray)
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	const ivec2 sceneColorSize = imageSize( _SceneColor );
+	const ivec2 sceneColorSize = imageSize(_SceneColor);
 	if ( any( greaterThanEqual( gl_GlobalInvocationID.xy, sceneColorSize.xy ) ) )
 		return;
 
 	const ivec2 screenCoords = ivec2(gl_GlobalInvocationID.xy);
 	
-	seed = RandomInit(screenCoords, _FrameNumber);
+	seed = RandomInit(screenCoords, _Params._FrameNumber);
 
 	vec3 color = vec3(0);
 
@@ -402,8 +404,8 @@ void main()
 		const float t = 1.0 - (float(screenCoords.y) + RandomFloat()) / (float(sceneColorSize.y));
 
 		Ray ray;
-		ray.origin = _Origin.xyz;
-		ray.direction = _LowerLeftCorner.xyz + s * _Horizontal.xyz + t * _Vertical.xyz - _Origin.xyz;
+		ray.origin = _Params._Origin.xyz;
+		ray.direction = _Params._LowerLeftCorner.xyz + s * _Params._Horizontal.xyz + t * _Params._Vertical.xyz - _Params._Origin.xyz;
 
 		color += RayColor(ray);
 	}
@@ -428,10 +430,10 @@ void main()
 	
 	const bool isOffscreen = any(lessThan(prevNormalized, vec2(0))) || any(greaterThan(prevNormalized, vec2(1)));*/
 
-	if (_FrameNumber < MAX_TEMPORAL_SAMPLES) // Prevents color banding
+	if (_Params._FrameNumber < MAX_TEMPORAL_SAMPLES) // Prevents color banding
 	{
 		const vec4 prevFrameColor = imageLoad(_SceneColor, screenCoords);
-		const float blend = (_FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevFrameColor.a)));
+		const float blend = (_Params._FrameNumber == 0) ? 1.0f : (1.0f / (1.0f + (1.0f / prevFrameColor.a)));
 		color = mix(prevFrameColor.rgb, color, blend);
 		imageStore(_SceneColor, screenCoords, vec4(color, blend));
 	}

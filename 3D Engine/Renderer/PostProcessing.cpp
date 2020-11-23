@@ -13,11 +13,6 @@ class PostProcessingCS : public gpu::Shader
 {
 public:
 	PostProcessingCS() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& worker)
-	{
-		worker << PostProcessingParams::decl;
-	}
 };
 
 REGISTER_SHADER(PostProcessingCS, "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute);
