@@ -65,8 +65,6 @@ namespace gpu
 
 		virtual VkDescriptorSet& GetTextures() = 0;
 
-		virtual VkDescriptorSet& GetSamplers() = 0;
-
 		virtual VkDescriptorSet& GetImages() = 0;
 
 		template<typename DescriptorSetType>

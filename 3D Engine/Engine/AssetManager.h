@@ -24,9 +24,9 @@ public:
 	std::vector<const StaticMesh*> LoadStaticMesh(const std::filesystem::path& Path, bool Breakup = false);
 	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
 
-	const gpu::Image* LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage = EImageUsage::None);
-	const gpu::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image);
-	const gpu::Image* GetImage(const std::string& AssetName) const;
+	gpu::Image* LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage = EImageUsage::None);
+	gpu::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image);
+	gpu::Image* GetImage(const std::string& AssetName) const;
 
 	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
 	const Material* GetMaterial(const std::string& AssetName);

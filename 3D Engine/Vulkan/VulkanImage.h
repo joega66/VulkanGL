@@ -22,15 +22,15 @@ namespace gpu
 
 		inline operator const VkImageView&() const { return _ImageView; }
 		inline EFormat GetFormat() const { return _Format; }
-		inline const TextureID& GetTextureID() const { return _TextureID; }
-		inline const ImageID& GetImageID() const { return _ImageID; }
+		TextureID GetTextureID(const gpu::Sampler& sampler);
+		inline ImageID GetImageID() const { return _ImageID; }
 
 	private:
 		VulkanDevice*	_Device = nullptr;
-		VkImageView		_ImageView = nullptr;
-		TextureID		_TextureID = {};
-		ImageID			_ImageID = {};
 		EFormat			_Format = EFormat::UNDEFINED;
+		VkImageView		_ImageView = nullptr;
+		ImageID			_ImageID = {};
+		std::unordered_map<VkSampler, TextureID> _TextureIDs = {};
 	};
 
 	class Image : public gpu::ImagePrivate
@@ -59,8 +59,8 @@ namespace gpu
 		inline operator VkImage() const { return _Image; }
 		inline operator const ImageView& () const { return _ImageView; }
 		inline const ImageView& GetImageView() const { return _ImageView; }
-		inline const TextureID& GetTextureID() const { return _ImageView.GetTextureID(); }
-		inline const ImageID& GetImageID() const { return _ImageView.GetImageID(); }
+		inline TextureID GetTextureID(const Sampler& sampler) { return _ImageView.GetTextureID(sampler); }
+		inline ImageID GetImageID() const { return _ImageView.GetImageID(); }
 		VkFormat GetVulkanFormat() const;
 		VkImageAspectFlags GetVulkanAspect() const;
 
@@ -86,11 +86,9 @@ namespace gpu
 		Sampler(VulkanDevice& device, const SamplerDesc& samplerDesc);
 
 		inline operator const VkSampler&() const { return _Sampler; }
-		inline const SamplerID& GetSamplerID() const { return _SamplerID; }
 
 	private:
 		VkSampler _Sampler = nullptr;
-		SamplerID _SamplerID = {};
 	};
 
 	class SampledImage

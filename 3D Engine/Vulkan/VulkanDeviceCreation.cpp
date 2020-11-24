@@ -85,8 +85,8 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 		.timelineSemaphore = true,
 	};
 	
-	VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures = 
-	{ 
+	VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures =
+	{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
 		.pNext = &timelineSemaphoreFeatures,
 		.shaderSampledImageArrayNonUniformIndexing = true,
@@ -137,8 +137,7 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 
 	vulkan(vmaCreateAllocator(&allocatorInfo, &_Allocator));
 	
-	_BindlessTextures = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 65556);
-	_BindlessSamplers = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_SAMPLER, 1024);
+	_BindlessTextures = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 65556);
 	_BindlessImages = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
 
 	// Create all descriptor set layouts.

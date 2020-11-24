@@ -19,7 +19,6 @@ public:
 		gpu::TextureID MetallicRoughness;
 		gpu::TextureID Normal;
 		gpu::TextureID Emissive;
-		gpu::SamplerID Sampler;
 		float Metallic;
 		float Roughness;
 		glm::vec3 EmissiveFactor;
@@ -30,10 +29,10 @@ public:
 	Material(
 		gpu::Device& Device,
 		EMaterialMode MaterialMode,
-		const gpu::Image* BaseColor,
-		const gpu::Image* MetallicRoughness,
-		const gpu::Image* Normal,
-		const gpu::Image* Emissive,
+		gpu::Image* BaseColor,
+		gpu::Image* MetallicRoughness,
+		gpu::Image* Normal,
+		gpu::Image* Emissive,
 		float Metallic,
 		float Roughness,
 		const glm::vec3& EmissiveFactor

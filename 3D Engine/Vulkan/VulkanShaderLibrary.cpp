@@ -91,7 +91,7 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 	std::map<uint32, VkDescriptorSetLayout> layouts;
 	std::map<uint32, std::vector<DescriptorBinding>> setBindings;
 
-	for (const auto& resource : resources.separate_images)
+	for (const auto& resource : resources.sampled_images)
 	{
 		const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
 		const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
@@ -102,24 +102,9 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 		}
 		else
 		{
-			// Only bindless resources use separate images.
-			signal_unimplemented();
-		}
-	}
-
-	for (const auto& resource : resources.separate_samplers)
-	{
-		const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
-		const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-
-		if (type.array.size())
-		{
-			layouts.insert({ set, device._BindlessSamplers->GetLayout() });
-		}
-		else
-		{
-			// Only bindless resources use separate samplers.
-			signal_unimplemented();
+			const uint32 binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+			const uint32 descriptorCount = 1;
+			setBindings[set].push_back({ binding, descriptorCount, EDescriptorType::SampledImage });
 		}
 	}
 
@@ -131,6 +116,12 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 		if (type.array.size())
 		{
 			layouts.insert({ set, device._BindlessImages->GetLayout() });
+		}
+		else
+		{
+			const uint32 binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+			const uint32 descriptorCount = 1;
+			setBindings[set].push_back({ binding, descriptorCount, EDescriptorType::StorageImage });
 		}
 	}
 
@@ -146,8 +137,6 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 		}
 	};
 
-	getBindings(resources.sampled_images, EDescriptorType::SampledImage);
-	getBindings(resources.storage_images, EDescriptorType::StorageImage);
 	getBindings(resources.uniform_buffers, EDescriptorType::UniformBuffer);
 	getBindings(resources.storage_buffers, EDescriptorType::StorageBuffer);
 

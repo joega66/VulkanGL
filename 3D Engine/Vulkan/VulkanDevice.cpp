@@ -7,7 +7,6 @@ void VulkanDevice::EndFrame()
 	_VulkanCache.EndFrame();
 	_DescriptorPoolManager.EndFrame(*this);
 	_BindlessTextures->EndFrame();
-	_BindlessSamplers->EndFrame();
 	_BindlessImages->EndFrame();
 }
 
@@ -288,11 +287,6 @@ gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& rpDesc)
 VkDescriptorSet& VulkanDevice::GetTextures()
 {
 	return *_BindlessTextures;
-}
-
-VkDescriptorSet& VulkanDevice::GetSamplers()
-{
-	return *_BindlessSamplers;
 }
 
 VkDescriptorSet& VulkanDevice::GetImages()

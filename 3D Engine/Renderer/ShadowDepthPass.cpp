@@ -45,7 +45,7 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 		{
 			auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);
 
-			const VkDescriptorSet descriptorSets[] = { shadowProxy.GetDescriptorSet(), surfaceGroup.GetSurfaceSet(), _Device.GetTextures(), _Device.GetSamplers() };
+			const VkDescriptorSet descriptorSets[] = { shadowProxy.GetDescriptorSet(), surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
 
 			surfaceGroup.Draw<false>(_Device, cmdList, std::size(descriptorSets), descriptorSets, [&] ()
 			{

@@ -12,7 +12,6 @@ BEGIN_PUSH_CONSTANTS(LightingParams)
 	MEMBER(glm::vec4, _Radiance)
 	MEMBER(glm::mat4, _LightViewProj)
 	MEMBER(gpu::TextureID, _ShadowMap)
-	MEMBER(gpu::SamplerID, _ShadowMapSampler)
 END_PUSH_CONSTANTS(LightingParams)
 
 class LightingPassCS : public gpu::Shader
@@ -45,14 +44,13 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 	{
 		const auto& directionalLight = _ECS.GetComponent<DirectionalLight>(entity);
 		const auto& transform = _ECS.GetComponent<Transform>(entity);
-		const auto& shadow = _ECS.GetComponent<ShadowProxy>(entity);
+		auto& shadow = _ECS.GetComponent<ShadowProxy>(entity);
 		
 		LightingParams light;
 		light._L = glm::vec4(transform.GetForward(), 0.0f);
 		light._Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
 		light._LightViewProj = shadow.GetLightViewProjMatrix();
-		light._ShadowMap = shadow.GetShadowMap().GetTextureID();
-		light._ShadowMapSampler = _Device.CreateSampler({}).GetSamplerID();
+		light._ShadowMap = shadow.GetShadowMap().GetTextureID(_Device.CreateSampler({}));
 
 		ComputeDeferredLight(camera, cmdList, light, isFirstLight);
 
@@ -77,7 +75,6 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 	{
 		camera._CameraDescriptorSet,
 		_Device.GetTextures(),
-		_Device.GetSamplers(),
 	};
 
 	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
@@ -92,7 +89,6 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 
 BEGIN_PUSH_CONSTANTS(SSGIParams)
 	MEMBER(gpu::TextureID, _Skybox)
-	MEMBER(gpu::SamplerID, _SkyboxSampler)
 	MEMBER(uint32, _FrameNumber)
 END_PUSH_CONSTANTS(SSGIParams)
 
@@ -130,7 +126,6 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 	{
 		cameraProxy._CameraDescriptorSet,
 		_Device.GetTextures(),
-		_Device.GetSamplers(),
 	};
 
 	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
@@ -142,9 +137,11 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 		frameNumber = 0;
 	}
 
+	auto& skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage();
+	const auto skyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
+
 	SSGIParams ssgiParams;
-	ssgiParams._Skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
-	ssgiParams._SkyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+	ssgiParams._Skybox = skybox.GetTextureID(skyboxSampler);
 	ssgiParams._FrameNumber = frameNumber++;
 
 	cmdList.PushConstants(pipeline, shader, &ssgiParams);

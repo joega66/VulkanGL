@@ -76,10 +76,6 @@ namespace gpu
 		, _ImageView(imageView)
 		, _Format(format)
 	{
-		if (Any(usage & EImageUsage::Sampled))
-		{
-			_TextureID = device._BindlessTextures->CreateTextureID(*this);
-		}
 		if (Any(usage & EImageUsage::Storage))
 		{
 			_ImageID = device._BindlessImages->CreateImageID(*this);
@@ -89,7 +85,7 @@ namespace gpu
 	ImageView::ImageView(ImageView&& other)
 		: _Device(other._Device)
 		, _ImageView(std::exchange(other._ImageView, nullptr))
-		, _TextureID(std::exchange(other._TextureID, {}))
+		, _TextureIDs(std::exchange(other._TextureIDs, {}))
 		, _ImageID(std::exchange(other._ImageID, {}))
 		, _Format(other._Format)
 	{
@@ -99,7 +95,7 @@ namespace gpu
 	{
 		_Device = other._Device;
 		_ImageView = std::exchange(other._ImageView, nullptr);
-		_TextureID = std::exchange(other._TextureID, {});
+		_TextureIDs = std::exchange(other._TextureIDs, {});
 		_ImageID = std::exchange(other._ImageID, {});
 		_Format = other._Format;
 		return *this;
@@ -109,9 +105,15 @@ namespace gpu
 	{
 		if (_ImageView)
 		{
-			if (_TextureID.IsValid() && _Device->_BindlessTextures)
+			if (_Device->_BindlessTextures)
 			{
-				_Device->_BindlessTextures->Release(_TextureID);
+				for (const auto& [sampler, textureIdx] : _TextureIDs)
+				{
+					if (textureIdx.IsValid())
+					{
+						_Device->_BindlessTextures->Release(textureIdx);
+					}
+				}
 			}
 
 			if (_ImageID.IsValid() && _Device->_BindlessImages)
@@ -120,6 +122,20 @@ namespace gpu
 			}
 			
 			vkDestroyImageView(*_Device, _ImageView, nullptr);
+		}
+	}
+
+	TextureID ImageView::GetTextureID(const Sampler& sampler)
+	{
+		auto iter = _TextureIDs.find(sampler);
+		if (iter == _TextureIDs.end())
+		{
+			_TextureIDs[sampler] = _Device->_BindlessTextures->CreateTextureID(*this, sampler);
+			return _TextureIDs[sampler];
+		}
+		else
+		{
+			return iter->second;
 		}
 	}
 
@@ -346,8 +362,6 @@ namespace gpu
 		samplerInfo.maxLod = samplerDesc.maxLod;
 
 		vulkan(vkCreateSampler(device, &samplerInfo, nullptr, &_Sampler));
-
-		_SamplerID = device._BindlessSamplers->CreateSamplerID(*this);
 	}
 
 	static VkImageLayout ChooseImageLayout(EFormat format)

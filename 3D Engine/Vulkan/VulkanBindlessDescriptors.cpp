@@ -5,7 +5,9 @@ VulkanBindlessDescriptors::VulkanBindlessDescriptors(VkDevice device, VkDescript
 	: _Device(device)
 	, _MaxDescriptorCount(descriptorCount)
 {
-	constexpr VkDescriptorBindingFlags bindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+	constexpr VkDescriptorBindingFlags bindingFlags = 
+		VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
+		VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
 
 	const VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = 
 	{ 
@@ -82,7 +84,7 @@ VulkanBindlessDescriptors::~VulkanBindlessDescriptors()
 	vkDestroyDescriptorPool(_Device, _DescriptorPool, nullptr);
 }
 
-gpu::TextureID VulkanBindlessDescriptors::CreateTextureID(const gpu::ImageView& imageView)
+gpu::TextureID VulkanBindlessDescriptors::CreateTextureID(const gpu::ImageView& imageView, const gpu::Sampler& sampler)
 {
 	static auto chooseImageLayout = [] (EFormat format)
 	{
@@ -104,7 +106,7 @@ gpu::TextureID VulkanBindlessDescriptors::CreateTextureID(const gpu::ImageView& 
 		}
 	};
 
-	const VkDescriptorImageInfo imageInfo = { nullptr, imageView, chooseImageLayout(imageView.GetFormat()) };
+	const VkDescriptorImageInfo imageInfo = { sampler, imageView, chooseImageLayout(imageView.GetFormat()) };
 
 	const VkWriteDescriptorSet writeDescriptorSet = 
 	{ 
@@ -113,7 +115,7 @@ gpu::TextureID VulkanBindlessDescriptors::CreateTextureID(const gpu::ImageView& 
 		.dstBinding = 0,
 		.dstArrayElement = Allocate(),
 		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 		.pImageInfo = &imageInfo,
 	};
 
@@ -140,26 +142,6 @@ gpu::ImageID VulkanBindlessDescriptors::CreateImageID(const gpu::ImageView& imag
 	vkUpdateDescriptorSets(_Device, 1, &writeDescriptorSet, 0, nullptr);
 
 	return gpu::ImageID(writeDescriptorSet.dstArrayElement);
-}
-
-gpu::SamplerID VulkanBindlessDescriptors::CreateSamplerID(const gpu::Sampler& sampler)
-{
-	const VkDescriptorImageInfo imageInfo = { sampler, nullptr, {} };
-
-	const VkWriteDescriptorSet writeDescriptorSet =
-	{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstSet = _DescriptorSet,
-		.dstBinding = 0,
-		.dstArrayElement = Allocate(),
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
-		.pImageInfo = &imageInfo,
-	};
-
-	vkUpdateDescriptorSets(_Device, 1, &writeDescriptorSet, 0, nullptr);
-
-	return gpu::SamplerID(writeDescriptorSet.dstArrayElement);
 }
 
 uint32 VulkanBindlessDescriptors::Allocate()

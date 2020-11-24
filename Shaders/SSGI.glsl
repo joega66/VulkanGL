@@ -2,7 +2,6 @@
 #include "CameraCommon.glsl"
 #include "LightingCommon.glsl"
 #define CUBEMAP_SET 1
-#define SAMPLER_SET 2
 #include "SceneResources.glsl"
 #include "SSGICommon.glsl"
 #include "RayTracingCommon.glsl"

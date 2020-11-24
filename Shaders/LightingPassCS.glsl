@@ -2,7 +2,6 @@
 #include "CameraCommon.glsl"
 #include "LightingCommon.glsl"
 #define TEXTURE_SET 1
-#define SAMPLER_SET 2
 #include "SceneResources.glsl"
 
 #define DIRECTIONAL_LIGHT 0
@@ -43,7 +42,7 @@ float ShadowPCF(vec3 worldPosition)
 	{
 		for (int y = -1; y <= 1; y++)
 		{
-			float shadowDepth = Sample2D(_Params._ShadowMap, _Params._ShadowMapSampler, lightSpace.xy + vec2(x, y) * texelSize).r;
+			float shadowDepth = Sample2D(_Params._ShadowMap, lightSpace.xy + vec2(x, y) * texelSize).r;
 			float depthTest = currentDepth > shadowDepth ? 1.0f : 0.0f;
 			shadowFactor += depthTest;
 		}

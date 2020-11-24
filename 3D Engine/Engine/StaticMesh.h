@@ -93,5 +93,5 @@ private:
 	void GLTFLoad(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device);
 	void GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, gpu::Device& Device);
 	void GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, gpu::Device& Device);
-	const gpu::Image* GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex);
+	gpu::Image* GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex);
 };

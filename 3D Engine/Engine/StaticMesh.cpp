@@ -160,10 +160,10 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 
 	if (!Material)
 	{
-		const gpu::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-		const gpu::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
-		const gpu::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
-		const gpu::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
+		gpu::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
+		gpu::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+		gpu::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
+		gpu::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
 		const glm::vec3 EmissiveFactor = 
 			GLTFMaterial.emissiveFactor.empty() ? 
 			glm::vec3(0.0) : 
@@ -208,7 +208,7 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 	}
 }
 
-const gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
+gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
 {
 	if (TextureIndex == -1 || Model.textures.empty())
 	{
@@ -219,7 +219,7 @@ const gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, gpu::Device& D
 		auto& Texture = Model.textures[TextureIndex];
 		auto& Image = Model.images[Texture.source];
 
-		if (const gpu::Image* LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
+		if (gpu::Image* LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
 		{
 			return LoadedImage;
 		}

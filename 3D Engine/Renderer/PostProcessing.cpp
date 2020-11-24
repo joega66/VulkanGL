@@ -5,8 +5,8 @@
 BEGIN_PUSH_CONSTANTS(PostProcessingParams)
 	MEMBER(float, _ExposureAdjustment)
 	MEMBER(float, _ExposureBias)
-	MEMBER(uint32, _DisplayColor)
-	MEMBER(uint32, _HDRColor)
+	MEMBER(gpu::ImageID, _DisplayColor)
+	MEMBER(gpu::ImageID, _HDRColor)
 END_PUSH_CONSTANTS(PostProcessingParams)
 
 class PostProcessingCS : public gpu::Shader

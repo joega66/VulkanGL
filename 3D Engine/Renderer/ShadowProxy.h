@@ -16,7 +16,7 @@ public:
 	void Update(gpu::Device& device, const struct DirectionalLight& directionalLight, const class Transform& transform);
 
 	inline const gpu::RenderPass& GetRenderPass() const { return _RenderPass; }
-	inline const gpu::Image& GetShadowMap() const { return _ShadowMap; }
+	inline gpu::Image& GetShadowMap() { return _ShadowMap; }
 	inline const gpu::DescriptorSet& GetDescriptorSet() const { return _DescriptorSet; }
 	inline const glm::mat4& GetLightViewProjMatrix() const { return _LightViewProjMatrix; }
 	inline const glm::mat4& GetLightViewProjMatrixInv() const { return _LightViewProjMatrixInv; }

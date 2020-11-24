@@ -43,7 +43,7 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 	{
 		auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);
 
-		const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures(), _Device.GetSamplers() };
+		const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
 
 		surfaceGroup.Draw<true>(_Device, cmdList, std::size(descriptorSets), descriptorSets, [&] ()
 		{

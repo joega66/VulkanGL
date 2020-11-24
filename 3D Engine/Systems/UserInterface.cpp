@@ -305,17 +305,19 @@ void UserInterface::ShowEntities(Engine& engine)
 		}
 	});
 
+	_UserTextures.clear();
+
 	SHOW_COMPONENT(SkyboxComponent, ecs, entitySelected, [&] (auto& skyboxComp)
 	{
 		Skybox* skybox = skyboxComp.Skybox;
 
 		for (uint32 face = CubemapFace_Begin; face != CubemapFace_End; face++)
 		{
-			gpu::TextureID& textureID = const_cast<gpu::TextureID&>(const_cast<gpu::Image*>(skybox->GetFaces()[face])->GetTextureID());
+			_UserTextures.push_back( skybox->GetFaces()[face]->GetTextureID(engine._Device.CreateSampler({})) );
 			ImGui::Text(Skybox::CubemapFaces[face].c_str());
 			ImGui::SameLine();
 			ImGui::ImageButton(
-				&textureID,
+				&_UserTextures.back(),
 				ImVec2(64.0f, 64.0f)
 			);
 		}
@@ -344,11 +346,12 @@ ImGuiRenderData::ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shader
 	imgui.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
 	fontImage = device.CreateImage(width, height, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	samplerID = device.CreateSampler({}).GetSamplerID();
-
+	
 	gpu::UploadImageData(device, pixels, fontImage);
 
-	imgui.Fonts->TexID = &const_cast<gpu::TextureID&>(fontImage.GetTextureID());
+	fontTexture = fontImage.GetTextureID(device.CreateSampler({}));
+
+	imgui.Fonts->TexID = &fontTexture;
 
 	psoDesc.depthStencilState.depthTestEnable = false;
 	psoDesc.depthStencilState.depthWriteEnable = false;
@@ -387,7 +390,7 @@ void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, con
 
 		cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &scaleAndTranslation);
 
-		const VkDescriptorSet descriptorSets[] = { device.GetTextures(), device.GetSamplers() };
+		const VkDescriptorSet descriptorSets[] = { device.GetTextures() };
 		cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 		cmdList.BindVertexBuffers(1, &vertexBuffer);
@@ -420,7 +423,7 @@ void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, con
 
 				cmdList.SetScissor(1, &scissor);
 
-				const glm::uvec2 pushConstants(*static_cast<uint32*>(drawCmd->TextureId), samplerID);
+				const uint32 pushConstants(*static_cast<uint32*>(drawCmd->TextureId));
 				cmdList.PushConstants(pipeline, psoDesc.shaderStages.fragment, &pushConstants);
 
 				cmdList.DrawIndexed(indexBuffer, drawCmd->ElemCount, 1, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset, 0, EIndexType::UINT16);

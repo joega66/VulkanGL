@@ -9,7 +9,6 @@ BEGIN_PUSH_CONSTANTS(RayTracingParams)
 	MEMBER(glm::vec4, _Vertical)
 	MEMBER(glm::vec4, _LowerLeftCorner)
 	MEMBER(gpu::TextureID, _Skybox)
-	MEMBER(gpu::SamplerID, _SkyboxSampler)
 	MEMBER(uint32, _FrameNumber)
 END_PUSH_CONSTANTS(RayTracingParams)
 
@@ -52,13 +51,15 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 		frameNumber = 0;
 	}
 
+	auto& skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage();
+	const auto skyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
+
 	RayTracingParams rayTracingParams;
 	rayTracingParams._Origin = glm::vec4(camera.GetPosition(), 0);
 	rayTracingParams._Horizontal = glm::vec4(focusDistance * viewportWidth * u, 0);
 	rayTracingParams._Vertical = glm::vec4(focusDistance * viewportHeight * v, 0);
 	rayTracingParams._LowerLeftCorner = rayTracingParams._Origin - rayTracingParams._Horizontal / 2.0f - rayTracingParams._Vertical / 2.0f - glm::vec4(focusDistance * w, 0);
-	rayTracingParams._Skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage().GetTextureID();
-	rayTracingParams._SkyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear }).GetSamplerID();
+	rayTracingParams._Skybox = skybox.GetTextureID(skyboxSampler);
 	rayTracingParams._FrameNumber = frameNumber++;
 
 	ComputePipelineDesc computeDesc = {};
@@ -68,7 +69,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 
 	cmdList.BindPipeline(pipeline);
 
-	const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, _Device.GetTextures(), _Device.GetSamplers() };
+	const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, _Device.GetTextures() };
 	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
 
 	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);

@@ -1,7 +1,6 @@
 #define CAMERA_SET 0
 #include "CameraCommon.glsl"
 #define CUBEMAP_SET 1
-#define SAMPLER_SET 2
 #include "SceneResources.glsl"
 #include "RayTracingCommon.glsl"
 #include "LightingCommon.glsl"
@@ -299,7 +298,7 @@ vec3 RayColor(Ray ray)
 		Material mat;
 		if ( !TraceRay(ray, rec, mat) )
 		{
-			color *= SampleCubemap(_Params._Skybox, _Params._SkyboxSampler, ray.direction).rgb;
+			color *= SampleCubemap(_Params._Skybox, ray.direction).rgb;
 			//color *= vec3(0);
 			return color;
 		}

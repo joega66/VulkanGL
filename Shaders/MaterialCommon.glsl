@@ -9,7 +9,6 @@ layout(push_constant) uniform MaterialConstants
 	uint metallicRoughness;
 	uint normal;
 	uint emissive;
-	uint samplerID;
 	float metallic;
 	float roughness;
 	vec3 emissiveFactor;
@@ -22,14 +21,12 @@ layout(constant_id = 3) const bool _HasEmissiveTexture = false;
 
 MaterialData Material_Get(SurfaceData surface)
 {
-	vec4 baseColor = Sample2D(_Material.baseColor, _Material.samplerID, surface.uv);
-	
 	MaterialData material;
-	material.baseColor = baseColor.rgb;
+	material.baseColor = Sample2D(_Material.baseColor, surface.uv).rgb;
 
 	if (_HasMetallicRoughnessTexture)
 	{
-		vec2 metallicRoughness = Sample2D(_Material.metallicRoughness, _Material.samplerID, surface.uv).gb;
+		vec2 metallicRoughness = Sample2D(_Material.metallicRoughness, surface.uv).gb;
 		material.metallic = metallicRoughness.y;
 		material.roughness = 1.0 - metallicRoughness.x;
 	}
@@ -48,7 +45,7 @@ void Material_DiscardMaskedPixel(SurfaceData surface)
 {
 	if (_IsMasked)
 	{
-		float alpha = Sample2D(_Material.baseColor, _Material.samplerID, surface.uv).a;
+		float alpha = Sample2D(_Material.baseColor, surface.uv).a;
 		if (alpha <= 0)
 		{
 			discard;
@@ -77,7 +74,7 @@ void Material_NormalMapping(inout SurfaceData surface, vec3 v)
 {
 	if (_HasNormalTexture)
 	{
-		const vec3 mapNormal = Sample2D(_Material.normal, _Material.samplerID, surface.uv).xyz * 2.0 - 1.0;
+		const vec3 mapNormal = Sample2D(_Material.normal, surface.uv).xyz * 2.0 - 1.0;
 		surface.worldNormal = normalize(CotangentFrame(surface.worldNormal, v, surface.uv) * mapNormal);
 	}
 }
@@ -86,7 +83,7 @@ void Material_Emissive(SurfaceData surface, inout vec3 color)
 {
 	if (_HasEmissiveTexture)
 	{
-		vec3 emissiveColor = Sample2D(_Material.emissive, _Material.samplerID, surface.uv).rgb;
+		vec3 emissiveColor = Sample2D(_Material.emissive, surface.uv).rgb;
 		emissiveColor *= _Material.emissiveFactor;
 		color += emissiveColor;
 	}

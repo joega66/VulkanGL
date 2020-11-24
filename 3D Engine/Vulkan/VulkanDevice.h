@@ -60,8 +60,6 @@ public:
 
 	VkDescriptorSet& GetTextures() override;
 
-	VkDescriptorSet& GetSamplers() override;
-
 	VkDescriptorSet& GetImages() override;
 
 	gpu::Semaphore CreateSemaphore() override;
@@ -92,8 +90,6 @@ public:
 	static const std::vector<const char*>& GetRequiredExtensions();
 
 	std::unique_ptr<VulkanBindlessDescriptors> _BindlessTextures;
-
-	std::unique_ptr<VulkanBindlessDescriptors> _BindlessSamplers;
 
 	std::unique_ptr<VulkanBindlessDescriptors> _BindlessImages;
 

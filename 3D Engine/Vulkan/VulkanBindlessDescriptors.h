@@ -17,9 +17,7 @@
 namespace gpu
 {
 	DECLARE_DESCRIPTOR_INDEX_TYPE(TextureID);
-	DECLARE_DESCRIPTOR_INDEX_TYPE(SamplerID);
 	DECLARE_DESCRIPTOR_INDEX_TYPE(ImageID);
-
 	class ImageView;
 	class Sampler;
 }
@@ -34,13 +32,10 @@ public:
 	~VulkanBindlessDescriptors();
 
 	/** Create a texture ID for indexing into the texture2D array. */
-	gpu::TextureID CreateTextureID(const gpu::ImageView& imageView);
+	gpu::TextureID CreateTextureID(const gpu::ImageView& imageView, const gpu::Sampler& sampler);
 
 	/** Create an image ID for indexing into the storage image array. */
 	gpu::ImageID CreateImageID(const gpu::ImageView& imageView);
-
-	/** Create a SamplerID. */
-	gpu::SamplerID CreateSamplerID(const gpu::Sampler& sampler);
 
 	/** Called in VulkanDevice::EndFrame(). */
 	void EndFrame();

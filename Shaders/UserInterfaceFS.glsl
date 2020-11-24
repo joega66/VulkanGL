@@ -1,10 +1,9 @@
 #define TEXTURE_SET 0
-#define SAMPLER_SET 1
 #include "SceneResources.glsl"
 
 layout(push_constant) uniform PushConstants
 {
-	layout(offset = 16) ivec2 _TextureAndSampler;
+	layout(offset = 16) uint _Texture;
 };
 
 layout(location = 0) in vec2 inUV;
@@ -14,5 +13,5 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	outColor = inColor * Sample2D(_TextureAndSampler.x, _TextureAndSampler.y, inUV);
+	outColor = inColor * Sample2D(_Texture, inUV);
 }

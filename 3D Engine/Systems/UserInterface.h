@@ -7,7 +7,7 @@
 struct ImGuiRenderData : public Component
 {
 	gpu::Image fontImage;
-	gpu::SamplerID samplerID;
+	gpu::TextureID fontTexture;
 
 	glm::vec4 scaleAndTranslation;
 
@@ -33,6 +33,7 @@ public:
 
 private:
 	std::shared_ptr<ScreenResizeEvent> _ScreenResizeEvent;
+	std::list<gpu::TextureID> _UserTextures;
 
 	void ShowUI(Engine& engine);
 	void ShowMainMenu(Engine& engine);

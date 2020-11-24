@@ -44,12 +44,6 @@ std::string ShaderTypeSerializer::Serialize<gpu::TextureID>()
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<gpu::SamplerID>()
-{
-	return "uint";
-}
-
-template<>
 std::string ShaderTypeSerializer::Serialize<gpu::ImageID>()
 {
 	return "uint";

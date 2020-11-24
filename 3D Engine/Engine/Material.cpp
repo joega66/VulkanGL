@@ -5,22 +5,21 @@
 Material::Material(
 	gpu::Device& Device,
 	EMaterialMode MaterialMode,
-	const gpu::Image* BaseColor,
-	const gpu::Image* MetallicRoughness,
-	const gpu::Image* Normal,
-	const gpu::Image* Emissive,
+	gpu::Image* BaseColor,
+	gpu::Image* MetallicRoughness,
+	gpu::Image* Normal,
+	gpu::Image* Emissive,
 	float Metallic,
 	float Roughness,
 	const glm::vec3& EmissiveFactor
 ) : MaterialMode(MaterialMode)
 {
-	const gpu::Sampler Sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
+	const gpu::Sampler sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
-	PushConstants.BaseColor = BaseColor->GetTextureID();
-	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID() : gpu::TextureID{};
-	PushConstants.Normal = Normal ? Normal->GetTextureID() : gpu::TextureID{};
-	PushConstants.Emissive = Emissive ? Emissive->GetTextureID() : gpu::TextureID{};
-	PushConstants.Sampler = Sampler.GetSamplerID();
+	PushConstants.BaseColor = BaseColor->GetTextureID(sampler);
+	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID(sampler) : gpu::TextureID{};
+	PushConstants.Normal = Normal ? Normal->GetTextureID(sampler) : gpu::TextureID{};
+	PushConstants.Emissive = Emissive ? Emissive->GetTextureID(sampler) : gpu::TextureID{};
 
 	PushConstants.Metallic = Metallic;
 	PushConstants.Roughness = Roughness;

@@ -18,7 +18,7 @@ const std::string Skybox::CubemapStems[6] = {
 	"nz",
 };
 
-Skybox::Skybox(gpu::Device& Device, const std::array<const gpu::Image*, 6>& Images, EFormat Format)
+Skybox::Skybox(gpu::Device& Device, const std::array<gpu::Image*, 6>& Images, EFormat Format)
 	: Images(Images)
 {
 	Image = Device.CreateImage(Images.front()->GetWidth(), Images.front()->GetHeight(), 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);

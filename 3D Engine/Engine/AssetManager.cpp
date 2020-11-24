@@ -39,7 +39,7 @@ const StaticMesh* AssetManager::GetStaticMesh(const std::string& AssetName) cons
 	return StaticMeshes.at(AssetName).get();
 }
 
-const gpu::Image* AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage)
+gpu::Image* AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage)
 {
 	check(Images.find(AssetName) == Images.end(), "Image %s already exists.", AssetName.c_str());
 
@@ -65,14 +65,14 @@ const gpu::Image* AssetManager::LoadImage(const std::string& AssetName, const st
 	return Images[AssetName].get();
 }
 
-const gpu::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image)
+gpu::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image)
 {
 	check(Images.find(Path.generic_string()) == Images.end(), "Image %s already exists.", Path.generic_string().c_str());
 	Images[Path.generic_string()] = std::move(Image);
 	return Images[Path.generic_string()].get();
 }
 
-const gpu::Image* AssetManager::GetImage(const std::string& AssetName) const
+gpu::Image* AssetManager::GetImage(const std::string& AssetName) const
 {
 	return Images.find(AssetName) == Images.end() ? nullptr : Images.at(AssetName).get();
 }
@@ -103,13 +103,13 @@ Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::filesy
 	{
 		const std::string PathStr = Path.string();
 
-		std::array<const gpu::Image*, 6> Images;
+		std::array<gpu::Image*, 6> Images;
 
 		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
 		{
 			const std::string& Stem = Skybox::CubemapStems[Face];
 			const std::string ImageName = AssetName + "_" + Stem;
-			const gpu::Image* Image = GetImage(ImageName);
+			gpu::Image* Image = GetImage(ImageName);
 
 			if (!Image)
 			{
