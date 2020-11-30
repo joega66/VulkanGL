@@ -4,20 +4,13 @@
 #include <Components/Transform.h>
 #include <Renderer/Surface.h>
 
-BEGIN_UNIFORM_BUFFER(LocalToWorldUniform)
-	MEMBER(glm::mat4, transform)
-	MEMBER(glm::mat4, inverse)
-	MEMBER(glm::mat4, inverseTranspose)
-END_UNIFORM_BUFFER(LocalToWorldUniform)
+DECLARE_UNIFORM_BUFFER(LocalToWorldUniform)
 
-BEGIN_DESCRIPTOR_SET(StaticMeshDescriptors)
-	DESCRIPTOR(gpu::StorageBuffer, _LocalToWorldBuffer)
-END_DESCRIPTOR_SET(StaticMeshDescriptors)
+DECLARE_DESCRIPTOR_SET(StaticMeshDescriptors)
 
 void SurfaceSystem::Start(Engine& engine)
 {
 	auto& device = engine._Device;
-	_SurfaceSet = device.CreateDescriptorSet<StaticMeshDescriptors>();
 }
 
 void SurfaceSystem::Update(Engine& engine)
@@ -37,10 +30,10 @@ void SurfaceSystem::Update(Engine& engine)
 	StaticMeshDescriptors descriptors;
 	descriptors._LocalToWorldBuffer = _SurfaceBuffer;
 
-	device.UpdateDescriptorSet(_SurfaceSet, descriptors);
+	descriptors.Update();
 
 	auto surfaceGroupEntity = ecs.CreateEntity();
-	auto& surfaceGroup = ecs.AddComponent(surfaceGroupEntity, SurfaceGroup(_SurfaceSet));
+	auto& surfaceGroup = ecs.AddComponent(surfaceGroupEntity, SurfaceGroup(StaticMeshDescriptors::_DescriptorSet));
 
 	uint32 surfaceId = 0;
 

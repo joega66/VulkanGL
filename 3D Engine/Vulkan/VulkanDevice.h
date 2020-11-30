@@ -33,8 +33,6 @@ public:
 
 	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) override;
 
-	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings) override;
-
 	gpu::Buffer CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data = nullptr) override;
 
 	gpu::Image CreateImage(
@@ -64,6 +62,8 @@ public:
 
 	gpu::Semaphore CreateSemaphore() override;
 
+	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings);
+
 	operator VkDevice() const { return _Device; }
 
 	inline VulkanInstance& GetInstance() { return _Instance; }
@@ -71,7 +71,7 @@ public:
 	inline VulkanQueue& GetGraphicsQueue() { return _GraphicsQueue; }
 	inline VulkanQueue& GetTransferQueue() { return _TransferQueue; }
 	inline VulkanCache& GetCache() { return _VulkanCache; }
-	inline gpu::DescriptorPoolManager& GetDescriptorPoolManager() { return _DescriptorPoolManager; }
+	inline VkDescriptorPool& GetDescriptorPool() { return _DescriptorPool; }
 	
 	static inline VkAccessFlags GetAccessFlags(EAccess access) 
 	{
@@ -108,7 +108,7 @@ private:
 
 	VkDevice _Device;
 
-	gpu::DescriptorPoolManager _DescriptorPoolManager;
+	VkDescriptorPool _DescriptorPool;
 };
 
 #define vulkan(result) \

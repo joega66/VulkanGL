@@ -5,7 +5,6 @@
 void VulkanDevice::EndFrame()
 {
 	_VulkanCache.EndFrame();
-	_DescriptorPoolManager.EndFrame(*this);
 	_BindlessTextures->EndFrame();
 	_BindlessImages->EndFrame();
 }
@@ -56,11 +55,6 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computePipelineDesc)
 {
 	return _VulkanCache.GetPipeline(computePipelineDesc);
-}
-
-gpu::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings)
-{
-	return gpu::DescriptorSetLayout(*this, numBindings, bindings);
 }
 
 gpu::Buffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data)
@@ -297,6 +291,11 @@ VkDescriptorSet& VulkanDevice::GetImages()
 gpu::Semaphore VulkanDevice::CreateSemaphore()
 {
 	return gpu::Semaphore(_Device);
+}
+
+gpu::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings)
+{
+	return gpu::DescriptorSetLayout(*this, numBindings, bindings);
 }
 
 const char* VulkanDevice::GetErrorString(VkResult result)

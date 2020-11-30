@@ -2,7 +2,7 @@
 #include <GPU/GPUDefinitions.h>
 #include <GPU/GPUShader.h>
 
-class gpu::Device;
+namespace gpu { class Device; }
 
 enum class EMaterialMode
 {

@@ -6,6 +6,7 @@
 #include <Components/Transform.h>
 #include <Components/SkyboxComponent.h>
 #include <Components/Camera.h>
+#include <Systems/CameraSystem.h>
 
 BEGIN_PUSH_CONSTANTS(LightingParams)
 	MEMBER(glm::vec4, _L)
@@ -71,13 +72,10 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 
 	cmdList.BindPipeline(pipeline);
 
-	const VkDescriptorSet descriptorSets[] =
-	{
-		camera._CameraDescriptorSet,
-		_Device.GetTextures(),
-	};
+	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
+	const uint32 dynamicOffsets[] = { camera.GetDynamicOffset() };
 
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
 	cmdList.PushConstants(pipeline, shader, &light);
 
@@ -122,13 +120,10 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 
 	cmdList.BindPipeline(pipeline);
 
-	const VkDescriptorSet descriptorSets[] =
-	{
-		cameraProxy._CameraDescriptorSet,
-		_Device.GetTextures(),
-	};
+	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
+	const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
 
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
 	static uint32 frameNumber = 0;
 

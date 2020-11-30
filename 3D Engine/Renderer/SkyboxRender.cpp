@@ -2,6 +2,7 @@
 #include <ECS/EntityManager.h>
 #include <Engine/AssetManager.h>
 #include <Components/SkyboxComponent.h>
+#include <Systems/CameraSystem.h>
 
 class SkyboxVS : public gpu::Shader
 {
@@ -46,8 +47,10 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	cmdList.BindPipeline(pipeline);
 
-	const VkDescriptorSet descriptorSets[] = { camera._CameraDescriptorSet, _Device.GetTextures() };
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
+	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
+	const uint32 dynamicOffsets[] = { camera.GetDynamicOffset() };
+
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
 	for (auto& entity : _ECS.GetEntities<SkyboxComponent>())
 	{

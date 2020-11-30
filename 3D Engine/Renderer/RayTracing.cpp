@@ -2,6 +2,7 @@
 #include <Components/Camera.h>
 #include <ECS/EntityManager.h>
 #include <Components/SkyboxComponent.h>
+#include <Systems/CameraSystem.h>
 
 BEGIN_PUSH_CONSTANTS(RayTracingParams)
 	MEMBER(glm::vec4, _Origin)
@@ -69,8 +70,10 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 
 	cmdList.BindPipeline(pipeline);
 
-	const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, _Device.GetTextures() };
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets);
+	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
+	const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
+
+	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
 	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
 

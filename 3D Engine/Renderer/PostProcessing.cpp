@@ -30,7 +30,7 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 
 	cmdList.BindPipeline(pipeline);
 
-	cmdList.BindDescriptorSets(pipeline, 1, &_Device.GetImages());
+	cmdList.BindDescriptorSets(pipeline, 1, &_Device.GetImages(), 0, nullptr);
 
 	PostProcessingParams postProcessingParams;
 	postProcessingParams._ExposureAdjustment = settings.ExposureAdjustment;

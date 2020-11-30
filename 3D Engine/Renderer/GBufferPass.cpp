@@ -4,6 +4,7 @@
 #include <ECS/EntityManager.h>
 #include <Engine/Engine.h>
 #include <Renderer/Surface.h>
+#include <Systems/CameraSystem.h>
 
 class GBufferPassVS : public MeshShader
 {
@@ -43,9 +44,10 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 	{
 		auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);
 
-		const VkDescriptorSet descriptorSets[] = { cameraProxy._CameraDescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
+		const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
+		const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
 
-		surfaceGroup.Draw<true>(_Device, cmdList, std::size(descriptorSets), descriptorSets, [&] ()
+		surfaceGroup.Draw<true>(_Device, cmdList, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
 		{
 			PipelineStateDesc psoDesc = {};
 			psoDesc.renderPass = cameraProxy._GBufferRP;

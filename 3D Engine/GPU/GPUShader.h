@@ -7,9 +7,10 @@
 namespace gpu
 {
 	class DescriptorSetLayout;
+	class DescriptorSet;
 }
 
-/** Serializes C++ types to shader types. */
+/** Reflects C++ types to shader types. */
 class ShaderTypeSerializer
 {
 public:
@@ -35,6 +36,7 @@ struct DescriptorSetSerialized
 struct RegisteredDescriptorSetType
 {
 	gpu::DescriptorSetLayout& layout;
+	gpu::DescriptorSet& set;
 	std::vector<DescriptorBinding>& bindings;
 };
 
@@ -89,17 +91,23 @@ public:																											\
 	};																											\
 	static SerializedData decl;																					\
 };																												\
-StructName::SerializedData StructName::decl;																	\
+
+#define DECLARE_UNIFORM_BLOCK(StructName)																		\
+	StructName::SerializedData StructName::decl;																\
 
 #define BEGIN_UNIFORM_BUFFER(StructName)	\
 	BEGIN_UNIFORM_BLOCK(StructName)
 #define END_UNIFORM_BUFFER(StructName)		\
 	END_UNIFORM_BLOCK(StructName)
 
+#define DECLARE_UNIFORM_BUFFER(StructName)  \
+	DECLARE_UNIFORM_BLOCK(StructName)
+
 #define BEGIN_PUSH_CONSTANTS(StructName)	\
 	BEGIN_UNIFORM_BLOCK(StructName)
 #define END_PUSH_CONSTANTS(StructName)		\
-	END_UNIFORM_BLOCK(StructName)
+	END_UNIFORM_BLOCK(StructName)			\
+	DECLARE_UNIFORM_BLOCK(StructName)		
 
 /** Begin a descriptor set declaration. */
 #define BEGIN_DESCRIPTOR_SET(StructName)	\
@@ -146,14 +154,23 @@ public:																											\
 			auto data = Serialize();																			\
 			bindings = std::move(data.bindings);																\
 			auto& registrar = gpu::GetRegisteredDescriptorSetTypes();											\
-			registrar.push_back({ StructName::layout, bindings });												\
+			registrar.push_back({ StructName::_Layout, StructName::_DescriptorSet, bindings });					\
 		}																										\
 	};																											\
 	static SerializedData decl;																					\
-	static gpu::DescriptorSetLayout layout;																		\
+	static gpu::DescriptorSetLayout _Layout;																	\
+	static gpu::DescriptorSet		_DescriptorSet;																\
+	void Update()																								\
+	{																											\
+		_Layout.UpdateDescriptorSet(_DescriptorSet, this);														\
+	}																											\
 };																												\
-StructName::SerializedData StructName::decl;																	\
-gpu::DescriptorSetLayout StructName::layout;																	\
+
+//@todo rename SerializedData to ReflectionInfo
+#define DECLARE_DESCRIPTOR_SET(StructName)																		\
+	StructName::SerializedData	StructName::decl;																\
+	gpu::DescriptorSetLayout	StructName::_Layout;															\
+	gpu::DescriptorSet			StructName::_DescriptorSet;														\
 
 class ShaderCompilerWorker
 {

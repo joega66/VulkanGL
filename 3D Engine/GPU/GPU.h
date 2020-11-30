@@ -30,11 +30,6 @@ namespace gpu
 
 		virtual gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) = 0;
 
-		virtual gpu::DescriptorSetLayout CreateDescriptorSetLayout(
-			std::size_t numBindings,
-			const DescriptorBinding* bindings
-		) = 0;
-
 		virtual gpu::Buffer CreateBuffer(
 			EBufferUsage bufferUsage, 
 			EMemoryUsage memoryUsage,
@@ -66,26 +61,6 @@ namespace gpu
 		virtual VkDescriptorSet& GetTextures() = 0;
 
 		virtual VkDescriptorSet& GetImages() = 0;
-
-		template<typename DescriptorSetType>
-		gpu::DescriptorSet CreateDescriptorSet()
-		{
-			return DescriptorSetType::layout.CreateDescriptorSet(*this);
-		}
-
-		template<typename DescriptorSetType>
-		gpu::DescriptorSet CreateDescriptorSet(const DescriptorSetType& descriptors)
-		{
-			gpu::DescriptorSet set = DescriptorSetType::layout.CreateDescriptorSet(*this);
-			DescriptorSetType::layout.UpdateDescriptorSet(*this, set, &descriptors);
-			return set;
-		}
-
-		template<typename DescriptorSetType>
-		void UpdateDescriptorSet(const gpu::DescriptorSet& set, const DescriptorSetType& descriptors)
-		{
-			DescriptorSetType::layout.UpdateDescriptorSet(*this, set, &descriptors);
-		}
 
 		virtual gpu::Semaphore CreateSemaphore() = 0;
 	};

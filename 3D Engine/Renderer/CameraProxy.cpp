@@ -1,41 +1,8 @@
 #include "CameraProxy.h"
 #include <Components/Camera.h>
 
-BEGIN_UNIFORM_BUFFER(CameraUniform)
-	MEMBER(glm::mat4, worldToView)
-	MEMBER(glm::mat4, viewToClip)
-	MEMBER(glm::mat4, worldToClip)
-	MEMBER(glm::mat4, clipToWorld)
-	MEMBER(glm::mat4, prevWorldToClip)
-	MEMBER(glm::vec3, position)
-	MEMBER(float, _pad0)
-	MEMBER(float, aspectRatio)
-	MEMBER(float, fov)
-	MEMBER(glm::vec2, screenDims)
-	MEMBER(glm::vec3, clipData)
-	MEMBER(float, _pad1)
-END_UNIFORM_BUFFER(CameraUniform)
-
-BEGIN_DESCRIPTOR_SET(CameraDescriptors)
-	DESCRIPTOR(gpu::UniformBuffer<CameraUniform>, _CameraUniform)
-	DESCRIPTOR(gpu::SampledImage, _SceneDepth)
-	DESCRIPTOR(gpu::SampledImage, _GBuffer0)
-	DESCRIPTOR(gpu::SampledImage, _GBuffer1)
-	DESCRIPTOR(gpu::StorageImage, _SceneColor)
-	DESCRIPTOR(gpu::StorageImage, _SSRHistory)
-	DESCRIPTOR(gpu::StorageImage, _SSGIHistory)
-	DESCRIPTOR(gpu::StorageImage, _DirectLighting)
-END_DESCRIPTOR_SET(CameraDescriptors)
-
 CameraProxy::CameraProxy(gpu::Device& device)
-{
-	_CameraDescriptorSet = device.CreateDescriptorSet<CameraDescriptors>();
-	_CameraUniformBuffer = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, sizeof(CameraUniform));
-}
-
-void CameraProxy::Update(const Camera& camera)
-{
-	UpdateCameraUniform(camera);
+{	
 }
 
 void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
@@ -55,20 +22,6 @@ void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
 
 	CreateSkyboxRP(device);
 
-	const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
-
-	CameraDescriptors cameraDescriptors;
-	cameraDescriptors._CameraUniform = { _CameraUniformBuffer };
-	cameraDescriptors._SceneDepth = { _SceneDepth, sampler };
-	cameraDescriptors._GBuffer0 = { _GBuffer0, sampler };
-	cameraDescriptors._GBuffer1 = { _GBuffer1, sampler };
-	cameraDescriptors._SceneColor = _SceneColor;
-	cameraDescriptors._SSRHistory = _SSRHistory;
-	cameraDescriptors._SSGIHistory = _SSGIHistory;
-	cameraDescriptors._DirectLighting = _DirectLighting;
-
-	device.UpdateDescriptorSet(_CameraDescriptorSet, cameraDescriptors);
-
 	gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
 
 	ImageMemoryBarrier barriers[] = { { _SSRHistory }, { _SSGIHistory } };
@@ -84,34 +37,6 @@ void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
 	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::TopOfPipe, 0, nullptr, std::size(barriers), barriers);
 
 	device.SubmitCommands(cmdList);
-}
-
-void CameraProxy::UpdateCameraUniform(const Camera& camera)
-{
-	const glm::vec3 clipData(
-		camera.GetFarPlane() * camera.GetNearPlane(),
-		camera.GetNearPlane() - camera.GetFarPlane(),
-		camera.GetFarPlane());
-
-	const glm::mat4 clipToWorld = glm::inverse(camera.GetWorldToClip());
-
-	const CameraUniform cameraUniform =
-	{
-		camera.GetWorldToView(),
-		camera.GetViewToClip(),
-		camera.GetWorldToClip(),
-		clipToWorld,
-		camera.GetPrevWorldToClip(),
-		camera.GetPosition(),
-		0.0f,
-		camera.GetAspectRatio(),
-		camera.GetFieldOfView(),
-		glm::vec2(camera.GetWidth(), camera.GetHeight()),
-		clipData,
-		0.0f,
-	};
-
-	Platform::Memcpy(_CameraUniformBuffer.GetData(), &cameraUniform, sizeof(cameraUniform));
 }
 
 void CameraProxy::CreateGBufferRP(gpu::Device& device)

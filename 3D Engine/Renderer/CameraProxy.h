@@ -13,8 +13,6 @@ public:
 	gpu::RenderPass _GBufferRP;
 	gpu::RenderPass _SkyboxRP;
 
-	gpu::Buffer _CameraUniformBuffer;
-
 	gpu::Image _SceneDepth;
 	gpu::Image _SceneColor;
 	gpu::Image _GBuffer0;
@@ -23,16 +21,15 @@ public:
 	gpu::Image _SSGIHistory;
 	gpu::Image _DirectLighting;
 
-	gpu::DescriptorSet _CameraDescriptorSet;
-
-	void Update(const Camera& camera);
-
 	void Resize(gpu::Device& device, uint32 width, uint32 height);
 
-private:
-	void UpdateCameraUniform(const Camera& camera);
+	void SetDynamicOffset(uint32 dynamicOffset) { _DynamicOffset = dynamicOffset; }
+	inline uint32 GetDynamicOffset() const { return _DynamicOffset; }
 
+private:
 	void CreateGBufferRP(gpu::Device& device);
 
 	void CreateSkyboxRP(gpu::Device& device);
+
+	uint32 _DynamicOffset;
 };

@@ -23,7 +23,7 @@ VulkanBindlessDescriptors::VulkanBindlessDescriptors(VkDevice device, VkDescript
 		.descriptorCount = descriptorCount,
 		.stageFlags = VK_SHADER_STAGE_ALL
 	};
-		
+	
 	const VkDescriptorSetLayoutCreateInfo setLayoutInfo = 
 	{ 
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -31,7 +31,7 @@ VulkanBindlessDescriptors::VulkanBindlessDescriptors(VkDevice device, VkDescript
 		.bindingCount = 1,
 		.pBindings = &binding,
 	};
-		
+	
 	VkDescriptorSetVariableDescriptorCountLayoutSupport variableDescriptorCountSupport = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT };
 	VkDescriptorSetLayoutSupport support = 
 	{ 

@@ -47,6 +47,8 @@ public:
 		gpu::CommandList& cmdList,
 		std::size_t numDescriptorSets,
 		const VkDescriptorSet* descriptorSets,
+		std::size_t numDynamicOffsets,
+		const uint32* dynamicOffsets,
 		std::function<PipelineStateDesc()> getPsoDesc,
 		const FrustumPlanes* viewFrustumPlanes = nullptr)
 	{
@@ -54,7 +56,7 @@ public:
 		PipelineStateDesc psoDesc = getPsoDesc();
 		gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
 
-		cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets);
+		cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
 
 		for (const auto& surface : _Surfaces)
 		{

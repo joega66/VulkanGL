@@ -140,10 +140,43 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	_BindlessTextures = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 65556);
 	_BindlessImages = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
 
-	// Create all descriptor set layouts.
+	// Create the app's descriptor set layouts.
 	auto& descriptorSetTypes = gpu::GetRegisteredDescriptorSetTypes();
 	for (auto& descriptorSetType : descriptorSetTypes)
 	{
 		descriptorSetType.layout = CreateDescriptorSetLayout(descriptorSetType.bindings.size(), descriptorSetType.bindings.data());
+	}
+
+	// Create the app's descriptor pool.
+	VkDescriptorPoolSize descriptorPoolSizes[] =
+	{
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 0 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 0 },
+	};
+
+	for (const auto& descriptorSetType : descriptorSetTypes)
+	{
+		for (const auto& binding : descriptorSetType.bindings)
+		{
+			descriptorPoolSizes[static_cast<uint32>(binding.descriptorType)].descriptorCount += binding.descriptorCount;
+		}
+	}
+
+	const VkDescriptorPoolCreateInfo descriptorPoolCreateInfo =
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.maxSets = static_cast<uint32>(descriptorSetTypes.size()),
+		.poolSizeCount = static_cast<uint32>(std::size(descriptorPoolSizes)),
+		.pPoolSizes = descriptorPoolSizes,
+	};
+
+	vulkan(vkCreateDescriptorPool(_Device, &descriptorPoolCreateInfo, nullptr, &_DescriptorPool));
+
+	// Create the app's descriptor sets.
+	for (auto& descriptorSetType : descriptorSetTypes)
+	{
+		descriptorSetType.set = descriptorSetType.layout.CreateDescriptorSet();
 	}
 }

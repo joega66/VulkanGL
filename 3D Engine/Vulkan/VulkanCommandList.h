@@ -36,9 +36,11 @@ namespace gpu
 		void BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline);
 
 		void BindDescriptorSets(
-			const std::shared_ptr<VulkanPipeline>& pipeline, 
-			std::size_t numDescriptorSets, 
-			const VkDescriptorSet* descriptorSets
+			const std::shared_ptr<VulkanPipeline>& pipeline,
+			std::size_t numDescriptorSets,
+			const VkDescriptorSet* descriptorSets,
+			std::size_t numDynamicOffsets,
+			const uint32* dynamicOffsets
 		);
 
 		void PushConstants(

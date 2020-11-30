@@ -4,6 +4,7 @@
 #include "FullscreenQuad.h"
 #include "Surface.h"
 #include <ECS/EntityManager.h>
+#include <Systems/ShadowSystem.h>
 
 class ShadowDepthVS : public MeshShader
 {
@@ -45,9 +46,10 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 		{
 			auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);
 
-			const VkDescriptorSet descriptorSets[] = { shadowProxy.GetDescriptorSet(), surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
+			const VkDescriptorSet descriptorSets[] = { ShadowDescriptors::_DescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
+			const uint32 dynamicOffsets[] = { shadowProxy.GetDynamicOffset() };
 
-			surfaceGroup.Draw<false>(_Device, cmdList, std::size(descriptorSets), descriptorSets, [&] ()
+			surfaceGroup.Draw<false>(_Device, cmdList, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
 			{
 				PipelineStateDesc psoDesc = {};
 				psoDesc.renderPass = shadowProxy.GetRenderPass();

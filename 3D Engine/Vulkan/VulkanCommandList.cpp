@@ -52,7 +52,9 @@ namespace gpu
 	void CommandList::BindDescriptorSets(
 		const std::shared_ptr<VulkanPipeline>& pipeline, 
 		std::size_t numDescriptorSets, 
-		const VkDescriptorSet* descriptorSets)
+		const VkDescriptorSet* descriptorSets,
+		std::size_t numDynamicOffsets,
+		const uint32* dynamicOffsets)
 	{
 		vkCmdBindDescriptorSets(
 			_CommandBuffer,
@@ -61,8 +63,8 @@ namespace gpu
 			0,
 			static_cast<uint32>(numDescriptorSets),
 			descriptorSets,
-			0,
-			nullptr
+			static_cast<uint32>(numDynamicOffsets),
+			dynamicOffsets
 		);
 	}
 
