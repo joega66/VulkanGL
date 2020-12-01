@@ -4,8 +4,6 @@
 
 VulkanCache::VulkanCache(VulkanDevice& Device)
 	: Device(Device)
-	, p_vkUpdateDescriptorSetWithTemplateKHR(reinterpret_cast<PFN_vkUpdateDescriptorSetWithTemplateKHR>
-		(vkGetInstanceProcAddr(Device.GetInstance(), "vkUpdateDescriptorSetWithTemplateKHR")))
 {
 }
 

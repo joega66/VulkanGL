@@ -2,67 +2,70 @@
 #include "GPU/GPUDefinitions.h"
 
 template<>
-std::string ShaderTypeSerializer::Serialize<uint32>()
+std::string ShaderTypeReflector::Reflect<uint32>()
 {
 	return "uint";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<float>()
+std::string ShaderTypeReflector::Reflect<float>()
 {
 	return "float";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<glm::vec2>()
+std::string ShaderTypeReflector::Reflect<glm::vec2>()
 {
 	return "vec2";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<glm::vec3>()
+std::string ShaderTypeReflector::Reflect<glm::vec3>()
 {
 	return "vec3";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<glm::vec4>()
+std::string ShaderTypeReflector::Reflect<glm::vec4>()
 {
 	return "vec4";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<glm::mat4>()
+std::string ShaderTypeReflector::Reflect<glm::mat4>()
 {
 	return "mat4";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<gpu::TextureID>()
+std::string ShaderTypeReflector::Reflect<gpu::TextureID>()
 {
 	return "uint";
 }
 
 template<>
-std::string ShaderTypeSerializer::Serialize<gpu::ImageID>()
+std::string ShaderTypeReflector::Reflect<gpu::ImageID>()
 {
 	return "uint";
 }
 
-std::string& gpu::GetRegisteredShaderStructs()
+namespace gpu
 {
-	static std::string registrar = "";
-	return registrar;
-}
+	std::string& GetShaderTypeReflectionTasks()
+	{
+		static std::string tasks = "";
+		return tasks;
+	}
 
-std::vector<RegisteredDescriptorSetType>& gpu::GetRegisteredDescriptorSetTypes()
-{
-	static std::vector<RegisteredDescriptorSetType> registrar;
-	return registrar;
-}
+	std::vector<DescriptorSetReflectionTask>& GetDescriptorSetReflectionTasks()
+	{
+		static std::vector<DescriptorSetReflectionTask> tasks;
+		return tasks;
+	}
 
-std::vector<ShaderCompilationTask>& gpu::GetShaderCompilationTasks()
-{
-	static std::vector<ShaderCompilationTask> tasks;
-	return tasks;
+	std::vector<ShaderCompilationTask>& GetShaderCompilationTasks()
+	{
+		static std::vector<ShaderCompilationTask> tasks;
+		return tasks;
+	}
 }

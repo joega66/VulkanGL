@@ -142,7 +142,10 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 
 	for (auto& [set, bindings] : setBindings)
 	{
-		layouts.insert({ set, device.CreateDescriptorSetLayout(bindings.size(), bindings.data()) });
+		VkDescriptorSetLayout descriptorSetLayout;
+		VkDescriptorUpdateTemplate descriptorUpdateTemplate;
+		device.CreateDescriptorSetLayout(bindings.size(), bindings.data(), descriptorSetLayout, descriptorUpdateTemplate);
+		layouts.insert({ set, descriptorSetLayout });
 	}
 
 	return layouts;
@@ -250,14 +253,14 @@ ShaderCompilationResult VulkanShaderLibrary::CompileShader(
 		compileOptions.AddMacroDefinition(define, value);
 	}
 
-	const auto& globalShaderStructs = gpu::GetRegisteredShaderStructs();
+	const auto& shaderTypesReflected = gpu::GetShaderTypeReflectionTasks();
 
 	shaderc::Compiler compiler;
 	shaderc::SpvCompilationResult spvCompilationResult;
 
 	do
 	{
-		const std::string sourceText = Platform::FileRead(path, globalShaderStructs);
+		const std::string sourceText = Platform::FileRead(path, shaderTypesReflected);
 
 		spvCompilationResult = compiler.CompileGlslToSpv(sourceText, shaderKind, path.string().c_str(), entrypoint.c_str(), compileOptions);
 

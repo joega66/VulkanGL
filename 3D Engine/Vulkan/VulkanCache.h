@@ -33,8 +33,6 @@ public:
 
 	void EndFrame();
 
-	void UpdateDescriptorSetWithTemplate(VkDescriptorSet DescriptorSet, VkDescriptorUpdateTemplate DescriptorUpdateTemplate, const void* Data);
-
 	void RecompilePipelines();
 
 private:
@@ -52,8 +50,6 @@ private:
 	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
 
 	std::unordered_map<Crc, gpu::Sampler> SamplerCache;
-
-	PFN_vkUpdateDescriptorSetWithTemplateKHR p_vkUpdateDescriptorSetWithTemplateKHR;
 
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 

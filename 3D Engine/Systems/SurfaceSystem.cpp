@@ -30,12 +30,12 @@ void SurfaceSystem::Update(Engine& engine)
 	StaticMeshDescriptors descriptors;
 	descriptors._LocalToWorldBuffer = _SurfaceBuffer;
 
-	descriptors.Update();
+	device.UpdateDescriptorSet(descriptors);
 
 	auto surfaceGroupEntity = ecs.CreateEntity();
 	auto& surfaceGroup = ecs.AddComponent(surfaceGroupEntity, SurfaceGroup(StaticMeshDescriptors::_DescriptorSet));
 
-	uint32 surfaceId = 0;
+	uint32 surfaceIdx = 0;
 
 	for (auto& entity : entities)
 	{
@@ -43,11 +43,11 @@ void SurfaceSystem::Update(Engine& engine)
 		const auto& transform = ecs.GetComponent<Transform>(entity);
 		const BoundingBox boundingBox = staticMesh.StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
 
-		auto* localToWorldUniformBuffer = reinterpret_cast<LocalToWorldUniform*>(_SurfaceBuffer.GetData()) + surfaceId;
+		auto* localToWorldUniformBuffer = reinterpret_cast<LocalToWorldUniform*>(_SurfaceBuffer.GetData()) + surfaceIdx;
 		localToWorldUniformBuffer->transform = transform.GetLocalToWorld();
 		localToWorldUniformBuffer->inverse = glm::inverse(transform.GetLocalToWorld());
 		localToWorldUniformBuffer->inverseTranspose = glm::transpose(localToWorldUniformBuffer->inverse);
 
-		surfaceGroup.AddSurface(Surface(surfaceId++, staticMesh.Material, staticMesh.StaticMesh->Submeshes, boundingBox));
+		surfaceGroup.AddSurface(Surface(surfaceIdx++, staticMesh.Material, staticMesh.StaticMesh->Submeshes, boundingBox));
 	}
 }

@@ -31,7 +31,7 @@ void ShadowSystem::Update(Engine& engine)
 	ShadowDescriptors descriptors;
 	descriptors._ShadowUniform = _ShadowUniform;
 
-	descriptors.Update();
+	device.UpdateDescriptorSet(descriptors);
 
 	auto shadowUniformData = static_cast<ShadowUniform*>(_ShadowUniform.GetData());
 

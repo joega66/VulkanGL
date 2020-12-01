@@ -4,22 +4,15 @@
 #include <typeindex>
 #include <map>
 
-namespace gpu
-{
-	class DescriptorSetLayout;
-	class DescriptorSet;
-}
-
 /** Reflects C++ types to shader types. */
-class ShaderTypeSerializer
+class ShaderTypeReflector
 {
 public:
 	template<typename T>
-	static std::string Serialize();
+	static std::string Reflect();
 };
 
-/** Shader struct serialization data. */
-struct ShaderStructSerialized
+struct ShaderTypeReflectionInfo
 {
 	std::string type;
 	std::string members;
@@ -27,24 +20,23 @@ struct ShaderStructSerialized
 	uint32		size;
 };
 
-/** Descriptor set serialization data. */
-struct DescriptorSetSerialized
+struct DescriptorSetReflectionInfo
 {
 	std::vector<DescriptorBinding> bindings;
 };
 
-struct RegisteredDescriptorSetType
+struct DescriptorSetReflectionTask
 {
-	gpu::DescriptorSetLayout& layout;
-	gpu::DescriptorSet& set;
-	std::vector<DescriptorBinding>& bindings;
+	DescriptorSetReflectionInfo	reflectionInfo;
+	VkDescriptorSet&			descriptorSet;
+	VkDescriptorUpdateTemplate&	descriptorUpdateTemplate;
 };
 
 namespace gpu
 {
-	std::string& GetRegisteredShaderStructs();
+	std::string& GetShaderTypeReflectionTasks();
 
-	std::vector<RegisteredDescriptorSetType>& GetRegisteredDescriptorSetTypes();
+	std::vector<DescriptorSetReflectionTask>& GetDescriptorSetReflectionTasks();
 }
 
 #define BEGIN_UNIFORM_BLOCK(StructName)	\
@@ -60,10 +52,10 @@ private:								\
 public:																											\
 	ShaderType Name;																							\
 private:																										\
-	static void Serialize(MemberId##Name memberId, std::string& members)										\
+	static void ReflectMember(MemberId##Name memberId, std::string& members)									\
 	{																											\
-		members += ShaderTypeSerializer::Serialize<ShaderType>() + " " + std::string(#Name) + ";";				\
-		Serialize(NextMemberId##Name{}, members);																\
+		members += ShaderTypeReflector::Reflect<ShaderType>() + " " + std::string(#Name) + ";";					\
+		ReflectMember(NextMemberId##Name{}, members);															\
 	}																											\
 	struct NextMemberId##Name {};																				\
 	typedef NextMemberId##Name																					\
@@ -71,29 +63,29 @@ private:																										\
 /** End push constant block. */
 #define END_UNIFORM_BLOCK(StructName)																			\
 		LastMemberId;																							\
-	static void Serialize(LastMemberId memberId, std::string& members) {}										\
+	static void ReflectMember(LastMemberId memberId, std::string& members) {}									\
 public:																											\
-	static std::string Serialize()																				\
+	static std::string ReflectMembers()																			\
 	{																											\
 		std::string members;																					\
-		Serialize(FirstMemberId{}, members);																	\
+		ReflectMember(FirstMemberId{}, members);																\
 		return members;																							\
 	}																											\
-	struct SerializedData : ShaderStructSerialized{																\
-		SerializedData() {																						\
+	struct ReflectionTask : ShaderTypeReflectionInfo{															\
+		ReflectionTask() {																						\
 			type = std::string(#StructName);																	\
-			members = Serialize();																				\
+			members = ReflectMembers();																			\
 			size = sizeof(StructName);																			\
 			structStr = "struct " + type + "{" + members + "};\n";												\
-			auto& registrar = gpu::GetRegisteredShaderStructs();												\
-			registrar += structStr;																				\
+			auto& tasks = gpu::GetShaderTypeReflectionTasks();													\
+			tasks += structStr;																					\
 		}																										\
 	};																											\
-	static SerializedData decl;																					\
+	static ReflectionTask _ReflectionTask;																		\
 };																												\
 
 #define DECLARE_UNIFORM_BLOCK(StructName)																		\
-	StructName::SerializedData StructName::decl;																\
+	StructName::ReflectionTask StructName::_ReflectionTask;														\
 
 #define BEGIN_UNIFORM_BUFFER(StructName)	\
 	BEGIN_UNIFORM_BLOCK(StructName)
@@ -125,14 +117,14 @@ private:									\
 public:																											\
 	DescriptorType Name;																						\
 private:																										\
-	static void Serialize(MemberId##Name memberId, DescriptorSetSerialized& data)								\
+	static void ReflectMember(MemberId##Name memberId, DescriptorSetReflectionInfo& reflectionInfo)				\
 	{																											\
 		DescriptorBinding binding;																				\
-		binding.binding = static_cast<uint32>(data.bindings.size());											\
+		binding.binding = static_cast<uint32>(reflectionInfo.bindings.size());									\
 		binding.descriptorCount = 1;																			\
 		binding.descriptorType = DescriptorType::GetDescriptorType();											\
-		data.bindings.push_back(binding);																		\
-		Serialize(NextMemberId##Name{}, data);																	\
+		reflectionInfo.bindings.push_back(binding);																\
+		ReflectMember(NextMemberId##Name{}, reflectionInfo);													\
 	}																											\
 	struct NextMemberId##Name {};																				\
 	typedef NextMemberId##Name																					\
@@ -140,37 +132,30 @@ private:																										\
 /** End descriptor set declaration. */
 #define END_DESCRIPTOR_SET(StructName)																			\
 		LastMemberId;																							\
-	static void Serialize(LastMemberId memberId, DescriptorSetSerialized& data) {}								\
+	static void ReflectMember(LastMemberId memberId, DescriptorSetReflectionInfo& reflectionInfo) {}			\
 public:																											\
-	static DescriptorSetSerialized Serialize()																	\
+	static DescriptorSetReflectionInfo ReflectMembers()															\
 	{																											\
-		DescriptorSetSerialized data;																			\
-		Serialize(FirstMemberId{}, data);																		\
-		return data;																							\
+		DescriptorSetReflectionInfo reflectionInfo;																\
+		ReflectMember(FirstMemberId{}, reflectionInfo);															\
+		return reflectionInfo;																					\
 	}																											\
-	struct SerializedData : public DescriptorSetSerialized 														\
+	struct ReflectionTask																						\
 	{																											\
-		SerializedData() {																						\
-			auto data = Serialize();																			\
-			bindings = std::move(data.bindings);																\
-			auto& registrar = gpu::GetRegisteredDescriptorSetTypes();											\
-			registrar.push_back({ StructName::_Layout, StructName::_DescriptorSet, bindings });					\
+		ReflectionTask() {																						\
+			auto& tasks = gpu::GetDescriptorSetReflectionTasks();												\
+			tasks.push_back({ReflectMembers(),_DescriptorSet,_DescriptorUpdateTemplate});						\
 		}																										\
 	};																											\
-	static SerializedData decl;																					\
-	static gpu::DescriptorSetLayout _Layout;																	\
-	static gpu::DescriptorSet		_DescriptorSet;																\
-	void Update()																								\
-	{																											\
-		_Layout.UpdateDescriptorSet(_DescriptorSet, this);														\
-	}																											\
+	static ReflectionTask				_ReflectionTask;														\
+	static VkDescriptorSet				_DescriptorSet;															\
+	static VkDescriptorUpdateTemplate	_DescriptorUpdateTemplate;												\
 };																												\
 
-//@todo rename SerializedData to ReflectionInfo
 #define DECLARE_DESCRIPTOR_SET(StructName)																		\
-	StructName::SerializedData	StructName::decl;																\
-	gpu::DescriptorSetLayout	StructName::_Layout;															\
-	gpu::DescriptorSet			StructName::_DescriptorSet;														\
+	StructName::ReflectionTask	StructName::_ReflectionTask;													\
+	VkDescriptorSet				StructName::_DescriptorSet;														\
+	VkDescriptorUpdateTemplate	StructName::_DescriptorUpdateTemplate;											\
 
 class ShaderCompilerWorker
 {

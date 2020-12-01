@@ -293,9 +293,61 @@ gpu::Semaphore VulkanDevice::CreateSemaphore()
 	return gpu::Semaphore(_Device);
 }
 
-gpu::DescriptorSetLayout VulkanDevice::CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings)
+void VulkanDevice::UpdateDescriptorSet(
+	VkDescriptorSet descriptorSet,
+	VkDescriptorUpdateTemplate descriptorUpdateTemplate,
+	const void* data)
 {
-	return gpu::DescriptorSetLayout(*this, numBindings, bindings);
+	_VkUpdateDescriptorSetWithTemplateKHR(_Device, descriptorSet, descriptorUpdateTemplate, data);
+}
+
+void VulkanDevice::CreateDescriptorSetLayout(
+	std::size_t numBindings,
+	const DescriptorBinding* bindings,
+	VkDescriptorSetLayout& descriptorSetLayout,
+	VkDescriptorUpdateTemplate& descriptorUpdateTemplate)
+{
+	static const VkDescriptorType descriptorTypes[] =
+	{
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+	};
+
+	std::vector<VkDescriptorUpdateTemplateEntry> descriptorUpdateTemplateEntries;
+	descriptorUpdateTemplateEntries.reserve(numBindings);
+
+	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+	descriptorSetLayoutBindings.reserve(numBindings);
+
+	uint32 structSize = 0;
+
+	for (std::size_t bindingIndex = 0; bindingIndex < numBindings; bindingIndex++)
+	{
+		const DescriptorBinding& binding = bindings[bindingIndex];
+		VkDescriptorUpdateTemplateEntry descriptorUpdateTemplateEntry = {};
+		descriptorUpdateTemplateEntry.dstBinding = binding.binding;
+		descriptorUpdateTemplateEntry.descriptorCount = binding.descriptorCount;
+		descriptorUpdateTemplateEntry.descriptorType = descriptorTypes[static_cast<uint32>(binding.descriptorType)];
+		descriptorUpdateTemplateEntry.offset = structSize;
+
+		structSize += (descriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC || descriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ?
+			sizeof(VkDescriptorBufferInfo) : sizeof(VkDescriptorImageInfo));
+
+		descriptorUpdateTemplateEntries.push_back(descriptorUpdateTemplateEntry);
+
+		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
+		descriptorSetLayoutBinding.binding = binding.binding;
+		descriptorSetLayoutBinding.descriptorCount = binding.descriptorCount;
+		descriptorSetLayoutBinding.descriptorType = descriptorTypes[static_cast<uint32>(binding.descriptorType)];
+		descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
+		descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+
+		descriptorSetLayoutBindings.push_back(descriptorSetLayoutBinding);
+	}
+
+	std::tie(descriptorSetLayout, descriptorUpdateTemplate) = GetCache().GetDescriptorSetLayout(descriptorSetLayoutBindings, descriptorUpdateTemplateEntries);
 }
 
 const char* VulkanDevice::GetErrorString(VkResult result)

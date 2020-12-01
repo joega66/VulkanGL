@@ -63,6 +63,18 @@ namespace gpu
 		virtual VkDescriptorSet& GetImages() = 0;
 
 		virtual gpu::Semaphore CreateSemaphore() = 0;
+
+		template<typename T>
+		void UpdateDescriptorSet(const T& descriptors)
+		{
+			UpdateDescriptorSet(T::_DescriptorSet, T::_DescriptorUpdateTemplate, &descriptors);
+		}
+
+		virtual void UpdateDescriptorSet(
+			VkDescriptorSet descriptorSet,
+			VkDescriptorUpdateTemplate descriptorUpdateTemplate,
+			const void* data
+		) = 0;
 	};
 
 	/** Compositor interface. Useful for creating a swapchain or letting an SDK control the display, e.g. OpenXR. */

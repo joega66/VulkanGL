@@ -85,7 +85,7 @@ void CameraSystem::Update(Engine& engine)
 		descriptors._SSGIHistory = cameraProxy._SSGIHistory;
 		descriptors._DirectLighting = cameraProxy._DirectLighting;
 
-		descriptors.Update();
+		device.UpdateDescriptorSet(descriptors);
 
 		i++;
 	}

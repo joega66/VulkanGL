@@ -31,8 +31,8 @@ private:
 class SurfaceGroup : public Component
 {
 public:
-	SurfaceGroup(const gpu::DescriptorSet& surfaceSet)
-		: _SurfaceSet(&surfaceSet)
+	SurfaceGroup(const VkDescriptorSet& surfaceSet)
+		: _SurfaceSet(surfaceSet)
 	{
 	}
 
@@ -88,9 +88,9 @@ public:
 		}
 	}
 
-	inline const gpu::DescriptorSet& GetSurfaceSet() const { return *_SurfaceSet; }
+	inline const VkDescriptorSet& GetSurfaceSet() const { return _SurfaceSet; }
 
 private:
-	const gpu::DescriptorSet* _SurfaceSet;
+	VkDescriptorSet _SurfaceSet;
 	std::vector<Surface> _Surfaces;
 };

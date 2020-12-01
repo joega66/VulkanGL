@@ -62,7 +62,16 @@ public:
 
 	gpu::Semaphore CreateSemaphore() override;
 
-	gpu::DescriptorSetLayout CreateDescriptorSetLayout(std::size_t numBindings, const DescriptorBinding* bindings);
+	void UpdateDescriptorSet(
+		VkDescriptorSet descriptorSet, 
+		VkDescriptorUpdateTemplate descriptorUpdateTemplate, 
+		const void* data) override;
+
+	void CreateDescriptorSetLayout(
+		std::size_t numBindings, 
+		const DescriptorBinding* bindings,
+		VkDescriptorSetLayout& descriptorSetLayout,
+		VkDescriptorUpdateTemplate& descriptorUpdateTemplate);
 
 	operator VkDevice() const { return _Device; }
 
@@ -109,6 +118,8 @@ private:
 	VkDevice _Device;
 
 	VkDescriptorPool _DescriptorPool;
+
+	PFN_vkUpdateDescriptorSetWithTemplateKHR _VkUpdateDescriptorSetWithTemplateKHR;
 };
 
 #define vulkan(result) \
