@@ -156,20 +156,28 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 		);
 	}
 
-	// Create the app's descriptor pool.
-	VkDescriptorPoolSize descriptorPoolSizes[] =
+	const std::unordered_map<VkDescriptorType, uint32> descriptorTypeToPoolSizeIdx =
 	{
-		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 0 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 0 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 0 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	0 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,				1 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,	2 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,			3 },
 	};
 
+	std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
+	descriptorPoolSizes.resize(descriptorTypeToPoolSizeIdx.size());
+
+	for (const auto& [descriptorType, idx] : descriptorTypeToPoolSizeIdx)
+	{
+		descriptorPoolSizes[idx] = { .type = descriptorType, .descriptorCount = 0 };
+	}
+
+	// Create the app's descriptor pool.
 	for (const auto& descriptorSetReflectionTask : descriptorSetReflectionTasks)
 	{
 		for (const auto& binding : descriptorSetReflectionTask.reflectionInfo.bindings)
 		{
-			descriptorPoolSizes[static_cast<uint32>(binding.descriptorType)].descriptorCount += binding.descriptorCount;
+			descriptorPoolSizes[descriptorTypeToPoolSizeIdx.at(binding.descriptorType)].descriptorCount += binding.descriptorCount;
 		}
 	}
 
@@ -178,7 +186,7 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 		.maxSets = static_cast<uint32>(descriptorSetReflectionTasks.size()),
 		.poolSizeCount = static_cast<uint32>(std::size(descriptorPoolSizes)),
-		.pPoolSizes = descriptorPoolSizes,
+		.pPoolSizes = descriptorPoolSizes.data(),
 	};
 
 	vulkan(vkCreateDescriptorPool(_Device, &descriptorPoolCreateInfo, nullptr, &_DescriptorPool));

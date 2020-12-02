@@ -25,7 +25,8 @@ public:
 	gpu::Sampler GetSampler(const SamplerDesc& SamplerDesc);
 
 	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> GetDescriptorSetLayout(
-		const std::vector<VkDescriptorSetLayoutBinding>& Bindings,
+		std::size_t numBindings,
+		const VkDescriptorSetLayoutBinding* bindings,
 		const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
 	);
 

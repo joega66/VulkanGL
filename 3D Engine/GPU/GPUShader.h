@@ -22,7 +22,7 @@ struct ShaderTypeReflectionInfo
 
 struct DescriptorSetReflectionInfo
 {
-	std::vector<DescriptorBinding> bindings;
+	std::vector<VkDescriptorSetLayoutBinding> bindings;
 };
 
 struct DescriptorSetReflectionTask
@@ -119,10 +119,11 @@ public:																											\
 private:																										\
 	static void ReflectMember(MemberId##Name memberId, DescriptorSetReflectionInfo& reflectionInfo)				\
 	{																											\
-		DescriptorBinding binding;																				\
-		binding.binding = static_cast<uint32>(reflectionInfo.bindings.size());									\
-		binding.descriptorCount = 1;																			\
-		binding.descriptorType = DescriptorType::GetDescriptorType();											\
+		const VkDescriptorSetLayoutBinding binding = {															\
+			.binding = static_cast<uint32>(reflectionInfo.bindings.size()),										\
+			.descriptorType = DescriptorType::GetDescriptorType(),												\
+			.descriptorCount = 1,																				\
+			.stageFlags = VK_SHADER_STAGE_ALL };																\
 		reflectionInfo.bindings.push_back(binding);																\
 		ReflectMember(NextMemberId##Name{}, reflectionInfo);													\
 	}																											\

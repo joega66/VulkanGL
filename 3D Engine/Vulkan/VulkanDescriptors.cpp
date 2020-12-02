@@ -3,11 +3,12 @@
 #include "VulkanDevice.h"
 
 std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> VulkanCache::GetDescriptorSetLayout(
-	const std::vector<VkDescriptorSetLayoutBinding>& bindings,
+	std::size_t numBindings,
+	const VkDescriptorSetLayoutBinding* bindings,
 	const std::vector<VkDescriptorUpdateTemplateEntry>& entries
 )
 {
-	const Crc crc = Platform::CalculateCrc(bindings.data(), bindings.size() * sizeof(bindings.front()));
+	const Crc crc = Platform::CalculateCrc(bindings, numBindings * sizeof(VkDescriptorSetLayoutBinding));
 
 	if (auto iter = SetLayoutCache.find(crc); iter != SetLayoutCache.end())
 	{
@@ -15,8 +16,8 @@ std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> VulkanCache::GetDes
 	}
 
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-	descriptorSetLayoutInfo.bindingCount = static_cast<uint32>(bindings.size());
-	descriptorSetLayoutInfo.pBindings = bindings.data();
+	descriptorSetLayoutInfo.bindingCount = static_cast<uint32>(numBindings);
+	descriptorSetLayoutInfo.pBindings = bindings;
 
 	VkDescriptorSetLayout descriptorSetLayout;
 	vulkan(vkCreateDescriptorSetLayout(Device, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout));

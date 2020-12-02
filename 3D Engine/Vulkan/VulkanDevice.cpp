@@ -303,51 +303,33 @@ void VulkanDevice::UpdateDescriptorSet(
 
 void VulkanDevice::CreateDescriptorSetLayout(
 	std::size_t numBindings,
-	const DescriptorBinding* bindings,
+	const VkDescriptorSetLayoutBinding* bindings,
 	VkDescriptorSetLayout& descriptorSetLayout,
 	VkDescriptorUpdateTemplate& descriptorUpdateTemplate)
 {
-	static const VkDescriptorType descriptorTypes[] =
-	{
-		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-	};
-
 	std::vector<VkDescriptorUpdateTemplateEntry> descriptorUpdateTemplateEntries;
 	descriptorUpdateTemplateEntries.reserve(numBindings);
-
-	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
-	descriptorSetLayoutBindings.reserve(numBindings);
 
 	uint32 structSize = 0;
 
 	for (std::size_t bindingIndex = 0; bindingIndex < numBindings; bindingIndex++)
 	{
-		const DescriptorBinding& binding = bindings[bindingIndex];
+		const auto& binding = bindings[bindingIndex];
 		VkDescriptorUpdateTemplateEntry descriptorUpdateTemplateEntry = {};
 		descriptorUpdateTemplateEntry.dstBinding = binding.binding;
 		descriptorUpdateTemplateEntry.descriptorCount = binding.descriptorCount;
-		descriptorUpdateTemplateEntry.descriptorType = descriptorTypes[static_cast<uint32>(binding.descriptorType)];
+		descriptorUpdateTemplateEntry.descriptorType = binding.descriptorType;
 		descriptorUpdateTemplateEntry.offset = structSize;
 
-		structSize += (descriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC || descriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ?
-			sizeof(VkDescriptorBufferInfo) : sizeof(VkDescriptorImageInfo));
+		structSize += 
+			descriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC || 
+			descriptorUpdateTemplateEntry.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ?
+			sizeof(VkDescriptorBufferInfo) : sizeof(VkDescriptorImageInfo);
 
 		descriptorUpdateTemplateEntries.push_back(descriptorUpdateTemplateEntry);
-
-		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding;
-		descriptorSetLayoutBinding.binding = binding.binding;
-		descriptorSetLayoutBinding.descriptorCount = binding.descriptorCount;
-		descriptorSetLayoutBinding.descriptorType = descriptorTypes[static_cast<uint32>(binding.descriptorType)];
-		descriptorSetLayoutBinding.pImmutableSamplers = nullptr;
-		descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
-
-		descriptorSetLayoutBindings.push_back(descriptorSetLayoutBinding);
 	}
 
-	std::tie(descriptorSetLayout, descriptorUpdateTemplate) = GetCache().GetDescriptorSetLayout(descriptorSetLayoutBindings, descriptorUpdateTemplateEntries);
+	std::tie(descriptorSetLayout, descriptorUpdateTemplate) = GetCache().GetDescriptorSetLayout(numBindings, bindings, descriptorUpdateTemplateEntries);
 }
 
 const char* VulkanDevice::GetErrorString(VkResult result)

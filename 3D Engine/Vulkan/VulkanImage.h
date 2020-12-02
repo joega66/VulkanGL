@@ -97,7 +97,7 @@ namespace gpu
 		SampledImage() = default;
 		SampledImage(const ImageView& imageView, const Sampler& sampler);
 
-		static EDescriptorType GetDescriptorType() { return EDescriptorType::SampledImage; }
+		static VkDescriptorType GetDescriptorType() { return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; }
 
 	private:
 		VkDescriptorImageInfo _DescriptorImageInfo = { nullptr };
@@ -110,7 +110,7 @@ namespace gpu
 		StorageImage(const Image& image);
 		StorageImage(const ImageView& imageView);
 
-		static EDescriptorType GetDescriptorType() { return EDescriptorType::StorageImage; }
+		static VkDescriptorType GetDescriptorType() { return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE; }
 
 	private:
 		VkDescriptorImageInfo _DescriptorImageInfo = { nullptr };

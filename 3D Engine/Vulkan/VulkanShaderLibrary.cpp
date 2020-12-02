@@ -89,7 +89,7 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 	const spirv_cross::ShaderResources& resources)
 {
 	std::map<uint32, VkDescriptorSetLayout> layouts;
-	std::map<uint32, std::vector<DescriptorBinding>> setBindings;
+	std::map<uint32, std::vector<VkDescriptorSetLayoutBinding>> bindings;
 
 	for (const auto& resource : resources.sampled_images)
 	{
@@ -102,9 +102,12 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 		}
 		else
 		{
-			const uint32 binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-			const uint32 descriptorCount = 1;
-			setBindings[set].push_back({ binding, descriptorCount, EDescriptorType::SampledImage });
+			bindings[set].push_back({
+					.binding = glsl.get_decoration(resource.id, spv::DecorationBinding),
+					.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+					.descriptorCount = 1,
+					.stageFlags = VK_SHADER_STAGE_ALL
+				});
 		}
 	}
 
@@ -119,28 +122,34 @@ static std::map<uint32, VkDescriptorSetLayout> ReflectDescriptorSetLayouts(
 		}
 		else
 		{
-			const uint32 binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-			const uint32 descriptorCount = 1;
-			setBindings[set].push_back({ binding, descriptorCount, EDescriptorType::StorageImage });
+			bindings[set].push_back({
+					.binding = glsl.get_decoration(resource.id, spv::DecorationBinding),
+					.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+					.descriptorCount = 1,
+					.stageFlags = VK_SHADER_STAGE_ALL
+				});
 		}
 	}
 
-	auto getBindings = [&] (const auto& resources, EDescriptorType descriptorType)
+	auto getBindings = [&] (const auto& resources, VkDescriptorType descriptorType)
 	{
 		for (const auto& resource : resources)
 		{
 			const spirv_cross::SPIRType& type = glsl.get_type(resource.type_id);
 			const uint32 set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-			const uint32 binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-			const uint32 descriptorCount = type.array.size() ? type.array[0] : 1;
-			setBindings[set].push_back({ binding, descriptorCount, descriptorType });
+			bindings[set].push_back({
+					.binding = glsl.get_decoration(resource.id, spv::DecorationBinding),
+					.descriptorType = descriptorType,
+					.descriptorCount = type.array.size() ? type.array[0] : 1,
+					.stageFlags = VK_SHADER_STAGE_ALL
+				});
 		}
 	};
 
-	getBindings(resources.uniform_buffers, EDescriptorType::UniformBuffer);
-	getBindings(resources.storage_buffers, EDescriptorType::StorageBuffer);
+	getBindings(resources.uniform_buffers, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+	getBindings(resources.storage_buffers, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-	for (auto& [set, bindings] : setBindings)
+	for (auto& [set, bindings] : bindings)
 	{
 		VkDescriptorSetLayout descriptorSetLayout;
 		VkDescriptorUpdateTemplate descriptorUpdateTemplate;

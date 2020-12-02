@@ -209,21 +209,6 @@ struct SamplerDesc
 	float maxLod = 0.0f;
 };
 
-enum class EDescriptorType
-{
-	SampledImage,
-	StorageImage,
-	UniformBuffer,
-	StorageBuffer,
-};
-
-struct DescriptorBinding
-{
-	uint32 binding;
-	uint32 descriptorCount;
-	EDescriptorType descriptorType;
-};
-
 namespace gpu
 {
 	class ImagePrivate

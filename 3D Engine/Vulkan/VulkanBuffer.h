@@ -47,7 +47,7 @@ namespace gpu
 		UniformBuffer() = default;
 		UniformBuffer(const Buffer& buffer) : DescriptorBufferInfo(buffer) {}
 
-		static EDescriptorType GetDescriptorType() { return EDescriptorType::UniformBuffer; }
+		static VkDescriptorType GetDescriptorType() { return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; }
 	};
 
 	class StorageBuffer : public DescriptorBufferInfo
@@ -56,6 +56,6 @@ namespace gpu
 		StorageBuffer() = default;
 		StorageBuffer(const Buffer& buffer) : DescriptorBufferInfo(buffer) {}
 
-		static EDescriptorType GetDescriptorType() { return EDescriptorType::StorageBuffer; }
+		static VkDescriptorType GetDescriptorType() { return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; }
 	};
 };

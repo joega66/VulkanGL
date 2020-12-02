@@ -69,7 +69,7 @@ public:
 
 	void CreateDescriptorSetLayout(
 		std::size_t numBindings, 
-		const DescriptorBinding* bindings,
+		const VkDescriptorSetLayoutBinding* bindings,
 		VkDescriptorSetLayout& descriptorSetLayout,
 		VkDescriptorUpdateTemplate& descriptorUpdateTemplate);
 
