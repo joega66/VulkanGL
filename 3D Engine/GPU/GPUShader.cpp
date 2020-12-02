@@ -57,10 +57,10 @@ namespace gpu
 		return tasks;
 	}
 
-	std::vector<DescriptorSetReflectionTask>& GetDescriptorSetReflectionTasks()
+	StaticDescriptorSetTaskCollector& GetStaticDescriptorSetTaskCollector()
 	{
-		static std::vector<DescriptorSetReflectionTask> tasks;
-		return tasks;
+		static StaticDescriptorSetTaskCollector collector;
+		return collector;
 	}
 
 	std::vector<ShaderCompilationTask>& GetShaderCompilationTasks()

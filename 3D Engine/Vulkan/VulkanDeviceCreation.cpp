@@ -140,22 +140,24 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	// Load instance procedures.
 	_VkUpdateDescriptorSetWithTemplateKHR = reinterpret_cast<PFN_vkUpdateDescriptorSetWithTemplateKHR>(vkGetInstanceProcAddr(_Instance, "vkUpdateDescriptorSetWithTemplateKHR"));
 	
+	// Create the app's bindless descriptors.
 	_BindlessTextures = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 65556);
 	_BindlessImages = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
 
 	// Create the app's descriptor set layouts.
-	auto& descriptorSetReflectionTasks = gpu::GetDescriptorSetReflectionTasks();
-	std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSetReflectionTasks.size());
-	for (int i = 0; i < descriptorSetReflectionTasks.size(); i++)
+	auto& descriptorSetTaskCollector = gpu::GetStaticDescriptorSetTaskCollector();
+	std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSetTaskCollector.tasks.size());
+	for (int i = 0; i < descriptorSetLayouts.size(); i++)
 	{
 		CreateDescriptorSetLayout(
-			descriptorSetReflectionTasks[i].reflectionInfo.bindings.size(),
-			descriptorSetReflectionTasks[i].reflectionInfo.bindings.data(),
+			descriptorSetTaskCollector.tasks[i].reflectionInfo.bindings.size(),
+			descriptorSetTaskCollector.tasks[i].reflectionInfo.bindings.data(),
 			descriptorSetLayouts[i],
-			descriptorSetReflectionTasks[i].descriptorUpdateTemplate
+			descriptorSetTaskCollector.tasks[i].descriptorUpdateTemplate
 		);
 	}
 
+	// Create the app's descriptor pool.
 	const std::unordered_map<VkDescriptorType, uint32> descriptorTypeToPoolSizeIdx =
 	{
 		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	0 },
@@ -172,19 +174,20 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 		descriptorPoolSizes[idx] = { .type = descriptorType, .descriptorCount = 0 };
 	}
 
-	// Create the app's descriptor pool.
-	for (const auto& descriptorSetReflectionTask : descriptorSetReflectionTasks)
+	for (const auto& task : descriptorSetTaskCollector.tasks)
 	{
-		for (const auto& binding : descriptorSetReflectionTask.reflectionInfo.bindings)
+		for (const auto& binding : task.reflectionInfo.bindings)
 		{
 			descriptorPoolSizes[descriptorTypeToPoolSizeIdx.at(binding.descriptorType)].descriptorCount += binding.descriptorCount;
 		}
 	}
 
+	std::vector<VkDescriptorSet> descriptorSets(descriptorSetTaskCollector.tasks.size());
+
 	const VkDescriptorPoolCreateInfo descriptorPoolCreateInfo =
 	{
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.maxSets = static_cast<uint32>(descriptorSetReflectionTasks.size()),
+		.maxSets = static_cast<uint32>(descriptorSets.size()),
 		.poolSizeCount = static_cast<uint32>(std::size(descriptorPoolSizes)),
 		.pPoolSizes = descriptorPoolSizes.data(),
 	};
@@ -192,16 +195,18 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	vulkan(vkCreateDescriptorPool(_Device, &descriptorPoolCreateInfo, nullptr, &_DescriptorPool));
 
 	// Create the app's descriptor sets.
-	for (int i = 0; i < descriptorSetReflectionTasks.size(); i++)
+	const VkDescriptorSetAllocateInfo descriptorSetAllocateInfo =
 	{
-		const VkDescriptorSetAllocateInfo descriptorSetAllocateInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			.descriptorPool = _DescriptorPool,
-			.descriptorSetCount = 1,
-			.pSetLayouts = &descriptorSetLayouts[i]
-		};
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.descriptorPool = _DescriptorPool,
+		.descriptorSetCount = static_cast<uint32>(descriptorSets.size()),
+		.pSetLayouts = descriptorSetLayouts.data()
+	};
 
-		vulkan(vkAllocateDescriptorSets(_Device, &descriptorSetAllocateInfo, &descriptorSetReflectionTasks[i].descriptorSet));
+	vulkan(vkAllocateDescriptorSets(_Device, &descriptorSetAllocateInfo, descriptorSets.data()));
+
+	for (int i = 0; i < descriptorSets.size(); i++)
+	{
+		descriptorSetTaskCollector.tasks[i].descriptorSet = descriptorSets[i];
 	}
 }

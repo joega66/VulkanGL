@@ -36,7 +36,12 @@ namespace gpu
 {
 	std::string& GetShaderTypeReflectionTasks();
 
-	std::vector<DescriptorSetReflectionTask>& GetDescriptorSetReflectionTasks();
+	struct StaticDescriptorSetTaskCollector
+	{
+		std::vector<DescriptorSetReflectionTask> tasks;
+	};
+
+	StaticDescriptorSetTaskCollector& GetStaticDescriptorSetTaskCollector();
 }
 
 #define BEGIN_UNIFORM_BLOCK(StructName)	\
@@ -144,8 +149,8 @@ public:																											\
 	struct ReflectionTask																						\
 	{																											\
 		ReflectionTask() {																						\
-			auto& tasks = gpu::GetDescriptorSetReflectionTasks();												\
-			tasks.push_back({ReflectMembers(),_DescriptorSet,_DescriptorUpdateTemplate});						\
+			auto& collector = gpu::GetStaticDescriptorSetTaskCollector();										\
+			collector.tasks.push_back({ReflectMembers(),_DescriptorSet,_DescriptorUpdateTemplate});				\
 		}																										\
 	};																											\
 	static ReflectionTask				_ReflectionTask;														\
