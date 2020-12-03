@@ -7,21 +7,6 @@ VulkanCache::VulkanCache(VulkanDevice& Device)
 {
 }
 
-gpu::Sampler VulkanCache::GetSampler(const SamplerDesc& SamplerDesc)
-{
-	const Crc Crc = Platform::CalculateCrc(&SamplerDesc, sizeof(SamplerDesc));
-
-	if (auto SamplerIter = SamplerCache.find(Crc); SamplerIter != SamplerCache.end())
-	{
-		return SamplerIter->second;
-	}
-	else
-	{
-		SamplerCache.emplace(Crc, gpu::Sampler(Device, SamplerDesc));
-		return SamplerCache.at(Crc);
-	}
-}
-
 void VulkanCache::EndFrame()
 {
 	for (auto& Pipeline : PipelinesToDestroy)

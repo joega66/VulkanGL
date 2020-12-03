@@ -211,7 +211,18 @@ gpu::ImageView VulkanDevice::CreateImageView(
 
 gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& samplerDesc)
 {
-	return _VulkanCache.GetSampler(samplerDesc);
+	const Crc crc = Platform::CalculateCrc(&samplerDesc, sizeof(samplerDesc));
+
+	if (auto iter = _SamplerCache.find(crc); iter == _SamplerCache.end())
+	{
+		// Cache miss... Create a new sampler.
+		const auto sampler = _SamplerCache.emplace(crc, gpu::Sampler(*this, samplerDesc));
+		return sampler.first->second;
+	}
+	else
+	{
+		return iter->second;
+	}
 }
 
 gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& rpDesc)

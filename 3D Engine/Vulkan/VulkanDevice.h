@@ -123,8 +123,11 @@ private:
 
 	PFN_vkUpdateDescriptorSetWithTemplateKHR _VkUpdateDescriptorSetWithTemplateKHR;
 
-	/** Descriptor set layout cache. */
+	/** Vulkan Resource Caches */
+
 	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> _DescriptorSetLayoutCache;
+
+	std::unordered_map<Crc, gpu::Sampler> _SamplerCache;
 };
 
 #define vulkan(result) \

@@ -214,8 +214,12 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 
 VulkanDevice::~VulkanDevice()
 {
-	auto p_vkDestroyDescriptorUpdateTemplateKHR = reinterpret_cast<PFN_vkDestroyDescriptorUpdateTemplateKHR>(vkGetInstanceProcAddr(_Instance, "vkDestroyDescriptorUpdateTemplateKHR"));
+	for (const auto& [crc, sampler] : _SamplerCache)
+	{
+		vkDestroySampler(_Device, sampler, nullptr);
+	}
 
+	auto p_vkDestroyDescriptorUpdateTemplateKHR = reinterpret_cast<PFN_vkDestroyDescriptorUpdateTemplateKHR>(vkGetInstanceProcAddr(_Instance, "vkDestroyDescriptorUpdateTemplateKHR"));
 	for (const auto& [crc, descriptorSetLayoutPair] : _DescriptorSetLayoutCache)
 	{
 		const auto& [descriptorSetLayout, descriptorUpdateTemplate] = descriptorSetLayoutPair;

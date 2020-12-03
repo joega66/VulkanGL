@@ -22,8 +22,6 @@ public:
 
 	gpu::Pipeline GetPipeline(const ComputePipelineDesc& ComputePipelineDesc);
 
-	gpu::Sampler GetSampler(const SamplerDesc& SamplerDesc);
-
 	inline void Destroy(VkPipeline Pipeline) { PipelinesToDestroy.push_back(Pipeline); }
 
 	void EndFrame();
@@ -41,8 +39,6 @@ private:
 
 	std::unordered_map<Crc, gpu::Pipeline> ComputePipelineCache;
 	std::unordered_map<Crc, ComputePipelineDesc> CrcToComputeDesc;
-
-	std::unordered_map<Crc, gpu::Sampler> SamplerCache;
 
 	[[nodiscard]] VkRenderPass CreateRenderPass(const RenderPassDesc& RPDesc);
 
