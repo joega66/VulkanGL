@@ -43,15 +43,6 @@ VulkanCache::~VulkanCache()
 	{
 		vkDestroyRenderPass(Device, RenderPass, nullptr);
 	}
-
-	auto p_vkDestroyDescriptorUpdateTemplateKHR = reinterpret_cast<PFN_vkDestroyDescriptorUpdateTemplateKHR>(vkGetInstanceProcAddr(Device.GetInstance(), "vkDestroyDescriptorUpdateTemplateKHR"));
-
-	for (const auto&[Crc, SetLayoutPair] : SetLayoutCache)
-	{
-		const auto& [SetLayout, DescriptorUpdateTemplate] = SetLayoutPair;
-		p_vkDestroyDescriptorUpdateTemplateKHR(Device, DescriptorUpdateTemplate, nullptr);
-		vkDestroyDescriptorSetLayout(Device, SetLayout, nullptr);
-	}
 }
 
 void VulkanCache::RecompilePipelines()

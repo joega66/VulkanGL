@@ -5,7 +5,6 @@
 #include "Vulkan/VulkanRenderPass.h"
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanBuffer.h"
-#include "Vulkan/VulkanDescriptors.h"
 #include "Vulkan/VulkanPipeline.h"
 #include "Vulkan/VulkanSemaphore.h"
 

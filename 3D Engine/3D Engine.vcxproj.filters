@@ -59,9 +59,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Vulkan\VulkanDescriptors.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanImage.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -288,9 +285,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanDescriptors.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanImage.cpp">
       <Filter>Source\Vulkan</Filter>

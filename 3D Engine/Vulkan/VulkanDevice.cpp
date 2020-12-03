@@ -329,7 +329,37 @@ void VulkanDevice::CreateDescriptorSetLayout(
 		descriptorUpdateTemplateEntries.push_back(descriptorUpdateTemplateEntry);
 	}
 
-	std::tie(descriptorSetLayout, descriptorUpdateTemplate) = GetCache().GetDescriptorSetLayout(numBindings, bindings, descriptorUpdateTemplateEntries);
+	const Crc crc = Platform::CalculateCrc(bindings, numBindings * sizeof(VkDescriptorSetLayoutBinding));
+
+	if (auto iter = _DescriptorSetLayoutCache.find(crc); iter == _DescriptorSetLayoutCache.end())
+	{
+		// Cache miss... Create a new descriptor set layout.
+		const VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = 
+		{ 
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.bindingCount = static_cast<uint32>(numBindings),
+			.pBindings = bindings
+		};
+
+		vulkan(vkCreateDescriptorSetLayout(_Device, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout));
+
+		const VkDescriptorUpdateTemplateCreateInfo descriptorUpdateTemplateInfo = 
+		{ 
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
+			.descriptorUpdateEntryCount = static_cast<uint32>(descriptorUpdateTemplateEntries.size()),
+			.pDescriptorUpdateEntries = descriptorUpdateTemplateEntries.data(),
+			.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET,
+			.descriptorSetLayout = descriptorSetLayout,
+		};
+
+		_VkCreateDescriptorUpdateTemplateKHR(_Device, &descriptorUpdateTemplateInfo, nullptr, &descriptorUpdateTemplate);
+
+		_DescriptorSetLayoutCache[crc] = { descriptorSetLayout, descriptorUpdateTemplate };
+	}
+	else
+	{
+		std::tie(descriptorSetLayout, descriptorUpdateTemplate) = iter->second;
+	}
 }
 
 const char* VulkanDevice::GetErrorString(VkResult result)

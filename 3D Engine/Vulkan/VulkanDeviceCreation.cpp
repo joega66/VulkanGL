@@ -25,7 +25,7 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(_PhysicalDevice, &queueFamilyCount, queueFamilies.data());
 
-	auto GetQueueFamilyIndex = [&queueFamilies] (VkQueueFlags queueFlags)
+	auto getQueueFamilyIndex = [&queueFamilies] (VkQueueFlags queueFlags)
 	{
 		int32 queueFamilyIndex = 0;
 
@@ -43,9 +43,9 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 		return -1;
 	};
 
-	const int32 graphicsIndex = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+	const int32 graphicsIndex = getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 
-	int32 transferIndex = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+	int32 transferIndex = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
 
 	if (transferIndex == -1)
 	{
@@ -138,8 +138,9 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	vulkan(vmaCreateAllocator(&allocatorInfo, &_Allocator));
 
 	// Load instance procedures.
+	_VkCreateDescriptorUpdateTemplateKHR = reinterpret_cast<PFN_vkCreateDescriptorUpdateTemplateKHR>(vkGetInstanceProcAddr(_Instance, "vkCreateDescriptorUpdateTemplateKHR"));
 	_VkUpdateDescriptorSetWithTemplateKHR = reinterpret_cast<PFN_vkUpdateDescriptorSetWithTemplateKHR>(vkGetInstanceProcAddr(_Instance, "vkUpdateDescriptorSetWithTemplateKHR"));
-	
+
 	// Create the app's bindless descriptors.
 	_BindlessTextures = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 65556);
 	_BindlessImages = std::make_unique<VulkanBindlessDescriptors>(_Device, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256);
@@ -209,4 +210,18 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	{
 		descriptorSetTaskCollector.tasks[i].descriptorSet = descriptorSets[i];
 	}
+}
+
+VulkanDevice::~VulkanDevice()
+{
+	auto p_vkDestroyDescriptorUpdateTemplateKHR = reinterpret_cast<PFN_vkDestroyDescriptorUpdateTemplateKHR>(vkGetInstanceProcAddr(_Instance, "vkDestroyDescriptorUpdateTemplateKHR"));
+
+	for (const auto& [crc, descriptorSetLayoutPair] : _DescriptorSetLayoutCache)
+	{
+		const auto& [descriptorSetLayout, descriptorUpdateTemplate] = descriptorSetLayoutPair;
+		p_vkDestroyDescriptorUpdateTemplateKHR(_Device, descriptorUpdateTemplate, nullptr);
+		vkDestroyDescriptorSetLayout(_Device, descriptorSetLayout, nullptr);
+	}
+
+	vkDestroyDescriptorPool(_Device, _DescriptorPool, nullptr);
 }

@@ -15,7 +15,7 @@ class VulkanDevice final : public gpu::Device
 public:
 	VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physicalDevice, std::vector<uint32> queueFamilyIndices);
 
-	~VulkanDevice() override {}
+	~VulkanDevice() override;
 
 	void EndFrame() override;
 
@@ -119,7 +119,12 @@ private:
 
 	VkDescriptorPool _DescriptorPool;
 
+	PFN_vkCreateDescriptorUpdateTemplateKHR _VkCreateDescriptorUpdateTemplateKHR;
+
 	PFN_vkUpdateDescriptorSetWithTemplateKHR _VkUpdateDescriptorSetWithTemplateKHR;
+
+	/** Descriptor set layout cache. */
+	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> _DescriptorSetLayoutCache;
 };
 
 #define vulkan(result) \

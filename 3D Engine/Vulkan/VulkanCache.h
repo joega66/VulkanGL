@@ -24,12 +24,6 @@ public:
 
 	gpu::Sampler GetSampler(const SamplerDesc& SamplerDesc);
 
-	std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate> GetDescriptorSetLayout(
-		std::size_t numBindings,
-		const VkDescriptorSetLayoutBinding* bindings,
-		const std::vector<VkDescriptorUpdateTemplateEntry>& Entries
-	);
-
 	inline void Destroy(VkPipeline Pipeline) { PipelinesToDestroy.push_back(Pipeline); }
 
 	void EndFrame();
@@ -40,8 +34,6 @@ private:
 	VulkanDevice& Device;
 
 	std::unordered_map<std::size_t, VkRenderPass> RenderPassCache;
-
-	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> SetLayoutCache;
 
 	std::unordered_map<Crc, VkPipelineLayout> PipelineLayoutCache;
 
