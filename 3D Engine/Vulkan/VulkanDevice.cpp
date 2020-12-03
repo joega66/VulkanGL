@@ -31,20 +31,7 @@ gpu::CommandList VulkanDevice::CreateCommandList(EQueue queueType)
 {
 	VulkanQueue& queue = queueType == EQueue::Transfer ? _TransferQueue : _GraphicsQueue;
 
-	VkCommandBufferAllocateInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	commandBufferInfo.commandPool = queue.GetCommandPool();
-	commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	commandBufferInfo.commandBufferCount = 1;
-
-	VkCommandBuffer commandBuffer;
-	vulkan(vkAllocateCommandBuffers(_Device, &commandBufferInfo, &commandBuffer));
-
-	VkCommandBufferBeginInfo commandBufferBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vulkan(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-	return gpu::CommandList(*this, queue, commandBuffer);
+	return gpu::CommandList(*this, queue);
 }
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
@@ -189,7 +176,7 @@ gpu::ImageView VulkanDevice::CreateImageView(
 	const gpu::Image& image, 
 	uint32 baseMipLevel, 
 	uint32 levelCount, 
-	uint32 baseArrayLayer, 
+	uint32 baseArrayLayer,
 	uint32 layerCount)
 {
 	VkImageViewCreateInfo imageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };

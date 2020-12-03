@@ -6,14 +6,27 @@
 
 namespace gpu
 {
-	CommandList::CommandList(
-		VulkanDevice& device,
-		VulkanQueue& queue,
-		VkCommandBuffer commandBuffer)
+	CommandList::CommandList(VulkanDevice& device, VulkanQueue& queue)
 		: _Device(device)
 		, _Queue(queue)
-		, _CommandBuffer(commandBuffer)
 	{
+		const VkCommandBufferAllocateInfo commandBufferAllocateInfo = 
+		{ 
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.commandPool = queue.GetCommandPool(),
+			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			.commandBufferCount = 1,
+		};
+		
+		vulkan(vkAllocateCommandBuffers(_Device, &commandBufferAllocateInfo, &_CommandBuffer));
+
+		const VkCommandBufferBeginInfo commandBufferBeginInfo = 
+		{ 
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		};
+
+		vulkan(vkBeginCommandBuffer(_CommandBuffer, &commandBufferBeginInfo));
 	}
 
 	void CommandList::BeginRenderPass(const RenderPass& renderPass)

@@ -23,11 +23,7 @@ namespace gpu
 
 		VkCommandBuffer _CommandBuffer;
 
-		CommandList(
-			VulkanDevice& device,
-			VulkanQueue& queue,
-			VkCommandBuffer commandBuffer
-		);
+		CommandList(VulkanDevice& device, VulkanQueue& queue);
 
 		void BeginRenderPass(const RenderPass& renderPass);
 
