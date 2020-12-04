@@ -5,7 +5,7 @@ class VulkanDevice;
 
 class VulkanPipeline
 {
-	friend class VulkanCache;
+	friend class VulkanDevice;
 public:
 	VulkanPipeline() = delete;
 	VulkanPipeline(const VulkanPipeline&) = delete;

@@ -1,112 +1,6 @@
-#include "VulkanCache.h"
 #include "VulkanDevice.h"
 #include "VulkanPipeline.h"
 #include <GPU/GPUShader.h>
-
-gpu::Pipeline VulkanCache::GetPipeline(const PipelineStateDesc& psoDesc)
-{
-	if (auto iter = GraphicsPipelineCache.find(psoDesc); iter != GraphicsPipelineCache.end())
-	{
-		return iter->second;
-	}
-
-	std::map<uint32, VkDescriptorSetLayout> layoutsMap;
-	
-	auto getLayouts = [&] (const gpu::Shader* shader)
-	{
-		if (shader)
-		{
-			for (const auto& [set, layout] : shader->compilationResult.layouts)
-			{
-				layoutsMap.insert({ set, layout });
-			}
-		}
-	};
-
-	getLayouts(psoDesc.shaderStages.vertex);
-	getLayouts(psoDesc.shaderStages.tessControl);
-	getLayouts(psoDesc.shaderStages.tessEval);
-	getLayouts(psoDesc.shaderStages.geometry);
-	getLayouts(psoDesc.shaderStages.fragment);
-
-	std::vector<VkDescriptorSetLayout> layouts;
-	layouts.reserve(layoutsMap.size());
-
-	for (const auto& [set, layout] : layoutsMap)
-	{
-		layouts.push_back(layout);
-	}
-
-	std::vector<VkPushConstantRange> pushConstantRanges;
-
-	auto getPushConstantRange = [&] (const gpu::Shader* shader)
-	{
-		if (shader && shader->compilationResult.pushConstantRange.size > 0)
-		{
-			pushConstantRanges.push_back(shader->compilationResult.pushConstantRange);
-		}
-	};
-
-	getPushConstantRange(psoDesc.shaderStages.vertex);
-	getPushConstantRange(psoDesc.shaderStages.tessControl);
-	getPushConstantRange(psoDesc.shaderStages.tessEval);
-	getPushConstantRange(psoDesc.shaderStages.geometry);
-	getPushConstantRange(psoDesc.shaderStages.fragment);
-
-	const VkPipelineLayout pipelineLayout = GetPipelineLayout(layouts, pushConstantRanges);
-	auto pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(psoDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
-	GraphicsPipelineCache[psoDesc] = pipeline;
-	return pipeline;
-}
-
-gpu::Pipeline VulkanCache::GetPipeline(const ComputePipelineDesc& computeDesc)
-{
-	auto& mapEntries = computeDesc.specInfo.GetMapEntries();
-	auto& data = computeDesc.specInfo.GetData();
-
-	struct ComputePipelineHash
-	{
-		Crc computeShaderCrc;
-		Crc mapEntriesCrc;
-		Crc mapDataCrc;
-	};
-
-	std::vector<VkDescriptorSetLayout> layouts;
-	layouts.reserve(computeDesc.computeShader->compilationResult.layouts.size());
-
-	for (auto& [set, layout] : computeDesc.computeShader->compilationResult.layouts)
-	{
-		layouts.push_back(layout);
-	}
-
-	const ComputePipelineHash computeHash =
-	{
-		.computeShaderCrc = Platform::CalculateCrc(computeDesc.computeShader, sizeof(computeDesc.computeShader)),
-		.mapEntriesCrc = Platform::CalculateCrc(mapEntries.data(), mapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry)),
-		.mapDataCrc = Platform::CalculateCrc(data.data(), data.size()),
-	};
-	
-	const Crc crc = Platform::CalculateCrc(&computeHash, sizeof(computeHash));
-
-	if (auto iter = ComputePipelineCache.find(crc); iter != ComputePipelineCache.end())
-	{
-		return iter->second;
-	}
-
-	const auto& pushConstantRange = computeDesc.computeShader->compilationResult.pushConstantRange;
-
-	const auto pushConstantRanges = pushConstantRange.size > 0 ? std::vector{ pushConstantRange } : std::vector<VkPushConstantRange>{};
-
-	const VkPipelineLayout pipelineLayout = GetPipelineLayout(layouts, pushConstantRanges);
-
-	auto pipeline = std::make_shared<VulkanPipeline>(Device, CreatePipeline(computeDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
-
-	ComputePipelineCache[crc] = pipeline;
-
-	CrcToComputeDesc[crc] = computeDesc;
-
-	return pipeline;
-}
 
 static void CreateDepthStencilState(const PipelineStateDesc& psoDesc, VkPipelineDepthStencilStateCreateInfo& depthStencilState)
 {
@@ -397,7 +291,7 @@ static void CreateViewportState(const PipelineStateDesc& psoDesc, VkViewport& vi
 	viewportState.scissorCount	= 1;
 }
 
-VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipelineLayout pipelineLayout) const
+VkPipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipelineLayout pipelineLayout) const
 {
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	CreateDepthStencilState(psoDesc, depthStencilState);
@@ -456,12 +350,12 @@ VkPipeline VulkanCache::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipel
 	};
 
 	VkPipeline pipeline;
-	vulkan(vkCreateGraphicsPipelines(Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
+	vulkan(vkCreateGraphicsPipelines(_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 
 	return pipeline;
 }
 
-VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& computeDesc, VkPipelineLayout pipelineLayout) const
+VkPipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDesc, VkPipelineLayout pipelineLayout) const
 {
 	VkComputePipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
 	pipelineInfo.layout				= pipelineLayout;
@@ -489,13 +383,13 @@ VkPipeline VulkanCache::CreatePipeline(const ComputePipelineDesc& computeDesc, V
 	}
 
 	VkPipeline pipeline;
-	vulkan(vkCreateComputePipelines(Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
+	vulkan(vkCreateComputePipelines(_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 
 	return pipeline;
 }
 
-VkPipelineLayout VulkanCache::GetPipelineLayout(
-	const std::vector<VkDescriptorSetLayout>& layouts, 
+VkPipelineLayout VulkanDevice::GetOrCreatePipelineLayout(
+	const std::vector<VkDescriptorSetLayout>& layouts,
 	const std::vector<VkPushConstantRange>& pushConstantRanges)
 {
 	const Crc crc0 = Platform::CalculateCrc(layouts.data(), layouts.size() * sizeof(layouts.front()));
@@ -505,28 +399,29 @@ VkPipelineLayout VulkanCache::GetPipelineLayout(
 	HashCombine(crc, crc0);
 	HashCombine(crc, crc1);
 
-	if (auto iter = PipelineLayoutCache.find(crc); iter != PipelineLayoutCache.end())
+	if (auto iter = _PipelineLayoutCache.find(crc); iter == _PipelineLayoutCache.end())
 	{
-		const auto& [cachedCrc, cachedPipelineLayout] = *iter;
-		return cachedPipelineLayout;
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32>(layouts.size());
+		pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+
+		if (pushConstantRanges.size() > 0)
+		{
+			pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32>(pushConstantRanges.size());
+			pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
+		}
+
+		VkPipelineLayout pipelineLayout;
+		vulkan(vkCreatePipelineLayout(_Device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
+
+		_PipelineLayoutCache[crc] = pipelineLayout;
+
+		return pipelineLayout;
 	}
-
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-	pipelineLayoutInfo.setLayoutCount	= static_cast<uint32>(layouts.size());
-	pipelineLayoutInfo.pSetLayouts		= layouts.data();
-
-	if (pushConstantRanges.size() > 0)
+	else
 	{
-		pipelineLayoutInfo.pushConstantRangeCount	= static_cast<uint32>(pushConstantRanges.size());
-		pipelineLayoutInfo.pPushConstantRanges		= pushConstantRanges.data();
+		return iter->second;
 	}
-
-	VkPipelineLayout pipelineLayout;
-	vulkan(vkCreatePipelineLayout(Device, &pipelineLayoutInfo, nullptr, &pipelineLayout));
-
-	PipelineLayoutCache[crc] = pipelineLayout;
-
-	return pipelineLayout;
 }
 
 VulkanPipeline::VulkanPipeline(
@@ -543,5 +438,5 @@ VulkanPipeline::VulkanPipeline(
 
 VulkanPipeline::~VulkanPipeline()
 {
-	_Device.GetCache().Destroy(_Pipeline);
+	_Device.Destroy(_Pipeline);
 }

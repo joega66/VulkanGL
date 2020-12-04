@@ -128,9 +128,6 @@
     <ClInclude Include="Vulkan\VulkanRenderPass.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanCache.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Vulkan\VulkanDevice.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
@@ -351,9 +348,6 @@
     </ClCompile>
     <ClCompile Include="Components\Transform.cpp">
       <Filter>Source\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanCache.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanDeviceCreation.cpp">
       <Filter>Source\Vulkan</Filter>

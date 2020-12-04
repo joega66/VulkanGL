@@ -1,7 +1,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanDevice.h"
 
-std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPassDesc& rpDesc)
+std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetOrCreateRenderPass(const RenderPassDesc& rpDesc)
 {
 	std::size_t seed;
 	
@@ -20,15 +20,15 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanCache::GetRenderPass(const RenderPa
 
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 
-	if (auto iter = RenderPassCache.find(seed); iter != RenderPassCache.end())
+	if (auto iter = _RenderPassCache.find(seed); iter != _RenderPassCache.end())
 	{
 		renderPass = iter->second;
 	}
 
 	if (renderPass == VK_NULL_HANDLE)
 	{
-		renderPass = CreateRenderPass(rpDesc);
-		RenderPassCache.emplace(seed, renderPass);
+		renderPass = CreateRenderPass(_Device, rpDesc);
+		_RenderPassCache.emplace(seed, renderPass);
 	}
 
 	const VkFramebuffer framebuffer = CreateFramebuffer(renderPass, rpDesc);
@@ -58,7 +58,7 @@ static VkAttachmentStoreOp GetVulkanStoreOp(EStoreAction storeAction)
 	return storeOps[static_cast<uint32>(storeAction)];
 }
 
-VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
+VkRenderPass VulkanDevice::CreateRenderPass(VkDevice device, const RenderPassDesc& rpDesc)
 {
 	std::vector<VkAttachmentDescription> descriptions;
 	std::vector<VkAttachmentReference> colorRefs;
@@ -164,12 +164,12 @@ VkRenderPass VulkanCache::CreateRenderPass(const RenderPassDesc& rpDesc)
 	};
 	
 	VkRenderPass renderPass;
-	vulkan(vkCreateRenderPass(Device, &renderPassCreateInfo, nullptr, &renderPass));
+	vulkan(vkCreateRenderPass(device, &renderPassCreateInfo, nullptr, &renderPass));
 
 	return renderPass;
 }
 
-VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass renderPass, const RenderPassDesc& rpDesc) const
+VkFramebuffer VulkanDevice::CreateFramebuffer(VkRenderPass renderPass, const RenderPassDesc& rpDesc) const
 {
 	std::vector<VkImageView> attachmentViews;
 
@@ -206,7 +206,7 @@ VkFramebuffer VulkanCache::CreateFramebuffer(VkRenderPass renderPass, const Rend
 	};
 	
 	VkFramebuffer framebuffer;
-	vulkan(vkCreateFramebuffer(Device, &framebufferCreateInfo, nullptr, &framebuffer));
+	vulkan(vkCreateFramebuffer(_Device, &framebufferCreateInfo, nullptr, &framebuffer));
 
 	return framebuffer;
 }

@@ -17,7 +17,6 @@ const std::vector<const char*>& VulkanDevice::GetRequiredExtensions()
 VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physicalDevice, std::vector<uint32> queueFamilyIndices)
 	: _Instance(instance)
 	, _PhysicalDevice(physicalDevice)
-	, _VulkanCache(*this)
 {
 	uint32 queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(_PhysicalDevice, &queueFamilyCount, nullptr);
@@ -228,4 +227,14 @@ VulkanDevice::~VulkanDevice()
 	}
 
 	vkDestroyDescriptorPool(_Device, _DescriptorPool, nullptr);
+
+	for (const auto& [crc, pipelineLayout] : _PipelineLayoutCache)
+	{
+		vkDestroyPipelineLayout(_Device, pipelineLayout, nullptr);
+	}
+
+	for (const auto& [crc, renderPass] : _RenderPassCache)
+	{
+		vkDestroyRenderPass(_Device, renderPass, nullptr);
+	}
 }

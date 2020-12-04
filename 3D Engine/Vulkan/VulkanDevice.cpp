@@ -4,7 +4,13 @@
 
 void VulkanDevice::EndFrame()
 {
-	_VulkanCache.EndFrame();
+	for (auto& pipeline : _PipelinesToDestroy)
+	{
+		vkDestroyPipeline(_Device, pipeline, nullptr);
+	}
+
+	_PipelinesToDestroy.clear();
+
 	_BindlessTextures->EndFrame();
 	_BindlessImages->EndFrame();
 }
@@ -36,12 +42,102 @@ gpu::CommandList VulkanDevice::CreateCommandList(EQueue queueType)
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 {
-	return _VulkanCache.GetPipeline(psoDesc);
+	if (auto iter = _GraphicsPipelineCache.find(psoDesc); iter == _GraphicsPipelineCache.end())
+	{
+		std::map<uint32, VkDescriptorSetLayout> layoutsMap;
+
+		auto getLayouts = [&] (const gpu::Shader* shader)
+		{
+			if (shader) 
+			{ 
+				for (const auto& [set, layout] : shader->compilationResult.layouts) { layoutsMap.insert({ set, layout }); }
+			}
+		};
+
+		getLayouts(psoDesc.shaderStages.vertex);
+		getLayouts(psoDesc.shaderStages.tessControl);
+		getLayouts(psoDesc.shaderStages.tessEval);
+		getLayouts(psoDesc.shaderStages.geometry);
+		getLayouts(psoDesc.shaderStages.fragment);
+
+		std::vector<VkDescriptorSetLayout> layouts;
+		layouts.reserve(layoutsMap.size());
+
+		for (const auto& [set, layout] : layoutsMap)
+		{
+			layouts.push_back(layout);
+		}
+
+		std::vector<VkPushConstantRange> pushConstantRanges;
+
+		auto getPushConstantRange = [&] (const gpu::Shader* shader)
+		{
+			if (shader && shader->compilationResult.pushConstantRange.size > 0)
+			{
+				pushConstantRanges.push_back(shader->compilationResult.pushConstantRange);
+			}
+		};
+
+		getPushConstantRange(psoDesc.shaderStages.vertex);
+		getPushConstantRange(psoDesc.shaderStages.tessControl);
+		getPushConstantRange(psoDesc.shaderStages.tessEval);
+		getPushConstantRange(psoDesc.shaderStages.geometry);
+		getPushConstantRange(psoDesc.shaderStages.fragment);
+
+		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
+		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(psoDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
+		_GraphicsPipelineCache[psoDesc] = pipeline;
+		return pipeline;
+	}
+	else
+	{
+		return iter->second;
+	}
 }
 
-gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computePipelineDesc)
+gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDesc)
 {
-	return _VulkanCache.GetPipeline(computePipelineDesc);
+	auto& mapEntries = computeDesc.specInfo.GetMapEntries();
+	auto& data = computeDesc.specInfo.GetData();
+
+	struct ComputePipelineHash
+	{
+		Crc computeShaderCrc;
+		Crc mapEntriesCrc;
+		Crc mapDataCrc;
+	};
+
+	std::vector<VkDescriptorSetLayout> layouts;
+	layouts.reserve(computeDesc.computeShader->compilationResult.layouts.size());
+
+	for (auto& [set, layout] : computeDesc.computeShader->compilationResult.layouts)
+	{
+		layouts.push_back(layout);
+	}
+
+	const ComputePipelineHash computeHash =
+	{
+		.computeShaderCrc = Platform::CalculateCrc(computeDesc.computeShader, sizeof(computeDesc.computeShader)),
+		.mapEntriesCrc = Platform::CalculateCrc(mapEntries.data(), mapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry)),
+		.mapDataCrc = Platform::CalculateCrc(data.data(), data.size()),
+	};
+
+	const Crc crc = Platform::CalculateCrc(&computeHash, sizeof(computeHash));
+
+	if (auto iter = _ComputePipelineCache.find(crc); iter == _ComputePipelineCache.end())
+	{
+		const auto& pushConstantRange = computeDesc.computeShader->compilationResult.pushConstantRange;
+		const auto pushConstantRanges = pushConstantRange.size > 0 ? std::vector{ pushConstantRange } : std::vector<VkPushConstantRange>{};
+		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
+		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(computeDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
+		_ComputePipelineCache[crc] = pipeline;
+		_CrcToComputeDesc[crc] = computeDesc;
+		return pipeline;
+	}
+	else
+	{
+		return iter->second;
+	}
 }
 
 gpu::Buffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data)
@@ -214,7 +310,7 @@ gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& samplerDesc)
 
 gpu::RenderPass VulkanDevice::CreateRenderPass(const RenderPassDesc& rpDesc)
 {
-	const auto[renderPass, framebuffer] = _VulkanCache.GetRenderPass(rpDesc);
+	const auto[renderPass, framebuffer] = GetOrCreateRenderPass(rpDesc);
 
 	const VkRect2D renderArea = 
 	{
@@ -357,6 +453,21 @@ void VulkanDevice::CreateDescriptorSetLayout(
 	else
 	{
 		std::tie(descriptorSetLayout, descriptorUpdateTemplate) = iter->second;
+	}
+}
+
+void VulkanDevice::RecompilePipelines()
+{
+	for (auto& [psoDesc, pipeline] : _GraphicsPipelineCache)
+	{
+		vkDestroyPipeline(_Device, pipeline->_Pipeline, nullptr);
+		pipeline->_Pipeline = CreatePipeline(psoDesc, pipeline->_PipelineLayout);
+	}
+
+	for (auto& [crc, pipeline] : _ComputePipelineCache)
+	{
+		vkDestroyPipeline(_Device, pipeline->_Pipeline, nullptr);
+		pipeline->_Pipeline = CreatePipeline(_CrcToComputeDesc[crc], pipeline->_PipelineLayout);
 	}
 }
 

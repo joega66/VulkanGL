@@ -1,7 +1,6 @@
 #pragma once
 #include <GPU/GPU.h>
 #include "VulkanQueue.h"
-#include "VulkanCache.h"
 #include "VulkanRenderPass.h"
 #include "VulkanCommandList.h"
 #include "VulkanBindlessDescriptors.h"
@@ -31,7 +30,7 @@ public:
 
 	gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) override;
 
-	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) override;
+	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computeDesc) override;
 
 	gpu::Buffer CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data = nullptr) override;
 
@@ -73,13 +72,18 @@ public:
 		VkDescriptorSetLayout& descriptorSetLayout,
 		VkDescriptorUpdateTemplate& descriptorUpdateTemplate);
 
+	/** Recompile all pipelines. */
+	void RecompilePipelines();
+
+	/** Request a pipeline be destroyed. */
+	inline void Destroy(VkPipeline pipeline) { _PipelinesToDestroy.push_back(pipeline); }
+
 	operator VkDevice() const { return _Device; }
 
 	inline VulkanInstance& GetInstance() { return _Instance; }
 	inline const VulkanPhysicalDevice& GetPhysicalDevice() const { return _PhysicalDevice; }
 	inline VulkanQueue& GetGraphicsQueue() { return _GraphicsQueue; }
 	inline VulkanQueue& GetTransferQueue() { return _TransferQueue; }
-	inline VulkanCache& GetCache() { return _VulkanCache; }
 	inline VkDescriptorPool& GetDescriptorPool() { return _DescriptorPool; }
 	
 	static inline VkAccessFlags GetAccessFlags(EAccess access) 
@@ -113,8 +117,6 @@ private:
 
 	VulkanQueue _TransferQueue;
 
-	VulkanCache _VulkanCache;
-
 	VkDevice _Device;
 
 	VkDescriptorPool _DescriptorPool;
@@ -125,9 +127,30 @@ private:
 
 	/** Vulkan Resource Caches */
 
+	std::unordered_map<std::size_t, VkRenderPass> _RenderPassCache;
+
+	std::unordered_map<PipelineStateDesc, gpu::Pipeline> _GraphicsPipelineCache;
+
+	std::unordered_map<Crc, gpu::Pipeline> _ComputePipelineCache;
+
+	std::unordered_map<Crc, ComputePipelineDesc> _CrcToComputeDesc;
+
+	std::unordered_map<Crc, VkPipelineLayout> _PipelineLayoutCache;
+
 	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> _DescriptorSetLayoutCache;
 
 	std::unordered_map<Crc, gpu::Sampler> _SamplerCache;
+
+	std::vector<VkPipeline> _PipelinesToDestroy;
+
+	std::pair<VkRenderPass, VkFramebuffer> GetOrCreateRenderPass(const RenderPassDesc& rpDesc);
+	[[nodiscard]] static VkRenderPass CreateRenderPass(VkDevice device, const RenderPassDesc& rpDesc);
+	[[nodiscard]] VkFramebuffer CreateFramebuffer(VkRenderPass renderPass, const RenderPassDesc& rpDesc) const;
+	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& psoDesc, VkPipelineLayout pipelineLayout) const;
+	[[nodiscard]] VkPipeline CreatePipeline(const ComputePipelineDesc& computeDesc, VkPipelineLayout pipelineLayout) const;
+	VkPipelineLayout GetOrCreatePipelineLayout(
+		const std::vector<VkDescriptorSetLayout>& Layouts,
+		const std::vector<VkPushConstantRange>& PushConstantRanges);
 };
 
 #define vulkan(result) \

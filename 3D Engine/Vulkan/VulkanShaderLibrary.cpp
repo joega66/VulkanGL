@@ -337,5 +337,5 @@ void VulkanShaderLibrary::RecompileShaders()
 		}
 	}
 
-	_Device.GetCache().RecompilePipelines();
+	_Device.RecompilePipelines();
 }
