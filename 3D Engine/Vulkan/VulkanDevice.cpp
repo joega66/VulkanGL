@@ -117,12 +117,12 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDes
 
 	const ComputePipelineHash computeHash =
 	{
-		.computeShaderCrc = Platform::CalculateCrc(computeDesc.computeShader, sizeof(computeDesc.computeShader)),
-		.mapEntriesCrc = Platform::CalculateCrc(mapEntries.data(), mapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry)),
-		.mapDataCrc = Platform::CalculateCrc(data.data(), data.size()),
+		.computeShaderCrc = Platform::crc32_u8(computeDesc.computeShader, sizeof(computeDesc.computeShader)),
+		.mapEntriesCrc = Platform::crc32_u8(mapEntries.data(), mapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry)),
+		.mapDataCrc = Platform::crc32_u8(data.data(), data.size()),
 	};
 
-	const Crc crc = Platform::CalculateCrc(&computeHash, sizeof(computeHash));
+	const Crc crc = Platform::crc32_u8(&computeHash, sizeof(computeHash));
 
 	if (auto iter = _ComputePipelineCache.find(crc); iter == _ComputePipelineCache.end())
 	{
@@ -294,7 +294,7 @@ gpu::ImageView VulkanDevice::CreateImageView(
 
 gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& samplerDesc)
 {
-	const Crc crc = Platform::CalculateCrc(&samplerDesc, sizeof(samplerDesc));
+	const Crc crc = Platform::crc32_u8(&samplerDesc, sizeof(samplerDesc));
 
 	if (auto iter = _SamplerCache.find(crc); iter == _SamplerCache.end())
 	{
@@ -423,7 +423,7 @@ void VulkanDevice::CreateDescriptorSetLayout(
 		descriptorUpdateTemplateEntries.push_back(descriptorUpdateTemplateEntry);
 	}
 
-	const Crc crc = Platform::CalculateCrc(bindings, numBindings * sizeof(VkDescriptorSetLayoutBinding));
+	const Crc crc = Platform::crc32_u8(bindings, numBindings * sizeof(VkDescriptorSetLayoutBinding));
 
 	if (auto iter = _DescriptorSetLayoutCache.find(crc); iter == _DescriptorSetLayoutCache.end())
 	{

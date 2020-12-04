@@ -134,19 +134,19 @@ namespace std
 		{
 			std::size_t seed = 0;
 			HashCombine(seed, psoDesc.renderPass.GetRenderPass());
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.scissor, sizeof(psoDesc.scissor)));
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.viewport, sizeof(psoDesc.viewport)));
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState)));
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState)));
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.multisampleState, sizeof(psoDesc.multisampleState)));
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState)));
-			HashCombine(seed, Platform::CalculateCrc(&psoDesc.shaderStages, sizeof(psoDesc.shaderStages)));
-			HashCombine(seed, Platform::CalculateCrc(psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
-			HashCombine(seed, Platform::CalculateCrc(psoDesc.specInfo.GetData().data(), psoDesc.specInfo.GetData().size()));
-			HashCombine(seed, Platform::CalculateCrc(psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
-			HashCombine(seed, Platform::CalculateCrc(psoDesc.dynamicStates.data(), psoDesc.dynamicStates.size() * sizeof(EDynamicState)));
-			HashCombine(seed, Platform::CalculateCrc(psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(VertexAttributeDescription)));
-			HashCombine(seed, Platform::CalculateCrc(psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(VertexBindingDescription)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.scissor, sizeof(psoDesc.scissor)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.viewport, sizeof(psoDesc.viewport)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.multisampleState, sizeof(psoDesc.multisampleState)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState)));
+			HashCombine(seed, Platform::crc32_u8(&psoDesc.shaderStages, sizeof(psoDesc.shaderStages)));
+			HashCombine(seed, Platform::crc32_u8(psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(SpecializationInfo::SpecializationMapEntry)));
+			HashCombine(seed, Platform::crc32_u8(psoDesc.specInfo.GetData().data(), psoDesc.specInfo.GetData().size()));
+			HashCombine(seed, Platform::crc32_u8(psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(ColorBlendAttachmentState)));
+			HashCombine(seed, Platform::crc32_u8(psoDesc.dynamicStates.data(), psoDesc.dynamicStates.size() * sizeof(EDynamicState)));
+			HashCombine(seed, Platform::crc32_u8(psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(VertexAttributeDescription)));
+			HashCombine(seed, Platform::crc32_u8(psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(VertexBindingDescription)));
 			return seed;
 		}
 	};

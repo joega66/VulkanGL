@@ -87,7 +87,7 @@ void Input::AddShortcut(std::string&& ShortcutName, std::vector<EKeyCode>&& Shor
 
 	std::sort(Shortcut.begin(), Shortcut.end());
 
-	const Crc Crc = Platform::CalculateCrc(Shortcut.data(), Shortcut.size() * sizeof(EKeyCode));
+	const Crc Crc = Platform::crc32_u8(Shortcut.data(), Shortcut.size() * sizeof(EKeyCode));
 
 	check(!ShortcutCrcs.contains(Crc), "\"%s\" trying to remap shortcut \"%s\".", ShortcutName.c_str(), ShortcutCrcs[Crc].c_str());
 

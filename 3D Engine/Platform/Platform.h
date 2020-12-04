@@ -101,7 +101,7 @@ public:
 	static float64 GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default);
 	static std::string GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default);
 
-	static Crc CalculateCrc(const void* Message, std::size_t nBytes);
+	static Crc crc32_u8(const void* data, std::size_t numBytes);
 };
 
 using Platform = WindowsPlatform;

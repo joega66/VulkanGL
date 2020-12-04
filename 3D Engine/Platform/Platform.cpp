@@ -343,51 +343,13 @@ std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 	}
 }
 
-/** Reference: https://barrgroup.com/embedded-systems/how-to/crc-calculation-c-code */
-#define POLYNOMIAL 0xD8
-#define WIDTH  (8 * sizeof(Crc))
-#define TOPBIT (1 << (WIDTH - 1))
-
-static std::array<Crc, 256> GetCrcTable()
+Crc Platform::crc32_u8(const void* data, std::size_t numBytes)
 {
-	std::array<Crc, 256> CrcTable;
-	Crc Remainder = 0;
-
-	for (uint32 Dividend = 0; Dividend < 256; ++Dividend)
+	const uint8* bytes = static_cast<const uint8*>(data);
+	Crc crc = 0;
+	for (std::size_t i = 0; i < numBytes; ++i)
 	{
-		Remainder = Dividend << (WIDTH - 8);
-
-		for (uint32 Bit = 8; Bit > 0; --Bit)
-		{
-			if (Remainder & TOPBIT)
-			{
-				Remainder = (Remainder << 1) ^ POLYNOMIAL;
-			}
-			else
-			{
-				Remainder = (Remainder << 1);
-			}
-		}
-
-		CrcTable[Dividend] = Remainder;
+		crc = _mm_crc32_u8(crc, bytes[i]);
 	}
-
-	return CrcTable;
-}
-
-Crc Platform::CalculateCrc(const void* Message, std::size_t nBytes)
-{
-	static std::array<Crc, 256> CrcTable = GetCrcTable();
-	const uint8* ByteMessage = static_cast<const uint8*>(Message);
-
-	uint8 Data;
-	Crc Remainder = 0;
-
-	for (std::size_t Byte = 0; Byte < nBytes; ++Byte)
-	{
-		Data = ByteMessage[Byte] ^ (Remainder >> (WIDTH - 8));
-		Remainder = CrcTable[Data] ^ (Remainder << 8);
-	}
-
-	return Remainder;
+	return crc;
 }

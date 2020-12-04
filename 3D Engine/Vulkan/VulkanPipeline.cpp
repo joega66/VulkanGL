@@ -351,7 +351,7 @@ VkPipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipe
 
 	VkPipeline pipeline;
 	vulkan(vkCreateGraphicsPipelines(_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
-
+	
 	return pipeline;
 }
 
@@ -392,8 +392,8 @@ VkPipelineLayout VulkanDevice::GetOrCreatePipelineLayout(
 	const std::vector<VkDescriptorSetLayout>& layouts,
 	const std::vector<VkPushConstantRange>& pushConstantRanges)
 {
-	const Crc crc0 = Platform::CalculateCrc(layouts.data(), layouts.size() * sizeof(layouts.front()));
-	const Crc crc1 = Platform::CalculateCrc(pushConstantRanges.data(), pushConstantRanges.size() * sizeof(pushConstantRanges[0]));
+	const Crc crc0 = Platform::crc32_u8(layouts.data(), layouts.size() * sizeof(layouts.front()));
+	const Crc crc1 = Platform::crc32_u8(pushConstantRanges.data(), pushConstantRanges.size() * sizeof(pushConstantRanges[0]));
 
 	Crc crc = 0;
 	HashCombine(crc, crc0);
