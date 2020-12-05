@@ -42,10 +42,11 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 
 		cmdList.BeginRenderPass(shadowProxy.GetRenderPass());
 
+		cmdList.SetViewportAndScissor({ .width = shadowProxy.GetShadowMap().GetWidth(), .height = shadowProxy.GetShadowMap().GetHeight() });
+
 		for (auto entity : _ECS.GetEntities<SurfaceGroup>())
 		{
 			auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);
-
 			const VkDescriptorSet descriptorSets[] = { ShadowDescriptors::_DescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
 			const uint32 dynamicOffsets[] = { shadowProxy.GetDynamicOffset() };
 
@@ -55,12 +56,9 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 				psoDesc.renderPass = shadowProxy.GetRenderPass();
 				psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<ShadowDepthVS>();
 				psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<ShadowDepthFS>();
-				psoDesc.viewport.width = shadowProxy.GetShadowMap().GetWidth();
-				psoDesc.viewport.height = shadowProxy.GetShadowMap().GetHeight();
 				psoDesc.rasterizationState.depthBiasEnable = true;
 				psoDesc.rasterizationState.depthBiasConstantFactor = shadowProxy.GetDepthBiasConstantFactor();
 				psoDesc.rasterizationState.depthBiasSlopeFactor = shadowProxy.GetDepthBiasSlopeFactor();
-
 				return psoDesc;
 			});
 		}

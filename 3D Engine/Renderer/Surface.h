@@ -18,7 +18,7 @@ public:
 	inline const uint32& GetSurfaceID() const { return _SurfaceID; }
 	inline const std::vector<Submesh>& GetSubmeshes() const { return *_Submeshes; }
 	inline const Material* GetMaterial() const { return _Material; }
-	inline const SpecializationInfo& GetSpecializationInfo() const { return _Material->GetSpecializationInfo(); }
+	inline const SpecializationInfo& GetMaterialInfo() const { return _Material->GetSpecializationInfo(); }
 	inline const BoundingBox& GetBoundingBox() const { return _BoundingBox; }
 	
 private:
@@ -52,11 +52,8 @@ public:
 		std::function<PipelineStateDesc()> getPsoDesc,
 		const FrustumPlanes* viewFrustumPlanes = nullptr)
 	{
-		/** Everything in a SurfaceGroup has the same pipeline layout. Create a dummy pipeline. */
-		PipelineStateDesc psoDesc = getPsoDesc();
-		gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
-
-		cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
+		// @todo Everything in a SurfaceGroup has the same pipeline layout. */
+		//cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
 
 		for (const auto& surface : _Surfaces)
 		{
@@ -68,12 +65,14 @@ public:
 				}
 			}
 
-			psoDesc = getPsoDesc();
-			psoDesc.specInfo = surface.GetSpecializationInfo();
+			PipelineStateDesc psoDesc = getPsoDesc();
+			psoDesc.specInfo = surface.GetMaterialInfo();
 
 			gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
 			
 			cmdList.BindPipeline(pipeline);
+
+			cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
 
 			cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &surface.GetSurfaceID());
 

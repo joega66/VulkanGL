@@ -69,10 +69,6 @@ void UserInterface::Start(Engine& engine)
 	{
 		ImGuiIO& imgui = ImGui::GetIO();
 		imgui.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-
-		auto& renderData = engine._ECS.GetSingletonComponent<ImGuiRenderData>();
-		renderData.psoDesc.viewport.width = width;
-		renderData.psoDesc.viewport.height = height;
 	});
 }
 
@@ -366,7 +362,6 @@ ImGuiRenderData::ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shader
 	psoDesc.colorBlendAttachmentStates[0].srcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
 	psoDesc.colorBlendAttachmentStates[0].dstAlphaBlendFactor = EBlendFactor::ZERO;
 	psoDesc.colorBlendAttachmentStates[0].alphaBlendOp = EBlendOp::ADD;
-	psoDesc.dynamicStates.push_back(EDynamicState::Scissor);
 	psoDesc.vertexAttributes = {
 		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
@@ -377,6 +372,8 @@ ImGuiRenderData::ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shader
 void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass)
 {
 	cmdList.BeginRenderPass(renderPass);
+
+	cmdList.SetViewport({ .width = renderPass.GetRenderArea().extent.width, .height = renderPass.GetRenderArea().extent.height });
 
 	const ImDrawData* drawData = ImGui::GetDrawData();
 
@@ -416,13 +413,10 @@ void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, con
 				clipRect.z = (drawCmd->ClipRect.z - clipOff.x) * clipScale.x;
 				clipRect.w = (drawCmd->ClipRect.w - clipOff.y) * clipScale.y;
 
-				Scissor scissor;
-				scissor.offset.x = static_cast<int32_t>(clipRect.x);
-				scissor.offset.y = static_cast<int32_t>(clipRect.y);
-				scissor.extent.x = static_cast<uint32_t>(clipRect.z - clipRect.x);
-				scissor.extent.y = static_cast<uint32_t>(clipRect.w - clipRect.y);
-
-				cmdList.SetScissor(1, &scissor);
+				cmdList.SetScissor({
+					.offset = { static_cast<int32_t>(clipRect.x), static_cast<int32_t>(clipRect.y)},
+					.extent = { static_cast<uint32_t>(clipRect.z - clipRect.x), static_cast<uint32_t>(clipRect.w - clipRect.y) }
+				});
 
 				const uint32 pushConstants(*static_cast<uint32*>(drawCmd->TextureId));
 				cmdList.PushConstants(pipeline, psoDesc.shaderStages.fragment, &pushConstants);

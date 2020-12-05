@@ -127,9 +127,11 @@ private:
 
 	/** Vulkan Resource Caches */
 
-	std::unordered_map<std::size_t, VkRenderPass> _RenderPassCache;
+	std::unordered_map<Crc, VkRenderPass> _RenderPassCache;
 
-	std::unordered_map<PipelineStateDesc, gpu::Pipeline> _GraphicsPipelineCache;
+	std::unordered_map<Crc, gpu::Pipeline> _GraphicsPipelineCache;
+
+	std::unordered_map<Crc, PipelineStateDesc> _CrcToPipelineStateDesc;
 
 	std::unordered_map<Crc, gpu::Pipeline> _ComputePipelineCache;
 

@@ -350,10 +350,31 @@ namespace gpu
 		);
 	}
 
-	void CommandList::SetScissor(uint32 scissorCount, const Scissor* scissors)
+	void CommandList::SetViewport(const Viewport& viewport)
+	{
+		const VkViewport setViewport =
+		{
+			.x = static_cast<float>(viewport.x),
+			.y = static_cast<float>(viewport.y),
+			.width = static_cast<float>(viewport.width),
+			.height = static_cast<float>(viewport.height),
+			.minDepth = viewport.minDepth,
+			.maxDepth = viewport.maxDepth,
+		};
+
+		vkCmdSetViewport(_CommandBuffer, 0, 1, &setViewport);
+	}
+
+	void CommandList::SetScissor(const Scissor& scissor)
 	{
 		static_assert(sizeof(Scissor) == sizeof(VkRect2D));
-		vkCmdSetScissor(_CommandBuffer, 0, scissorCount, reinterpret_cast<const VkRect2D*>(scissors));
+		vkCmdSetScissor(_CommandBuffer, 0, 1, reinterpret_cast<const VkRect2D*>(&scissor));
+	}
+
+	void CommandList::SetViewportAndScissor(const Viewport& viewport)
+	{
+		SetViewport(viewport);
+		SetScissor({ .offset = { 0, 0 }, .extent = { viewport.width, viewport.height } });
 	}
 
 	void CommandList::CopyBuffer(

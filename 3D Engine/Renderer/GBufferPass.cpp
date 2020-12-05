@@ -38,12 +38,13 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 {
 	cmdList.BeginRenderPass(cameraProxy._GBufferRP);
 
+	cmdList.SetViewportAndScissor({ .width = cameraProxy._SceneDepth.GetWidth(), .height = cameraProxy._SceneDepth.GetHeight() });
+
 	const FrustumPlanes viewFrustumPlanes = camera.GetFrustumPlanes();
 
 	for (auto entity : _ECS.GetEntities<SurfaceGroup>())
 	{
 		auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);
-
 		const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
 		const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
 
@@ -53,8 +54,6 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 			psoDesc.renderPass = cameraProxy._GBufferRP;
 			psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<GBufferPassVS>();
 			psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<GBufferPassFS>();
-			psoDesc.viewport.width = cameraProxy._SceneDepth.GetWidth();
-			psoDesc.viewport.height = cameraProxy._SceneDepth.GetHeight();
 
 			return psoDesc;
 		}, &viewFrustumPlanes);

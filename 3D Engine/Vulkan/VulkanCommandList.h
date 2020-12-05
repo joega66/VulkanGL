@@ -115,11 +115,6 @@ namespace gpu
 			EFilter filter
 		);
 
-		void SetScissor(
-			uint32 scissorCount, 
-			const Scissor* scissors
-		);
-
 		void CopyBuffer(
 			const Buffer& srcBuffer,
 			const Buffer& dstBuffer,
@@ -140,6 +135,12 @@ namespace gpu
 			uint64 size, 
 			const void* data = nullptr
 		);
+
+		void SetViewport(const Viewport& viewport);
+
+		void SetScissor(const Scissor& scissor);
+
+		void SetViewportAndScissor(const Viewport& viewport);
 
 	private:
 		VulkanDevice& _Device;

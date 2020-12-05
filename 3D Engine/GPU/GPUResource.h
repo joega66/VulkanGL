@@ -258,8 +258,8 @@ struct Viewport
 {
 	int32 x = 0;
 	int32 y = 0;
-	int32 width = 0;
-	int32 height = 0;
+	uint32 width = 0;
+	uint32 height = 0;
 	float minDepth = 0.0f;
 	float maxDepth = 1.0f;
 
@@ -477,12 +477,12 @@ enum class EColorChannel
 struct ColorBlendAttachmentState
 {
 	bool blendEnable = false;
-	EBlendFactor srcColorBlendFactor;
-	EBlendFactor dstColorBlendFactor;
-	EBlendOp colorBlendOp;
-	EBlendFactor srcAlphaBlendFactor;
-	EBlendFactor dstAlphaBlendFactor;
-	EBlendOp alphaBlendOp;
+	EBlendFactor srcColorBlendFactor = EBlendFactor::ZERO;
+	EBlendFactor dstColorBlendFactor = EBlendFactor::ZERO;
+	EBlendOp colorBlendOp = EBlendOp::ADD;
+	EBlendFactor srcAlphaBlendFactor = EBlendFactor::ZERO;;
+	EBlendFactor dstAlphaBlendFactor = EBlendFactor::ZERO;;
+	EBlendOp alphaBlendOp = EBlendOp::ADD;
 	EColorChannel colorWriteMask = EColorChannel::RGBA;
 
 	friend bool operator==(const ColorBlendAttachmentState& l, const ColorBlendAttachmentState& r)
@@ -581,9 +581,9 @@ class SpecializationInfo
 public:
 	struct SpecializationMapEntry
 	{
-		uint32 constantID;
-		uint32 offset;
-		size_t size;
+		uint32 constantID = 0;
+		uint32 offset = 0;
+		size_t size = 0;
 
 		bool operator==(const SpecializationMapEntry& other) const;
 	};
@@ -596,8 +596,7 @@ public:
 		const uint32 offset = (uint32)_Data.size();
 		_Data.resize(offset + sizeof(constant));
 		memcpy(_Data.data() + offset, &constant, sizeof(constant));
-		const SpecializationMapEntry mapEntry = { constantID, offset, sizeof(constant) };
-		_MapEntries.push_back(std::move(mapEntry));
+		_MapEntries.push_back({ constantID, offset, sizeof(constant) });
 	}
 
 	bool operator==(const SpecializationInfo& other) const;
@@ -613,10 +612,10 @@ private:
 
 struct VertexAttributeDescription
 {
-	uint64	location;
-	uint32	binding;
-	EFormat	format;
-	uint32	offset;
+	uint64	location = 0;
+	uint32	binding = 0;
+	EFormat	format = EFormat::UNDEFINED;
+	uint32	offset = 0;
 
 	friend bool operator==(const VertexAttributeDescription& l, const VertexAttributeDescription& r)
 	{
@@ -629,8 +628,8 @@ struct VertexAttributeDescription
 
 struct VertexBindingDescription
 {
-	uint32 binding;
-	uint32 stride;
+	uint32 binding = 0;
+	uint32 stride = 0;
 
 	friend bool operator==(const VertexBindingDescription& l, const VertexBindingDescription& r)
 	{

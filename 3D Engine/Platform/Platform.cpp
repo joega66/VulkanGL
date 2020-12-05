@@ -345,11 +345,16 @@ std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 
 Crc Platform::crc32_u8(const void* data, std::size_t numBytes)
 {
-	const uint8* bytes = static_cast<const uint8*>(data);
 	Crc crc = 0;
+	crc32_u8(crc, data, numBytes);
+	return crc;
+}
+
+void Platform::crc32_u8(Crc& crc, const void* data, std::size_t numBytes)
+{
+	const uint8* bytes = static_cast<const uint8*>(data);
 	for (std::size_t i = 0; i < numBytes; ++i)
 	{
 		crc = _mm_crc32_u8(crc, bytes[i]);
 	}
-	return crc;
 }

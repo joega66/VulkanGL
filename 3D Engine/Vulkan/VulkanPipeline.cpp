@@ -262,32 +262,11 @@ static void CreateInputAssemblyState(const PipelineStateDesc& psoDesc, VkPipelin
 	inputAssemblyState.primitiveRestartEnable	= psoDesc.inputAssemblyState.primitiveRestartEnable;
 }
 
-static void CreateViewportState(const PipelineStateDesc& psoDesc, VkViewport& viewport, VkRect2D& scissor, VkPipelineViewportStateCreateInfo& viewportState)
+static void CreateViewportState(const PipelineStateDesc& psoDesc, VkPipelineViewportStateCreateInfo& viewportState)
 {
-	viewport.x			= static_cast<float>(psoDesc.viewport.x);
-	viewport.y			= static_cast<float>(psoDesc.viewport.y);
-	viewport.width		= static_cast<float>(psoDesc.viewport.width);
-	viewport.height		= static_cast<float>(psoDesc.viewport.height);
-	viewport.minDepth	= psoDesc.viewport.minDepth;
-	viewport.maxDepth	= psoDesc.viewport.maxDepth;
-
-	if (psoDesc.scissor == Scissor{})
-	{
-		scissor.extent.width	= static_cast<uint32>(viewport.width);
-		scissor.extent.height	= static_cast<uint32>(viewport.height);
-		scissor.offset			= { 0, 0 };
-	}
-	else
-	{
-		scissor.extent.width	= psoDesc.scissor.extent.x;
-		scissor.extent.height	= psoDesc.scissor.extent.y;
-		scissor.offset.x		= psoDesc.scissor.offset.x;
-		scissor.offset.y		= psoDesc.scissor.offset.y;
-	}
-
-	viewportState.pViewports	= &viewport;
+	viewportState.pViewports	= nullptr;
 	viewportState.viewportCount = 1;
-	viewportState.pScissors		= &scissor;
+	viewportState.pScissors		= nullptr;
 	viewportState.scissorCount	= 1;
 }
 
@@ -320,14 +299,16 @@ VkPipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipe
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 	CreateInputAssemblyState(psoDesc, inputAssemblyState);
 
-	VkViewport viewport;
-	VkRect2D scissor;
 	VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-	CreateViewportState(psoDesc, viewport, scissor, viewportState);
+	CreateViewportState(psoDesc, viewportState);
 
-	VkPipelineDynamicStateCreateInfo dynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-	dynamicState.dynamicStateCount	= static_cast<uint32>(psoDesc.dynamicStates.size());
-	dynamicState.pDynamicStates		= reinterpret_cast<const VkDynamicState*>(psoDesc.dynamicStates.data());
+	const VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+	const VkPipelineDynamicStateCreateInfo dynamicState =
+	{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.dynamicStateCount = static_cast<uint32>(std::size(dynamicStates)),
+		.pDynamicStates = dynamicStates,
+	};
 
 	const VkGraphicsPipelineCreateInfo pipelineInfo = 
 	{ 

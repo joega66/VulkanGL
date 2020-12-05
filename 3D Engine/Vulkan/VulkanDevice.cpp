@@ -42,18 +42,36 @@ gpu::CommandList VulkanDevice::CreateCommandList(EQueue queueType)
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 {
-	if (auto iter = _GraphicsPipelineCache.find(psoDesc); iter == _GraphicsPipelineCache.end())
+	const uint64 renderPass = *reinterpret_cast<uint64*>(psoDesc.renderPass.GetRenderPass());
+
+	int i = 0;
+	std::array<uint64, 5> shaders({ 0 });
+	auto addShader = [&] (const gpu::Shader* shader) { if (shader) shaders[i++] = *reinterpret_cast<uint64*>(shader->compilationResult.shaderModule); };
+	addShader(psoDesc.shaderStages.vertex);
+	addShader(psoDesc.shaderStages.tessControl);
+	addShader(psoDesc.shaderStages.tessEval);
+	addShader(psoDesc.shaderStages.geometry);
+	addShader(psoDesc.shaderStages.fragment);
+
+	Crc crc = 0;
+	Platform::crc32_u8(crc, &renderPass, sizeof(renderPass));
+	// @todo Why does the crc break on these structs?
+	//Platform::crc32_u8(crc, &psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState));
+	//Platform::crc32_u8(crc, &psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState));
+	//Platform::crc32_u8(crc, &psoDesc.multisampleState, sizeof(psoDesc.multisampleState));
+	//Platform::crc32_u8(crc, &psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState));
+	Platform::crc32_u8(crc, shaders.data(), shaders.size() * sizeof(shaders[0]));
+	Platform::crc32_u8(crc, psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(psoDesc.specInfo.GetMapEntries()[0]));
+	Platform::crc32_u8(crc, psoDesc.specInfo.GetData().data(), psoDesc.specInfo.GetData().size() * sizeof(psoDesc.specInfo.GetData()[0]));
+	Platform::crc32_u8(crc, psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(psoDesc.colorBlendAttachmentStates[0]));
+	Platform::crc32_u8(crc, psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(psoDesc.vertexAttributes[0]));
+	Platform::crc32_u8(crc, psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(psoDesc.vertexBindings[0]));
+
+	if (auto iter = _GraphicsPipelineCache.find(crc); iter == _GraphicsPipelineCache.end())
 	{
 		std::map<uint32, VkDescriptorSetLayout> layoutsMap;
-
-		auto getLayouts = [&] (const gpu::Shader* shader)
-		{
-			if (shader) 
-			{ 
-				for (const auto& [set, layout] : shader->compilationResult.layouts) { layoutsMap.insert({ set, layout }); }
-			}
-		};
-
+		auto getLayouts = [&] (const gpu::Shader* shader) 
+			{ if (shader) { for (const auto& [set, layout] : shader->compilationResult.layouts) { layoutsMap.insert({ set, layout }); } } };
 		getLayouts(psoDesc.shaderStages.vertex);
 		getLayouts(psoDesc.shaderStages.tessControl);
 		getLayouts(psoDesc.shaderStages.tessEval);
@@ -62,22 +80,14 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 
 		std::vector<VkDescriptorSetLayout> layouts;
 		layouts.reserve(layoutsMap.size());
-
 		for (const auto& [set, layout] : layoutsMap)
 		{
 			layouts.push_back(layout);
 		}
 
 		std::vector<VkPushConstantRange> pushConstantRanges;
-
-		auto getPushConstantRange = [&] (const gpu::Shader* shader)
-		{
-			if (shader && shader->compilationResult.pushConstantRange.size > 0)
-			{
-				pushConstantRanges.push_back(shader->compilationResult.pushConstantRange);
-			}
-		};
-
+		auto getPushConstantRange = [&] (const gpu::Shader* shader) 
+		{ if (shader && shader->compilationResult.pushConstantRange.size > 0) { pushConstantRanges.push_back(shader->compilationResult.pushConstantRange); } };
 		getPushConstantRange(psoDesc.shaderStages.vertex);
 		getPushConstantRange(psoDesc.shaderStages.tessControl);
 		getPushConstantRange(psoDesc.shaderStages.tessEval);
@@ -86,7 +96,8 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 
 		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
 		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(psoDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
-		_GraphicsPipelineCache[psoDesc] = pipeline;
+		_GraphicsPipelineCache[crc] = pipeline;
+		_CrcToPipelineStateDesc[crc] = psoDesc;
 		return pipeline;
 	}
 	else
@@ -97,35 +108,22 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDesc)
 {
-	auto& mapEntries = computeDesc.specInfo.GetMapEntries();
-	auto& data = computeDesc.specInfo.GetData();
+	const uint64 computeShader = *reinterpret_cast<uint64*>(computeDesc.computeShader->compilationResult.shaderModule);
 
-	struct ComputePipelineHash
-	{
-		Crc computeShaderCrc;
-		Crc mapEntriesCrc;
-		Crc mapDataCrc;
-	};
-
-	std::vector<VkDescriptorSetLayout> layouts;
-	layouts.reserve(computeDesc.computeShader->compilationResult.layouts.size());
-
-	for (auto& [set, layout] : computeDesc.computeShader->compilationResult.layouts)
-	{
-		layouts.push_back(layout);
-	}
-
-	const ComputePipelineHash computeHash =
-	{
-		.computeShaderCrc = Platform::crc32_u8(computeDesc.computeShader, sizeof(computeDesc.computeShader)),
-		.mapEntriesCrc = Platform::crc32_u8(mapEntries.data(), mapEntries.size() * sizeof(SpecializationInfo::SpecializationMapEntry)),
-		.mapDataCrc = Platform::crc32_u8(data.data(), data.size()),
-	};
-
-	const Crc crc = Platform::crc32_u8(&computeHash, sizeof(computeHash));
+	Crc crc = 0;
+	Platform::crc32_u8(crc, &computeShader, sizeof(computeShader));
+	Platform::crc32_u8(crc, computeDesc.specInfo.GetMapEntries().data(), computeDesc.specInfo.GetMapEntries().size() * sizeof(computeDesc.specInfo.GetMapEntries()[0]));
+	Platform::crc32_u8(crc, computeDesc.specInfo.GetData().data(), computeDesc.specInfo.GetData().size());
 
 	if (auto iter = _ComputePipelineCache.find(crc); iter == _ComputePipelineCache.end())
 	{
+		std::vector<VkDescriptorSetLayout> layouts;
+		layouts.reserve(computeDesc.computeShader->compilationResult.layouts.size());
+		for (auto& [set, layout] : computeDesc.computeShader->compilationResult.layouts)
+		{
+			layouts.push_back(layout);
+		}
+
 		const auto& pushConstantRange = computeDesc.computeShader->compilationResult.pushConstantRange;
 		const auto pushConstantRanges = pushConstantRange.size > 0 ? std::vector{ pushConstantRange } : std::vector<VkPushConstantRange>{};
 		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
@@ -458,10 +456,10 @@ void VulkanDevice::CreateDescriptorSetLayout(
 
 void VulkanDevice::RecompilePipelines()
 {
-	for (auto& [psoDesc, pipeline] : _GraphicsPipelineCache)
+	for (auto& [crc, pipeline] : _GraphicsPipelineCache)
 	{
 		vkDestroyPipeline(_Device, pipeline->_Pipeline, nullptr);
-		pipeline->_Pipeline = CreatePipeline(psoDesc, pipeline->_PipelineLayout);
+		pipeline->_Pipeline = CreatePipeline(_CrcToPipelineStateDesc[crc], pipeline->_PipelineLayout);
 	}
 
 	for (auto& [crc, pipeline] : _ComputePipelineCache)

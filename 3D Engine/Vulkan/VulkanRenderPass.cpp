@@ -3,24 +3,24 @@
 
 std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetOrCreateRenderPass(const RenderPassDesc& rpDesc)
 {
-	std::size_t seed;
+	Crc crc = 0;
 	
 	for (const auto& colorAttachment : rpDesc.colorAttachments)
 	{
-		HashCombine(seed, colorAttachment.initialLayout);
-		HashCombine(seed, colorAttachment.finalLayout);
-		HashCombine(seed, colorAttachment.loadAction);
-		HashCombine(seed, colorAttachment.storeAction);
+		Platform::crc32_u8(crc, &colorAttachment.initialLayout, sizeof(colorAttachment.initialLayout));
+		Platform::crc32_u8(crc, &colorAttachment.finalLayout, sizeof(colorAttachment.finalLayout));
+		Platform::crc32_u8(crc, &colorAttachment.loadAction, sizeof(colorAttachment.loadAction));
+		Platform::crc32_u8(crc, &colorAttachment.storeAction, sizeof(colorAttachment.storeAction));
 	}
 
-	HashCombine(seed, rpDesc.depthAttachment.initialLayout);
-	HashCombine(seed, rpDesc.depthAttachment.finalLayout);
-	HashCombine(seed, rpDesc.depthAttachment.loadAction);
-	HashCombine(seed, rpDesc.depthAttachment.storeAction);
+	Platform::crc32_u8(crc, &rpDesc.depthAttachment.initialLayout, sizeof(rpDesc.depthAttachment.initialLayout));
+	Platform::crc32_u8(crc, &rpDesc.depthAttachment.finalLayout, sizeof(rpDesc.depthAttachment.finalLayout));
+	Platform::crc32_u8(crc, &rpDesc.depthAttachment.loadAction, sizeof(rpDesc.depthAttachment.loadAction));
+	Platform::crc32_u8(crc, &rpDesc.depthAttachment.storeAction, sizeof(rpDesc.depthAttachment.storeAction));
 
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 
-	if (auto iter = _RenderPassCache.find(seed); iter != _RenderPassCache.end())
+	if (auto iter = _RenderPassCache.find(crc); iter != _RenderPassCache.end())
 	{
 		renderPass = iter->second;
 	}
@@ -28,7 +28,7 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetOrCreateRenderPass(const
 	if (renderPass == VK_NULL_HANDLE)
 	{
 		renderPass = CreateRenderPass(_Device, rpDesc);
-		_RenderPassCache.emplace(seed, renderPass);
+		_RenderPassCache.emplace(crc, renderPass);
 	}
 
 	const VkFramebuffer framebuffer = CreateFramebuffer(renderPass, rpDesc);
