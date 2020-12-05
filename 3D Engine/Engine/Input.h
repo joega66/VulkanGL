@@ -68,7 +68,7 @@ private:
 	std::unordered_map<std::string, std::vector<EKeyCode>> Shortcuts;
 	std::unordered_map<Crc, std::string> ShortcutCrcs;
 
-	static void GLFWKeyboardEvent(struct GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
+	static void GLFWKeyboardEvent(struct GLFWwindow* window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
 
-	static void GLFWMouseButtonEvent(struct GLFWwindow* Window, int32 Button, int32 Action, int32 Mods);
+	static void GLFWMouseButtonEvent(struct GLFWwindow* window, int32 Button, int32 Action, int32 Mods);
 };

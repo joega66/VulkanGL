@@ -28,7 +28,7 @@ void UserInterface::Start(Engine& engine)
 {
 	ImGui::CreateContext();
 
-	ImGui_ImplGlfw_InitForVulkan(engine._Platform.Window, true);
+	ImGui_ImplGlfw_InitForVulkan(engine._Platform._Window, true);
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);

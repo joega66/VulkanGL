@@ -3,14 +3,14 @@
 
 void Screen::GLFWScreenSizeChangedEvent(GLFWwindow* window, int32 pixelWidth, int32 pixelHeight)
 {
-	Screen* screen = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->Screen;
+	Screen* screen = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Screen;
 	screen->_IsDirty = true;
 	screen->_PixelWidth = pixelWidth;
 	screen->_PixelHeight = pixelHeight;
 }
 
 Screen::Screen(Platform& platform)
-	: _Window(platform.Window)
+	: _Window(platform._Window)
 {
 	glfwSetFramebufferSizeCallback(_Window, GLFWScreenSizeChangedEvent);
 

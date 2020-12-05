@@ -40,7 +40,7 @@ public:
 	glm::vec2 Position;
 
 private:
-	static void GLFWScrollEvent(struct GLFWwindow* Window, double XOffset, double YOffset);
+	static void GLFWScrollEvent(struct GLFWwindow* window, double XOffset, double YOffset);
 
-	static void GLFWMouseEvent(struct GLFWwindow* Window, double X, double Y);
+	static void GLFWMouseEvent(struct GLFWwindow* window, double X, double Y);
 };

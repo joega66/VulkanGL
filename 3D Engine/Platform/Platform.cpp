@@ -15,18 +15,18 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-WindowsPlatform::WindowsPlatform(int32 Width, int32 Height)
+WindowsPlatform::WindowsPlatform(int32 width, int32 height)
 {
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	Window = glfwCreateWindow(Width, Height, "Vulkan Engine", nullptr, nullptr);
+	_Window = glfwCreateWindow(width, height, "Vulkan Engine", nullptr, nullptr);
 }
 
 bool WindowsPlatform::WindowShouldClose() const
 {
-	return glfwWindowShouldClose(Window);
+	return glfwWindowShouldClose(_Window);
 }
 
 void WindowsPlatform::PollEvents() const
@@ -37,7 +37,7 @@ void WindowsPlatform::PollEvents() const
 
 void* WindowsPlatform::GetWindow() const
 {
-	return glfwGetWin32Window(Window);
+	return glfwGetWin32Window(_Window);
 }
 
 void WindowsPlatform::Exit()
@@ -47,216 +47,216 @@ void WindowsPlatform::Exit()
 
 std::string WindowsPlatform::FileRead(const std::filesystem::path& path, const std::string& prependText)
 {
-	std::ifstream File(path, std::ios::ate | std::ios::binary);
+	std::ifstream file(path, std::ios::ate | std::ios::binary);
 
-	check(File.is_open(), "Failed to open file %s", path.c_str());
+	check(file.is_open(), "Failed to open file %s", path.c_str());
 
-	size_t FileSize = static_cast<size_t>(File.tellg());
-	std::string Buffer;
-	Buffer.resize(FileSize + prependText.size());
+	size_t fileSize = static_cast<size_t>(file.tellg());
+	std::string buffer;
+	buffer.resize(fileSize + prependText.size());
 
-	memcpy(Buffer.data(), prependText.data(), prependText.size());
+	memcpy(buffer.data(), prependText.data(), prependText.size());
 
-	File.seekg(0);
-	File.read(Buffer.data() + prependText.size(), FileSize);
-	File.close();
+	file.seekg(0);
+	file.read(buffer.data() + prependText.size(), fileSize);
+	file.close();
 
-	return Buffer;
+	return buffer;
 }
 
-void WindowsPlatform::FileDelete(const std::string& Filename)
+void WindowsPlatform::FileDelete(const std::string& filename)
 {
-	check(std::filesystem::remove(Filename), "Failed to remove file...");
+	check(std::filesystem::remove(filename), "Failed to remove file...");
 }
 
-void WindowsPlatform::FileRename(const std::string& Old, const std::string& New)
+void WindowsPlatform::FileRename(const std::string& oldName, const std::string& newName)
 {
-	check(FileExists(Old), "Renaming file that doesn't exist...");
-	std::filesystem::rename(Old, New);
+	check(FileExists(oldName), "Renaming file that doesn't exist...");
+	std::filesystem::rename(oldName, newName);
 }
 
-bool WindowsPlatform::FileExists(const std::string& Filename)
+bool WindowsPlatform::FileExists(const std::string& filename)
 {
-	return std::filesystem::is_regular_file(Filename);
+	return std::filesystem::is_regular_file(filename);
 }
 
 uint64 WindowsPlatform::GetLastWriteTime(const std::filesystem::path& path)
 {
-	const uint64 LastWriteTime = std::filesystem::last_write_time(path).time_since_epoch().count();
-	return LastWriteTime;
+	const uint64 lastWriteTime = std::filesystem::last_write_time(path).time_since_epoch().count();
+	return lastWriteTime;
 }
 
-void WindowsPlatform::WriteLog(const std::string& InLog)
+void WindowsPlatform::WriteLog(const std::string& log)
 {
-	printf("%s\n", InLog.c_str());
+	printf("%s\n", log.c_str());
 }
 
-static std::string SanitizeFile(const std::string& File)
+static std::string SanitizeFile(const std::string& file)
 {
-	std::string FileSanitized = File;
-	FileSanitized.erase(FileSanitized.begin(), FileSanitized.begin() + FileSanitized.find_last_of('\\') + 1);
-	return FileSanitized;
+	std::string fileSanitized = file;
+	fileSanitized.erase(fileSanitized.begin(), fileSanitized.begin() + fileSanitized.find_last_of('\\') + 1);
+	return fileSanitized;
 }
 
-void WindowsPlatform::WriteLog(const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
+void WindowsPlatform::WriteLog(const std::string& file, const std::string& func, int32 line, const std::string& log)
 {
-	std::string Header = "[Debug] [" + SanitizeFile(File) + ":" + Func + ":" + std::to_string(Line) + "]\n";
-	std::string Recent = Header + InLog + '\n';
-	std::cerr << Recent;
+	std::string header = "[Debug] [" + SanitizeFile(file) + ":" + func + ":" + std::to_string(line) + "]\n";
+	std::string recent = header + log + '\n';
+	std::cerr << recent;
 }
 
-void WindowsPlatform::WriteLog(const std::string& Expression, const std::string& File, const std::string& Func, int32 Line, const std::string& InLog)
+void WindowsPlatform::WriteLog(const std::string& expression, const std::string& file, const std::string& func, int32 line, const std::string& log)
 {
-	std::string Header = "[Warning] [" + SanitizeFile(File) + ":" + Func + ":" + std::to_string(Line) + ":" + Expression + "]\n";
-	std::string Recent = Header + InLog + '\n';
-	std::cerr << Recent;
+	std::string header = "[Warning] [" + SanitizeFile(file) + ":" + func + ":" + std::to_string(line) + ":" + expression + "]\n";
+	std::string recent = header + log + '\n';
+	std::cerr << recent;
 }
 
-std::string WindowsPlatform::FormatString(std::string Format, ...)
+std::string WindowsPlatform::FormatString(std::string format, ...)
 {
-	va_list Args, ArgsCopy;
-	va_start(Args, Format);
-	va_copy(ArgsCopy, Args);
+	va_list args, argsCopy;
+	va_start(args, format);
+	va_copy(argsCopy, args);
 
-	const auto SZ = std::vsnprintf(nullptr, 0, Format.c_str(), Args) + 1;
+	const auto sz = std::vsnprintf(nullptr, 0, format.c_str(), args) + 1;
 
 	try
 	{
-		std::string Result(SZ, ' ');
-		std::vsnprintf(&Result.front(), SZ, Format.c_str(), ArgsCopy);
-		va_end(ArgsCopy);
-		va_end(Args);
-		Result.erase(std::remove(Result.begin(), Result.end(), '\0'), Result.end());
-		return Result;
+		std::string result(sz, ' ');
+		std::vsnprintf(&result.front(), sz, format.c_str(), argsCopy);
+		va_end(argsCopy);
+		va_end(args);
+		result.erase(std::remove(result.begin(), result.end(), '\0'), result.end());
+		return result;
 	}
-	catch (const std::bad_alloc& E)
+	catch (const std::bad_alloc& e)
 	{
-		va_end(ArgsCopy);
-		va_end(Args);
-		fail(E.what());
+		va_end(argsCopy);
+		va_end(args);
+		fail(e.what());
 	}
 }
 
-void WindowsPlatform::ForkProcess(const std::string& ExePath, const std::string& CmdArgs)
+void WindowsPlatform::ForkProcess(const std::string& exePath, const std::string& cmdArgs)
 {
 	enum { ParentRead, ParentWrite, ChildWrite, ChildRead, NumPipeTypes };
 
-	SECURITY_ATTRIBUTES Security;
-	Security.nLength = sizeof(Security);
-	Security.bInheritHandle = TRUE;
-	Security.lpSecurityDescriptor = NULL;
+	SECURITY_ATTRIBUTES security;
+	security.nLength = sizeof(security);
+	security.bInheritHandle = TRUE;
+	security.lpSecurityDescriptor = NULL;
 
-	HANDLE Pipes[NumPipeTypes];
+	HANDLE pipes[NumPipeTypes];
 
-	if (!CreatePipe(&Pipes[ParentWrite], &Pipes[ChildRead], &Security, 0))
+	if (!CreatePipe(&pipes[ParentWrite], &pipes[ChildRead], &security, 0))
 		fail("%d", GetLastError());
-	if (!CreatePipe(&Pipes[ParentRead], &Pipes[ChildWrite], &Security, 0))
+	if (!CreatePipe(&pipes[ParentRead], &pipes[ChildWrite], &security, 0))
 		fail("%d", GetLastError());
-	if (!SetHandleInformation(Pipes[ParentRead], HANDLE_FLAG_INHERIT, 0))
+	if (!SetHandleInformation(pipes[ParentRead], HANDLE_FLAG_INHERIT, 0))
 		fail("%d", GetLastError());
-	if (!SetHandleInformation(Pipes[ParentWrite], HANDLE_FLAG_INHERIT, 0))
+	if (!SetHandleInformation(pipes[ParentWrite], HANDLE_FLAG_INHERIT, 0))
 		fail("%d", GetLastError());
 
-	STARTUPINFO StartupInfo;
-	ZeroMemory(&StartupInfo, sizeof(STARTUPINFO));
-	StartupInfo.cb = sizeof(STARTUPINFO);
-	StartupInfo.wShowWindow = SW_SHOW;
-	StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	StartupInfo.hStdOutput = Pipes[ChildWrite];
-	StartupInfo.hStdError = Pipes[ChildWrite];
-	StartupInfo.hStdInput = Pipes[ChildRead];
+	STARTUPINFO startupInfo;
+	ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
+	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.wShowWindow = SW_SHOW;
+	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	startupInfo.hStdOutput = pipes[ChildWrite];
+	startupInfo.hStdError = pipes[ChildWrite];
+	startupInfo.hStdInput = pipes[ChildRead];
 
-	PROCESS_INFORMATION ProcessInfo;
-	ZeroMemory(&ProcessInfo, sizeof(PROCESS_INFORMATION));
+	PROCESS_INFORMATION processInfo;
+	ZeroMemory(&processInfo, sizeof(PROCESS_INFORMATION));
 
-	std::vector<char> ExePathArr(ExePath.size());
-	std::vector<char> CmdArgsArr(CmdArgs.size());
+	std::vector<char> exePathArr(exePath.size());
+	std::vector<char> cmdArgsArr(cmdArgs.size());
 
-	ExePathArr.insert(ExePathArr.begin(), ExePath.begin(), ExePath.end());
-	CmdArgsArr.insert(CmdArgsArr.begin(), CmdArgs.begin(), CmdArgs.end());
+	exePathArr.insert(exePathArr.begin(), exePath.begin(), exePath.end());
+	cmdArgsArr.insert(cmdArgsArr.begin(), cmdArgs.begin(), cmdArgs.end());
 
-	if (CreateProcess(ExePathArr.data(), CmdArgsArr.data(),
+	if (CreateProcess(exePathArr.data(), cmdArgsArr.data(),
 		NULL, NULL, TRUE, 0, NULL,
-		NULL, &StartupInfo, &ProcessInfo))
+		NULL, &startupInfo, &processInfo))
 	{
-		WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
-		CloseHandle(ProcessInfo.hThread);
-		CloseHandle(ProcessInfo.hProcess);
+		WaitForSingleObject(processInfo.hProcess, INFINITE);
+		CloseHandle(processInfo.hThread);
+		CloseHandle(processInfo.hProcess);
 	}
 	else
 	{
 		fail("The process could not be started...");
 	}
 
-	for (uint32 i = 0; i < std::size(Pipes); i++)
+	for (uint32 i = 0; i < std::size(pipes); i++)
 	{
-		CloseHandle(Pipes[i]);
+		CloseHandle(pipes[i]);
 	}
 }
 
-void WindowsPlatform::Memcpy(void* Dst, const void* Src, size_t Size)
+void WindowsPlatform::Memcpy(void* dst, const void* src, size_t size)
 {
-	memcpy(Dst, Src, Size);
+	memcpy(dst, src, size);
 }
 
 #undef LoadImage
-uint8* WindowsPlatform::LoadImage(const std::filesystem::path& Path, int32& Width, int32& Height, int32& NumChannels)
+uint8* WindowsPlatform::LoadImage(const std::filesystem::path& path, int32& width, int32& height, int32& numChannels)
 {
-	uint8* Image = stbi_load(Path.string().c_str(), &Width, &Height, &NumChannels, STBI_rgb_alpha);
-	return Image;
+	uint8* image = stbi_load(path.string().c_str(), &width, &height, &numChannels, STBI_rgb_alpha);
+	return image;
 }
 
-void WindowsPlatform::FreeImage(uint8* Pixels)
+void WindowsPlatform::FreeImage(uint8* pixels)
 {
-	stbi_image_free(Pixels);
+	stbi_image_free(pixels);
 }
 
-static const std::string ConfigPath = "../Config/";
+static const std::string configPath = "../Config/";
 
-bool WindowsPlatform::GetBool(const std::string& Filename, const std::string& Section, const std::string& Key, bool Default)
+bool WindowsPlatform::GetBool(const std::string& filename, const std::string& section, const std::string& key, bool defaultVal)
 {
-	const std::string DefaultString = Default ? "true" : "false";
+	const std::string defaultString = defaultVal ? "true" : "false";
 	
-	std::string ReturnedString = GetString(Filename, Section, Key, DefaultString);
+	std::string returnedString = GetString(filename, section, key, defaultString);
 
-	std::transform(ReturnedString.begin(), ReturnedString.end(), ReturnedString.begin(), [] (char& c) { return std::tolower(c); });
+	std::transform(returnedString.begin(), returnedString.end(), returnedString.begin(), [] (char& c) { return std::tolower(c); });
 
-	return ReturnedString == "true" ? true : false;
+	return returnedString == "true" ? true : false;
 }
 
-int32 WindowsPlatform::GetInt(const std::string& Filename, const std::string& Section, const std::string& Key, int32 Default)
+int32 WindowsPlatform::GetInt(const std::string& filename, const std::string& section, const std::string& key, int32 defaultVal)
 {
-	const std::string Path = ConfigPath + Filename;
+	const std::string path = configPath + filename;
 
-	return GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, Path.c_str());
+	return GetPrivateProfileIntA(section.c_str(), key.c_str(), defaultVal, path.c_str());
 }
 
-float WindowsPlatform::GetFloat(const std::string& Filename, const std::string& Section, const std::string& Key, float Default)
+float WindowsPlatform::GetFloat(const std::string& filename, const std::string& section, const std::string& key, float defaultVal)
 {
-	const float Value = static_cast<float>(GetFloat64(Filename, Section, Key, Default));
-	return Value;
+	const float value = static_cast<float>(GetFloat64(filename, section, key, defaultVal));
+	return value;
 }
 
-float64 WindowsPlatform::GetFloat64(const std::string& Filename, const std::string& Section, const std::string& Key, float Default)
+float64 WindowsPlatform::GetFloat64(const std::string& filename, const std::string& section, const std::string& key, float defaultVal)
 {
-	std::string FloatStr = GetString(Filename, Section, Key, std::to_string(Default));
-	return std::atof(FloatStr.c_str());
+	std::string floatStr = GetString(filename, section, key, std::to_string(defaultVal));
+	return std::atof(floatStr.c_str());
 }
 
-std::string WindowsPlatform::GetString(const std::string& Filename, const std::string& Section, const std::string& Key, const std::string& Default)
+std::string WindowsPlatform::GetString(const std::string& filename, const std::string& section, const std::string& key, const std::string& defaultVal)
 {
-	const std::string Path = ConfigPath + Filename;
+	const std::string path = configPath + filename;
 
-	std::array<char, 256> ReturnedString;
+	std::array<char, 256> returnedString;
 
-	GetPrivateProfileStringA(Section.c_str(), Key.c_str(), Default.c_str(), ReturnedString.data(), static_cast<DWORD>(ReturnedString.size()), Path.c_str());
+	GetPrivateProfileStringA(section.c_str(), key.c_str(), defaultVal.c_str(), returnedString.data(), static_cast<DWORD>(returnedString.size()), path.c_str());
 
-	return std::string(ReturnedString.data());
+	return std::string(returnedString.data());
 }
 
-EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const std::string& Text, const std::string& Caption, EMBModality Modality)
+EMBReturn WindowsPlatform::DisplayMessageBox(EMBType type, EMBIcon icon, const std::string& text, const std::string& caption, EMBModality modality)
 {
-	static const std::unordered_map<EMBType, UINT> WindowsMBType =
+	static const std::unordered_map<EMBType, UINT> windowsMBType =
 	{
 		ENTRY(EMBType::ABORTRETRYIGNORE, MB_ABORTRETRYIGNORE)
 		ENTRY(EMBType::CANCELTRYCONTINUE, MB_CANCELTRYCONTINUE)
@@ -269,7 +269,7 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 		ENTRY(EMBType::YESNOCANCEL, MB_YESNOCANCEL)
 	};
 
-	static const std::unordered_map<EMBIcon, UINT> WindowsMBIcon =
+	static const std::unordered_map<EMBIcon, UINT> windowsMBIcon =
 	{
 		ENTRY(EMBIcon::EXCLAMATION, MB_ICONEXCLAMATION)
 		ENTRY(EMBIcon::WARNING, MB_ICONWARNING)
@@ -281,14 +281,14 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 		ENTRY(EMBIcon::HAND, MB_ICONHAND)
 	};
 
-	static const std::unordered_map<EMBModality, UINT> WindowsMBModality =
+	static const std::unordered_map<EMBModality, UINT> windowsMBModality =
 	{
 		ENTRY(EMBModality::APPLMODAL, MB_APPLMODAL)
 		ENTRY(EMBModality::SYSTEMMODAL, MB_SYSTEMMODAL)
 		ENTRY(EMBModality::TASKMODAL, MB_TASKMODAL)
 	};
 
-	static const std::unordered_map<int32, EMBReturn> WindowsMBReturn =
+	static const std::unordered_map<int32, EMBReturn> windowsMBReturn =
 	{
 		ENTRY(IDABORT, EMBReturn::ABORT)
 		ENTRY(IDCANCEL, EMBReturn::CANCEL)
@@ -301,41 +301,41 @@ EMBReturn WindowsPlatform::DisplayMessageBox(EMBType Type, EMBIcon Icon, const s
 		ENTRY(IDYES, EMBReturn::YES)
 	};
 
-	const UINT WindowsMessageBox = WindowsMBType.at(Type) | WindowsMBIcon.at(Icon) | WindowsMBModality.at(Modality);
+	const UINT windowsMessageBox = windowsMBType.at(type) | windowsMBIcon.at(icon) | windowsMBModality.at(modality);
 
-	const int32 MessageBoxID = MessageBoxA(
+	const int32 messageBoxID = MessageBoxA(
 		nullptr,
-		Text.c_str(),
-		Caption.c_str(),
-		WindowsMessageBox
+		text.c_str(),
+		caption.c_str(),
+		windowsMessageBox
 	);
 
-	return WindowsMBReturn.at(MessageBoxID);
+	return windowsMBReturn.at(messageBoxID);
 }
 
 std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 {
-	const HWND Hwnd = (HWND)GetWindow();
+	const HWND hwnd = (HWND)GetWindow();
 
-	OPENFILENAME OFN;
-	std::array<char, 1024> File;
+	OPENFILENAME openFilename;
+	std::array<char, 1024> file;
 
-	ZeroMemory(&OFN, sizeof(OFN));
-	OFN.lStructSize = sizeof(OFN);
-	OFN.hwndOwner = Hwnd;
-	OFN.lpstrFile = File.data();
-	OFN.lpstrFile[0] = '\0';
-	OFN.nMaxFile = static_cast<DWORD>(File.size());
-	OFN.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
-	OFN.nFilterIndex = 1;
-	OFN.lpstrFileTitle = NULL;
-	OFN.nMaxFileTitle = 0;
-	OFN.lpstrInitialDir = NULL;
-	OFN.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+	ZeroMemory(&openFilename, sizeof(openFilename));
+	openFilename.lStructSize = sizeof(openFilename);
+	openFilename.hwndOwner = hwnd;
+	openFilename.lpstrFile = file.data();
+	openFilename.lpstrFile[0] = '\0';
+	openFilename.nMaxFile = static_cast<DWORD>(file.size());
+	openFilename.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
+	openFilename.nFilterIndex = 1;
+	openFilename.lpstrFileTitle = NULL;
+	openFilename.nMaxFileTitle = 0;
+	openFilename.lpstrInitialDir = NULL;
+	openFilename.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-	if (GetOpenFileName(&OFN) == TRUE)
+	if (GetOpenFileName(&openFilename) == TRUE)
 	{
-		return { OFN.lpstrFile };
+		return { openFilename.lpstrFile };
 	}
 	else
 	{

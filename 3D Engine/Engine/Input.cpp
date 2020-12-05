@@ -24,9 +24,9 @@ static std::unordered_map<int32, EKeyCode> GLFWKeyCodes =
 	ENTRY(GLFW_KEY_DELETE, EKeyCode::Delete)
 };
 
-void Input::GLFWKeyboardEvent(GLFWwindow* Window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
+void Input::GLFWKeyboardEvent(GLFWwindow* window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
 {
-	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Input;
+	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Input;
 
 	if (GLFWKeyCodes.contains(Key))
 	{
@@ -44,9 +44,9 @@ void Input::GLFWKeyboardEvent(GLFWwindow* Window, int32 Key, int32 Scancode, int
 	}
 }
 
-void Input::GLFWMouseButtonEvent(GLFWwindow* Window, int32 Button, int32 Action, int32 Mods)
+void Input::GLFWMouseButtonEvent(GLFWwindow* window, int32 Button, int32 Action, int32 Mods)
 {
-	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Input;
+	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Input;
 
 	if (GLFWKeyCodes.contains(Button))
 	{
@@ -66,9 +66,9 @@ void Input::GLFWMouseButtonEvent(GLFWwindow* Window, int32 Button, int32 Action,
 
 Input::Input(Platform& Platform)
 {
-	glfwSetKeyCallback(Platform.Window, GLFWKeyboardEvent);
+	glfwSetKeyCallback(Platform._Window, GLFWKeyboardEvent);
 
-	glfwSetMouseButtonCallback(Platform.Window, GLFWMouseButtonEvent);
+	glfwSetMouseButtonCallback(Platform._Window, GLFWMouseButtonEvent);
 }
 
 bool Input::GetKeyDown(EKeyCode KeyCode) const

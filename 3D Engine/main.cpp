@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 	Screen screen(platform);
 
 	GLFWWindowUserPointer windowUserPointer{ &cursor, &input, &screen };
-	glfwSetWindowUserPointer(platform.Window, &windowUserPointer);
+	glfwSetWindowUserPointer(platform._Window, &windowUserPointer);
 
 	VulkanInstance instance(Platform::GetBool("Engine.ini", "Renderer", "UseValidationLayers", false));
 	VulkanPhysicalDevice physicalDevice(instance);

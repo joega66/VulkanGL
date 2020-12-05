@@ -1,25 +1,25 @@
 #include "Cursor.h"
 #include <GLFW/glfw3.h>
 
-void Cursor::GLFWScrollEvent(GLFWwindow* Window, double XOffset, double YOffset)
+void Cursor::GLFWScrollEvent(GLFWwindow* window, double XOffset, double YOffset)
 {
-	Cursor* Cursor = static_cast<GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Cursor;
+	Cursor* Cursor = static_cast<GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Cursor;
 
 	Cursor->MouseScrollDelta = glm::vec2(XOffset, YOffset);
 }
 
-void Cursor::GLFWMouseEvent(GLFWwindow* Window, double X, double Y)
+void Cursor::GLFWMouseEvent(GLFWwindow* window, double X, double Y)
 {
-	Cursor* Cursor = static_cast<GLFWWindowUserPointer*>(glfwGetWindowUserPointer(Window))->Cursor;
+	Cursor* Cursor = static_cast<GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Cursor;
 
 	Cursor->Position = glm::vec2(X, Y);
 }
 
 Cursor::Cursor(Platform& Platform)
 {
-	glfwSetScrollCallback(Platform.Window, GLFWScrollEvent);
+	glfwSetScrollCallback(Platform._Window, GLFWScrollEvent);
 
-	glfwSetCursorPosCallback(Platform.Window, GLFWMouseEvent);
+	glfwSetCursorPosCallback(Platform._Window, GLFWMouseEvent);
 }
 
 void Cursor::Update(Platform& Platform)
@@ -39,7 +39,7 @@ void Cursor::Update(Platform& Platform)
 		break;
 	}
 
-	glfwSetInputMode(Platform.Window, GLFW_CURSOR, InputMode);
+	glfwSetInputMode(Platform._Window, GLFW_CURSOR, InputMode);
 
 	MouseScrollDelta = {};
 
