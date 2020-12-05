@@ -22,7 +22,7 @@ void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
 
 	CreateSkyboxRP(device);
 
-	gpu::CommandList cmdList = device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandBuffer cmdBuf = device.CreateCommandBuffer(EQueue::Transfer);
 
 	ImageMemoryBarrier barriers[] = { { _SSRHistory }, { _SSGIHistory } };
 
@@ -34,9 +34,9 @@ void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
 		barrier.newLayout = EImageLayout::General;
 	}
 
-	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::TopOfPipe, 0, nullptr, std::size(barriers), barriers);
+	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::TopOfPipe, 0, nullptr, std::size(barriers), barriers);
 
-	device.SubmitCommands(cmdList);
+	device.SubmitCommands(cmdBuf);
 }
 
 void CameraProxy::CreateGBufferRP(gpu::Device& device)

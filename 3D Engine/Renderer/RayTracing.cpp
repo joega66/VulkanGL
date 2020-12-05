@@ -21,7 +21,7 @@ public:
 
 REGISTER_SHADER(RayTracingCS, "../Shaders/RayTracingCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
+void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf)
 {
 	ImageMemoryBarrier imageBarrier
 	{
@@ -32,7 +32,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 		EImageLayout::General
 	};
 
-	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 
 	const float theta = glm::radians(camera.GetFieldOfView());
 	const float h = glm::tan(theta / 2.0f);
@@ -68,24 +68,24 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
-	cmdList.BindPipeline(pipeline);
+	cmdBuf.BindPipeline(pipeline);
 
 	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
 	const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
 
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
+	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
-	cmdList.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
+	cmdBuf.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
 
 	const uint32 groupCountX = DivideAndRoundUp(camera.GetWidth(), 8u);
 	const uint32 groupCountY = DivideAndRoundUp(camera.GetHeight(), 8u);
 
-	cmdList.Dispatch(groupCountX, groupCountY, 1);
+	cmdBuf.Dispatch(groupCountX, groupCountY, 1);
 
 	imageBarrier.srcAccessMask = EAccess::ShaderWrite;
 	imageBarrier.dstAccessMask = EAccess::ShaderRead;
 	imageBarrier.oldLayout = EImageLayout::General;
 	imageBarrier.newLayout = EImageLayout::General;
 
-	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+	cmdBuf.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 }

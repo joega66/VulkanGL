@@ -16,15 +16,15 @@ namespace gpu
 
 		virtual void EndFrame() = 0;
 
-		virtual void SubmitCommands(gpu::CommandList& cmdList) = 0;
+		virtual void SubmitCommands(gpu::CommandBuffer& cmdBuf) = 0;
 
 		virtual void SubmitCommands(
-			gpu::CommandList& cmdList,
+			gpu::CommandBuffer& cmdBuf,
 			const gpu::Semaphore& waitSemaphore,
 			const gpu::Semaphore& signalSemaphore
 		) = 0;
 
-		virtual gpu::CommandList CreateCommandList(EQueue queue) = 0;
+		virtual gpu::CommandBuffer CreateCommandBuffer(EQueue queue) = 0;
 
 		virtual gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) = 0;
 

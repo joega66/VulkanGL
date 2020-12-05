@@ -2,7 +2,7 @@
 #include <GPU/GPU.h>
 #include "VulkanQueue.h"
 #include "VulkanRenderPass.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBuffer.h"
 #include "VulkanBindlessDescriptors.h"
 #include "vk_mem_alloc.h"
 
@@ -18,15 +18,15 @@ public:
 
 	void EndFrame() override;
 
-	void SubmitCommands(gpu::CommandList& cmdList) override;
+	void SubmitCommands(gpu::CommandBuffer& cmdBuf) override;
 
 	void SubmitCommands(
-		gpu::CommandList& cmdList,
+		gpu::CommandBuffer& cmdBuf,
 		const gpu::Semaphore& waitSemaphore,
 		const gpu::Semaphore& signalSemaphore
 	) override;
 
-	gpu::CommandList CreateCommandList(EQueue queue) override;
+	gpu::CommandBuffer CreateCommandBuffer(EQueue queue) override;
 
 	gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) override;
 

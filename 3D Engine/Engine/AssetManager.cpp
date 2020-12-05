@@ -157,7 +157,7 @@ void AssetManager::CreateDebugImages(gpu::Device& Device)
 		0, 0, 0, 0, // Black
 	};
 
-	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandBuffer CmdList = Device.CreateCommandBuffer(EQueue::Transfer);
 
 	auto StagingBuffer = CmdList.CreateStagingBuffer(Colors.size(), Colors.data());
 

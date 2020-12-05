@@ -29,15 +29,15 @@ private:
 	gpu::Semaphore _AcquireNextImageSem;
 	gpu::Semaphore _EndOfFrameSem;
 
-	void RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList);
-	void RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList);
-	void ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList);
-	void ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const struct LightingParams& light, bool isFirstLight);
-	void ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList);
-	void ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList);
-	void RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList);
-	void ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList);
-	void RenderUserInterface(gpu::CommandList& cmdList, const gpu::RenderPass& renderPass);
+	void RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf);
+	void RenderShadowDepths(CameraProxy& camera, gpu::CommandBuffer& cmdBuf);
+	void ComputeLightingPass(CameraProxy& camera, gpu::CommandBuffer& cmdBuf);
+	void ComputeDeferredLight(CameraProxy& camera, gpu::CommandBuffer& cmdBuf, const struct LightingParams& light, bool isFirstLight);
+	void ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf);
+	void ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf);
+	void RenderSkybox(CameraProxy& camera, gpu::CommandBuffer& cmdBuf);
+	void ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandBuffer& cmdBuf);
+	void RenderUserInterface(gpu::CommandBuffer& cmdBuf, const gpu::RenderPass& renderPass);
 
 	void CreateUserInterfacePipeline();
 };

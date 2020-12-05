@@ -1,4 +1,4 @@
-#include "VulkanCommandList.h"
+#include "VulkanCommandBuffer.h"
 #include "VulkanDevice.h"
 #include "VulkanQueue.h"
 #include <GPU/GPUShader.h>
@@ -6,7 +6,7 @@
 
 namespace gpu
 {
-	CommandList::CommandList(VulkanDevice& device, VulkanQueue& queue)
+	CommandBuffer::CommandBuffer(VulkanDevice& device, VulkanQueue& queue)
 		: _Device(device)
 		, _Queue(queue)
 	{
@@ -29,7 +29,7 @@ namespace gpu
 		vulkan(vkBeginCommandBuffer(_CommandBuffer, &commandBufferBeginInfo));
 	}
 
-	void CommandList::BeginRenderPass(const RenderPass& renderPass)
+	void CommandBuffer::BeginRenderPass(const RenderPass& renderPass)
 	{
 		const VkRenderPassBeginInfo renderPassBeginInfo = 
 		{ 
@@ -48,12 +48,12 @@ namespace gpu
 		);
 	}
 
-	void CommandList::EndRenderPass()
+	void CommandBuffer::EndRenderPass()
 	{
 		vkCmdEndRenderPass(_CommandBuffer);
 	}
 
-	void CommandList::BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline)
+	void CommandBuffer::BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline)
 	{
 		vkCmdBindPipeline(
 			_CommandBuffer, 
@@ -62,7 +62,7 @@ namespace gpu
 		);
 	}
 
-	void CommandList::BindDescriptorSets(
+	void CommandBuffer::BindDescriptorSets(
 		const std::shared_ptr<VulkanPipeline>& pipeline, 
 		std::size_t numDescriptorSets, 
 		const VkDescriptorSet* descriptorSets,
@@ -81,7 +81,7 @@ namespace gpu
 		);
 	}
 
-	void CommandList::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
+	void CommandBuffer::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
 	{
 		const auto& pushConstantRange = shader->compilationResult.pushConstantRange;
 
@@ -95,7 +95,7 @@ namespace gpu
 		);
 	}
 
-	void CommandList::BindVertexBuffers(std::size_t numVertexBuffers, const Buffer* vertexBuffers)
+	void CommandBuffer::BindVertexBuffers(std::size_t numVertexBuffers, const Buffer* vertexBuffers)
 	{
 		std::vector<VkDeviceSize> offsets(numVertexBuffers, 0);
 		std::vector<VkBuffer> buffers(numVertexBuffers);
@@ -108,7 +108,7 @@ namespace gpu
 		vkCmdBindVertexBuffers(_CommandBuffer, 0, static_cast<uint32>(buffers.size()), buffers.data(), offsets.data());
 	}
 
-	void CommandList::DrawIndexed(
+	void CommandBuffer::DrawIndexed(
 		const Buffer& indexBuffer,
 		uint32 indexCount,
 		uint32 instanceCount,
@@ -121,12 +121,12 @@ namespace gpu
 		vkCmdDrawIndexed(_CommandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
-	void CommandList::Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance)
+	void CommandBuffer::Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance)
 	{
 		vkCmdDraw(_CommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 	}
 
-	void CommandList::DrawIndirect(const Buffer& buffer, uint32 offset, uint32 drawCount)
+	void CommandBuffer::DrawIndirect(const Buffer& buffer, uint32 offset, uint32 drawCount)
 	{
 		vkCmdDrawIndirect(
 			_CommandBuffer,
@@ -137,12 +137,12 @@ namespace gpu
 		);
 	}
 
-	void CommandList::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)
+	void CommandBuffer::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)
 	{
 		vkCmdDispatch(_CommandBuffer, groupCountX, groupCountY, groupCountZ);
 	}
 
-	void CommandList::ClearColorImage(const Image& image, EImageLayout imageLayout, const ClearColorValue& color)
+	void CommandBuffer::ClearColorImage(const Image& image, EImageLayout imageLayout, const ClearColorValue& color)
 	{
 		const VkImageSubresourceRange range = 
 		{
@@ -156,7 +156,7 @@ namespace gpu
 		vkCmdClearColorImage(_CommandBuffer, image, Image::GetLayout(imageLayout), reinterpret_cast<const VkClearColorValue*>(&color), 1, &range);
 	}
 
-	void CommandList::ClearDepthStencilImage(const Image& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue)
+	void CommandBuffer::ClearDepthStencilImage(const Image& image, EImageLayout imageLayout, const ClearDepthStencilValue& depthStencilValue)
 	{
 		const VkImageSubresourceRange range = 
 		{
@@ -170,7 +170,7 @@ namespace gpu
 		vkCmdClearDepthStencilImage(_CommandBuffer, image, Image::GetLayout(imageLayout), reinterpret_cast<const VkClearDepthStencilValue*>(&depthStencilValue), 1, &range);
 	}
 
-	void CommandList::PipelineBarrier(
+	void CommandBuffer::PipelineBarrier(
 		EPipelineStage srcStageMask,
 		EPipelineStage dstStageMask,
 		std::size_t numBufferBarriers,
@@ -237,7 +237,7 @@ namespace gpu
 		);
 	}
 
-	void CommandList::CopyBufferToImage(
+	void CommandBuffer::CopyBufferToImage(
 		const Buffer& srcBuffer,
 		uint32 bufferOffset,
 		const Image& dstImage,
@@ -311,7 +311,7 @@ namespace gpu
 		);
 	}
 
-	void CommandList::BlitImage(
+	void CommandBuffer::BlitImage(
 		const Image& srcImage,
 		EImageLayout srcImageLayout,
 		const Image& dstImage,
@@ -350,7 +350,7 @@ namespace gpu
 		);
 	}
 
-	void CommandList::SetViewport(const Viewport& viewport)
+	void CommandBuffer::SetViewport(const Viewport& viewport)
 	{
 		const VkViewport setViewport =
 		{
@@ -365,19 +365,19 @@ namespace gpu
 		vkCmdSetViewport(_CommandBuffer, 0, 1, &setViewport);
 	}
 
-	void CommandList::SetScissor(const Scissor& scissor)
+	void CommandBuffer::SetScissor(const Scissor& scissor)
 	{
 		static_assert(sizeof(Scissor) == sizeof(VkRect2D));
 		vkCmdSetScissor(_CommandBuffer, 0, 1, reinterpret_cast<const VkRect2D*>(&scissor));
 	}
 
-	void CommandList::SetViewportAndScissor(const Viewport& viewport)
+	void CommandBuffer::SetViewportAndScissor(const Viewport& viewport)
 	{
 		SetViewport(viewport);
 		SetScissor({ .offset = { 0, 0 }, .extent = { viewport.width, viewport.height } });
 	}
 
-	void CommandList::CopyBuffer(
+	void CommandBuffer::CopyBuffer(
 		const Buffer& srcBuffer,
 		const Buffer& dstBuffer,
 		uint64 srcOffset,
@@ -394,7 +394,7 @@ namespace gpu
 		vkCmdCopyBuffer(_CommandBuffer, srcBuffer, dstBuffer, 1, &region);
 	}
 
-	void CommandList::CopyImage(
+	void CommandBuffer::CopyImage(
 		const Image& srcImage,
 		EImageLayout srcImageLayout,
 		const Image& dstImage,
@@ -428,7 +428,7 @@ namespace gpu
 		);
 	}
 
-	std::shared_ptr<gpu::Buffer> CommandList::CreateStagingBuffer(uint64 size, const void* data)
+	std::shared_ptr<gpu::Buffer> CommandBuffer::CreateStagingBuffer(uint64 size, const void* data)
 	{
 		auto stagingBuffer = std::make_shared<gpu::Buffer>(_Device.CreateBuffer(EBufferUsage::None, EMemoryUsage::CPU_ONLY, size, data));
 		_Queue.AddInFlightStagingBuffer(stagingBuffer);

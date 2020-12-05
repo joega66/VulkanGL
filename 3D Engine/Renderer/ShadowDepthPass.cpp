@@ -34,15 +34,15 @@ public:
 
 REGISTER_SHADER(ShadowDepthFS, "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment);
 
-void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cmdList)
+void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
 {
 	for (auto entity : _ECS.GetEntities<ShadowProxy>())
 	{
 		ShadowProxy& shadowProxy = _ECS.GetComponent<ShadowProxy>(entity);
 
-		cmdList.BeginRenderPass(shadowProxy.GetRenderPass());
+		cmdBuf.BeginRenderPass(shadowProxy.GetRenderPass());
 
-		cmdList.SetViewportAndScissor({ .width = shadowProxy.GetShadowMap().GetWidth(), .height = shadowProxy.GetShadowMap().GetHeight() });
+		cmdBuf.SetViewportAndScissor({ .width = shadowProxy.GetShadowMap().GetWidth(), .height = shadowProxy.GetShadowMap().GetHeight() });
 
 		for (auto entity : _ECS.GetEntities<SurfaceGroup>())
 		{
@@ -50,7 +50,7 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 			const VkDescriptorSet descriptorSets[] = { ShadowDescriptors::_DescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
 			const uint32 dynamicOffsets[] = { shadowProxy.GetDynamicOffset() };
 
-			surfaceGroup.Draw<false>(_Device, cmdList, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
+			surfaceGroup.Draw<false>(_Device, cmdBuf, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
 			{
 				PipelineStateDesc psoDesc = {};
 				psoDesc.renderPass = shadowProxy.GetRenderPass();
@@ -63,6 +63,6 @@ void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandList& cm
 			});
 		}
 
-		cmdList.EndRenderPass();
+		cmdBuf.EndRenderPass();
 	}
 }

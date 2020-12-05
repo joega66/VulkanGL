@@ -14,16 +14,16 @@ namespace gpu
 	class Image;
 	class RenderPass;
 
-	class CommandList
+	class CommandBuffer
 	{
-		CommandList(const CommandList&) = delete;
-		CommandList& operator=(const CommandList&) = delete;
+		CommandBuffer(const CommandBuffer&) = delete;
+		CommandBuffer& operator=(const CommandBuffer&) = delete;
 	public:
 		VulkanQueue& _Queue;
 
 		VkCommandBuffer _CommandBuffer;
 
-		CommandList(VulkanDevice& device, VulkanQueue& queue);
+		CommandBuffer(VulkanDevice& device, VulkanQueue& queue);
 
 		void BeginRenderPass(const RenderPass& renderPass);
 

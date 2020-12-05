@@ -47,45 +47,45 @@ void SceneRenderer::Render()
 
 	const RenderSettings& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
-	gpu::CommandList cmdList = _Device.CreateCommandList(EQueue::Graphics);
+	gpu::CommandBuffer cmdBuf = _Device.CreateCommandBuffer(EQueue::Graphics);
 
 	auto& view = _ECS.GetComponent<Camera>(_ECS.GetEntities<Camera>().front());
 	auto& camera = _ECS.GetComponent<CameraProxy>(_ECS.GetEntities<CameraProxy>().front());
 	
 	if (settings.bRayTracing)
 	{
-		ComputeRayTracing(view, camera, cmdList);
+		ComputeRayTracing(view, camera, cmdBuf);
 	}
 	else
 	{
-		RenderGBufferPass(view, camera, cmdList);
+		RenderGBufferPass(view, camera, cmdBuf);
 
-		RenderShadowDepths(camera, cmdList);
+		RenderShadowDepths(camera, cmdBuf);
 
-		ComputeLightingPass(camera, cmdList);
+		ComputeLightingPass(camera, cmdBuf);
 
-		RenderSkybox(camera, cmdList);
+		RenderSkybox(camera, cmdBuf);
 
-		ComputeSSGI(view, camera, cmdList);
+		ComputeSSGI(view, camera, cmdBuf);
 	}
 
 	const gpu::Image& displayImage = _Compositor.GetImages()[imageIndex];
 	ImageMemoryBarrier barrier{ displayImage, EAccess::MemoryRead, EAccess::ShaderWrite, EImageLayout::Undefined, EImageLayout::General };
 
-	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &barrier);
+	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &barrier);
 
-	ComputePostProcessing(displayImage, camera, cmdList);
+	ComputePostProcessing(displayImage, camera, cmdBuf);
 
 	barrier.srcAccessMask = EAccess::ShaderWrite;
 	barrier.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;
 	barrier.oldLayout = EImageLayout::General;
 	barrier.newLayout = EImageLayout::ColorAttachmentOptimal;
+	
+	cmdBuf.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
 
-	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
+	RenderUserInterface(cmdBuf, _UserInterfaceRP[imageIndex]);
 
-	RenderUserInterface(cmdList, _UserInterfaceRP[imageIndex]);
-
-	_Device.SubmitCommands(cmdList, _AcquireNextImageSem, _EndOfFrameSem);
+	_Device.SubmitCommands(cmdBuf, _AcquireNextImageSem, _EndOfFrameSem);
 
 	_Compositor.QueuePresent(_Device, imageIndex, _EndOfFrameSem);
 

@@ -17,7 +17,7 @@ public:
 
 REGISTER_SHADER(PostProcessingCS, "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList)
+void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
 {
 	auto& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
@@ -28,9 +28,9 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
-	cmdList.BindPipeline(pipeline);
+	cmdBuf.BindPipeline(pipeline);
 
-	cmdList.BindDescriptorSets(pipeline, 1, &_Device.GetImages(), 0, nullptr);
+	cmdBuf.BindDescriptorSets(pipeline, 1, &_Device.GetImages(), 0, nullptr);
 
 	PostProcessingParams postProcessingParams;
 	postProcessingParams._ExposureAdjustment = settings.ExposureAdjustment;
@@ -38,7 +38,7 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 	postProcessingParams._DisplayColor = displayImage.GetImageID();
 	postProcessingParams._HDRColor = camera._SceneColor.GetImageID();
 
-	cmdList.PushConstants(pipeline, shader, &postProcessingParams);
+	cmdBuf.PushConstants(pipeline, shader, &postProcessingParams);
 
 	const glm::ivec3 groupCount(
 		DivideAndRoundUp(camera._SceneColor.GetWidth(), 8u),
@@ -46,5 +46,5 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 		1
 	);
 
-	cmdList.Dispatch(groupCount.x, groupCount.y, groupCount.z);
+	cmdBuf.Dispatch(groupCount.x, groupCount.y, groupCount.z);
 }

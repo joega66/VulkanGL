@@ -26,7 +26,7 @@ public:
 
 REGISTER_SHADER(LightingPassCS, "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& cmdList)
+void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
 {
 	const ImageMemoryBarrier imageBarrier
 	{
@@ -37,7 +37,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		EImageLayout::General
 	};
 
-	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
+	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &imageBarrier);
 
 	bool isFirstLight = true;
 
@@ -53,13 +53,13 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandList& c
 		light._LightViewProj = shadow.GetLightViewProjMatrix();
 		light._ShadowMap = shadow.GetShadowMap().GetTextureID(_Device.CreateSampler({}));
 
-		ComputeDeferredLight(camera, cmdList, light, isFirstLight);
+		ComputeDeferredLight(camera, cmdBuf, light, isFirstLight);
 
 		isFirstLight = false;
 	}
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& cmdList, const LightingParams& light, bool isFirstLight)
+void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandBuffer& cmdBuf, const LightingParams& light, bool isFirstLight)
 {
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<LightingPassCS>();
 
@@ -70,19 +70,19 @@ void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandList& 
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
-	cmdList.BindPipeline(pipeline);
+	cmdBuf.BindPipeline(pipeline);
 
 	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
 	const uint32 dynamicOffsets[] = { camera.GetDynamicOffset() };
 
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
+	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
-	cmdList.PushConstants(pipeline, shader, &light);
+	cmdBuf.PushConstants(pipeline, shader, &light);
 
 	const uint32 groupCountX = DivideAndRoundUp(camera._DirectLighting.GetWidth(), 8u);
 	const uint32 groupCountY = DivideAndRoundUp(camera._DirectLighting.GetHeight(), 8u);
 
-	cmdList.Dispatch(groupCountX, groupCountY, 1);
+	cmdBuf.Dispatch(groupCountX, groupCountY, 1);
 }
 
 BEGIN_PUSH_CONSTANTS(SSGIParams)
@@ -98,7 +98,7 @@ public:
 
 REGISTER_SHADER(SSGI, "../Shaders/SSGI.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
+void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf)
 {
 	const ImageMemoryBarrier startBarrier
 	{
@@ -109,7 +109,7 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 		EImageLayout::General
 	};
 
-	cmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &startBarrier);
+	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &startBarrier);
 
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<SSGI>();
 
@@ -118,12 +118,12 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
-	cmdList.BindPipeline(pipeline);
+	cmdBuf.BindPipeline(pipeline);
 
 	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
 	const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
 
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
+	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
 	static uint32 frameNumber = 0;
 
@@ -139,12 +139,12 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 	ssgiParams._Skybox = skybox.GetTextureID(skyboxSampler);
 	ssgiParams._FrameNumber = frameNumber++;
 
-	cmdList.PushConstants(pipeline, shader, &ssgiParams);
+	cmdBuf.PushConstants(pipeline, shader, &ssgiParams);
 
 	const uint32 groupCountX = DivideAndRoundUp(cameraProxy._SceneColor.GetWidth(), 8u);
 	const uint32 groupCountY = DivideAndRoundUp(cameraProxy._SceneColor.GetHeight(), 8u);
 
-	cmdList.Dispatch(groupCountX, groupCountY, 1);
+	cmdBuf.Dispatch(groupCountX, groupCountY, 1);
 
 	const ImageMemoryBarrier endBarrier
 	{
@@ -155,5 +155,5 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 		EImageLayout::General
 	};
 
-	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &endBarrier);
+	cmdBuf.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ComputeShader, 0, nullptr, 1, &endBarrier);
 }

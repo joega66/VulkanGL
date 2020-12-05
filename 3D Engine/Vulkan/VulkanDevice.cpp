@@ -14,29 +14,29 @@ void VulkanDevice::EndFrame()
 	_BindlessImages->EndFrame();
 }
 
-void VulkanDevice::SubmitCommands(gpu::CommandList& cmdList)
+void VulkanDevice::SubmitCommands(gpu::CommandBuffer& cmdBuf)
 {
-	SubmitCommands(cmdList, gpu::Semaphore(), gpu::Semaphore());
+	SubmitCommands(cmdBuf, gpu::Semaphore(), gpu::Semaphore());
 }
 
 void VulkanDevice::SubmitCommands(
-	gpu::CommandList& cmdList, 
+	gpu::CommandBuffer& cmdBuf, 
 	const gpu::Semaphore& waitSemaphore, 
 	const gpu::Semaphore& signalSemaphore)
 {
-	if (cmdList._Queue.GetQueue() == _GraphicsQueue.GetQueue())
+	if (cmdBuf._Queue.GetQueue() == _GraphicsQueue.GetQueue())
 	{
 		_TransferQueue.WaitSemaphores(_Device);
 	}
 
-	cmdList._Queue.Submit(cmdList, waitSemaphore, signalSemaphore);
+	cmdBuf._Queue.Submit(cmdBuf, waitSemaphore, signalSemaphore);
 }
 
-gpu::CommandList VulkanDevice::CreateCommandList(EQueue queueType)
+gpu::CommandBuffer VulkanDevice::CreateCommandBuffer(EQueue queueType)
 {
 	VulkanQueue& queue = queueType == EQueue::Transfer ? _TransferQueue : _GraphicsQueue;
 
-	return gpu::CommandList(*this, queue);
+	return gpu::CommandBuffer(*this, queue);
 }
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)

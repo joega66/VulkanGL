@@ -18,7 +18,7 @@ struct UserInterfaceRenderData : public Component
 
 	UserInterfaceRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
 
-	void Render(gpu::Device& device, gpu::CommandList& cmdList);
+	void Render(gpu::Device& device, gpu::CommandBuffer& cmdBuf);
 
 	void Update(gpu::Device& device);
 };

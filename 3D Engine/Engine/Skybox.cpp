@@ -23,7 +23,7 @@ Skybox::Skybox(gpu::Device& Device, const std::array<gpu::Image*, 6>& Images, EF
 {
 	Image = Device.CreateImage(Images.front()->GetWidth(), Images.front()->GetHeight(), 1, Format, EImageUsage::Sampled | EImageUsage::Cubemap | EImageUsage::TransferDst);
 
-	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandBuffer CmdList = Device.CreateCommandBuffer(EQueue::Transfer);
 
 	std::vector<ImageMemoryBarrier> SrcImageBarriers;
 	SrcImageBarriers.reserve(Images.size());

@@ -1,6 +1,6 @@
 #include "VulkanQueue.h"
 #include "VulkanPhysicalDevice.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBuffer.h"
 #include "VulkanSemaphore.h"
 
 VulkanQueue::VulkanQueue(VkDevice device, int32 queueFamilyIndex)
@@ -37,11 +37,11 @@ VulkanQueue::VulkanQueue(VkDevice device, int32 queueFamilyIndex)
 }
 
 void VulkanQueue::Submit(
-	const gpu::CommandList& cmdList,
+	const gpu::CommandBuffer& cmdBuf,
 	const gpu::Semaphore& waitSemaphore,
 	const gpu::Semaphore& signalSemaphore)
 {
-	vkEndCommandBuffer(cmdList._CommandBuffer);
+	vkEndCommandBuffer(cmdBuf._CommandBuffer);
 
 	const auto waitSemaphoreValues = waitSemaphore.Get() == VK_NULL_HANDLE ? 
 		std::vector{ _TimelineSemaphoreValue } : std::vector{ _TimelineSemaphoreValue, 0llu };
@@ -74,14 +74,14 @@ void VulkanQueue::Submit(
 		.pWaitSemaphores = waitSemaphores.data(),
 		.pWaitDstStageMask = waitDstStage.data(),
 		.commandBufferCount = 1,
-		.pCommandBuffers = &cmdList._CommandBuffer,
+		.pCommandBuffers = &cmdBuf._CommandBuffer,
 		.signalSemaphoreCount = static_cast<uint32>(signalSemaphores.size()),
 		.pSignalSemaphores = signalSemaphores.data(),
 	};
 
 	vkQueueSubmit(_Queue, 1, &submitInfo, VK_NULL_HANDLE);
 
-	_InFlightCmdBufs.push_back(cmdList._CommandBuffer);
+	_InFlightCmdBufs.push_back(cmdBuf._CommandBuffer);
 }
 
 void VulkanQueue::WaitSemaphores(VkDevice device)

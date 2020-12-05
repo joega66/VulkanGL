@@ -96,7 +96,7 @@ void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, 
 	gpu::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, UvView.byteLength);
 	gpu::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, NormalView.byteLength);
 
-	gpu::CommandList CmdList = Device.CreateCommandList(EQueue::Transfer);
+	gpu::CommandBuffer CmdList = Device.CreateCommandBuffer(EQueue::Transfer);
 
 	uint64 SrcOffset = 0;
 

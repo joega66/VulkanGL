@@ -5,7 +5,7 @@
 
 namespace gpu
 { 
-	class CommandList;
+	class CommandBuffer;
 	class Buffer;
 	class Semaphore;
 }
@@ -18,7 +18,7 @@ public:
 	VulkanQueue(VkDevice device, int32 queueFamilyIndex);
 
 	void Submit(
-		const gpu::CommandList& cmdList,
+		const gpu::CommandBuffer& cmdBuf,
 		const gpu::Semaphore& waitSemaphore,
 		const gpu::Semaphore& signalSemaphore);
 	

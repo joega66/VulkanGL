@@ -28,11 +28,11 @@ public:
 
 REGISTER_SHADER(SkyboxFS, "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment);
 
-void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
+void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
 {
-	cmdList.BeginRenderPass(camera._SkyboxRP);
+	cmdBuf.BeginRenderPass(camera._SkyboxRP);
 
-	cmdList.SetViewportAndScissor({ .width = camera._SceneDepth.GetWidth(), .height = camera._SceneDepth.GetHeight() });
+	cmdBuf.SetViewportAndScissor({ .width = camera._SceneDepth.GetWidth(), .height = camera._SceneDepth.GetHeight() });
 
 	const SkyboxVS* vertShader = _ShaderLibrary.FindShader<SkyboxVS>();
 	const SkyboxFS* fragShader = _ShaderLibrary.FindShader<SkyboxFS>();
@@ -46,12 +46,12 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(psoDesc);
 
-	cmdList.BindPipeline(pipeline);
+	cmdBuf.BindPipeline(pipeline);
 
 	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
 	const uint32 dynamicOffsets[] = { camera.GetDynamicOffset() };
 
-	cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
+	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
 	for (auto& entity : _ECS.GetEntities<SkyboxComponent>())
 	{
@@ -61,16 +61,16 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 		SkyboxParams skyboxParams;
 		skyboxParams._Skybox = skybox.GetTextureID(skyboxSampler);
 
-		cmdList.PushConstants(pipeline, fragShader, &skyboxParams);
+		cmdBuf.PushConstants(pipeline, fragShader, &skyboxParams);
 
 		const StaticMesh* cube = _Assets.GetStaticMesh("Cube");
 
 		for (const auto& submesh : cube->Submeshes)
 		{
-			cmdList.BindVertexBuffers(1, &submesh.GetPositionBuffer());
-			cmdList.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());
+			cmdBuf.BindVertexBuffers(1, &submesh.GetPositionBuffer());
+			cmdBuf.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());
 		}
 	}
 
-	cmdList.EndRenderPass();
+	cmdBuf.EndRenderPass();
 }

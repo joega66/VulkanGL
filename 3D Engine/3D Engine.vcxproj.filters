@@ -89,9 +89,6 @@
     <ClInclude Include="Engine\Timers.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanCommandList.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Screen.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -278,6 +275,9 @@
     <ClInclude Include="Vulkan\VulkanSemaphore.h">
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\VulkanCommandBuffer.h">
+      <Filter>Source\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -303,9 +303,6 @@
     </ClCompile>
     <ClCompile Include="Engine\Timers.cpp">
       <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Vulkan\VulkanCommandList.cpp">
-      <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp">
       <Filter>Source\Vulkan</Filter>
@@ -459,6 +456,9 @@
     </ClCompile>
     <ClCompile Include="Renderer\UserInterfaceRender.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanCommandBuffer.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

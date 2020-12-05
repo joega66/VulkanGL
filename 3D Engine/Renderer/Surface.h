@@ -44,7 +44,7 @@ public:
 	template<bool doFrustumCulling>
 	void Draw(
 		gpu::Device& device, 
-		gpu::CommandList& cmdList,
+		gpu::CommandBuffer& cmdBuf,
 		std::size_t numDescriptorSets,
 		const VkDescriptorSet* descriptorSets,
 		std::size_t numDynamicOffsets,
@@ -53,7 +53,7 @@ public:
 		const FrustumPlanes* viewFrustumPlanes = nullptr)
 	{
 		// @todo Everything in a SurfaceGroup has the same pipeline layout. */
-		//cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
+		//cmdBuf.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
 
 		for (const auto& surface : _Surfaces)
 		{
@@ -70,19 +70,19 @@ public:
 
 			gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
 			
-			cmdList.BindPipeline(pipeline);
+			cmdBuf.BindPipeline(pipeline);
 
-			cmdList.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
+			cmdBuf.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
 
-			cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &surface.GetSurfaceID());
+			cmdBuf.PushConstants(pipeline, psoDesc.shaderStages.vertex, &surface.GetSurfaceID());
 
-			cmdList.PushConstants(pipeline, psoDesc.shaderStages.fragment, &surface.GetMaterial()->GetPushConstants());
+			cmdBuf.PushConstants(pipeline, psoDesc.shaderStages.fragment, &surface.GetMaterial()->GetPushConstants());
 
 			for (const auto& submesh : surface.GetSubmeshes())
 			{
-				cmdList.BindVertexBuffers(static_cast<uint32>(submesh.GetVertexBuffers().size()), submesh.GetVertexBuffers().data());
+				cmdBuf.BindVertexBuffers(static_cast<uint32>(submesh.GetVertexBuffers().size()), submesh.GetVertexBuffers().data());
 
-				cmdList.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());
+				cmdBuf.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());
 			}
 		}
 	}

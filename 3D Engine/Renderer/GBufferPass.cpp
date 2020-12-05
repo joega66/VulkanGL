@@ -34,12 +34,12 @@ public:
 
 REGISTER_SHADER(GBufferPassFS, "../Shaders/GBufferFS.glsl", "main", EShaderStage::Fragment);
 
-void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList)
+void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf)
 {
-	cmdList.BeginRenderPass(cameraProxy._GBufferRP);
+	cmdBuf.BeginRenderPass(cameraProxy._GBufferRP);
 
-	cmdList.SetViewportAndScissor({ .width = cameraProxy._SceneDepth.GetWidth(), .height = cameraProxy._SceneDepth.GetHeight() });
-
+	cmdBuf.SetViewportAndScissor({ .width = cameraProxy._SceneDepth.GetWidth(), .height = cameraProxy._SceneDepth.GetHeight() });
+	
 	const FrustumPlanes viewFrustumPlanes = camera.GetFrustumPlanes();
 
 	for (auto entity : _ECS.GetEntities<SurfaceGroup>())
@@ -48,7 +48,7 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 		const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, surfaceGroup.GetSurfaceSet(), _Device.GetTextures() };
 		const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
 
-		surfaceGroup.Draw<true>(_Device, cmdList, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
+		surfaceGroup.Draw<true>(_Device, cmdBuf, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
 		{
 			PipelineStateDesc psoDesc = {};
 			psoDesc.renderPass = cameraProxy._GBufferRP;
@@ -59,5 +59,5 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraProxy& cameraP
 		}, &viewFrustumPlanes);
 	}
 
-	cmdList.EndRenderPass();
+	cmdBuf.EndRenderPass();
 }
