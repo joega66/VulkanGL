@@ -1,11 +1,7 @@
-#include "CameraProxy.h"
+#include "CameraRender.h"
 #include <Components/Camera.h>
 
-CameraProxy::CameraProxy(gpu::Device& device)
-{	
-}
-
-void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
+void CameraRender::Resize(gpu::Device& device, uint32 width, uint32 height)
 {
 	_DirectLighting = device.CreateImage(width, height, 1, EFormat::R16G16B16A16_SFLOAT, EImageUsage::Attachment | EImageUsage::Storage);
 
@@ -39,7 +35,7 @@ void CameraProxy::Resize(gpu::Device& device, uint32 width, uint32 height)
 	device.SubmitCommands(cmdBuf);
 }
 
-void CameraProxy::CreateGBufferRP(gpu::Device& device)
+void CameraRender::CreateGBufferRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments =
@@ -63,7 +59,7 @@ void CameraProxy::CreateGBufferRP(gpu::Device& device)
 	_GBufferRP = device.CreateRenderPass(rpDesc);
 }
 
-void CameraProxy::CreateSkyboxRP(gpu::Device& device)
+void CameraRender::CreateSkyboxRP(gpu::Device& device)
 {
 	RenderPassDesc rpDesc = {};
 	rpDesc.colorAttachments.push_back(

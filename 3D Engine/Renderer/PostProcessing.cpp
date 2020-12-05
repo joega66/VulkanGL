@@ -17,7 +17,7 @@ public:
 
 REGISTER_SHADER(PostProcessingCS, "../Shaders/PostProcessingCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, CameraRender& camera, gpu::CommandBuffer& cmdBuf)
 {
 	auto& settings = _ECS.GetSingletonComponent<RenderSettings>();
 

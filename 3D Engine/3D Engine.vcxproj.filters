@@ -173,9 +173,6 @@
     <ClInclude Include="Systems\SceneSystem.h">
       <Filter>Source\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\CameraProxy.h">
-      <Filter>Source\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Skybox.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -276,6 +273,9 @@
       <Filter>Source\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\ShadowRender.h">
+      <Filter>Source\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\CameraRender.h">
       <Filter>Source\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
@@ -379,9 +379,6 @@
     <ClCompile Include="Renderer\GBufferPass.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\CameraProxy.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Skybox.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
@@ -455,6 +452,9 @@
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\ShadowRender.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\CameraRender.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

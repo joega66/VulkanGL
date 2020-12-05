@@ -49,7 +49,7 @@ void SceneRenderer::Render()
 	gpu::CommandBuffer cmdBuf = _Device.CreateCommandBuffer(EQueue::Graphics);
 
 	auto& view = _ECS.GetComponent<Camera>(_ECS.GetEntities<Camera>().front());
-	auto& camera = _ECS.GetComponent<CameraProxy>(_ECS.GetEntities<CameraProxy>().front());
+	auto& camera = _ECS.GetComponent<CameraRender>(_ECS.GetEntities<CameraRender>().front());
 	
 	if (settings.bRayTracing)
 	{

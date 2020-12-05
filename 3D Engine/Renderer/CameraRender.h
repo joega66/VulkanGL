@@ -2,13 +2,10 @@
 #include <ECS/Component.h>
 #include <GPU/GPU.h>
 
-class Screen;
-class Camera;
-
-class CameraProxy : public Component
+class CameraRender : public Component
 {
 public:
-	CameraProxy(gpu::Device& device);
+	CameraRender() = default;
 
 	gpu::RenderPass _GBufferRP;
 	gpu::RenderPass _SkyboxRP;

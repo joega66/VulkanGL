@@ -1,5 +1,5 @@
 #include <Renderer/SceneRenderer.h>
-#include <Renderer/CameraProxy.h>
+#include <Renderer/CameraRender.h>
 #include <Systems/EditorControllerSystem.h>
 #include <Systems/SceneSystem.h>
 #include <Systems/SurfaceSystem.h>

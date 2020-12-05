@@ -74,7 +74,7 @@ public:
 
 REGISTER_SHADER(ShadowDepthFS, "../Shaders/ShadowDepthFS.glsl", "main", EShaderStage::Fragment);
 
-void SceneRenderer::RenderShadowDepths(CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::RenderShadowDepths(CameraRender& camera, gpu::CommandBuffer& cmdBuf)
 {
 	for (auto entity : _ECS.GetEntities<ShadowRender>())
 	{

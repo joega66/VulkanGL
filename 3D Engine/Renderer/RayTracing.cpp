@@ -21,11 +21,11 @@ public:
 
 REGISTER_SHADER(RayTracingCS, "../Shaders/RayTracingCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf)
 {
 	ImageMemoryBarrier imageBarrier
 	{
-		cameraProxy._SceneColor,
+		cameraRender._SceneColor,
 		EAccess::None,
 		EAccess::ShaderWrite,
 		EImageLayout::Undefined,
@@ -71,7 +71,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraProxy& cameraP
 	cmdBuf.BindPipeline(pipeline);
 
 	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
-	const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
+	const uint32 dynamicOffsets[] = { cameraRender.GetDynamicOffset() };
 
 	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 

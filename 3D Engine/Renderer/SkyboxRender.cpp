@@ -28,7 +28,7 @@ public:
 
 REGISTER_SHADER(SkyboxFS, "../Shaders/SkyboxFS.glsl", "main", EShaderStage::Fragment);
 
-void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::RenderSkybox(CameraRender& camera, gpu::CommandBuffer& cmdBuf)
 {
 	cmdBuf.BeginRenderPass(camera._SkyboxRP);
 

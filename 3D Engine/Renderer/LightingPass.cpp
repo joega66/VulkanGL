@@ -1,4 +1,4 @@
-#include "CameraProxy.h"
+#include "CameraRender.h"
 #include "SceneRenderer.h"
 #include "ShadowRender.h"
 #include <ECS/EntityManager.h>
@@ -26,7 +26,7 @@ public:
 
 REGISTER_SHADER(LightingPassCS, "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::ComputeLightingPass(CameraRender& camera, gpu::CommandBuffer& cmdBuf)
 {
 	const ImageMemoryBarrier imageBarrier
 	{
@@ -59,7 +59,7 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandBuffer&
 	}
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraProxy& camera, gpu::CommandBuffer& cmdBuf, const LightingParams& light, bool isFirstLight)
+void SceneRenderer::ComputeDeferredLight(CameraRender& camera, gpu::CommandBuffer& cmdBuf, const LightingParams& light, bool isFirstLight)
 {
 	const gpu::Shader* shader = _ShaderLibrary.FindShader<LightingPassCS>();
 
@@ -98,11 +98,11 @@ public:
 
 REGISTER_SHADER(SSGI, "../Shaders/SSGI.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::ComputeSSGI(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf)
 {
 	const ImageMemoryBarrier startBarrier
 	{
-		cameraProxy._SceneColor,
+		cameraRender._SceneColor,
 		EAccess::None,
 		EAccess::ShaderWrite,
 		EImageLayout::Undefined,
@@ -121,7 +121,7 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 	cmdBuf.BindPipeline(pipeline);
 
 	const VkDescriptorSet descriptorSets[] = { CameraDescriptors::_DescriptorSet, _Device.GetTextures() };
-	const uint32 dynamicOffsets[] = { cameraProxy.GetDynamicOffset() };
+	const uint32 dynamicOffsets[] = { cameraRender.GetDynamicOffset() };
 
 	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
@@ -141,14 +141,14 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraProxy& cameraProxy, 
 
 	cmdBuf.PushConstants(pipeline, shader, &ssgiParams);
 
-	const uint32 groupCountX = DivideAndRoundUp(cameraProxy._SceneColor.GetWidth(), 8u);
-	const uint32 groupCountY = DivideAndRoundUp(cameraProxy._SceneColor.GetHeight(), 8u);
+	const uint32 groupCountX = DivideAndRoundUp(cameraRender._SceneColor.GetWidth(), 8u);
+	const uint32 groupCountY = DivideAndRoundUp(cameraRender._SceneColor.GetHeight(), 8u);
 
 	cmdBuf.Dispatch(groupCountX, groupCountY, 1);
 
 	const ImageMemoryBarrier endBarrier
 	{
-		cameraProxy._SceneColor,
+		cameraRender._SceneColor,
 		EAccess::ShaderWrite,
 		EAccess::ShaderRead,
 		EImageLayout::General,

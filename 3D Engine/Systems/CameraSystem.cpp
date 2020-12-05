@@ -1,6 +1,6 @@
 #include "CameraSystem.h"
 #include <Engine/Engine.h>
-#include <Renderer/CameraProxy.h>
+#include <Renderer/CameraRender.h>
 
 DECLARE_UNIFORM_BUFFER(CameraUniform)
 
@@ -14,16 +14,16 @@ void CameraSystem::Start(Engine& engine)
 
 	ecs.OnComponentCreated<Camera>([&] (Entity& entity, Camera& camera)
 	{
-		auto& renderCamera = ecs.AddComponent(entity, CameraProxy(device));
-		renderCamera.Resize(device, screen.GetWidth(), screen.GetHeight());
+		auto& cameraRender = ecs.AddComponent(entity, CameraRender());
+		cameraRender.Resize(device, screen.GetWidth(), screen.GetHeight());
 	});
 
 	_ScreenResizeEvent = screen.OnScreenResize([&] (uint32 width, uint32 height)
 	{
-		for (auto entity : ecs.GetEntities<CameraProxy>())
+		for (auto entity : ecs.GetEntities<CameraRender>())
 		{
-			auto& renderCamera = ecs.GetComponent<CameraProxy>(entity);
-			renderCamera.Resize(device, width, height);
+			auto& cameraRender = ecs.GetComponent<CameraRender>(entity);
+			cameraRender.Resize(device, width, height);
 		}
 	});
 }
@@ -44,7 +44,7 @@ void CameraSystem::Update(Engine& engine)
 	for (auto entity : ecs.GetEntities<Camera>())
 	{
 		auto& camera = ecs.GetComponent<Camera>(entity);
-		auto& cameraProxy = ecs.GetComponent<CameraProxy>(entity);
+		auto& cameraRender = ecs.GetComponent<CameraRender>(entity);
 
 		const glm::vec3 clipData(
 			camera.GetFarPlane() * camera.GetNearPlane(),
@@ -71,19 +71,19 @@ void CameraSystem::Update(Engine& engine)
 
 		cameraUniformData[i] = cameraUniform;
 
-		cameraProxy.SetDynamicOffset(i * sizeof(CameraUniform));
+		cameraRender.SetDynamicOffset(i * sizeof(CameraUniform));
 
 		const gpu::Sampler sampler = device.CreateSampler({ EFilter::Nearest });
 
 		CameraDescriptors descriptors;
 		descriptors._CameraUniform = { _CameraUniform };
-		descriptors._SceneDepth = { cameraProxy._SceneDepth, sampler };
-		descriptors._GBuffer0 = { cameraProxy._GBuffer0, sampler };
-		descriptors._GBuffer1 = { cameraProxy._GBuffer1, sampler };
-		descriptors._SceneColor = cameraProxy._SceneColor;
-		descriptors._SSRHistory = cameraProxy._SSRHistory;
-		descriptors._SSGIHistory = cameraProxy._SSGIHistory;
-		descriptors._DirectLighting = cameraProxy._DirectLighting;
+		descriptors._SceneDepth = { cameraRender._SceneDepth, sampler };
+		descriptors._GBuffer0 = { cameraRender._GBuffer0, sampler };
+		descriptors._GBuffer1 = { cameraRender._GBuffer1, sampler };
+		descriptors._SceneColor = cameraRender._SceneColor;
+		descriptors._SSRHistory = cameraRender._SSRHistory;
+		descriptors._SSGIHistory = cameraRender._SSGIHistory;
+		descriptors._DirectLighting = cameraRender._DirectLighting;
 
 		device.UpdateDescriptorSet(descriptors);
 

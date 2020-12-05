@@ -54,7 +54,7 @@
     <ClCompile Include="Renderer\RayTracing.cpp" />
     <ClCompile Include="Renderer\ShadowRender.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
-    <ClCompile Include="Renderer\CameraProxy.cpp" />
+    <ClCompile Include="Renderer\CameraRender.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
     <ClCompile Include="Renderer\UserInterfaceRender.cpp" />
@@ -131,7 +131,7 @@
     <ClInclude Include="Renderer\ShadowRender.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\Surface.h" />
-    <ClInclude Include="Renderer\CameraProxy.h" />
+    <ClInclude Include="Renderer\CameraRender.h" />
     <ClInclude Include="Renderer\SceneRenderer.h" />
     <ClInclude Include="Systems\CameraSystem.h" />
     <ClInclude Include="Systems\EditorControllerSystem.h" />
