@@ -1,7 +1,6 @@
 #include "SceneRenderer.h"
 #include <Engine/Engine.h>
 #include <Components/RenderSettings.h>
-#include <Systems/UserInterface.h>
 #include "ShadowProxy.h"
 
 SceneRenderer::SceneRenderer(Engine& engine)
@@ -34,6 +33,8 @@ SceneRenderer::SceneRenderer(Engine& engine)
 
 			_UserInterfaceRP.push_back(_Device.CreateRenderPass(rpDesc));
 		}
+
+		CreateUserInterfacePipeline();
 	});
 
 	_AcquireNextImageSem = _Device.CreateSemaphore();
@@ -82,7 +83,7 @@ void SceneRenderer::Render()
 
 	cmdList.PipelineBarrier(EPipelineStage::ComputeShader, EPipelineStage::ColorAttachmentOutput, 0, nullptr, 1, &barrier);
 
-	_ECS.GetSingletonComponent<ImGuiRenderData>().Render(_Device, cmdList, _UserInterfaceRP[imageIndex]);
+	RenderUserInterface(cmdList, _UserInterfaceRP[imageIndex]);
 
 	_Device.SubmitCommands(cmdList, _AcquireNextImageSem, _EndOfFrameSem);
 

@@ -8,7 +8,6 @@ void VulkanDevice::EndFrame()
 	{
 		vkDestroyPipeline(_Device, pipeline, nullptr);
 	}
-
 	_PipelinesToDestroy.clear();
 
 	_BindlessTextures->EndFrame();

@@ -10,32 +10,7 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/SkyboxComponent.h>
 #include <Systems/SceneSystem.h>
-#include <Renderer/CameraProxy.h>
 #include <Renderer/ShadowProxy.h>
-
-class UserInterfaceVS : public gpu::Shader
-{
-public:
-	UserInterfaceVS() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
-	{
-	}
-};
-
-REGISTER_SHADER(UserInterfaceVS, "../Shaders/UserInterfaceVS.glsl", "main", EShaderStage::Vertex);
-
-class UserInterfaceFS : public gpu::Shader
-{
-public:
-	UserInterfaceFS() = default;
-
-	static void SetEnvironmentVariables(ShaderCompilerWorker& Worker)
-	{
-	}
-};
-
-REGISTER_SHADER(UserInterfaceFS, "../Shaders/UserInterfaceFS.glsl", "main", EShaderStage::Fragment);
 
 #define SHOW_COMPONENT(type, ecs, entity, callback)					\
 	if (ecs.HasComponent<type>(entity) && ImGui::TreeNode(#type))	\
@@ -63,7 +38,7 @@ void UserInterface::Start(Engine& engine)
 
 	ImGui::StyleColorsDark();
 
-	engine._ECS.AddSingletonComponent<ImGuiRenderData>(engine._Device, engine.ShaderLibrary);
+	engine._ECS.AddSingletonComponent<UserInterfaceRenderData>(engine._Device, engine.ShaderLibrary);
 
 	_ScreenResizeEvent = engine._Screen.OnScreenResize([&] (int32 width, int32 height)
 	{
@@ -80,10 +55,9 @@ void UserInterface::Update(Engine& engine)
 	ShowUI(engine);
 
 	ImGui::ShowDemoWindow();
-
 	ImGui::Render();
 
-	engine._ECS.GetSingletonComponent<ImGuiRenderData>().Update(engine._Device);
+	engine._ECS.GetSingletonComponent<UserInterfaceRenderData>().Update(engine._Device);
 }
 
 void UserInterface::ShowUI(Engine& engine)
@@ -333,7 +307,7 @@ void UserInterface::ShowEntities(Engine& engine)
 	ImGui::End();
 }
 
-ImGuiRenderData::ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary)
+UserInterfaceRenderData::UserInterfaceRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary)
 {
 	ImGuiIO& imgui = ImGui::GetIO();
 
@@ -348,91 +322,9 @@ ImGuiRenderData::ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shader
 	fontTexture = fontImage.GetTextureID(device.CreateSampler({}));
 
 	imgui.Fonts->TexID = &fontTexture;
-
-	psoDesc.depthStencilState.depthTestEnable = false;
-	psoDesc.depthStencilState.depthWriteEnable = false;
-	psoDesc.depthStencilState.depthCompareTest = ECompareOp::Always;
-	psoDesc.shaderStages.vertex = shaderLibrary.FindShader<UserInterfaceVS>();
-	psoDesc.shaderStages.fragment = shaderLibrary.FindShader<UserInterfaceFS>();
-	psoDesc.colorBlendAttachmentStates.resize(1, {});
-	psoDesc.colorBlendAttachmentStates[0].blendEnable = true;
-	psoDesc.colorBlendAttachmentStates[0].srcColorBlendFactor = EBlendFactor::SRC_ALPHA;
-	psoDesc.colorBlendAttachmentStates[0].dstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	psoDesc.colorBlendAttachmentStates[0].colorBlendOp = EBlendOp::ADD;
-	psoDesc.colorBlendAttachmentStates[0].srcAlphaBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-	psoDesc.colorBlendAttachmentStates[0].dstAlphaBlendFactor = EBlendFactor::ZERO;
-	psoDesc.colorBlendAttachmentStates[0].alphaBlendOp = EBlendOp::ADD;
-	psoDesc.vertexAttributes = {
-		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
-		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
-		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
-	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
 }
 
-void ImGuiRenderData::Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass)
-{
-	cmdList.BeginRenderPass(renderPass);
-
-	cmdList.SetViewport({ .width = renderPass.GetRenderArea().extent.width, .height = renderPass.GetRenderArea().extent.height });
-
-	const ImDrawData* drawData = ImGui::GetDrawData();
-
-	if (drawData->CmdListsCount > 0)
-	{
-		psoDesc.renderPass = renderPass;
-
-		gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
-
-		cmdList.BindPipeline(pipeline);
-
-		cmdList.PushConstants(pipeline, psoDesc.shaderStages.vertex, &scaleAndTranslation);
-
-		const VkDescriptorSet descriptorSets[] = { device.GetTextures() };
-
-		cmdList.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, 0, nullptr);
-
-		cmdList.BindVertexBuffers(1, &vertexBuffer);
-
-		const ImVec2 clipOff = drawData->DisplayPos;         // (0,0) unless using multi-viewports
-		const ImVec2 clipScale = drawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
-
-		int32 vertexOffset = 0;
-		int32 indexOffset = 0;
-
-		for (int32 cmdListIndex = 0; cmdListIndex < drawData->CmdListsCount; cmdListIndex++)
-		{
-			const ImDrawList* drawList = drawData->CmdLists[cmdListIndex];
-
-			for (int32 drawCmdIndex = 0; drawCmdIndex < drawList->CmdBuffer.Size; drawCmdIndex++)
-			{
-				const ImDrawCmd* drawCmd = &drawList->CmdBuffer[drawCmdIndex];
-				
-				ImVec4 clipRect;
-				clipRect.x = std::max((drawCmd->ClipRect.x - clipOff.x) * clipScale.x, 0.0f);
-				clipRect.y = std::max((drawCmd->ClipRect.y - clipOff.y) * clipScale.y, 0.0f);
-				clipRect.z = (drawCmd->ClipRect.z - clipOff.x) * clipScale.x;
-				clipRect.w = (drawCmd->ClipRect.w - clipOff.y) * clipScale.y;
-
-				cmdList.SetScissor({
-					.offset = { static_cast<int32_t>(clipRect.x), static_cast<int32_t>(clipRect.y)},
-					.extent = { static_cast<uint32_t>(clipRect.z - clipRect.x), static_cast<uint32_t>(clipRect.w - clipRect.y) }
-				});
-
-				const uint32 pushConstants(*static_cast<uint32*>(drawCmd->TextureId));
-				cmdList.PushConstants(pipeline, psoDesc.shaderStages.fragment, &pushConstants);
-
-				cmdList.DrawIndexed(indexBuffer, drawCmd->ElemCount, 1, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset, 0, EIndexType::UINT16);
-			}
-
-			indexOffset += drawList->IdxBuffer.Size;
-			vertexOffset += drawList->VtxBuffer.Size;
-		}
-	}
-
-	cmdList.EndRenderPass();
-}
-
-void ImGuiRenderData::Update(gpu::Device& device)
+void UserInterfaceRenderData::Update(gpu::Device& device)
 {
 	const ImDrawData* drawData = ImGui::GetDrawData();
 	const uint32 vertexBufferSize = drawData->TotalVtxCount * sizeof(ImDrawVert);

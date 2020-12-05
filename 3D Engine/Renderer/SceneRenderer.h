@@ -37,4 +37,7 @@ private:
 	void ComputeRayTracing(const Camera& camera, CameraProxy& cameraProxy, gpu::CommandList& cmdList);
 	void RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList);
 	void ComputePostProcessing(const gpu::Image& displayImage, CameraProxy& camera, gpu::CommandList& cmdList);
+	void RenderUserInterface(gpu::CommandList& cmdList, const gpu::RenderPass& renderPass);
+
+	void CreateUserInterfacePipeline();
 };

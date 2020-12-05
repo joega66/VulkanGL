@@ -32,8 +32,6 @@ Engine::Engine(
 
 void Engine::Main()
 {
-	SceneRenderer sceneRenderer(*this);
-
 	SystemsManager SystemsManager;
 
 	SurfaceSystem surfaceSystem;
@@ -56,6 +54,8 @@ void Engine::Main()
 
 	SystemsManager.StartRenderSystems(*this);
 	SystemsManager.StartSystems(*this);
+
+	SceneRenderer sceneRenderer(*this);
 
 	while (!_Platform.WindowShouldClose())
 	{

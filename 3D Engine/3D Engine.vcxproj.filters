@@ -457,6 +457,9 @@
     <ClCompile Include="Vulkan\VulkanSemaphore.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\UserInterfaceRender.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenVS.glsl">

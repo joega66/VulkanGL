@@ -4,7 +4,7 @@
 #include <GPU/GPU.h>
 #include <Engine/Screen.h>
 
-struct ImGuiRenderData : public Component
+struct UserInterfaceRenderData : public Component
 {
 	gpu::Image fontImage;
 	gpu::TextureID fontTexture;
@@ -14,11 +14,11 @@ struct ImGuiRenderData : public Component
 	gpu::Buffer vertexBuffer;
 	gpu::Buffer indexBuffer;
 
-	PipelineStateDesc psoDesc = {};
+	gpu::Pipeline pipeline;
 
-	ImGuiRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
+	UserInterfaceRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
 
-	void Render(gpu::Device& device, gpu::CommandList& cmdList, const gpu::RenderPass& renderPass);
+	void Render(gpu::Device& device, gpu::CommandList& cmdList);
 
 	void Update(gpu::Device& device);
 };

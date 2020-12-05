@@ -58,6 +58,7 @@
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
+    <ClCompile Include="Renderer\UserInterfaceRender.cpp" />
     <ClCompile Include="Systems\CameraSystem.cpp" />
     <ClCompile Include="Systems\EditorControllerSystem.cpp" />
     <ClCompile Include="Systems\SceneSystem.cpp" />
