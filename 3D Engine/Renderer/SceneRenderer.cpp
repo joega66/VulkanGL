@@ -1,7 +1,6 @@
 #include "SceneRenderer.h"
 #include <Engine/Engine.h>
 #include <Components/RenderSettings.h>
-#include "ShadowProxy.h"
 
 SceneRenderer::SceneRenderer(Engine& engine)
 	: _Device(engine._Device)

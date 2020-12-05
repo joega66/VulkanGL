@@ -1,6 +1,6 @@
 #include "CameraProxy.h"
 #include "SceneRenderer.h"
-#include "ShadowProxy.h"
+#include "ShadowRender.h"
 #include <ECS/EntityManager.h>
 #include <Components/Light.h>
 #include <Components/Transform.h>
@@ -45,13 +45,13 @@ void SceneRenderer::ComputeLightingPass(CameraProxy& camera, gpu::CommandBuffer&
 	{
 		const auto& directionalLight = _ECS.GetComponent<DirectionalLight>(entity);
 		const auto& transform = _ECS.GetComponent<Transform>(entity);
-		auto& shadow = _ECS.GetComponent<ShadowProxy>(entity);
+		auto& shadowRender = _ECS.GetComponent<ShadowRender>(entity);
 		
 		LightingParams light;
 		light._L = glm::vec4(transform.GetForward(), 0.0f);
 		light._Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
-		light._LightViewProj = shadow.GetLightViewProjMatrix();
-		light._ShadowMap = shadow.GetShadowMap().GetTextureID(_Device.CreateSampler({}));
+		light._LightViewProj = shadowRender.GetLightViewProjMatrix();
+		light._ShadowMap = shadowRender.GetShadowMap().GetTextureID(_Device.CreateSampler({}));
 
 		ComputeDeferredLight(camera, cmdBuf, light, isFirstLight);
 

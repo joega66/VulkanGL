@@ -52,11 +52,10 @@
     <ClCompile Include="Renderer\GBufferPass.cpp" />
     <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\RayTracing.cpp" />
-    <ClCompile Include="Renderer\ShadowProxy.cpp" />
+    <ClCompile Include="Renderer\ShadowRender.cpp" />
     <ClCompile Include="Renderer\LightingPass.cpp" />
     <ClCompile Include="Renderer\CameraProxy.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
-    <ClCompile Include="Renderer\ShadowDepthPass.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
     <ClCompile Include="Renderer\UserInterfaceRender.cpp" />
     <ClCompile Include="Systems\CameraSystem.cpp" />
@@ -129,7 +128,7 @@
     <ClInclude Include="Physics\Physics.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Renderer\FullscreenQuad.h" />
-    <ClInclude Include="Renderer\ShadowProxy.h" />
+    <ClInclude Include="Renderer\ShadowRender.h" />
     <ClInclude Include="Renderer\MaterialShader.h" />
     <ClInclude Include="Renderer\Surface.h" />
     <ClInclude Include="Renderer\CameraProxy.h" />

@@ -2,7 +2,7 @@
 #include <GPU/GPU.h>
 #include <ECS/Component.h>
 
-class ShadowProxy : public Component
+class ShadowRender : public Component
 {
 public:
 	float _Width;
@@ -11,7 +11,7 @@ public:
 
 	float _ZFar;
 
-	ShadowProxy(gpu::Device& device, const struct DirectionalLight& directionalLight);
+	ShadowRender(gpu::Device& device, const struct DirectionalLight& directionalLight);
 
 	void Update(gpu::Device& device, const struct DirectionalLight& directionalLight, const class Transform& transform, uint32 dynamicOffset);
 

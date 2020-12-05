@@ -10,7 +10,7 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/SkyboxComponent.h>
 #include <Systems/SceneSystem.h>
-#include <Renderer/ShadowProxy.h>
+#include <Renderer/ShadowRender.h>
 
 #define SHOW_COMPONENT(type, ecs, entity, callback)					\
 	if (ecs.HasComponent<type>(entity) && ImGui::TreeNode(#type))	\
@@ -265,13 +265,13 @@ void UserInterface::ShowEntities(Engine& engine)
 			light.Intensity = intensity;
 		}
 
-		if (ecs.HasComponent<ShadowProxy>(entitySelected))
+		if (ecs.HasComponent<ShadowRender>(entitySelected))
 		{
 			ImGui::Text("Shadows");
-			auto& shadow = ecs.GetComponent<ShadowProxy>(entitySelected);
-			ImGui::DragFloat("Width", &shadow._Width);
-			ImGui::DragFloat("ZNear", &shadow._ZNear);
-			ImGui::DragFloat("ZFar", &shadow._ZFar);
+			auto& shadowRender = ecs.GetComponent<ShadowRender>(entitySelected);
+			ImGui::DragFloat("Width", &shadowRender._Width);
+			ImGui::DragFloat("ZNear", &shadowRender._ZNear);
+			ImGui::DragFloat("ZFar", &shadowRender._ZFar);
 		}
 	});
 

@@ -1,7 +1,7 @@
 #include "ShadowSystem.h"
 #include <Components/Transform.h>
 #include <Components/Light.h>
-#include <Renderer/ShadowProxy.h>
+#include <Renderer/ShadowRender.h>
 #include <Engine/Engine.h>
 
 DECLARE_UNIFORM_BUFFER(ShadowUniform)
@@ -15,7 +15,7 @@ void ShadowSystem::Start(Engine& engine)
 
 	ecs.OnComponentCreated<DirectionalLight>([&] (Entity& entity, DirectionalLight& directionalLight)
 	{
-		ecs.AddComponent(entity, ShadowProxy(device, directionalLight));
+		ecs.AddComponent(entity, ShadowRender(device, directionalLight));
 	});
 }
 
@@ -24,7 +24,7 @@ void ShadowSystem::Update(Engine& engine)
 	auto& ecs = engine._ECS;
 	auto& device = engine._Device;
 
-	auto entities = ecs.GetEntities<ShadowProxy>();
+	auto entities = ecs.GetEntities<ShadowRender>();
 
 	_ShadowUniform = device.CreateBuffer(EBufferUsage::Uniform, EMemoryUsage::CPU_TO_GPU, entities.size() * sizeof(ShadowUniform));
 
@@ -41,12 +41,12 @@ void ShadowSystem::Update(Engine& engine)
 	{
 		const auto& directionalLight = ecs.GetComponent<DirectionalLight>(entity);
 		const auto& transform = ecs.GetComponent<Transform>(entity);
-		auto& shadowProxy = ecs.GetComponent<ShadowProxy>(entity);
+		auto& shadowRender = ecs.GetComponent<ShadowRender>(entity);
 
-		shadowProxy.Update(device, directionalLight, transform, i * sizeof(ShadowUniform));
+		shadowRender.Update(device, directionalLight, transform, i * sizeof(ShadowUniform));
 
-		shadowUniformData[i].lightViewProj = shadowProxy.GetLightViewProjMatrix();
-		shadowUniformData[i].invLightViewProj = shadowProxy.GetLightViewProjMatrixInv();
+		shadowUniformData[i].lightViewProj = shadowRender.GetLightViewProjMatrix();
+		shadowUniformData[i].invLightViewProj = shadowRender.GetLightViewProjMatrixInv();
 
 		i++;
 	}
