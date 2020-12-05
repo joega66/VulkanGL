@@ -78,16 +78,3 @@ namespace gpu
 		return GetSize(_Format);
 	}
 }
-
-bool SpecializationInfo::SpecializationMapEntry::operator==(const SpecializationMapEntry& other) const
-{
-	return constantID == other.constantID
-		&& offset == other.offset
-		&& size == other.size;
-}
-
-bool SpecializationInfo::operator==(const SpecializationInfo& other) const
-{
-	return _MapEntries == other._MapEntries
-		&& _Data == other._Data;
-}

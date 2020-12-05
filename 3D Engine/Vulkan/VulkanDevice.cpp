@@ -54,18 +54,17 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 	addShader(psoDesc.shaderStages.fragment);
 
 	Crc crc = 0;
-	Platform::crc32_u8(crc, &renderPass, sizeof(renderPass));
-	// @todo Why does the crc break on these structs?
-	//Platform::crc32_u8(crc, &psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState));
-	//Platform::crc32_u8(crc, &psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState));
-	//Platform::crc32_u8(crc, &psoDesc.multisampleState, sizeof(psoDesc.multisampleState));
-	//Platform::crc32_u8(crc, &psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState));
-	Platform::crc32_u8(crc, shaders.data(), shaders.size() * sizeof(shaders[0]));
-	Platform::crc32_u8(crc, psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(psoDesc.specInfo.GetMapEntries()[0]));
+	Platform::crc32_u32(crc, &renderPass, sizeof(renderPass));
+	Platform::crc32_u32(crc, &psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState));
+	Platform::crc32_u32(crc, &psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState));
+	Platform::crc32_u32(crc, &psoDesc.multisampleState, sizeof(psoDesc.multisampleState));
+	Platform::crc32_u32(crc, &psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState));
+	Platform::crc32_u32(crc, shaders.data(), shaders.size() * sizeof(shaders[0]));
+	Platform::crc32_u32(crc, psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(psoDesc.specInfo.GetMapEntries()[0]));
 	Platform::crc32_u8(crc, psoDesc.specInfo.GetData().data(), psoDesc.specInfo.GetData().size() * sizeof(psoDesc.specInfo.GetData()[0]));
-	Platform::crc32_u8(crc, psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(psoDesc.colorBlendAttachmentStates[0]));
-	Platform::crc32_u8(crc, psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(psoDesc.vertexAttributes[0]));
-	Platform::crc32_u8(crc, psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(psoDesc.vertexBindings[0]));
+	Platform::crc32_u32(crc, psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(psoDesc.colorBlendAttachmentStates[0]));
+	Platform::crc32_u32(crc, psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(psoDesc.vertexAttributes[0]));
+	Platform::crc32_u32(crc, psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(psoDesc.vertexBindings[0]));
 
 	if (auto iter = _GraphicsPipelineCache.find(crc); iter == _GraphicsPipelineCache.end())
 	{
@@ -111,8 +110,8 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDes
 	const uint64 computeShader = *reinterpret_cast<uint64*>(computeDesc.computeShader->compilationResult.shaderModule);
 
 	Crc crc = 0;
-	Platform::crc32_u8(crc, &computeShader, sizeof(computeShader));
-	Platform::crc32_u8(crc, computeDesc.specInfo.GetMapEntries().data(), computeDesc.specInfo.GetMapEntries().size() * sizeof(computeDesc.specInfo.GetMapEntries()[0]));
+	Platform::crc32_u32(crc, &computeShader, sizeof(computeShader));
+	Platform::crc32_u32(crc, computeDesc.specInfo.GetMapEntries().data(), computeDesc.specInfo.GetMapEntries().size() * sizeof(computeDesc.specInfo.GetMapEntries()[0]));
 	Platform::crc32_u8(crc, computeDesc.specInfo.GetData().data(), computeDesc.specInfo.GetData().size());
 
 	if (auto iter = _ComputePipelineCache.find(crc); iter == _ComputePipelineCache.end())
@@ -292,7 +291,8 @@ gpu::ImageView VulkanDevice::CreateImageView(
 
 gpu::Sampler VulkanDevice::CreateSampler(const SamplerDesc& samplerDesc)
 {
-	const Crc crc = Platform::crc32_u8(&samplerDesc, sizeof(samplerDesc));
+	Crc crc = 0;
+	Platform::crc32_u32(crc, &samplerDesc, sizeof(samplerDesc));
 
 	if (auto iter = _SamplerCache.find(crc); iter == _SamplerCache.end())
 	{
@@ -421,7 +421,8 @@ void VulkanDevice::CreateDescriptorSetLayout(
 		descriptorUpdateTemplateEntries.push_back(descriptorUpdateTemplateEntry);
 	}
 
-	const Crc crc = Platform::crc32_u8(bindings, numBindings * sizeof(VkDescriptorSetLayoutBinding));
+	Crc crc = 0;
+	Platform::crc32_u32(crc, bindings, numBindings * sizeof(bindings[0]));
 
 	if (auto iter = _DescriptorSetLayoutCache.find(crc); iter == _DescriptorSetLayoutCache.end())
 	{

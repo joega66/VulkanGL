@@ -373,12 +373,9 @@ VkPipelineLayout VulkanDevice::GetOrCreatePipelineLayout(
 	const std::vector<VkDescriptorSetLayout>& layouts,
 	const std::vector<VkPushConstantRange>& pushConstantRanges)
 {
-	const Crc crc0 = Platform::crc32_u8(layouts.data(), layouts.size() * sizeof(layouts.front()));
-	const Crc crc1 = Platform::crc32_u8(pushConstantRanges.data(), pushConstantRanges.size() * sizeof(pushConstantRanges[0]));
-
 	Crc crc = 0;
-	HashCombine(crc, crc0);
-	HashCombine(crc, crc1);
+	Platform::crc32_u32(crc, layouts.data(), layouts.size() * sizeof(layouts[0]));
+	Platform::crc32_u32(crc, pushConstantRanges.data(), pushConstantRanges.size() * sizeof(pushConstantRanges[0]));
 
 	if (auto iter = _PipelineLayoutCache.find(crc); iter == _PipelineLayoutCache.end())
 	{

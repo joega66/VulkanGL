@@ -343,18 +343,21 @@ std::filesystem::path WindowsPlatform::DisplayFileExplorer()
 	}
 }
 
-Crc Platform::crc32_u8(const void* data, std::size_t numBytes)
-{
-	Crc crc = 0;
-	crc32_u8(crc, data, numBytes);
-	return crc;
-}
-
 void Platform::crc32_u8(Crc& crc, const void* data, std::size_t numBytes)
 {
 	const uint8* bytes = static_cast<const uint8*>(data);
 	for (std::size_t i = 0; i < numBytes; ++i)
 	{
 		crc = _mm_crc32_u8(crc, bytes[i]);
+	}
+}
+
+void Platform::crc32_u32(Crc& crc, const void* data, std::size_t numBytes)
+{
+	const std::size_t numDwords = numBytes / sizeof(uint32);
+	const uint32* dwords = static_cast<const uint32*>(data);
+	for (std::size_t i = 0; i < numDwords; ++i)
+	{
+		crc = _mm_crc32_u32(crc, dwords[i]);
 	}
 }

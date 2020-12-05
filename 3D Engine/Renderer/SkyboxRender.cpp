@@ -41,6 +41,7 @@ void SceneRenderer::RenderSkybox(CameraProxy& camera, gpu::CommandList& cmdList)
 	psoDesc.renderPass = camera._SkyboxRP;
 	psoDesc.depthStencilState.depthTestEnable = true;
 	psoDesc.depthStencilState.depthWriteEnable = true;
+	psoDesc.depthStencilState.depthCompareTest = ECompareOp::LessOrEqual;
 	psoDesc.shaderStages = { vertShader, nullptr, nullptr, nullptr, fragShader };
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(psoDesc);

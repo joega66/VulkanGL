@@ -2,6 +2,8 @@
 #include <Platform/Platform.h>
 #include <variant>
 
+using bool32 = uint32_t;
+
 enum class EFormat
 {
 	UNDEFINED,
@@ -262,28 +264,12 @@ struct Viewport
 	uint32 height = 0;
 	float minDepth = 0.0f;
 	float maxDepth = 1.0f;
-
-	friend bool operator==(const Viewport& l, const Viewport& r)
-	{
-		return l.x == r.x
-			&& l.y == r.y
-			&& l.width == r.width
-			&& l.height == r.height
-			&& l.minDepth == r.minDepth
-			&& l.maxDepth == r.maxDepth;
-	}
 };
 
 struct Scissor
 {
 	glm::ivec2 offset = glm::ivec2(0);
 	glm::uvec2 extent = glm::uvec2(0);
-
-	friend bool operator==(const Scissor& l, const Scissor& r)
-	{
-		return l.offset == r.offset
-			&& l.extent == r.extent;
-	}
 };
 
 enum class EStencilOp
@@ -314,43 +300,19 @@ struct StencilOpState
 	uint32 compareMask = 0;
 	uint32 writeMask = 0;
 	uint32 reference = 0;
-
-	friend bool operator==(const StencilOpState& l, const StencilOpState& r)
-	{
-		return l.failOp == r.failOp
-			&& l.passOp == r.passOp
-			&& l.depthFailOp == r.depthFailOp
-			&& l.compareOp == r.compareOp
-			&& l.compareMask == r.compareMask
-			&& l.writeMask == r.writeMask
-			&& l.reference == r.reference;
-	}
 };
 
 struct DepthStencilState
 {
-	bool depthTestEnable = true;
-	bool depthWriteEnable = true;
-	ECompareOp depthCompareTest = ECompareOp::LessOrEqual;
-	bool depthBoundsTestEnable = false;
-	bool stencilTestEnable = false;
+	bool32 depthTestEnable = true;
+	bool32 depthWriteEnable = true;
+	ECompareOp depthCompareTest = ECompareOp::Less;
+	bool32 depthBoundsTestEnable = false;
+	bool32 stencilTestEnable = false;
 	StencilOpState front = {};
 	StencilOpState back = {};
 	float minDepthBounds = 0.0f;
 	float maxDepthBounds = 0.0f;
-
-	friend bool operator==(const DepthStencilState& l, const DepthStencilState& r)
-	{
-		return l.depthTestEnable == r.depthTestEnable
-			&& l.depthWriteEnable == r.depthWriteEnable
-			&& l.depthCompareTest == r.depthCompareTest
-			&& l.depthBoundsTestEnable == r.depthBoundsTestEnable
-			&& l.stencilTestEnable == r.stencilTestEnable
-			&& l.front == r.front
-			&& l.back == r.back
-			&& l.minDepthBounds == r.minDepthBounds
-			&& l.maxDepthBounds == r.maxDepthBounds;
-	}
 };
 
 enum class EPolygonMode
@@ -376,30 +338,16 @@ enum class ECullMode
 
 struct RasterizationState
 {
-	bool depthClampEnable = false;
-	bool rasterizerDiscardEnable = false;
+	bool32 depthClampEnable = false;
+	bool32 rasterizerDiscardEnable = false;
 	EPolygonMode polygonMode = EPolygonMode::Fill;
 	ECullMode cullMode = ECullMode::None;
 	EFrontFace frontFace = EFrontFace::CW;
-	bool depthBiasEnable = false;
+	bool32 depthBiasEnable = false;
 	float depthBiasConstantFactor = 0.0f;
 	float depthBiasClamp = 0.0f;
 	float depthBiasSlopeFactor = 0.0f;
 	float lineWidth = 1.0f;
-
-	friend bool operator==(const RasterizationState& l, const RasterizationState& r)
-	{
-		return l.depthClampEnable == r.depthClampEnable
-			&& l.rasterizerDiscardEnable == r.rasterizerDiscardEnable
-			&& l.polygonMode == r.polygonMode
-			&& l.cullMode == r.cullMode
-			&& l.frontFace == r.frontFace
-			&& l.depthBiasEnable == r.depthBiasEnable
-			&& l.depthBiasConstantFactor == r.depthBiasConstantFactor
-			&& l.depthBiasClamp == r.depthBiasClamp
-			&& l.depthBiasSlopeFactor == r.depthBiasSlopeFactor
-			&& l.lineWidth == r.lineWidth;
-	}
 };
 
 enum ESampleCount
@@ -417,19 +365,10 @@ enum ESampleCount
 struct MultisampleState
 {
 	ESampleCount rasterizationSamples = ESampleCount::Samples1;
-	bool sampleShadingEnable = false;
+	bool32 sampleShadingEnable = false;
 	float minSampleShading = 0.0f;
-	bool alphaToCoverageEnable = false;
-	bool alphaToOneEnable = false;
-
-	friend bool operator==(const MultisampleState& l, const MultisampleState& r)
-	{
-		return l.rasterizationSamples == r.rasterizationSamples
-			&& l.sampleShadingEnable == r.sampleShadingEnable
-			&& l.minSampleShading == r.minSampleShading
-			&& l.alphaToCoverageEnable == r.alphaToCoverageEnable
-			&& l.alphaToOneEnable == r.alphaToOneEnable;
-	}
+	bool32 alphaToCoverageEnable = false;
+	bool32 alphaToOneEnable = false;
 };
 
 enum class EBlendFactor
@@ -476,7 +415,7 @@ enum class EColorChannel
 
 struct ColorBlendAttachmentState
 {
-	bool blendEnable = false;
+	bool32 blendEnable = false;
 	EBlendFactor srcColorBlendFactor = EBlendFactor::ZERO;
 	EBlendFactor dstColorBlendFactor = EBlendFactor::ZERO;
 	EBlendOp colorBlendOp = EBlendOp::ADD;
@@ -484,23 +423,6 @@ struct ColorBlendAttachmentState
 	EBlendFactor dstAlphaBlendFactor = EBlendFactor::ZERO;;
 	EBlendOp alphaBlendOp = EBlendOp::ADD;
 	EColorChannel colorWriteMask = EColorChannel::RGBA;
-
-	friend bool operator==(const ColorBlendAttachmentState& l, const ColorBlendAttachmentState& r)
-	{
-		return l.blendEnable == r.blendEnable
-			&& l.srcColorBlendFactor == r.srcColorBlendFactor
-			&& l.dstColorBlendFactor == r.dstColorBlendFactor
-			&& l.colorBlendOp == r.colorBlendOp
-			&& l.srcAlphaBlendFactor == r.srcAlphaBlendFactor
-			&& l.dstAlphaBlendFactor == r.dstAlphaBlendFactor
-			&& l.alphaBlendOp == r.alphaBlendOp
-			&& l.colorWriteMask == r.colorWriteMask;
-	}
-
-	friend bool operator!=(const ColorBlendAttachmentState& l, const ColorBlendAttachmentState& r)
-	{
-		return !(l == r);
-	}
 };
 
 enum class EPrimitiveTopology
@@ -516,13 +438,7 @@ enum class EPrimitiveTopology
 struct InputAssemblyState
 {
 	EPrimitiveTopology topology = EPrimitiveTopology::TriangleList;
-	bool primitiveRestartEnable = false;
-
-	friend bool operator==(const InputAssemblyState& l, const InputAssemblyState& r)
-	{
-		return l.topology == r.topology 
-			&& l.primitiveRestartEnable == r.primitiveRestartEnable;
-	}
+	bool32 primitiveRestartEnable = false;
 };
 
 namespace gpu { class Shader; }
@@ -584,8 +500,6 @@ public:
 		uint32 constantID = 0;
 		uint32 offset = 0;
 		size_t size = 0;
-
-		bool operator==(const SpecializationMapEntry& other) const;
 	};
 
 	SpecializationInfo() = default;
@@ -598,8 +512,6 @@ public:
 		memcpy(_Data.data() + offset, &constant, sizeof(constant));
 		_MapEntries.push_back({ constantID, offset, sizeof(constant) });
 	}
-
-	bool operator==(const SpecializationInfo& other) const;
 
 	inline const std::vector<SpecializationMapEntry>& GetMapEntries() const { return _MapEntries; }
 
@@ -616,26 +528,12 @@ struct VertexAttributeDescription
 	uint32	binding = 0;
 	EFormat	format = EFormat::UNDEFINED;
 	uint32	offset = 0;
-
-	friend bool operator==(const VertexAttributeDescription& l, const VertexAttributeDescription& r)
-	{
-		return l.location == r.location
-			&& l.binding == r.binding
-			&& l.format == r.format
-			&& l.offset == r.offset;
-	}
 };
 
 struct VertexBindingDescription
 {
 	uint32 binding = 0;
 	uint32 stride = 0;
-
-	friend bool operator==(const VertexBindingDescription& l, const VertexBindingDescription& r)
-	{
-		return l.binding == r.binding
-			&& l.stride == r.stride;
-	}
 };
 
 enum class EIndexType

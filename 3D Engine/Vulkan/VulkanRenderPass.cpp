@@ -7,16 +7,16 @@ std::pair<VkRenderPass, VkFramebuffer> VulkanDevice::GetOrCreateRenderPass(const
 	
 	for (const auto& colorAttachment : rpDesc.colorAttachments)
 	{
-		Platform::crc32_u8(crc, &colorAttachment.initialLayout, sizeof(colorAttachment.initialLayout));
-		Platform::crc32_u8(crc, &colorAttachment.finalLayout, sizeof(colorAttachment.finalLayout));
-		Platform::crc32_u8(crc, &colorAttachment.loadAction, sizeof(colorAttachment.loadAction));
-		Platform::crc32_u8(crc, &colorAttachment.storeAction, sizeof(colorAttachment.storeAction));
+		Platform::crc32_u32(crc, &colorAttachment.initialLayout, sizeof(colorAttachment.initialLayout));
+		Platform::crc32_u32(crc, &colorAttachment.finalLayout, sizeof(colorAttachment.finalLayout));
+		Platform::crc32_u32(crc, &colorAttachment.loadAction, sizeof(colorAttachment.loadAction));
+		Platform::crc32_u32(crc, &colorAttachment.storeAction, sizeof(colorAttachment.storeAction));
 	}
 
-	Platform::crc32_u8(crc, &rpDesc.depthAttachment.initialLayout, sizeof(rpDesc.depthAttachment.initialLayout));
-	Platform::crc32_u8(crc, &rpDesc.depthAttachment.finalLayout, sizeof(rpDesc.depthAttachment.finalLayout));
-	Platform::crc32_u8(crc, &rpDesc.depthAttachment.loadAction, sizeof(rpDesc.depthAttachment.loadAction));
-	Platform::crc32_u8(crc, &rpDesc.depthAttachment.storeAction, sizeof(rpDesc.depthAttachment.storeAction));
+	Platform::crc32_u32(crc, &rpDesc.depthAttachment.initialLayout, sizeof(rpDesc.depthAttachment.initialLayout));
+	Platform::crc32_u32(crc, &rpDesc.depthAttachment.finalLayout, sizeof(rpDesc.depthAttachment.finalLayout));
+	Platform::crc32_u32(crc, &rpDesc.depthAttachment.loadAction, sizeof(rpDesc.depthAttachment.loadAction));
+	Platform::crc32_u32(crc, &rpDesc.depthAttachment.storeAction, sizeof(rpDesc.depthAttachment.storeAction));
 
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 

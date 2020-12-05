@@ -19,14 +19,6 @@ using int64 = int64_t;
 using uint64 = uint64_t;
 using float64 = double;
 
-// Reference: boost::hash_combine
-template<typename SeedType, typename T>
-inline void HashCombine(SeedType& Seed, const T& V)
-{
-	std::hash<T> Hasher;
-	Seed ^= Hasher(V) + 0x9e3779b9 + (Seed << 6) + (Seed >> 2);
-}
-
 #define ENABLE_BITWISE_OPERATORS(T) \
 inline constexpr T operator~ (T a) { return (T)~(int)a; } \
 inline constexpr T operator| (T a, T b) { return (T)((int)a | (int)b); } \

@@ -64,8 +64,6 @@ namespace gpu
 		inline VkRenderPass GetRenderPass() const { return _RenderPass; }
 		inline uint32 GetNumAttachments() const { return _NumAttachments; }
 
-		inline bool operator==(const RenderPassView& other) const { return _RenderPass == other._RenderPass; }
-
 	private:
 		VkRenderPass _RenderPass = nullptr;
 		uint32 _NumAttachments;
