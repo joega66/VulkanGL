@@ -16,9 +16,7 @@ struct UserInterfaceRender : public Component
 
 	gpu::Pipeline pipeline;
 
-	UserInterfaceRender(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
-
-	void Render(gpu::Device& device, gpu::CommandBuffer& cmdBuf);
+	UserInterfaceRender(gpu::Device& device);
 
 	void Update(gpu::Device& device);
 };

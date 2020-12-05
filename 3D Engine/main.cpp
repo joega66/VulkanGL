@@ -2,7 +2,6 @@
 #include <Vulkan/VulkanInstance.h>
 #include <Vulkan/VulkanPhysicalDevice.h>
 #include <Vulkan/VulkanDevice.h>
-#include <Vulkan/VulkanShaderLibrary.h>
 #include <Vulkan/VulkanCompositor.h>
 #include <Engine/Screen.h>
 #include <Engine/Input.h>
@@ -27,9 +26,8 @@ int main(int argc, char* argv[])
 	VulkanPhysicalDevice physicalDevice(instance);
 	VulkanCompositor compositor(instance, physicalDevice, platform.GetWindow());
 	VulkanDevice device(instance, physicalDevice, { compositor.GetPresentIndex() });
-	VulkanShaderLibrary shaderLibrary(device);
 
-	Engine engine(platform, cursor, input, screen, device, shaderLibrary, compositor);
+	Engine engine(platform, cursor, input, screen, device, compositor);
 	engine.Main();
 
 	return 0;

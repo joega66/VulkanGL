@@ -76,7 +76,7 @@
     <ClCompile Include="Vulkan\VulkanQueue.cpp" />
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="Vulkan\VulkanSemaphore.cpp" />
-    <ClCompile Include="Vulkan\VulkanShaderLibrary.cpp" />
+    <ClCompile Include="Vulkan\VulkanShader.cpp" />
     <ClCompile Include="Vulkan\VulkanCompositor.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -151,7 +151,6 @@
     <ClInclude Include="Vulkan\VulkanQueue.h" />
     <ClInclude Include="Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="Vulkan\VulkanSemaphore.h" />
-    <ClInclude Include="Vulkan\VulkanShaderLibrary.h" />
     <ClInclude Include="Vulkan\VulkanCompositor.h" />
   </ItemGroup>
   <ItemGroup>

@@ -61,7 +61,7 @@ void SceneRenderer::ComputeLightingPass(CameraRender& camera, gpu::CommandBuffer
 
 void SceneRenderer::ComputeDeferredLight(CameraRender& camera, gpu::CommandBuffer& cmdBuf, const LightingParams& light, bool isFirstLight)
 {
-	const gpu::Shader* shader = _ShaderLibrary.FindShader<LightingPassCS>();
+	const gpu::Shader* shader = _Device.FindShader<LightingPassCS>();
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;
@@ -111,7 +111,7 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraRender& cameraRender
 
 	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &startBarrier);
 
-	const gpu::Shader* shader = _ShaderLibrary.FindShader<SSGI>();
+	const gpu::Shader* shader = _Device.FindShader<SSGI>();
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;

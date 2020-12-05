@@ -34,8 +34,8 @@ void SceneRenderer::RenderSkybox(CameraRender& camera, gpu::CommandBuffer& cmdBu
 
 	cmdBuf.SetViewportAndScissor({ .width = camera._SceneDepth.GetWidth(), .height = camera._SceneDepth.GetHeight() });
 
-	const SkyboxVS* vertShader = _ShaderLibrary.FindShader<SkyboxVS>();
-	const SkyboxFS* fragShader = _ShaderLibrary.FindShader<SkyboxFS>();
+	const SkyboxVS* vertShader = _Device.FindShader<SkyboxVS>();
+	const SkyboxFS* fragShader = _Device.FindShader<SkyboxFS>();
 
 	PipelineStateDesc psoDesc = {};
 	psoDesc.renderPass = camera._SkyboxRP;

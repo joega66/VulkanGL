@@ -64,7 +64,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraRender& camera
 	rayTracingParams._FrameNumber = frameNumber++;
 
 	ComputePipelineDesc computeDesc = {};
-	computeDesc.computeShader = _ShaderLibrary.FindShader<RayTracingCS>();
+	computeDesc.computeShader = _Device.FindShader<RayTracingCS>();
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 

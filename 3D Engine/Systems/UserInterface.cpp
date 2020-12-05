@@ -38,7 +38,7 @@ void UserInterface::Start(Engine& engine)
 
 	ImGui::StyleColorsDark();
 
-	engine._ECS.AddSingletonComponent<UserInterfaceRender>(engine._Device, engine.ShaderLibrary);
+	engine._ECS.AddSingletonComponent<UserInterfaceRender>(engine._Device);
 
 	_ScreenResizeEvent = engine._Screen.OnScreenResize([&] (int32 width, int32 height)
 	{
@@ -307,7 +307,7 @@ void UserInterface::ShowEntities(Engine& engine)
 	ImGui::End();
 }
 
-UserInterfaceRender::UserInterfaceRender(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary)
+UserInterfaceRender::UserInterfaceRender(gpu::Device& device)
 {
 	ImGuiIO& imgui = ImGui::GetIO();
 

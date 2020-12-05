@@ -94,8 +94,8 @@ void SceneRenderer::RenderShadowDepths(CameraRender& camera, gpu::CommandBuffer&
 			{
 				PipelineStateDesc psoDesc = {};
 				psoDesc.renderPass = shadowRender.GetRenderPass();
-				psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<ShadowDepthVS>();
-				psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<ShadowDepthFS>();
+				psoDesc.shaderStages.vertex = _Device.FindShader<ShadowDepthVS>();
+				psoDesc.shaderStages.fragment = _Device.FindShader<ShadowDepthFS>();
 				psoDesc.rasterizationState.depthBiasEnable = true;
 				psoDesc.rasterizationState.depthBiasConstantFactor = shadowRender.GetDepthBiasConstantFactor();
 				psoDesc.rasterizationState.depthBiasSlopeFactor = shadowRender.GetDepthBiasSlopeFactor();

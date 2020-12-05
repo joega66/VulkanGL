@@ -21,7 +21,7 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 {
 	auto& settings = _ECS.GetSingletonComponent<RenderSettings>();
 
-	const gpu::Shader* shader = _ShaderLibrary.FindShader<PostProcessingCS>();
+	const gpu::Shader* shader = _Device.FindShader<PostProcessingCS>();
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.computeShader = shader;

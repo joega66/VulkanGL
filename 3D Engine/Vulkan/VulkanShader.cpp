@@ -1,4 +1,3 @@
-#include "VulkanShaderLibrary.h"
 #include "VulkanDevice.h"
 #include <SPIRV-Cross/spirv_glsl.hpp>
 #include <shaderc/shaderc.hpp>
@@ -209,20 +208,7 @@ private:
 	std::unordered_map<std::string, shaderc_include_result> _Includes;
 };
 
-VulkanShaderLibrary::VulkanShaderLibrary(VulkanDevice& device)
-	: _Device(device)
-{
-	// Compile all statically registered shaders.
-	auto& tasks = gpu::GetShaderCompilationTasks();
-	for (auto& task : tasks)
-	{
-		task.shader->compilationResult = CompileShader(task.worker, task.path, task.entrypoint, task.stage);
-		_Shaders.emplace(task.typeIndex, task.shader);
-	}
-	tasks.clear();
-}
-
-ShaderCompilationResult VulkanShaderLibrary::CompileShader(
+ShaderCompilationResult VulkanDevice::CompileShader(
 	const ShaderCompilerWorker& worker,
 	const std::filesystem::path& path,
 	const std::string& entrypoint,
@@ -309,7 +295,7 @@ ShaderCompilationResult VulkanShaderLibrary::CompileShader(
 		return {};
 	}();
 
-	const auto descriptorSetLayouts = ReflectDescriptorSetLayouts(_Device, glsl, resources);
+	const auto descriptorSetLayouts = ReflectDescriptorSetLayouts(*this, glsl, resources);
 
 	const auto pushConstantRange = ReflectPushConstantRange(glsl, resources, static_cast<VkShaderStageFlags>(stage));
 	
@@ -317,7 +303,7 @@ ShaderCompilationResult VulkanShaderLibrary::CompileShader(
 		shaderModule, vertexAttributeDescriptions, descriptorSetLayouts, pushConstantRange);
 }
 
-void VulkanShaderLibrary::RecompileShaders()
+void VulkanDevice::RecompileShaders()
 {
 	for (const auto& [typeIndex, shader] : _Shaders)
 	{
@@ -337,5 +323,5 @@ void VulkanShaderLibrary::RecompileShaders()
 		}
 	}
 
-	_Device.RecompilePipelines();
+	RecompilePipelines();
 }

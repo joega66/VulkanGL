@@ -61,6 +61,8 @@ public:
 
 	gpu::Semaphore CreateSemaphore() override;
 
+	void RecompileShaders() override;
+
 	void UpdateDescriptorSet(
 		VkDescriptorSet descriptorSet, 
 		VkDescriptorUpdateTemplate descriptorUpdateTemplate, 
@@ -144,6 +146,12 @@ private:
 	std::unordered_map<Crc, gpu::Sampler> _SamplerCache;
 
 	std::vector<VkPipeline> _PipelinesToDestroy;
+
+	ShaderCompilationResult CompileShader(
+		const ShaderCompilerWorker& worker,
+		const std::filesystem::path& path,
+		const std::string& entrypoint,
+		EShaderStage stage) override;
 
 	std::pair<VkRenderPass, VkFramebuffer> GetOrCreateRenderPass(const RenderPassDesc& rpDesc);
 	[[nodiscard]] static VkRenderPass CreateRenderPass(VkDevice device, const RenderPassDesc& rpDesc);

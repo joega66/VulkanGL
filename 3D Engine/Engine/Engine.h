@@ -7,7 +7,7 @@
 class Cursor;
 class Input;
 class Screen;
-namespace gpu { class Device; class Compositor; class ShaderLibrary; }
+namespace gpu { class Device; class Compositor; }
 
 /** The main() of the engine, after the platform-dependent stuff has been resolved. */
 class Engine
@@ -19,7 +19,6 @@ public:
 		Input& InInput,
 		Screen& InScreen,
 		gpu::Device& InDevice,
-		gpu::ShaderLibrary& InShaderLibrary,
 		gpu::Compositor& compositor
 	);
 
@@ -33,7 +32,6 @@ public:
 	
 	/** GPU/GPU.h implementations. */
 	gpu::Device& _Device;
-	gpu::ShaderLibrary& ShaderLibrary;
 	gpu::Compositor& _Compositor;
 
 	/** Engine misc. */

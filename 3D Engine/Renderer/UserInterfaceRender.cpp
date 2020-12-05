@@ -34,8 +34,8 @@ void SceneRenderer::CreateUserInterfacePipeline()
 	psoDesc.depthStencilState.depthTestEnable = false;
 	psoDesc.depthStencilState.depthWriteEnable = false;
 	psoDesc.depthStencilState.depthCompareTest = ECompareOp::Always;
-	psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<UserInterfaceVS>();
-	psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<UserInterfaceFS>();
+	psoDesc.shaderStages.vertex = _Device.FindShader<UserInterfaceVS>();
+	psoDesc.shaderStages.fragment = _Device.FindShader<UserInterfaceFS>();
 	psoDesc.colorBlendAttachmentStates.push_back({
 		.blendEnable = true,
 		.srcColorBlendFactor = EBlendFactor::SRC_ALPHA,
@@ -64,8 +64,8 @@ void SceneRenderer::RenderUserInterface(gpu::CommandBuffer& cmdBuf, const gpu::R
 	cmdBuf.SetViewport({ .width = renderPass.GetRenderArea().extent.width, .height = renderPass.GetRenderArea().extent.height });
 
 	const ImDrawData* drawData = ImGui::GetDrawData();
-	const auto* vertex = _ShaderLibrary.FindShader<UserInterfaceVS>();
-	const auto* fragment = _ShaderLibrary.FindShader<UserInterfaceFS>();
+	const auto* vertex = _Device.FindShader<UserInterfaceVS>();
+	const auto* fragment = _Device.FindShader<UserInterfaceFS>();
 	
 	if (drawData->CmdListsCount > 0)
 	{

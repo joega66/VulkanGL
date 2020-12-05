@@ -265,34 +265,6 @@ namespace gpu
 		{
 		}
 	};
-
-	/** The shader library compiles statically registered shaders and caches them by type index. */
-	class ShaderLibrary
-	{
-	public:
-		/** Find shader of ShaderType. */
-		template<typename ShaderType>
-		const ShaderType* FindShader()
-		{
-			const std::type_index typeIndex = std::type_index(typeid(ShaderType));
-			return static_cast<ShaderType*>(_Shaders[typeIndex]);
-		}
-
-		/** Recompile cached shaders. */
-		virtual void RecompileShaders() = 0;
-
-	private:
-		/** Compile the shader. */
-		virtual ShaderCompilationResult CompileShader(
-			const ShaderCompilerWorker& worker,
-			const std::filesystem::path& path,
-			const std::string& entrypoint,
-			EShaderStage stage) = 0;
-
-	protected:
-		/** Cached shaders. */
-		std::unordered_map<std::type_index, gpu::Shader*> _Shaders;
-	};
 }
 
 #define REGISTER_SHADER(Type, Path, Entrypoint, Stage)	\

@@ -52,8 +52,8 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraRender& camera
 		{
 			PipelineStateDesc psoDesc = {};
 			psoDesc.renderPass = cameraRender._GBufferRP;
-			psoDesc.shaderStages.vertex = _ShaderLibrary.FindShader<GBufferPassVS>();
-			psoDesc.shaderStages.fragment = _ShaderLibrary.FindShader<GBufferPassFS>();
+			psoDesc.shaderStages.vertex = _Device.FindShader<GBufferPassVS>();
+			psoDesc.shaderStages.fragment = _Device.FindShader<GBufferPassFS>();
 
 			return psoDesc;
 		}, &viewFrustumPlanes);

@@ -17,7 +17,6 @@ public:
 
 private:
 	gpu::Device& _Device;
-	gpu::ShaderLibrary& _ShaderLibrary;
 	gpu::Compositor& _Compositor;
 	EntityManager& _ECS;
 	AssetManager& _Assets;

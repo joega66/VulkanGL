@@ -4,7 +4,6 @@
 
 SceneRenderer::SceneRenderer(Engine& engine)
 	: _Device(engine._Device)
-	, _ShaderLibrary(engine.ShaderLibrary)
 	, _Compositor(engine._Compositor)
 	, _ECS(engine._ECS)
 	, _Assets(engine.Assets)

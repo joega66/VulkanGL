@@ -200,9 +200,6 @@
     <ClInclude Include="..\ThirdParty\SPIRV-Cross\spirv_glsl.hpp">
       <Filter>Source\Vulkan\SPIRV-Cross</Filter>
     </ClInclude>
-    <ClInclude Include="Vulkan\VulkanShaderLibrary.h">
-      <Filter>Source\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="..\ThirdParty\shaderc\env.h">
       <Filter>ThirdParty\shaderc</Filter>
     </ClInclude>
@@ -397,9 +394,6 @@
     <ClCompile Include="Renderer\PostProcessing.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Vulkan\VulkanShaderLibrary.cpp">
-      <Filter>Source\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\RayTracing.cpp">
       <Filter>Source\Renderer</Filter>
     </ClCompile>
@@ -456,6 +450,9 @@
     </ClCompile>
     <ClCompile Include="Renderer\CameraRender.cpp">
       <Filter>Source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanShader.cpp">
+      <Filter>Source\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -209,6 +209,15 @@ VulkanDevice::VulkanDevice(VulkanInstance& instance, VulkanPhysicalDevice& physi
 	{
 		descriptorSetTaskCollector.tasks[i].descriptorSet = descriptorSets[i];
 	}
+
+	// Compile all statically registered shaders.
+	auto& tasks = gpu::GetShaderCompilationTasks();
+	for (auto& task : tasks)
+	{
+		task.shader->compilationResult = CompileShader(task.worker, task.path, task.entrypoint, task.stage);
+		_Shaders.emplace(task.typeIndex, task.shader);
+	}
+	tasks.clear();
 }
 
 VulkanDevice::~VulkanDevice()
