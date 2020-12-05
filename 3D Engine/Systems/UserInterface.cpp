@@ -38,7 +38,7 @@ void UserInterface::Start(Engine& engine)
 
 	ImGui::StyleColorsDark();
 
-	engine._ECS.AddSingletonComponent<UserInterfaceRenderData>(engine._Device, engine.ShaderLibrary);
+	engine._ECS.AddSingletonComponent<UserInterfaceRender>(engine._Device, engine.ShaderLibrary);
 
 	_ScreenResizeEvent = engine._Screen.OnScreenResize([&] (int32 width, int32 height)
 	{
@@ -57,7 +57,7 @@ void UserInterface::Update(Engine& engine)
 	ImGui::ShowDemoWindow();
 	ImGui::Render();
 
-	engine._ECS.GetSingletonComponent<UserInterfaceRenderData>().Update(engine._Device);
+	engine._ECS.GetSingletonComponent<UserInterfaceRender>().Update(engine._Device);
 }
 
 void UserInterface::ShowUI(Engine& engine)
@@ -307,7 +307,7 @@ void UserInterface::ShowEntities(Engine& engine)
 	ImGui::End();
 }
 
-UserInterfaceRenderData::UserInterfaceRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary)
+UserInterfaceRender::UserInterfaceRender(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary)
 {
 	ImGuiIO& imgui = ImGui::GetIO();
 
@@ -324,7 +324,7 @@ UserInterfaceRenderData::UserInterfaceRenderData(gpu::Device& device, gpu::Shade
 	imgui.Fonts->TexID = &fontTexture;
 }
 
-void UserInterfaceRenderData::Update(gpu::Device& device)
+void UserInterfaceRender::Update(gpu::Device& device)
 {
 	const ImDrawData* drawData = ImGui::GetDrawData();
 	const uint32 vertexBufferSize = drawData->TotalVtxCount * sizeof(ImDrawVert);

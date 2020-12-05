@@ -51,13 +51,13 @@ void SceneRenderer::CreateUserInterfacePipeline()
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
 	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
 
-	auto& userInterfaceRenderData = _ECS.GetSingletonComponent<UserInterfaceRenderData>();
-	userInterfaceRenderData.pipeline = _Device.CreatePipeline(psoDesc);
+	auto& userInterfaceRender = _ECS.GetSingletonComponent<UserInterfaceRender>();
+	userInterfaceRender.pipeline = _Device.CreatePipeline(psoDesc);
 }
 
 void SceneRenderer::RenderUserInterface(gpu::CommandBuffer& cmdBuf, const gpu::RenderPass& renderPass)
 {
-	auto& userInterfaceRenderData = _ECS.GetSingletonComponent<UserInterfaceRenderData>();
+	auto& userInterfaceRender = _ECS.GetSingletonComponent<UserInterfaceRender>();
 
 	cmdBuf.BeginRenderPass(renderPass);
 
@@ -69,15 +69,15 @@ void SceneRenderer::RenderUserInterface(gpu::CommandBuffer& cmdBuf, const gpu::R
 	
 	if (drawData->CmdListsCount > 0)
 	{
-		cmdBuf.BindPipeline(userInterfaceRenderData.pipeline);
+		cmdBuf.BindPipeline(userInterfaceRender.pipeline);
 
-		cmdBuf.PushConstants(userInterfaceRenderData.pipeline, vertex, &userInterfaceRenderData.scaleAndTranslation);
+		cmdBuf.PushConstants(userInterfaceRender.pipeline, vertex, &userInterfaceRender.scaleAndTranslation);
 
 		const VkDescriptorSet descriptorSets[] = { _Device.GetTextures() };
 
-		cmdBuf.BindDescriptorSets(userInterfaceRenderData.pipeline, std::size(descriptorSets), descriptorSets, 0, nullptr);
+		cmdBuf.BindDescriptorSets(userInterfaceRender.pipeline, std::size(descriptorSets), descriptorSets, 0, nullptr);
 
-		cmdBuf.BindVertexBuffers(1, &userInterfaceRenderData.vertexBuffer);
+		cmdBuf.BindVertexBuffers(1, &userInterfaceRender.vertexBuffer);
 
 		const ImVec2 clipOff = drawData->DisplayPos;         // (0,0) unless using multi-viewports
 		const ImVec2 clipScale = drawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
@@ -105,9 +105,9 @@ void SceneRenderer::RenderUserInterface(gpu::CommandBuffer& cmdBuf, const gpu::R
 					});
 
 				const uint32 pushConstants(*static_cast<uint32*>(drawCmd->TextureId));
-				cmdBuf.PushConstants(userInterfaceRenderData.pipeline, fragment, &pushConstants);
+				cmdBuf.PushConstants(userInterfaceRender.pipeline, fragment, &pushConstants);
 
-				cmdBuf.DrawIndexed(userInterfaceRenderData.indexBuffer, drawCmd->ElemCount, 1, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset, 0, EIndexType::UINT16);
+				cmdBuf.DrawIndexed(userInterfaceRender.indexBuffer, drawCmd->ElemCount, 1, drawCmd->IdxOffset + indexOffset, drawCmd->VtxOffset + vertexOffset, 0, EIndexType::UINT16);
 			}
 
 			indexOffset += drawList->IdxBuffer.Size;

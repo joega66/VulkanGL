@@ -4,7 +4,7 @@
 #include <GPU/GPU.h>
 #include <Engine/Screen.h>
 
-struct UserInterfaceRenderData : public Component
+struct UserInterfaceRender : public Component
 {
 	gpu::Image fontImage;
 	gpu::TextureID fontTexture;
@@ -16,7 +16,7 @@ struct UserInterfaceRenderData : public Component
 
 	gpu::Pipeline pipeline;
 
-	UserInterfaceRenderData(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
+	UserInterfaceRender(gpu::Device& device, gpu::ShaderLibrary& shaderLibrary);
 
 	void Render(gpu::Device& device, gpu::CommandBuffer& cmdBuf);
 
