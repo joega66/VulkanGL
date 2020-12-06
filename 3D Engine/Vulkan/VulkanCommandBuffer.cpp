@@ -53,17 +53,17 @@ namespace gpu
 		vkCmdEndRenderPass(_CommandBuffer);
 	}
 
-	void CommandBuffer::BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline)
+	void CommandBuffer::BindPipeline(const gpu::Pipeline& pipeline)
 	{
 		vkCmdBindPipeline(
 			_CommandBuffer, 
-			pipeline->GetPipelineBindPoint(), 
-			pipeline->GetPipeline()
+			pipeline.GetPipelineBindPoint(), 
+			pipeline.GetPipeline()
 		);
 	}
 
 	void CommandBuffer::BindDescriptorSets(
-		const std::shared_ptr<VulkanPipeline>& pipeline, 
+		const gpu::Pipeline& pipeline,
 		std::size_t numDescriptorSets, 
 		const VkDescriptorSet* descriptorSets,
 		std::size_t numDynamicOffsets,
@@ -71,8 +71,8 @@ namespace gpu
 	{
 		vkCmdBindDescriptorSets(
 			_CommandBuffer,
-			pipeline->GetPipelineBindPoint(),
-			pipeline->GetPipelineLayout(),
+			pipeline.GetPipelineBindPoint(),
+			pipeline.GetPipelineLayout(),
 			0,
 			static_cast<uint32>(numDescriptorSets),
 			descriptorSets,
@@ -81,13 +81,13 @@ namespace gpu
 		);
 	}
 
-	void CommandBuffer::PushConstants(const std::shared_ptr<VulkanPipeline>& pipeline, const gpu::Shader* shader, const void* values)
+	void CommandBuffer::PushConstants(const gpu::Pipeline& pipeline, const gpu::Shader* shader, const void* values)
 	{
 		const auto& pushConstantRange = shader->compilationResult.pushConstantRange;
 
 		vkCmdPushConstants(
 			_CommandBuffer,
-			pipeline->GetPipelineLayout(),
+			pipeline.GetPipelineLayout(),
 			pushConstantRange.stageFlags,
 			pushConstantRange.offset,
 			pushConstantRange.size,

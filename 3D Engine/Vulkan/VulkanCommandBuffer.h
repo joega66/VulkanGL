@@ -5,7 +5,6 @@
 class VulkanDevice;
 struct ImageMemoryBarrier;
 struct BufferMemoryBarrier;
-class VulkanPipeline;
 class VulkanQueue;
 
 namespace gpu
@@ -13,6 +12,7 @@ namespace gpu
 	class Buffer;
 	class Image;
 	class RenderPass;
+	class Pipeline;
 
 	class CommandBuffer
 	{
@@ -29,10 +29,10 @@ namespace gpu
 
 		void EndRenderPass();
 
-		void BindPipeline(const std::shared_ptr<VulkanPipeline>& pipeline);
+		void BindPipeline(const gpu::Pipeline& pipeline);
 
 		void BindDescriptorSets(
-			const std::shared_ptr<VulkanPipeline>& pipeline,
+			const gpu::Pipeline& pipeline,
 			std::size_t numDescriptorSets,
 			const VkDescriptorSet* descriptorSets,
 			std::size_t numDynamicOffsets,
@@ -40,7 +40,7 @@ namespace gpu
 		);
 
 		void PushConstants(
-			const std::shared_ptr<VulkanPipeline>& pipeline, 
+			const gpu::Pipeline& pipeline,
 			const Shader* shader, 
 			const void* values
 		);

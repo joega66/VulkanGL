@@ -402,19 +402,15 @@ VkPipelineLayout VulkanDevice::GetOrCreatePipelineLayout(
 	}
 }
 
-VulkanPipeline::VulkanPipeline(
-	VulkanDevice& device,
-	VkPipeline pipeline, 
-	VkPipelineLayout pipelineLayout, 
-	VkPipelineBindPoint pipelineBindPoint)
-	: _Device(device)
-	, _Pipeline(pipeline)
-	, _PipelineLayout(pipelineLayout)
-	, _PipelineBindPoint(pipelineBindPoint)
+namespace gpu
 {
-}
-
-VulkanPipeline::~VulkanPipeline()
-{
-	_Device.Destroy(_Pipeline);
+	Pipeline::Pipeline(
+		std::shared_ptr<VkPipeline> pipeline,
+		VkPipelineLayout pipelineLayout,
+		VkPipelineBindPoint pipelineBindPoint)
+		: _Pipeline(pipeline)
+		, _PipelineLayout(pipelineLayout)
+		, _PipelineBindPoint(pipelineBindPoint)
+	{
+	}
 }

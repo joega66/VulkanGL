@@ -77,9 +77,6 @@ public:
 	/** Recompile all pipelines. */
 	void RecompilePipelines();
 
-	/** Request a pipeline be destroyed. */
-	inline void Destroy(VkPipeline pipeline) { _PipelinesToDestroy.push_back(pipeline); }
-
 	operator VkDevice() const { return _Device; }
 
 	inline VulkanInstance& GetInstance() { return _Instance; }
@@ -144,8 +141,6 @@ private:
 	std::unordered_map<Crc, std::pair<VkDescriptorSetLayout, VkDescriptorUpdateTemplate>> _DescriptorSetLayoutCache;
 
 	std::unordered_map<Crc, gpu::Sampler> _SamplerCache;
-
-	std::vector<VkPipeline> _PipelinesToDestroy;
 
 	ShaderCompilationResult CompileShader(
 		const ShaderCompilerWorker& worker,

@@ -4,12 +4,6 @@
 
 void VulkanDevice::EndFrame()
 {
-	for (auto& pipeline : _PipelinesToDestroy)
-	{
-		vkDestroyPipeline(_Device, pipeline, nullptr);
-	}
-	_PipelinesToDestroy.clear();
-
 	_BindlessTextures->EndFrame();
 	_BindlessImages->EndFrame();
 }
@@ -93,9 +87,11 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const GraphicsPipelineDesc& graphicsD
 		getPushConstantRange(graphicsDesc.shaderStages.fragment);
 
 		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
-		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(graphicsDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
+		const gpu::Pipeline pipeline = gpu::Pipeline(std::make_shared<VkPipeline>(CreatePipeline(graphicsDesc, pipelineLayout)), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
+
 		_GraphicsPipelineCache[crc] = pipeline;
 		_CrcToGraphicsPipelineDesc[crc] = graphicsDesc;
+
 		return pipeline;
 	}
 	else
@@ -124,10 +120,13 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDes
 
 		const auto& pushConstantRange = computeDesc.shader->compilationResult.pushConstantRange;
 		const auto pushConstantRanges = pushConstantRange.size > 0 ? std::vector{ pushConstantRange } : std::vector<VkPushConstantRange>{};
+
 		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
-		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(computeDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
+		const gpu::Pipeline pipeline = gpu::Pipeline(std::make_shared<VkPipeline>(CreatePipeline(computeDesc, pipelineLayout)), pipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
+
 		_ComputePipelineCache[crc] = pipeline;
 		_CrcToComputeDesc[crc] = computeDesc;
+
 		return pipeline;
 	}
 	else
@@ -458,14 +457,14 @@ void VulkanDevice::RecompilePipelines()
 {
 	for (auto& [crc, pipeline] : _GraphicsPipelineCache)
 	{
-		vkDestroyPipeline(_Device, pipeline->_Pipeline, nullptr);
-		pipeline->_Pipeline = CreatePipeline(_CrcToGraphicsPipelineDesc[crc], pipeline->_PipelineLayout);
+		vkDestroyPipeline(_Device, *pipeline._Pipeline, nullptr);
+		*pipeline._Pipeline = CreatePipeline(_CrcToGraphicsPipelineDesc[crc], pipeline._PipelineLayout);
 	}
 
 	for (auto& [crc, pipeline] : _ComputePipelineCache)
 	{
-		vkDestroyPipeline(_Device, pipeline->_Pipeline, nullptr);
-		pipeline->_Pipeline = CreatePipeline(_CrcToComputeDesc[crc], pipeline->_PipelineLayout);
+		vkDestroyPipeline(_Device, *pipeline._Pipeline, nullptr);
+		*pipeline._Pipeline = CreatePipeline(_CrcToComputeDesc[crc], pipeline._PipelineLayout);
 	}
 }
 

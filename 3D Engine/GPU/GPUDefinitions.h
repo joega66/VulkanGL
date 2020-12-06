@@ -8,11 +8,6 @@
 #include "Vulkan/VulkanPipeline.h"
 #include "Vulkan/VulkanSemaphore.h"
 
-namespace gpu
-{
-	using Pipeline = std::shared_ptr<VulkanPipeline>;
-}
-
 struct AttachmentView
 {
 	const gpu::Image* image = nullptr;
