@@ -92,14 +92,14 @@ void SceneRenderer::RenderShadowDepths(CameraRender& camera, gpu::CommandBuffer&
 
 			surfaceGroup.Draw<false>(_Device, cmdBuf, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
 			{
-				PipelineStateDesc psoDesc = {};
-				psoDesc.renderPass = shadowRender.GetRenderPass();
-				psoDesc.shaderStages.vertex = _Device.FindShader<ShadowDepthVS>();
-				psoDesc.shaderStages.fragment = _Device.FindShader<ShadowDepthFS>();
-				psoDesc.rasterizationState.depthBiasEnable = true;
-				psoDesc.rasterizationState.depthBiasConstantFactor = shadowRender.GetDepthBiasConstantFactor();
-				psoDesc.rasterizationState.depthBiasSlopeFactor = shadowRender.GetDepthBiasSlopeFactor();
-				return psoDesc;
+				GraphicsPipelineDesc graphicsDesc = {};
+				graphicsDesc.renderPass = shadowRender.GetRenderPass();
+				graphicsDesc.shaderStages.vertex = _Device.FindShader<ShadowDepthVS>();
+				graphicsDesc.shaderStages.fragment = _Device.FindShader<ShadowDepthFS>();
+				graphicsDesc.rasterizationState.depthBiasEnable = true;
+				graphicsDesc.rasterizationState.depthBiasConstantFactor = shadowRender.GetDepthBiasConstantFactor();
+				graphicsDesc.rasterizationState.depthBiasSlopeFactor = shadowRender.GetDepthBiasSlopeFactor();
+				return graphicsDesc;
 			});
 		}
 

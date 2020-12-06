@@ -64,7 +64,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraRender& camera
 	rayTracingParams._FrameNumber = frameNumber++;
 
 	ComputePipelineDesc computeDesc = {};
-	computeDesc.computeShader = _Device.FindShader<RayTracingCS>();
+	computeDesc.shader = _Device.FindShader<RayTracingCS>();
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 
@@ -75,7 +75,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraRender& camera
 
 	cmdBuf.BindDescriptorSets(pipeline, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets);
 
-	cmdBuf.PushConstants(pipeline, computeDesc.computeShader, &rayTracingParams);
+	cmdBuf.PushConstants(pipeline, computeDesc.shader, &rayTracingParams);
 
 	const uint32 groupCountX = DivideAndRoundUp(camera.GetWidth(), 8u);
 	const uint32 groupCountY = DivideAndRoundUp(camera.GetHeight(), 8u);

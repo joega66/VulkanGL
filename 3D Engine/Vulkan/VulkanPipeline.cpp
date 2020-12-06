@@ -2,7 +2,7 @@
 #include "VulkanPipeline.h"
 #include <GPU/GPUShader.h>
 
-static void CreateDepthStencilState(const PipelineStateDesc& psoDesc, VkPipelineDepthStencilStateCreateInfo& depthStencilState)
+static void CreateDepthStencilState(const GraphicsPipelineDesc& graphicsDesc, VkPipelineDepthStencilStateCreateInfo& depthStencilState)
 {
 	static const VkStencilOp vulkanStencilOp[] =
 	{
@@ -23,22 +23,22 @@ static void CreateDepthStencilState(const PipelineStateDesc& psoDesc, VkPipeline
 		VK_COMPARE_OP_ALWAYS,
 	};
 
-	depthStencilState.depthTestEnable	= psoDesc.depthStencilState.depthTestEnable;
-	depthStencilState.depthWriteEnable	= psoDesc.depthStencilState.depthWriteEnable;
-	depthStencilState.depthCompareOp	= vulkanCompareOp[static_cast<uint32>(psoDesc.depthStencilState.depthCompareTest)];
-	depthStencilState.stencilTestEnable = psoDesc.depthStencilState.stencilTestEnable;
+	depthStencilState.depthTestEnable	= graphicsDesc.depthStencilState.depthTestEnable;
+	depthStencilState.depthWriteEnable	= graphicsDesc.depthStencilState.depthWriteEnable;
+	depthStencilState.depthCompareOp	= vulkanCompareOp[static_cast<uint32>(graphicsDesc.depthStencilState.depthCompareTest)];
+	depthStencilState.stencilTestEnable = graphicsDesc.depthStencilState.stencilTestEnable;
 
-	depthStencilState.back.failOp		= vulkanStencilOp[static_cast<uint32>(psoDesc.depthStencilState.back.failOp)];
-	depthStencilState.back.passOp		= vulkanStencilOp[static_cast<uint32>(psoDesc.depthStencilState.back.passOp)];
-	depthStencilState.back.depthFailOp	= vulkanStencilOp[static_cast<uint32>(psoDesc.depthStencilState.back.depthFailOp)];
-	depthStencilState.back.compareOp	= vulkanCompareOp[static_cast<uint32>(psoDesc.depthStencilState.back.compareOp)];
-	depthStencilState.back.compareMask	= psoDesc.depthStencilState.back.compareMask;
-	depthStencilState.back.writeMask	= psoDesc.depthStencilState.back.writeMask;
-	depthStencilState.back.reference	= psoDesc.depthStencilState.back.reference;
+	depthStencilState.back.failOp		= vulkanStencilOp[static_cast<uint32>(graphicsDesc.depthStencilState.back.failOp)];
+	depthStencilState.back.passOp		= vulkanStencilOp[static_cast<uint32>(graphicsDesc.depthStencilState.back.passOp)];
+	depthStencilState.back.depthFailOp	= vulkanStencilOp[static_cast<uint32>(graphicsDesc.depthStencilState.back.depthFailOp)];
+	depthStencilState.back.compareOp	= vulkanCompareOp[static_cast<uint32>(graphicsDesc.depthStencilState.back.compareOp)];
+	depthStencilState.back.compareMask	= graphicsDesc.depthStencilState.back.compareMask;
+	depthStencilState.back.writeMask	= graphicsDesc.depthStencilState.back.writeMask;
+	depthStencilState.back.reference	= graphicsDesc.depthStencilState.back.reference;
 	depthStencilState.front				= depthStencilState.back;
 }
 
-static void CreateRasterizationState(const PipelineStateDesc& psoDesc, VkPipelineRasterizationStateCreateInfo& rasterizationState)
+static void CreateRasterizationState(const GraphicsPipelineDesc& graphicsDesc, VkPipelineRasterizationStateCreateInfo& rasterizationState)
 {
 	static const VkFrontFace vulkanFrontFace[] =
 	{
@@ -53,29 +53,29 @@ static void CreateRasterizationState(const PipelineStateDesc& psoDesc, VkPipelin
 		VK_POLYGON_MODE_POINT,
 	};
 
-	rasterizationState.depthClampEnable			= psoDesc.rasterizationState.depthClampEnable;
-	rasterizationState.rasterizerDiscardEnable	= psoDesc.rasterizationState.rasterizerDiscardEnable;
-	rasterizationState.polygonMode				= vulkanPolygonMode[static_cast<uint32>(psoDesc.rasterizationState.polygonMode)];
-	rasterizationState.cullMode					= static_cast<VkCullModeFlags>(psoDesc.rasterizationState.cullMode);
-	rasterizationState.frontFace				= vulkanFrontFace[static_cast<uint32>(psoDesc.rasterizationState.frontFace)];
-	rasterizationState.depthBiasEnable			= psoDesc.rasterizationState.depthBiasEnable;
-	rasterizationState.depthBiasConstantFactor	= psoDesc.rasterizationState.depthBiasConstantFactor;
-	rasterizationState.depthBiasClamp			= psoDesc.rasterizationState.depthBiasClamp;
-	rasterizationState.depthBiasSlopeFactor		= psoDesc.rasterizationState.depthBiasSlopeFactor;
-	rasterizationState.lineWidth				= psoDesc.rasterizationState.lineWidth;
+	rasterizationState.depthClampEnable			= graphicsDesc.rasterizationState.depthClampEnable;
+	rasterizationState.rasterizerDiscardEnable	= graphicsDesc.rasterizationState.rasterizerDiscardEnable;
+	rasterizationState.polygonMode				= vulkanPolygonMode[static_cast<uint32>(graphicsDesc.rasterizationState.polygonMode)];
+	rasterizationState.cullMode					= static_cast<VkCullModeFlags>(graphicsDesc.rasterizationState.cullMode);
+	rasterizationState.frontFace				= vulkanFrontFace[static_cast<uint32>(graphicsDesc.rasterizationState.frontFace)];
+	rasterizationState.depthBiasEnable			= graphicsDesc.rasterizationState.depthBiasEnable;
+	rasterizationState.depthBiasConstantFactor	= graphicsDesc.rasterizationState.depthBiasConstantFactor;
+	rasterizationState.depthBiasClamp			= graphicsDesc.rasterizationState.depthBiasClamp;
+	rasterizationState.depthBiasSlopeFactor		= graphicsDesc.rasterizationState.depthBiasSlopeFactor;
+	rasterizationState.lineWidth				= graphicsDesc.rasterizationState.lineWidth;
 }
 
-static void CreateMultisampleState(const PipelineStateDesc& psoDesc, VkPipelineMultisampleStateCreateInfo& multisampleState)
+static void CreateMultisampleState(const GraphicsPipelineDesc& graphicsDesc, VkPipelineMultisampleStateCreateInfo& multisampleState)
 {
-	multisampleState.rasterizationSamples	= static_cast<VkSampleCountFlagBits>(psoDesc.multisampleState.rasterizationSamples);
-	multisampleState.sampleShadingEnable	= psoDesc.multisampleState.sampleShadingEnable;
-	multisampleState.minSampleShading		= psoDesc.multisampleState.minSampleShading;
-	multisampleState.alphaToCoverageEnable	= psoDesc.multisampleState.alphaToCoverageEnable;
-	multisampleState.alphaToOneEnable		= psoDesc.multisampleState.alphaToOneEnable;
+	multisampleState.rasterizationSamples	= static_cast<VkSampleCountFlagBits>(graphicsDesc.multisampleState.rasterizationSamples);
+	multisampleState.sampleShadingEnable	= graphicsDesc.multisampleState.sampleShadingEnable;
+	multisampleState.minSampleShading		= graphicsDesc.multisampleState.minSampleShading;
+	multisampleState.alphaToCoverageEnable	= graphicsDesc.multisampleState.alphaToCoverageEnable;
+	multisampleState.alphaToOneEnable		= graphicsDesc.multisampleState.alphaToOneEnable;
 }
 
 static void CreateColorBlendState(
-	const PipelineStateDesc& psoDesc,
+	const GraphicsPipelineDesc& graphicsDesc,
 	VkPipelineColorBlendStateCreateInfo& colorBlendState,
 	std::vector<VkPipelineColorBlendAttachmentState>& colorBlendAttachmentStates)
 {
@@ -135,12 +135,12 @@ static void CreateColorBlendState(
 		}
 	};
 
-	colorBlendAttachmentStates.reserve(psoDesc.renderPass.GetNumAttachments());
+	colorBlendAttachmentStates.reserve(graphicsDesc.renderPass.GetNumAttachments());
 
 	convertColorBlendAttachmentStates(
-		psoDesc.colorBlendAttachmentStates.empty() ? 
-		std::vector(psoDesc.renderPass.GetNumAttachments(), ColorBlendAttachmentState{}) :
-		psoDesc.colorBlendAttachmentStates,
+		graphicsDesc.colorBlendAttachmentStates.empty() ? 
+		std::vector(graphicsDesc.renderPass.GetNumAttachments(), ColorBlendAttachmentState{}) :
+		graphicsDesc.colorBlendAttachmentStates,
 		colorBlendAttachmentStates);
 	
 	colorBlendState.blendConstants[0]	= 0.0f;
@@ -150,10 +150,10 @@ static void CreateColorBlendState(
 	colorBlendState.logicOp				= VK_LOGIC_OP_COPY;
 	colorBlendState.logicOpEnable		= false;
 	colorBlendState.pAttachments		= colorBlendAttachmentStates.data();
-	colorBlendState.attachmentCount		= psoDesc.renderPass.GetNumAttachments();
+	colorBlendState.attachmentCount		= graphicsDesc.renderPass.GetNumAttachments();
 }
 
-static void CreateShaderStages(const PipelineStateDesc& psoDesc, std::vector<VkPipelineShaderStageCreateInfo>& shaderStages)
+static void CreateShaderStages(const GraphicsPipelineDesc& graphicsDesc, std::vector<VkPipelineShaderStageCreateInfo>& shaderStages)
 {
 	const auto addShaderStage = [&] (const gpu::Shader* shader)
 	{
@@ -170,25 +170,25 @@ static void CreateShaderStages(const PipelineStateDesc& psoDesc, std::vector<VkP
 		});
 	};
 
-	addShaderStage(psoDesc.shaderStages.vertex);
-	addShaderStage(psoDesc.shaderStages.tessControl);
-	addShaderStage(psoDesc.shaderStages.tessEval);
-	addShaderStage(psoDesc.shaderStages.geometry);
-	addShaderStage(psoDesc.shaderStages.fragment);
+	addShaderStage(graphicsDesc.shaderStages.vertex);
+	addShaderStage(graphicsDesc.shaderStages.tessControl);
+	addShaderStage(graphicsDesc.shaderStages.tessEval);
+	addShaderStage(graphicsDesc.shaderStages.geometry);
+	addShaderStage(graphicsDesc.shaderStages.fragment);
 }
 
 static void CreateSpecializationInfo(
-	const PipelineStateDesc& psoDesc, 
+	const GraphicsPipelineDesc& graphicsDesc, 
 	VkSpecializationInfo& specializationInfo, 
 	std::vector<VkPipelineShaderStageCreateInfo>& shaderStages)
 {
-	const std::vector<SpecializationInfo::SpecializationMapEntry>& mapEntries = psoDesc.specInfo.GetMapEntries();
+	const std::vector<SpecializationInfo::SpecializationMapEntry>& mapEntries = graphicsDesc.specInfo.GetMapEntries();
 
 	if (mapEntries.size() > 0)
 	{
 		static_assert(sizeof(VkSpecializationMapEntry) == sizeof(SpecializationInfo::SpecializationMapEntry));
 
-		const std::vector<uint8>& data = psoDesc.specInfo.GetData();
+		const std::vector<uint8>& data = graphicsDesc.specInfo.GetData();
 		specializationInfo.mapEntryCount	= static_cast<uint32>(mapEntries.size());
 		specializationInfo.pMapEntries		= reinterpret_cast<const VkSpecializationMapEntry*>(mapEntries.data());
 		specializationInfo.dataSize			= data.size();
@@ -202,16 +202,16 @@ static void CreateSpecializationInfo(
 }
 
 static void CreateVertexInputState(
-	const PipelineStateDesc& psoDesc,
+	const GraphicsPipelineDesc& graphicsDesc,
 	VkPipelineVertexInputStateCreateInfo& outVertexInputState,
 	std::vector<VkVertexInputAttributeDescription>& outVertexAttributes,
 	std::vector<VkVertexInputBindingDescription>& outVertexBindings)
 {
 	// If no vertex attributes were provided in the PSO desc, use the ones from shader reflection.
 	const std::vector<VertexAttributeDescription>& vertexAttributes =
-		psoDesc.vertexAttributes.empty() ? 
-		psoDesc.shaderStages.vertex->compilationResult.vertexAttributeDescriptions : 
-		psoDesc.vertexAttributes;
+		graphicsDesc.vertexAttributes.empty() ? 
+		graphicsDesc.shaderStages.vertex->compilationResult.vertexAttributeDescriptions : 
+		graphicsDesc.vertexAttributes;
 
 	outVertexAttributes.reserve(vertexAttributes.size());
 
@@ -227,7 +227,7 @@ static void CreateVertexInputState(
 
 	outVertexBindings.reserve(vertexAttributes.size());
 
-	if (psoDesc.vertexBindings.empty())
+	if (graphicsDesc.vertexBindings.empty())
 	{
 		for (const auto& vertexAttribute : vertexAttributes)
 		{
@@ -240,7 +240,7 @@ static void CreateVertexInputState(
 	}
 	else
 	{
-		for (const auto& vertexBinding : psoDesc.vertexBindings)
+		for (const auto& vertexBinding : graphicsDesc.vertexBindings)
 		{
 			outVertexBindings.push_back({
 				.binding = vertexBinding.binding,
@@ -256,13 +256,13 @@ static void CreateVertexInputState(
 	outVertexInputState.pVertexAttributeDescriptions	= outVertexAttributes.data();
 }
 
-static void CreateInputAssemblyState(const PipelineStateDesc& psoDesc, VkPipelineInputAssemblyStateCreateInfo& inputAssemblyState)
+static void CreateInputAssemblyState(const GraphicsPipelineDesc& graphicsDesc, VkPipelineInputAssemblyStateCreateInfo& inputAssemblyState)
 {
-	inputAssemblyState.topology					= static_cast<VkPrimitiveTopology>(psoDesc.inputAssemblyState.topology);
-	inputAssemblyState.primitiveRestartEnable	= psoDesc.inputAssemblyState.primitiveRestartEnable;
+	inputAssemblyState.topology					= static_cast<VkPrimitiveTopology>(graphicsDesc.inputAssemblyState.topology);
+	inputAssemblyState.primitiveRestartEnable	= graphicsDesc.inputAssemblyState.primitiveRestartEnable;
 }
 
-static void CreateViewportState(const PipelineStateDesc& psoDesc, VkPipelineViewportStateCreateInfo& viewportState)
+static void CreateViewportState(const GraphicsPipelineDesc& graphicsDesc, VkPipelineViewportStateCreateInfo& viewportState)
 {
 	viewportState.pViewports	= nullptr;
 	viewportState.viewportCount = 1;
@@ -270,37 +270,37 @@ static void CreateViewportState(const PipelineStateDesc& psoDesc, VkPipelineView
 	viewportState.scissorCount	= 1;
 }
 
-VkPipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipelineLayout pipelineLayout) const
+VkPipeline VulkanDevice::CreatePipeline(const GraphicsPipelineDesc& graphicsDesc, VkPipelineLayout pipelineLayout) const
 {
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-	CreateDepthStencilState(psoDesc, depthStencilState);
+	CreateDepthStencilState(graphicsDesc, depthStencilState);
 
 	VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-	CreateRasterizationState(psoDesc, rasterizationState);
+	CreateRasterizationState(graphicsDesc, rasterizationState);
 
 	VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-	CreateMultisampleState(psoDesc, multisampleState);
+	CreateMultisampleState(graphicsDesc, multisampleState);
 
 	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates;
 	VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-	CreateColorBlendState(psoDesc, colorBlendState, colorBlendAttachmentStates);
+	CreateColorBlendState(graphicsDesc, colorBlendState, colorBlendAttachmentStates);
 
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-	CreateShaderStages(psoDesc, shaderStages);
+	CreateShaderStages(graphicsDesc, shaderStages);
 
 	VkSpecializationInfo specializationInfo;
-	CreateSpecializationInfo(psoDesc, specializationInfo, shaderStages);
+	CreateSpecializationInfo(graphicsDesc, specializationInfo, shaderStages);
 
 	std::vector<VkVertexInputAttributeDescription> vertexAttributes;
 	std::vector<VkVertexInputBindingDescription> vertexBindings;
 	VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-	CreateVertexInputState(psoDesc, vertexInputState, vertexAttributes, vertexBindings);
+	CreateVertexInputState(graphicsDesc, vertexInputState, vertexAttributes, vertexBindings);
 	
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-	CreateInputAssemblyState(psoDesc, inputAssemblyState);
+	CreateInputAssemblyState(graphicsDesc, inputAssemblyState);
 
 	VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-	CreateViewportState(psoDesc, viewportState);
+	CreateViewportState(graphicsDesc, viewportState);
 
 	const VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 	const VkPipelineDynamicStateCreateInfo dynamicState =
@@ -324,7 +324,7 @@ VkPipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc, VkPipe
 		.pColorBlendState		= &colorBlendState,
 		.pDynamicState			= &dynamicState,
 		.layout					= pipelineLayout,
-		.renderPass				= psoDesc.renderPass.GetRenderPass(),
+		.renderPass				= graphicsDesc.renderPass.GetRenderPass(),
 		.subpass				= 0,
 		.basePipelineHandle		= VK_NULL_HANDLE,
 		.basePipelineIndex		= -1,
@@ -345,8 +345,8 @@ VkPipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDesc, 
 	VkPipelineShaderStageCreateInfo& stage = pipelineInfo.stage;
 	stage			= { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	stage.stage		= VK_SHADER_STAGE_COMPUTE_BIT;
-	stage.module	= computeDesc.computeShader->compilationResult.shaderModule;
-	stage.pName		= computeDesc.computeShader->compilationResult.entrypoint.data();
+	stage.module	= computeDesc.shader->compilationResult.shaderModule;
+	stage.pName		= computeDesc.shader->compilationResult.entrypoint.data();
 
 	VkSpecializationInfo specializationInfo;
 

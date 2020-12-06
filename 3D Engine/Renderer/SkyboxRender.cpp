@@ -37,14 +37,14 @@ void SceneRenderer::RenderSkybox(CameraRender& camera, gpu::CommandBuffer& cmdBu
 	const SkyboxVS* vertShader = _Device.FindShader<SkyboxVS>();
 	const SkyboxFS* fragShader = _Device.FindShader<SkyboxFS>();
 
-	PipelineStateDesc psoDesc = {};
-	psoDesc.renderPass = camera._SkyboxRP;
-	psoDesc.depthStencilState.depthTestEnable = true;
-	psoDesc.depthStencilState.depthWriteEnable = true;
-	psoDesc.depthStencilState.depthCompareTest = ECompareOp::LessOrEqual;
-	psoDesc.shaderStages = { vertShader, nullptr, nullptr, nullptr, fragShader };
+	GraphicsPipelineDesc graphicsDesc = {};
+	graphicsDesc.renderPass = camera._SkyboxRP;
+	graphicsDesc.depthStencilState.depthTestEnable = true;
+	graphicsDesc.depthStencilState.depthWriteEnable = true;
+	graphicsDesc.depthStencilState.depthCompareTest = ECompareOp::LessOrEqual;
+	graphicsDesc.shaderStages = { vertShader, nullptr, nullptr, nullptr, fragShader };
 
-	gpu::Pipeline pipeline = _Device.CreatePipeline(psoDesc);
+	gpu::Pipeline pipeline = _Device.CreatePipeline(graphicsDesc);
 
 	cmdBuf.BindPipeline(pipeline);
 

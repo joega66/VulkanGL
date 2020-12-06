@@ -49,7 +49,7 @@ public:
 		const VkDescriptorSet* descriptorSets,
 		std::size_t numDynamicOffsets,
 		const uint32* dynamicOffsets,
-		std::function<PipelineStateDesc()> getPsoDesc,
+		std::function<GraphicsPipelineDesc()> getPsoDesc,
 		const FrustumPlanes* viewFrustumPlanes = nullptr)
 	{
 		// @todo Everything in a SurfaceGroup has the same pipeline layout. */
@@ -65,18 +65,18 @@ public:
 				}
 			}
 
-			PipelineStateDesc psoDesc = getPsoDesc();
-			psoDesc.specInfo = surface.GetMaterialInfo();
+			GraphicsPipelineDesc graphicsDesc = getPsoDesc();
+			graphicsDesc.specInfo = surface.GetMaterialInfo();
 
-			gpu::Pipeline pipeline = device.CreatePipeline(psoDesc);
+			gpu::Pipeline pipeline = device.CreatePipeline(graphicsDesc);
 			
 			cmdBuf.BindPipeline(pipeline);
 
 			cmdBuf.BindDescriptorSets(pipeline, numDescriptorSets, descriptorSets, numDynamicOffsets, dynamicOffsets);
 
-			cmdBuf.PushConstants(pipeline, psoDesc.shaderStages.vertex, &surface.GetSurfaceID());
+			cmdBuf.PushConstants(pipeline, graphicsDesc.shaderStages.vertex, &surface.GetSurfaceID());
 
-			cmdBuf.PushConstants(pipeline, psoDesc.shaderStages.fragment, &surface.GetMaterial()->GetPushConstants());
+			cmdBuf.PushConstants(pipeline, graphicsDesc.shaderStages.fragment, &surface.GetMaterial()->GetPushConstants());
 
 			for (const auto& submesh : surface.GetSubmeshes())
 			{

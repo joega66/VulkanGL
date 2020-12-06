@@ -39,42 +39,42 @@ gpu::CommandBuffer VulkanDevice::CreateCommandBuffer(EQueue queueType)
 	return gpu::CommandBuffer(*this, queue);
 }
 
-gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
+gpu::Pipeline VulkanDevice::CreatePipeline(const GraphicsPipelineDesc& graphicsDesc)
 {
-	const uint64 renderPass = *reinterpret_cast<uint64*>(psoDesc.renderPass.GetRenderPass());
+	const uint64 renderPass = *reinterpret_cast<uint64*>(graphicsDesc.renderPass.GetRenderPass());
 
 	int i = 0;
 	std::array<uint64, 5> shaders({ 0 });
 	auto addShader = [&] (const gpu::Shader* shader) { if (shader) shaders[i++] = *reinterpret_cast<uint64*>(shader->compilationResult.shaderModule); };
-	addShader(psoDesc.shaderStages.vertex);
-	addShader(psoDesc.shaderStages.tessControl);
-	addShader(psoDesc.shaderStages.tessEval);
-	addShader(psoDesc.shaderStages.geometry);
-	addShader(psoDesc.shaderStages.fragment);
+	addShader(graphicsDesc.shaderStages.vertex);
+	addShader(graphicsDesc.shaderStages.tessControl);
+	addShader(graphicsDesc.shaderStages.tessEval);
+	addShader(graphicsDesc.shaderStages.geometry);
+	addShader(graphicsDesc.shaderStages.fragment);
 
 	Crc crc = 0;
 	Platform::crc32_u32(crc, &renderPass, sizeof(renderPass));
-	Platform::crc32_u32(crc, &psoDesc.depthStencilState, sizeof(psoDesc.depthStencilState));
-	Platform::crc32_u32(crc, &psoDesc.rasterizationState, sizeof(psoDesc.rasterizationState));
-	Platform::crc32_u32(crc, &psoDesc.multisampleState, sizeof(psoDesc.multisampleState));
-	Platform::crc32_u32(crc, &psoDesc.inputAssemblyState, sizeof(psoDesc.inputAssemblyState));
+	Platform::crc32_u32(crc, &graphicsDesc.depthStencilState, sizeof(graphicsDesc.depthStencilState));
+	Platform::crc32_u32(crc, &graphicsDesc.rasterizationState, sizeof(graphicsDesc.rasterizationState));
+	Platform::crc32_u32(crc, &graphicsDesc.multisampleState, sizeof(graphicsDesc.multisampleState));
+	Platform::crc32_u32(crc, &graphicsDesc.inputAssemblyState, sizeof(graphicsDesc.inputAssemblyState));
 	Platform::crc32_u32(crc, shaders.data(), shaders.size() * sizeof(shaders[0]));
-	Platform::crc32_u32(crc, psoDesc.specInfo.GetMapEntries().data(), psoDesc.specInfo.GetMapEntries().size() * sizeof(psoDesc.specInfo.GetMapEntries()[0]));
-	Platform::crc32_u8(crc, psoDesc.specInfo.GetData().data(), psoDesc.specInfo.GetData().size() * sizeof(psoDesc.specInfo.GetData()[0]));
-	Platform::crc32_u32(crc, psoDesc.colorBlendAttachmentStates.data(), psoDesc.colorBlendAttachmentStates.size() * sizeof(psoDesc.colorBlendAttachmentStates[0]));
-	Platform::crc32_u32(crc, psoDesc.vertexAttributes.data(), psoDesc.vertexAttributes.size() * sizeof(psoDesc.vertexAttributes[0]));
-	Platform::crc32_u32(crc, psoDesc.vertexBindings.data(), psoDesc.vertexBindings.size() * sizeof(psoDesc.vertexBindings[0]));
+	Platform::crc32_u32(crc, graphicsDesc.specInfo.GetMapEntries().data(), graphicsDesc.specInfo.GetMapEntries().size() * sizeof(graphicsDesc.specInfo.GetMapEntries()[0]));
+	Platform::crc32_u8(crc, graphicsDesc.specInfo.GetData().data(), graphicsDesc.specInfo.GetData().size() * sizeof(graphicsDesc.specInfo.GetData()[0]));
+	Platform::crc32_u32(crc, graphicsDesc.colorBlendAttachmentStates.data(), graphicsDesc.colorBlendAttachmentStates.size() * sizeof(graphicsDesc.colorBlendAttachmentStates[0]));
+	Platform::crc32_u32(crc, graphicsDesc.vertexAttributes.data(), graphicsDesc.vertexAttributes.size() * sizeof(graphicsDesc.vertexAttributes[0]));
+	Platform::crc32_u32(crc, graphicsDesc.vertexBindings.data(), graphicsDesc.vertexBindings.size() * sizeof(graphicsDesc.vertexBindings[0]));
 
 	if (auto iter = _GraphicsPipelineCache.find(crc); iter == _GraphicsPipelineCache.end())
 	{
 		std::map<uint32, VkDescriptorSetLayout> layoutsMap;
 		auto getLayouts = [&] (const gpu::Shader* shader) 
 			{ if (shader) { for (const auto& [set, layout] : shader->compilationResult.layouts) { layoutsMap.insert({ set, layout }); } } };
-		getLayouts(psoDesc.shaderStages.vertex);
-		getLayouts(psoDesc.shaderStages.tessControl);
-		getLayouts(psoDesc.shaderStages.tessEval);
-		getLayouts(psoDesc.shaderStages.geometry);
-		getLayouts(psoDesc.shaderStages.fragment);
+		getLayouts(graphicsDesc.shaderStages.vertex);
+		getLayouts(graphicsDesc.shaderStages.tessControl);
+		getLayouts(graphicsDesc.shaderStages.tessEval);
+		getLayouts(graphicsDesc.shaderStages.geometry);
+		getLayouts(graphicsDesc.shaderStages.fragment);
 
 		std::vector<VkDescriptorSetLayout> layouts;
 		layouts.reserve(layoutsMap.size());
@@ -86,16 +86,16 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 		std::vector<VkPushConstantRange> pushConstantRanges;
 		auto getPushConstantRange = [&] (const gpu::Shader* shader) 
 		{ if (shader && shader->compilationResult.pushConstantRange.size > 0) { pushConstantRanges.push_back(shader->compilationResult.pushConstantRange); } };
-		getPushConstantRange(psoDesc.shaderStages.vertex);
-		getPushConstantRange(psoDesc.shaderStages.tessControl);
-		getPushConstantRange(psoDesc.shaderStages.tessEval);
-		getPushConstantRange(psoDesc.shaderStages.geometry);
-		getPushConstantRange(psoDesc.shaderStages.fragment);
+		getPushConstantRange(graphicsDesc.shaderStages.vertex);
+		getPushConstantRange(graphicsDesc.shaderStages.tessControl);
+		getPushConstantRange(graphicsDesc.shaderStages.tessEval);
+		getPushConstantRange(graphicsDesc.shaderStages.geometry);
+		getPushConstantRange(graphicsDesc.shaderStages.fragment);
 
 		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
-		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(psoDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
+		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(graphicsDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_GRAPHICS);
 		_GraphicsPipelineCache[crc] = pipeline;
-		_CrcToPipelineStateDesc[crc] = psoDesc;
+		_CrcToGraphicsPipelineDesc[crc] = graphicsDesc;
 		return pipeline;
 	}
 	else
@@ -106,23 +106,23 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const PipelineStateDesc& psoDesc)
 
 gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDesc)
 {
-	const uint64 computeShader = *reinterpret_cast<uint64*>(computeDesc.computeShader->compilationResult.shaderModule);
+	const uint64 shader = *reinterpret_cast<uint64*>(computeDesc.shader->compilationResult.shaderModule);
 
 	Crc crc = 0;
-	Platform::crc32_u32(crc, &computeShader, sizeof(computeShader));
+	Platform::crc32_u32(crc, &shader, sizeof(shader));
 	Platform::crc32_u32(crc, computeDesc.specInfo.GetMapEntries().data(), computeDesc.specInfo.GetMapEntries().size() * sizeof(computeDesc.specInfo.GetMapEntries()[0]));
 	Platform::crc32_u8(crc, computeDesc.specInfo.GetData().data(), computeDesc.specInfo.GetData().size());
 
 	if (auto iter = _ComputePipelineCache.find(crc); iter == _ComputePipelineCache.end())
 	{
 		std::vector<VkDescriptorSetLayout> layouts;
-		layouts.reserve(computeDesc.computeShader->compilationResult.layouts.size());
-		for (auto& [set, layout] : computeDesc.computeShader->compilationResult.layouts)
+		layouts.reserve(computeDesc.shader->compilationResult.layouts.size());
+		for (auto& [set, layout] : computeDesc.shader->compilationResult.layouts)
 		{
 			layouts.push_back(layout);
 		}
 
-		const auto& pushConstantRange = computeDesc.computeShader->compilationResult.pushConstantRange;
+		const auto& pushConstantRange = computeDesc.shader->compilationResult.pushConstantRange;
 		const auto pushConstantRanges = pushConstantRange.size > 0 ? std::vector{ pushConstantRange } : std::vector<VkPushConstantRange>{};
 		const VkPipelineLayout pipelineLayout = GetOrCreatePipelineLayout(layouts, pushConstantRanges);
 		auto pipeline = std::make_shared<VulkanPipeline>(*this, CreatePipeline(computeDesc, pipelineLayout), pipelineLayout, VK_PIPELINE_BIND_POINT_COMPUTE);
@@ -459,7 +459,7 @@ void VulkanDevice::RecompilePipelines()
 	for (auto& [crc, pipeline] : _GraphicsPipelineCache)
 	{
 		vkDestroyPipeline(_Device, pipeline->_Pipeline, nullptr);
-		pipeline->_Pipeline = CreatePipeline(_CrcToPipelineStateDesc[crc], pipeline->_PipelineLayout);
+		pipeline->_Pipeline = CreatePipeline(_CrcToGraphicsPipelineDesc[crc], pipeline->_PipelineLayout);
 	}
 
 	for (auto& [crc, pipeline] : _ComputePipelineCache)

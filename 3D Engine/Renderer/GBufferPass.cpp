@@ -50,12 +50,12 @@ void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraRender& camera
 
 		surfaceGroup.Draw<true>(_Device, cmdBuf, std::size(descriptorSets), descriptorSets, std::size(dynamicOffsets), dynamicOffsets, [&] ()
 		{
-			PipelineStateDesc psoDesc = {};
-			psoDesc.renderPass = cameraRender._GBufferRP;
-			psoDesc.shaderStages.vertex = _Device.FindShader<GBufferPassVS>();
-			psoDesc.shaderStages.fragment = _Device.FindShader<GBufferPassFS>();
+			GraphicsPipelineDesc graphicsDesc = {};
+			graphicsDesc.renderPass = cameraRender._GBufferRP;
+			graphicsDesc.shaderStages.vertex = _Device.FindShader<GBufferPassVS>();
+			graphicsDesc.shaderStages.fragment = _Device.FindShader<GBufferPassFS>();
 
-			return psoDesc;
+			return graphicsDesc;
 		}, &viewFrustumPlanes);
 	}
 

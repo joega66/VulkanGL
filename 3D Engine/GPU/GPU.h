@@ -26,7 +26,7 @@ namespace gpu
 
 		virtual gpu::CommandBuffer CreateCommandBuffer(EQueue queue) = 0;
 
-		virtual gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) = 0;
+		virtual gpu::Pipeline CreatePipeline(const GraphicsPipelineDesc& graphicsDesc) = 0;
 
 		virtual gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computePipelineDesc) = 0;
 

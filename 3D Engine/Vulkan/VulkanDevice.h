@@ -28,7 +28,7 @@ public:
 
 	gpu::CommandBuffer CreateCommandBuffer(EQueue queue) override;
 
-	gpu::Pipeline CreatePipeline(const PipelineStateDesc& psoDesc) override;
+	gpu::Pipeline CreatePipeline(const GraphicsPipelineDesc& graphicsDesc) override;
 
 	gpu::Pipeline CreatePipeline(const ComputePipelineDesc& computeDesc) override;
 
@@ -133,7 +133,7 @@ private:
 
 	std::unordered_map<Crc, gpu::Pipeline> _GraphicsPipelineCache;
 
-	std::unordered_map<Crc, PipelineStateDesc> _CrcToPipelineStateDesc;
+	std::unordered_map<Crc, GraphicsPipelineDesc> _CrcToGraphicsPipelineDesc;
 
 	std::unordered_map<Crc, gpu::Pipeline> _ComputePipelineCache;
 
@@ -156,7 +156,7 @@ private:
 	std::pair<VkRenderPass, VkFramebuffer> GetOrCreateRenderPass(const RenderPassDesc& rpDesc);
 	[[nodiscard]] static VkRenderPass CreateRenderPass(VkDevice device, const RenderPassDesc& rpDesc);
 	[[nodiscard]] VkFramebuffer CreateFramebuffer(VkRenderPass renderPass, const RenderPassDesc& rpDesc) const;
-	[[nodiscard]] VkPipeline CreatePipeline(const PipelineStateDesc& psoDesc, VkPipelineLayout pipelineLayout) const;
+	[[nodiscard]] VkPipeline CreatePipeline(const GraphicsPipelineDesc& graphicsDesc, VkPipelineLayout pipelineLayout) const;
 	[[nodiscard]] VkPipeline CreatePipeline(const ComputePipelineDesc& computeDesc, VkPipelineLayout pipelineLayout) const;
 	VkPipelineLayout GetOrCreatePipelineLayout(
 		const std::vector<VkDescriptorSetLayout>& Layouts,

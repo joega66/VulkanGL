@@ -64,7 +64,7 @@ void SceneRenderer::ComputeDeferredLight(CameraRender& camera, gpu::CommandBuffe
 	const gpu::Shader* shader = _Device.FindShader<LightingPassCS>();
 
 	ComputePipelineDesc computeDesc;
-	computeDesc.computeShader = shader;
+	computeDesc.shader = shader;
 	computeDesc.specInfo.Add(0, light._L.w == 0.0f ? LightingPassCS::directionalLight : LightingPassCS::pointLight);
 	computeDesc.specInfo.Add(1, static_cast<int>(isFirstLight));
 
@@ -114,7 +114,7 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraRender& cameraRender
 	const gpu::Shader* shader = _Device.FindShader<SSGI>();
 
 	ComputePipelineDesc computeDesc;
-	computeDesc.computeShader = shader;
+	computeDesc.shader = shader;
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 

@@ -24,7 +24,7 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 	const gpu::Shader* shader = _Device.FindShader<PostProcessingCS>();
 
 	ComputePipelineDesc computeDesc;
-	computeDesc.computeShader = shader;
+	computeDesc.shader = shader;
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
 

@@ -29,14 +29,14 @@ REGISTER_SHADER(UserInterfaceFS, "../Shaders/UserInterfaceFS.glsl", "main", ESha
 
 void SceneRenderer::CreateUserInterfacePipeline()
 {
-	PipelineStateDesc psoDesc = {};
-	psoDesc.renderPass = _UserInterfaceRP.front();
-	psoDesc.depthStencilState.depthTestEnable = false;
-	psoDesc.depthStencilState.depthWriteEnable = false;
-	psoDesc.depthStencilState.depthCompareTest = ECompareOp::Always;
-	psoDesc.shaderStages.vertex = _Device.FindShader<UserInterfaceVS>();
-	psoDesc.shaderStages.fragment = _Device.FindShader<UserInterfaceFS>();
-	psoDesc.colorBlendAttachmentStates.push_back({
+	GraphicsPipelineDesc graphicsDesc = {};
+	graphicsDesc.renderPass = _UserInterfaceRP.front();
+	graphicsDesc.depthStencilState.depthTestEnable = false;
+	graphicsDesc.depthStencilState.depthWriteEnable = false;
+	graphicsDesc.depthStencilState.depthCompareTest = ECompareOp::Always;
+	graphicsDesc.shaderStages.vertex = _Device.FindShader<UserInterfaceVS>();
+	graphicsDesc.shaderStages.fragment = _Device.FindShader<UserInterfaceFS>();
+	graphicsDesc.colorBlendAttachmentStates.push_back({
 		.blendEnable = true,
 		.srcColorBlendFactor = EBlendFactor::SRC_ALPHA,
 		.dstColorBlendFactor = EBlendFactor::ONE_MINUS_SRC_ALPHA,
@@ -45,14 +45,14 @@ void SceneRenderer::CreateUserInterfacePipeline()
 		.dstAlphaBlendFactor = EBlendFactor::ZERO,
 		.alphaBlendOp = EBlendOp::ADD,
 	});
-	psoDesc.vertexAttributes = {
+	graphicsDesc.vertexAttributes = {
 		{ 0, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, pos) },
 		{ 1, 0, EFormat::R32G32_SFLOAT, offsetof(ImDrawVert, uv) },
 		{ 2, 0, EFormat::R8G8B8A8_UNORM, offsetof(ImDrawVert, col) } };
-	psoDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
+	graphicsDesc.vertexBindings = { { 0, sizeof(ImDrawVert) } };
 
 	auto& userInterfaceRender = _ECS.GetSingletonComponent<UserInterfaceRender>();
-	userInterfaceRender.pipeline = _Device.CreatePipeline(psoDesc);
+	userInterfaceRender.pipeline = _Device.CreatePipeline(graphicsDesc);
 }
 
 void SceneRenderer::RenderUserInterface(gpu::CommandBuffer& cmdBuf, const gpu::RenderPass& renderPass)

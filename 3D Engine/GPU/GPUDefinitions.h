@@ -75,18 +75,18 @@ struct RenderPassDesc
 	EAccess						dstAccessMask;
 };
 
-struct PipelineStateDesc
+struct GraphicsPipelineDesc
 {
-	gpu::RenderPassView renderPass;
-	DepthStencilState depthStencilState = {};
-	RasterizationState rasterizationState = {};
-	MultisampleState multisampleState = {};
-	InputAssemblyState inputAssemblyState = {};
-	ShaderStages shaderStages = {};
-	SpecializationInfo specInfo;
-	std::vector<ColorBlendAttachmentState> colorBlendAttachmentStates;
+	gpu::RenderPassView						renderPass;
+	DepthStencilState						depthStencilState = {};
+	RasterizationState						rasterizationState = {};
+	MultisampleState						multisampleState = {};
+	InputAssemblyState						inputAssemblyState = {};
+	ShaderStages							shaderStages = {};
+	SpecializationInfo						specInfo;
+	std::vector<ColorBlendAttachmentState>	colorBlendAttachmentStates;
 	std::vector<VertexAttributeDescription> vertexAttributes;
-	std::vector<VertexBindingDescription> vertexBindings;
+	std::vector<VertexBindingDescription>	vertexBindings;
 
 	bool HasShader(const gpu::Shader* shader) const
 	{
@@ -108,7 +108,7 @@ struct PipelineStateDesc
 
 struct ComputePipelineDesc
 {
-	const gpu::Shader* computeShader = nullptr;
+	const gpu::Shader* shader = nullptr;
 	SpecializationInfo specInfo;
 };
 

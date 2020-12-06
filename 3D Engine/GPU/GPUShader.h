@@ -206,11 +206,6 @@ struct ShaderCompilationTask
 	ShaderCompilerWorker	worker;
 };
 
-namespace gpu
-{
-	std::vector<ShaderCompilationTask>& GetShaderCompilationTasks();
-}
-
 /** Result of shader compilation. */
 class ShaderCompilationResult
 {
@@ -254,6 +249,8 @@ public:
 
 namespace gpu
 {
+	std::vector<ShaderCompilationTask>& GetShaderCompilationTasks();
+
 	class Shader
 	{
 	public:

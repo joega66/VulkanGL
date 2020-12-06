@@ -53,7 +53,7 @@ namespace gpu
 
 	/**
 	  * Since the API couples the render pass and framebuffer for convenience,
-	  * but PipelineStateDesc just needs the render pass, the API needs to offer
+	  * but GraphicsPipelineDesc just needs the render pass, the API needs to offer
 	  * a view into the render pass.
 	  */
 	class RenderPassView
