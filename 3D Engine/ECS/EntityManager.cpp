@@ -1,88 +1,96 @@
 #include "EntityManager.h"
 #include <Components/Transform.h>
 
-Entity EntityManager::CreatePrefab(const std::string& Name)
+Entity EntityManager::CreatePrefab(const std::string& name)
 {
-	check(!Prefabs.contains(Name), "Prefab %s already exists.", Name.c_str());
-	Prefabs.emplace(Name, CreateEntity());
-	Entity Prefab = Prefabs[Name];
-	PrefabNames.emplace(Prefab.GetEntityID(), Name);
-	return Prefab;
+	check(!_Prefabs.contains(name), "Prefab %s already exists.", name.c_str());
+
+	_Prefabs.emplace(name, CreateEntity());
+
+	Entity prefab = _Prefabs[name];
+
+	_PrefabNames.emplace(prefab.GetEntityID(), name);
+
+	return prefab;
 }
 
-Entity EntityManager::CreateEntity(const std::string& Name)
+Entity EntityManager::CreateEntity(const std::string& name)
 {
-	Entity NewEntity = [&] ()
+	Entity entity = [&] ()
 	{
-		if (!DeadEntities.empty())
+		if (!_DeadEntities.empty())
 		{
-			auto Entity = DeadEntities.front();
-			DeadEntities.pop_front();
-			EntityStatus[Entity.GetEntityID()] = true;
-			return Entity;
+			auto entity = _DeadEntities.front();
+
+			_DeadEntities.pop_front();
+
+			_EntityStatus[entity.GetEntityID()] = true;
+
+			return entity;
 		}
 		else
 		{
-			EntityStatus.push_back(true);
-			return Entities.emplace_back(Entity( Entities.size() ));
+			_EntityStatus.push_back(true);
+
+			return _Entities.emplace_back(Entity( _Entities.size() ));
 		}
 	}();
 	
 	// Add components every entity should probably have...
-	AddComponent(NewEntity, Transform(*this, NewEntity));
+	AddComponent(entity, Transform(*this, entity));
 
-	EntityNames[NewEntity.GetEntityID()] = Name.empty() ? "Entity" + std::to_string(NewEntity.GetEntityID()) : Name;
+	_EntityNames[entity.GetEntityID()] = name.empty() ? "Entity" + std::to_string(entity.GetEntityID()) : name;
 
-	return NewEntity;
+	return entity;
 }
 
-void EntityManager::Destroy(Entity& Entity)
+void EntityManager::Destroy(Entity& entity)
 {
-	for (auto& [Type, ComponentArray] : ComponentArrays)
+	for (auto& [type, componentArray] : _ComponentArrays)
 	{
-		if (ComponentArray.get()->HasComponent(Entity))
+		if (componentArray.get()->HasComponent(entity))
 		{
-			ComponentArray.get()->RemoveComponent(Entity);
+			componentArray.get()->RemoveComponent(entity);
 		}
 	}
 
-	DeadEntities.push_back(Entity);
+	_DeadEntities.push_back(entity);
 
-	EntityStatus[Entity.GetEntityID()] = false;
+	_EntityStatus[entity.GetEntityID()] = false;
 
-	EntityNames.erase(Entity.GetEntityID());
+	_EntityNames.erase(entity.GetEntityID());
 }
 
 EntityIterator EntityManager::Iter()
 {
-	return EntityIterator(Entities, EntityStatus);
+	return EntityIterator(_Entities, _EntityStatus);
 }
 
 void EntityManager::NotifyComponentEvents()
 {
-	for (auto& ComponentArrayEntry : ComponentArrays)
+	for (auto& componentArrayEntry : _ComponentArrays)
 	{
-		auto ComponentArray = ComponentArrayEntry.second.get();
-		ComponentArray->NotifyOnComponentCreatedEvents();
+		auto componentArray = componentArrayEntry.second.get();
+		componentArray->NotifyOnComponentCreatedEvents();
 	}
 }
 
-EntityIterator::EntityIterator(std::vector<Entity>& Entities, const std::vector<bool>& EntityStatus)
-	: Entities(Entities), EntityStatus(EntityStatus)
+EntityIterator::EntityIterator(std::vector<Entity>& entities, const std::vector<bool>& entityStatus)
+	: _Entities(entities), _EntityStatus(entityStatus)
 {
 }
 
 Entity& EntityIterator::Next()
 {
-	return Entities[CurrIndex++];
+	return _Entities[_CurrIndex++];
 }
 
 bool EntityIterator::End()
 {
-	while (CurrIndex != Entities.size() && EntityStatus[CurrIndex] == false)
+	while (_CurrIndex != _Entities.size() && _EntityStatus[_CurrIndex] == false)
 	{
-		CurrIndex++;
+		_CurrIndex++;
 	}
 
-	return CurrIndex == Entities.size();
+	return _CurrIndex == _Entities.size();
 }

@@ -2,11 +2,11 @@
 #include "EntityManager.h"
 
 Entity::Entity()
-	: EntityID(InvalidID)
+	: _EntityID(_InvalidID)
 {
 }
 
-Entity::Entity(std::size_t EntityID)
-	: EntityID(EntityID)
+Entity::Entity(std::size_t entityID)
+	: _EntityID(entityID)
 {
 }

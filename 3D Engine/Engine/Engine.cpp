@@ -32,15 +32,6 @@ void Engine::Main()
 {
 	SystemsManager systemsManager;
 
-	SurfaceSystem surfaceSystem;
-	systemsManager.Register(surfaceSystem);
-
-	CameraSystem cameraSystem;
-	systemsManager.Register(cameraSystem);
-
-	ShadowSystem shadowSystem;
-	systemsManager.Register(shadowSystem);
-
 	EditorControllerSystem editorControllerSystem;
 	systemsManager.Register(editorControllerSystem);
 
@@ -50,7 +41,15 @@ void Engine::Main()
 	UserInterface userInterface;
 	systemsManager.Register(userInterface);
 
-	systemsManager.StartRenderSystems(*this);
+	SurfaceSystem surfaceSystem;
+	systemsManager.Register(surfaceSystem);
+
+	CameraSystem cameraSystem;
+	systemsManager.Register(cameraSystem);
+
+	ShadowSystem shadowSystem;
+	systemsManager.Register(shadowSystem);
+
 	systemsManager.StartSystems(*this);
 
 	SceneRenderer sceneRenderer(*this);
@@ -64,7 +63,6 @@ void Engine::Main()
 		_ECS.NotifyComponentEvents();
 
 		systemsManager.UpdateSystems(*this);
-		systemsManager.UpdateRenderSystems(*this);
 
 		sceneRenderer.Render();
 

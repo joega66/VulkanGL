@@ -1,43 +1,22 @@
 #include "System.h"
 
-void SystemsManager::Register(ISystem& System)
+void SystemsManager::Register(ISystem& system)
 {
-	Systems.push_back(System);
+	_Systems.push_back(system);
 }
 
-void SystemsManager::Register(IRenderSystem& System)
+void SystemsManager::StartSystems(Engine& engine)
 {
-	RenderSystems.push_back(System);
-}
-
-void SystemsManager::StartSystems(class Engine& Engine)
-{
-	for (auto& System : Systems)
+	for (auto& system : _Systems)
 	{
-		System.get().Start(Engine);
+		system.get().Start(engine);
 	}
 }
 
-void SystemsManager::UpdateSystems(class Engine& Engine)
+void SystemsManager::UpdateSystems(Engine& engine)
 {
-	for (auto& System : Systems)
+	for (auto& system : _Systems)
 	{
-		System.get().Update(Engine);
-	}
-}
-
-void SystemsManager::StartRenderSystems(class Engine& Engine)
-{
-	for (auto& System : RenderSystems)
-	{
-		System.get().Start(Engine);
-	}
-}
-
-void SystemsManager::UpdateRenderSystems(class Engine& Engine)
-{
-	for (auto& System : RenderSystems)
-	{
-		System.get().Update(Engine);
+		system.get().Update(engine);
 	}
 }

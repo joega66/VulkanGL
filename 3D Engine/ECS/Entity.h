@@ -4,34 +4,34 @@
 class Entity
 {
 public:
-	static constexpr std::size_t InvalidID = std::numeric_limits<std::size_t>::max();
+	static constexpr std::size_t _InvalidID = std::numeric_limits<std::size_t>::max();
 
 	Entity();
 
-	bool operator==(const Entity& Entity) const
+	bool operator==(const Entity& entity) const
 	{
-		return EntityID == Entity.GetEntityID();
+		return _EntityID == entity.GetEntityID();
 	}
 
-	bool operator!=(const Entity& Entity) const
+	bool operator!=(const Entity& entity) const
 	{
-		return EntityID != Entity.GetEntityID();
+		return _EntityID != entity.GetEntityID();
 	}
 
-	bool operator<(const Entity& Entity) const
+	bool operator<(const Entity& entity) const
 	{
-		return EntityID < Entity.GetEntityID();
+		return _EntityID < entity.GetEntityID();
 	}
 
 	inline std::size_t GetEntityID() const
 	{
-		return EntityID;
+		return _EntityID;
 	};
 
 private:
 	friend class EntityManager; // So that only the entity manager can assign entity ids.
 
-	std::size_t EntityID;
+	std::size_t _EntityID;
 
-	Entity(std::size_t EntityID);
+	Entity(std::size_t entityID);
 };

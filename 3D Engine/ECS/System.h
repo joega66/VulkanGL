@@ -2,32 +2,23 @@
 #include <Platform/Platform.h>
 #include <typeindex>
 
+class Engine;
+
 class ISystem
 {
 public:
-	virtual void Start(class Engine& Engine) {}
-	virtual void Update(class Engine& Engine) {}
-};
-
-class IRenderSystem
-{
-public:
-	virtual void Start(class Engine& Engine) {}
-	virtual void Update(class Engine& Engine) {}
+	virtual void Start(Engine& engine) {}
+	virtual void Update(Engine& engine) {}
 };
 
 class SystemsManager
 {
 public:
 	SystemsManager() = default;
-	void Register(ISystem& ISystem);
-	void Register(IRenderSystem& System);
-	void StartSystems(class Engine& Engine);
-	void UpdateSystems(class Engine& Engine);
-	void StartRenderSystems(class Engine& Engine);
-	void UpdateRenderSystems(class Engine& Engine);
+	void Register(ISystem& system);
+	void StartSystems(Engine& engine);
+	void UpdateSystems(Engine& engine);
 
 private:
-	std::vector<std::reference_wrapper<ISystem>> Systems;
-	std::vector<std::reference_wrapper<IRenderSystem>> RenderSystems;
+	std::vector<std::reference_wrapper<ISystem>> _Systems;
 };

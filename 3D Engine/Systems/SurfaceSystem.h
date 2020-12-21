@@ -12,7 +12,7 @@ BEGIN_DESCRIPTOR_SET(StaticMeshDescriptors)
 	DESCRIPTOR(gpu::StorageBuffer, _LocalToWorldBuffer)
 END_DESCRIPTOR_SET(StaticMeshDescriptors)
 
-class SurfaceSystem : public IRenderSystem
+class SurfaceSystem : public ISystem
 {
 public:
 	void Start(Engine& engine) override;

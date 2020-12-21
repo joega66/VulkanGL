@@ -5,14 +5,14 @@
 class Entity;
 
 template<typename ComponentType>
-using ComponentEvent = std::function<void(Entity& Entity, ComponentType& Component)>;
+using ComponentEvent = std::function<void(Entity&, ComponentType&)>;
 
 /** ComponentArray interface. Only meant to be implemented by ComponentArray. */
 class IComponentArray
 {
 public:
-	virtual bool HasComponent(Entity& Entity) const = 0;
-	virtual void RemoveComponent(Entity& Entity) = 0;
+	virtual bool HasComponent(Entity& entity) const = 0;
+	virtual void RemoveComponent(Entity& entity) = 0;
 	virtual void NotifyOnComponentCreatedEvents() = 0;
 };
 
@@ -23,38 +23,38 @@ public:
 	ComponentArray();
 
 	/** Get an entity's component. */
-	ComponentType& GetComponent(Entity& Entity);
+	ComponentType& GetComponent(Entity& entity);
 
 	/** Add a component to an entity. */
-	ComponentType& AddComponent(Entity& Entity, ComponentType&& Component);
+	ComponentType& AddComponent(Entity& entity, ComponentType&& component);
 
 	/** Add a callback for when a component is created.	*/
-	void OnComponentCreated(ComponentEvent<ComponentType> ComponentEvent);
+	void OnComponentCreated(ComponentEvent<ComponentType> componentEvent);
 
 	/** Notify callbacks that a component was created. */
 	virtual void NotifyOnComponentCreatedEvents() final;
 
 	/** Check if entity has a component. */
-	virtual bool HasComponent(Entity& Entity) const final;
+	virtual bool HasComponent(Entity& entity) const final;
 
 	/** Remove component from an entity. */
-	virtual void RemoveComponent(Entity& Entity) final;
+	virtual void RemoveComponent(Entity& entity) final;
 
-	inline const std::unordered_map<std::size_t, std::size_t>& GetEntities() const { return EntityToArrayIndex; }
+	inline const std::unordered_map<std::size_t, std::size_t>& GetEntities() const { return _EntityToArrayIndex; }
 
 private:
 	/** Component pool. */
-	std::vector<ComponentType> Components;
+	std::vector<ComponentType> _Components;
 
 	/** Maps an entity to its array index. */
-	std::unordered_map<std::size_t, std::size_t> EntityToArrayIndex;
+	std::unordered_map<std::size_t, std::size_t> _EntityToArrayIndex;
 
 	/** Maps an array index to an entity. */
-	std::unordered_map<std::size_t, std::size_t> ArrayIndexToEntity;
+	std::unordered_map<std::size_t, std::size_t> _ArrayIndexToEntity;
 
 	/** Component created events. */
-	std::vector<ComponentEvent<ComponentType>> ComponentCreatedEvents;
+	std::vector<ComponentEvent<ComponentType>> _ComponentCreatedEvents;
 
 	/** Entities that were given a component this frame. */
-	std::vector<Entity> NewEntities;
+	std::vector<Entity> _NewEntities;
 };

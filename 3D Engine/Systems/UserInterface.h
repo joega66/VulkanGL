@@ -21,7 +21,7 @@ struct UserInterfaceRender : public Component
 	void Update(gpu::Device& device);
 };
 
-class UserInterface : public IRenderSystem
+class UserInterface : public ISystem
 {
 public:
 	~UserInterface();

@@ -11,7 +11,7 @@ BEGIN_DESCRIPTOR_SET(ShadowDescriptors)
 	DESCRIPTOR(gpu::UniformBuffer<ShadowUniform>, _ShadowUniform)
 END_DESCRIPTOR_SET(ShadowDescriptors)
 
-class ShadowSystem : public IRenderSystem
+class ShadowSystem : public ISystem
 {
 public:
 	void Start(Engine& engine) override;

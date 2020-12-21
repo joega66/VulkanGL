@@ -29,7 +29,7 @@ BEGIN_DESCRIPTOR_SET(CameraDescriptors)
 	DESCRIPTOR(gpu::StorageImage, _DirectLighting)
 END_DESCRIPTOR_SET(CameraDescriptors)
 
-class CameraSystem : public IRenderSystem
+class CameraSystem : public ISystem
 {
 public:
 	void Start(Engine& engine) override;
