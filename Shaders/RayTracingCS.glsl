@@ -408,26 +408,6 @@ void main()
 
 		color += RayColor(ray);
 	}
-	
-	// History reprojection
-	/*const vec4 clipSpaceH = _Camera.worldToClip * vec4(closestHitInfo.position, 1.0);
-	const vec3 clipSpace = clipSpaceH.xyz / clipSpaceH.w;
-
-	const vec4 prevClipSpaceH = _Camera.prevWorldToClip * vec4(closestHitInfo.position, 1.0);
-	const vec3 prevClipSpace = prevClipSpaceH.xyz / prevClipSpaceH.w;
-
-	const vec2 prevNormalized = (prevClipSpace.xy / 2.0) + 0.5;
-	const ivec2 prevScreenCoords = ivec2(prevNormalized * vec2(sceneColorSize));
-	
-	const float prevClosestHitDepth = imageLoad(_RTDepth, prevScreenCoords).r;
-
-	const float csNormalZ = normalize(mat3(_Camera.worldToView) * closestHitInfo.normal).z;
-
-	const float epsilon = 0.003 + 0.017 * abs(csNormalZ);
-
-	const float error = abs(1 - LinearizeDepth(prevClipSpace.z, _Camera.clipData) / LinearizeDepth(prevClosestHitDepth, _Camera.clipData));
-	
-	const bool isOffscreen = any(lessThan(prevNormalized, vec2(0))) || any(greaterThan(prevNormalized, vec2(1)));*/
 
 	if (_Params._FrameNumber < MAX_TEMPORAL_SAMPLES) // Prevents color banding
 	{

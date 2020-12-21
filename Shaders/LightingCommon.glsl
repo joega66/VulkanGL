@@ -72,11 +72,11 @@ float SmithGF(float ndotv, float ndotl, float roughness)
 	return geom1 * geom2;
 }
 
-vec3 Specular_BRDF(BRDFContext brdf, vec3 specularColor, float roughness)
+vec3 Specular_BRDF(BRDFContext brdf, vec3 specularColor, float roughness, out vec3 fresnel)
 {
 	roughness *= roughness;
 
-	vec3 fresnel = FresnelSchlick(specularColor, brdf.ndotl);
+	fresnel = FresnelSchlick(specularColor, brdf.ndotl);
 	float ndf = NormalGGX(brdf.ndoth, roughness);
 	float g = SmithGF(brdf.ndotv, brdf.ndotl, roughness);
 
@@ -97,7 +97,10 @@ vec3 DirectLighting(vec3 v, LightData light, SurfaceData surface, MaterialData m
 	BRDFContext brdf;
 	BRDF_InitContext(brdf, surface.worldNormal, v, light.l);
 
-	vec3 lo = ( material.diffuseColor + Specular_BRDF(brdf, material.specularColor, material.roughness) ) * light.radiance * brdf.ndotl;
+	vec3 fresnel;
+	const vec3 specularColor = Specular_BRDF(brdf, material.specularColor, material.roughness, fresnel);
+
+	const vec3 lo = mix( material.diffuseColor, specularColor, fresnel ) * light.radiance * brdf.ndotl;
 	
 	return lo;
 }
