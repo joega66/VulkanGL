@@ -66,8 +66,8 @@ void Engine::Main()
 
 		sceneRenderer.Render();
 
-		_Cursor.Update(_Platform);
-		_Input.Update(_Platform);
+		_Cursor.Update();
+		_Input.Update();
 
 		// @todo Move me.
 		for (auto entity : _ECS.GetEntities<Camera>())

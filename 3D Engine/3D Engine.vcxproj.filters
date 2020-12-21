@@ -286,9 +286,6 @@
     <ClCompile Include="Engine\StaticMesh.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\LightingPass.cpp">
-      <Filter>Source\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Physics\Physics.cpp">
       <Filter>Source\Physics</Filter>
     </ClCompile>
@@ -448,6 +445,9 @@
     <ClCompile Include="Vulkan\VulkanShader.cpp">
       <Filter>Source\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\DirectLightingPass.cpp">
+      <Filter>Source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\FullscreenVS.glsl">
@@ -504,9 +504,6 @@
     <None Include="..\Shaders\GBufferVS.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\Shaders\LightingPassCS.glsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="..\Shaders\SurfaceInterface.glsl">
       <Filter>Shaders</Filter>
     </None>
@@ -526,6 +523,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\Shaders\SSGI.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Shaders\DirectLightingPassCS.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

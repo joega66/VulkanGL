@@ -28,10 +28,10 @@ private:
 	gpu::Semaphore _AcquireNextImageSem;
 	gpu::Semaphore _EndOfFrameSem;
 
-	void RenderGBufferPass(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf);
+	void RenderGBuffer(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf);
 	void RenderShadowDepths(CameraRender& camera, gpu::CommandBuffer& cmdBuf);
-	void ComputeLightingPass(CameraRender& camera, gpu::CommandBuffer& cmdBuf);
-	void ComputeDeferredLight(CameraRender& camera, gpu::CommandBuffer& cmdBuf, const struct LightingParams& light, bool isFirstLight);
+	void ComputeDirectLighting(CameraRender& camera, gpu::CommandBuffer& cmdBuf);
+	void ComputeDirectLighting(CameraRender& camera, gpu::CommandBuffer& cmdBuf, const struct DirectLightingParams& light, bool isFirstLight);
 	void ComputeSSGI(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf);
 	void ComputeRayTracing(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf);
 	void RenderSkybox(CameraRender& camera, gpu::CommandBuffer& cmdBuf);

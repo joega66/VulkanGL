@@ -34,7 +34,7 @@ public:
 
 REGISTER_SHADER(GBufferPassFS, "../Shaders/GBufferFS.glsl", "main", EShaderStage::Fragment);
 
-void SceneRenderer::RenderGBufferPass(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::RenderGBuffer(const Camera& camera, CameraRender& cameraRender, gpu::CommandBuffer& cmdBuf)
 {
 	cmdBuf.BeginRenderPass(cameraRender._GBufferRP);
 

@@ -19,7 +19,7 @@ public:
 	Cursor& operator=(const Cursor&) = delete;
 
 	/** Set end-of-frame updates. */
-	void Update(Platform& platform);
+	void Update();
 
 	/** Determines the state of the hardware cursor. */
 	ECursorMode _Mode = ECursorMode::Normal;
@@ -40,6 +40,8 @@ public:
 	glm::vec2 _Position;
 
 private:
+	struct GLFWwindow* _Window;
+
 	static void GLFWScrollEvent(struct GLFWwindow* window, double xOffset, double yOffset);
 
 	static void GLFWMouseEvent(struct GLFWwindow* window, double x, double y);

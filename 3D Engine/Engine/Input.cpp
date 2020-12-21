@@ -117,7 +117,7 @@ bool Input::GetShortcutUp(std::string&& shortcutName) const
 	return areAllKeysPressed && GetKeyUp(shortcut.back());
 }
 
-void Input::Update(Platform& platform)
+void Input::Update()
 {
 	std::fill(_KeysPressed.begin(), _KeysPressed.end(), false);
 }

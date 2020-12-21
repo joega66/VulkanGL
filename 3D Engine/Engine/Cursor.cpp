@@ -16,13 +16,14 @@ void Cursor::GLFWMouseEvent(GLFWwindow* window, double x, double y)
 }
 
 Cursor::Cursor(Platform& platform)
+	: _Window(platform._Window)
 {
-	glfwSetScrollCallback(platform._Window, GLFWScrollEvent);
+	glfwSetScrollCallback(_Window, GLFWScrollEvent);
 
-	glfwSetCursorPosCallback(platform._Window, GLFWMouseEvent);
+	glfwSetCursorPosCallback(_Window, GLFWMouseEvent);
 }
 
-void Cursor::Update(Platform& platform)
+void Cursor::Update()
 {
 	uint32 inputMode;
 
@@ -39,7 +40,7 @@ void Cursor::Update(Platform& platform)
 		break;
 	}
 
-	glfwSetInputMode(platform._Window, GLFW_CURSOR, inputMode);
+	glfwSetInputMode(_Window, GLFW_CURSOR, inputMode);
 
 	_MouseScrollDelta = {};
 

@@ -53,7 +53,7 @@ public:
 	bool GetShortcutUp(std::string&& shortcutName) const;
 
 	/** Apply end-of-frame updates. */
-	void Update(Platform& platform);
+	void Update();
 
 private:
 	static constexpr size_t NUM_KEYS = 1024;

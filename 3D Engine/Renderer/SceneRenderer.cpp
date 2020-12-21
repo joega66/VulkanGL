@@ -56,11 +56,11 @@ void SceneRenderer::Render()
 	}
 	else
 	{
-		RenderGBufferPass(camera, cameraRender, cmdBuf);
+		RenderGBuffer(camera, cameraRender, cmdBuf);
 
 		RenderShadowDepths(cameraRender, cmdBuf);
 
-		ComputeLightingPass(cameraRender, cmdBuf);
+		ComputeDirectLighting(cameraRender, cmdBuf);
 
 		RenderSkybox(cameraRender, cmdBuf);
 

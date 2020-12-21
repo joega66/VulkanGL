@@ -52,7 +52,7 @@
     <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\RayTracing.cpp" />
     <ClCompile Include="Renderer\ShadowRender.cpp" />
-    <ClCompile Include="Renderer\LightingPass.cpp" />
+    <ClCompile Include="Renderer\DirectLightingPass.cpp" />
     <ClCompile Include="Renderer\CameraRender.cpp" />
     <ClCompile Include="Renderer\SceneRenderer.cpp" />
     <ClCompile Include="Renderer\SkyboxRender.cpp" />
@@ -158,7 +158,7 @@
     <None Include="..\Shaders\GBufferFS.glsl" />
     <None Include="..\Shaders\GBufferVS.glsl" />
     <None Include="..\Shaders\LightingCommon.glsl" />
-    <None Include="..\Shaders\LightingPassCS.glsl" />
+    <None Include="..\Shaders\DirectLightingPassCS.glsl" />
     <None Include="..\Shaders\MaterialCommon.glsl" />
     <None Include="..\Shaders\MaterialInterface.glsl" />
     <None Include="..\Shaders\MeshCommon.glsl" />

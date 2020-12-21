@@ -10,7 +10,7 @@
 layout(constant_id = 0) const uint _LIGHT_TYPE = 0;
 layout(constant_id = 1) const int _IS_FIRST_LIGHT = 0;
 
-layout(push_constant) uniform Params { LightingParams _Params; };
+layout(push_constant) uniform Params { DirectLightingParams _Params; };
 
 void GetDirectionalLightParams(inout LightData light)
 {

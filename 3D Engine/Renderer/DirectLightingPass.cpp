@@ -8,25 +8,25 @@
 #include <Components/Camera.h>
 #include <Systems/CameraSystem.h>
 
-BEGIN_PUSH_CONSTANTS(LightingParams)
+BEGIN_PUSH_CONSTANTS(DirectLightingParams)
 	MEMBER(glm::vec4, _L)
 	MEMBER(glm::vec4, _Radiance)
 	MEMBER(glm::mat4, _LightViewProj)
 	MEMBER(gpu::TextureID, _ShadowMap)
-END_PUSH_CONSTANTS(LightingParams)
+END_PUSH_CONSTANTS(DirectLightingParams)
 
-class LightingPassCS : public gpu::Shader
+class DirectLightingPassCS : public gpu::Shader
 {
 public:
 	static constexpr uint32 directionalLight = 0;
 	static constexpr uint32 pointLight = 1;
 
-	LightingPassCS() = default;
+	DirectLightingPassCS() = default;
 };
 
-REGISTER_SHADER(LightingPassCS, "../Shaders/LightingPassCS.glsl", "main", EShaderStage::Compute);
+REGISTER_SHADER(DirectLightingPassCS, "../Shaders/DirectLightingPassCS.glsl", "main", EShaderStage::Compute);
 
-void SceneRenderer::ComputeLightingPass(CameraRender& camera, gpu::CommandBuffer& cmdBuf)
+void SceneRenderer::ComputeDirectLighting(CameraRender& camera, gpu::CommandBuffer& cmdBuf)
 {
 	const ImageMemoryBarrier imageBarrier
 	{
@@ -47,25 +47,25 @@ void SceneRenderer::ComputeLightingPass(CameraRender& camera, gpu::CommandBuffer
 		const auto& transform = _ECS.GetComponent<Transform>(entity);
 		auto& shadowRender = _ECS.GetComponent<ShadowRender>(entity);
 		
-		LightingParams light;
+		DirectLightingParams light;
 		light._L = glm::vec4(transform.GetForward(), 0.0f);
 		light._Radiance = glm::vec4(directionalLight._Intensity * directionalLight._Color, 1.0f);
 		light._LightViewProj = shadowRender.GetLightViewProjMatrix();
 		light._ShadowMap = shadowRender.GetShadowMap().GetTextureID(_Device.CreateSampler({}));
 
-		ComputeDeferredLight(camera, cmdBuf, light, isFirstLight);
+		ComputeDirectLighting(camera, cmdBuf, light, isFirstLight);
 
 		isFirstLight = false;
 	}
 }
 
-void SceneRenderer::ComputeDeferredLight(CameraRender& camera, gpu::CommandBuffer& cmdBuf, const LightingParams& light, bool isFirstLight)
+void SceneRenderer::ComputeDirectLighting(CameraRender& camera, gpu::CommandBuffer& cmdBuf, const DirectLightingParams& light, bool isFirstLight)
 {
-	const gpu::Shader* shader = _Device.FindShader<LightingPassCS>();
+	const gpu::Shader* shader = _Device.FindShader<DirectLightingPassCS>();
 
 	ComputePipelineDesc computeDesc;
 	computeDesc.shader = shader;
-	computeDesc.specInfo.Add(0, light._L.w == 0.0f ? LightingPassCS::directionalLight : LightingPassCS::pointLight);
+	computeDesc.specInfo.Add(0, light._L.w == 0.0f ? DirectLightingPassCS::directionalLight : DirectLightingPassCS::pointLight);
 	computeDesc.specInfo.Add(1, static_cast<int>(isFirstLight));
 
 	gpu::Pipeline pipeline = _Device.CreatePipeline(computeDesc);
