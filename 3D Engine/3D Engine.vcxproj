@@ -42,7 +42,6 @@
     <ClCompile Include="Engine\Screen.cpp" />
     <ClCompile Include="Engine\Skybox.cpp" />
     <ClCompile Include="Engine\StaticMesh.cpp" />
-    <ClCompile Include="Engine\Timers.cpp" />
     <ClCompile Include="GPU\GPU.cpp" />
     <ClCompile Include="GPU\GPUResource.cpp" />
     <ClCompile Include="GPU\GPUShader.cpp" />
@@ -119,7 +118,6 @@
     <ClInclude Include="Engine\Screen.h" />
     <ClInclude Include="Engine\Skybox.h" />
     <ClInclude Include="Engine\StaticMesh.h" />
-    <ClInclude Include="Engine\Timers.h" />
     <ClInclude Include="Engine\Types.h" />
     <ClInclude Include="GPU\GPU.h" />
     <ClInclude Include="GPU\GPUDefinitions.h" />

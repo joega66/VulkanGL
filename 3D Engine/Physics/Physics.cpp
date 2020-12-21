@@ -4,139 +4,139 @@
 #include <Components/StaticMeshComponent.h>
 #include <Components/Transform.h>
 
-const Plane Plane::XY = Plane{ glm::vec3(0.0f, 0.0f, 1.0f), 0.0f };
-const Plane Plane::YZ = Plane{ glm::vec3(1.0f, 0.0f, 0.0f), 0.0f };
-const Plane Plane::XZ = Plane{ glm::vec3(0.0f, 1.0f, 0.0f), 0.0f };
+const Plane Plane::_XY = Plane{ glm::vec3(0.0f, 0.0f, 1.0f), 0.0f };
+const Plane Plane::_YZ = Plane{ glm::vec3(1.0f, 0.0f, 0.0f), 0.0f };
+const Plane Plane::_XZ = Plane{ glm::vec3(0.0f, 1.0f, 0.0f), 0.0f };
 
-BoundingBox::BoundingBox(const glm::vec3& Min, const glm::vec3& Max)
-	: Min(Min)
-	, Max(Max)
+BoundingBox::BoundingBox(const glm::vec3& min, const glm::vec3& max)
+	: _Min(min)
+	, _Max(max)
 {
 }
 
-void BoundingBox::TestPoint(const glm::vec3& Point)
+void BoundingBox::TestPoint(const glm::vec3& point)
 {
-	if (Point.x > Max.x)
-		Max.x = Point.x;
-	if (Point.y > Max.y)
-		Max.y = Point.y;
-	if (Point.z > Max.z)
-		Max.z = Point.z;
-	if (Point.x < Min.x)
-		Min.x = Point.x;
-	if (Point.y < Min.y)
-		Min.y = Point.y;
-	if (Point.z < Min.z)
-		Min.z = Point.z;
+	if (point.x > _Max.x)
+		_Max.x = point.x;
+	if (point.y > _Max.y)
+		_Max.y = point.y;
+	if (point.z > _Max.z)
+		_Max.z = point.z;
+	if (point.x < _Min.x)
+		_Min.x = point.x;
+	if (point.y < _Min.y)
+		_Min.y = point.y;
+	if (point.z < _Min.z)
+		_Min.z = point.z;
 }
 
-BoundingBox BoundingBox::Transform(const glm::mat4& M) const
+BoundingBox BoundingBox::Transform(const glm::mat4& transform) const
 {
-	const glm::vec3 OutMin(M * glm::vec4(Min, 1.0f));
-	const glm::vec3 OutMax(M * glm::vec4(Max, 1.0f));
-	return BoundingBox(OutMin, OutMax);
+	const glm::vec3 min(transform * glm::vec4(_Min, 1.0f));
+	const glm::vec3 max(transform * glm::vec4(_Max, 1.0f));
+	return BoundingBox(min, max);
 }
 
-bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity, float& T)
+bool Physics::Raycast(EntityManager& ecs, const Ray& ray, Entity entity, float& t)
 {
-	const StaticMeshComponent& StaticMeshComponent = ECS.GetComponent<class StaticMeshComponent>(Entity);
-	const Transform& Transform = ECS.GetComponent<class Transform>(Entity);
-	const BoundingBox Bounds = StaticMeshComponent.StaticMesh->GetBounds().Transform(Transform.GetLocalToWorld());
+	const StaticMeshComponent& staticMeshComponent = ecs.GetComponent<StaticMeshComponent>(entity);
+	const Transform& transform = ecs.GetComponent<class Transform>(entity);
+	const BoundingBox bounds = staticMeshComponent.StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
 	
-	glm::vec3 DirInv = glm::vec3(
-		1.0f / Ray.Direction.x,
-		1.0f / Ray.Direction.y,
-		1.0f / Ray.Direction.z
+	const glm::vec3 dirInv = glm::vec3(
+		1.0f / ray._Direction.x,
+		1.0f / ray._Direction.y,
+		1.0f / ray._Direction.z
 	);
 
-	float T1 = (Bounds.GetMin().x - Ray.Origin.x) * DirInv.x;
-	float T2 = (Bounds.GetMax().x - Ray.Origin.x) * DirInv.x;
-	float T3 = (Bounds.GetMin().y - Ray.Origin.y) * DirInv.y;
-	float T4 = (Bounds.GetMax().y - Ray.Origin.y) * DirInv.y;
-	float T5 = (Bounds.GetMin().z - Ray.Origin.z) * DirInv.z;
-	float T6 = (Bounds.GetMax().z - Ray.Origin.z) * DirInv.z;
+	const float t1 = (bounds.GetMin().x - ray._Origin.x) * dirInv.x;
+	const float t2 = (bounds.GetMax().x - ray._Origin.x) * dirInv.x;
+	const float t3 = (bounds.GetMin().y - ray._Origin.y) * dirInv.y;
+	const float t4 = (bounds.GetMax().y - ray._Origin.y) * dirInv.y;
+	const float t5 = (bounds.GetMin().z - ray._Origin.z) * dirInv.z;
+	const float t6 = (bounds.GetMax().z - ray._Origin.z) * dirInv.z;
 
-	float TMin = std::max(std::max(std::min(T1, T2), std::min(T3, T4)), std::min(T5, T6));
-	float TMax = std::min(std::min(std::max(T1, T2), std::max(T3, T4)), std::max(T5, T6));
+	const float tMin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
+	const float tMax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
 
-	if (TMax < 0)
+	if (tMax < 0)
 	{
-		T = TMax;
+		t = tMax;
 		return false;
 	}
 
-	if (TMin > TMax)
+	if (tMin > tMax)
 	{
-		T = TMax;
+		t = tMax;
 		return false;
 	}
 
-	T = TMin;
+	t = tMin;
 	return true;
 }
 
-bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, Entity Entity)
+bool Physics::Raycast(EntityManager& ecs, const Ray& ray, Entity entity)
 {
-	float T;
-	return Raycast(ECS, Ray, Entity, T);
+	float t;
+	return Raycast(ecs, ray, entity, t);
 }
 
-bool Physics::Raycast(EntityManager& ECS, const Ray& Ray, const Plane& Plane, float& T)
+bool Physics::Raycast(EntityManager& ecs, const Ray& ray, const Plane& plane, float& t)
 {
-	check(Plane.Normal != glm::vec3(0.0f), "Plane should have non-zero normal.");
+	check(plane._Normal != glm::vec3(0.0f), "Plane should have non-zero normal.");
 
-	glm::vec3 PointOnPlane = [&]()
+	const glm::vec3 pointOnPlane = [&]()
 	{
-		if (Plane.Normal.x != 0.0f)
+		if (plane._Normal.x != 0.0f)
 		{
-			return glm::vec3(-Plane.Distance / Plane.Normal.x, 0.0f, 0.0f);
+			return glm::vec3(-plane._Distance / plane._Normal.x, 0.0f, 0.0f);
 		}
-		else if (Plane.Normal.y != 0.0f)
+		else if (plane._Normal.y != 0.0f)
 		{
-			return glm::vec3(0.0f, -Plane.Distance / Plane.Normal.y, 0.0f);
+			return glm::vec3(0.0f, -plane._Distance / plane._Normal.y, 0.0f);
 		}
-		else //Plane.Normal.z != 0.0f
+		else //plane.Normal.z != 0.0f
 		{
-			return glm::vec3(0.0f, 0.0f, -Plane.Distance / Plane.Normal.z);
+			return glm::vec3(0.0f, 0.0f, -plane._Distance / plane._Normal.z);
 		}
 	}();
 
-	if (float Denom = glm::dot(Ray.Direction, Plane.Normal); Denom == 0.0f)
+	if (const float denom = glm::dot(ray._Direction, plane._Normal); denom == 0.0f)
 	{
 		// Line and plane are parallel.
-		if (glm::dot(PointOnPlane - Ray.Origin, Plane.Normal) == 0.0f)
+		if (glm::dot(pointOnPlane - ray._Origin, plane._Normal) == 0.0f)
 		{
 			// Line is contained in the plane.
-			T = 0;
+			t = 0;
 		}
 		else
 		{
 			// No intersection.
-			T = std::numeric_limits<float>().lowest();
+			t = std::numeric_limits<float>().lowest();
 		}
 		return false;
 	}
 	else
 	{
 		// There is a single point of intersection.
-		T = (glm::dot(PointOnPlane - Ray.Origin, Plane.Normal)) / Denom;
+		t = (glm::dot(pointOnPlane - ray._Origin, plane._Normal)) / denom;
 		return true;
 	}
 }
 
-bool Physics::IsBoxInsideFrustum(const FrustumPlanes& FrustumPlanes, const BoundingBox& BB)
+bool Physics::IsBoxInsideFrustum(const FrustumPlanes& frustumPlanes, const BoundingBox& bb)
 {
-	return std::all_of(FrustumPlanes.begin(), FrustumPlanes.end(), [&] (const glm::vec4& FrustumPlane)
+	return std::all_of(frustumPlanes.begin(), frustumPlanes.end(), [&] (const glm::vec4& FrustumPlane)
 	{
-		int32 NumVerticesOutside = 0;
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMin().x, BB.GetMin().y, BB.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMax().x, BB.GetMin().y, BB.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMin().x, BB.GetMax().y, BB.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMax().x, BB.GetMax().y, BB.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMin().x, BB.GetMin().y, BB.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMax().x, BB.GetMin().y, BB.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMin().x, BB.GetMax().y, BB.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
-		NumVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(BB.GetMax().x, BB.GetMax().y, BB.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
-		return NumVerticesOutside < 8;
+		int32 numVerticesOutside = 0;
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMin().x, bb.GetMin().y, bb.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMax().x, bb.GetMin().y, bb.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMin().x, bb.GetMax().y, bb.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMax().x, bb.GetMax().y, bb.GetMin().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMin().x, bb.GetMin().y, bb.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMax().x, bb.GetMin().y, bb.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMin().x, bb.GetMax().y, bb.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
+		numVerticesOutside += ((glm::dot(FrustumPlane, glm::vec4(bb.GetMax().x, bb.GetMax().y, bb.GetMax().z, 1.0)) < 0.0) ? 1 : 0);
+		return numVerticesOutside < 8;
 	});
 }

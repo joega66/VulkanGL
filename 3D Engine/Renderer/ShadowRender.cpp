@@ -83,7 +83,7 @@ void SceneRenderer::RenderShadowDepths(CameraRender& camera, gpu::CommandBuffer&
 		cmdBuf.BeginRenderPass(shadowRender.GetRenderPass());
 
 		cmdBuf.SetViewportAndScissor({ .width = shadowRender.GetShadowMap().GetWidth(), .height = shadowRender.GetShadowMap().GetHeight() });
-
+		
 		for (auto entity : _ECS.GetEntities<SurfaceGroup>())
 		{
 			auto& surfaceGroup = _ECS.GetComponent<SurfaceGroup>(entity);

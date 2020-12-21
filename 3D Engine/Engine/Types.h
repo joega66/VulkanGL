@@ -29,13 +29,13 @@ inline constexpr T& operator&= (T& a, T b) { return (T&)((int&)a &= (int)b); } \
 inline constexpr T& operator^= (T& a, T b) { return (T&)((int&)a ^= (int)b); } \
 
 template<typename EnumClass>
-inline bool Any(EnumClass EnumTrait)
+inline bool Any(EnumClass enumTrait)
 {
-	return EnumTrait != EnumClass::None;
+	return enumTrait != EnumClass::None;
 }
 
 template<typename T>
-inline T DivideAndRoundUp(const T& Num, const T& Denom)
+inline T DivideAndRoundUp(const T& num, const T& denom)
 {
-	return (Num + Denom - 1) / Denom;
+	return (num + denom - 1) / denom;
 }

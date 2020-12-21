@@ -47,24 +47,24 @@ void SceneRenderer::Render()
 
 	gpu::CommandBuffer cmdBuf = _Device.CreateCommandBuffer(EQueue::Graphics);
 
-	auto& view = _ECS.GetComponent<Camera>(_ECS.GetEntities<Camera>().front());
-	auto& camera = _ECS.GetComponent<CameraRender>(_ECS.GetEntities<CameraRender>().front());
+	auto& camera = _ECS.GetComponent<Camera>(_ECS.GetEntities<Camera>().front());
+	auto& cameraRender = _ECS.GetComponent<CameraRender>(_ECS.GetEntities<CameraRender>().front());
 	
 	if (settings.bRayTracing)
 	{
-		ComputeRayTracing(view, camera, cmdBuf);
+		ComputeRayTracing(camera, cameraRender, cmdBuf);
 	}
 	else
 	{
-		RenderGBufferPass(view, camera, cmdBuf);
+		RenderGBufferPass(camera, cameraRender, cmdBuf);
 
-		RenderShadowDepths(camera, cmdBuf);
+		RenderShadowDepths(cameraRender, cmdBuf);
 
-		ComputeLightingPass(camera, cmdBuf);
+		ComputeLightingPass(cameraRender, cmdBuf);
 
-		RenderSkybox(camera, cmdBuf);
+		RenderSkybox(cameraRender, cmdBuf);
 
-		ComputeSSGI(view, camera, cmdBuf);
+		ComputeSSGI(camera, cameraRender, cmdBuf);
 	}
 
 	const gpu::Image& displayImage = _Compositor.GetImages()[imageIndex];
@@ -72,7 +72,7 @@ void SceneRenderer::Render()
 
 	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::ComputeShader, 0, nullptr, 1, &barrier);
 
-	ComputePostProcessing(displayImage, camera, cmdBuf);
+	ComputePostProcessing(displayImage, cameraRender, cmdBuf);
 
 	barrier.srcAccessMask = EAccess::ShaderWrite;
 	barrier.dstAccessMask = EAccess::ColorAttachmentRead | EAccess::ColorAttachmentWrite;

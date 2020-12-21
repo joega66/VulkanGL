@@ -86,9 +86,6 @@
     <ClInclude Include="Engine\Input.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Timers.h">
-      <Filter>Source\Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Screen.h">
       <Filter>Source\Engine</Filter>
     </ClInclude>
@@ -296,9 +293,6 @@
       <Filter>Source\Physics</Filter>
     </ClCompile>
     <ClCompile Include="Engine\AssetManager.cpp">
-      <Filter>Source\Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Timers.cpp">
       <Filter>Source\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanRenderPass.cpp">
