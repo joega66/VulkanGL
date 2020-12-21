@@ -13,34 +13,34 @@ class Cursor
 {
 public:
 	/** Set GLFW cursor callbacks. */
-	Cursor(Platform& Platform);
+	Cursor(Platform& platform);
 
 	Cursor(const Cursor&) = delete;
 	Cursor& operator=(const Cursor&) = delete;
 
 	/** Set end-of-frame updates. */
-	void Update(Platform& Platform);
+	void Update(Platform& platform);
 
 	/** Determines the state of the hardware cursor. */
-	ECursorMode Mode = ECursorMode::Normal;
+	ECursorMode _Mode = ECursorMode::Normal;
 
 	/** Mouse scroll delta. */
-	glm::vec2 MouseScrollDelta;
+	glm::vec2 _MouseScrollDelta;
 
 	/** Mouse scroll speed. */
-	float MouseScrollSpeed = 1.0f;
+	float _MouseScrollSpeed = 1.0f;
 
 	/** Cursor sensitivity. */
-	float Sensitivity = 0.25f;
+	float _Sensitivity = 0.25f;
 
 	/** Position of the cursor last frame. */
-	glm::vec2 Last;
+	glm::vec2 _Last;
 
 	/** Position of the cursor this frame. */
-	glm::vec2 Position;
+	glm::vec2 _Position;
 
 private:
-	static void GLFWScrollEvent(struct GLFWwindow* window, double XOffset, double YOffset);
+	static void GLFWScrollEvent(struct GLFWwindow* window, double xOffset, double yOffset);
 
-	static void GLFWMouseEvent(struct GLFWwindow* window, double X, double Y);
+	static void GLFWMouseEvent(struct GLFWwindow* window, double x, double y);
 };

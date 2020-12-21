@@ -1,7 +1,7 @@
 #include "Input.h"
 #include <GLFW/glfw3.h>
 
-static std::unordered_map<int32, EKeyCode> GLFWKeyCodes =
+static std::unordered_map<int32, EKeyCode> gGLFWKeyCodes =
 {
 	ENTRY(GLFW_MOUSE_BUTTON_LEFT, EKeyCode::MouseLeft)
 	ENTRY(GLFW_KEY_0, EKeyCode::Keypad0)
@@ -24,100 +24,100 @@ static std::unordered_map<int32, EKeyCode> GLFWKeyCodes =
 	ENTRY(GLFW_KEY_DELETE, EKeyCode::Delete)
 };
 
-void Input::GLFWKeyboardEvent(GLFWwindow* window, int32 Key, int32 Scancode, int32 Action, int32 Mode)
+void Input::GLFWKeyboardEvent(GLFWwindow* window, int32 key, int32 scancode, int32 action, int32 mode)
 {
-	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Input;
+	Input* input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Input;
 
-	if (GLFWKeyCodes.contains(Key))
+	if (gGLFWKeyCodes.contains(key))
 	{
-		const EKeyCode KeyCode = GLFWKeyCodes[Key];
+		const EKeyCode keyCode = gGLFWKeyCodes[key];
 
-		if (Action == GLFW_PRESS)
+		if (action == GLFW_PRESS)
 		{
-			Input->Keys[static_cast<size_t>(KeyCode)] = true;
+			input->_Keys[static_cast<size_t>(keyCode)] = true;
 		}
-		else if (Action == GLFW_RELEASE)
+		else if (action == GLFW_RELEASE)
 		{
-			Input->Keys[static_cast<size_t>(KeyCode)] = false;
-			Input->KeysPressed[static_cast<size_t>(KeyCode)] = true;
+			input->_Keys[static_cast<size_t>(keyCode)] = false;
+			input->_KeysPressed[static_cast<size_t>(keyCode)] = true;
 		}
 	}
 }
 
-void Input::GLFWMouseButtonEvent(GLFWwindow* window, int32 Button, int32 Action, int32 Mods)
+void Input::GLFWMouseButtonEvent(GLFWwindow* window, int32 button, int32 action, int32 mods)
 {
-	Input* Input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Input;
+	Input* input = static_cast<const GLFWWindowUserPointer*>(glfwGetWindowUserPointer(window))->_Input;
 
-	if (GLFWKeyCodes.contains(Button))
+	if (gGLFWKeyCodes.contains(button))
 	{
-		const EKeyCode KeyCode = GLFWKeyCodes[Button];
+		const EKeyCode keyCode = gGLFWKeyCodes[button];
 
-		if (Action == GLFW_PRESS)
+		if (action == GLFW_PRESS)
 		{
-			Input->Keys[static_cast<size_t>(KeyCode)] = true;
+			input->_Keys[static_cast<size_t>(keyCode)] = true;
 		}
-		else if (Action == GLFW_RELEASE)
+		else if (action == GLFW_RELEASE)
 		{
-			Input->Keys[static_cast<size_t>(KeyCode)] = false;
-			Input->KeysPressed[static_cast<size_t>(KeyCode)] = true;
+			input->_Keys[static_cast<size_t>(keyCode)] = false;
+			input->_KeysPressed[static_cast<size_t>(keyCode)] = true;
 		}
 	}
 }
 
-Input::Input(Platform& Platform)
+Input::Input(Platform& platform)
 {
-	glfwSetKeyCallback(Platform._Window, GLFWKeyboardEvent);
+	glfwSetKeyCallback(platform._Window, GLFWKeyboardEvent);
 
-	glfwSetMouseButtonCallback(Platform._Window, GLFWMouseButtonEvent);
+	glfwSetMouseButtonCallback(platform._Window, GLFWMouseButtonEvent);
 }
 
-bool Input::GetKeyDown(EKeyCode KeyCode) const
+bool Input::GetKeyDown(EKeyCode keyCode) const
 {
-	return static_cast<size_t>(KeyCode) < Keys.size() ? Keys[static_cast<size_t>(KeyCode)] : false;
+	return static_cast<size_t>(keyCode) < _Keys.size() ? _Keys[static_cast<size_t>(keyCode)] : false;
 }
 
-bool Input::GetKeyUp(EKeyCode KeyCode) const
+bool Input::GetKeyUp(EKeyCode keyCode) const
 {
-	return static_cast<size_t>(KeyCode) < KeysPressed.size() ? KeysPressed[static_cast<size_t>(KeyCode)] : false;
+	return static_cast<size_t>(keyCode) < _KeysPressed.size() ? _KeysPressed[static_cast<size_t>(keyCode)] : false;
 }
 
-void Input::AddShortcut(std::string&& ShortcutName, std::vector<EKeyCode>&& Shortcut)
+void Input::AddShortcut(std::string&& shortcutName, std::vector<EKeyCode>&& shortcut)
 {
-	check(!Shortcuts.contains(ShortcutName), "Shortcut name \"%s\" already taken.", ShortcutName.c_str());
+	check(!_Shortcuts.contains(shortcutName), "Shortcut name \"%s\" already taken.", shortcutName.c_str());
 
-	std::sort(Shortcut.begin(), Shortcut.end());
+	std::sort(shortcut.begin(), shortcut.end());
 
 	Crc crc = 0;
-	Platform::crc32_u32(crc, Shortcut.data(), Shortcut.size() * sizeof(Shortcut[0]));
+	Platform::crc32_u32(crc, shortcut.data(), shortcut.size() * sizeof(shortcut[0]));
 
-	check(!ShortcutCrcs.contains(crc), "\"%s\" trying to remap shortcut \"%s\".", ShortcutName.c_str(), ShortcutCrcs[crc].c_str());
+	check(!_ShortcutCrcs.contains(crc), "\"%s\" trying to remap shortcut \"%s\".", shortcutName.c_str(), _ShortcutCrcs[crc].c_str());
 
-	ShortcutCrcs[crc] = ShortcutName;
+	_ShortcutCrcs[crc] = shortcutName;
 
-	Shortcuts[ShortcutName] = Shortcut;
+	_Shortcuts[shortcutName] = shortcut;
 }
 
-bool Input::RemoveShortcut(std::string&& ShortcutName)
+bool Input::RemoveShortcut(std::string&& shortcutName)
 {
-	return Shortcuts.erase(ShortcutName);
+	return _Shortcuts.erase(shortcutName);
 }
 
-bool Input::GetShortcutDown(std::string&& ShortcutName) const
+bool Input::GetShortcutDown(std::string&& shortcutName) const
 {
-	check(Shortcuts.contains(ShortcutName), "Shortcut %s not found.", ShortcutName.c_str());
-	const auto& Shortcut = Shortcuts.at(ShortcutName);
-	return std::all_of(Shortcut.begin(), Shortcut.end(), [this] (auto Key) { return GetKeyDown(Key); });
+	check(_Shortcuts.contains(shortcutName), "Shortcut %s not found.", shortcutName.c_str());
+	const auto& shortcut = _Shortcuts.at(shortcutName);
+	return std::all_of(shortcut.begin(), shortcut.end(), [this] (auto key) { return GetKeyDown(key); });
 }
 
-bool Input::GetShortcutUp(std::string&& ShortcutName) const
+bool Input::GetShortcutUp(std::string&& shortcutName) const
 {
-	check(Shortcuts.contains(ShortcutName), "Shortcut %s not found.", ShortcutName.c_str());
-	const auto& Shortcut = Shortcuts.at(ShortcutName);
-	const bool bAllKeysPressed = std::all_of(Shortcut.begin(), Shortcut.end() - 1, [this] (auto Key) { return GetKeyDown(Key); });
-	return bAllKeysPressed && GetKeyUp(Shortcut.back());
+	check(_Shortcuts.contains(shortcutName), "Shortcut %s not found.", shortcutName.c_str());
+	const auto& shortcut = _Shortcuts.at(shortcutName);
+	const bool areAllKeysPressed = std::all_of(shortcut.begin(), shortcut.end() - 1, [this] (auto key) { return GetKeyDown(key); });
+	return areAllKeysPressed && GetKeyUp(shortcut.back());
 }
 
-void Input::Update(Platform& Platform)
+void Input::Update(Platform& platform)
 {
-	std::fill(KeysPressed.begin(), KeysPressed.end(), false);
+	std::fill(_KeysPressed.begin(), _KeysPressed.end(), false);
 }

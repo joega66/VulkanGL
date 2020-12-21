@@ -14,11 +14,11 @@ class Engine
 {
 public:
 	Engine(
-		Platform& InPlatform,
-		Cursor& InCursor,
-		Input& InInput,
-		Screen& InScreen,
-		gpu::Device& InDevice,
+		Platform& platform,
+		Cursor& cursor,
+		Input& input,
+		Screen& screen,
+		gpu::Device& device,
 		gpu::Compositor& compositor
 	);
 
@@ -36,5 +36,5 @@ public:
 
 	/** Engine misc. */
 	EntityManager _ECS;
-	AssetManager Assets;
+	AssetManager _Assets;
 };

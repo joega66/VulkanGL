@@ -33,8 +33,8 @@ void SceneRenderer::ComputePostProcessing(const gpu::Image& displayImage, Camera
 	cmdBuf.BindDescriptorSets(pipeline, 1, &_Device.GetImages(), 0, nullptr);
 
 	PostProcessingParams postProcessingParams;
-	postProcessingParams._ExposureAdjustment = settings.ExposureAdjustment;
-	postProcessingParams._ExposureBias = settings.ExposureBias;
+	postProcessingParams._ExposureAdjustment = settings._ExposureAdjustment;
+	postProcessingParams._ExposureBias = settings._ExposureBias;
 	postProcessingParams._DisplayColor = displayImage.GetImageID();
 	postProcessingParams._HDRColor = camera._SceneColor.GetImageID();
 

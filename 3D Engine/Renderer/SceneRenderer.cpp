@@ -6,7 +6,7 @@ SceneRenderer::SceneRenderer(Engine& engine)
 	: _Device(engine._Device)
 	, _Compositor(engine._Compositor)
 	, _ECS(engine._ECS)
-	, _Assets(engine.Assets)
+	, _Assets(engine._Assets)
 {
 	_ScreenResizeEvent = engine._Screen.OnScreenResize([this] (int32 width, int32 height)
 	{
@@ -50,7 +50,7 @@ void SceneRenderer::Render()
 	auto& camera = _ECS.GetComponent<Camera>(_ECS.GetEntities<Camera>().front());
 	auto& cameraRender = _ECS.GetComponent<CameraRender>(_ECS.GetEntities<CameraRender>().front());
 	
-	if (settings.bRayTracing)
+	if (settings._UseRayTracing)
 	{
 		ComputeRayTracing(camera, cameraRender, cmdBuf);
 	}

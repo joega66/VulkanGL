@@ -1,7 +1,7 @@
 #include "StaticMeshComponent.h"
 
-StaticMeshComponent::StaticMeshComponent(const class StaticMesh* StaticMesh, const class Material* Material)
-	: StaticMesh(StaticMesh)
-	, Material(Material)
+StaticMeshComponent::StaticMeshComponent(const StaticMesh* staticMesh, const Material* material)
+	: _StaticMesh(staticMesh)
+	, _Material(material)
 {
 }

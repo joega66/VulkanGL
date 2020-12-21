@@ -7,8 +7,8 @@ class Material;
 class StaticMeshComponent : public Component
 {
 public:
-	StaticMeshComponent(const StaticMesh* StaticMesh, const Material* Material);
+	StaticMeshComponent(const StaticMesh* staticMesh, const Material* material);
 
-	const StaticMesh* StaticMesh = nullptr;
-	const Material* Material = nullptr;
+	const StaticMesh* _StaticMesh = nullptr;
+	const Material* _Material = nullptr;
 };

@@ -39,15 +39,15 @@ void SurfaceSystem::Update(Engine& engine)
 
 	for (auto& entity : entities)
 	{
-		const auto& staticMesh = ecs.GetComponent<StaticMeshComponent>(entity);
+		const auto& staticMeshComponent = ecs.GetComponent<StaticMeshComponent>(entity);
 		const auto& transform = ecs.GetComponent<Transform>(entity);
-		const BoundingBox boundingBox = staticMesh.StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
+		const BoundingBox boundingBox = staticMeshComponent._StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
 
 		auto* localToWorldUniformBuffer = reinterpret_cast<LocalToWorldUniform*>(_SurfaceBuffer.GetData()) + surfaceIdx;
 		localToWorldUniformBuffer->transform = transform.GetLocalToWorld();
 		localToWorldUniformBuffer->inverse = glm::inverse(transform.GetLocalToWorld());
 		localToWorldUniformBuffer->inverseTranspose = glm::transpose(localToWorldUniformBuffer->inverse);
 
-		surfaceGroup.AddSurface(Surface(surfaceIdx++, staticMesh.Material, staticMesh.StaticMesh->_Submeshes, boundingBox));
+		surfaceGroup.AddSurface(Surface(surfaceIdx++, staticMeshComponent._Material, staticMeshComponent._StaticMesh->_Submeshes, boundingBox));
 	}
 }

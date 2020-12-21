@@ -101,14 +101,14 @@ void UserInterface::ShowRenderSettings(Engine& engine)
 
 	if (ImGui::TreeNode("Camera"))
 	{
-		ImGui::DragFloat("Exposure Adjustment", &settings.ExposureAdjustment, 0.05f, 0.0f, 256.0f);
-		ImGui::DragFloat("Exposure Bias", &settings.ExposureBias, 0.05f, 0.0f, 16.0f);
+		ImGui::DragFloat("Exposure Adjustment", &settings._ExposureAdjustment, 0.05f, 0.0f, 256.0f);
+		ImGui::DragFloat("Exposure Bias", &settings._ExposureBias, 0.05f, 0.0f, 16.0f);
 		ImGui::TreePop();
 	}
 
 	if (ImGui::TreeNode("Ray Tracing"))
 	{
-		ImGui::Checkbox("Ray Tracing", &settings.bRayTracing);
+		ImGui::Checkbox("Ray Tracing", &settings._UseRayTracing);
 		ImGui::TreePop();
 	}
 
@@ -177,7 +177,7 @@ void UserInterface::ShowEntities(Engine& engine)
 		{
 			const auto& transform = ecs.GetComponent<Transform>(entity);
 			const auto& staticMesh = ecs.GetComponent<StaticMeshComponent>(entity);
-			const BoundingBox boundingBox = staticMesh.StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
+			const BoundingBox boundingBox = staticMesh._StaticMesh->GetBounds().Transform(transform.GetLocalToWorld());
 
 			for (auto entity : ecs.GetEntities<Camera>())
 			{
@@ -252,17 +252,17 @@ void UserInterface::ShowEntities(Engine& engine)
 
 	SHOW_COMPONENT(DirectionalLight, ecs, entitySelected, [&] (auto& light)
 	{
-		glm::vec3 color = light.Color;
-		float intensity = light.Intensity;
+		glm::vec3 color = light._Color;
+		float intensity = light._Intensity;
 
 		ImGui::ColorEdit3("Color", &color[0]);
 		ImGui::DragFloat("Intensity", &intensity, 1.0f, 0.0f);
 
-		if (color != light.Color ||
-			intensity != light.Intensity)
+		if (color != light._Color ||
+			intensity != light._Intensity)
 		{
-			light.Color = color;
-			light.Intensity = intensity;
+			light._Color = color;
+			light._Intensity = intensity;
 		}
 
 		if (ecs.HasComponent<ShadowRender>(entitySelected))
@@ -279,12 +279,12 @@ void UserInterface::ShowEntities(Engine& engine)
 
 	SHOW_COMPONENT(SkyboxComponent, ecs, entitySelected, [&] (auto& skyboxComp)
 	{
-		Skybox* skybox = skyboxComp.Skybox;
+		Skybox* skybox = skyboxComp._Skybox;
 
 		for (uint32 face = CubemapFace_Begin; face != CubemapFace_End; face++)
 		{
 			_UserTextures.push_back( skybox->GetFaces()[face]->GetTextureID(engine._Device.CreateSampler({})) );
-			ImGui::Text(Skybox::CubemapFaces[face].c_str());
+			ImGui::Text(Skybox::_CubemapFaces[face].c_str());
 			ImGui::SameLine();
 			ImGui::ImageButton(
 				&_UserTextures.back(),

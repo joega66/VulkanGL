@@ -25,18 +25,18 @@ void EditorControllerSystem::Update(Engine& engine)
 	{
 		auto& camera = ecs.GetComponent<Camera>(entity);
 
-		const float ds = cursor.MouseScrollSpeed * cursor.MouseScrollDelta.y;
+		const float ds = cursor._MouseScrollSpeed * cursor._MouseScrollDelta.y;
 
 		camera.TranslateBy(ds);
 
 		if (input.GetKeyDown(EKeyCode::MouseLeft))
 		{
 			// Disable the mouse while looking around.
-			cursor.Mode = ECursorMode::Disabled;
+			cursor._Mode = ECursorMode::Disabled;
 
 			if (!camera.bFreeze)
 			{
-				const glm::vec2 degrees = glm::vec2(cursor.Position.x - cursor.Last.x, -(cursor.Last.y - cursor.Position.y)) * cursor.Sensitivity;
+				const glm::vec2 degrees = glm::vec2(cursor._Position.x - cursor._Last.x, -(cursor._Last.y - cursor._Position.y)) * cursor._Sensitivity;
 				camera.RotateBy(degrees);
 			}
 		}
@@ -44,7 +44,7 @@ void EditorControllerSystem::Update(Engine& engine)
 
 	if (input.GetKeyUp(EKeyCode::MouseLeft))
 	{
-		cursor.Mode = ECursorMode::Normal;
+		cursor._Mode = ECursorMode::Normal;
 	}
 
 	if (input.GetShortcutUp("Recompile Shaders"))

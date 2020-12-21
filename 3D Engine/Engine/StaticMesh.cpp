@@ -173,7 +173,7 @@ void StaticMesh::GLTFLoadMaterial(const std::string& assetName, AssetManager& as
 
 		if (!baseColor)
 		{
-			baseColor = &AssetManager::Red;
+			baseColor = &AssetManager::_Red;
 		}
 
 		material = assets.LoadMaterial(

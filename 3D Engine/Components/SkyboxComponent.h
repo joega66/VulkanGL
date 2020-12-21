@@ -5,10 +5,10 @@
 class SkyboxComponent : public Component
 {
 public:
-	SkyboxComponent(Skybox* Skybox)
-		: Skybox(Skybox)
+	SkyboxComponent(Skybox* skybox)
+		: _Skybox(skybox)
 	{
 	}
 
-	Skybox* Skybox = nullptr;
+	Skybox* _Skybox = nullptr;
 };

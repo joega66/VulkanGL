@@ -8,7 +8,7 @@ class gpu::Device;
 class AssetManager
 {
 	friend class Engine;
-	AssetManager(gpu::Device& Device);
+	AssetManager(gpu::Device& device);
 
 public:
 	AssetManager(const AssetManager&) = delete;
@@ -21,36 +21,36 @@ public:
 	 * @return Array of static mesh render resources. Size is 1 if Breakup is false.
 	 * @todo Replace with std::span
 	*/
-	std::vector<const StaticMesh*> LoadStaticMesh(const std::filesystem::path& Path, bool Breakup = false);
-	const StaticMesh* GetStaticMesh(const std::string& AssetName) const;
+	std::vector<const StaticMesh*> LoadStaticMesh(const std::filesystem::path& path, bool breakup = false);
+	const StaticMesh* GetStaticMesh(const std::string& assetName) const;
 
-	gpu::Image* LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage = EImageUsage::None);
-	gpu::Image* LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image);
-	gpu::Image* GetImage(const std::string& AssetName) const;
+	gpu::Image* LoadImage(const std::string& assetName, const std::filesystem::path& path, EFormat format, EImageUsage additionalUsage = EImageUsage::None);
+	gpu::Image* LoadImage(const std::filesystem::path& path, std::unique_ptr<gpu::Image> image);
+	gpu::Image* GetImage(const std::string& assetName) const;
 
-	const Material* LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material);
-	const Material* GetMaterial(const std::string& AssetName);
+	const Material* LoadMaterial(const std::string& assetName, std::unique_ptr<Material> material);
+	const Material* GetMaterial(const std::string& assetName);
 
 	/** 
 	  * Load a skybox. If the path has an extension, it's assumed to be pointing to a file in a cubemap format. 
 	  * Otherwise, the loader looks for px, nx, py, ny, pz, nz, in the directory.
 	  */
-	Skybox* LoadSkybox(const std::string& AssetName, const std::filesystem::path& Path);
-	Skybox* GetSkybox(const std::string& AssetName);
+	Skybox* LoadSkybox(const std::string& assetName, const std::filesystem::path& path);
+	Skybox* GetSkybox(const std::string& assetName);
 
-	static gpu::Image Red;
-	static gpu::Image Green;
-	static gpu::Image Blue;
-	static gpu::Image White;
-	static gpu::Image Black;
+	static gpu::Image _Red;
+	static gpu::Image _Green;
+	static gpu::Image _Blue;
+	static gpu::Image _White;
+	static gpu::Image _Black;
 
 private:
-	gpu::Device& Device;
+	gpu::Device& _Device;
 
-	std::unordered_map<std::string, std::unique_ptr<StaticMesh>> StaticMeshes;
-	std::unordered_map<std::string, std::unique_ptr<Material>> Materials;
-	std::unordered_map<std::string, std::unique_ptr<Skybox>> Skyboxes;
-	std::unordered_map<std::string, std::unique_ptr<gpu::Image>> Images;
+	std::unordered_map<std::string, std::unique_ptr<StaticMesh>> _StaticMeshes;
+	std::unordered_map<std::string, std::unique_ptr<Material>> _Materials;
+	std::unordered_map<std::string, std::unique_ptr<Skybox>> _Skyboxes;
+	std::unordered_map<std::string, std::unique_ptr<gpu::Image>> _Images;
 
-	static void CreateDebugImages(gpu::Device& Device);
+	void CreateDebugImages() const;
 };

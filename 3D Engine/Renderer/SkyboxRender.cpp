@@ -55,7 +55,7 @@ void SceneRenderer::RenderSkybox(CameraRender& camera, gpu::CommandBuffer& cmdBu
 
 	for (auto& entity : _ECS.GetEntities<SkyboxComponent>())
 	{
-		auto& skybox = _ECS.GetComponent<SkyboxComponent>(entity).Skybox->GetImage();
+		auto& skybox = _ECS.GetComponent<SkyboxComponent>(entity)._Skybox->GetImage();
 		const auto skyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 		SkyboxParams skyboxParams;

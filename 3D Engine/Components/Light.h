@@ -10,11 +10,11 @@ enum class EShadowType
 
 struct Light
 {
-	EShadowType ShadowType = EShadowType::None;
-	glm::vec3 Color = glm::vec3(1.0f);
-	float Intensity = 1.0f;
-	float DepthBiasConstantFactor = 1.0f;
-	float DepthBiasSlopeFactor = 1.0f;
+	EShadowType _ShadowType = EShadowType::None;
+	glm::vec3 _Color = glm::vec3(1.0f);
+	float _Intensity = 1.0f;
+	float _DepthBiasConstantFactor = 1.0f;
+	float _DepthBiasSlopeFactor = 1.0f;
 };
 
 struct DirectionalLight : public Light, public Component
@@ -23,5 +23,5 @@ struct DirectionalLight : public Light, public Component
 
 struct PointLight : public Light, public Component
 {
-	float Range = 10.0f;
+	float _Range = 10.0f;
 };

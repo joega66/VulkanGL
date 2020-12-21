@@ -29,46 +29,46 @@ class Input
 {
 public:
 	/** Set GLFW callbacks. */
-	Input(Platform& Platform);
+	Input(Platform& platform);
 
 	Input(const Input&) = delete;
 	Input& operator=(const Input&) = delete;
 
 	/** Test if the key is being pressed. */
-	bool GetKeyDown(EKeyCode KeyCode) const;
+	bool GetKeyDown(EKeyCode keyCode) const;
 
 	/** Test if the key was released. */
-	bool GetKeyUp(EKeyCode KeyCode) const;
+	bool GetKeyUp(EKeyCode keyCode) const;
 
 	/** Add a new shortcut. */
-	void AddShortcut(std::string&& ShortcutName, std::vector<EKeyCode>&& Shortcut);
+	void AddShortcut(std::string&& shortcutName, std::vector<EKeyCode>&& shortcut);
 
 	/** Remove the shortcut. */
-	bool RemoveShortcut(std::string&& ShortcutName);
+	bool RemoveShortcut(std::string&& shortcutName);
 
 	/** Test if the shortcut is being pressed. */
-	bool GetShortcutDown(std::string&& ShortcutName) const;
+	bool GetShortcutDown(std::string&& shortcutName) const;
 
 	/** Test if the shortcut was released. */
-	bool GetShortcutUp(std::string&& ShortcutName) const;
+	bool GetShortcutUp(std::string&& shortcutName) const;
 
 	/** Apply end-of-frame updates. */
-	void Update(Platform& Platform);
+	void Update(Platform& platform);
 
 private:
 	static constexpr size_t NUM_KEYS = 1024;
 
 	/** Keys being pressed. */
-	std::array<bool, NUM_KEYS> Keys;
+	std::array<bool, NUM_KEYS> _Keys;
 
 	/** Keys just released. */
-	std::array<bool, NUM_KEYS> KeysPressed;
+	std::array<bool, NUM_KEYS> _KeysPressed;
 
 	/** Keyboard shortcuts. */
-	std::unordered_map<std::string, std::vector<EKeyCode>> Shortcuts;
-	std::unordered_map<Crc, std::string> ShortcutCrcs;
+	std::unordered_map<std::string, std::vector<EKeyCode>> _Shortcuts;
+	std::unordered_map<Crc, std::string> _ShortcutCrcs;
 
-	static void GLFWKeyboardEvent(struct GLFWwindow* window, int32 Key, int32 Scancode, int32 Action, int32 Mode);
+	static void GLFWKeyboardEvent(struct GLFWwindow* window, int32 key, int32 scancode, int32 action, int32 mode);
 
-	static void GLFWMouseButtonEvent(struct GLFWwindow* window, int32 Button, int32 Action, int32 Mods);
+	static void GLFWMouseButtonEvent(struct GLFWwindow* window, int32 button, int32 action, int32 mods);
 };

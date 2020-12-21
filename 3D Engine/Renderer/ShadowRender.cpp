@@ -33,8 +33,8 @@ ShadowRender::ShadowRender(gpu::Device& device, const DirectionalLight& directio
 
 void ShadowRender::Update(gpu::Device& device, const DirectionalLight& directionalLight, const Transform& transform, uint32 dynamicOffset)
 {
-	_DepthBiasConstantFactor = directionalLight.DepthBiasConstantFactor;
-	_DepthBiasSlopeFactor = directionalLight.DepthBiasSlopeFactor;
+	_DepthBiasConstantFactor = directionalLight._DepthBiasConstantFactor;
+	_DepthBiasSlopeFactor = directionalLight._DepthBiasSlopeFactor;
 
 	glm::mat4 lightProjMatrix = glm::ortho(-_Width * 0.5f, _Width * 0.5f, -_Width * 0.5f, _Width * 0.5f, _ZNear, _ZFar);
 	lightProjMatrix[1][1] *= -1;

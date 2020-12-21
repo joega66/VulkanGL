@@ -5,17 +5,16 @@ class RenderSettings : public Component
 {
 public:
 	/** Camera */
-	float ExposureAdjustment;
-	float ExposureBias;
+	float _ExposureAdjustment;
+	float _ExposureBias;
 
 	/** Ray Tracing */
-	bool bRayTracing = false;
+	bool _UseRayTracing = false;
 
 	RenderSettings()
-		: ExposureAdjustment(Platform::GetFloat("Engine.ini", "Camera", "ExposureAdjustment", 2.0f))
-		, ExposureBias(Platform::GetFloat("Engine.ini", "Camera", "ExposureBias", 2.0f))
-		, bRayTracing(Platform::GetBool("Engine.ini", "Scene", "RayTracing", false))
-		
+		: _ExposureAdjustment(Platform::GetFloat("Engine.ini", "Camera", "ExposureAdjustment", 2.0f))
+		, _ExposureBias(Platform::GetFloat("Engine.ini", "Camera", "ExposureBias", 2.0f))
+		, _UseRayTracing(Platform::GetBool("Engine.ini", "Scene", "RayTracing", false))
 	{
 	}
 };

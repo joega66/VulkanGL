@@ -52,7 +52,7 @@ void SceneRenderer::ComputeRayTracing(const Camera& camera, CameraRender& camera
 		frameNumber = 0;
 	}
 
-	auto& skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage();
+	auto& skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front())._Skybox->GetImage();
 	const auto skyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	RayTracingParams rayTracingParams;

@@ -49,7 +49,7 @@ void SceneRenderer::ComputeLightingPass(CameraRender& camera, gpu::CommandBuffer
 		
 		LightingParams light;
 		light._L = glm::vec4(transform.GetForward(), 0.0f);
-		light._Radiance = glm::vec4(directionalLight.Intensity * directionalLight.Color, 1.0f);
+		light._Radiance = glm::vec4(directionalLight._Intensity * directionalLight._Color, 1.0f);
 		light._LightViewProj = shadowRender.GetLightViewProjMatrix();
 		light._ShadowMap = shadowRender.GetShadowMap().GetTextureID(_Device.CreateSampler({}));
 
@@ -132,7 +132,7 @@ void SceneRenderer::ComputeSSGI(const Camera& camera, CameraRender& cameraRender
 		frameNumber = 0;
 	}
 
-	auto& skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front()).Skybox->GetImage();
+	auto& skybox = _ECS.GetComponent<SkyboxComponent>(_ECS.GetEntities<SkyboxComponent>().front())._Skybox->GetImage();
 	const auto skyboxSampler = _Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::ClampToEdge, ESamplerMipmapMode::Linear });
 
 	SSGIParams ssgiParams;

@@ -3,30 +3,30 @@
 #include <GPU/GPU.h>
 
 Material::Material(
-	gpu::Device& Device,
-	EMaterialMode MaterialMode,
-	gpu::Image* BaseColor,
-	gpu::Image* MetallicRoughness,
-	gpu::Image* Normal,
-	gpu::Image* Emissive,
-	float Metallic,
-	float Roughness,
-	const glm::vec3& EmissiveFactor
-) : MaterialMode(MaterialMode)
+	gpu::Device& device,
+	EMaterialMode materialMode,
+	gpu::Image* baseColor,
+	gpu::Image* metallicRoughness,
+	gpu::Image* normal,
+	gpu::Image* emissive,
+	float metallic,
+	float roughness,
+	const glm::vec3& emissiveFactor
+) : _MaterialMode(materialMode)
 {
-	const gpu::Sampler sampler = Device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
+	const gpu::Sampler sampler = device.CreateSampler({ EFilter::Linear, ESamplerAddressMode::Repeat, ESamplerMipmapMode::Linear });
 
-	PushConstants.BaseColor = BaseColor->GetTextureID(sampler);
-	PushConstants.MetallicRoughness = MetallicRoughness ? MetallicRoughness->GetTextureID(sampler) : gpu::TextureID{};
-	PushConstants.Normal = Normal ? Normal->GetTextureID(sampler) : gpu::TextureID{};
-	PushConstants.Emissive = Emissive ? Emissive->GetTextureID(sampler) : gpu::TextureID{};
+	_PushConstants._BaseColor = baseColor->GetTextureID(sampler);
+	_PushConstants._MetallicRoughness = metallicRoughness ? metallicRoughness->GetTextureID(sampler) : gpu::TextureID{};
+	_PushConstants._Normal = normal ? normal->GetTextureID(sampler) : gpu::TextureID{};
+	_PushConstants._Emissive = emissive ? emissive->GetTextureID(sampler) : gpu::TextureID{};
 
-	PushConstants.Metallic = Metallic;
-	PushConstants.Roughness = Roughness;
-	PushConstants.EmissiveFactor = EmissiveFactor;
+	_PushConstants._Metallic = metallic;
+	_PushConstants._Roughness = roughness;
+	_PushConstants._EmissiveFactor = emissiveFactor;
 
-	mSpecializationInfo.Add(0, MetallicRoughness != nullptr);
-	mSpecializationInfo.Add(1, MaterialMode == EMaterialMode::Masked);
-	mSpecializationInfo.Add(2, Normal != nullptr);
-	mSpecializationInfo.Add(3, Emissive != nullptr);
+	_SpecializationInfo.Add(0, metallicRoughness != nullptr);
+	_SpecializationInfo.Add(1, materialMode == EMaterialMode::Masked);
+	_SpecializationInfo.Add(2, normal != nullptr);
+	_SpecializationInfo.Add(3, emissive != nullptr);
 }

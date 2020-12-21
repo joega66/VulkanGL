@@ -1,154 +1,163 @@
 #include "AssetManager.h"
 #include <GPU/GPU.h>
 
-AssetManager::AssetManager(gpu::Device& Device)
-	: Device(Device)
+AssetManager::AssetManager(gpu::Device& device)
+	: _Device(device)
 {
-	CreateDebugImages(Device);
+	CreateDebugImages();
 
 	LoadStaticMesh("../Assets/Meshes/Cube/glTF/Cube.gltf");
 }
 
-std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesystem::path& Path, bool Breakup)
+std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesystem::path& path, bool breakup)
 {
-	const std::string AssetName = Path.stem().generic_string();
+	const std::string assetName = path.stem().generic_string();
 
-	std::unique_ptr<StaticMesh> StaticMesh = std::make_unique<class StaticMesh>(AssetName, *this, Device, Path);
+	std::unique_ptr<StaticMesh> staticMesh = std::make_unique<StaticMesh>(assetName, *this, _Device, path);
 
-	if (Breakup)
+	if (breakup)
 	{
-		std::vector<const class StaticMesh*> OutStaticMeshes;
-		OutStaticMeshes.reserve(StaticMesh->_Submeshes.size());
-		for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->_Submeshes.size(); SubmeshIndex++)
+		std::vector<const StaticMesh*> outStaticMeshes;
+
+		outStaticMeshes.reserve(staticMesh->_Submeshes.size());
+
+		for (uint32 submeshIndex = 0; submeshIndex < staticMesh->_Submeshes.size(); submeshIndex++)
 		{
-			const std::string MadeUpAssetName = AssetName + std::to_string(SubmeshIndex);
-			StaticMeshes[MadeUpAssetName] = std::make_unique<class StaticMesh>(MadeUpAssetName, *StaticMesh, SubmeshIndex);
-			OutStaticMeshes.push_back(StaticMeshes[MadeUpAssetName].get());
+			const std::string madeUpAssetName = assetName + std::to_string(submeshIndex);
+
+			_StaticMeshes[madeUpAssetName] = std::make_unique<StaticMesh>(madeUpAssetName, *staticMesh, submeshIndex);
+
+			outStaticMeshes.push_back(_StaticMeshes[madeUpAssetName].get());
 		}
-		return OutStaticMeshes;
+		return outStaticMeshes;
 	}
 	else
 	{
-		StaticMeshes[AssetName] = std::move(StaticMesh);
-		return { StaticMeshes[AssetName].get() };
+		_StaticMeshes[assetName] = std::move(staticMesh);
+
+		return { _StaticMeshes[assetName].get() };
 	}
 }
 
-const StaticMesh* AssetManager::GetStaticMesh(const std::string& AssetName) const
+const StaticMesh* AssetManager::GetStaticMesh(const std::string& assetName) const
 {
-	return StaticMeshes.at(AssetName).get();
+	return _StaticMeshes.at(assetName).get();
 }
 
-gpu::Image* AssetManager::LoadImage(const std::string& AssetName, const std::filesystem::path& Path, EFormat Format, EImageUsage AdditionalUsage)
+gpu::Image* AssetManager::LoadImage(const std::string& assetName, const std::filesystem::path& path, EFormat format, EImageUsage additionalUsage)
 {
-	check(Images.find(AssetName) == Images.end(), "Image %s already exists.", AssetName.c_str());
+	check(_Images.find(assetName) == _Images.end(), "Image %s already exists.", assetName.c_str());
 
-	int32 Width, Height, Channels;
-	uint8* Pixels = Platform::LoadImage(Path.generic_string(), Width, Height, Channels);
+	int32 width, height, channels;
+	uint8* pixels = Platform::LoadImage(path.generic_string(), width, height, channels);
 
-	if (Pixels == nullptr)
+	if (pixels == nullptr)
 	{
-		LOG("Warning: Failed to load image %s at %s", AssetName.c_str(), Path.c_str());
+		LOG("Warning: Failed to load image %s at %s", assetName.c_str(), path.c_str());
 		return nullptr;
 	}
 
-	std::unique_ptr<gpu::Image> Image = std::make_unique<gpu::Image>(
-		Device.CreateImage(Width, Height, 1, Format, EImageUsage::Sampled | EImageUsage::TransferDst | AdditionalUsage)
+	std::unique_ptr<gpu::Image> image = std::make_unique<gpu::Image>(
+		_Device.CreateImage(width, height, 1, format, EImageUsage::Sampled | EImageUsage::TransferDst | additionalUsage)
 	);
 
-	gpu::UploadImageData(Device, Pixels, *Image);
+	gpu::UploadImageData(_Device, pixels, *image);
 
-	Platform::FreeImage(Pixels);
+	Platform::FreeImage(pixels);
 
-	Images[AssetName] = std::move(Image);
+	_Images[assetName] = std::move(image);
 
-	return Images[AssetName].get();
+	return _Images[assetName].get();
 }
 
-gpu::Image* AssetManager::LoadImage(const std::filesystem::path& Path, std::unique_ptr<gpu::Image> Image)
+gpu::Image* AssetManager::LoadImage(const std::filesystem::path& path, std::unique_ptr<gpu::Image> image)
 {
-	check(Images.find(Path.generic_string()) == Images.end(), "Image %s already exists.", Path.generic_string().c_str());
-	Images[Path.generic_string()] = std::move(Image);
-	return Images[Path.generic_string()].get();
+	check(_Images.find(path.generic_string()) == _Images.end(), "Image %s already exists.", path.generic_string().c_str());
+
+	_Images[path.generic_string()] = std::move(image);
+
+	return _Images[path.generic_string()].get();
 }
 
-gpu::Image* AssetManager::GetImage(const std::string& AssetName) const
+gpu::Image* AssetManager::GetImage(const std::string& assetName) const
 {
-	return Images.find(AssetName) == Images.end() ? nullptr : Images.at(AssetName).get();
+	return _Images.find(assetName) == _Images.end() ? nullptr : _Images.at(assetName).get();
 }
 
-const Material* AssetManager::LoadMaterial(const std::string& AssetName, std::unique_ptr<Material> Material)
+const Material* AssetManager::LoadMaterial(const std::string& assetName, std::unique_ptr<Material> material)
 {
-	check(Materials.find(AssetName) == Materials.end(), "Material %s already exists.", AssetName.c_str());
+	check(_Materials.find(assetName) == _Materials.end(), "Material %s already exists.", assetName.c_str());
 
-	Materials[AssetName] = std::move(Material);
+	_Materials[assetName] = std::move(material);
 
-	return Materials[AssetName].get();
+	return _Materials[assetName].get();
 }
 
-const Material* AssetManager::GetMaterial(const std::string& AssetName)
+const Material* AssetManager::GetMaterial(const std::string& assetName)
 {
-	return Materials.find(AssetName) == Materials.end() ? nullptr : Materials[AssetName].get();
+	return _Materials.find(assetName) == _Materials.end() ? nullptr : _Materials[assetName].get();
 }
 
-Skybox* AssetManager::LoadSkybox(const std::string& AssetName, const std::filesystem::path& Path)
+Skybox* AssetManager::LoadSkybox(const std::string& assetName, const std::filesystem::path& path)
 {
-	check(Skyboxes.find(AssetName) == Skyboxes.end(), "Skybox %s already exists.", AssetName.c_str());
+	check(_Skyboxes.find(assetName) == _Skyboxes.end(), "Skybox %s already exists.", assetName.c_str());
 
-	if (Path.has_extension())
+	if (path.has_extension())
 	{
 		signal_unimplemented();
 	}
 	else
 	{
-		const std::string PathStr = Path.string();
+		const std::string pathStr = path.string();
 
-		std::array<gpu::Image*, 6> Images;
+		std::array<gpu::Image*, 6> images;
 
-		for (uint32 Face = CubemapFace_Begin; Face != CubemapFace_End; Face++)
+		for (uint32 face = CubemapFace_Begin; face != CubemapFace_End; face++)
 		{
-			const std::string& Stem = Skybox::CubemapStems[Face];
-			const std::string ImageName = AssetName + "_" + Stem;
-			gpu::Image* Image = GetImage(ImageName);
+			const std::string& stem = Skybox::_CubemapStems[face];
 
-			if (!Image)
+			const std::string imageName = assetName + "_" + stem;
+
+			gpu::Image* image = GetImage(imageName);
+
+			if (!image)
 			{
-				const std::filesystem::path ImagePath = PathStr + Stem + ".png";
+				const std::filesystem::path imagePath = pathStr + stem + ".png";
 
-				Image = LoadImage(ImageName, ImagePath, EFormat::R8G8B8A8_UNORM, EImageUsage::TransferSrc);
+				image = LoadImage(imageName, imagePath, EFormat::R8G8B8A8_UNORM, EImageUsage::TransferSrc);
 
-				if (!Image)
+				if (!image)
 				{
 					fail("Skybox %s is missing a %s image",
-						AssetName.c_str(),
-						Skybox::CubemapFaces[Face].c_str()
+						assetName.c_str(),
+						Skybox::_CubemapFaces[face].c_str()
 					);
 				}
 			}
 
-			Images[Face] = Image;
+			images[face] = image;
 		}
 
-		Skyboxes[AssetName] = std::make_unique<Skybox>(Device, Images, EFormat::R8G8B8A8_UNORM);
+		_Skyboxes[assetName] = std::make_unique<Skybox>(_Device, images, EFormat::R8G8B8A8_UNORM);
 
-		return Skyboxes[AssetName].get();
+		return _Skyboxes[assetName].get();
 	}
 }
 
-Skybox* AssetManager::GetSkybox(const std::string& AssetName)
+Skybox* AssetManager::GetSkybox(const std::string& assetName)
 {
-	return Skyboxes[AssetName].get();
+	return _Skyboxes[assetName].get();
 }
 
-gpu::Image AssetManager::Red;
-gpu::Image AssetManager::Green;
-gpu::Image AssetManager::Blue;
-gpu::Image AssetManager::White;
-gpu::Image AssetManager::Black;
+gpu::Image AssetManager::_Red;
+gpu::Image AssetManager::_Green;
+gpu::Image AssetManager::_Blue;
+gpu::Image AssetManager::_White;
+gpu::Image AssetManager::_Black;
 
-void AssetManager::CreateDebugImages(gpu::Device& Device)
+void AssetManager::CreateDebugImages() const
 {
-	std::vector<uint8> Colors =
+	const std::vector<uint8> colors =
 	{
 		255, 0, 0, 0, // Red
 		0, 255, 0, 0, // Green
@@ -157,41 +166,41 @@ void AssetManager::CreateDebugImages(gpu::Device& Device)
 		0, 0, 0, 0, // Black
 	};
 
-	gpu::CommandBuffer CmdList = Device.CreateCommandBuffer(EQueue::Transfer);
+	gpu::CommandBuffer cmdBuf = _Device.CreateCommandBuffer(EQueue::Transfer);
 
-	auto StagingBuffer = CmdList.CreateStagingBuffer(Colors.size(), Colors.data());
+	auto stagingBuffer = cmdBuf.CreateStagingBuffer(colors.size(), colors.data());
 
-	AssetManager::Red = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	AssetManager::Green = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	AssetManager::Blue = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	AssetManager::White = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
-	AssetManager::Black = Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::_Red = _Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::_Green = _Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::_Blue = _Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::_White = _Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
+	AssetManager::_Black = _Device.CreateImage(1, 1, 1, EFormat::R8G8B8A8_UNORM, EImageUsage::Sampled | EImageUsage::TransferDst);
 
-	std::vector<ImageMemoryBarrier> Barriers
+	std::vector<ImageMemoryBarrier> barriers
 	{
-		ImageMemoryBarrier{ AssetManager::Red, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
-		ImageMemoryBarrier{ AssetManager::Green, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
-		ImageMemoryBarrier{ AssetManager::Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
-		ImageMemoryBarrier{ AssetManager::White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
-		ImageMemoryBarrier{ AssetManager::Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::_Red, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::_Green, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::_Blue, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::_White, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
+		ImageMemoryBarrier{ AssetManager::_Black, EAccess::None, EAccess::TransferWrite, EImageLayout::Undefined, EImageLayout::TransferDstOptimal },
 	};
 
-	CmdList.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, Barriers.size(), Barriers.data());
+	cmdBuf.PipelineBarrier(EPipelineStage::TopOfPipe, EPipelineStage::Transfer, 0, nullptr, barriers.size(), barriers.data());
 
-	for (uint32 ColorIndex = 0; ColorIndex < Barriers.size(); ColorIndex++)
+	for (uint32 colorIndex = 0; colorIndex < barriers.size(); colorIndex++)
 	{
-		CmdList.CopyBufferToImage(*StagingBuffer, ColorIndex * 4 * sizeof(uint8), Barriers[ColorIndex].image, EImageLayout::TransferDstOptimal);
+		cmdBuf.CopyBufferToImage(*stagingBuffer, colorIndex * 4 * sizeof(uint8), barriers[colorIndex].image, EImageLayout::TransferDstOptimal);
 	}
 
-	for (auto& Barrier : Barriers)
+	for (auto& barrier : barriers)
 	{
-		Barrier.srcAccessMask = EAccess::TransferWrite;
-		Barrier.dstAccessMask = EAccess::MemoryRead;
-		Barrier.oldLayout = EImageLayout::TransferDstOptimal;
-		Barrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
+		barrier.srcAccessMask = EAccess::TransferWrite;
+		barrier.dstAccessMask = EAccess::MemoryRead;
+		barrier.oldLayout = EImageLayout::TransferDstOptimal;
+		barrier.newLayout = EImageLayout::ShaderReadOnlyOptimal;
 	}
 
-	CmdList.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, Barriers.size(), Barriers.data());
+	cmdBuf.PipelineBarrier(EPipelineStage::Transfer, EPipelineStage::TopOfPipe, 0, nullptr, barriers.size(), barriers.data());
 
-	Device.SubmitCommands(CmdList);
+	_Device.SubmitCommands(cmdBuf);
 }

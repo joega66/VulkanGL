@@ -12,46 +12,46 @@
 #include "Engine.h"
 
 Engine::Engine(
-	Platform& InPlatform, 
-	Cursor& InCursor,
-	Input& InInput,
-	Screen& InScreen,
-	gpu::Device& InDevice,
-	gpu::Compositor& compositor
-) : _Platform(InPlatform)
-	, _Cursor(InCursor)
-	, _Input(InInput)
-	, _Screen(InScreen)
-	, _Device(InDevice)
+	Platform& platform, 
+	Cursor& cursor,
+	Input& input,
+	Screen& screen,
+	gpu::Device& device,
+	gpu::Compositor& compositor) 
+	: _Platform(platform)
+	, _Cursor(cursor)
+	, _Input(input)
+	, _Screen(screen)
+	, _Device(device)
 	, _Compositor(compositor)
-	, Assets(InDevice)
+	, _Assets(device)
 {
 }
 
 void Engine::Main()
 {
-	SystemsManager SystemsManager;
+	SystemsManager systemsManager;
 
 	SurfaceSystem surfaceSystem;
-	SystemsManager.Register(surfaceSystem);
+	systemsManager.Register(surfaceSystem);
 
 	CameraSystem cameraSystem;
-	SystemsManager.Register(cameraSystem);
+	systemsManager.Register(cameraSystem);
 
 	ShadowSystem shadowSystem;
-	SystemsManager.Register(shadowSystem);
+	systemsManager.Register(shadowSystem);
 
-	EditorControllerSystem EditorControllerSystem;
-	SystemsManager.Register(EditorControllerSystem);
+	EditorControllerSystem editorControllerSystem;
+	systemsManager.Register(editorControllerSystem);
 
-	SceneSystem SceneSystem;
-	SystemsManager.Register(SceneSystem);
+	SceneSystem sceneSystem;
+	systemsManager.Register(sceneSystem);
 
-	UserInterface UserInterface;
-	SystemsManager.Register(UserInterface);
+	UserInterface userInterface;
+	systemsManager.Register(userInterface);
 
-	SystemsManager.StartRenderSystems(*this);
-	SystemsManager.StartSystems(*this);
+	systemsManager.StartRenderSystems(*this);
+	systemsManager.StartSystems(*this);
 
 	SceneRenderer sceneRenderer(*this);
 
@@ -63,8 +63,8 @@ void Engine::Main()
 
 		_ECS.NotifyComponentEvents();
 
-		SystemsManager.UpdateSystems(*this);
-		SystemsManager.UpdateRenderSystems(*this);
+		systemsManager.UpdateSystems(*this);
+		systemsManager.UpdateRenderSystems(*this);
 
 		sceneRenderer.Render();
 
