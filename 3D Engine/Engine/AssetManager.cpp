@@ -18,8 +18,8 @@ std::vector<const StaticMesh*> AssetManager::LoadStaticMesh(const std::filesyste
 	if (Breakup)
 	{
 		std::vector<const class StaticMesh*> OutStaticMeshes;
-		OutStaticMeshes.reserve(StaticMesh->Submeshes.size());
-		for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->Submeshes.size(); SubmeshIndex++)
+		OutStaticMeshes.reserve(StaticMesh->_Submeshes.size());
+		for (uint32 SubmeshIndex = 0; SubmeshIndex < StaticMesh->_Submeshes.size(); SubmeshIndex++)
 		{
 			const std::string MadeUpAssetName = AssetName + std::to_string(SubmeshIndex);
 			StaticMeshes[MadeUpAssetName] = std::make_unique<class StaticMesh>(MadeUpAssetName, *StaticMesh, SubmeshIndex);

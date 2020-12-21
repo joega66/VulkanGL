@@ -6,147 +6,147 @@
 #define STBI_MSC_SECURE_CRT
 #include <tiny_gltf.h>
 
-StaticMesh::StaticMesh(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device, const std::filesystem::path& Path)
-	: Name(AssetName)
-	, Path(Path)
+StaticMesh::StaticMesh(const std::string& assetName, AssetManager& assets, gpu::Device& device, const std::filesystem::path& path)
+	: _Name(assetName)
+	, _Path(path)
 {
-	if (Path.extension() == ".gltf" || Path.extension() == ".glb")
+	if (_Path.extension() == ".gltf" || _Path.extension() == ".glb")
 	{
-		GLTFLoad(AssetName, Assets, Device);
+		GLTFLoad(assetName, assets, device);
 	}
 	else
 	{
 		signal_unimplemented();
 	}
 
-	std::for_each(SubmeshBounds.begin(), SubmeshBounds.end(), [&] (const BoundingBox& SubmeshBounds)
+	std::for_each(_SubmeshBounds.begin(), _SubmeshBounds.end(), [&] (const BoundingBox& submeshBounds)
 	{
-		Bounds.TestPoint(SubmeshBounds.GetMin());
-		Bounds.TestPoint(SubmeshBounds.GetMax());
+		_Bounds.TestPoint(submeshBounds.GetMin());
+		_Bounds.TestPoint(submeshBounds.GetMax());
 	});
 }
 
-StaticMesh::StaticMesh(const std::string& AssetName, StaticMesh& StaticMesh, uint32 SubmeshIndex)
-	: Name(AssetName)
-	, Path(StaticMesh.Path)
-	, Materials{ StaticMesh.Materials[SubmeshIndex] }
-	, SubmeshBounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
-	, SubmeshNames{ StaticMesh.SubmeshNames[SubmeshIndex] }
-	, Bounds{ StaticMesh.SubmeshBounds[SubmeshIndex] }
+StaticMesh::StaticMesh(const std::string& assetName, StaticMesh& staticMesh, uint32 submeshIndex)
+	: _Name(assetName)
+	, _Path(staticMesh._Path)
+	, _Materials{ staticMesh._Materials[submeshIndex] }
+	, _SubmeshBounds{ staticMesh._SubmeshBounds[submeshIndex] }
+	, _SubmeshNames{ staticMesh._SubmeshNames[submeshIndex] }
+	, _Bounds{ staticMesh._SubmeshBounds[submeshIndex] }
 {
-	Submeshes.emplace_back(std::move(StaticMesh.Submeshes[SubmeshIndex]));
+	_Submeshes.emplace_back(std::move(staticMesh._Submeshes[submeshIndex]));
 }
 
-tinygltf::TinyGLTF Loader;
+tinygltf::TinyGLTF gLoader;
 
-void StaticMesh::GLTFLoad(const std::string& AssetName, AssetManager& Assets, gpu::Device& Device)
+void StaticMesh::GLTFLoad(const std::string& assetName, AssetManager& assets, gpu::Device& device)
 {
-	tinygltf::Model Model;
-	std::string Err;
-	std::string Warn;
+	tinygltf::Model model;
+	std::string err;
+	std::string warn;
 
-	if (Path.extension() == ".gltf")
+	if (_Path.extension() == ".gltf")
 	{
-		Loader.LoadASCIIFromFile(&Model, &Err, &Warn, Path.generic_string());
+		gLoader.LoadASCIIFromFile(&model, &err, &warn, _Path.generic_string());
 	}
 	else
 	{
-		Loader.LoadBinaryFromFile(&Model, &Err, &Warn, Path.generic_string());
+		gLoader.LoadBinaryFromFile(&model, &err, &warn, _Path.generic_string());
 	}
 
-	if (!Err.empty())
+	if (!err.empty())
 	{
-		LOG("TinyGLTF error: %s", Err.c_str());
+		LOG("TinyGLTF error: %s", err.c_str());
 	}
-	if (!Warn.empty())
+	if (!warn.empty())
 	{
-		LOG("TinyGLTF warning: %s", Warn.c_str());
+		LOG("TinyGLTF warning: %s", warn.c_str());
 	}
 
-	for (auto& Mesh : Model.meshes)
+	for (auto& mesh : model.meshes)
 	{
-		for (auto& Primitive : Mesh.primitives)
+		for (auto& primitive : mesh.primitives)
 		{
-			GLTFLoadGeometry(Model, Mesh, Primitive, Device);
-			GLTFLoadMaterial(AssetName, Assets, Model, Primitive, Device);
-			SubmeshNames.push_back(Mesh.name);
+			GLTFLoadGeometry(model, mesh, primitive, device);
+			GLTFLoadMaterial(assetName, assets, model, primitive, device);
+			_SubmeshNames.push_back(mesh.name);
 		}
 	}
 }
 
-void StaticMesh::GLTFLoadGeometry(tinygltf::Model& Model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, gpu::Device& Device)
+void StaticMesh::GLTFLoadGeometry(tinygltf::Model& model, tinygltf::Mesh& Mesh, tinygltf::Primitive& Primitive, gpu::Device& device)
 {
-	auto& IndexAccessor = Model.accessors[Primitive.indices];
-	auto& PositionAccessor = Model.accessors[Primitive.attributes["POSITION"]];
-	auto& NormalAccessor = Model.accessors[Primitive.attributes["NORMAL"]];
-	auto& UvAccessor = Model.accessors[Primitive.attributes["TEXCOORD_0"]];
+	auto& indexAccessor = model.accessors[Primitive.indices];
+	auto& positionAccessor = model.accessors[Primitive.attributes["POSITION"]];
+	auto& normalAccessor = model.accessors[Primitive.attributes["NORMAL"]];
+	auto& uvAccessor = model.accessors[Primitive.attributes["TEXCOORD_0"]];
 
-	auto& IndexView = Model.bufferViews[IndexAccessor.bufferView];
-	auto& PositionView = Model.bufferViews[PositionAccessor.bufferView];
-	auto& NormalView = Model.bufferViews[NormalAccessor.bufferView];
-	auto& UvView = Model.bufferViews[UvAccessor.bufferView];
+	auto& indexView = model.bufferViews[indexAccessor.bufferView];
+	auto& positionView = model.bufferViews[positionAccessor.bufferView];
+	auto& normalView = model.bufferViews[normalAccessor.bufferView];
+	auto& uvView = model.bufferViews[uvAccessor.bufferView];
 
-	auto& IndexData = Model.buffers[IndexView.buffer];
-	auto& PositionData = Model.buffers[PositionView.buffer];
-	auto& NormalData = Model.buffers[NormalView.buffer];
-	auto& UvData = Model.buffers[UvView.buffer];
+	auto& indexData = model.buffers[indexView.buffer];
+	auto& positionData = model.buffers[positionView.buffer];
+	auto& normalData = model.buffers[normalView.buffer];
+	auto& uvData = model.buffers[uvView.buffer];
 	
-	gpu::Buffer IndexBuffer = Device.CreateBuffer(EBufferUsage::Index, EMemoryUsage::GPU_ONLY, IndexView.byteLength);
-	gpu::Buffer PositionBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, PositionView.byteLength);
-	gpu::Buffer TextureCoordinateBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, UvView.byteLength);
-	gpu::Buffer NormalBuffer = Device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, NormalView.byteLength);
+	gpu::Buffer indexBuffer = device.CreateBuffer(EBufferUsage::Index, EMemoryUsage::GPU_ONLY, indexView.byteLength);
+	gpu::Buffer positionBuffer = device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, positionView.byteLength);
+	gpu::Buffer textureCoordinateBuffer = device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, uvView.byteLength);
+	gpu::Buffer normalBuffer = device.CreateBuffer(EBufferUsage::Vertex, EMemoryUsage::GPU_ONLY, normalView.byteLength);
 
-	gpu::CommandBuffer CmdList = Device.CreateCommandBuffer(EQueue::Transfer);
+	gpu::CommandBuffer cmdBuf = device.CreateCommandBuffer(EQueue::Transfer);
 
-	uint64 SrcOffset = 0;
+	uint64 srcOffset = 0;
 
-	auto StagingBuffer = CmdList.CreateStagingBuffer(IndexView.byteLength + PositionView.byteLength + UvView.byteLength + NormalView.byteLength);
+	auto stagingBuffer = cmdBuf.CreateStagingBuffer(indexView.byteLength + positionView.byteLength + uvView.byteLength + normalView.byteLength);
 
-	uint8* Memmapped = static_cast<uint8*>(StagingBuffer->GetData());
+	uint8* data = static_cast<uint8*>(stagingBuffer->GetData());
 
-	Platform::Memcpy(Memmapped, IndexData.data.data() + IndexView.byteOffset, IndexView.byteLength);
-	CmdList.CopyBuffer(*StagingBuffer, IndexBuffer, SrcOffset, 0, IndexView.byteLength);
-	Memmapped += IndexView.byteLength;
-	SrcOffset += IndexView.byteLength;
+	Platform::Memcpy(data, indexData.data.data() + indexView.byteOffset, indexView.byteLength);
+	cmdBuf.CopyBuffer(*stagingBuffer, indexBuffer, srcOffset, 0, indexView.byteLength);
+	data += indexView.byteLength;
+	srcOffset += indexView.byteLength;
 
-	Platform::Memcpy(Memmapped, PositionData.data.data() + PositionView.byteOffset, PositionView.byteLength);
-	CmdList.CopyBuffer(*StagingBuffer, PositionBuffer, SrcOffset, 0, PositionView.byteLength);
-	Memmapped += PositionView.byteLength;
-	SrcOffset += PositionView.byteLength;
+	Platform::Memcpy(data, positionData.data.data() + positionView.byteOffset, positionView.byteLength);
+	cmdBuf.CopyBuffer(*stagingBuffer, positionBuffer, srcOffset, 0, positionView.byteLength);
+	data += positionView.byteLength;
+	srcOffset += positionView.byteLength;
 
-	Platform::Memcpy(Memmapped, UvData.data.data() + UvView.byteOffset, UvView.byteLength);
-	CmdList.CopyBuffer(*StagingBuffer, TextureCoordinateBuffer, SrcOffset, 0, UvView.byteLength);
-	Memmapped += UvView.byteLength;
-	SrcOffset += UvView.byteLength;
+	Platform::Memcpy(data, uvData.data.data() + uvView.byteOffset, uvView.byteLength);
+	cmdBuf.CopyBuffer(*stagingBuffer, textureCoordinateBuffer, srcOffset, 0, uvView.byteLength);
+	data += uvView.byteLength;
+	srcOffset += uvView.byteLength;
 
-	Platform::Memcpy(Memmapped, NormalData.data.data() + NormalView.byteOffset, NormalView.byteLength);
-	CmdList.CopyBuffer(*StagingBuffer, NormalBuffer, SrcOffset, 0, NormalView.byteLength);
-	Memmapped += NormalView.byteLength;
-	SrcOffset += NormalView.byteLength;
+	Platform::Memcpy(data, normalData.data.data() + normalView.byteOffset, normalView.byteLength);
+	cmdBuf.CopyBuffer(*stagingBuffer, normalBuffer, srcOffset, 0, normalView.byteLength);
+	data += normalView.byteLength;
+	srcOffset += normalView.byteLength;
 
-	Device.SubmitCommands(CmdList);
+	device.SubmitCommands(cmdBuf);
 
-	Submeshes.emplace_back(Submesh(
-		static_cast<uint32>(IndexAccessor.count)
-		, tinygltf::GetComponentSizeInBytes(IndexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
-		, std::move(IndexBuffer)
-		, std::move(PositionBuffer)
-		, std::move(TextureCoordinateBuffer)
-		, std::move(NormalBuffer)
+	_Submeshes.emplace_back(Submesh(
+		static_cast<uint32>(indexAccessor.count)
+		, tinygltf::GetComponentSizeInBytes(indexAccessor.componentType) == 2 ? EIndexType::UINT16 : EIndexType::UINT32
+		, std::move(indexBuffer)
+		, std::move(positionBuffer)
+		, std::move(textureCoordinateBuffer)
+		, std::move(normalBuffer)
 	));
 
-	const glm::vec3 Min(PositionAccessor.minValues[0], PositionAccessor.minValues[1], PositionAccessor.minValues[2]);
-	const glm::vec3 Max(PositionAccessor.maxValues[0], PositionAccessor.maxValues[1], PositionAccessor.maxValues[2]);
+	const glm::vec3 min(positionAccessor.minValues[0], positionAccessor.minValues[1], positionAccessor.minValues[2]);
+	const glm::vec3 max(positionAccessor.maxValues[0], positionAccessor.maxValues[1], positionAccessor.maxValues[2]);
 
-	SubmeshBounds.push_back(BoundingBox(Min, Max));
+	_SubmeshBounds.push_back(BoundingBox(min, max));
 }
 
-void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& Assets, tinygltf::Model& Model, tinygltf::Primitive& Primitive, gpu::Device& Device)
+void StaticMesh::GLTFLoadMaterial(const std::string& assetName, AssetManager& assets, tinygltf::Model& model, tinygltf::Primitive& primitive, gpu::Device& device)
 {
-	auto& GLTFMaterial = Model.materials[Primitive.material];
-	const EMaterialMode MaterialMode = [] (const std::string& AlphaMode)
+	auto& gltfMaterial = model.materials[primitive.material];
+	const EMaterialMode materialMode = [] (const std::string& alphaMode)
 	{
-		if (AlphaMode == "MASK")
+		if (alphaMode == "MASK")
 		{
 			return EMaterialMode::Masked;
 		}
@@ -154,51 +154,51 @@ void StaticMesh::GLTFLoadMaterial(const std::string& AssetName, AssetManager& As
 		{
 			return EMaterialMode::Opaque;
 		}
-	}(GLTFMaterial.alphaMode);
-	const std::string MaterialAssetName = AssetName + "_Material_" + std::to_string(Primitive.material);
-	const Material* Material = Assets.GetMaterial(MaterialAssetName);
+	}(gltfMaterial.alphaMode);
+	const std::string materialAssetName = assetName + "_Material_" + std::to_string(primitive.material);
+	const Material* material = assets.GetMaterial(materialAssetName);
 
-	if (!Material)
+	if (!material)
 	{
-		gpu::Image* BaseColor = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.baseColorTexture.index);
-		gpu::Image* MetallicRoughness = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
-		gpu::Image* Normal = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.normalTexture.index);
-		gpu::Image* Emissive = GLTFLoadImage(Assets, Device, Model, GLTFMaterial.emissiveTexture.index);
-		const glm::vec3 EmissiveFactor = 
-			GLTFMaterial.emissiveFactor.empty() ? 
+		gpu::Image* baseColor = GLTFLoadImage(assets, device, model, gltfMaterial.pbrMetallicRoughness.baseColorTexture.index);
+		gpu::Image* metallicRoughness = GLTFLoadImage(assets, device, model, gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+		gpu::Image* normal = GLTFLoadImage(assets, device, model, gltfMaterial.normalTexture.index);
+		gpu::Image* emissive = GLTFLoadImage(assets, device, model, gltfMaterial.emissiveTexture.index);
+		const glm::vec3 emissiveFactor = 
+			gltfMaterial.emissiveFactor.empty() ? 
 			glm::vec3(0.0) : 
-			glm::vec3(static_cast<float>(GLTFMaterial.emissiveFactor[0]),
-			static_cast<float>(GLTFMaterial.emissiveFactor[1]),
-			static_cast<float>(GLTFMaterial.emissiveFactor[2]));
+			glm::vec3(static_cast<float>(gltfMaterial.emissiveFactor[0]),
+			static_cast<float>(gltfMaterial.emissiveFactor[1]),
+			static_cast<float>(gltfMaterial.emissiveFactor[2]));
 
-		if (!BaseColor)
+		if (!baseColor)
 		{
-			BaseColor = &AssetManager::Red;
+			baseColor = &AssetManager::Red;
 		}
 
-		Material = Assets.LoadMaterial(
-			MaterialAssetName,
-			std::make_unique<class Material>
+		material = assets.LoadMaterial(
+			materialAssetName,
+			std::make_unique<Material>
 			(
-				Device,
-				MaterialMode,
-				BaseColor,
-				MetallicRoughness,
-				Normal,
-				Emissive,
-				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.roughnessFactor),
-				static_cast<float>(GLTFMaterial.pbrMetallicRoughness.metallicFactor),
-				EmissiveFactor
+				device,
+				materialMode,
+				baseColor,
+				metallicRoughness,
+				normal,
+				emissive,
+				static_cast<float>(gltfMaterial.pbrMetallicRoughness.roughnessFactor),
+				static_cast<float>(gltfMaterial.pbrMetallicRoughness.metallicFactor),
+				emissiveFactor
 			)
 		);
 	}
 
-	Materials.push_back(Material);
+	_Materials.push_back(material);
 }
 
-static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
+static EFormat GetFormat(int32 bits, int32 components, int32 pixelType)
 {
-	if (PixelType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && Bits == 8 && Components == 4)
+	if (pixelType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE && bits == 8 && components == 4)
 	{
 		return EFormat::R8G8B8A8_UNORM;
 	}
@@ -208,32 +208,32 @@ static EFormat GetFormat(int32 Bits, int32 Components, int32 PixelType)
 	}
 }
 
-gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& Assets, gpu::Device& Device, tinygltf::Model& Model, int32 TextureIndex)
+gpu::Image* StaticMesh::GLTFLoadImage(AssetManager& assets, gpu::Device& device, tinygltf::Model& model, int32 textureIndex)
 {
-	if (TextureIndex == -1 || Model.textures.empty())
+	if (textureIndex == -1 || model.textures.empty())
 	{
 		return nullptr;
 	}
 	else
 	{
-		auto& Texture = Model.textures[TextureIndex];
-		auto& Image = Model.images[Texture.source];
+		auto& texture = model.textures[textureIndex];
+		auto& image = model.images[texture.source];
 
-		if (gpu::Image* LoadedImage = Assets.GetImage(Image.uri); LoadedImage != nullptr)
+		if (gpu::Image* loadedImage = assets.GetImage(image.uri); loadedImage != nullptr)
 		{
-			return LoadedImage;
+			return loadedImage;
 		}
 		else
 		{
 #undef LoadImage
-			std::unique_ptr<gpu::Image> NewImage = std::make_unique<gpu::Image>(Device.CreateImage(
-				Image.width, 
-				Image.height, 
+			std::unique_ptr<gpu::Image> NewImage = std::make_unique<gpu::Image>(device.CreateImage(
+				image.width, 
+				image.height,
 				1, 
-				GetFormat(Image.bits, Image.component, Image.pixel_type), 
+				GetFormat(image.bits, image.component, image.pixel_type),
 				EImageUsage::Sampled | EImageUsage::TransferDst));
-			gpu::UploadImageData(Device, Image.image.data(), *NewImage);
-			return Assets.LoadImage(Image.uri, std::move(NewImage));
+			gpu::UploadImageData(device, image.image.data(), *NewImage);
+			return assets.LoadImage(image.uri, std::move(NewImage));
 		}
 	}
 }

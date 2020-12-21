@@ -78,8 +78,8 @@ void SceneSystem::Update(Engine& engine)
 
 		for (auto staticMesh : scene)
 		{
-			auto entity = ecs.CreateEntity(staticMesh->Name.c_str());
-			ecs.AddComponent(entity, StaticMeshComponent(staticMesh, staticMesh->Materials.front()));
+			auto entity = ecs.CreateEntity(staticMesh->_Name.c_str());
+			ecs.AddComponent(entity, StaticMeshComponent(staticMesh, staticMesh->_Materials.front()));
 
 			auto& transform = ecs.GetComponent<Transform>(entity);
 			transform.Scale(ecs, glm::vec3(scale));

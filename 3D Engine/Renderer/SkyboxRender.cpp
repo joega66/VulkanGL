@@ -65,7 +65,7 @@ void SceneRenderer::RenderSkybox(CameraRender& camera, gpu::CommandBuffer& cmdBu
 
 		const StaticMesh* cube = _Assets.GetStaticMesh("Cube");
 
-		for (const auto& submesh : cube->Submeshes)
+		for (const auto& submesh : cube->_Submeshes)
 		{
 			cmdBuf.BindVertexBuffers(1, &submesh.GetPositionBuffer());
 			cmdBuf.DrawIndexed(submesh.GetIndexBuffer(), submesh.GetIndexCount(), 1, 0, 0, 0, submesh.GetIndexType());

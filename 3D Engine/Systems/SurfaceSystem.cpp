@@ -48,6 +48,6 @@ void SurfaceSystem::Update(Engine& engine)
 		localToWorldUniformBuffer->inverse = glm::inverse(transform.GetLocalToWorld());
 		localToWorldUniformBuffer->inverseTranspose = glm::transpose(localToWorldUniformBuffer->inverse);
 
-		surfaceGroup.AddSurface(Surface(surfaceIdx++, staticMesh.Material, staticMesh.StaticMesh->Submeshes, boundingBox));
+		surfaceGroup.AddSurface(Surface(surfaceIdx++, staticMesh.Material, staticMesh.StaticMesh->_Submeshes, boundingBox));
 	}
 }
