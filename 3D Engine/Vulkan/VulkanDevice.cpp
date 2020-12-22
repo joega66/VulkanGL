@@ -137,23 +137,23 @@ gpu::Pipeline VulkanDevice::CreatePipeline(const ComputePipelineDesc& computeDes
 
 gpu::Buffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage memoryUsage, uint64 size, const void* data)
 {
-	VkBufferUsageFlags vulkanBufferUsage = 0;
-	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
-	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Vertex) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
-	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
-	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Index) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
-	vulkanBufferUsage |= Any(bufferUsage & EBufferUsage::Uniform) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
+	VkBufferUsageFlags usage = 0;
+	usage |= Any(bufferUsage & EBufferUsage::Indirect) ? VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT : 0;
+	usage |= Any(bufferUsage & EBufferUsage::Vertex) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
+	usage |= Any(bufferUsage & EBufferUsage::Storage) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	usage |= Any(bufferUsage & EBufferUsage::Index) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
+	usage |= Any(bufferUsage & EBufferUsage::Uniform) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
 
 	VmaAllocationCreateInfo allocInfo = {};
 
 	if (memoryUsage == EMemoryUsage::GPU_ONLY)
 	{
-		vulkanBufferUsage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	}
 	else if (memoryUsage == EMemoryUsage::CPU_ONLY)
 	{
-		vulkanBufferUsage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 		allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 	}
@@ -178,14 +178,15 @@ gpu::Buffer VulkanDevice::CreateBuffer(EBufferUsage bufferUsage, EMemoryUsage me
 		.pNext = nullptr,
 		.flags = 0,
 		.size = size,
-		.usage = vulkanBufferUsage,
+		.usage = usage,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 	};
 
 	VkBuffer buffer;
 	VmaAllocation allocation;
 	VmaAllocationInfo allocationInfo;
-	vmaCreateBuffer(_Allocator, &bufferInfo, &allocInfo, &buffer, &allocation, &allocationInfo);
+	
+	vulkan( vmaCreateBuffer(_Allocator, &bufferInfo, &allocInfo, &buffer, &allocation, &allocationInfo) );
 
 	gpu::Buffer newBuffer(_Allocator, buffer, allocation, allocationInfo, size, bufferUsage);
 
@@ -246,7 +247,8 @@ gpu::Image VulkanDevice::CreateImage(
 	VkImage image;
 	VmaAllocation allocation;
 	VmaAllocationInfo allocationInfo;
-	vmaCreateImage(_Allocator, &imageInfo, &allocInfo, &image, &allocation, &allocationInfo);
+
+	vulkan( vmaCreateImage(_Allocator, &imageInfo, &allocInfo, &image, &allocation, &allocationInfo) );
 	
 	return gpu::Image(
 		*this

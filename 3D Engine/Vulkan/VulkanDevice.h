@@ -81,6 +81,7 @@ public:
 
 	inline VulkanInstance& GetInstance() { return _Instance; }
 	inline const VulkanPhysicalDevice& GetPhysicalDevice() const { return _PhysicalDevice; }
+	inline VmaAllocator GetAllocator() const { return _Allocator; }
 	inline VulkanQueue& GetGraphicsQueue() { return _GraphicsQueue; }
 	inline VulkanQueue& GetTransferQueue() { return _TransferQueue; }
 	inline VkDescriptorPool& GetDescriptorPool() { return _DescriptorPool; }

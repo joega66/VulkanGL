@@ -23,11 +23,13 @@ namespace gpu
 		inline operator const VkBuffer&() const { return _Buffer; }
 
 	private:
-		VmaAllocator _Allocator;
-		VmaAllocation _Allocation;
-		VmaAllocationInfo _AllocationInfo;
-		VkBuffer _Buffer;
-		uint64 _Size;
+		VmaAllocator		_Allocator = nullptr;
+		VmaAllocation		_Allocation = nullptr;
+		VmaAllocationInfo	_AllocationInfo;
+		VkBuffer			_Buffer = nullptr;
+		uint64				_Size;
+
+		void Destroy();
 	};
 
 	class DescriptorBufferInfo

@@ -25,6 +25,8 @@ namespace gpu
 		TextureID GetTextureID(const gpu::Sampler& sampler);
 		inline ImageID GetImageID() const { return _ImageID; }
 
+		void Destroy();
+
 	private:
 		VulkanDevice*	_Device = nullptr;
 		EFormat			_Format = EFormat::UNDEFINED;
@@ -72,11 +74,13 @@ namespace gpu
 		static VkFilter GetVulkanFilter(EFilter filter);
 
 	private:
-		VmaAllocator		_Allocator;
-		VmaAllocation		_Allocation;
+		VmaAllocator		_Allocator = nullptr;
+		VmaAllocation		_Allocation = nullptr;
 		VmaAllocationInfo	_AllocationInfo;
 		VkImage				_Image = nullptr;
 		ImageView			_ImageView = {};
+
+		void Destroy();
 	};
 
 	class Sampler

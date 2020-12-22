@@ -21,16 +21,13 @@ namespace gpu
 	}
 
 	Buffer::Buffer(Buffer&& other)
-		: _Allocator(std::exchange(other._Allocator, nullptr))
-		, _Allocation(std::exchange(other._Allocation, nullptr))
-		, _AllocationInfo(other._AllocationInfo)
-		, _Buffer(std::exchange(other._Buffer, nullptr))
-		, _Size(other._Size)
 	{
+		*this = std::move(other);
 	}
 
 	Buffer& Buffer::operator=(Buffer&& other)
 	{
+		Destroy();
 		_Allocator = std::exchange(other._Allocator, nullptr);
 		_Allocation = std::exchange(other._Allocation, nullptr);
 		_AllocationInfo = other._AllocationInfo;
@@ -41,9 +38,15 @@ namespace gpu
 
 	Buffer::~Buffer()
 	{
-		if (_Allocator)
+		Destroy();
+	}
+
+	void Buffer::Destroy()
+	{
+		if (_Allocation)
 		{
 			vmaDestroyBuffer(_Allocator, _Buffer, _Allocation);
+			_Allocation = nullptr;
 		}
 	}
 

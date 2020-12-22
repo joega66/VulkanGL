@@ -83,52 +83,29 @@ namespace gpu
 	}
 
 	ImageView::ImageView(ImageView&& other)
-		: _Device(other._Device)
-		, _ImageView(std::exchange(other._ImageView, nullptr))
-		, _TextureIDs(std::exchange(other._TextureIDs, {}))
-		, _ImageID(std::exchange(other._ImageID, {}))
-		, _Format(other._Format)
 	{
+		*this = std::move(other);
 	}
 
 	ImageView& ImageView::operator=(ImageView&& other)
 	{
+		Destroy();
 		_Device = other._Device;
-		_ImageView = std::exchange(other._ImageView, nullptr);
-		_TextureIDs = std::exchange(other._TextureIDs, {});
-		_ImageID = std::exchange(other._ImageID, {});
 		_Format = other._Format;
+		_ImageView = std::exchange(other._ImageView, nullptr);
+		_ImageID = other._ImageID;
+		_TextureIDs = other._TextureIDs;
 		return *this;
 	}
 
 	ImageView::~ImageView()
 	{
-		if (_ImageView)
-		{
-			if (_Device->_BindlessTextures)
-			{
-				for (const auto& [sampler, textureIdx] : _TextureIDs)
-				{
-					if (textureIdx.IsValid())
-					{
-						_Device->_BindlessTextures->Release(textureIdx);
-					}
-				}
-			}
-
-			if (_ImageID.IsValid() && _Device->_BindlessImages)
-			{
-				_Device->_BindlessImages->Release(_ImageID);
-			}
-			
-			vkDestroyImageView(*_Device, _ImageView, nullptr);
-		}
+		Destroy();
 	}
 
 	TextureID ImageView::GetTextureID(const Sampler& sampler)
 	{
-		auto iter = _TextureIDs.find(sampler);
-		if (iter == _TextureIDs.end())
+		if (auto iter = _TextureIDs.find(sampler); iter == _TextureIDs.end())
 		{
 			_TextureIDs[sampler] = _Device->_BindlessTextures->CreateTextureID(*this, sampler);
 			return _TextureIDs[sampler];
@@ -136,6 +113,29 @@ namespace gpu
 		else
 		{
 			return iter->second;
+		}
+	}
+
+	void ImageView::Destroy()
+	{
+		if (_ImageView)
+		{
+			for (const auto& [sampler, textureIdx] : _TextureIDs)
+			{
+				if (textureIdx.IsValid())
+				{
+					_Device->_BindlessTextures->Release(textureIdx);
+				}
+			}
+
+			if (_ImageID.IsValid())
+			{
+				_Device->_BindlessImages->Release(_ImageID);
+			}
+
+			vkDestroyImageView(*_Device, _ImageView, nullptr);
+
+			_ImageView = nullptr;
 		}
 	}
 
@@ -161,17 +161,13 @@ namespace gpu
 	}
 
 	Image::Image(Image&& other)
-		: _Allocator(std::exchange(other._Allocator, nullptr))
-		, _Allocation(std::exchange(other._Allocation, nullptr))
-		, _AllocationInfo(std::exchange(other._AllocationInfo, {}))
-		, _Image(std::exchange(other._Image, nullptr))
-		, _ImageView(std::move(other._ImageView))
-		, ImagePrivate(other)
 	{
+		*this = std::move(other);
 	}
 
 	Image& Image::operator=(Image&& other)
 	{
+		Destroy();
 		_Allocator = std::exchange(other._Allocator, nullptr);
 		_Allocation = std::exchange(other._Allocation, nullptr);
 		_AllocationInfo = std::exchange(other._AllocationInfo, {});
@@ -188,9 +184,18 @@ namespace gpu
 
 	Image::~Image()
 	{
-		if (_Allocation != nullptr)
+		Destroy();
+	}
+	
+	void Image::Destroy()
+	{
+		if (_Image)
 		{
+			_ImageView.Destroy();
+
 			vmaDestroyImage(_Allocator, _Image, _Allocation);
+
+			_Image = nullptr;
 		}
 	}
 

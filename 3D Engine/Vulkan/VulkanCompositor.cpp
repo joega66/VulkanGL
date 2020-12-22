@@ -249,7 +249,7 @@ void VulkanCompositor::Resize(gpu::Device& device, uint32 screenWidth, uint32 sc
 	std::vector<VkImage> images(imageCount);
 
 	vkGetSwapchainImagesKHR(_Device, _Swapchain, &imageCount, images.data());
-	
+
 	_Images.clear();
 	_Images.reserve(imageCount);
 
@@ -257,7 +257,7 @@ void VulkanCompositor::Resize(gpu::Device& device, uint32 screenWidth, uint32 sc
 	{
 		_Images.push_back(gpu::Image(
 			_Device,
-			nullptr,
+			_Device.GetAllocator(),
 			nullptr,
 			{},
 			image,
