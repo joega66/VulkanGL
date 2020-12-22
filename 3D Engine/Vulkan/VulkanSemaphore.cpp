@@ -20,6 +20,7 @@ gpu::Semaphore::Semaphore(Semaphore&& other)
 
 gpu::Semaphore& gpu::Semaphore::operator=(Semaphore&& other)
 {
+	Destroy();
 	_Device = other._Device;
 	_Semaphore = std::exchange(other._Semaphore, nullptr);
 	return *this;
@@ -27,8 +28,15 @@ gpu::Semaphore& gpu::Semaphore::operator=(Semaphore&& other)
 
 gpu::Semaphore::~Semaphore()
 {
+	Destroy();
+}
+
+void gpu::Semaphore::Destroy()
+{
 	if (_Semaphore != nullptr)
 	{
 		vkDestroySemaphore(_Device, _Semaphore, nullptr);
+
+		_Semaphore = nullptr;
 	}
 }

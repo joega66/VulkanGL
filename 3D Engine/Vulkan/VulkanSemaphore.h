@@ -20,5 +20,7 @@ namespace gpu
 	private:
 		VkDevice _Device;
 		VkSemaphore _Semaphore = nullptr;
+
+		void Destroy();
 	};
 }
